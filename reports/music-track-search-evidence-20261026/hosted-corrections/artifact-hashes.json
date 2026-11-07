@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "scope": "Hosted-corrections supplement leaves only, excludes self; all56 earlier leaves preserved.",
+  "files": {
+    "summary.json": {
+      "bytes": 6475,
+      "sha256": "b6f9c2c5e6e11b54336d7a790369476e51ef212cc938ca747e89a609b1194872"
+    },
+    "original-hosted-artifact-hashes.json": {
+      "bytes": 2213,
+      "sha256": "fec163f15e638060da50263edd242ff843f2732e49c74009900e4d11badc05bf"
+    },
+    "stronger-native-source-after.json": {
+      "bytes": 104547,
+      "sha256": "09b69af9e9f5e38b2574c5cb30a0034bf5f8e1a47e4e5913a8178b4eb0d62bae"
+    },
+    "metadata-readiness-receipt.json": {
+      "bytes": 2149,
+      "sha256": "6556f381441ccf968151b86793c0a1967f017441ad9b7eec7eb39c71baae14b6"
+    },
+    "archive-member-hashes.json": {
+      "bytes": 17771,
+      "sha256": "0d94b51761ef10b72e151bf9bb8f04c484838d34370a6da60872e98f7f6f34f5"
+    },
+    "README.md": {
+      "bytes": 2573,
+      "sha256": "7c093973672f3916e59282f13666d8d3eb07c529b832ac860f2ef5c16da921e3"
+    },
+    "mobile-hosted-run.json": {
+      "bytes": 13163,
+      "sha256": "5aa009bc02623858aaa5c03e5c633ff4783b2f6a95c9896f48aa48b62dc013a5"
+    },
+    "response-guard-receipt.json": {
+      "bytes": 8187,
+      "sha256": "783130eb6c2d174bdc6d24d8f58b9585a47d22942bf1eeab6136ffc1e8ac25ec"
+    },
+    "hosted-failures-local-corrections-evidence.tar.gz": {
+      "bytes": 8148918,
+      "sha256": "48b3a6e8a85ac987b8d4c1d11d67bcea4c14c4b5f2a02434a6a68139d2a27ee2"
+    }
+  }
+}

@@ -73,7 +73,7 @@ test('email signup asks only for email and password and lands on artist-first Co
   await expectRenderedApp(page);
   expect(state.signups).toHaveLength(1);
   expect(state.signups[0]).toMatchObject({
-    email: 'llamaestepez@gmail.com', firstName: 'Llamaestepez', lastName: '', termsAccepted: true,
+    email: 'llamaestepez@gmail.com', firstName: 'Cuenta TDF', lastName: '', termsAccepted: true,
     termsVersion: 'tdf-account-terms-v1',
   });
   expect(state.signups[0]).not.toHaveProperty('phone');

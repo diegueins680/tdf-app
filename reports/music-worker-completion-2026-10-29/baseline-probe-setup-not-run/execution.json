@@ -1,0 +1,13 @@
+{
+  "startedAt": 1793287726.6689112,
+  "baseline": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "scope": "One unchanged actual sibling-worker scenario with existing fixed-stage timing and bounded read-only owned process/PG samples. Diagnosis only; no hosted qualification or product repair.",
+  "sourceSha256": {
+    "scripts/test-music-release-worker-runtime.mjs": "cf8ed92b7f4a702051cef5705308171f17fcbdf55a7bf18190cd5a019d28b5a5",
+    "scripts/run-music-release-worker-once.sh": "e11646f2ed2fb7a34246e6e2e0cb26eb574beff4e5da8c1ae48243bb68da1d29",
+    "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf"
+  },
+  "postgresStopExit": 0,
+  "finishedAt": 1793287728.6069062,
+  "sourceUnchanged": true
+}

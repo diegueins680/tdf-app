@@ -1,0 +1,45 @@
+{
+  "sourceCommit": "2e4288bba74ba7c6943c769f64e0447b6555f56b",
+  "baselineMain": "6197b87326a437350dca239ee64902e78da6964c",
+  "publishedArtistSource": "dd8f2c9c14cc0b3c77ef9c84ab1a112a8c6b2f4d",
+  "sourceDigest": "0cbdf8490c5a105931563e996f6233a47b77a16f83477f1605e382b35fc8c566",
+  "registeredGitBlobsChecked": 1417,
+  "rootBlobs": 1317,
+  "mobileBlobs": 100,
+  "mobileCommit": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "everyRegisteredHashVerifiedAgainstCommittedGitBlob": true,
+  "sevenArtistInputsByteExactDD8": true,
+  "all156IncomingRequirementsExact": true,
+  "artistRequirementExactDD8": true,
+  "totalRequirements": 157,
+  "changedPathsExactlyOwnedAndCanonicalGenerated": [
+    "docs/artist-enrichment-runbook.md",
+    "docs/catalog-persistence/reports/list-consumer-matrix.csv",
+    "docs/catalog-persistence/reports/static-list-inventory.json",
+    "formal/system/inventory.json",
+    "formal/system/requirements.json",
+    "formal/system/traceability.json",
+    "scripts/__tests__/artist-enrichment.test.mjs",
+    "scripts/artist-enrichment.mjs",
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts",
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.ts"
+  ],
+  "historicalReviewFilesByteExactMain": {
+    "formal/system/evidence/2026-10-05-crash-safety/reviews-43ff.json": "c032b263e608581b953a0e622b5a729a6b8ab6c413f5fa79408191fd6399bb3c",
+    "formal/system/evidence/2026-10-25-financial-main/expiry-main-reviews.json": "7729df814b6a3cf4f16bdf4b6665dd6dc05412facece118486efad681193faa4",
+    "formal/system/evidence/2026-10-26-ci-selected-jobs/catalog-review-main625.json": "025f3f6c22bf66acab7a33a10e50762d90496d4829d51a4209582c13cbd0bb10",
+    "formal/system/evidence/2026-10-26-provider-domain-main/native-98f3/review-observation.json": "2d15281af6a70950efdafaae678bd571d99df7a77f87206443a78854466831a4"
+  },
+  "markdownOutsideSourceFingerprintSeparatelyBoundGitSha256": {
+    "docs/artist-enrichment-runbook.md": "ca9048fc7127144f831667d69d4ba1184698f8205ba9bd0f8eed96179347ac40"
+  },
+  "scope": "Git/source correspondence only, not runtime correctness or complete compiler/package attestation.",
+  "wholeHistoricalCatalogDecisionFileByteExactMain": {
+    "path": "docs/catalog-persistence/catalog-list-decisions.json",
+    "sha256": "dfb05263f8744d61806b46ff4d2f7295c5ee65ef1e2df5fdd6fc4195792044fc",
+    "byteExact": true,
+    "decisions": 1352
+  }
+}

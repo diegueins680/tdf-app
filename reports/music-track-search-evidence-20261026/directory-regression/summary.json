@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "status": "PARTIAL_ENVIRONMENT_NOT_RELEASE_QUALIFICATION",
+  "sourceRevision": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "rootSession": 74683,
+  "actualExitCode": 1,
+  "executions": 11,
+  "passed": 10,
+  "failed": 1,
+  "skipped": 0,
+  "flaky": 0,
+  "retries": 0,
+  "reruns": 0,
+  "qaReceiptSha256": "ac2f0c5952786ad204d81812bfff8b173c5d6b5f894af507400882237fdb7e9e",
+  "discovery": {
+    "actualCases": 11,
+    "chromiumDesktop": 3,
+    "chromiumPhone": 3,
+    "firefoxCritical": 5,
+    "reason": "Installed Playwright config.js:152 uses takeFirst(projectConfig.grep, config.grep, defaultGrep); Firefox @critical replaces root selection filter. Initial9-case estimate corrected; no skip/filter/test modification during run."
+  },
+  "failure": "Spanish Chromium desktop screenshot98 ENOSPC followed by write/mkdir errors and30s timeout; failed case is not promoted to pass. Later geolocation/map/Axe checks were not executed.",
+  "accessibility": "Existing serious/critical Axe assertions pass in10 successful cases only; not full WCAG.",
+  "sourceBoundary": "Seven repository source/config hashes and private config are unchanged. Synthetic directory/session/favorite/music replies; empty music fixture; no actual backend/audio/production journey.",
+  "availableOriginalArtifacts": 12,
+  "archivedArtifactPolicy": "All available original artifact hashes retained. PNG/HTML bloat and videos omitted. No failed screenshot/trace claimed or invented.",
+  "archive": {
+    "path": "directory-regression-failure-evidence.tar.gz",
+    "members": 8,
+    "bytes": 7422,
+    "sha256": "213f061154bcf0517cf0818a8365394adcd38d61a8cdb7a7848baa6c4dd635ba"
+  },
+  "previousEvidenceLeavesPreserved": 41,
+  "previousNativeOrHttpResultsReclassified": false,
+  "release": "Directory regression incomplete; current exact-head hosted CI/review and environment correction remain gates."
+}

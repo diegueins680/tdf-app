@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "status": "LOCAL_CANONICAL_SDK_MOBILE_QUALIFICATION_PASS_LATEST_INTEGRATION_HOSTED_PENDING",
+  "rootCheckpoint": "f630d5cc7c9fd00ad78b2782e3376437016bb277",
+  "qualifiedRuntimeCheckpoint": "b8a13e66fb40613250c047df92b6775a04eebf67",
+  "latestProtectedMainPendingIntegration": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+  "canonicalContract": {
+    "canonicalRefIntegrated": true,
+    "priorResolvedOperationsPreserved": 531,
+    "currentResolvedOperations": 532,
+    "onlyAddedOperation": "GET /music/search",
+    "canonicalApiSha256": "0c34c59a78d764e911031128f01bd84fc6eafb18438132e49b59f3fb14b87ea3",
+    "priorGeneratedMemberLeavesPreserved": 1543,
+    "webMobileTypesByteIdentical": true,
+    "generatedTypesSha256": "36e46d7af5ad300b8cfa91786439facf1daeb92b903571ab5d88f4476101564e",
+    "webTypesDiff": "+105/-0",
+    "mobileTypesDiff": "+105/-0",
+    "apiYamlDiff": "+2/-0",
+    "generatorNode": "22.14.0",
+    "webAppTypecheckExitCode": 0,
+    "finalCanonicalReflectionAfterGeneration": "PENDING",
+    "boundary": "Canonical operation and generated declaration preservation does not prove every runtime payload/auth or remove all existing conformance debt."
+  },
+  "mobile": {
+    "commit": "8d69b011bd6c0dc7b0a9751c20ff9610dcc8b7bd",
+    "draftPr": "https://github.com/diegueins680/TDF-mobile/pull/175",
+    "qualityNode": "20.19.4",
+    "releaseCheckExitCode": 0,
+    "jestTests": 627,
+    "jestSuites": 97,
+    "jestExitCode": 0,
+    "packageAndLockUnchanged": true,
+    "dependencyPreparation": "Exact source-cache package/lock match; COW538MB dependency copy; no install, dotenv or network during checks",
+    "dependencyFloor": {
+      "rootChecked": 20,
+      "mobileChecked": 21,
+      "status": "PASS_KNOWN_FLOORS_ONLY_NOT_ADVISORY_SCAN"
+    },
+    "hostedValidate": "DISPATCH_ACTIVE_RUN_ID_NOT_OBSERVED",
+    "publicationHistory": "Initial push without existing auth helper exit128 is operator-stdout-only; authorized existing gh auth helper push then succeeded. Connected PR creation403, CLI authorized fallback created draft175. No raw logs fabricated."
+  },
+  "metroStartup": {
+    "status": "PASS_STARTUP_ONLY_WITH_LISTENER_ISOLATION_ADAPTER",
+    "scope": "Actual npm start/Expo/Metro with test-only loopback listen-argument guard; GET/status only. No bundle, app execution, device, API, EAS, signing, deployment or production claim.",
+    "receiptSha256": "b8f593c6f86053bf7fef2db4c2a115595d88590e8a15518c7a2b5f440f50136b",
+    "actualRootExitCode": 0,
+    "statusResponse": {
+      "url": "http://127.0.0.1:8091/status",
+      "method": "GET",
+      "status": 200,
+      "body": "packager-status:running",
+      "projectRoot": "/private/tmp/tdf-universal-music-search-20261026/tdf-mobile"
+    },
+    "cleanup": {
+      "ownedNpmProcessExited": true,
+      "ownedProcessGroupStopped": true,
+      "portClosed": true,
+      "trackedAndKnownUntrackedSourceUnchanged": true
+    },
+    "loopbackAndOwnedListenerConfirmed": true,
+    "nonLoopbackEgressDeniedPositiveControl": true,
+    "lanConnectionDenied": true,
+    "sourceHashesUnchanged": true,
+    "priorAttempt": {
+      "status": "FAILED",
+      "stage": "Duplicate same-path npm global/user config rejected before Expo initialization",
+      "actualExitCode": 1,
+      "receiptSha256": "412d9d4c276a67b24b3aec849cd3a6e6ef85c9647e1364fd5d6020ea975adda0"
+    },
+    "setupCorrection": "Two distinct owned empty npmrc paths; no app/source/assertion/timeout weakening; v1/v2 plans/review manifests/diff/raw logs retained",
+    "limitations": "Test-only net.Server.listen argument guard forces real8091 IPv4loopback. Actual npm/Expo/Metro+GET/status, not JS bundle/app/device/API/audio/EAS/signing/deployment. EXPO_OFFLINE intentionally skips its network dependency validation."
+  },
+  "archive": {
+    "path": "canonical-contract-mobile-evidence.tar.gz",
+    "members": 37,
+    "bytes": 467109,
+    "sha256": "3234c8df84d4bc812bab72809067aaa1bbc66f8a9bcc84cd0f8f0fd3bb536216"
+  },
+  "priorLeavesPreserved": 47,
+  "release": "Draft640/175 only. New63c parent integration, final generated-client drift/reflection, exact-head hosted CI/review/protected merge and production deployment remain pending. Earlierb8a/full223 runtime evidence is not relabelled f630 or63c."
+}

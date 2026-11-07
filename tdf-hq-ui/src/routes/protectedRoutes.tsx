@@ -18,6 +18,7 @@ const BrainAdminPage = lazy(() => import('../pages/BrainAdminPage'));
 const CatalogsPage = lazy(() => import('../pages/CatalogsPage'));
 const FeedbackCatalogPage = lazy(() => import('../pages/FeedbackCatalogPage'));
 const CalendarSyncPage = lazy(() => import('../pages/CalendarSyncPage'));
+const MusicCampaignsPage = lazy(() => import('../pages/MusicCampaignsPage'));
 const CampaignAutomationsPage = lazy(() => import('../pages/CampaignAutomationsPage'));
 const ChatKitPage = lazy(() => import('../pages/ChatKitPage'));
 const ChatPage = lazy(() => import('../pages/ChatPage'));
@@ -83,7 +84,6 @@ const SecurityPage = lazy(() => import('../pages/SecurityPage'));
 const ServiceTypesPage = lazy(() => import('../pages/ServiceTypesPage'));
 const SocialEventsPage = lazy(() => import('../pages/SocialEventsPage'));
 const CollaborativeEventCreatorPage = lazy(() => import('../pages/CollaborativeEventCreatorPage'));
-const SocialEventDetailPage = lazy(() => import('../pages/SocialEventWorkspacePage'));
 const EventLogisticsPage = lazy(() => import('../pages/EventLogisticsPage'));
 const RecentlyDiscoveredEventsPage = lazy(() => import('../pages/RecentlyDiscoveredEventsPage'));
 const SocialInboxPage = lazy(() => import('../pages/SocialInboxPage'));
@@ -134,11 +134,11 @@ export function renderProtectedRoutes() {
         <Route path="/merch/vendedor/tiendas/:storeId/reputacion" element={<MerchSellerReputationPage />} />
         <Route path="/admin/merch/reputacion" element={<MerchReputationModerationPage />} />
         <Route path="/social" element={<SocialPageView />} />
+        <Route path="/social/campanas" element={<MusicCampaignsPage />} />
         <Route path="/social/instagram" element={<InstagramConnectPage />} />
         <Route path="/social/inbox" element={<SocialInboxPage />} />
         <Route path="/social/eventos" element={<SocialEventsPage />} />
         <Route path="/social/eventos/nuevo" element={<CollaborativeEventCreatorPage />} />
-        <Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} />
         <Route path="/social/eventos/:eventId/logistica" element={<EventLogisticsPage />} />
         <Route path="/social/eventos-descubiertos" element={<RecentlyDiscoveredEventsPage />} />
         <Route path="/chat" element={<ChatPage />} />

@@ -1,0 +1,762 @@
+{
+  "source": "c6ecae133a93b6bab93c84cee4d72290f9e28982",
+  "sourceWorktreeDirty": true,
+  "runtimeSources": {
+    "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "0bcd509d2fc77d6c47e6cb8aa736c28a5be3936ba43fee5a0fd892670f911e09",
+    "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "92967b58e42e22f59f5d241a9090792f6e8d084b40c730d881462130f8b9e9d7",
+    "tdf-hq/src/TDF/Interactions/Notifications.hs": "52d3ec0c8f5f3cbafe283966253cca558ff8c892fa1431ddb9901f24ddd22118",
+    "tdf-hq/sql/2026-10-25_event_memory_invitations.sql": "ccf205e8fb797512223620e48d8b4bddf4663f20c63f73f6904eb85ac14c6b83",
+    "scripts/test-event-memories-http.py": "f980e93138a92a2b082aa41c4646debd13cfc3d769ec07fd86bc5239ec5bd175",
+    "tdf-hq/src/TDF/Interactions/API.hs": "1c87397e99ddc44da1178cdb7e696a32966dc02760e58ea32863c162df88d58b",
+    "tdf-hq/src/TDF/Interactions/Server.hs": "2e428ac17988d22dd05e6f510db5aee07e1724f9c2af1b92e36cb86b5522e7b5",
+    "tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql": "d140ebcd0e1458b07bb036b63ab5d1b68efcb148e44e0f795ed665694b0a4cc4",
+    "tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql": "6d704d98dae147297b5bb6c0b45277acc295d568cfeb812093e1d2e516dcc518",
+    "scripts/test-event-memory-source-browser.mjs": "983062c3d286d0f76c428b95e9684c79071ba9ba3aba7f44a7b0d00ad59e9817",
+    "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx": "0395b9365543faf228903f5f50e19f4f5470721199032a4ec5ca2f138fad90de",
+    "tdf-hq-ui/src/api/eventMemoryModeration.ts": "0b771dcdeb9318776a5955c1ae543d97ae2b9f06af31dc13e2f397f010bb4ed5",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "89031662f7657f36b5379a462172f1c3b1018865325baf3ed8cee37c813ccba7",
+    "tdf-hq-ui/src/api/socialEvents.ts": "a071a745cbaa496c2a9172fedc9556f5f1bda5f5a14ec3c400f622e9ece84414",
+    "tdf-hq-ui/src/api/client.ts": "6b0d3de4ec299b7f44e4c2ef295efe97b0977f81288379c9aa4af4c0fac5cd92",
+    "tdf-hq-ui/src/api/eventMemoryInvitations.ts": "2ed34e56f52432bff7d53ee495a79c902a9d2fb4c6d79ea630bc92cd61e7e6f9",
+    "tdf-hq-ui/src/session/useSessionOwner.ts": "5259fc1b40271bb60e2c5e680e8c60bdb51d1d10f198005ffae01d8dab3af67d",
+    "tdf-hq-ui/src/session/useOwnedSessionDraft.ts": "12932fe83acc0e61f601f14444a8744909d75e9e9ae2c115f86b832e1c2bb41f",
+    "tdf-hq-ui/src/session/authEvents.ts": "7eb5599167ba8a097912f600c0b88a472c9d56e98b0115bba05aa3734249e977",
+    "tdf-hq-ui/src/session/SessionContext.tsx": "8cb425bcd28933e0482bee404607a6ed275d75b3810a42b207e8edd930037037",
+    "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx": "00701c2a3d06eaa8ffa8d7a30708f7897e2e39d053ae332e423c1edc3c91bc14",
+    "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": "945dc8892a1e1cb88fbf8cd725535d402a2032dfa9a31b13c5b8c76ec2a0f004"
+  },
+  "binarySha256": "830082822b64ef620152d1e5632cd9a2fd0c4a06f92cb7197bb682fefcbf3d1c",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/version",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/session",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/signup",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/signup",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143002/moments?extended",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143002/moments",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143003/moments",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/assets/serve/social-events/events/919143001/moments/66e25d46-7bda-4bc6-a108-ea71f011cb53-memory.png",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 400
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143002/moments/media",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143099/moments/media",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143003/moments/media",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/media",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 404
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 404
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 409
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143002/moments/4",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/4/reactions",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/4/reactions",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/4/comments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/me/memory-invitations",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/me/memory-invitations",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/memory-invitations",
+      "status": 404
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/memory-invitations",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/memory-invitations/74e45493-82e3-46ba-857d-7f6dea0a38a6/open",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/memory-invitations",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143001/moments/4",
+      "status": 204
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/assets/serve/social-events/events/919143001/moments/66e25d46-7bda-4bc6-a108-ea71f011cb53-memory.png",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=0919143001",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143002",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 401
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 409
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 409
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/public/interactions/targets/event_moment/1",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments/1/comments",
+      "status": 404
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/1",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/assets/serve/social-events/events/919143001/moments/66e25d46-7bda-4bc6-a108-ea71f011cb53-memory.png",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 409
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments?extended",
+      "status": 200
+    },
+    {
+      "method": "PUT",
+      "path": "/social-events/events/919143001/moments/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 409
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/signup",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143002/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/6",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143002",
+      "status": 404
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/914db5e4-56f0-4be7-a775-c3139345e534/commands",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/targets/event_moment/1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/interactions/reports?sourceEvent=919143001",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/f2feebb4-dd79-4f7e-bcc8-1ef323121412/commands",
+      "status": 403
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/919143001/moments/1",
+      "status": 204
+    }
+  ],
+  "assertions": [
+    "Actual anonymous session follows the nullable HTTP 200 response contract",
+    "Public media bytes persist and are recoverable through the actual asset route",
+    "Private and deleted parents cannot create public assets; forged signatures are rejected",
+    "A real QuickTime MOV container uploads without depending on generic Drive storage",
+    "All four moment types persist; legacy feed remains compatible and authenticated reads are no-store",
+    "Author edit/delete and cross-event IDOR guards apply; stale edits conflict",
+    "Existing canonical reactions and comments work for an extended text memory",
+    "Actual organizer API exposes aggregates; one synthetic inbox delivery and publication suppress reminder",
+    "Source deletion persists; surviving moments and media remain after a real API restart",
+    "Authenticated source reports deduplicate; default comment inbox and reporter privacy remain intact",
+    "Source hiding gates actual legacy/extended reads, comments, author edits and notification authority; pause cannot bypass it",
+    "Content-version reports reopen only after real changes and can be closed without hiding; resolution replays are idempotent",
+    "Competing real HTTP moderation requests serialize to one effect and one revision conflict",
+    "Actual HTTP denies ownerless review/enforcement and former-organizer replay without effects",
+    "Actual private-parent denial, live moderator-role revocation and author deletion preserve scoped enforcement",
+    "Source rollback refuses after actual committed evidence and retains all installed privacy authorities",
+    "Actual desktop/phone product UI signs in, publishes, reports, hides and restores against this PostgreSQL/API instance"
+  ],
+  "externalProviderCalls": 0,
+  "actualVersion": {
+    "buildTime": "2026-10-25T21:35:58Z",
+    "commit": "98ddfb6a27a75c2f6df365cf7a30aa0e338e3d9e",
+    "name": "tdf-hq",
+    "version": "0.1.0.0"
+  },
+  "browser": {
+    "status": "PASS",
+    "api": "http://127.0.0.1:18886",
+    "sourceRevision": "recorded by the owning HTTP runner",
+    "sourceApiResponses": [
+      {
+        "method": "POST",
+        "path": "/login",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/login",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/interactions/targets/6bb7660c-61e5-4706-92f4-8b88b9fb0237/commands",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/interactions/targets/6bb7660c-61e5-4706-92f4-8b88b9fb0237/commands",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/interactions/targets/6bb7660c-61e5-4706-92f4-8b88b9fb0237/commands",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "POST",
+        "path": "/interactions/targets/6bb7660c-61e5-4706-92f4-8b88b9fb0237/commands",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      },
+      {
+        "method": "GET",
+        "path": "/social-events/events/919143001/moments",
+        "status": 200
+      }
+    ],
+    "blockedExternalRequests": 26,
+    "assertions": [
+      "Two real isolated sessions sign in and retain event/composer context",
+      "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+      "Organizer closes the actual source report without removing the publication",
+      "Keyboard hide denies both sessions after reload; scoped restoration restores the persisted source"
+    ],
+    "frontendStopped": true
+  },
+  "status": "PASS",
+  "runtimesStopped": true,
+  "ownedDatabaseRemoved": true,
+  "finishedAt": "2026-10-26T00:12:59Z"
+}

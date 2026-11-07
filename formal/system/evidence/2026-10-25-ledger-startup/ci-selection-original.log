@@ -1,0 +1,47 @@
+✔ UI-only changes do not compile backend or mobile (5.244707ms)
+✔ ordinary backend changes avoid UI, mobile, contracts and migrations (0.474441ms)
+✔ notification navigation drift is checked when only tdf-hq-ui/src/components/notificationTarget.ts changes (0.300198ms)
+✔ notification navigation drift is checked when only scripts/generate-notification-navigation.mjs changes (0.2873ms)
+✔ public booking HTTP concurrency harness selects backend validation (0.378664ms)
+✔ OpenAPI changes validate both generated clients (0.282418ms)
+✔ Mobile pins and contract definition changes select generated API validation (0.5419ms)
+✔ every event operations HTTP runner selects backend validation (0.464791ms)
+✔ schema model changes run backend and migration checks (0.354315ms)
+✔ merch checkout expiry runner and SQL assertions select migration validation (0.473385ms)
+✔ production migration runner changes run backend and migration checks (0.305297ms)
+✖ ledger runtime and verification changes select the real PostgreSQL backend lane (1.5634ms)
+✔ root dependency changes cover every JavaScript consumer (0.264221ms)
+✔ pipeline changes fail safe across every scope (0.241812ms)
+✔ backend artifact builds can force backend validation (0.218206ms)
+✔ declared lifecycle models and their bindings select migrated-schema checks (0.307882ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 15
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 165.824363
+
+✖ failing tests:
+
+test at ../tdf-ledger-startup-scope-control-20261025/scripts/__tests__/ci-change-scope.test.mjs:118:1
+✖ ledger runtime and verification changes select the real PostgreSQL backend lane (1.5634ms)
+  AssertionError [ERR_ASSERTION]: scripts/lib/production-release.mjs
+
+  false !== true
+
+      at TestContext.<anonymous> (file:///private<frozen-classifier-control>/scripts/__tests__/ci-change-scope.test.mjs:130:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1103:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:785:18)
+      at Test.postRun (node:internal/test_runner/test:1232:19)
+      at Test.run (node:internal/test_runner/test:1160:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:785:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

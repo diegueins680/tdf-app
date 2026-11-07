@@ -1,0 +1,21 @@
+{
+  "base": "069fac6cb99de88e11f78c867a1395c5bb56fe23",
+  "head": "87c3ed19473b0f19d03a39f4c592d47e2dd3dcb2",
+  "mobileBase": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mobileHead": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "mappedChangedSurfaces": [
+    "scripts/test-event-memories-http.py",
+    "scripts/test-event-memory-source-browser.mjs",
+    "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+    "tdf-hq-ui/src/components/PublicBranding.tsx",
+    "tdf-hq-ui/src/features/interactions/InteractionPanel.test.tsx",
+    "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+    "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx",
+    "tdf-hq-ui/src/routes/EventCommunityEntry.tsx",
+    "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+    "tdf-hq-ui/src/routes/publicRoutes.tsx"
+  ],
+  "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+}

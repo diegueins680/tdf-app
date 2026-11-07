@@ -9,6 +9,7 @@ jest.unstable_mockModule('../utils/lazyWithReload', () => ({ reloadOnceForChunkE
 
 const { BootErrorBoundary, installGlobalErrorHandlers } = await import('../bootSafety');
 const { default: AppErrorBoundary } = await import('../routes/AppErrorBoundary');
+const { default: RouteErrorBoundary } = await import('../components/RouteErrorBoundary');
 
 function Thrower({ fail }: { fail: boolean }) {
   if (fail) throw new Error('provider exploded');
@@ -54,6 +55,27 @@ describe('boot safety', () => {
     expect(container.textContent).toContain('Comunidad lista');
     await act(async () => root.unmount());
     container.remove();
+  });
+
+  it('retains section recovery controls and recovers successfully on retry', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    try {
+      await act(async () => root.render(<RouteErrorBoundary><Thrower fail /></RouteErrorBoundary>));
+      expect(container.querySelector('[role="alert"]')).not.toBeNull();
+      expect(container.textContent).not.toContain('provider exploded');
+      const buttons = Array.from(container.querySelectorAll('button'));
+      expect(buttons.map((button) => button.textContent)).toEqual(['Reintentar', 'Ir al inicio']);
+      expect(reportMock).toHaveBeenCalledWith('app_render', expect.any(Error), { boundary: 'route' });
+      await act(async () => root.render(<RouteErrorBoundary><Thrower fail={false} /></RouteErrorBoundary>));
+      await act(async () => buttons[0]!.click());
+      expect(container.textContent).toContain('Comunidad lista');
+      expect(container.querySelector('[role="alert"]')).toBeNull();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+    }
   });
 
   it('reports unhandled rejections, blank-screen detections and recovers stale chunk preloads', () => {

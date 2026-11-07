@@ -1,0 +1,10 @@
+{
+  "UICompilationCommit": "a5535c59e49064fec535daa3682a4a1dc31c68f4",
+  "UIFileSha256": "3da31ca4796501893fcb9cd6cb4381c11ee4aa3873c4455dda978600a2c794b3",
+  "workingFinalTestSha256": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
+  "executedTestSha256": "cb0e8c06e80d1c65cefaad186397fb7db0e3a0d55f8c6cd953e1960c1ed3c668",
+  "testTransform": "Only package import locations; complete test body matches working observation.",
+  "change": "Explicit native-event overlay phase correction; immutable first root/scale retained, event acknowledgment before one strict helper measurement.",
+  "allUISourceAndDependenciesEqualCompiledC2": true,
+  "scope": "New phase-corrected test body against exact unchanged immutable C2 UI artifacts; no new product repair or hosted WebKit guarantee."
+}

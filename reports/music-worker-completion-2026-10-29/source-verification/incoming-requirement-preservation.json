@@ -1,0 +1,11 @@
+{
+  "all156IncomingMainObjectsPreserved": true,
+  "ownNewRequirementExact": true,
+  "incomingChangeFromOldComponent": {
+    "BOOK-SERVICE-PICKER-001": [
+      "source",
+      "verification"
+    ]
+  },
+  "scope": "Preserve protectedmain booking references rather than overwrite them with older component baseline."
+}

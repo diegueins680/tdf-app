@@ -210,10 +210,14 @@ test.describe('Course enrollment on a small Android phone', () => {
   });
 
   test('Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow', async ({ page, baseURL }) => {
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
     await fixture(page, baseURL);
     await page.goto(`/curso/${SLUG}`, { waitUntil: 'domcontentloaded' });
     await expectRenderedRoot(page);
+    // The shell can render before the lazy course route. Scroll only after
+    // the course controls exist, otherwise scrolling the shell is a no-op.
     await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Inscribirme', exact: true }).first()).toBeVisible();
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     await expect(stickyBar).toBeHidden();
 
@@ -228,6 +232,9 @@ test.describe('Course enrollment on a small Android phone', () => {
     await stickyBar.getByRole('button', { name: 'Inscribirme' }).click();
     const dialog = page.getByRole('dialog', { name: 'Inscríbete en Curso de Batería con Guillermo Díaz' });
     await expectInViewport(page, dialog.getByLabel('Nombre completo'));
+    // A visible input can arrive before the sliding sheet. Wait for the
+    // whole form to enter the viewport before targeting its moving close button.
+    await expect(dialog).toBeInViewport({ ratio: 1 });
     await dialog.getByRole('button', { name: 'Cerrar' }).click();
     await expect(dialog).toBeHidden();
   });
@@ -238,9 +245,9 @@ test.describe('Course enrollment on a small Android phone', () => {
     await expectRenderedRoot(page);
     const radioBar = page.getByTestId('radio-docked-bar');
     await expect(radioBar).toBeVisible({ timeout: 15_000 });
-    // The signed-in shell and radio can mount before this lazy course route.
-    // Scroll the loaded course, not the shorter shell that precedes it.
+    // Radio belongs to the shell and does not establish course readiness.
     await expect(page.getByRole('heading', { name: courseMetadata.title, exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Inscribirme', exact: true }).first()).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     const stickyBar = page.getByRole('region', { name: 'Inscripción rápida' });
     if ((page.viewportSize()?.width ?? 0) >= 900) {

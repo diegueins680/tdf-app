@@ -1,0 +1,147 @@
+{
+  "status": "PASS",
+  "api": "http://127.0.0.1:18886",
+  "sourceRevision": "recorded by the owning HTTP runner",
+  "sourceApiResponses": [
+    {
+      "method": "POST",
+      "path": "/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/c708fe66-0caa-4c1b-9d2f-e5b97c19d21c/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/c708fe66-0caa-4c1b-9d2f-e5b97c19d21c/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/c708fe66-0caa-4c1b-9d2f-e5b97c19d21c/commands",
+      "status": 409
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/c708fe66-0caa-4c1b-9d2f-e5b97c19d21c/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/interactions/targets/c708fe66-0caa-4c1b-9d2f-e5b97c19d21c/commands",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/social-events/events/919143001/moments",
+      "status": 200
+    }
+  ],
+  "blockedExternalRequests": 50,
+  "assertions": [
+    "Unavailable public metadata retains private-event authentication and the exact original target",
+    "Anonymous desktop/phone render completed-event metadata without private moment reads; explicit publication retains attribution through login",
+    "One injected metadata network failure remains on the public event; explicit retry receives real metadata",
+    "Two real isolated sessions sign in and retain event/composer context",
+    "Desktop text publication persists and a phone reader reports it without automatically hiding it",
+    "Organizer closes the actual source report without removing the publication",
+    "One injected mismatched version receives a real 409; explicit cancel/reload/review creates a fresh decision",
+    "Keyboard hide denies both sessions after reload; scoped restoration restores the persisted source",
+    "New phone-browser account registers through visible account terms and returns to the exact invitation/composer target without fixture role grants",
+    "First uploaded photograph is acknowledged by the actual API, returns identical durable bytes and remains visible to its new author and another account after reload",
+    "Registration and first publication leave invitation preference disabled and do not grant private-event or organizer campaign access"
+  ],
+  "browserRuntime": {
+    "channel": "playwright-chromium",
+    "version": "147.0.7727.15"
+  },
+  "publicEntry": {
+    "publicSnapshotStatus": 200,
+    "completed": true,
+    "injectedNetworkFailures": 1,
+    "protectedGuestMomentReads": 0
+  },
+  "newAccount": {
+    "partyId": 7,
+    "momentId": "8",
+    "assetPath": "/assets/serve/social-events/events/919143001/moments/2d26953d-65f2-4d8b-90d0-691afa8724cc-newcomer-memory.png",
+    "assetSha256": "2c7e2665529fcb52c595dad1b8cc6230d02226df97810386658d4a0e41acf968",
+    "signupStatus": 200,
+    "uploadStatus": 200,
+    "publicationStatus": 200,
+    "marketingRequested": false,
+    "invitationPreferenceBefore": false,
+    "invitationPreferenceAfter": false,
+    "privateReadStatus": 404,
+    "organizerCampaignStatus": 404,
+    "fixtureRoleGrants": 0
+  },
+  "frontendStopped": true
+}

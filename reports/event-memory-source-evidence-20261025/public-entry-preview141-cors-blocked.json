@@ -1,0 +1,96 @@
+{
+  "observedAt": "2026-10-26T18:52:03.300Z",
+  "scope": "Immutable PR632 web preview, actual anonymous public event141, GET/HEAD only. No protected moment content or account submissions. Not canonical production deployment or native acceptance.",
+  "preview": "https://8bbdefdd.tdf-app.pages.dev",
+  "source": "8a3d0b4b02a5d4c24d3d15b97a92e75d9506f8bd",
+  "status": "FAIL",
+  "assertions": [],
+  "pageErrors": [],
+  "publicResponses": [],
+  "sentBusinessMutations": 0,
+  "blockedMutations": 0,
+  "blockedExternal": 1,
+  "protectedMomentReads": 0,
+  "blockedOrigins": [
+    "https://api.frankfurter.dev/v1/latest"
+  ],
+  "requestFailures": [
+    {
+      "url": "https://api.frankfurter.dev/v1/latest",
+      "error": "net::ERR_BLOCKED_BY_CLIENT.Inspector"
+    },
+    {
+      "url": "https://api.tdfrecords.net/catalogs/batch",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/session",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/catalogs/batch",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/directory/events/141",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/catalogs/batch",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/catalogs/batch",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/catalogs/batch",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/catalogs/batch",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/catalogs/batch",
+      "error": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://api.tdfrecords.net/catalogs/batch",
+      "error": "net::ERR_FAILED"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "Access to fetch at 'https://api.tdfrecords.net/catalogs/batch?code=appearance-modes&locale=es&page=1&pageSize=50' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Access to fetch at 'https://api.tdfrecords.net/session' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "[tdf] session_bootstrap {name: TypeError, message: Failed to fetch}",
+    "Access to fetch at 'https://api.tdfrecords.net/catalogs/batch?code=locales&code=currencies&locale=es&page=1&pageSize=500' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Access to fetch at 'https://api.tdfrecords.net/directory/events/141' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Access to fetch at 'https://api.tdfrecords.net/catalogs/batch?code=appearance-modes&locale=es&page=1&pageSize=50' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Access to fetch at 'https://api.tdfrecords.net/catalogs/batch?code=locales&code=currencies&locale=es&page=1&pageSize=500' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Access to fetch at 'https://api.tdfrecords.net/catalogs/batch?code=appearance-modes&locale=es&page=1&pageSize=50' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Access to fetch at 'https://api.tdfrecords.net/catalogs/batch?code=locales&code=currencies&locale=es&page=1&pageSize=500' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Access to fetch at 'https://api.tdfrecords.net/catalogs/batch?code=appearance-modes&locale=es&page=1&pageSize=50' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED",
+    "Access to fetch at 'https://api.tdfrecords.net/catalogs/batch?code=locales&code=currencies&locale=es&page=1&pageSize=500' from origin 'https://8bbdefdd.tdf-app.pages.dev' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.",
+    "Failed to load resource: net::ERR_FAILED"
+  ],
+  "entry": {
+    "path": "/assets/index-DFAP047A.js",
+    "sha256": "0cef5a482d49701f06bac45ad843cac909328ce2d23ec2efde78ed2093e934aa",
+    "sourceEmbedded": true
+  },
+  "error": "TimeoutError: page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\"",
+  "finalUrl": "https://8bbdefdd.tdf-app.pages.dev/social/eventos/141?utm_source=event-memory-preview#momentos",
+  "browserClosed": true,
+  "resultClassification": "Preview integration blocked by existing API origin policy; not a successful journey or canonical production acceptance"
+}

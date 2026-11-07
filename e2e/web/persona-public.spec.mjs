@@ -295,7 +295,7 @@ test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }
 
   await expect(page).toHaveURL(/\/fans$/);
   expect(signupPayload).toMatchObject({
-    firstName: 'Per 01 elena', lastName: '', email: 'per-01.elena@persona.test',
+    firstName: 'Cuenta TDF', lastName: '', email: 'per-01.elena@persona.test',
     termsAccepted: true, termsVersion: 'tdf-account-terms-v1',
     password: 'fictional-password-not-a-secret',
     marketingOptIn: false,
@@ -333,13 +333,13 @@ test('PW-PER-01-DISCOVERY completes public city discovery and preserves search s
   // City scope is deliberate; global discovery no longer silently selects Quito.
   await page.getByRole('combobox', { name: 'Ciudad', exact: true }).click();
   await page.getByRole('option', { name: 'Quito', exact: true }).click();
-  await page.getByLabel('¿Qué necesitas?').fill('bajista');
+  await page.getByLabel('Buscar artistas, profesionales o eventos').fill('bajista');
   await page.getByRole('button', { name: 'Buscar' }).click();
   await expect(page).toHaveURL(new RegExp(`q=bajista.*cityId=${fictionalCityId}`));
   await page.getByRole('link', { name: 'Ver detalle' }).click();
   await expect(page).toHaveURL(/\/directorio\/synthetic-bassist/);
   await page.goBack();
-  await expect(page.getByLabel('¿Qué necesitas?')).toHaveValue('bajista');
+  await expect(page.getByLabel('Buscar artistas, profesionales o eventos')).toHaveValue('bajista');
   await expectNoSeriousAxeViolations(page, testInfo);
   expect(runtime.failedRequests).toEqual([]);
   expect(runtime.consoleErrors).toEqual([]);

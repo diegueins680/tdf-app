@@ -2,6 +2,7 @@
 import copy
 import importlib.util
 import json
+import os
 from pathlib import Path
 import subprocess
 import socketserver
@@ -92,6 +93,16 @@ class CanaryTests(unittest.TestCase):
         for bad in ['--env-file','--publish','--privileged',SOURCE]:self.assertNotIn(bad,command)
         for key in ['GIT_SHA','SOURCE_COMMIT','PAYPAL_CLIENT_SECRET','SMTP_PASSWORD','DATABASE_URL']:
             self.assertNotIn(key,canary.ENVIRONMENT)
+
+    def test_canary_preserves_tdf_spanish_default_without_host_inheritance(self):
+        # The restored TDF deployment has default locale es. App boot rejects a
+        # differing default rather than rewriting persisted regional authority.
+        with patch.dict(os.environ, {'DEFAULT_LOCALE': 'en'}):
+            self.assertIn('DEFAULT_LOCALE=es', make().command())
+        data=container()
+        data['Config']['Cmd']=[item.replace('DEFAULT_LOCALE=es','DEFAULT_LOCALE=en')
+                               for item in canary.COMMAND]
+        with self.assertRaises(ValueError):make().admit(data)
 
     def test_database_network_must_still_be_disconnected(self):
         subject=make();data={'NetworkSettings':{'Networks':{'none':{}}},'State':{'Running':True,'Pid':123}}

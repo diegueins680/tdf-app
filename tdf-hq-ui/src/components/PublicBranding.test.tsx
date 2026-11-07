@@ -35,6 +35,12 @@ jest.unstable_mockModule('./events/UpcomingEventsCarousel', () => ({
   default: () => null,
 }));
 
+jest.unstable_mockModule('./SidebarNav', () => ({
+  default: ({ onNavigate }: { onNavigate?: () => void }) => (
+    <nav aria-label="Navegación de la aplicación"><a href="/admin/directorio" onClick={(event) => { event.preventDefault(); onNavigate?.(); }}>Revisar directorio</a></nav>
+  ),
+}));
+
 const { default: PublicBranding } = await import('./PublicBranding');
 
 const flushPromises = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -260,3 +266,50 @@ it('sends the TDF Mobile navigation entry to the landing with its surface', asyn
     container.remove();
   }
 });
+
+
+it('opens the shared feature menu from a signed-in public page and closes it after navigation', async () => {
+  await i18n.changeLanguage('es');
+  activeSession = { username: 'menu-admin', displayName: 'Admin', roles: ['Admin'], partyId: 42 };
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/fans');
+  try {
+    const button = container.querySelector<HTMLButtonElement>('button[aria-label="Menú de funciones"]');
+    expect(button).not.toBeNull();
+    await act(async () => { button!.click(); await flushPromises(); });
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="Menú de funciones"] nav')).not.toBeNull());
+    await act(async () => { document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href="/admin/directorio"]')!.click(); await flushPromises(); });
+    await waitFor(() => expect(document.querySelector('[role="dialog"][aria-label="Menú de funciones"]')).toBeNull());
+    expect(button!.getAttribute('aria-expanded')).toBe('false');
+  } finally { await view.cleanup(); container.remove(); activeSession = null; }
+});
+
+it('keeps the authenticated feature menu out of the guest header', async () => {
+  activeSession = null;
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const view = await renderBranding(container, '/fans');
+  try { expect(container.querySelector('button[aria-haspopup="dialog"]')).toBeNull(); }
+  finally { await view.cleanup(); container.remove(); }
+});
+
+
+it.each([
+  ['/social/eventos/141?utm_source=invitation#momentos', '/social/eventos/141?utm_source=invitation#momentos'],
+  // The legacy public alias deliberately strips query/hash in the shared redirect sanitizer.
+  ['/eventos/141?utm_campaign=community#momentos', '/eventos/141'],
+])(
+  'retains the approved event return target in the public signup invitation: %s', async (route, expectedTarget) => {
+    activeSession = null;
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const view = await renderBranding(container, route);
+    try {
+      const links = [...container.querySelectorAll<HTMLAnchorElement>('a[href*="signup=1"]')];
+      expect(links.length).toBeGreaterThan(0);
+      for (const link of links) {
+        const destination = new URL(link.getAttribute('href') ?? '', 'https://tdf.test');
+        expect(destination.searchParams.get('signup')).toBe('1');
+        expect(destination.searchParams.get('redirect')).toBe(expectedTarget);
+      }
+    } finally { await view.cleanup(); }
+  },
+);

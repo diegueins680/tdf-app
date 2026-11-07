@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "musicParent": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+  "mainAndBrowserParent": "ffc5b147c805ade1f5419b731f236b242844a371",
+  "protectedMain": "c02e758beb999d3e0fee0baee2b0e49b33e5a05a",
+  "mergeBase": "b0fc2aba2d97a20313f83181fda93846fa59c615",
+  "scope": "Local source integration. Preserve compatible three-way requirement, authority and research fields, intentional catalog deletions, all historical SQL and the exact 211-entry protected prefix followed by two music migrations. No production application or release qualification.",
+  "manifestEntries": 213,
+  "canonicalObjectCountsBeforeFreshCatalog": {
+    "formal/system/requirements.json": 135,
+    "formal/system/authority-decisions.json": 84,
+    "formal/system/research.json": 76,
+    "docs/catalog-persistence/catalog-list-decisions.json": 1327
+  },
+  "divergentHistoricalManifestReviews": [
+    {
+      "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+      "sourceFileSha256": "50369165341a735c5b6800cb19fae9f5698f8dae9e1592883b4491ab080e081f",
+      "sourceEntry": {
+        "index": 8
+      },
+      "sourceEntryCanonicalSha256": "6c94c901f843bb75f67806b3ede3745fb956f116b5a30d73dc346b433ab783cb",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+      "sourceFile": "docs/catalog-persistence/event-catalog-current-successors.json",
+      "sourceFileSha256": "b3b35f6c56e2b6054b8f32effb665a887d0d907a7c2bb9ecb4af1d2b538e7207",
+      "sourceEntry": {
+        "index": 8
+      },
+      "sourceEntryCanonicalSha256": "e7bdeef253f74c742e85e9426d5d9b90901a2d9d99e9e5eb02030e051c05fcf0",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+      "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+      "sourceFileSha256": "762752f98f5506a7260f2ab917a9ea9adedae7a03bbdaae3ed000e4495f9bbb0",
+      "sourceEntry": {
+        "index": 10
+      },
+      "sourceEntryCanonicalSha256": "c2faa82202c221af84dcea4d0d6c9e55e5d4054a2c528ab6fffc5529c368a3d5",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+      "sourceFile": "docs/catalog-persistence/event-integration-retirements.json",
+      "sourceFileSha256": "28d940cae7e14d91afb8da50751b40ad577a52740fb97e0ded3f13da48ec8f59",
+      "sourceEntry": {
+        "index": 10
+      },
+      "sourceEntryCanonicalSha256": "936fc7eab64e14f0c6e54724e055f02e8d7b1ef1ec06436b735b473b48317fbf",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ],
+  "resolution": "Current successor and retirement point to the freshly reviewed 213-entry fingerprint. Complete parent reviews remain in immutable Git blobs and canonical-entry hashes above; no recursive historical copying.",
+  "currentManifestDecisionId": "3f336173e03f10fc023c",
+  "retiredManifestDecisions": [
+    {
+      "id": "e60cbdb9121493f47fa6",
+      "replacementId": "3f336173e03f10fc023c",
+      "sources": [
+        {
+          "sourceRevision": "ffc5b147c805ade1f5419b731f236b242844a371",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "c30db6337a46b1288d09e32f150ec5d0e86e831431389bc42c053dad9fcde870",
+          "sourceEntry": {
+            "id": "e60cbdb9121493f47fa6"
+          },
+          "sourceEntryCanonicalSha256": "24ba7ed913a4b392df53e5ea645f0f83dd233ceefc34e67565c785156d6d98f3",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "reason": "Combined source uses the unchanged protected 211-entry prefix followed by the two original music payment and exact-money migrations. Prior manifest fingerprints remain immutable history, not active approval of changed values."
+    },
+    {
+      "id": "a8128668e1b74b7c0ae4",
+      "replacementId": "3f336173e03f10fc023c",
+      "sources": [
+        {
+          "sourceRevision": "0546eb29bced55cece15be79c21ef0550d6e5a2a",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "df3301a5e4e14ee920619c251b37263a396222b586b415ff66344c0cf35208fc",
+          "sourceEntry": {
+            "id": "a8128668e1b74b7c0ae4"
+          },
+          "sourceEntryCanonicalSha256": "dab47e9fa64734c8d0cf095e073839470e08661348dc8695839803a7d4e822c4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "reason": "Combined source uses the unchanged protected 211-entry prefix followed by the two original music payment and exact-money migrations. Prior manifest fingerprints remain immutable history, not active approval of changed values."
+    }
+  ],
+  "protectedMainManifestCanonicalSha256": "6bdf37145262822ce9307b2b4860e1756cfe4a65c4d02291ea8838dc6ef41308",
+  "combinedManifestCanonicalSha256": "7b3616b6095436eb7eb46038d6ccaa289ff4cb22e602960c06d971bf915add86",
+  "musicMigrations": [
+    {
+      "id": "2026-10-15_music_payment_outcome_consistency",
+      "path": "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+      "introducedBy": "8ad5722fa885c1970b20c57449eed4fc54d088eb",
+      "sqlSha256": "0eaf8fd7a04836f35eae5693a709933109c4aa91b63d0eb2b5a148c2c257db94"
+    },
+    {
+      "id": "2026-10-15_music_exact_minor_units",
+      "path": "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+      "introducedBy": "4fc88645f511d4c70aca2b969ec412081664978d",
+      "sqlSha256": "d80703d04d4508c3a3e0b47ffe6eb2583bc1a29e84a6b05f3f09f1afe17e2782"
+    }
+  ],
+  "protectedFormalRefresh": {
+    "previousCandidate": "28e77bb867494e05d3c0423af274b886889b271f",
+    "actualProtectedMain": "030365aabfb46c14e2962e054cf3b22192cda1a8",
+    "mergeBase": "c02e758beb999d3e0fee0baee2b0e49b33e5a05a",
+    "canonicalObjectCounts": {
+      "formal/system/requirements.json": 135,
+      "formal/system/authority-decisions.json": 87,
+      "formal/system/research.json": 77,
+      "docs/catalog-persistence/catalog-list-decisions.json": 1326
+    },
+    "resolution": "Exact compatible three-way record preservation. Both additive music and assurance CI steps retained. Application, clients, Mobile pin, browser journeys and213 manifest unchanged; derived evidence regenerated for the combined source."
+  }
+}

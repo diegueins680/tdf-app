@@ -1,0 +1,341 @@
+{
+  "schemaVersion": 1,
+  "cycle": "2026-11-01 continuation / native resolver lock repair",
+  "asOf": "2026-11-02T00:30:25.795230+00:00",
+  "status": "TESTED_LOCAL_SOURCE; NEW_HEAD_CI_AND_REVIEW_PENDING; NO_MERGE",
+  "repository": "diegueins680/tdf-app",
+  "baseline": {
+    "parentPR": 685,
+    "parentSource": "aa5b9322ac9519f5ba34a897bf843f7bf8493f56",
+    "protectedMainAtPreflight": "c377ce75f290396ae6d222e8a7bc55f7bcf1ef7d"
+  },
+  "source": {
+    "qualifiedImplementationCommit": "805e48d5657e66c8a1944ee0ab86cd2261b532a4",
+    "sourceBinding": {
+      "source": "805e48d5657e66c8a1944ee0ab86cd2261b532a4",
+      "sourceFiles": 1458,
+      "mobileFiles": 100,
+      "allGitAndFilesystemSourceHashesVerified": true,
+      "evidenceArtifacts": 52,
+      "allEvidenceHashesVerified": true,
+      "cleanSource": true,
+      "sourceDigest": "97f2b68594edc99d22642414826d422300468c2fa26b3acda15b0a8493f78b93",
+      "installedResolverManifestSHA256": "0510c5611b2c4436d12364dff5ddd0f227dacd174cadd62141b226bce1fa4b19",
+      "installedNativeBinarySHA256": "7ded65303b790ed738c923a93fc87f2611d07884cb15c79dca3532222b1345a5",
+      "nativeAcquiredByCorrectedCanonicalNpmCi": true,
+      "allProductUITreeExactParentAA": true,
+      "scope": "Source/evidence object binding and actual canonical-install runtime artifacts; no semantic proof or GitHub review."
+    },
+    "preservation": {
+      "base": "aa5b9322ac9519f5ba34a897bf843f7bf8493f56",
+      "all161IncomingRequirementsExact": true,
+      "totalRequirements": 162,
+      "all1377IncomingLockEntriesExact": true,
+      "addedEntries": 24,
+      "allAddedEntriesDevAndOptional": true,
+      "packageManifestsBrowserLoaderWorkerAndBackendInputsExact": true,
+      "lockSHA256": "c227addc2c70d9e597a850fff7c543029d63a179522a310d52230fd82acea6f9",
+      "scope": "Mechanical composition/pin preservation; not runtime proof."
+    },
+    "reportSuccessor": "This report/archive are a reports-only successor to the qualified implementation. New published-head CI remains a separate required check; derived Git build metadata is not established by source-only equality."
+  },
+  "problem": {
+    "classification": "Confirmed inherited dependency/verification reliability gap; not a new exploit or production incident.",
+    "counterexample": "Pristine npmci --ignore-scripts exits0, then loading required unrs-resolver1.11.1 with SKIP_UNRS_RESOLVER_FALLBACK=1 exits1 Cannot find native binding. All19 exact optional declarations lacked package nodes.",
+    "baselineSource": "aa5b9322ac9519f5ba34a897bf843f7bf8493f56",
+    "baselineEvidence": [
+      "execution/baseline-install.json",
+      "execution/baseline-native-probe.log",
+      "execution/baseline-lock-gate.log"
+    ],
+    "authority": [
+      "formal/system/native-resolver-lock.md",
+      "canonical CI npmci recipes",
+      "https://docs.npmjs.com/cli/v11/commands/npm-ci/"
+    ]
+  },
+  "correction": {
+    "npmGeneratedOptionalRecordsRestored": 24,
+    "declaredBindings": 19,
+    "all1377ExistingLockRecordsExact": true,
+    "packageManifestsAndProductCodeChanged": false,
+    "canonicalUIProbe": "Fresh process, runtime fallback disabled, native-path and forced-WASI overrides excluded.",
+    "CIProtection": [
+      "scripts/quality-repo.sh: native lock guard and negative tests",
+      "scripts/quality-ui.sh: actual native load probe plus SKIP_UNRS_RESOLVER_FALLBACK=1",
+      ".github/workflows/ci-safe-install.yml: runtime fallback disabled alongside ignored installation scripts"
+    ]
+  },
+  "invariants": [
+    {
+      "id": "SYS-NATIVE-RESOLVER-001",
+      "statement": "Installed resolver version/optional declarations agree with the lock; every exact optional binding has a version, HTTPS archive, SHA512 integrity and optional flag. Canonical verification loads the host resolver without lazy native package installation.",
+      "status": "TESTED",
+      "implementation": [
+        "scripts/check-native-resolver-lock.mjs",
+        "package-lock.json"
+      ],
+      "regression": [
+        "scripts/__tests__/native-resolver-lock.test.mjs"
+      ],
+      "assumptions": [
+        "Trusted Node/npm, registry/SRI and installed resolver metadata; normal supported host runtime.",
+        "Only direct binding records are checked structurally; no complete transitive graph or supply-chain proof."
+      ],
+      "currentEvidence": [
+        "execution/frozen-repository-quality.log",
+        "metadata/final-native-binary-fault.json",
+        "metadata/final-native-verifier-mutation.json"
+      ],
+      "commit": "805e48d5657e66c8a1944ee0ab86cd2261b532a4"
+    }
+  ],
+  "verification": {
+    "freshCorrectedInstall": {
+      "exit": 0,
+      "ignoreScripts": true,
+      "manualNativeCopies": false,
+      "evidence": "execution/corrected-install.json"
+    },
+    "actualNativeProbe": {
+      "status": "TESTED",
+      "platform": "darwin-x64",
+      "fallback": "disabled",
+      "binarySHA256": "7ded65303b790ed738c923a93fc87f2611d07884cb15c79dca3532222b1345a5",
+      "currentSource": "805e48d5657e66c8a1944ee0ab86cd2261b532a4"
+    },
+    "realMissingBinaryControl": {
+      "source": "805e48d5657e66c8a1944ee0ab86cd2261b532a4",
+      "binarySHA256": "7ded65303b790ed738c923a93fc87f2611d07884cb15c79dca3532222b1345a5",
+      "restoredExactly": true,
+      "platform": "darwin-x64",
+      "records": [
+        {
+          "case": "valid",
+          "exit": 0,
+          "logSHA256": "f862d408c7c292df042d2599ba2d620929bab65589f62fcdea91cd639a88be4e"
+        },
+        {
+          "case": "override-excluded",
+          "exit": 0,
+          "logSHA256": "f862d408c7c292df042d2599ba2d620929bab65589f62fcdea91cd639a88be4e"
+        },
+        {
+          "case": "missing",
+          "exit": 1,
+          "logSHA256": "4395ec07e5a0e1e7870679f856ff518a33758fcdc6c992807529362e540f89f1"
+        },
+        {
+          "case": "restored",
+          "exit": 0,
+          "logSHA256": "f862d408c7c292df042d2599ba2d620929bab65589f62fcdea91cd639a88be4e"
+        }
+      ],
+      "scope": "Actual reversible owned native binary fault and override exclusion; no production mutation."
+    },
+    "verifierMutationControl": {
+      "source": "805e48d5657e66c8a1944ee0ab86cd2261b532a4",
+      "mutationsDetected": 1,
+      "records": [
+        {
+          "case": "valid",
+          "exit": 0,
+          "failedAssertions": 0,
+          "logSHA256": "ab7d462164eec0beaed53a053fdfcb4bb29d4aea3aba6429592ada583f7f405d"
+        },
+        {
+          "case": "disabled",
+          "exit": 1,
+          "failedAssertions": 7,
+          "logSHA256": "5e14604ab977840316758648e78efabe1cd27d518987573168148dd710878ddf"
+        },
+        {
+          "case": "restored",
+          "exit": 0,
+          "failedAssertions": 0,
+          "logSHA256": "2f3d9628dbc63758d9a2fc6ca5828d15902b600ef1d9f5c1d4a6906e0899fa0c"
+        }
+      ],
+      "scope": "Finite verifier mutation detected by actual unchanged tests; not proof."
+    },
+    "unitRegressionCases": 10,
+    "JestSmoke": {
+      "suites": 2,
+      "tests": 32,
+      "failures": 0,
+      "actualRecordedHEAD": "aa5b9322ac9519f5ba34a897bf843f7bf8493f56",
+      "scope": "Pre-freeze run against corrected lock; all product UI files equal parent and qualified805, lock hash unchanged. Not a full new-head UI-suite claim."
+    },
+    "frozenRepositoryQuality": {
+      "command": [
+        "bash",
+        "scripts/quality-repo.sh"
+      ],
+      "cwd": "/private/tmp/tdf-native-lock-20261101T2353",
+      "startedAt": "2026-11-02T00:20:55.123702+00:00",
+      "sourceAtStart": "805e48d5657e66c8a1944ee0ab86cd2261b532a4",
+      "inputHashesAtStart": {
+        "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
+        "package-lock.json": "c227addc2c70d9e597a850fff7c543029d63a179522a310d52230fd82acea6f9",
+        "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
+        "tdf-hq-ui/package.json": "6e48d627640bfe135ab7a745a923782127cd324e8fd11dfd43c1f31ab2fa31ee",
+        "tdf-hq-ui/src/utils/torrentAudio.ts": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+        "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
+        "formal/system/requirements.json": "86da51ab65fc69519baa6055ce6db97887060ca293537a80eb910d1e0437abaa",
+        "scripts/check-native-resolver-lock.mjs": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
+        "scripts/__tests__/native-resolver-lock.test.mjs": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
+        "scripts/quality-ui.sh": "15781485c4fa3e3993d5d4d03e2e647775a9d26a850d1b8f38e153816b3ac4d7",
+        "scripts/quality-repo.sh": "6e185c6acb66a8808b136a46cde876c0e1150a1fcae2bbc00ff062fcb2402156",
+        ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a"
+      },
+      "environment": "minimal whitelist; no provider credentials, external database routing or production operations",
+      "exitCode": 0,
+      "finishedAt": "2026-11-02T00:25:27.776604+00:00",
+      "sourceAtFinish": "805e48d5657e66c8a1944ee0ab86cd2261b532a4",
+      "inputHashesAtFinish": {
+        "package.json": "686ea623b5f355299b35188e0acdd4ce1ab98fa743c23a2825a78d02221f79f9",
+        "package-lock.json": "c227addc2c70d9e597a850fff7c543029d63a179522a310d52230fd82acea6f9",
+        "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
+        "tdf-hq-ui/package.json": "6e48d627640bfe135ab7a745a923782127cd324e8fd11dfd43c1f31ab2fa31ee",
+        "tdf-hq-ui/src/utils/torrentAudio.ts": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
+        "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
+        "formal/system/requirements.json": "86da51ab65fc69519baa6055ce6db97887060ca293537a80eb910d1e0437abaa",
+        "scripts/check-native-resolver-lock.mjs": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
+        "scripts/__tests__/native-resolver-lock.test.mjs": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
+        "scripts/quality-ui.sh": "15781485c4fa3e3993d5d4d03e2e647775a9d26a850d1b8f38e153816b3ac4d7",
+        "scripts/quality-repo.sh": "6e185c6acb66a8808b136a46cde876c0e1150a1fcae2bbc00ff062fcb2402156",
+        ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a"
+      },
+      "logSha256": "689333961effb8a93ef352f0ef805fd1131cf0e573e1f04a23f5863cf5385ad8"
+    },
+    "immutableSourceAdmission": {
+      "exit": 0,
+      "base": "aa5b9322ac9519f5ba34a897bf843f7bf8493f56"
+    },
+    "strictCatalog": {
+      "candidates": 1367,
+      "unreviewed": 0,
+      "stale": 0,
+      "incomingDecisionsPreserved": 1367
+    },
+    "metadata": "Final inventory and traceability generated and checked after one correctly refused pre-freeze stale artifact.",
+    "productionAudit": {
+      "exit": 0,
+      "thresholdOrExceptionChanges": false
+    },
+    "addedDevOptionalAdvisories": {
+      "queried": 24,
+      "applicableLowOrHigher": 0,
+      "method": "Existing fail-closed official npm bulk scanner; fresh feed at execution, no universal security guarantee."
+    },
+    "stableAssuranceControls": {
+      "tests": 27,
+      "exit": 0
+    },
+    "formal": {
+      "sourceFiles": 1458,
+      "artifacts": 52,
+      "inheritedConditionalSMT": 11,
+      "newNativeTheorems": 0,
+      "wholeRequirementsUNPROVEN": 162,
+      "implementationAndRefinementUNPROVEN": 324,
+      "release": "BLOCKED",
+      "metrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 162,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 145,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 162,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 162,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      }
+    }
+  },
+  "knownLimitsAndRetainedDiagnostics": [
+    "Actual native execution is darwin-x64; the 19 binding records provide structural coverage, not runtime passes on every platform. New-head hosted Linux checks remain pending.",
+    "The parent685 full UI3778 pass is parent-source evidence and not relabeled as a new805 or report-head full-suite pass.",
+    "Initial optional-lock experiment lacked tracked npmrc and failed peer resolution; canonical config retry made no changes; pinned module refresh produced the minimal24entry addition.",
+    "Initial source discovery cancelled before output because new files needed staging and report/receipt filenames would collide. Exit-2 is no pass or product failure.",
+    "A documentation edit during pre-freeze index generation correctly caused stale-index refusal; exactly one artifact SHA differed. Stable generation/checks then passed.",
+    "Extra rootMJS ESLint invocation failed because no root configuration exists. No lint config or CI gate was weakened; Node syntax and actual executable tests passed."
+  ],
+  "parentContext": {
+    "PR": 685,
+    "approvedExactHead": "aa5b9322ac9519f5ba34a897bf843f7bf8493f56",
+    "approvalID": 5730846172,
+    "primaryCI": 41363568680,
+    "primaryCIConclusion": "success",
+    "SafeInstall": 41363568977,
+    "SafeInstallConclusion": "success",
+    "scope": "Separate parent qualification. Remaining RACI/main admission and all protected integration controls still apply; not a merge claim."
+  },
+  "integration": {
+    "newPR": "Draft child of685 to be created after committing this report; exact number retained in execution state/PR metadata.",
+    "draft": true,
+    "autoMerge": false,
+    "newHeadCIPending": true,
+    "GitHubReviewRequired": true,
+    "mergeOrDeployment": false,
+    "interpersonalMessagesReviewRequestsCommentsSent": false
+  },
+  "scorecard": {
+    "confirmedInheritedGapCorrectedInBranch": 1,
+    "nativeInvariantTESTED": 1,
+    "newNativeProofs": 0,
+    "missingLockRecordsRestored": 24,
+    "survivingLockRecordsChanged": 0,
+    "realFaultsDetected": 1,
+    "verifierMutationsDetected": 1,
+    "currentSourceFailedAssertionsUnderMutation": 7,
+    "CIProtectionAdded": true,
+    "integratedCorrections": 0
+  },
+  "remainingRisks": [
+    "Live registry/toolchain/native supply-chain trust and full cross-platform execution remain outside this bounded test assurance.",
+    "Parent685 must satisfy review/CI/FIFO integration, followed by child new-head checks/review; neither is a production deployment.",
+    "Approved refund652 and existing654/657+ financial corrections remain separate and are preserved."
+  ],
+  "nextTask": "Observe current-head CI/review without unchanged retries or messages; respect FIFO665 and protectedmain. Resume existing refund652 current-main integration and654 inventory boundary after security dependency integration.",
+  "evidence": {
+    "archive": "reports/native-resolver-lock-2026-11-02-evidence.tar.gz",
+    "sha256": "0b13cfdb1b9d04ff7a2abb6d84b5a99459506ae5f84c2569658c33e9519a5e89",
+    "bytes": 290135,
+    "regularUniqueMembers": 123,
+    "manifestSHA256": "f68c013a284f0c16af1d346b2e5655dfacfb586df317581b4c50873f8b8b263a",
+    "allSelectedMemberBytesReadBack": true
+  }
+}

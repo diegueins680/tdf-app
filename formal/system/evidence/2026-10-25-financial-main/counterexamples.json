@@ -1,0 +1,56 @@
+[
+  {
+    "id": "CE-EXPIRED-FRESH-INTENT",
+    "category": "business",
+    "priority": "P0",
+    "fixed": true,
+    "integratedMain": true,
+    "pr": 609
+  },
+  {
+    "id": "CE-LEDGER-TEMP-ENTRIES",
+    "category": "business",
+    "priority": "P0",
+    "fixed": true,
+    "integratedMain": false,
+    "pr": 612
+  },
+  {
+    "id": "CE-LEDGER-TEMP-PARENT",
+    "category": "business",
+    "priority": "P0",
+    "fixed": true,
+    "integratedMain": false,
+    "pr": 612
+  },
+  {
+    "id": "CE-VERIFIER-PYTHON-OPTIMIZATION",
+    "category": "verification",
+    "fixed": true,
+    "integratedMain": false,
+    "pr": 612,
+    "scope": "Existing local prototype; detected before publication"
+  },
+  {
+    "id": "CE-REPLAY-LOSES-NAMESPACE",
+    "category": "verification",
+    "fixed": true,
+    "integratedMain": false,
+    "pr": 612,
+    "scope": "Existing default snapshot verifier replay"
+  },
+  {
+    "id": "CE-STARTUP-ACCEPTS-LOOKUP-DRIFT",
+    "category": "verification",
+    "fixed": true,
+    "integratedMain": false,
+    "pr": 617
+  },
+  {
+    "id": "CE-CI-SKIPS-LEDGER-BACKEND",
+    "category": "verification",
+    "fixed": true,
+    "integratedMain": false,
+    "pr": 617
+  }
+]

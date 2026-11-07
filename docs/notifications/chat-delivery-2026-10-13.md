@@ -130,3 +130,9 @@ Offline-paused authorization is pending even when React Query reports `isFetchin
 The paused-cache, same-route allowed/revoked, late ordinary-poll and late previous-notification regressions verify that private content and read marks remain unavailable before the current response. The original same-route implementation fails both allowed/revoked regressions by exposing the cached body immediately. `ChatNotificationNavigation` bounds two navigations and a prior pending poll; three controls detect stale display, stale read bookkeeping and old-response attribution. Ordinary offline chat/background polling and full backend policy refinement remain outside these finite notification-entry models.
 
 The production-bundle browser regression `e2e/web/chat-notification-navigation.spec.mjs` drives the notification bell from an already-mounted chat, with fresh authorization held pending. It checks allowed/revoked access, private preview/body/read-marker boundaries, preserved drafts and serious/critical accessibility findings. The retry action refreshes the currently selected authorization query. Browser fixtures use synthetic API responses only.
+
+The late-response fixtures explicitly hold the subsequent ordinary poll after a
+denied notification. Otherwise its default authorized response can race the
+privacy assertion. Both earlier-response completion orders retain preview/body,
+badge and read-marker assertions. Releasing the fresh poll may restore authorized
+sidebar previews; it does not select, fetch or mark the unavailable target read.

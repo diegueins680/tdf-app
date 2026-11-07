@@ -1,5 +1,10 @@
 // Public arrival, authentication and recovery copy.
 export default {
+  logoutPending: 'Saliste de esta aplicación. Estamos confirmando el cierre en el servidor.',
+  logoutUnconfirmed: 'Saliste de esta aplicación, pero no pudimos confirmar el cierre en el servidor. Reintenta cuando tengas conexión.',
+  retryLogout: 'Reintentar cierre',
+  featureMenu: 'Menú de funciones',
+  closeFeatureMenu: 'Cerrar menú de funciones',
   claimReviewAfterSignup: 'Crea tu propia cuenta. Después podrás enviar una solicitud de acceso al perfil seleccionado para revisión; registrarte no te concede su propiedad.',
   "googleLinkTitle": "Conecta tu cuenta TDF",
   "googleLinkExplanation": "Usa tus credenciales de TDF para conectar Google. Si antes usabas solo Google, restablece primero tu contraseña de TDF. Crea una cuenta solo si todavía no tienes una.",
@@ -105,6 +110,7 @@ export default {
   "createEnter": "Crear e ingresar",
   "tdfAccount": "Cuenta TDF",
   "invalidReset": "Este enlace no incluye un token válido.",
+  "resetTokenExpired": "Este enlace no es válido o ya venció. Solicita uno nuevo para continuar.",
   "passwordMismatch": "Las contraseñas no coinciden.",
   "resetError": "No pudimos restablecer la contraseña.",
   "access": "Acceso",
@@ -175,5 +181,16 @@ export default {
   "googleCreateWithGoogle": "Crear mi cuenta con Google",
   "googleLinkInstead": "¿Ya tienes una cuenta TDF con contraseña? Conéctala con Google:",
   "googleCreating": "Creando tu cuenta…",
-  "continueIntentInvitation": "Al terminar, continuaremos con “{{intent}}” y activaremos tu acceso de Artista sin una revisión adicional."
+  "continueIntentInvitation": "Al terminar, continuaremos con “{{intent}}” y activaremos tu acceso de Artista sin una revisión adicional.",
+  "signupPasswordHint": "Mínimo 8 caracteres. Es una contraseña nueva solo para TDF: no es la de Google ni la de tu correo.",
+  "inAppBrowserGenericApp": "esta app",
+  "inAppBrowserTitle": "Estás en el navegador de {{app}}",
+  "inAppBrowserBodyLogin": "Google no permite iniciar sesión desde aquí con passkey ni con Face ID, por eso te pide una contraseña. Abre esta página en tu navegador y Google te dejará entrar como siempre; o entra aquí mismo con tu correo y contraseña de TDF.",
+  "inAppBrowserBodySignup": "Google no permite crear la cuenta desde aquí con passkey ni con Face ID, por eso te pide una contraseña. Abre esta página en tu navegador y Google funcionará como siempre; o crea tu cuenta aquí mismo con tu correo y una contraseña nueva.",
+  "inAppBrowserOpenSafari": "Abrir en Safari",
+  "inAppBrowserOpenChrome": "Abrir en Chrome",
+  "inAppBrowserCopyLink": "Copiar enlace",
+  "inAppBrowserCopied": "Enlace copiado. Pégalo en Safari o Chrome.",
+  "inAppBrowserCopyFailed": "No se pudo copiar. Usa el menú ⋯ de la app y elige “Abrir en el navegador”.",
+  "inAppBrowserMenuHint": "También puedes tocar el menú ⋯ de la app y elegir “Abrir en el navegador”."
 } as const;

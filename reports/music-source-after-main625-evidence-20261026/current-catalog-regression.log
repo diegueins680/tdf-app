@@ -1,0 +1,50 @@
+TAP version 13
+# Subtest: music/main reconciliation retains both reviews and the protected migration prefix
+ok 1 - music/main reconciliation retains both reviews and the protected migration prefix
+  ---
+  duration_ms: 42.571657
+  ...
+# Subtest: saved-alert221 succession preserves213/214/220 provenance and rejects stale approvals
+ok 2 - saved-alert221 succession preserves213/214/220 provenance and rejects stale approvals
+  ---
+  duration_ms: 6312.026134
+  ...
+# Subtest: event catalog retirement ledger preserves evidence and distinct reviewed successors
+ok 3 - event catalog retirement ledger preserves evidence and distinct reviewed successors
+  ---
+  duration_ms: 12.927739
+  ...
+# Subtest: reconciled fingerprints match current sources; retired decisions still fail the gate
+ok 4 - reconciled fingerprints match current sources; retired decisions still fail the gate
+  ---
+  duration_ms: 3175.271174
+  ...
+# Subtest: main integration archives exact old decisions and retains reviewed successors or source-removal evidence
+ok 5 - main integration archives exact old decisions and retains reviewed successors or source-removal evidence
+  ---
+  duration_ms: 18.063733
+  ...
+# Subtest: catalog audit excludes ignored local source files from candidate fingerprints
+ok 6 - catalog audit excludes ignored local source files from candidate fingerprints
+  ---
+  duration_ms: 843.204697
+  ...
+# Subtest: decision reconciliation preserves reviewed entries, removes stale IDs, and records rule evidence
+ok 7 - decision reconciliation preserves reviewed entries, removes stale IDs, and records rule evidence
+  ---
+  duration_ms: 83.770609
+  ...
+# Subtest: ticket main merge retains stale approvals only as provenance
+ok 8 - ticket main merge retains stale approvals only as provenance
+  ---
+  duration_ms: 7.961865
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 10628.673513

@@ -136,19 +136,29 @@ describe('TdfPlatformPage', () => {
     listPublicArtistsMock.mockResolvedValue(artists);
   });
 
-  it('explains TDF and sends users to fan or artist signup routes', async () => {
+  it('offers public exploration before contextual fan or artist signup', async () => {
     renderPage();
 
     expect(screen.getByRole('heading', { name: 'TDF Records' })).not.toBeNull();
     expect(screen.getAllByRole('link', { name: 'Crear cuenta' })[0]?.getAttribute('href')).toBe(
       '/login?signup=1',
     );
-    expect(screen.getByRole('link', { name: 'Perfil fan' }).getAttribute('href')).toBe(
+    expect(screen.getByRole('link', { name: 'Crear perfil fan' }).getAttribute('href')).toBe(
       '/login?signup=1&intent=follow_artists&redirect=/fans',
     );
-    expect(screen.getByRole('link', { name: 'Perfil artista' }).getAttribute('href')).toBe(
+    expect(screen.getByRole('link', { name: 'Crear perfil de artista' }).getAttribute('href')).toBe(
       '/login?signup=1&intent=artist_profile',
     );
+
+    expect(screen.getByRole('link', { name: 'Conoce el estudio' }).getAttribute('href')).toBe('#estudio');
+    expect(screen.getByRole('link', { name: 'Explora nuestros servicios' }).getAttribute('href')).toBe('#servicios');
+    expect(screen.getByRole('link', { name: 'Mira sesiones y lanzamientos' }).getAttribute('href')).toBe('/records');
+    const studio = document.getElementById('estudio')!;
+    const services = document.getElementById('servicios')!;
+    const signup = screen.getByRole('link', { name: 'Crear perfil fan' });
+    expect(studio.compareDocumentPosition(signup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(services.compareDocumentPosition(signup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(document.querySelector('video')).toBeNull();
 
     await screen.findByText('Artista Mayor');
     expect(ARTIST_RANKING_FIXTURE.majorFollowerCount).toBeGreaterThan(

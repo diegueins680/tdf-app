@@ -7,6 +7,13 @@ import SecurityPage from './SecurityPage';
 afterEach(cleanup);
 
 describe('SecurityPage deep links', () => {
+  it('provides menu destinations for public reputation rights', () => {
+    render(<MemoryRouter><SecurityPage /></MemoryRouter>);
+    expect(screen.getByRole('menuitem', { name: 'Privacidad de reputación' })).toHaveAttribute('href', '/privacidad');
+    expect(screen.getByRole('menuitem', { name: 'Apelaciones de reputación' })).toHaveAttribute('href', '/apelaciones');
+    expect(screen.getByRole('menuitem', { name: 'Cómo se calcula la reputación' })).toHaveAttribute('href', '/reputacion/como-se-calcula');
+  });
+
   it('expands the policy named by an in-app hash change, not only on first load', () => {
     let navigate: NavigateFunction | undefined;
     function CaptureNavigate() {

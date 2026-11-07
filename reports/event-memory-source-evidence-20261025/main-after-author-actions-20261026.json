@@ -1,0 +1,13 @@
+{
+  "observedAt": "2026-10-26T16:27:57.660138+00:00",
+  "githubMain": "78fa351b469c1d2031df3232204dd722ac480e3b",
+  "message": "Merge pull request #621: Freeze posted ledger source identities and audit headers",
+  "parents": [
+    "3c25a9de56345a8fccea4c1320b0548fed37a334",
+    "950c3f7c3f341cd05a48c237e7377cca66e35188"
+  ],
+  "preparationHeadBeforeReport": "f9094440cbc7677b968beb1b4da4d0711bffb972",
+  "preparationIncludesProtectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "newSuccessorsIncluded": false,
+  "pending": "Normal reconciliation with protected successors and fresh affected checks after independent source review; no claim of current-main release qualification."
+}

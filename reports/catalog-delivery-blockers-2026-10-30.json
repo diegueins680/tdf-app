@@ -1,0 +1,15 @@
+{
+  "observedSource": "840c2b1f38505318f19f802da89676a5beeeacc3",
+  "artifact": {
+    "run": 41053821743,
+    "id": 12976053273,
+    "sha256": "5f053bf35bc4d56ee1b8244d66823bbf013054e1da5f197e7527f3de81b5870d",
+    "downloadHashVerified": true
+  },
+  "observedFailure": "Report button locator timed out after 30 seconds; eight RACI journeys passed.",
+  "sourceFinding": "InteractionPanel summary is enabled only when its wrapper is near the viewport; absent lazy controls cannot be scrolled by clicking their own locator.",
+  "repair": "Scroll the existing card with one DOM operation before looking for its lazy report control; preserve subsequent real report/moderation assertions and all test deadlines/retries.",
+  "qualification": "Syntax, twelve cleanup controls, canonical metadata and source admission pass. Fresh hosted full integration is required; no local backend/browser pass or production effect is claimed.",
+  "mobilePublication": "Generated featured-track contract typechecks locally; connector branch creation returned 403 Resource not accessible by integration. Published Mobile pin remains unchanged.",
+  "productionMetrics": "No production database/analytics credentials or export available in this workspace."
+}

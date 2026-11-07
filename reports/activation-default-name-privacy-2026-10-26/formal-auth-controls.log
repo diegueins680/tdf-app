@@ -1,0 +1,10 @@
+........
+----------------------------------------------------------------------
+Ran 8 tests in 3.828s
+
+OK
+{"executionPassed": false, "error": "Proof, witness, mutation control or replay failed; inspect retained formulas", "obligations": {"strict-admin": "REFUTED", "module-access": "REFUTED", "ingestion-admission": "REFUTED"}, "output": "/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tmpgjz4pmgx/counterexample"}
+{"executionPassed": true, "error": null, "obligations": {"strict-admin": "PROVEN", "module-access": "PROVEN", "ingestion-admission": "PROVEN"}, "output": "/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tmpb30rdi85/snapshot"}
+{"executionPassed": false, "error": "Unreviewed source snapshot: tdf-hq/src/TDF/Auth.hs; review imports, bindings and translation before updating the pin", "obligations": {"strict-admin": "UNPROVEN", "module-access": "UNPROVEN", "ingestion-admission": "UNPROVEN"}, "output": "/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tmptqk03eo2/unreviewed"}
+{"executionPassed": false, "error": "Proof, witness, mutation control or replay failed; inspect retained formulas", "obligations": {"strict-admin": "UNPROVEN", "module-access": "UNPROVEN", "ingestion-admission": "UNPROVEN"}, "output": "/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tmptqk03eo2/unknown"}
+{"executionPassed": false, "error": "Sources changed during verification", "obligations": {"strict-admin": "UNPROVEN", "module-access": "UNPROVEN", "ingestion-admission": "UNPROVEN"}, "output": "/var/folders/xf/f9gpsqys7y70crkxkm0mgff40000gn/T/tmptqk03eo2/stale"}

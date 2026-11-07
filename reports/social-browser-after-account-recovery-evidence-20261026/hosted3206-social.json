@@ -1,0 +1,44 @@
+{
+  "observedAt": "2026-10-26T23:42:19.709888+00:00",
+  "head": "3206faad3999f85d610360175e05389e0a7addf2",
+  "base": "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+  "actualCheckout": "8a40665add3d4630479e7ae4631b3e1915e2a642",
+  "parents": [
+    "c66a65a10a8e5e48f89172d61f6f57fb81697896",
+    "3206faad3999f85d610360175e05389e0a7addf2"
+  ],
+  "wholeTree": "54c25a492e89b5ad49627547e02df59571dd2b1d",
+  "wholeTreeEqualsPublishedSource": true,
+  "job": 121913075086,
+  "workflow": 40420390206,
+  "conclusion": "SUCCESS",
+  "focusedTests": 63,
+  "focusedSuites": 6,
+  "preflight": {
+    "kind": "bundled-browser-preflight",
+    "workflow": ".github/workflows/social-verification.yml",
+    "job": "social-client",
+    "playwright": "1.59.1",
+    "browserUser": 1001,
+    "browsers": [
+      {
+        "browser": "chromium",
+        "version": "147.0.7727.15"
+      },
+      {
+        "browser": "firefox",
+        "version": "148.0.2"
+      },
+      {
+        "browser": "webkit",
+        "version": "26.4"
+      }
+    ]
+  },
+  "generatedContract": "PASS",
+  "originalSocialBrowserKeyboardMobileAxe": "PASS",
+  "durationSeconds": 69.0,
+  "logSha256": "b131860f38c709736c091ab716ed5b4655748472bb4c64f204c5e19379fb7b1f",
+  "capacityFullPersonaAcceptance": "PENDING separate current-head job; social browser does not use the persona project scheduling",
+  "scope": "Fresh published-head hostedLinux social qualification only. No inherited7bed pass, no finance/provider/user journey or production action."
+}

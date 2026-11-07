@@ -36,7 +36,8 @@ try {
   try {
     outcome = await new Promise(resolve => {
       const child = spawn('bash', ['scripts/verify-event-operations-formal.sh'],
-        { cwd: root, stdio: ['ignore', fd, fd], timeout: 30 * 60_000 });
+        { cwd: root, stdio: ['ignore', fd, fd], timeout: 30 * 60_000,
+          env: { ...process.env, TDF_ALLOY_EVIDENCE_DIR: path.join(out, 'alloy') } });
       child.on('error', error => resolve({ status: null, error: error.message }));
       child.on('close', (status, signal) => resolve({ status, signal }));
     });
@@ -49,6 +50,10 @@ try {
   report.finishedAt = new Date().toISOString();
   report.finalSourceDigest = after.digest;
   report.status = classifyExecution({ ...outcome, log, before: before.digest, after: after.digest });
+  if (report.status === 'bounded-model-checks-passed') {
+    report.alloy = JSON.parse(readFileSync(path.join(out, 'alloy/result.json'), 'utf8'));
+    if (report.alloy.status !== 'bounded-model-checks-passed') report.status = 'incomplete';
+  }
   if (report.status !== 'bounded-model-checks-passed') process.exitCode = 1;
 } catch (error) {
   report.status = 'execution-failed'; report.error = error.message; process.exitCode = 1;

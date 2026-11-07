@@ -37,6 +37,7 @@ const show = (path = '/artista/crear') => render(
 beforeEach(() => {
   jest.clearAllMocks();
   window.sessionStorage.clear();
+  window.localStorage.clear();
   session = { username: 'artist', displayName: 'Artist', partyId: 42, roles: ['Customer'] };
   activate.mockResolvedValue({ apArtistId: 42 });
   get.mockResolvedValue({ ...session, roles: ['Customer', 'Artist'] });
@@ -51,7 +52,7 @@ it('activates a customer profile immediately, refreshes server roles and opens t
   await screen.findByText('Editor de artista');
   expect(activate).toHaveBeenCalledTimes(1);
   expect(get).toHaveBeenCalledWith('/session');
-  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42, roles: ['Customer', 'Artist'] }), { remember: false });
+  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42, roles: ['Customer', 'Artist'] }), { remember: false, refreshExistingSession: true });
 });
 
 it('keeps the user on the activation screen when activation fails', async () => {
@@ -110,7 +111,7 @@ it('opens the persisted artist profile when optional session storage is inaccess
   jest.spyOn(window, 'sessionStorage', 'get').mockImplementation(() => { throw new DOMException('denied', 'SecurityError'); });
   fireEvent.click(screen.getByRole('button', { name: 'Crear mi perfil de artista' }));
   await screen.findByText('Editor de artista');
-  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: false });
+  expect(login).toHaveBeenCalledWith(expect.objectContaining({ partyId: 42 }), { remember: false, refreshExistingSession: true });
 });
 
 it('rejects a stale activation result after credential rotation in the same account', async () => {
@@ -159,6 +160,22 @@ it.each(['activation', 'refresh'])('ignores %s receipts after switching to a cla
   fireEvent.click(screen.getByRole('link', { name: 'Elegir reclamación de prueba' }));
   await screen.findByText('Artista importado');
   fireEvent.click(screen.getByRole('link', { name: 'Volver a activación de prueba' }));
+  await act(async () => { finish({ ...session!, roles: ['Artist'], apArtistId: 42 }); await deferred; });
+  expect(login).not.toHaveBeenCalled();
+  expect(screen.queryByText('Editor de artista')).not.toBeInTheDocument();
+  if (phase === 'activation') expect(get).not.toHaveBeenCalled();
+});
+
+
+it.each(['activation', 'refresh'])('rejects a late %s after remote logout even before its storage event runs', async (phase) => {
+  let finish!: (value: unknown) => void;
+  const deferred = new Promise(resolve => { finish = resolve; });
+  if (phase === 'activation') activate.mockReturnValueOnce(deferred);
+  else get.mockReturnValueOnce(deferred);
+  show();
+  fireEvent.click(screen.getByRole('button', { name: 'Crear mi perfil de artista' }));
+  await waitFor(() => expect(phase === 'activation' ? activate : get).toHaveBeenCalledTimes(1));
+  localStorage.setItem('tdf-hq-ui/logout-intent/v1', JSON.stringify({ revision: 'remote-before-event', status: 'unconfirmed' }));
   await act(async () => { finish({ ...session!, roles: ['Artist'], apArtistId: 42 }); await deferred; });
   expect(login).not.toHaveBeenCalled();
   expect(screen.queryByText('Editor de artista')).not.toBeInTheDocument();

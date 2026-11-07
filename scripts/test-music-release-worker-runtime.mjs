@@ -10,6 +10,7 @@ import { dirname, join } from 'node:path';
 import { tmpdir, userInfo } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { disposableMusicDatabase, musicTestEnvironment, musicTestDatabaseUrl } from './lib/music-test-database.mjs';
+import { observeTestChild, completedTestChild as completed } from './lib/test-child-completion.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const runtime = mkdtempSync(join(tmpdir(), 'tdf-music-worker-test-'));
@@ -24,17 +25,9 @@ function startWorker(extra = {}, script = 'scripts/run-music-release-worker-once
     env: { ...workerEnv, ...extra }, stdio: ['ignore', 'pipe', 'pipe'],
   });
   children.add(child);
-  let stdout = '', stderr = '';
-  child.stdout.on('data', (data) => { stdout += data; });
-  child.stderr.on('data', (data) => { stderr += data; });
-  const done = new Promise((resolve, reject) => {
-    child.on('error', reject);
-    child.on('close', (status, signal) => {
-      children.delete(child);
-      resolve({ status, signal, stdout, stderr });
-    });
-  });
-  return { child, done, snapshot: () => ({ stdout, stderr }) };
+  const observed = observeTestChild(child);
+  child.once('close', () => children.delete(child));
+  return observed;
 }
 async function until(predicate, label, milliseconds = 15000) {
   const deadline = Date.now() + milliseconds;
@@ -42,14 +35,6 @@ async function until(predicate, label, milliseconds = 15000) {
     assert.ok(Date.now() < deadline, `Timed out: ${label}`);
     await setTimeout(100);
   }
-}
-async function completed(workerProcess) {
-  let timer;
-  try {
-    return await Promise.race([workerProcess.done, new Promise((_, reject) => {
-      timer = globalThis.setTimeout(() => reject(new Error('Worker did not stop within 30s')), 30000);
-    })]);
-  } finally { clearTimeout(timer); }
 }
 async function waitForGate(workerProcess, gate, label, milliseconds = 45000) {
   try {
@@ -96,7 +81,9 @@ const workerEnv = {
   MUSIC_S3_REGION: 'us-east-1', MUSIC_S3_MASTER_BUCKET: 'music-test-master',
   MUSIC_S3_DERIVATIVE_BUCKET: 'music-test-derivatives', MUSIC_S3_DDEX_BUCKET: 'music-test-ddex',
   MUSIC_TEST_OBJECTS: objects, MUSIC_TEST_TRACE: trace,
-  MUSIC_WORKER_DIAGNOSTICS: process.env.MUSIC_WORKER_DIAGNOSTICS ?? 'false',
+  // Synthetic fixture only: preserve fixed-stage timing before failure cleanup.
+  // Explicit false remains available; never turn on shell argument tracing.
+  MUSIC_WORKER_DIAGNOSTICS: process.env.MUSIC_WORKER_DIAGNOSTICS ?? 'true',
   // Quotes and psql metacharacters must remain data through -v substitution.
   MUSIC_WORKER_ID: "worker's :quoted \\ identity",
 };

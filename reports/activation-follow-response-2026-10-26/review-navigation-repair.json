@@ -1,0 +1,47 @@
+{
+  "capturedAt": "2026-10-26T15:57:22.185119+00:00",
+  "status": "PARTIAL",
+  "finding": {
+    "thread": "PRRT_kwDOQPdUrM6wVFiN",
+    "comment": 4379122387,
+    "url": "https://github.com/diegueins680/tdf-app/pull/627#discussion_r4379122387",
+    "severity": "P2",
+    "problem": "A captured clearResume closure can overwrite a newer same-artist search/hash while a recovery read is pending."
+  },
+  "negativeControl": {
+    "unchangedPageSource": "7430420d5e1726e996ca96964cc33e8f96e6f14f",
+    "failed": 2,
+    "passedControls": 2,
+    "skippedExisting": 20,
+    "observedWrongURL": "/a/las-sinteticas?source=initial#bio",
+    "expectedURLs": [
+      "/a/las-sinteticas?source=later#music",
+      "/a/las-sinteticas?source=later&resume=follow&artistId=99#music"
+    ],
+    "logSha256": "5cb2c6e72406d5ab821497f5b25cb5377587745cfd4e7873b9316e2853f98636"
+  },
+  "repair": {
+    "change": "Require command.isCurrent() before using the captured clearResume closure. Membership/first-value confirmation remains session/profile-scoped; current valid resume cleanup can use the latest URL through the existing effect.",
+    "noNewWriteOrEndpoint": true
+  },
+  "componentVerification": {
+    "passed": 102,
+    "suites": 5,
+    "navigationCases": 4,
+    "controls": [
+      "new same-artist URL without resume is preserved during recovery",
+      "current valid resume consumes its keys while preserving new source/hash",
+      "mismatched new resume target is left untouched",
+      "late ordinary success preserves current navigation"
+    ],
+    "followWritesPerCase": 1,
+    "logSha256": "231464e6004eace53b13309010ae5da55114813ed599746cd82dbd185f0a489f",
+    "scope": "Actual React component and Router with API/analytics mocks. Native server evidence is separate.",
+    "firstValueCallbackCallsPerCase": 1
+  },
+  "supportedBrowserFollowRegression": {
+    "passed": 14,
+    "scope": "Chromium desktop/phone/tablet and Firefox; keyboard/explicit retry/URL/axe constraints unchanged. WebKit remains mandatory in supported Linux CI."
+  },
+  "scope": "Reproduction and scoped local checks; final exact-head CI and actual isolated runtime qualification are distinct gates. Earlier743 approval/19checks must not be inherited by a later head."
+}

@@ -1,0 +1,12 @@
+{
+  "sourceHead": "535b113e7b4c139be9ea570c18e8d29c6a34700d",
+  "UIInputsEqualMainE302": true,
+  "UIgitTree": "12011eef081f9b3aba1d2337265438ee2140627b",
+  "lockAndUIDeclarationsByteExact": true,
+  "rootPackageDifference": "Only test:ci-pipeline script differs, not invoked by direct cached Vite/Playwright binaries. Every dependency/override/workspace field matches.",
+  "preparedFixtureSyntaxDiagnostic": "Two const initial bindings in same test body. Renamed only response gate to initialGate before any browser execution; retained original fixture.",
+  "originalFixtureSha256": "53bb5d1c2b058d7adb7278c6d0fc14688e9ebaf0e05215ee9ebe305c3e94b807",
+  "executableFixtureSha256": "17129ee8c1cea40f059e4b96fa33345fd629117c79ada30e8e8ea734fffb8c30",
+  "permissionContext": "Current main session ordinary loopback bind succeeded; no sandbox override, escalation or approval bypass.",
+  "delegatedAttempt": "NOT_RUN; OS sandbox bind refused, no automatic approval-review rejection."
+}

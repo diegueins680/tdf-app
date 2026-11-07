@@ -503,8 +503,9 @@ function main() {
     baselineRevision: existingReport.baselineRevision ?? 'ce0c3bc19e2d9030e871480e9e93790940c9eb12',
     generatedFrom: options.input,
     reconciliation: {
-      // Retired approvals remain historical evidence, outside active decisions.
-      ...existingReport.reconciliation,
+      // Historical retirement evidence is append-only provenance, not a fresh
+      // discovery counter. Retain it while recalculating this run's counters.
+      ...(existingReport.reconciliation ?? {}),
       preservedDecisions: preservedDecisionIds.size,
       reviewedByPolicy: decisions.length - preservedDecisionIds.size,
       removedStaleDecisions: [...existingDecisions.keys()]

@@ -68,6 +68,22 @@ profile publication state and creates no external service or parallel index
 store. When pg_trgm is unavailable, the existing normalization/matching remains
 functional without those indexes. All SQL parameters remain Persistent-bound.
 
+## Artist profile photos
+
+All artists use their persisted `artist_profile.hero_image_url` in legacy search
+results. Linked public directory profiles resolve the same media through the
+canonical directory preview resolver and refresh when artist media changes.
+This does not depend on a particular artist name, ID or frontend fallback map.
+Saving an artist profile invalidates Community/Global Search results, the artist
+catalog and public artist detail caches so an already open view shows updated
+artwork. Artists without valid media retain the generic placeholder; changing a
+photo does not publish a private or draft directory profile.
+
+`scripts/test-community-search.py` checks arbitrary new artists, replacement and
+removal, linked media refresh and private profile suppression against the shipped
+SQL. `FanHubPage.onboarding.test.tsx` checks that saving an arbitrary artist's photo
+refreshes an already open Community card and cached public profile destinations.
+
 ## Navigation contract
 
 A single `NavigationScrollRestoration` lives above route Suspense boundaries.
@@ -263,3 +279,53 @@ allocates an available loopback port, and applies the existing current-handler
 schema prerequisites after its historical migration tests. Its public backfill
 control is isolated from subsequent exact HTTP facet fixtures. Earlier fixture
 failures are retained as regression evidence; assertions were not weakened.
+
+
+## Complete feature menus
+
+Product authority: explicit owner request of October 25, 2026 to provide menu
+items for available features that lacked them. The sidebar retains the existing
+curated labels and groups and supplements them with all registered, usable,
+nontechnical routes that have a concrete destination. Each path appears once.
+Newly registered standalone features receive a menu destination automatically.
+Contextual pages requiring a record ID remain reachable through their list pages.
+Access-request creation requires a selected feature query parameter and stays in
+its contextual request action; Mis solicitudes de acceso remains in the menu.
+OAuth/payment returns, authentication callbacks, incomplete and broken features
+are excluded. The two additional concrete editor destinations are Mi perfil de
+artista and Nuevo lanzamiento. Crear perfil de artista and Nuevo evento are placed
+in Crear; personal access requests are labelled Mis solicitudes de acceso in Ayuda.
+
+The existing access registry continues to decide visibility for each viewer.
+The sidebar passes the current session feature flags to that decision together
+with roles and modules. Disabled pilots remain concealed. A menu entry does not
+grant a role, module, feature flag or backend capability. No rollout flags change.
+
+Public reputation privacy, appeals and calculation pages retain their existing
+shareable public-route metadata and are linked by a Derechos y reputación menu
+inside Seguridad. These informational routes do not become internal admin tools.
+
+Regression coverage checks every standalone feature against the actual sidebar,
+unique concrete destinations, searchable artist and directory review entries,
+feature flag changes, denied-role/module combinations and the public rights menu.
+
+Signed-in public pages (including Comunidad) expose Menú de funciones in the
+header. It loads the same sidebar on demand in a dismissible drawer, closes
+after navigation or account change, and keeps the guest header unchanged.
+
+The public drawer reserves its width independently of the lazy sidebar. The close
+control stays above the sidebar and inside the viewport after loading. A compiled
+browser regression waits for the real search field before checking touch/click
+dismissal, warm reopen, Escape and focus restoration. The previous mobile layout
+fails the close-control viewport check; a loading-placeholder-only check is not
+accepted as evidence that the loaded menu can be dismissed.
+
+
+## Artist fan profile navigation
+
+Product authority: explicit owner request of October 28, 2026. On artist pages,
+each fan photo and display name link to `/perfil/{afFanId}` using the fan Party ID
+returned by the artist fans endpoint. The row is one native link with an accessible
+name and visible keyboard focus. Fans without a photo retain their initials inside
+the same link. The existing profile route retains its session and visibility checks.
+Pagination continues to select fan pages without opening a profile.

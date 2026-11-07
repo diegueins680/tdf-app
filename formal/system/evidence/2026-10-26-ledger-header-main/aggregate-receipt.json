@@ -1,0 +1,11 @@
+{
+  "source": "db2ec17c1fc2cd934d523a434fa833d286900a2c",
+  "command": [
+    "/private/tmp/tdf-ledger-event-identity-20261025/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+    "--seed=20261026"
+  ],
+  "exitCode": 0,
+  "binarySha256": "6fb9e3854c509fa0052cbd93f46c4ef0d264c975acccc05807a7a895d30b8614",
+  "logSha256": "699dda639ca66f3360a0a2102bd4fcc4757cc2c10a6dfcd388aa9dac8210fefa",
+  "finishedAt": "2026-10-26T04:25:02.728687+00:00"
+}

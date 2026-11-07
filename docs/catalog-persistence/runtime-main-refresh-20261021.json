@@ -1,0 +1,806 @@
+{
+  "schemaVersion": 1,
+  "runtimeParent": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+  "mainParent": "a25971359f21bad4ad2e9debf636b9230a897859",
+  "scope": "Preserve protected main reviews, SQL and shipped Mobile; add only original startup sweep domain review. Retain concurrent and replaced reviews through immutable parent locators. No runtime policy changes.",
+  "sharedDecisionConflicts": [
+    {
+      "id": "05cf100aa2fff2a7c8ad",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "05cf100aa2fff2a7c8ad"
+          },
+          "sourceEntryCanonicalSha256": "358d88d641daa8e497a252df70cd18db8d733065ada2449b3388b3e522641ba0",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "05cf100aa2fff2a7c8ad"
+          },
+          "sourceEntryCanonicalSha256": "219a92fbd13b2c4bcf52b84409947750a59caa77f07ed98e1db4d56e425ef757",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "219a92fbd13b2c4bcf52b84409947750a59caa77f07ed98e1db4d56e425ef757"
+    },
+    {
+      "id": "0eb0488703525594608c",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "0eb0488703525594608c"
+          },
+          "sourceEntryCanonicalSha256": "08e6e65da9ab289b62b76b84348256cab639471e657fdcbf7db12d968ca27283",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "0eb0488703525594608c"
+          },
+          "sourceEntryCanonicalSha256": "5bfb6743cde9489c1e96051bf82985e7b2cd1129ca4b761eecb161e8084e5ce6",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "5bfb6743cde9489c1e96051bf82985e7b2cd1129ca4b761eecb161e8084e5ce6"
+    },
+    {
+      "id": "2281d810a9d407c3857d",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "2281d810a9d407c3857d"
+          },
+          "sourceEntryCanonicalSha256": "e803ada0df56864025bfc8ae5a6fc9e839dd98069d9c016f952b1774313c1d0c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "2281d810a9d407c3857d"
+          },
+          "sourceEntryCanonicalSha256": "52dfcf4ccb6166899793a536153643e43a17f9e23a5c151c7ca47764e76d688b",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "52dfcf4ccb6166899793a536153643e43a17f9e23a5c151c7ca47764e76d688b"
+    },
+    {
+      "id": "3022d9364dbbe18e8bbb",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "3022d9364dbbe18e8bbb"
+          },
+          "sourceEntryCanonicalSha256": "9e993a104a2df54419a65630e59553580b079f69aa8e0178f1d931d5d11d4204",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "3022d9364dbbe18e8bbb"
+          },
+          "sourceEntryCanonicalSha256": "17d47afa7e55dac068c0fd17d73340cf723a6c6ad7aff61d3a4116675b74a271",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "17d47afa7e55dac068c0fd17d73340cf723a6c6ad7aff61d3a4116675b74a271"
+    },
+    {
+      "id": "5bd12641cfad78ecd0b5",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "5bd12641cfad78ecd0b5"
+          },
+          "sourceEntryCanonicalSha256": "eb81d7f74407146d1790d5b5153f12913007b74eaa5fe27228f4f1796812a327",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "5bd12641cfad78ecd0b5"
+          },
+          "sourceEntryCanonicalSha256": "06254e9cf18ea1a7fd6d74e653859d6ba3886a5e4ae009c2c715beac7babd429",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "06254e9cf18ea1a7fd6d74e653859d6ba3886a5e4ae009c2c715beac7babd429"
+    },
+    {
+      "id": "6d5e424d686ab740e5db",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "6d5e424d686ab740e5db"
+          },
+          "sourceEntryCanonicalSha256": "c4efde2011ddc28b9508ef46ff38168ae7c0c2f6a3cf89b3d5439b9973c40974",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "6d5e424d686ab740e5db"
+          },
+          "sourceEntryCanonicalSha256": "eb9f85b17da976c9ec8bd88416dc3a3d41a41038084ea284632f477fd721c39f",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "eb9f85b17da976c9ec8bd88416dc3a3d41a41038084ea284632f477fd721c39f"
+    },
+    {
+      "id": "720d867f7e9dfc6e3a88",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "720d867f7e9dfc6e3a88"
+          },
+          "sourceEntryCanonicalSha256": "4a18415a9c5dfc04ef3d41c7af87ed2d22bc3baedd702cb755121ba2866eabed",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "720d867f7e9dfc6e3a88"
+          },
+          "sourceEntryCanonicalSha256": "643b77af08dedc29a1925898fc35a5f05641c2a017de181785290da9916eb175",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "643b77af08dedc29a1925898fc35a5f05641c2a017de181785290da9916eb175"
+    },
+    {
+      "id": "83c448226d409286e4ed",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "83c448226d409286e4ed"
+          },
+          "sourceEntryCanonicalSha256": "930d6a995095ab625888d0843ee696c1ae9e67a1cbbe5aedc82863b646dda6a8",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "83c448226d409286e4ed"
+          },
+          "sourceEntryCanonicalSha256": "544d5bf7e406327e1f999ff8e3ad70da218218bdedab62083ba3ccecddaf4951",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "544d5bf7e406327e1f999ff8e3ad70da218218bdedab62083ba3ccecddaf4951"
+    },
+    {
+      "id": "9053eecad03f9b4e6349",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "9053eecad03f9b4e6349"
+          },
+          "sourceEntryCanonicalSha256": "0ba679ea0aee1d2e4e5dbd0d98e0ab49b07d0e06c1d718dd2508cce74db8ca67",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "9053eecad03f9b4e6349"
+          },
+          "sourceEntryCanonicalSha256": "949df767a7b7cb32683ae2d1256246410eb255d169f730a5f2438d7595bc0913",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "949df767a7b7cb32683ae2d1256246410eb255d169f730a5f2438d7595bc0913"
+    },
+    {
+      "id": "9f4bd75d43cac2910708",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "9f4bd75d43cac2910708"
+          },
+          "sourceEntryCanonicalSha256": "f0a00a0afee977e2024262decc581f51d8e3533d0660745958d0693722224438",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "9f4bd75d43cac2910708"
+          },
+          "sourceEntryCanonicalSha256": "41ed134ff1c3f3f7dc05aff2347e6e26317049886e3eb8bd7a70b0bf42890483",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "41ed134ff1c3f3f7dc05aff2347e6e26317049886e3eb8bd7a70b0bf42890483"
+    },
+    {
+      "id": "a23dba5cb2c3672c7dab",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "a23dba5cb2c3672c7dab"
+          },
+          "sourceEntryCanonicalSha256": "f0909e6883b3d1b1da3f52c6c48a0afe1e3b44f9ed6e72d19f2436a876eaa113",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "a23dba5cb2c3672c7dab"
+          },
+          "sourceEntryCanonicalSha256": "661619859407a00522d7f524a097fa67f81eb4608c763f7fd1c6218f4c214f47",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "661619859407a00522d7f524a097fa67f81eb4608c763f7fd1c6218f4c214f47"
+    },
+    {
+      "id": "a4581315814378b361dd",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "a4581315814378b361dd"
+          },
+          "sourceEntryCanonicalSha256": "9fc5d0b359b3a43a1846be1e828d0147107f44cc63e0beb4ad449dabd367d94a",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "a4581315814378b361dd"
+          },
+          "sourceEntryCanonicalSha256": "d1f9ffd678497465c85d1cd54e75aaa1241a57f94f347048ef65146cf0f5ced4",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "d1f9ffd678497465c85d1cd54e75aaa1241a57f94f347048ef65146cf0f5ced4"
+    },
+    {
+      "id": "a7561a719beb23884345",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "a7561a719beb23884345"
+          },
+          "sourceEntryCanonicalSha256": "ed451c74b248ce8deac2a176fc830b54f7eda9d19dabce452a9ce4408dbe6bf1",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "a7561a719beb23884345"
+          },
+          "sourceEntryCanonicalSha256": "cfd754599e30a9eb31ad1565cb0b5416fd711f4e348c1021785274cd3f662ffe",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "cfd754599e30a9eb31ad1565cb0b5416fd711f4e348c1021785274cd3f662ffe"
+    },
+    {
+      "id": "ab22a28a6c1f13d36e93",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "ab22a28a6c1f13d36e93"
+          },
+          "sourceEntryCanonicalSha256": "0eff1a8c0c4ab03929ef5219e70718cd269768a871cb6fba03a7339a0772e693",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "ab22a28a6c1f13d36e93"
+          },
+          "sourceEntryCanonicalSha256": "32ebce04c2a9ca440829ab993b3143bcd19ca725348abb377340c41934a67986",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "32ebce04c2a9ca440829ab993b3143bcd19ca725348abb377340c41934a67986"
+    },
+    {
+      "id": "b0240cfa54d35e9c4aa5",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "b0240cfa54d35e9c4aa5"
+          },
+          "sourceEntryCanonicalSha256": "7fb939ff68af0006bc4c826c8aa9102c2d38cc1bca3d223a88d6c163a1e8f6ab",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "b0240cfa54d35e9c4aa5"
+          },
+          "sourceEntryCanonicalSha256": "5eff21e26de5023bd7ea2225a6e2312d28599b0e1e0f9a5a5b91ddca38b74369",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "5eff21e26de5023bd7ea2225a6e2312d28599b0e1e0f9a5a5b91ddca38b74369"
+    },
+    {
+      "id": "b53cc0e14f15058ad16e",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "b53cc0e14f15058ad16e"
+          },
+          "sourceEntryCanonicalSha256": "a09a2b123ff0adb2f6d8bbf2436f1d0892e1cc74b37d3c067fa8f55f35d90482",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "b53cc0e14f15058ad16e"
+          },
+          "sourceEntryCanonicalSha256": "228c92efc9b46d249a884f77b5fc7350b4f364b423b5a5cdabe3dcb68cc66d4e",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "228c92efc9b46d249a884f77b5fc7350b4f364b423b5a5cdabe3dcb68cc66d4e"
+    },
+    {
+      "id": "b58fdf6937b3afba91bc",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "b58fdf6937b3afba91bc"
+          },
+          "sourceEntryCanonicalSha256": "b0af506010da7e445ea59a40888f0efba3a00971ea5cfd8c74234cf089713eac",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "b58fdf6937b3afba91bc"
+          },
+          "sourceEntryCanonicalSha256": "06c23663839e35eadc7fc9ded4e1d2f373623ea51cb0a2c475da1797b0525e67",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "06c23663839e35eadc7fc9ded4e1d2f373623ea51cb0a2c475da1797b0525e67"
+    },
+    {
+      "id": "b6c6b968f57294a67687",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "b6c6b968f57294a67687"
+          },
+          "sourceEntryCanonicalSha256": "1d05db3e17517bdf58783fb3140b7034489b02ed5f7a633d58ab13356bef02cd",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "b6c6b968f57294a67687"
+          },
+          "sourceEntryCanonicalSha256": "34ce0af8113ce08c33f51be33e57336668b201b076f4a3c6d7d4674b1d95155a",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "34ce0af8113ce08c33f51be33e57336668b201b076f4a3c6d7d4674b1d95155a"
+    },
+    {
+      "id": "c7c31a11cdb3859ae4bb",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "c7c31a11cdb3859ae4bb"
+          },
+          "sourceEntryCanonicalSha256": "75766fd330d192cffb60468832d49b4d94521b2689db87f6ab27177d10952ba2",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "c7c31a11cdb3859ae4bb"
+          },
+          "sourceEntryCanonicalSha256": "23f026471c2a36b8cc4220b551a57c6009641a0b230d270269e5ca4f3387127c",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "23f026471c2a36b8cc4220b551a57c6009641a0b230d270269e5ca4f3387127c"
+    },
+    {
+      "id": "d1ca7432d9f9de9caed3",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "d1ca7432d9f9de9caed3"
+          },
+          "sourceEntryCanonicalSha256": "3ee0500ddbd302d81fad6a2e4b2e4b1f44d407aba411e13245521d5c474c0632",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "d1ca7432d9f9de9caed3"
+          },
+          "sourceEntryCanonicalSha256": "cc15accfc8e6279818ae7c990161553a652d3bf1ec463139f084cb3413baeec7",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "cc15accfc8e6279818ae7c990161553a652d3bf1ec463139f084cb3413baeec7"
+    },
+    {
+      "id": "d9b9d4ae8c44ebb790f8",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "d9b9d4ae8c44ebb790f8"
+          },
+          "sourceEntryCanonicalSha256": "09d1c48aee37512f7242574a8a1d022868182bb9b91826088d98ea639bb10cbd",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "d9b9d4ae8c44ebb790f8"
+          },
+          "sourceEntryCanonicalSha256": "7aed193418cef0ee7017db9da25cbde9898f8473287e5af8508e2a37ea237983",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "7aed193418cef0ee7017db9da25cbde9898f8473287e5af8508e2a37ea237983"
+    },
+    {
+      "id": "df4db7e4f0142896d690",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "df4db7e4f0142896d690"
+          },
+          "sourceEntryCanonicalSha256": "7ce541dcc421eacc1e7c0b0657940f183779cdd605c5be3c021d0f87fb13e819",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "df4db7e4f0142896d690"
+          },
+          "sourceEntryCanonicalSha256": "5bbc3fbd0fafbbc5353c02bfda437f2a712466254957eefcc69ef20a20660325",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "5bbc3fbd0fafbbc5353c02bfda437f2a712466254957eefcc69ef20a20660325"
+    },
+    {
+      "id": "e53ab49ed259af5f577d",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "e53ab49ed259af5f577d"
+          },
+          "sourceEntryCanonicalSha256": "bafe595286190973b21209d21997db75d4d0a1f30b5a92efda575977a507eb72",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "e53ab49ed259af5f577d"
+          },
+          "sourceEntryCanonicalSha256": "73da9595346a404ab89bc4c5472b2017721e72dff4f9ba7179077e79633d3785",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "73da9595346a404ab89bc4c5472b2017721e72dff4f9ba7179077e79633d3785"
+    },
+    {
+      "id": "f02a4c1dd4e058076de8",
+      "differingFields": [
+        "evidence"
+      ],
+      "sources": [
+        {
+          "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+          "sourceEntry": {
+            "id": "f02a4c1dd4e058076de8"
+          },
+          "sourceEntryCanonicalSha256": "ae9c9f13ae3b61f3158f4e4e41ba9452a91d25c503f508ff35c97354c9bae51d",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        },
+        {
+          "sourceRevision": "a25971359f21bad4ad2e9debf636b9230a897859",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "58a07c509f04187d0611057f46ab9c402d354e62433b03afc5b3a222a08e4c0b",
+          "sourceEntry": {
+            "id": "f02a4c1dd4e058076de8"
+          },
+          "sourceEntryCanonicalSha256": "895654c71259775ceeee8da8b8c4b38d0f5bfa4b6f1d09fcdfe6534265bbc2e2",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+        }
+      ],
+      "preservedMainReviewCanonicalSha256": "895654c71259775ceeee8da8b8c4b38d0f5bfa4b6f1d09fcdfe6534265bbc2e2"
+    }
+  ],
+  "supersededRuntimeDecisions": [
+    {
+      "id": "1a20aae8bb74a6df248f",
+      "source": {
+        "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+        "sourceEntry": {
+          "id": "1a20aae8bb74a6df248f"
+        },
+        "sourceEntryCanonicalSha256": "be04ec38408756b5aeb500efed20380638752bc96b376d4b94404af585cf36b1",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      "mainReplacementIds": [
+        "2a0d6d57a51e35d91376"
+      ],
+      "reason": "Protected main owns the updated source and existing successor history; retain its exact current review."
+    },
+    {
+      "id": "254cc8e9014b4fe1347c",
+      "source": {
+        "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+        "sourceEntry": {
+          "id": "254cc8e9014b4fe1347c"
+        },
+        "sourceEntryCanonicalSha256": "02833e61e3efb484908898abacd6b7d58e69d821e253b3c1b5763028c6a9fe6d",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      "mainReplacementIds": [
+        "e60cbdb9121493f47fa6"
+      ],
+      "reason": "Protected main owns the updated source and existing successor history; retain its exact current review."
+    },
+    {
+      "id": "30eacf4605aa4c213248",
+      "source": {
+        "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+        "sourceEntry": {
+          "id": "30eacf4605aa4c213248"
+        },
+        "sourceEntryCanonicalSha256": "d4b3a29714cea2032075bcea7b1f2dffb6d7f02ee3e4fe1fad380e6d6d8ddfc4",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      "mainReplacementIds": [
+        "792f0717242ca974abe2"
+      ],
+      "reason": "Protected main owns the updated source and existing successor history; retain its exact current review."
+    },
+    {
+      "id": "7a64750714562d66a881",
+      "source": {
+        "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+        "sourceEntry": {
+          "id": "7a64750714562d66a881"
+        },
+        "sourceEntryCanonicalSha256": "ca1865941684787d17259773d89d8a7b128818a73dca1b2b5b3d702381612ce4",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      "mainReplacementIds": [],
+      "reason": "Protected main owns the updated source; former Instagram serviceLinks was removed in merged public discovery simplification."
+    },
+    {
+      "id": "8ea9381b405e317f5e7f",
+      "source": {
+        "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+        "sourceEntry": {
+          "id": "8ea9381b405e317f5e7f"
+        },
+        "sourceEntryCanonicalSha256": "19507271b72df11b048884eeb6e33b814c7f8eec93b806d91eb863587d351592",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      "mainReplacementIds": [
+        "d6b3102f762f66266bf0"
+      ],
+      "reason": "Protected main owns the updated source and existing successor history; retain its exact current review."
+    },
+    {
+      "id": "9de842d0529aa06faf6b",
+      "source": {
+        "sourceRevision": "c359764a038d2228c0e0c0c94c2b9aadb91614b7",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "faf8dfdfeae901892766d3d0b72f1ff9370d48d3b20b0e54a62a4948f5349b36",
+        "sourceEntry": {
+          "id": "9de842d0529aa06faf6b"
+        },
+        "sourceEntryCanonicalSha256": "686c099eb7d321132df2f67b384e3778c5de97c4406ae64ba393d298c4664eff",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      "mainReplacementIds": [
+        "4beaac5c476079656a0a"
+      ],
+      "reason": "Protected main owns the updated source and existing successor history; retain its exact current review."
+    }
+  ]
+}

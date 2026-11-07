@@ -1,0 +1,63 @@
+{
+  "baseCommit": "6ddf5810f405b44b9fd3f81653dbfa3fdfa6ea88",
+  "reviewComment": 4397411789,
+  "scope": "First session identity resolution without a cached descriptor is not an established listener switch.",
+  "counterexamples": {
+    "restoringSavedPosition": {
+      "expected": 12,
+      "observed": 0
+    },
+    "retainingNewSelection": {
+      "expected": "public-B",
+      "observed": null
+    },
+    "failedTests": 2,
+    "passedNegativeControls": 2,
+    "notSelectedTests": 25
+  },
+  "fixedFocusedTests": {
+    "passed": 68,
+    "failed": 0,
+    "skipped": 0,
+    "suites": 2
+  },
+  "negativeControls": [
+    "A saved queue is not exposed when the server resolves a different listener.",
+    "Resolving anonymous consumes initial-owner eligibility, so a later login cannot restore a stale account queue.",
+    "Existing direct A/B/A, late save, bootstrap edit and source-disposal tests remain in the focused suites."
+  ],
+  "sourceSha256": {
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "5b28707df52612a9376fe2cb5bec1f62d8831065a5df07e5b71a56a07957420e",
+    "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "16227bfeb8b8858ead6aa79ecc75f24f24b657dcc63d484a5292ab54f6ab3c8a",
+    "formal/system/player-listening-privacy.md": "cba10039295f343b5cafab911298d0072d9ae2d874c5f5328892566e4017ec51",
+    "e2e/web/music-player-native.spec.mjs": "fac07b5d9a994ae4335ccd1095426dd2da5383b7ef34d70a4c86216c4e352a78"
+  },
+  "evidenceLimits": [
+    "JSDOM media doubles; no new native-media, physical-device, provider, production, SLO or universal-refinement claim.",
+    "The initial test-only launch did not wait for lazy App route mounting and is not counted as a product counterexample. The corrected readiness-aware red run is the counterexample above."
+  ],
+  "stateChanges": "None outside the local player session boundary; backend, migrations, permissions and queue order unchanged.",
+  "nativeRegression": {
+    "old6ddDesktopChromium": "one real-decoder counterexample: saved queue was emptied on first owner resolution",
+    "fixedFocusedCases": 9,
+    "fixedProjects": [
+      "chromium-desktop",
+      "chromium-phone",
+      "firefox-critical"
+    ],
+    "coverage": "Existing cached-bootstrap and account-switch disposal cases plus new uncached-bootstrap continuity case",
+    "retry": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "mocked": "Account/catalog/access responses only; media bytes, native methods and clocks are real and use loopback HTTP",
+    "oldResultsSha256": "1f9012fb2705fe5b7a9f057664a14e182c031bb346b894ce5e647aba1bd43627",
+    "fixedResultsSha256": "81fe5f4235232af4d0df83573aebc099f4fad763dec585d03cc78f1b96e2862b",
+    "scope": "Working-tree source at base6dd with the recorded fix hashes; not an installed production or future final-head CI claim"
+  },
+  "fixedWholeUi": {
+    "passed": 3667,
+    "suites": 318,
+    "failed": 0,
+    "skipped": 0
+  }
+}

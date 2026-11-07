@@ -40,6 +40,11 @@ import Servant.Server.Experimental.Auth (AuthHandler, AuthServerData, mkAuthHand
 import TDF.Auth (parseBearerAuthorizationHeader)
 import TDF.DB (Env(..))
 import TDF.DTO.EventResearchDTO
+  ( EventResearchCandidateWriteDTO(..)
+  , EventResearchCandidateDTO
+  , EventResearchMaterializationRequestDTO(..)
+  , EventResearchMaterializationDTO
+  )
 import TDF.Models.SocialEventsModels
 import qualified TDF.Server.EventResearch as Research
 

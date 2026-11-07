@@ -1,0 +1,177 @@
+[
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121317784234",
+    "name": "quality",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121317785163",
+    "name": "native-android-e2e",
+    "state": "SKIPPED"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121311920279",
+    "name": "production-migrations",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121311179943",
+    "name": "api-contracts",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240267712/job/121310850864",
+    "name": "admission",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310620451",
+    "name": "migration-tests",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310620406",
+    "name": "mobile-quality",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310620418",
+    "name": "repo-quality",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310620385",
+    "name": "api-contract-tests",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310620360",
+    "name": "backend-quality",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310620330",
+    "name": "ui-quality",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309853314",
+    "name": "postgres-task-revision",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309853295",
+    "name": "postgres-raci-reassignment",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310620329",
+    "name": "persona-web-e2e",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309853292",
+    "name": "postgres-api",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852963",
+    "name": "postgres-foundation",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852952",
+    "name": "postgres-raci-editor-context",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310214438",
+    "name": "changes",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852958",
+    "name": "postgres-task-read",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852924",
+    "name": "postgres-task-completion",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852903",
+    "name": "postgres-task-commit",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852906",
+    "name": "specification-contracts",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://dash.cloudflare.com/?to=/c07256e78d05ad9a508d0aee82ac577a/pages/view/tdf-app/56198754-bacb-4b06-b5fe-68f7ca1f569c",
+    "name": "Cloudflare Pages",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852917",
+    "name": "postgres-complete-schema",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096902/job/121310215383",
+    "name": "payment-staging-inspection",
+    "state": "SKIPPED"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096895/job/121309852100",
+    "name": "build",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096898/job/121309852112",
+    "name": "models-and-postgres",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://vercel.com/github",
+    "name": "Vercel Preview Comments",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096937/job/121309852077",
+    "name": "postgres-properties",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852855",
+    "name": "postgres-task-revisioned-read",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096898/job/121309851911",
+    "name": "social-client",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096897/job/121309852103",
+    "name": "hardcoded-list-audit",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240097076/job/121309852725",
+    "name": "verify",
+    "state": "SUCCESS"
+  },
+  {
+    "link": "https://github.com/diegueins680/tdf-app/actions/runs/40240096937/job/121309853061",
+    "name": "native-ios-e2e",
+    "state": "SKIPPED"
+  },
+  {
+    "link": "https://vercel.com/diego-saas-projects/tdf-app-tdf-hq-ui/H9chqcEU5fQubEVmqeECLrfAySWN",
+    "name": "Vercel",
+    "state": "SUCCESS"
+  }
+]

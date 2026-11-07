@@ -1,0 +1,22 @@
+{
+  "publishedDD8": "dd8f2c9c14cc0b3c77ef9c84ab1a112a8c6b2f4d",
+  "reusedPrep": "5788f07b0013a067c359f67a36290011e59f8414",
+  "main": "6197b87326a437350dca239ee64902e78da6964c",
+  "sevenOwnedInputHashes": {
+    "scripts/artist-enrichment.mjs": "40fa05c40650b4fbdc94ab06533481e93391a402cf8f40332d3a598aa7cd9e7d",
+    "scripts/__tests__/artist-enrichment.test.mjs": "1279298dc4cd6c11107577ac67d85df7931d67497060338948aaf82c8363df01",
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx": "d4c78364465efb2470458c71eabb7e90ce7943aa6005852aae064c352e6b0005",
+    "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx": "33b3ffcac89df7788cd7888c6bc63a41e3fd708615f5b46af9f174dc808d8224",
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.ts": "f4b507724bc41be6f64d46f10b2f775316f7bc9ea139e7f0c8261a79fe926aae",
+    "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts": "b7a7422e67a3b5b9c8e6576adb0cd6b85499d2f5411b74cec1b0b658394d2777",
+    "docs/artist-enrichment-runbook.md": "ca9048fc7127144f831667d69d4ba1184698f8205ba9bd0f8eed96179347ac40"
+  },
+  "sixFunctionalFilesAndRunbookExactDD8": true,
+  "all156IncomingMainRequirementsPreserved": true,
+  "ownARTRequirementExactDD8": true,
+  "unresolvedOnlyGenerated": [
+    "docs/catalog-persistence/reports/static-list-inventory.json",
+    "formal/system/inventory.json",
+    "formal/system/traceability.json"
+  ]
+}

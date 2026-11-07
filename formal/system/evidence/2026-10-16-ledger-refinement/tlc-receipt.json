@@ -1,0 +1,141 @@
+{
+  "toolSha1": "7f21faa2cdae3189e7d5fadb4488f0dfcc658407",
+  "scope": "Finite existing LedgerPosting abstraction; no MVCC snapshots or universal refinement",
+  "cases": [
+    {
+      "config": "LedgerPosting.cfg",
+      "exitCode": 0,
+      "expectedCounterexample": null,
+      "logSha256": "4d9eb7ff9d51c80c6cd835408916897149d96051767d39f6155a43667860fb90",
+      "configSha256": "c9bd256bf365910ea502ddbab1ca36a90c49dcfd5844266212614e7462f90079",
+      "command": [
+        "java",
+        "-XX:ActiveProcessorCount=2",
+        "-cp",
+        "/workspace/scratch/87d34f5fc53e/tla2tools.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-cleanup",
+        "-metadir",
+        "/tmp/tdf-ledger-tlc-LedgerPosting.cfg",
+        "-config",
+        "LedgerPosting.cfg",
+        "LedgerPosting.tla"
+      ]
+    },
+    {
+      "config": "LedgerPostingAppend.cfg",
+      "exitCode": 12,
+      "expectedCounterexample": "PostedImmutable",
+      "logSha256": "2f0a5752e2da0cf0a06146ae794cd45b9916fe7c117e7d9b2103a46d0296b028",
+      "configSha256": "f09d97280f6de2fd31d39a093062c124743e4de3af7a171302b96a1eba3f8905",
+      "command": [
+        "java",
+        "-XX:ActiveProcessorCount=2",
+        "-cp",
+        "/workspace/scratch/87d34f5fc53e/tla2tools.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-cleanup",
+        "-metadir",
+        "/tmp/tdf-ledger-tlc-LedgerPostingAppend.cfg",
+        "-config",
+        "LedgerPostingAppend.cfg",
+        "LedgerPosting.tla"
+      ]
+    },
+    {
+      "config": "LedgerPostingUnvalidated.cfg",
+      "exitCode": 12,
+      "expectedCounterexample": "PostedBalanced",
+      "logSha256": "c11ca2d6968ec0cbd72bf39c83840988acd4ea1cbfa8d514bcdf23783a7470e9",
+      "configSha256": "8c5604e88c2aff8b33363640efa19f3977d70bbf04818773ca8058cd9cfb4a7f",
+      "command": [
+        "java",
+        "-XX:ActiveProcessorCount=2",
+        "-cp",
+        "/workspace/scratch/87d34f5fc53e/tla2tools.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-cleanup",
+        "-metadir",
+        "/tmp/tdf-ledger-tlc-LedgerPostingUnvalidated.cfg",
+        "-config",
+        "LedgerPostingUnvalidated.cfg",
+        "LedgerPosting.tla"
+      ]
+    },
+    {
+      "config": "LedgerPostingReopen.cfg",
+      "exitCode": 12,
+      "expectedCounterexample": "PostedHistory",
+      "logSha256": "516043e86dcdafbdf08a3d525afe8ebaae9ab1f25f4f1e6c9f7b5c47250d9e42",
+      "configSha256": "78d3b64415366b82bf28afac1938eeffab57e5acc089eb02d4f9fc7a3443932c",
+      "command": [
+        "java",
+        "-XX:ActiveProcessorCount=2",
+        "-cp",
+        "/workspace/scratch/87d34f5fc53e/tla2tools.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-cleanup",
+        "-metadir",
+        "/tmp/tdf-ledger-tlc-LedgerPostingReopen.cfg",
+        "-config",
+        "LedgerPostingReopen.cfg",
+        "LedgerPosting.tla"
+      ]
+    },
+    {
+      "config": "LedgerPostingInsertPosted.cfg",
+      "exitCode": 12,
+      "expectedCounterexample": "PostedBalanced",
+      "logSha256": "dfaa62e49b392bdf0cb06d8fa2d7664cb93508c3b7f07b30b53d77efa7e726fd",
+      "configSha256": "b6b26746ff878e12fbc7184a5769502cb5f2364ad0a35512877b82f0d2b0b01f",
+      "command": [
+        "java",
+        "-XX:ActiveProcessorCount=2",
+        "-cp",
+        "/workspace/scratch/87d34f5fc53e/tla2tools.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-cleanup",
+        "-metadir",
+        "/tmp/tdf-ledger-tlc-LedgerPostingInsertPosted.cfg",
+        "-config",
+        "LedgerPostingInsertPosted.cfg",
+        "LedgerPosting.tla"
+      ]
+    },
+    {
+      "config": "LedgerPostingReverserMutable.cfg",
+      "exitCode": 12,
+      "expectedCounterexample": "ReversedByPosted",
+      "logSha256": "3a8084af95bcf08a855f054242dd1a9d31b6bf2fcc18f001168a10beefb8957f",
+      "configSha256": "979aa3ad107922440768d413c0d3c74ffc76c208ae45be81b9eb51ff01825244",
+      "command": [
+        "java",
+        "-XX:ActiveProcessorCount=2",
+        "-cp",
+        "/workspace/scratch/87d34f5fc53e/tla2tools.jar",
+        "tlc2.TLC",
+        "-workers",
+        "1",
+        "-cleanup",
+        "-metadir",
+        "/tmp/tdf-ledger-tlc-LedgerPostingReverserMutable.cfg",
+        "-config",
+        "LedgerPostingReverserMutable.cfg",
+        "LedgerPosting.tla"
+      ]
+    }
+  ],
+  "toolSha256": "fa18543e44ed5974a85bd2c60c0dc16620ae117680ea8e693d2691999ed90b22",
+  "java": "OpenJDK17.0.20+8-1-24.04-Ubuntu",
+  "modelSha256": "1782b4e7cdcd96e9a38fd99ed17939a88961af26d3f5fec8472f655ff20576eb"
+}

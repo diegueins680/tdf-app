@@ -96,3 +96,31 @@ receipts and serializes admission; it does not assume unlimited provider retenti
 [PostgreSQL17 row locks](https://www.postgresql.org/docs/17/explicit-locking.html)
 provide transaction-duration exclusion. Consistent lock order and actual concurrent
 integration tests remain necessary; adding a lock is not a whole-system proof.
+
+## Ticket capture classification boundary
+
+The ticket fallback guard consumes `ServicePaypalCaptureOutcome.spcoStatus`, the
+nested capture status, not the enclosing order status. A valid bound order with
+no single capture parses as UNKNOWN. Only explicit DECLINED or FAILED capture
+evidence may clear this additional fallback guard. Missing, unknown, pending,
+refund and future statuses retain it on both transport-error readback and ordinary
+capture-response paths. Completed captures retain the separate existing order,
+merchant, amount and currency validation before settlement. A refund is not proof
+that this checkout was never charged.
+
+The existing canonical intent gate independently blocks fresh charges for an
+unresolved linked intent. This repair concerns the additional ticket/UI and legacy
+attempt boundary; the earlier classifier counterexample does not establish a
+bypass of canonical fresh-charge admission.
+
+`TicketCaptureClassification.tla` enumerates eight representative outcome classes,
+two response paths and one attempted alternate rail. Its safety invariant excludes
+alternate-rail admission without affirmative no-charge evidence. Two negative
+configurations reproduce the old readback classifier and ordinary-response fallthrough.
+These finite checks assume authenticated, correctly bound observations and atomic
+persistence; they do not prove network behavior, refund accounting, liveness,
+implementation refinement or the complete payment protocol. Haskell regressions
+exercise the actual bound-order parser and classifier, and PostgreSQL handler
+regressions verify the guard survives unknown and refund states.
+
+Provider status authority: [PayPal Orders capture status](https://developer.paypal.com/sdk/orders/v2/definitions/capture_status/).

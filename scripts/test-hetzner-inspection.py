@@ -3,6 +3,7 @@
 import copy
 import importlib.util
 import json
+import re
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -45,7 +46,113 @@ def database():
             'socialRuntime': {'enabled': False, 'activatedOnce': True, 'private': SECRET}, 'extra': SECRET}
 
 
+def discovered_boolean_controls(text):
+    """Conservative lexical shapes, not general Haskell dataflow analysis."""
+    names = set(re.findall(r'"([A-Z][A-Z0-9_]*(?:_ENABLED|_AUTO_PUBLISH))"', text))
+    names.update(re.findall(r'validateStartupBooleanFlag\s+"([A-Z][A-Z0-9_]*)"', text))
+    # A literal lookup wrapped in a boolean parser need not follow a suffix
+    # convention. Permit line wrapping, but do not cross a blank paragraph.
+    names.update(re.findall(r'\b(?:parseBool\w*|readBool\w*)\b(?:(?!\n\s*\n).)*?\blookupEnv\s+"([A-Z][A-Z0-9_]*)"', text, re.S))
+    # Association-list lookups from getEnvironment can use boolean membership
+    # instead of a parser. Require every member to be a literal boolean spelling,
+    # so APP_ENV/development lists do not become boolean configuration fields.
+    for name, values in re.findall(
+            r'\blookup\w*\s+"([A-Z][A-Z0-9_]*)"(?:\s+[a-zA-Z_]\w*)?\s*`elem`\s*\[([^]]*)\]', text):
+        members = [value.strip() for value in values.split(',')]
+        if all(re.fullmatch(r'Just\s+"(?:true|false|1|0|yes|no|on|off)"', value, re.I)
+               for value in members):
+            names.add(name)
+    return names
+
+
 class Boundaries(unittest.TestCase):
+    def test_environment_list_boolean_membership_is_discovered_without_suffix(self):
+        for text in [
+            'lookupNormalized "SYNTHETIC_PERSONA_SWITCH" `elem` [Just "1", Just "true", Just "yes"]',
+            'lookup "SYNTHETIC_PERSONA_SWITCH" env\n  `elem` [Just "yes", Just "no"]',
+        ]:
+            with self.subTest(text=text):
+                self.assertEqual(discovered_boolean_controls(text), {'SYNTHETIC_PERSONA_SWITCH'})
+        self.assertEqual(discovered_boolean_controls(
+            'lookupNormalized "APP_ENV" `elem` [Just "development", Just "test"]'), set())
+        self.assertEqual(discovered_boolean_controls(
+            'lookupNormalized "APP_ENV" `elem` [Just "true", Just "development"]'), set())
+        self.assertNotIn('SYNTHETIC_PERSONA_SWITCH', module.BOOLEAN_KEYS)
+
+    def test_synthetic_persona_switch_reports_raw_presence_and_absence_without_password(self):
+        key = 'TDF_ENABLE_SYNTHETIC_PERSONAS'
+        value = container(); value['Config']['Env'] = ['APP_ENV=production']
+        self.assertIn(key, module.summarize_container('api', value)['missingBooleanConfiguration'])
+        for raw in ['1', 'true', 'yes', '0', 'false', 'no', '', ' true ']:
+            with self.subTest(raw=raw):
+                probe = copy.deepcopy(value)
+                probe['Config']['Env'] += [key + '=' + raw, 'TDF_PERSONA_TEST_PASSWORD=' + SECRET]
+                result = module.summarize_container('api', probe)
+                self.assertEqual(result['booleanConfiguration'], {key: raw})
+                self.assertNotIn(key, result['missingBooleanConfiguration'])
+                self.assertNotIn(SECRET, json.dumps(result))
+        value['Config']['Env'].append(key + '=' + SECRET)
+        with self.assertRaises(ValueError): module.summarize_container('api', value)
+
+    def test_boolean_parser_lookup_is_discovered_without_a_suffix(self):
+        for text in ['flag <- fmap (maybe False parseBoolean) (lookupEnv "SYNTHETIC_TRUST_HEADER")',
+                     'flag <- fmap (maybe False parseBoolean)\n  (liftIO (lookupEnv "SYNTHETIC_TRUST_HEADER"))']:
+            self.assertEqual(discovered_boolean_controls(text), {'SYNTHETIC_TRUST_HEADER'})
+        self.assertNotIn('SYNTHETIC_TRUST_HEADER', module.BOOLEAN_KEYS,
+                         'The synthetic control must exercise discovery, not a registry entry')
+
+    def test_known_backend_boolean_controls_report_absence_as_well_as_presence(self):
+        # Conservative lexical discovery: names in comments may demand review,
+        # but this does not pretend to resolve Haskell values or dynamic names.
+        discovered = set()
+        for directory in ['tdf-hq/src', 'tdf-hq/app']:
+            for source in (ROOT/directory).rglob('*.hs'):
+                text = source.read_text()
+                discovered.update(discovered_boolean_controls(text))
+        cors = (ROOT/'tdf-hq/src/TDF/Cors.hs').read_text()
+        for name in ['allowAllEnv', 'disableDefaultsEnv']:
+            group = re.search(rf'{name}\s*<-\s*lookupFirstNonEmptyEnv\s*\[([^]]+)\]', cors)
+            self.assertIsNotNone(group, 'CORS boolean alias discovery changed; review the collector')
+            discovered.update(re.findall(r'"([A-Z][A-Z0-9_]*)"', group[1]))
+        self.assertGreaterEqual(len(discovered), 25)
+        self.assertEqual(discovered - module.BOOLEAN_KEYS, set(),
+                         'Backend boolean controls missing from absence reporting')
+        absent = container(); absent['Config']['Env'] = ['APP_ENV=production']
+        result = module.summarize_container('api', absent)
+        self.assertEqual(result['booleanConfiguration'], {})
+        self.assertEqual(set(result['missingBooleanConfiguration']), module.BOOLEAN_KEYS)
+        for key in discovered:
+            for raw in ['true', 'false', '']:
+                with self.subTest(key=key, raw=raw):
+                    value = copy.deepcopy(absent)
+                    value['Config']['Env'].append(key + '=' + raw)
+                    result = module.summarize_container('api', value)
+                    self.assertEqual(result['booleanConfiguration'], {key: raw})
+                    self.assertNotIn(key, result['missingBooleanConfiguration'])
+        # A previously unknown suffix flag is observable when supplied, without
+        # claiming knowledge of its absence/default or leaking arbitrary values.
+        value = copy.deepcopy(absent)
+        value['Config']['Env'].append('FUTURE_WORKER_ENABLED=false')
+        self.assertEqual(module.summarize_container('api', value)['booleanConfiguration'],
+                         {'FUTURE_WORKER_ENABLED': 'false'})
+
+    def test_padded_booleans_and_cors_wildcard_preserve_raw_observations(self):
+        for key in module.BOOLEAN_KEYS:
+            values = [' true ', '\tFALSE\n', '  ', 'yes', 'OFF']
+            if key in module.CORS_BOOLEAN_KEYS:
+                values.append(' * ')
+            for raw in values:
+                with self.subTest(key=key, raw=raw):
+                    value = container(); value['Config']['Env'] = [key + '=' + raw]
+                    result = module.summarize_container('api', value)
+                    self.assertEqual(result['booleanConfiguration'], {key: raw})
+        for key, raw in [('SMTP_TLS', '*'), ('FUTURE_WORKER_ENABLED', '*'),
+                         ('ENABLE_GDPR_COMPLIANCE', SECRET), ('DISABLE_DEFAULT_CORS', SECRET),
+                         ('SMTP_TLS', ' ' * 257), ('SMTP_TLS', 'true\x00')]:
+            with self.subTest(key=key, raw=raw):
+                value = container(); value['Config']['Env'] = [key + '=' + raw]
+                with self.assertRaises(ValueError): module.summarize_container('api', value)
+
     def test_api_redacts_credentials_and_reports_unsafe_cors_honestly(self):
         result=module.summarize_container('api', container())
         self.assertNotIn(SECRET, json.dumps(result))
