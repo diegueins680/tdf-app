@@ -866,7 +866,8 @@ createApprovalHandler original command = runOperationsWrite original $ \user -> 
       :: SqlPersistT IO [Single Text]
     unless (length linked == 1) $ rejectCommand err404
     item <- fetchUpdatedItem itemId >>= maybe (rejectCommand err500) pure
-    unless (canViewEntityType (auRoles user)
+    -- A write: ReadOnly never widens the linking role's visibility.
+    unless (canViewEntityType (filter (/= ReadOnly) (auRoles user))
       (item.assigneePartyId == Just (fromSqlKey (auPartyId user))) (item.entityType)) $
       rejectCommand err404
   inserted <- rawSql
@@ -970,29 +971,50 @@ replayFailureHandler original failureId command = runOperationsWrite original $ 
   unless (any (`elem` auRoles user) [Admin, Manager, StudioManager]) $ rejectCommand err403
   validateCommandMetadata (command.requestId) (command.sourceClient)
   when (T.null (T.strip (command.reason))) $ rejectCommand err422 {errBody = "Replay reason is required"}
+  -- Acquire in worker/migration order before taking a failure row lock. These locks
+  -- keep trigger DDL out while remaining compatible with normal worker writes.
+  rawExecute
+    "LOCK TABLE operations_outbox, operations_integration_failure IN ROW EXCLUSIVE MODE" []
   locked <- rawSql
-    "SELECT organization_id::text,branch_id::text,status,retryable FROM operations_integration_failure WHERE id=?::uuid FOR UPDATE"
-    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single Text, Single Bool)]
-  (scope, previous) <- case locked of
-    [(Single org, Single (Just branch), Single previous, Single True)] ->
+    "SELECT organization_id::text,branch_id::text,status,retryable,provider FROM operations_integration_failure WHERE id=?::uuid FOR UPDATE"
+    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single Text, Single Bool, Single Text)]
+  (scope, previous, provider) <- case locked of
+    [(Single org, Single (Just branch), Single previous, Single True, Single provider)] ->
       case (UUID.fromText org, UUID.fromText branch) of
-        (Just organization, Just branchId) -> pure (OperationsScope organization branchId, previous)
+        (Just organization, Just branchId) -> pure (OperationsScope organization branchId, previous, provider)
         _ -> rejectCommand err500
     _ -> rejectCommand err404
   lockOperationsScope user scope []
   unless (previous `elem` ["open", "dead_letter"]) $ rejectCommand err409
+  -- Only a dead-lettered projection has something this server can run again.
+  -- Admitting any other failure would leave it in 'retrying' with no executor.
+  unless (provider == "internal_outbox") $
+    rejectCommand err409 {errBody = "No automatic retry exists for this failure"}
+  -- Replay requires re-queueing, settlement, failure reuse and work-item closure.
+  -- A missing or disabled companion trigger would strand an admitted retry.
+  installed <- rawSql
+    "SELECT NOT EXISTS (SELECT 1 FROM (VALUES\
+    \ ('operations_integration_failure'::regclass,'operations_integration_failure_retry'),\
+    \ ('operations_integration_failure'::regclass,'operations_integration_failure_merge'),\
+    \ ('operations_integration_failure'::regclass,'operations_integration_failure_resolved'),\
+    \ ('operations_outbox'::regclass,'operations_outbox_settle_failure')) AS required(rel,name)\
+    \ WHERE NOT EXISTS (SELECT 1 FROM pg_trigger t WHERE t.tgrelid=required.rel\
+    \ AND t.tgname=required.name AND NOT t.tgisinternal AND t.tgenabled IN ('O','A')))" []
+    :: SqlPersistT IO [Single Bool]
+  unless (installed == [Single True]) $
+    rejectCommand err503 {errBody = "Failure retry is not installed"}
   rows <- rawSql
     "UPDATE operations_integration_failure SET status='retrying',next_attempt_at=clock_timestamp(),last_attempt_at=clock_timestamp(),attempt_count=attempt_count+1 WHERE id=?::uuid \
-    \RETURNING jsonb_build_object('id',id,'organizationId',organization_id,'branchId',branch_id,'provider',provider,'direction',direction,'sourceRecordType',source_record_type,'sourceRecordId',source_record_id,'failureCode',failure_code,'redactedSummary',redacted_summary,'retryable',retryable,'status',status,'attemptCount',attempt_count,'lastAttemptAt',last_attempt_at,'nextAttemptAt',next_attempt_at,'createdAt',created_at)::text,source_record_type,source_record_id"
-    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single Text, Single Text)]
+    \RETURNING jsonb_build_object('id',id,'organizationId',organization_id,'branchId',branch_id,'provider',provider,'direction',direction,'sourceRecordType',source_record_type,'sourceRecordId',source_record_id,'failureCode',failure_code,'redactedSummary',redacted_summary,'retryable',retryable,'status',status,'attemptCount',attempt_count,'lastAttemptAt',last_attempt_at,'nextAttemptAt',next_attempt_at,'createdAt',created_at)::text,source_record_type,source_record_id,status"
+    [uuidValue failureId] :: SqlPersistT IO [(Single Text, Single Text, Single Text, Single Text)]
   case rows of
-    [(Single payload, Single sourceType, Single sourceId)] -> do
+    [(Single payload, Single sourceType, Single sourceId, Single outcome)] -> do
       rawExecute
         "INSERT INTO operations_admin_audit(organization_id,branch_id,actor_party_id,acting_role,source_client,action,target_entity_type,target_entity_id,previous_value,new_value,request_id,correlation_id,reason) \
-        \VALUES(?::uuid,?::uuid,?,?::text,?::text,'integration_failure_replayed',?::text,?::text,jsonb_build_object('status',?::text),jsonb_build_object('status','retrying'),?::text,?::text,?::text)"
+        \VALUES(?::uuid,?::uuid,?,?::text,?::text,'integration_failure_replayed',?::text,?::text,jsonb_build_object('status',?::text),jsonb_build_object('status',?::text),?::text,?::text,?::text)"
         [uuidValue (scopeOrganizationId scope),uuidValue (scopeBranchId scope),partyIdValue user
         ,PersistText (auditRole user),PersistText (command.sourceClient),PersistText sourceType,PersistText sourceId
-        ,PersistText previous,PersistText (command.requestId),PersistText (UUID.toText failureId),PersistText (T.strip (command.reason))]
+        ,PersistText previous,PersistText outcome,PersistText (command.requestId),PersistText (UUID.toText failureId),PersistText (T.strip (command.reason))]
       decodeCommandJson payload
     _ -> rejectCommand err500
 

@@ -4,6 +4,12 @@
 -- No test touches the network: the JWKS fetch is injected and counted.
 module TDF.AppleSignInSpec (spec) where
 
+import Control.Concurrent (forkIO, killThread)
+import Control.Concurrent.MVar (newEmptyMVar, putMVar, readMVar, takeMVar)
+import qualified Control.Exception as E
+import Control.Monad (replicateM, replicateM_)
+import System.Timeout (timeout)
+
 import Crypto.Hash.Algorithms (SHA256 (..))
 import Crypto.Number.Serialize (i2osp)
 import qualified Crypto.PubKey.RSA as RSA
@@ -305,10 +311,101 @@ spec = describe "Sign in with Apple identity token verification" $ do
       token <- tokenWith key baseClaims
       verifyAppleIdentityToken cache (pure (Left "offline")) verification token
         `shouldReturn` Left (AppleTokenKeysUnavailable "offline")
-      verifyAppleIdentityToken cache (pure (Right (AppleJwks []))) verification token
+      emptyCache <- newAppleKeyCache
+      verifyAppleIdentityToken emptyCache (pure (Right (AppleJwks []))) verification token
         `shouldReturn` Left (AppleTokenKeysUnavailable "no usable RSA keys")
-      verifyAppleIdentityToken cache (pure (Right (AppleJwks [(jwkFor key) { ajKty = "EC" }]))) verification token
+      unusableCache <- newAppleKeyCache
+      verifyAppleIdentityToken unusableCache (pure (Right (AppleJwks [(jwkFor key) { ajKty = "EC" }]))) verification token
         `shouldReturn` Left (AppleTokenKeysUnavailable "no usable RSA keys")
+
+    it "throttles failed first attempts and permits recovery only after the cooldown" $ do
+      cache <- newAppleKeyCache
+      calls <- newIORef (0 :: Int)
+      token <- tokenWith key baseClaims
+      let failedFetch = modifyIORef' calls (+ 1) >> pure (Left "offline")
+      verifyAppleIdentityToken cache failedFetch verification token
+        `shouldReturn` Left (AppleTokenKeysUnavailable "offline")
+      replicateM_ 3 $ do
+        result <- verifyAppleIdentityToken cache failedFetch verification token
+        result `shouldSatisfy` isLeft
+      readIORef calls `shouldReturn` 1
+      let later = verification { avNow = addUTCTime 61 now }
+          recovered = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor key]))
+      verifyAppleIdentityToken cache recovered later token
+        >>= (`shouldSatisfy` either (const False) (const True))
+      readIORef calls `shouldReturn` 2
+
+    it "throttles empty first key documents rather than fetching for every forged kid" $ do
+      cache <- newAppleKeyCache
+      calls <- newIORef (0 :: Int)
+      token <- tokenWith key baseClaims
+      let emptyFetch = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks []))
+      replicateM_ 4 $ do
+        result <- verifyAppleIdentityToken cache emptyFetch verification token
+        result `shouldSatisfy` isLeft
+      readIORef calls `shouldReturn` 1
+
+    it "single-flights simultaneous cold misses through one injected fetch" $ do
+      cache <- newAppleKeyCache
+      token <- tokenWith key baseClaims
+      calls <- newIORef (0 :: Int)
+      begin <- newEmptyMVar
+      entered <- newEmptyMVar
+      release <- newEmptyMVar
+      done <- replicateM 4 newEmptyMVar
+      let fetch = do
+            modifyIORef' calls (+ 1)
+            putMVar entered ()
+            readMVar release
+            pure (Right (AppleJwks [jwkFor key]))
+      threads <- mapM (\result -> forkIO $ readMVar begin >>
+        verifyAppleIdentityToken cache fetch verification token >>= putMVar result) done
+      E.finally (do
+        putMVar begin ()
+        timeout 1000000 (takeMVar entered) `shouldReturn` Just ()
+        -- A second fetch entering while the first is deliberately held is a
+        -- direct concurrency witness, not a duration/performance assertion.
+        timeout 100000 (takeMVar entered) `shouldReturn` Nothing
+        putMVar release ()
+        results <- timeout 1000000 (mapM takeMVar done)
+        results `shouldSatisfy` maybe False (all (either (const False) (const True)))
+        readIORef calls `shouldReturn` 1) (mapM_ killThread threads)
+
+    it "propagates cancellation while retaining the attempted-fetch cooldown and releasing the lock" $ do
+      cache <- newAppleKeyCache
+      token <- tokenWith key baseClaims
+      entered <- newEmptyMVar
+      never <- newEmptyMVar
+      result <- newEmptyMVar
+      worker <- forkIO $ do
+        outcome <- E.try (verifyAppleIdentityToken cache
+          (putMVar entered () >> takeMVar never) verification token)
+          :: IO (Either E.AsyncException (Either AppleTokenError AppleIdentity))
+        putMVar result outcome
+      E.finally (do
+        timeout 1000000 (takeMVar entered) `shouldReturn` Just ()
+        killThread worker
+        timeout 1000000 (takeMVar result) `shouldReturn` Just (Left E.ThreadKilled)
+        calls <- newIORef (0 :: Int)
+        let fetch = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor key]))
+        withinCooldown <- timeout 1000000 (verifyAppleIdentityToken cache fetch verification token)
+        withinCooldown `shouldSatisfy` maybe False isLeft
+        readIORef calls `shouldReturn` 0
+        let later = verification { avNow = addUTCTime 61 now }
+        recovered <- timeout 1000000 (verifyAppleIdentityToken cache fetch later token)
+        recovered `shouldSatisfy` maybe False (either (const False) (const True))
+        readIORef calls `shouldReturn` 1) (killThread worker)
+
+    it "rejects expired tokens even when their signing key is already cached" $ do
+      cache <- newAppleKeyCache
+      token <- tokenWith key baseClaims
+      calls <- newIORef (0 :: Int)
+      let fetch = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor key]))
+      verifyAppleIdentityToken cache fetch verification token
+        >>= (`shouldSatisfy` either (const False) (const True))
+      let expired = verification { avNow = addUTCTime 661 now }
+      verifyAppleIdentityToken cache fetch expired token `shouldReturn` Left AppleTokenExpired
+      readIORef calls `shouldReturn` 1
 
     it "never fetches for tokens whose header cannot be parsed" $ do
       cache <- newAppleKeyCache

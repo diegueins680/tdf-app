@@ -86,6 +86,10 @@ test('standard new-tab activation resolves the owned notification and preserves 
   const state = await fixture(page, baseURL);
   await page.goto('/solicitudes-acceso?request=17'); await openBell(page);
   const [target] = await Promise.all([page.context().waitForEvent('page'), page.getByRole('link', { name: /Nuevo fan/ }).click(browserName === 'webkit' ? { modifiers: ['ControlOrMeta'] } : { button: 'middle' })]);
+  // Activate the tab as the reader would; background-tab scheduling is not the
+  // navigation contract. Then match page.goto's document-load boundary.
+  await target.bringToFront();
+  await target.waitForLoadState('load');
   await expect(target).toHaveURL(/\/perfil\/7$/);
   await expect(target.getByText('Actual follower', { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/\/solicitudes-acceso\?request=17$/);

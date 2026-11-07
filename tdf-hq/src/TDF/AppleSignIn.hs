@@ -36,6 +36,7 @@ module TDF.AppleSignIn
   , describeAppleTokenError
   ) where
 
+import Control.Concurrent.MVar (MVar, newMVar, withMVar)
 import Control.Exception.Safe (SomeException, try)
 import Crypto.Hash (Digest, SHA256 (..), hashWith)
 import Crypto.Number.Serialize (os2ip)
@@ -376,10 +377,16 @@ data AppleKeyCacheState = AppleKeyCacheState
   , akcLastFetch :: Maybe UTCTime
   }
 
-newtype AppleKeyCache = AppleKeyCache (IORef AppleKeyCacheState)
+data AppleKeyCache = AppleKeyCache
+  { akcState :: IORef AppleKeyCacheState
+  , akcFetchLock :: MVar ()
+  }
 
 newAppleKeyCache :: IO AppleKeyCache
-newAppleKeyCache = AppleKeyCache <$> newIORef AppleKeyCacheState { akcKeys = Map.empty, akcLastFetch = Nothing }
+newAppleKeyCache = do
+  state <- newIORef AppleKeyCacheState { akcKeys = Map.empty, akcLastFetch = Nothing }
+  fetchLock <- newMVar ()
+  pure AppleKeyCache { akcState = state, akcFetchLock = fetchLock }
 
 -- | Injected JWKS retrieval; production uses 'fetchAppleJwks'.
 type AppleJwksFetch = IO (Either Text AppleJwks)
@@ -397,7 +404,7 @@ verifyAppleIdentityToken
   -> AppleVerification
   -> Text
   -> IO (Either AppleTokenError AppleIdentity)
-verifyAppleIdentityToken (AppleKeyCache ref) fetchKeys verification token =
+verifyAppleIdentityToken AppleKeyCache { akcState = ref, akcFetchLock } fetchKeys verification token =
   case parseAppleTokenHeaderKid token of
     Left err -> pure (Left err)
     Right kid -> do
@@ -405,30 +412,44 @@ verifyAppleIdentityToken (AppleKeyCache ref) fetchKeys verification token =
       keys <-
         if Map.member kid (akcKeys state)
           then pure (Right (akcKeys state))
-          else refresh state
+          else refresh kid
       pure $ case keys of
         Left err -> Left err
         Right available -> verifyAppleIdentityTokenWithKeys verification (`Map.lookup` available) token
   where
-    refresh state =
-      let recentlyFetched = case akcLastFetch state of
+    -- Serialize only cache misses. The state is re-read after acquiring the
+    -- lock: another verifier may already have fetched this signing key.
+    -- withMVar restores asynchronous cancellation during the fetch and always
+    -- releases the lock. The attempt timestamp lives outside the lock value,
+    -- so cancellation must not roll it back and immediately permit amplification.
+    refresh kid = withMVar akcFetchLock $ \_ -> do
+      state <- readIORef ref
+      let recentlyAttempted = case akcLastFetch state of
             Just previous -> realToFrac (diffUTCTime (avNow verification) previous) < minimumRefetchIntervalSeconds
             Nothing -> False
-      in if recentlyFetched && not (Map.null (akcKeys state))
-           then pure (Right (akcKeys state))
-           else do
-             fetched <- fetchKeys
-             case fetched of
-               Left detail -> pure (Left (AppleTokenKeysUnavailable detail))
-               Right (AppleJwks jwks) -> do
-                 let usable = Map.fromList [(ajKid jwk, key) | jwk <- jwks, Right key <- [appleJwkPublicKey jwk]]
-                 if Map.null usable
-                   then pure (Left (AppleTokenKeysUnavailable "no usable RSA keys"))
-                   else do
-                     atomicModifyIORef' ref $ \current ->
-                       ( current { akcKeys = usable, akcLastFetch = Just (avNow verification) }
-                       , () )
-                     pure (Right usable)
+      if Map.member kid (akcKeys state)
+        then pure (Right (akcKeys state))
+        else if recentlyAttempted
+          then if Map.null (akcKeys state)
+            then pure (Left (AppleTokenKeysUnavailable "JWKS refresh cooldown"))
+            else pure (Right (akcKeys state))
+          else do
+            -- Reserve before every fetch, including failed/empty responses.
+            -- Keep prior keys; successful refresh still replaces them exactly
+            -- as before, and each token's signature and lifetime are rechecked.
+            atomicModifyIORef' ref $ \current ->
+              (current { akcLastFetch = Just (avNow verification) }, ())
+            fetched <- fetchKeys
+            case fetched of
+              Left detail -> pure (Left (AppleTokenKeysUnavailable detail))
+              Right (AppleJwks jwks) -> do
+                let usable = Map.fromList [(ajKid jwk, key) | jwk <- jwks, Right key <- [appleJwkPublicKey jwk]]
+                if Map.null usable
+                  then pure (Left (AppleTokenKeysUnavailable "no usable RSA keys"))
+                  else do
+                    atomicModifyIORef' ref $ \current ->
+                      (current { akcKeys = usable }, ())
+                    pure (Right usable)
 
 -- | Production JWKS retrieval over HTTPS.
 fetchAppleJwks :: Manager -> Text -> AppleJwksFetch

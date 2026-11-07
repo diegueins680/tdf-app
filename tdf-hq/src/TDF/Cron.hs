@@ -1205,6 +1205,10 @@ ensureInstagramAccounts Env{..} = runSqlPool action envPool
                 , socialSyncAccountLastSyncedAt = Nothing
                 , socialSyncAccountCreatedAt = now
                 , socialSyncAccountUpdatedAt = Nothing
+                , socialSyncAccountDeliveryDesignated = False
+                , socialSyncAccountConnectedByPartyId = Nothing
+                , socialSyncAccountDesignatedByPartyId = Nothing
+                , socialSyncAccountDesignatedAt = Nothing
                 }
               pure (Just ent)
 

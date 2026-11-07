@@ -1,0 +1,160 @@
+{
+  "recordedAt": "2026-10-26T16:14:53.836695+00:00",
+  "base": "6d0b1090cebf6b96fa7a840cb4062871b6ac0914",
+  "status": "IMPLEMENTED_AND_LOCALLY_TESTED_NOT_DEPLOYED",
+  "sourceSha256": {
+    "app/eventDetail.tsx": "5f3ba79a5675ab7652894bb429c1b9dd684c0b3738cddc45aa289acbb4b51398",
+    "src/api/events.ts": "50ce6e23235e77299f7f6b588c6d96ffe56d431f637a35b5e25c6a7f1441d8a0",
+    "src/components/EventMomentCard.tsx": "4d6c16c22b1dc3ce3ced783af44aae982ffa3d8f3a9cb84a2db79638d754fd0e",
+    "src/localization/eventExperienceCopy.ts": "a37b5f49ca779bc94668f59abd7ea5a8e9cb8a21cebcdce854859179445cd17d",
+    "src/types/index.ts": "a46a8bb51b5edef441ed0d9e17e3f2565c20b0713a64f46e35d2597223470c2f",
+    "__tests__/EventDetailMoments.test.tsx": "5e687bd856c5ba6c44cad12b897b1d1d46f325d49cf0cb02b0ebe118a8fbc46f",
+    "__tests__/EventMomentAuthorCard.test.tsx": "d0c7dc29e64522fa5e2c4aa9e4944cc7c4148c05ec2e647aab2f1cea5ee6f4a1",
+    "__tests__/eventMomentAuthorApi.test.ts": "490bfec762d0bb151ed3641a23ad885d4bcff5354b4a207923c5b59b7fbb0728",
+    "scripts/test-event-moment-author-preview.mjs": "848c396c3b6a481ff843a35812dffa3a307ba0f4b789aa5b2c64d66992a20e71"
+  },
+  "checks": {
+    "node": "20.19.4",
+    "targeted": {
+      "tests": 57,
+      "suites": 3,
+      "status": "PASS"
+    },
+    "fullJest": {
+      "tests": 759,
+      "suites": 101,
+      "status": "PASS"
+    },
+    "releaseCheck": "PASS (assets, ESLint, TypeScript, release guards, public Expo config)",
+    "artifactGuards": {
+      "total": 14,
+      "executed": 14,
+      "skipped": 0,
+      "status": "PASS"
+    },
+    "metroOffline": "PASS on owned port 8119",
+    "preview": "PASS synthetic Expo Web; one known blocked external QR worker error, zero unexpected page errors"
+  },
+  "logs": [
+    {
+      "name": "targeted-v3",
+      "privateLog": "/private/tmp/tdf-mobile-author-targeted-v3.log",
+      "sha256": "607cc0573dd6ede7ca99df4286d83a03ac3545f46a37dd844fbff0a9fba72015"
+    },
+    {
+      "name": "full-v2",
+      "privateLog": "/private/tmp/tdf-mobile-author-full-v2.log",
+      "sha256": "9b702241b9a5f97e022511a8f8387374da2cab2de7e4564184090bc36cefccdf"
+    },
+    {
+      "name": "release-v3",
+      "privateLog": "/private/tmp/tdf-mobile-author-release-v3.log",
+      "sha256": "5c900062b26307bf3dd8cafa98bc560013acad617743445e071bf5338c9dc191"
+    },
+    {
+      "name": "artifact-guards-v1",
+      "privateLog": "/private/tmp/tdf-mobile-author-artifact-guards-v1.log",
+      "sha256": "92d894bb608b0f0e44f10e5a3ae8baddb1448bca329995be23384a0cb6d5b372"
+    }
+  ],
+  "androidJavaScript": {
+    "scope": "Android JavaScript production-mode Metro bundle; not an APK, IPA or device execution",
+    "sources": [
+      {
+        "path": "app/eventDetail.tsx",
+        "sha256": "5f3ba79a5675ab7652894bb429c1b9dd684c0b3738cddc45aa289acbb4b51398",
+        "exactSourceMap": true
+      },
+      {
+        "path": "src/api/events.ts",
+        "sha256": "50ce6e23235e77299f7f6b588c6d96ffe56d431f637a35b5e25c6a7f1441d8a0",
+        "exactSourceMap": true
+      },
+      {
+        "path": "src/components/EventMomentCard.tsx",
+        "sha256": "4d6c16c22b1dc3ce3ced783af44aae982ffa3d8f3a9cb84a2db79638d754fd0e",
+        "exactSourceMap": true
+      },
+      {
+        "path": "src/localization/eventExperienceCopy.ts",
+        "sha256": "a37b5f49ca779bc94668f59abd7ea5a8e9cb8a21cebcdce854859179445cd17d",
+        "exactSourceMap": true
+      }
+    ],
+    "artifacts": [
+      {
+        "path": "/private/tmp/tdf-mobile-author-android-v1.bundle",
+        "bytes": 5307030,
+        "sha256": "321df14658b0ab47592766f3d4d35811c3dea13a5463d04f6d41c393f249df2d"
+      },
+      {
+        "path": "/private/tmp/tdf-mobile-author-android-v1.map",
+        "bytes": 18036495,
+        "sha256": "b708873aa1feab25c00ac82b9799957a37cb0cacb86f1d0cac4c0e58afa54bfa"
+      }
+    ]
+  },
+  "nativeInputsUnchanged": [
+    "package.json",
+    "package-lock.json",
+    "app.json",
+    "ios/**",
+    "android/**",
+    "src/api/generated/types.ts"
+  ],
+  "previewResult": "event-moment-author-actions-20261026/results.json",
+  "attemptHistory": [
+    {
+      "attempt": "targeted-v1",
+      "status": "FAIL",
+      "reason": "Test accessed onPress on a React Native host node instead of its touch handler; corrected interaction dispatch; assertions retained."
+    },
+    {
+      "attempt": "preview-v1",
+      "status": "FAIL",
+      "reason": "Symlinked node_modules produced a Metro SSR script URL outside the worktree; replaced only the owned symlink with real npm ci."
+    },
+    {
+      "attempt": "preview-v2",
+      "status": "FAIL",
+      "reason": "Synthetic event omitted required lifecycle UUID and localized names; corrected fixture only."
+    },
+    {
+      "attempt": "preview-v3",
+      "status": "FAIL",
+      "reason": "Harness waited for Momentos (1) before activating the lazy-loaded tab; now opens the tab and then asserts the count."
+    },
+    {
+      "attempt": "preview-v4",
+      "status": "PASS",
+      "limit": "External connectivity check intentionally blocked, so an offline banner appears; external QR worker also remains blocked."
+    },
+    {
+      "attempt": "preview-v5",
+      "status": "PASS",
+      "limit": "Connectivity HEAD fulfilled locally without external egress; QR worker blocked and recorded."
+    },
+    {
+      "attempt": "preview-v6",
+      "status": "PASS",
+      "limit": "Final formatted replay script; same product input hashes; QR worker blocked and recorded."
+    }
+  ],
+  "limitations": [
+    "No new native binary/device/store evidence at this local qualification stage. Prior #173 compiled artifacts retain their original source identity.",
+    "Preview uses all-synthetic HTTP responses and no real backend. Root API/PG edit/delete proofs retain their prior execution identity.",
+    "Preview blocks a pre-existing external QR decoder worker; scanner functionality is not tested.",
+    "Publication deletion does not revoke public media URLs or erase external copies.",
+    "Independent review, protected integration, backend rollout and production acceptance remain required."
+  ],
+  "production": {
+    "writes": 0,
+    "deployments": 0,
+    "invitationsAttempted": 0,
+    "invitationsSent": 0,
+    "invitationsDelivered": 0,
+    "invitationsFailed": 0,
+    "eligibleWithConsent": null,
+    "excluded": null
+  }
+}

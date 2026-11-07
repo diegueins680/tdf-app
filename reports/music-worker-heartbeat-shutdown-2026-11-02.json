@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-02T23:45:12.571044+00:00",
+  "baseline": "dc2e1425c113066e9ed5bb0a2bfd8151d52e1203",
+  "mainAtStart": "a0cc6529fa10d3aae33804a06c3da23c648a9fbb",
+  "implementation": "f4ef3daf9eb9348a546ef30ac515cae550660719",
+  "qualifiedSource": "5c404af2e025b8f1730ee87620acc40d33f19dbb",
+  "problem": "A group TERM can reach the heartbeat shell while missing its native sleep or PostgreSQL child. Original helpers then permit successful worker exit with inherited streams still open. Controlled fault confirmed; live CI descriptor holder and schedule remain UNKNOWN.",
+  "liveFailure": {
+    "head": "dc2e1425c113066e9ed5bb0a2bfd8151d52e1203",
+    "workflowRun": 41540047662,
+    "job": 125601931722,
+    "url": "https://github.com/diegueins680/tdf-app/actions/runs/41540047662/job/125601931722",
+    "rawLogSHA256": "d9a8651ce56e3bb3209e7be5c4c8171d7680d99df0315c103682d146fc4a9cc5",
+    "standaloneStackSummary": "4091 examples, 0 failures, 21 pending",
+    "earlierStep": "Verify music worker recovery, fencing and DDEX diagnostics",
+    "failedScenario": "two sibling jobs close a release once without losing the final validation",
+    "snapshot": {
+      "pid": 11834,
+      "startedAt": 52475.856715,
+      "spawnedAt": 52478.5297,
+      "exitedAt": 52696.525613,
+      "closedAt": null,
+      "observedAt": 82486.247169,
+      "exitCode": 0,
+      "signalCode": null,
+      "spawnError": null,
+      "processState": "exited-awaiting-close",
+      "stdoutStream": {
+        "ended": false,
+        "closed": false,
+        "destroyed": false
+      },
+      "stderrStream": {
+        "ended": false,
+        "closed": false,
+        "destroyed": false
+      },
+      "stdoutCharacters": 87,
+      "stderrCharacters": 0,
+      "stdoutTail": "Music processing job 34963f73-7c4b-4cce-bfb1-ccf93034e9d1 (validate_release) succeeded\n",
+      "stderrTail": ""
+    },
+    "notExecuted": "Dedicated ProviderRetry PostgreSQL group including67inventorycases",
+    "liveDescriptorHolderIdentity": "UNKNOWN",
+    "rootCauseClaim": "Controlledfirstgroupdeliverymissrevealsoriginalheartbeatshutdownweakness; notproofthatthiscausedtheliveCIincident."
+  },
+  "correction": "Heartbeat records its owned native child, signals it from the stopping callback and reaps outside the trap. A stopping flag covers child registration. The supervised SQL branch retains the common guard/options and explicitly preserves stdin. Parent group shutdown, 30-second stream-close deadline and financial sources remain unchanged.",
+  "properties": [
+    {
+      "id": "MEDIA-WORKER-HEARTBEAT-STOP-001",
+      "status": "TESTED",
+      "statement": "On ordinary progress and the modeled first-delivery miss, stop reaps the native sleep or SQL client before successful worker stream close."
+    },
+    {
+      "id": "MEDIA-WORKER-HEARTBEAT-SQL-001",
+      "status": "TESTED",
+      "statement": "Normal and supervised SQL receive identical guard/input/options and preserve statuses0 and7, including quoted worker identity."
+    },
+    {
+      "id": "MEDIA-WORKER-LEASE-PRESERVATION-001",
+      "status": "TESTED",
+      "statement": "Seven existing real PostgreSQL scenarios preserve lease exclusivity, stale-attempt fencing, cancellation and TERM/supervisor recovery."
+    }
+  ],
+  "verification": {
+    "newHeartbeatTests": 6,
+    "combinedFocusedControls": 27,
+    "uploadControls": 9,
+    "catalogControls": 8,
+    "assuranceHarnessControls": 27,
+    "realPostgresScenarios": 7,
+    "postgresVersion": "16.13 local macOS",
+    "sqlScope": "9 selected music migrations, not full228-entry manifest",
+    "regressionCounterexample": "Original actual-main worker:4PASS/2FAIL; both missed-native-delivery cases fail with exit0/open-pipe signature. Fixed source:6PASS.",
+    "mutation": "Removing explicit stdin is detected by both SQL cases. Initial comparison setup incorrectly retained job control and missed the mutation; corrected to actual heartbeat job-control-off. Both receipts preserved; no test assertion or deadline weakened.",
+    "ordinaryProbe": "100/100 ordinary MacBash3.2 helper runs closed; does not reproduce live Linux nondeterminism.",
+    "sourceMutationIsolation": "First PostgreSQL run7PASS is exploratory only because source mutation overlapped it. Only final f4ef-frozen run supplies qualification.",
+    "repoQuality": "PASS on immutable implementation; final source adds four generated inventory/traceability/catalog metadata files only.",
+    "canonicalMetadata": "strictJSON/CSV, inventory+conformance generate/check and immutable admission PASS",
+    "hostedLinux": "PENDING fresh prerequisite PR; old DC failure retained; no unchanged CI retry"
+  },
+  "preservation": {
+    "baseline": "dc2e1425c113066e9ed5bb0a2bfd8151d52e1203",
+    "implementation": "f4ef3daf9eb9348a546ef30ac515cae550660719",
+    "unchangedPaths": [
+      "scripts/production-migrations.json",
+      "tdf-hq/sql",
+      "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+      "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+      "scripts/__tests__/ticket-admission-model.test.mjs",
+      "tdf-hq/stack.yaml",
+      "tdf-hq/tdf-hq.cabal",
+      "scripts/lib/test-child-completion.mjs",
+      "tdf-hq-ui",
+      "package-lock.json",
+      "tdf-mobile"
+    ],
+    "otherRequirementsExact": 169,
+    "totalRequirements": 170,
+    "catalogDecisionCount": 1371,
+    "completionDeadlineSeconds": 30,
+    "liveDescriptorHolderIdentity": "UNKNOWN"
+  },
+  "assurance": {
+    "wholeRequirements": 170,
+    "criticalRequirements": 133,
+    "newTheorems": 0,
+    "wholeImplementation": "170 UNPROVEN",
+    "wholeRefinement": "170 UNPROVEN",
+    "inheritedConditionalSMTLemmas": 11,
+    "release": "BLOCKED",
+    "limitations": [
+      "Ordinary native-child signal progress and active PID ownership assumed.",
+      "No proof for arbitrary descendant trees, unkillable OS tasks, PID reuse or every signal schedule.",
+      "Actual live descriptor-holder identity remains unknown.",
+      "Local macOS Node24/Bash3.2 is not hosted Linux Node22 qualification.",
+      "No current dedicated67 inventory-handler pass claimed; the preceding worker step failed on DC."
+    ]
+  },
+  "integration": {
+    "parent652": "MERGED externally as a0cc6529f after actual protected checks and exact review; agent did not merge.",
+    "stock654": "OPEN exactDC approved but backendFAILED; sourceunchanged, mainancestryalignmentpending.",
+    "workerPrerequisite": "Prepared base654; fresh CI/review required; auto-mergeOFF; not merged at report creation.",
+    "messagesSent": false,
+    "productionOperations": false
+  },
+  "next": [
+    "Obtain actual prerequisite Linux worker and67 inventory-handler qualification plus required review.",
+    "Normally integrate qualified worker prerequisite into inventory branch, reconcile current main and require fresh checks/review before protected integration.",
+    "Resume existing657 authorization/serialization work without duplicating it."
+  ],
+  "evidence": {
+    "archive": "reports/music-worker-heartbeat-shutdown-2026-11-02/evidence.tar.gz",
+    "sha256": "2db4435cc8f09b78391239d6137122ba40e0845210e4aff36ee25f02e3ee0392",
+    "regularFiles": 114,
+    "independentlyVerifiedManifestEntries": 113,
+    "manifest": "reports/music-worker-heartbeat-shutdown-2026-11-02/manifest.json"
+  }
+}

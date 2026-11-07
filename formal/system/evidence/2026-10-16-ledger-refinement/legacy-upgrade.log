@@ -1,0 +1,8 @@
+PASS legacy empty refuses migration without replacing guards
+PASS legacy unbalanced refuses migration without replacing guards
+PASS legacy self refuses migration without replacing guards
+PASS legacy draft refuses migration without replacing guards
+PASS legacy reversed refuses migration without replacing guards
+PASS clean migration remains idempotent
+PASS concurrent reversal preserves posted reference under READ COMMITTED
+PASS concurrent reversal preserves posted reference under REPEATABLE READ

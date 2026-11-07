@@ -3,6 +3,7 @@ import { act, isValidElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import type { NavGroup } from './SidebarNav';
+import { featureRegistry } from '../features/featureRegistry';
 import { COURSE_REGISTRATIONS_NAV_LABEL } from '../utils/navigationLabels';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
@@ -10,6 +11,7 @@ const session = {
   username: 'admin',
   displayName: 'Admin',
   roles: ['admin'],
+  featureFlags: [] as string[],
   modules: ['admin', 'crm', 'label', 'ops', 'scheduling', 'school', 'invoicing', 'internships'],
 };
 
@@ -108,6 +110,55 @@ describe('SidebarNav', () => {
   beforeEach(() => {
     window.localStorage.clear();
     chatUnreadCount.unreadCount = 0;
+    session.featureFlags = [];
+  });
+
+  it('gives every usable standalone feature a unique menu destination in its registered group', () => {
+    const items = NAV_GROUPS.flatMap(group => group.items);
+    expect(new Set(items.map(item => item.path)).size).toBe(items.length);
+    expect(items.every(item => !/[:*]/.test(item.path))).toBe(true);
+    for (const feature of featureRegistry) {
+      const route = feature.webRoute;
+      if (!route || /[:*]/.test(route) || feature.technical || feature.id === 'access-requests.create' || ['incomplete', 'broken'].includes(feature.maturity)) continue;
+      expect(items.filter(item => item.path === route)).toHaveLength(1);
+    }
+    for (const route of ['/admin/directorio', '/admin/artistas-enriquecimiento', '/admin/merch', '/label/ddex', '/musica/biblioteca']) {
+      expect(items.some(item => item.path === route)).toBe(true);
+    }
+    expect(items.some(item => item.path === '/mi-artista')).toBe(true);
+    expect(items.some(item => item.path === '/label/releases/nuevo')).toBe(true);
+    expect(items.some(item => item.path === '/oauth/google-drive/callback')).toBe(false);
+    expect(items.some(item => item.path === '/pagos/retorno')).toBe(false);
+    expect(items.some(item => item.path === '/solicitudes-acceso/nueva')).toBe(false);
+    expect(items.some(item => item.path === '/solicitudes-acceso')).toBe(true);
+  });
+
+  it('makes artist enrichment and directory review discoverable in the rendered admin menu', async () => {
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderNav(container, '/admin/directorio');
+    try {
+      await setSearchFilter(container, 'enriquecimiento');
+      expect(container.querySelector('a[href="/admin/artistas-enriquecimiento"]')?.textContent).toContain('Enriquecimiento de artistas');
+      await setSearchFilter(container, 'directorio');
+      expect(container.querySelector('a[href="/admin/directorio"]')).not.toBeNull();
+    } finally { await cleanup(); }
+  });
+
+  it('uses current session flags for newly available feature links and removes them when disabled', async () => {
+    const container = document.createElement('div'); document.body.appendChild(container);
+    session.featureFlags = ['operations_enabled'];
+    const { cleanup } = await renderNav(container, '/dashboard/operations');
+    try {
+      await setSearchFilter(container, 'Centro de operaciones');
+      expect(container.querySelector('a[href="/dashboard/operations"]')).not.toBeNull();
+    } finally { await cleanup(); }
+    session.featureFlags = [];
+    const hidden = document.createElement('div'); document.body.appendChild(hidden);
+    const view = await renderNav(hidden, '/fans');
+    try {
+      await setSearchFilter(hidden, 'Centro de operaciones');
+      expect(hidden.querySelector('a[href="/dashboard/operations"]')).toBeNull();
+    } finally { await view.cleanup(); }
   });
 
   it('keeps every top-level group icon on the shared compact-size contract', () => {

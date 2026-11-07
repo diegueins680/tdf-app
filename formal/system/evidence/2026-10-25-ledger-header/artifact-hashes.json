@@ -1,0 +1,137 @@
+[
+  {
+    "file": "qualified-compiled-ledger-boundary.log.gz",
+    "rawSha256": "0a6df9d43ec12858bdbdb46175ab99579433ccb999aa6f0a3ce2dd16629614c5",
+    "storedSha256": "bd0d22763352f6e0653de950db0d49368ace420679d96bc046fe2734ae791db4"
+  },
+  {
+    "file": "qualified-create.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "storedSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "file": "qualified-drop.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "storedSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "file": "qualified-full221-apply-replay.log.gz",
+    "rawSha256": "13de9e55a12750f9fe3be33c42c2d71fda8d2044028e41459b14dd1e24bb3f09",
+    "storedSha256": "62ba59223e98fd1c1f8bb95ac1a16767ec80fcc1f43453d6fd0a97dc3050e811"
+  },
+  {
+    "file": "qualified-header-regression-and-guard-controls.log.gz",
+    "rawSha256": "af4394b6701ecb0ef1a35822b5695d1d331ded3babdfba777e48bbc29b60a28c",
+    "storedSha256": "aa67d8b9e32e6432bf5e43516721e9ce4402bcbea2456d499ecf455d83cc36d4"
+  },
+  {
+    "file": "qualified-init.log.gz",
+    "rawSha256": "14d805a9942cdc55c91e27b39526984502faf44de4f22ce48f6585b427985d92",
+    "storedSha256": "e3337c78a9fe4e877952a729f914b6ed573bc173974f78441b79c8892486e72e"
+  },
+  {
+    "file": "qualified-legacy-upgrade-and-reversal.log.gz",
+    "rawSha256": "7ee8fb6294df5f4e7f3ce764efd3efb719a8b8931ee99f668070d95a8be0551d",
+    "storedSha256": "8209d766b2176b96ba4a37f59ffc005e371e9bd572c71efa432b67c9df74771e"
+  },
+  {
+    "file": "qualified-manifest-cardinality.log.gz",
+    "rawSha256": "1686d416d219177d07a9ea4d2d3e8db1b54682e103072e4d9cfc65ad6770707e",
+    "storedSha256": "b549323454cfd1a471a90d54fe54f50d5142d73e6551bc8ba77730eda0f97faf"
+  },
+  {
+    "file": "qualified-namespace-controls.log.gz",
+    "rawSha256": "f3d1029873d61c7be68c6f2f1b611d483637ce82b77f6f8e03cabbba10735c25",
+    "storedSha256": "51956a5241a7388cd16e2371658a300c16c36cc1fc5a1db8f8bd6e41f19b37ac"
+  },
+  {
+    "file": "qualified-optimized-namespace-controls.log.gz",
+    "rawSha256": "f3d1029873d61c7be68c6f2f1b611d483637ce82b77f6f8e03cabbba10735c25",
+    "storedSha256": "51956a5241a7388cd16e2371658a300c16c36cc1fc5a1db8f8bd6e41f19b37ac"
+  },
+  {
+    "file": "qualified-snapshot-entry-and-header-races.log.gz",
+    "rawSha256": "99e4c4a22d28ef0d5a6224dac6073980d6bdd31ab0616e566fd484c4b185c148",
+    "storedSha256": "b07b12665f6984bb1ab71dc209512991e700a03687c12f5064a5403b7bbb7710"
+  },
+  {
+    "file": "qualified-start.log.gz",
+    "rawSha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad",
+    "storedSha256": "e368673aef8c85b9339c7457c5544c1b856d1529f0a14f786c0e3b9e03511c3d"
+  },
+  {
+    "file": "qualified-startup-namespace-controls.log.gz",
+    "rawSha256": "67cf88a6f8522461bdf3832c0d15203949e1b627c7ef936ee818dd7521d8e0c7",
+    "storedSha256": "a28516aced9901da37c1893fc00071625a2de230412b6c2c6e12d52c0050c4e7"
+  },
+  {
+    "file": "qualified-stop.log.gz",
+    "rawSha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d",
+    "storedSha256": "da5bb8e75cbab141a9164b24c1330658be919fc88a9a3838063a58df033740bd"
+  },
+  {
+    "file": "tlc-LedgerHeader.cfg.log.gz",
+    "rawSha256": "f8822b0d7669dad77962374a4a77acf7f7471d12f7a2677707191e686fd77315",
+    "storedSha256": "074bcea84f73327ce337aa9a148b598db0be0bdcf6d5e147283a6f4fa9526a42"
+  },
+  {
+    "file": "tlc-LedgerHeaderMutable.cfg.log.gz",
+    "rawSha256": "41098c05538965f16ed5b35c07ddba717b979ea6391f9c91408f950bf21c3ffe",
+    "storedSha256": "388a63f85e0108db49faf071c4932c8b8bf7a6befe619530c5ff457b34a5f72f"
+  },
+  {
+    "file": "differential-create.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "storedSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "file": "differential-drop.log.gz",
+    "rawSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "storedSha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "file": "differential-full220-apply-replay.log.gz",
+    "rawSha256": "597eb87a3a88a3a77afe9f5ec637c4e07b0a5ef06d7a9a77fe42c066b1efd327",
+    "storedSha256": "72c22ff340a3e11f6ab4aca8a765aba9322661dbf9bcebbdb8216e05f462372f"
+  },
+  {
+    "file": "differential-header-regression-and-guard-controls.log.gz",
+    "rawSha256": "4f72c5dfbe440b3024782442b878a338b0ff8b671e7f71b0c3cfcb836f7260a4",
+    "storedSha256": "f60dcccdd25d4cb0fa3e9c32caeb89d04867e1ef7269f1e686064146bab8fa28"
+  },
+  {
+    "file": "differential-init.log.gz",
+    "rawSha256": "f0b8f02641362812475eef33b6e99535fc4f67d76e910e66181be1c7c0288beb",
+    "storedSha256": "f42057e51d030c1108a3ccdcd5c8d4139627a2dcca4dfe4316285d1e037c5366"
+  },
+  {
+    "file": "differential-install-additive-header-guard.log.gz",
+    "rawSha256": "8628ad76a87f115fd600d0216f799417a54bcc6d8ce4f901a723891fe5efb883",
+    "storedSha256": "c4fb1bb6062d9e48189f852e237b832a23a96166ab953a005cb055ab65474b1c"
+  },
+  {
+    "file": "differential-manifest-cardinality.log.gz",
+    "rawSha256": "cbdd19a3980a0d492694d4805af33ac243c847017d8a73a1c02ed1d88c45cb3e",
+    "storedSha256": "6c09e8d694d6587676ce2f3fecd8e4000f32418ceeddfaf4f47a982c5978f2dc"
+  },
+  {
+    "file": "differential-posted-identity-regression-exposes-baseline.log.gz",
+    "rawSha256": "1fb938af2f38d67b16d15c7dc0a817b2e2a630f53cb21014ed01ea2dffd0d57a",
+    "storedSha256": "d8fb933d9cc389c1ec4fb37b76ed4891106ce04cf2bd522283ff19c9a22b84ec"
+  },
+  {
+    "file": "differential-start.log.gz",
+    "rawSha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad",
+    "storedSha256": "e368673aef8c85b9339c7457c5544c1b856d1529f0a14f786c0e3b9e03511c3d"
+  },
+  {
+    "file": "differential-stop.log.gz",
+    "rawSha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d",
+    "storedSha256": "da5bb8e75cbab141a9164b24c1330658be919fc88a9a3838063a58df033740bd"
+  },
+  {
+    "file": "repository-quality.log.gz",
+    "rawSha256": "a642f252a7bc09fab93d7a6e0d7ff9d24342acb2e86894ef934fbbdae1024c4b",
+    "storedSha256": "859443f17412f5981355e46a3cf5c88e102294472c4b67ef62847ec07d75c448"
+  }
+]

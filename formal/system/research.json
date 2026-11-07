@@ -645,6 +645,97 @@
       "decision": "adopted",
       "rationale": "A customer-scoped key must be issued only to the authenticated owner of that customer; the legacy course route issued it to any caller presenting a sequential registration ID, so it was retired.",
       "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-OPS-CAPTURE-LOCK-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS",
+      "title": "PostgreSQL17 row-level lock modes",
+      "verifiedAt": "2026-10-15",
+      "recommendation": "FOR SHARE conflicts with non-key UPDATE; FOR KEY SHARE does not. Successful row locks last through transaction completion, while exception/savepoint rollback releases locks acquired within the failed scope.",
+      "applicability": "OPS-INBOUND-CAPTURE-001 admission versus operations_enabled/active updates",
+      "decision": "adopted",
+      "rationale": "Take SHARE locks on both authority rows inside the capture transaction. A non-key disablement must not race a previously checked boolean. Actual PostgreSQL17 tests witness both lock orders; capture errors remain contained and do not promise successful delivery."
+    },
+    {
+      "id": "RES-OPS-CAPTURE-RETENTION-001",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html#disposal-of-logs",
+      "title": "OWASP Logging Cheat Sheet: sensitive data and disposal",
+      "verifiedAt": "2026-10-15",
+      "recommendation": "Review personal data in logging and set retention/disposal periods for records, copies, backups and extracts according to their purpose and applicable obligations.",
+      "applicability": "Sender identifiers copied into permanent Operations events/audits",
+      "decision": "adopted as activation prerequisite",
+      "rationale": "The source does not supply a TDF retention duration or authorize identifier collection. Keep capture disabled until product-specific retention, deletion/anonymization, exceptions and backup expiry are defined and executable. No arbitrary duration or blanket financial-record exception is inferred."
+    },
+    {
+      "id": "RES-RAG-SNAPSHOT-001",
+      "source": "https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED",
+      "title": "PostgreSQL17 Read Committed statement snapshots",
+      "recommendation": "Successive statements in one transaction may observe different committed versions. State the observation point for a current-data guarantee.",
+      "applicability": "PRIV-RAG-001 ranking followed by course metadata reads",
+      "decision": "adopted",
+      "rationale": "Model edits/deletion between ranking, metadata read and delivery. Require current public data at metadata read, not deletion-linearized delivery. Do not infer production isolation configuration from the default or claim full SQL/Haskell refinement.",
+      "checkedAt": "2026-10-13"
+    },
+    {
+      "id": "RES-ALLOY-CONTROLS-001",
+      "source": "https://alloytools.org/spec.html",
+      "supportingSource": "https://alloytools.org/tutorials/online/sidenote-format-fact.html",
+      "title": "Alloy language specification and fact overconstraint guidance",
+      "recommendation": "A check searches for a counterexample under facts and finite scopes; inconsistent or overly restrictive facts can conceal assertion violations. Run commands witness consistency.",
+      "applicability": "EventStructure and TaskReadStructure assertion admission",
+      "decision": "adopted",
+      "rationale": "Keep original satisfiable scenarios; remove selected guards in separate copies without weakening assertions or enlarging scopes, and require their counterexamples. Retain original scope limits and separate implementation refinement.",
+      "verifiedAt": "2026-10-13"
+    },
+    {
+      "id": "RES-MUSIC-PURCHASE-REPLAY-001",
+      "source": "https://docs.stripe.com/api/idempotent_requests",
+      "title": "Stripe API v1 parameter-bound idempotency",
+      "recommendation": "Compare replay parameters to the original request and reject a mismatch.",
+      "applicability": "Music purchase creation currently scopes keys to a buyer but omits payload binding.",
+      "decision": "adopted",
+      "rationale": "Compare TDF immutable snapshot fields after unique reservation, including the concurrent loser path. Do not copy provider response caching/24-hour expiry or treat this vendor contract as a universal HTTP mandate. RFC 9110 identical-request semantics are already indexed in RES-HTTP-001.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-MUSIC-MONEY-WIRE-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc8259.html#section-6",
+      "title": "RFC8259 JSON number interoperability",
+      "recommendation": "Use interoperable integer representations; binary64 consumers cannot preserve every Int64 value as a JSON number.",
+      "applicability": "Music BIGINT prices and web Number decoding/input conversion.",
+      "decision": "adopted",
+      "rationale": "Retain exact small-number compatibility and decimal strings outside the safe range. This is a transport correction, not a business price cap.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-MUSIC-MONEY-WIRE-002",
+      "source": "https://tc39.es/ecma402/2022/#sec-formatnumerictoparts",
+      "title": "ECMA402 BigInt numeric formatting parts",
+      "recommendation": "Use BigInt-compatible Intl parts to retain exact whole units.",
+      "applicability": "USD music-price display through the signed64 monetary domain.",
+      "decision": "adopted",
+      "rationale": "Format whole units as BigInt and convert only a remainder in0..99; do not divide the whole amount as Number. Device/provider behavior remains separately verified.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-VERSION-STACK-001",
+      "source": "https://docs.haskellstack.org/en/stable/commands/build_command/#-no-force-dirty-flag",
+      "title": "Stack local-package dirty admission",
+      "recommendation": "Use --force-dirty when local inputs outside tracked Haskell source require rebuilding an otherwise clean package.",
+      "applicability": "Restored .stack-work may contain a valid package cache with stale Git/time metadata.",
+      "decision": "adopted",
+      "rationale": "Force the canonical local package invocation, while retaining immutable dependency and unrelated GHC object caches. Actual source-identical HEAD-change regression verifies this boundary.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-VERSION-GHC-001",
+      "source": "https://downloads.haskell.org/ghc/9.10.3/docs/users_guide/separate_compilation.html#recompilation",
+      "title": "GHC recompilation checking for external splice inputs",
+      "recommendation": "Disable recompilation checking selectively when source alone cannot capture the changing external input.",
+      "applicability": "TDF.Version embeds Git identity and current time using Template Haskell.",
+      "decision": "adopted",
+      "rationale": "Use module-local -fforce-recomp together with Stack dirty admission. Independent controls removing either layer reproduce the stale metadata; unrelated Main object remains reused in the probe. No global force-recompile or source attestation claim.",
+      "verifiedAt": "2026-10-15"
     }
   ]
 }

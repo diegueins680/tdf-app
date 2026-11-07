@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/private/tmp/tdf-ledger-namespace-qualification-20261025/scripts/__tests__/ledger-posting-namespace.py", line 170, in <module>
+    require(result.returncode == 0, result.stderr)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/tdf-ledger-namespace-qualification-20261025/scripts/__tests__/ledger-posting-namespace.py", line 25, in require
+    raise AssertionError(problem)
+AssertionError: ERROR:  temp entry shadow accepted unbalanced posting
+CONTEXT:  PL/pgSQL function inline_code_block line 6 at RAISE

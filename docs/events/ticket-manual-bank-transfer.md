@@ -19,7 +19,8 @@ reusable option of the versioned ticket policy.
   `min(now + hold, cutoff + hold)` so staff can verify late reports.
   Expiry, payment validation and every API liveness check use the later of the
   two deadlines.
-- The buyer reports a transfer reference (3–120 characters). That is evidence,
+- The buyer reports a transfer reference (3–120 characters), optionally with a
+  JPG, PNG or PDF receipt (maximum 5 MiB). That is evidence,
   never payment. The guest is recorded as a new unverified contact party, as
   public bookings do; the system never links a guest to an existing account
   by email.
@@ -57,3 +58,30 @@ mutation controls and the exclusions are in
 [formal/system/manual-bank-transfer.md](../../formal/system/manual-bank-transfer.md).
 Bank deposits are verified by people against the account statement; no bank API
 is integrated.
+
+## Private receipt files
+
+The organizer opens **Comprobante: [número]** in the transfer card to preview
+and download the attached file. Older transfers with only a reference show
+that no image or PDF was attached; a reference is never treated as a file URL.
+
+Set `TICKET_PAYMENT_EVIDENCE_DIR` to durable private storage before deploying
+receipt uploads in production. It must be outside `assetsRootDir`, owned by the
+API service account and included in private backup/recovery procedures. All API
+replicas must have access to the same receipt storage. Production rejects file
+uploads when this setting is absent. Development defaults to
+`uploads/ticket-payment-evidence`.
+
+Files are bound to their order using a SHA-256 object key in the existing
+`commerce_manual_payment_evidence.evidence_object_key` column. Submitting an
+identical reference and file is idempotent; evidence under review cannot be
+replaced by another file. Only the authenticated event organizer or a strict
+administrator can fetch receipt bytes, through the event/order scoped endpoint
+`GET /social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/receipt`.
+Responses use `Cache-Control: no-store`; the browser releases its temporary
+preview URL when the dialog closes. No schema migration is needed.
+
+For web/API rollout compatibility, the buyer form offers file attachments only
+when the checkout response includes the `receiptAttached` Boolean. The previous
+API omits that field and continues to accept reference-only submissions. This
+keeps those transfers usable if the web release arrives before the API release.

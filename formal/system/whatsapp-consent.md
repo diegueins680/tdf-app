@@ -105,3 +105,32 @@ party can withdraw someone else's pending request; that person must then wait fo
 message path. The 1-hour undelivered window is an engineering
 default awaiting product-owner confirmation. Production has no WhatsApp Cloud API
 configuration, so none of this has been exercised against the live provider.
+
+## Confirmation notice (2026-10-12, AUTHORITY-074)
+
+The historical production-shaped schema made WhatsApp history unique on both
+`(phone_e164, created_at)` and `(party_id, created_at)`. A confirming reply
+activated consent, then its notice collided with the inbound row at the handler's
+single timestamp: the webhook answered500, no notice was recorded, and redelivery
+could not produce the notice. That defect was reproduced on2026-10-12 against
+the real backend before the index-declaration migration. The notice samples its
+own `getCurrentTime` after the inbound receipt. A separate clock sample alone
+was only a best-effort repair while those constraints remained.
+
+Current main retains the additive
+`tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql` migration and the matching
+model declaration removal (`DATA-INDEX-DECLARATION-001`). Both history indexes are
+plain indexes; distinct messages may share a phone, party and instant. This
+integration preserves that schema and `receiveWhatsAppInbound`'s atomic receipt,
+consent confirmation and duplicate-delivery handling. It does not reinstate the
+old non-atomic confirmation path or either uniqueness constraint. Historical
+batched-message/course-reply timestamp collisions are superseded by the index
+repair; provider delivery and durable notice retry remain separate obligations.
+
+`scripts/lib/whatsapp_consent_conformance.py`, called by the real-backend booking
+harness with a signed synthetic Meta webhook and no WhatsApp provider, checks
+simultaneous first requests, stale/non-affirmative replies, successful confirmation
+with one outgoing notice, unchanged redelivery and unknown-number refusal. It
+also inserts incoming/outgoing messages at the same phone/party timestamp and
+requires both existing history indexes to remain non-unique. These checks require
+fresh execution on the combined candidate; earlier branch receipts are historical.

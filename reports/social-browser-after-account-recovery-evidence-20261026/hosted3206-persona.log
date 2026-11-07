@@ -1,0 +1,1076 @@
+﻿2026-10-26T23:40:18.1862364Z Current runner version: '2.338.0'
+2026-10-26T23:40:18.1883563Z ##[group]Runner Image Provisioner
+2026-10-26T23:40:18.1884297Z Hosted Compute Agent
+2026-10-26T23:40:18.1884851Z Version: 20261021.618
+2026-10-26T23:40:18.1885385Z Commit: 21505ad2541d5be6135ed84fc33697146cf75b8e
+2026-10-26T23:40:18.1885952Z Build Date: 2026-10-21T00:45:21Z
+2026-10-26T23:40:18.1886561Z Worker ID: {d9bd7854-356e-4df8-b2e4-472f0c943eae}
+2026-10-26T23:40:18.1887138Z Region: westus3
+2026-10-26T23:40:18.1887613Z Cloud: Azure
+2026-10-26T23:40:18.1888101Z ##[endgroup]
+2026-10-26T23:40:18.1889146Z ##[group]Operating System
+2026-10-26T23:40:18.1889708Z Ubuntu
+2026-10-26T23:40:18.1890174Z 24.04.5
+2026-10-26T23:40:18.1890757Z LTS
+2026-10-26T23:40:18.1891235Z ##[endgroup]
+2026-10-26T23:40:18.1891683Z ##[group]Runner Image
+2026-10-26T23:40:18.1892237Z Image: ubuntu-24.04
+2026-10-26T23:40:18.1892706Z Version: 20261012.334.1
+2026-10-26T23:40:18.1893755Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261012.334/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-26T23:40:18.1894984Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261012.334
+2026-10-26T23:40:18.1895822Z ##[endgroup]
+2026-10-26T23:40:18.1896798Z ##[group]GITHUB_TOKEN Permissions
+2026-10-26T23:40:18.1898349Z Contents: read
+2026-10-26T23:40:18.1898830Z Metadata: read
+2026-10-26T23:40:18.1899279Z Packages: read
+2026-10-26T23:40:18.1899830Z ##[endgroup]
+2026-10-26T23:40:18.1901634Z Secret source: Actions
+2026-10-26T23:40:18.1902478Z Cache mode: write
+2026-10-26T23:40:18.1903036Z Prepare workflow directory
+2026-10-26T23:40:18.2232801Z Prepare all required actions
+2026-10-26T23:40:18.2271191Z Getting action download info
+2026-10-26T23:40:18.5218883Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-26T23:40:18.6134719Z Download action repository 'actions/setup-node@v7' (SHA:949feb2413d6458794dcd2491c4babbbce0c15c1)
+2026-10-26T23:40:19.4408275Z Download action repository 'actions/upload-artifact@v7' (SHA:cf430e030ddbb5b0abf93d22962f4752f3646cd9)
+2026-10-26T23:40:20.2352111Z Complete job name: persona-web-e2e
+2026-10-26T23:40:20.2875820Z ##[group]Checking docker version
+2026-10-26T23:40:20.2886191Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-10-26T23:40:20.4425315Z '1.48'
+2026-10-26T23:40:20.4448004Z Docker daemon API version: '1.48'
+2026-10-26T23:40:20.4448882Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-10-26T23:40:20.4591620Z '1.48'
+2026-10-26T23:40:20.4601334Z Docker client API version: '1.48'
+2026-10-26T23:40:20.4606359Z ##[endgroup]
+2026-10-26T23:40:20.4608656Z ##[group]Clean up resources from previous jobs
+2026-10-26T23:40:20.4613420Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=7b9d2d"
+2026-10-26T23:40:20.4731647Z ##[command]/usr/bin/docker network prune --force --filter "label=7b9d2d"
+2026-10-26T23:40:20.4834699Z ##[endgroup]
+2026-10-26T23:40:20.4835366Z ##[group]Create local container network
+2026-10-26T23:40:20.4843890Z ##[command]/usr/bin/docker network create --label 7b9d2d github_network_65ab6ae1e5aa42a09aad9df97aef5cfb
+2026-10-26T23:40:20.5301434Z 7e9b0a45429bca4a56517b29497006f811b8c288b696ec4908718fa40cc9c76b
+2026-10-26T23:40:20.5308365Z ##[endgroup]
+2026-10-26T23:40:20.5329594Z ##[group]Starting job container
+2026-10-26T23:40:20.5347725Z ##[command]/usr/bin/docker pull mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+2026-10-26T23:40:20.7460870Z mcr.microsoft.com/playwright@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53: Pulling from playwright
+2026-10-26T23:40:20.8388310Z 18dbadc1f2f9: Pulling fs layer
+2026-10-26T23:40:20.8389586Z 0087bd18691f: Pulling fs layer
+2026-10-26T23:40:20.8393020Z b59ffadf3f32: Pulling fs layer
+2026-10-26T23:40:20.8393920Z 824c9c26fa20: Pulling fs layer
+2026-10-26T23:40:20.8394866Z 824c9c26fa20: Waiting
+2026-10-26T23:40:21.0970469Z b59ffadf3f32: Download complete
+2026-10-26T23:40:21.1501951Z 18dbadc1f2f9: Verifying Checksum
+2026-10-26T23:40:21.1503724Z 18dbadc1f2f9: Download complete
+2026-10-26T23:40:22.0465910Z 18dbadc1f2f9: Pull complete
+2026-10-26T23:40:24.4763530Z 824c9c26fa20: Verifying Checksum
+2026-10-26T23:40:24.4764444Z 824c9c26fa20: Download complete
+2026-10-26T23:40:25.8883750Z 0087bd18691f: Verifying Checksum
+2026-10-26T23:40:25.8884250Z 0087bd18691f: Download complete
+2026-10-26T23:40:36.8906768Z 0087bd18691f: Pull complete
+2026-10-26T23:40:37.1059872Z b59ffadf3f32: Pull complete
+2026-10-26T23:40:57.1721347Z 824c9c26fa20: Pull complete
+2026-10-26T23:40:57.1751015Z Digest: sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+2026-10-26T23:40:57.1757724Z Status: Downloaded newer image for mcr.microsoft.com/playwright@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+2026-10-26T23:40:57.1764189Z mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53
+2026-10-26T23:40:57.1843311Z ##[command]/usr/bin/docker create --name 71e78a920b364b2ba412283137989eb2_mcrmicrosoftcomplaywrightv1591noblesha256b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53_bd0b72 --label 7b9d2d --workdir /__w/tdf-app/tdf-app --network github_network_65ab6ae1e5aa42a09aad9df97aef5cfb --init --ipc=host --user 1001 -e "HOME=/github/home" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work":"/__w" -v "/home/runner/actions-runner/cached/2.338.0/externals":"/__e":ro -v "/home/runner/work/_temp":"/__w/_temp" -v "/home/runner/work/_actions":"/__w/_actions" -v "/opt/hostedtoolcache":"/__t" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" --entrypoint "tail" mcr.microsoft.com/playwright:v1.59.1-noble@sha256:b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53 "-f" "/dev/null"
+2026-10-26T23:40:57.5941816Z 917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2
+2026-10-26T23:40:57.5961278Z ##[command]/usr/bin/docker start 917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2
+2026-10-26T23:40:57.7579925Z 917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2
+2026-10-26T23:40:57.7596242Z ##[command]/usr/bin/docker ps --all --filter id=917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-10-26T23:40:57.7693748Z 917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2 Up Less than a second
+2026-10-26T23:40:57.7711007Z ##[command]/usr/bin/docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" 917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2
+2026-10-26T23:40:57.7808936Z CI=true
+2026-10-26T23:40:57.7809568Z HOME=/github/home
+2026-10-26T23:40:57.7810003Z GITHUB_ACTIONS=true
+2026-10-26T23:40:57.7810633Z PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+2026-10-26T23:40:57.7811145Z LANG=C.UTF-8
+2026-10-26T23:40:57.7811435Z LC_ALL=C.UTF-8
+2026-10-26T23:40:57.7811792Z PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+2026-10-26T23:40:57.7826268Z ##[endgroup]
+2026-10-26T23:40:57.7892245Z ##[group]Waiting for all services to be ready
+2026-10-26T23:40:57.7893735Z ##[endgroup]
+2026-10-26T23:40:57.8124021Z ##[group]Run actions/checkout@v7
+2026-10-26T23:40:57.8124764Z with:
+2026-10-26T23:40:57.8124971Z   repository: diegueins680/tdf-app
+2026-10-26T23:40:57.8127113Z   token: ***
+2026-10-26T23:40:57.8127292Z   ssh-strict: true
+2026-10-26T23:40:57.8127473Z   ssh-user: git
+2026-10-26T23:40:57.8127656Z   persist-credentials: true
+2026-10-26T23:40:57.8127856Z   clean: true
+2026-10-26T23:40:57.8128048Z   sparse-checkout-cone-mode: true
+2026-10-26T23:40:57.8128262Z   fetch-depth: 1
+2026-10-26T23:40:57.8128438Z   fetch-tags: false
+2026-10-26T23:40:57.8128618Z   show-progress: true
+2026-10-26T23:40:57.8128803Z   lfs: false
+2026-10-26T23:40:57.8128967Z   submodules: false
+2026-10-26T23:40:57.8129147Z   set-safe-directory: true
+2026-10-26T23:40:57.8129355Z   allow-unsafe-pr-checkout: false
+2026-10-26T23:40:57.8129993Z ##[endgroup]
+2026-10-26T23:40:57.8178302Z ##[command]/usr/bin/docker exec  917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2 sh -c "cat /etc/*release | grep ^ID"
+2026-10-26T23:41:01.4741438Z Syncing repository: diegueins680/tdf-app
+2026-10-26T23:41:01.4742460Z ##[group]Getting Git version info
+2026-10-26T23:41:01.4742738Z Working directory is '/__w/tdf-app/tdf-app'
+2026-10-26T23:41:01.4743134Z [command]/usr/bin/git version
+2026-10-26T23:41:01.4791420Z git version 2.43.0
+2026-10-26T23:41:01.4807611Z ##[endgroup]
+2026-10-26T23:41:01.4826157Z Temporarily overriding HOME='/__w/_temp/3733abf9-5df7-45a2-838e-10359e2c3305' before making global git config changes
+2026-10-26T23:41:01.4827144Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-26T23:41:01.4831402Z [command]/usr/bin/git config --global --add safe.directory /__w/tdf-app/tdf-app
+2026-10-26T23:41:01.4861057Z Deleting the contents of '/__w/tdf-app/tdf-app'
+2026-10-26T23:41:01.4881624Z ##[group]Determining repository object format
+2026-10-26T23:41:01.4882867Z ##[endgroup]
+2026-10-26T23:41:01.4883182Z ##[group]Initializing the repository
+2026-10-26T23:41:01.4886355Z [command]/usr/bin/git init /__w/tdf-app/tdf-app
+2026-10-26T23:41:01.4919350Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-10-26T23:41:01.4920199Z hint: is subject to change. To configure the initial branch name to use in all
+2026-10-26T23:41:01.4921072Z hint: of your new repositories, which will suppress this warning, call:
+2026-10-26T23:41:01.4921728Z hint: 
+2026-10-26T23:41:01.4922157Z hint: 	git config --global init.defaultBranch <name>
+2026-10-26T23:41:01.4922569Z hint: 
+2026-10-26T23:41:01.4922954Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-10-26T23:41:01.4923611Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-10-26T23:41:01.4924125Z hint: 
+2026-10-26T23:41:01.4924385Z hint: 	git branch -m <name>
+2026-10-26T23:41:01.4930220Z Initialized empty Git repository in /__w/tdf-app/tdf-app/.git/
+2026-10-26T23:41:01.4940812Z [command]/usr/bin/git remote add origin https://github.com/diegueins680/tdf-app
+2026-10-26T23:41:01.4969797Z ##[endgroup]
+2026-10-26T23:41:01.4970145Z ##[group]Disabling automatic garbage collection
+2026-10-26T23:41:01.4973132Z [command]/usr/bin/git config --local gc.auto 0
+2026-10-26T23:41:01.5004165Z ##[endgroup]
+2026-10-26T23:41:01.5004619Z ##[group]Setting up auth
+2026-10-26T23:41:01.5004949Z Removing SSH command configuration
+2026-10-26T23:41:01.5009305Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-26T23:41:01.5047498Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-26T23:41:01.5272079Z Removing HTTP extra header
+2026-10-26T23:41:01.5273023Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-26T23:41:01.5303807Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-26T23:41:01.5531586Z Removing includeIf entries pointing to credentials config files
+2026-10-26T23:41:01.5536878Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-26T23:41:01.5570835Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-26T23:41:01.5780235Z [command]/usr/bin/git config --file /__w/_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-10-26T23:41:01.5816668Z [command]/usr/bin/git config --local includeIf.gitdir:/__w/tdf-app/tdf-app/.git.path /__w/_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config
+2026-10-26T23:41:01.5846443Z [command]/usr/bin/git config --local includeIf.gitdir:/__w/tdf-app/tdf-app/.git/worktrees/*.path /__w/_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config
+2026-10-26T23:41:01.5875568Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config
+2026-10-26T23:41:01.5904338Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config
+2026-10-26T23:41:01.5931341Z ##[endgroup]
+2026-10-26T23:41:01.5931811Z ##[group]Fetching the repository
+2026-10-26T23:41:01.5937468Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +8a40665add3d4630479e7ae4631b3e1915e2a642:refs/remotes/pull/634/merge
+2026-10-26T23:41:08.1116024Z From https://github.com/diegueins680/tdf-app
+2026-10-26T23:41:08.1116525Z  * [new ref]         8a40665add3d4630479e7ae4631b3e1915e2a642 -> pull/634/merge
+2026-10-26T23:41:08.1138528Z ##[endgroup]
+2026-10-26T23:41:08.1139013Z ##[group]Determining the checkout info
+2026-10-26T23:41:08.1139570Z ##[endgroup]
+2026-10-26T23:41:08.1139885Z [command]/usr/bin/git sparse-checkout disable
+2026-10-26T23:41:08.1177466Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-10-26T23:41:08.1206379Z ##[group]Checking out the ref
+2026-10-26T23:41:08.1209079Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/634/merge
+2026-10-26T23:41:09.0136849Z Note: switching to 'refs/remotes/pull/634/merge'.
+2026-10-26T23:41:09.0137408Z 
+2026-10-26T23:41:09.0137906Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-10-26T23:41:09.0138728Z changes and commit them, and you can discard any commits you make in this
+2026-10-26T23:41:09.0139149Z state without impacting any branches by switching back to a branch.
+2026-10-26T23:41:09.0139413Z 
+2026-10-26T23:41:09.0139782Z If you want to create a new branch to retain commits you create, you may
+2026-10-26T23:41:09.0140267Z do so (now or later) by using -c with the switch command. Example:
+2026-10-26T23:41:09.0140766Z 
+2026-10-26T23:41:09.0140886Z   git switch -c <new-branch-name>
+2026-10-26T23:41:09.0141077Z 
+2026-10-26T23:41:09.0141192Z Or undo this operation with:
+2026-10-26T23:41:09.0141368Z 
+2026-10-26T23:41:09.0141467Z   git switch -
+2026-10-26T23:41:09.0141617Z 
+2026-10-26T23:41:09.0141867Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-10-26T23:41:09.0142202Z 
+2026-10-26T23:41:09.0142572Z HEAD is now at 8a40665 Merge 3206faad3999f85d610360175e05389e0a7addf2 into c66a65a10a8e5e48f89172d61f6f57fb81697896
+2026-10-26T23:41:09.0201117Z ##[endgroup]
+2026-10-26T23:41:09.0237774Z [command]/usr/bin/git log -1 --format=%H
+2026-10-26T23:41:09.0261942Z 8a40665add3d4630479e7ae4631b3e1915e2a642
+2026-10-26T23:41:09.0500049Z ##[group]Run actions/setup-node@v7
+2026-10-26T23:41:09.0500428Z with:
+2026-10-26T23:41:09.0500590Z   node-version: 22
+2026-10-26T23:41:09.0500761Z   cache: npm
+2026-10-26T23:41:09.0500925Z   check-latest: false
+2026-10-26T23:41:09.0502933Z   token: ***
+2026-10-26T23:41:09.0503111Z   package-manager-cache: true
+2026-10-26T23:41:09.0503318Z ##[endgroup]
+2026-10-26T23:41:09.0508888Z ##[command]/usr/bin/docker exec  917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2 sh -c "cat /etc/*release | grep ^ID"
+2026-10-26T23:41:09.2331728Z Found in cache @ /__t/node/22.23.3/x64
+2026-10-26T23:41:10.5472111Z ##[group]Environment details
+2026-10-26T23:41:13.8641174Z node: v22.23.3
+2026-10-26T23:41:13.8641407Z npm: 10.9.9
+2026-10-26T23:41:13.8641680Z yarn: 1.22.22
+2026-10-26T23:41:13.8642730Z ##[endgroup]
+2026-10-26T23:41:13.8652943Z [command]/__t/node/22.23.3/x64/bin/npm config get cache
+2026-10-26T23:41:14.7940916Z /github/home/.npm
+2026-10-26T23:41:15.5204073Z Cache hit for: node-cache-Linux-x64-npm-ff005079a67770f98ca82e9e2c50144e45a4db957d2b78d0946355c70ce663f3
+2026-10-26T23:41:17.3399432Z Received 16777216 of 99196624 (16.9%), 13.5 MBs/sec
+2026-10-26T23:41:17.9720188Z Received 99196624 of 99196624 (100.0%), 52.1 MBs/sec
+2026-10-26T23:41:17.9720704Z Cache Size: ~95 MB (99196624 B)
+2026-10-26T23:41:17.9741600Z [command]/usr/bin/tar -xf /__w/_temp/b85079cc-e4d7-47a5-8d43-dc2886e6b418/cache.tgz -P -C /__w/tdf-app/tdf-app -z
+2026-10-26T23:41:18.5435513Z Cache restored successfully
+2026-10-26T23:41:18.5482439Z Cache restored from key: node-cache-Linux-x64-npm-ff005079a67770f98ca82e9e2c50144e45a4db957d2b78d0946355c70ce663f3
+2026-10-26T23:41:18.5684728Z ##[group]Run npm ci
+2026-10-26T23:41:18.5684987Z [36;1mnpm ci[0m
+2026-10-26T23:41:18.5687756Z shell: sh -e {0}
+2026-10-26T23:41:18.5687952Z ##[endgroup]
+2026-10-26T23:41:26.3354336Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-10-26T23:41:26.4063865Z npm warn deprecated rimraf@2.4.5: Rimraf versions prior to v4 are no longer supported
+2026-10-26T23:41:26.4837355Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2026-10-26T23:41:26.5005176Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-10-26T23:41:26.6158379Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2026-10-26T23:41:26.6159264Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2026-10-26T23:41:26.6172843Z npm warn deprecated glob@6.0.4: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-10-26T23:41:26.6185763Z npm warn deprecated glob@8.1.0: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-10-26T23:41:26.7602792Z npm warn deprecated prebuild-install@7.1.3: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
+2026-10-26T23:41:26.7688941Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2026-10-26T23:41:27.0433974Z npm warn deprecated reflect-metadata@0.2.1: This version has a critical bug in fallback handling. Please upgrade to reflect-metadata@0.2.2 or newer.
+2026-10-26T23:41:27.7219748Z npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-10-26T23:41:28.5570487Z npm warn deprecated uuid@9.0.1: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
+2026-10-26T23:41:31.3063095Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2026-10-26T23:41:43.7550830Z 
+2026-10-26T23:41:43.7551464Z added 1469 packages, and audited 1472 packages in 25s
+2026-10-26T23:41:43.7551713Z 
+2026-10-26T23:41:43.7551850Z 274 packages are looking for funding
+2026-10-26T23:41:43.7552112Z   run `npm fund` for details
+2026-10-26T23:41:43.7815312Z 
+2026-10-26T23:41:43.7815882Z 16 vulnerabilities (11 moderate, 5 high)
+2026-10-26T23:41:43.7816087Z 
+2026-10-26T23:41:43.7816309Z To address issues that do not require attention, run:
+2026-10-26T23:41:43.7816580Z   npm audit fix
+2026-10-26T23:41:43.7816693Z 
+2026-10-26T23:41:43.7818670Z To address all issues (including breaking changes), run:
+2026-10-26T23:41:43.7819080Z   npm audit fix --force
+2026-10-26T23:41:43.7819251Z 
+2026-10-26T23:41:43.7819387Z Run `npm audit` for details.
+2026-10-26T23:41:43.8559031Z ##[group]Run node scripts/verify-playwright-image.mjs
+2026-10-26T23:41:43.8559565Z [36;1mnode scripts/verify-playwright-image.mjs[0m
+2026-10-26T23:41:43.8559934Z shell: sh -e {0}
+2026-10-26T23:41:43.8560112Z ##[endgroup]
+2026-10-26T23:41:45.8281697Z {"kind":"bundled-browser-preflight","workflow":".github/workflows/ci.yml","job":"persona-web-e2e","playwright":"1.59.1","browserUser":1001,"browsers":[{"browser":"chromium","version":"147.0.7727.15"},{"browser":"firefox","version":"148.0.2"},{"browser":"webkit","version":"26.4"}]}
+2026-10-26T23:41:45.8429288Z ##[group]Run npm run test:e2e:web
+2026-10-26T23:41:45.8429559Z [36;1mnpm run test:e2e:web[0m
+2026-10-26T23:41:45.8429867Z shell: sh -e {0}
+2026-10-26T23:41:45.8430038Z ##[endgroup]
+2026-10-26T23:41:45.9779862Z 
+2026-10-26T23:41:45.9780573Z > tdf-app@0.2.0 test:e2e:web
+2026-10-26T23:41:45.9781043Z > playwright test
+2026-10-26T23:41:45.9781236Z 
+2026-10-26T23:41:53.0912393Z [1A[2K[WebServer] [33mnode_modules/zod/v4/core/util.js (400:0): A comment
+2026-10-26T23:41:53.0912765Z [WebServer] 
+2026-10-26T23:41:53.0913540Z [WebServer] "// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+2026-10-26T23:41:53.0914302Z [WebServer] 
+2026-10-26T23:41:53.0915479Z [WebServer] in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+2026-10-26T23:41:53.0916351Z 
+2026-10-26T23:41:53.0922721Z [1A[2K[WebServer] [33mnode_modules/zod/v4/core/regexes.js (74:0): A comment
+2026-10-26T23:41:53.0923028Z 
+2026-10-26T23:41:53.0923367Z [WebServer] 
+2026-10-26T23:41:53.0924366Z [WebServer] "/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+2026-10-26T23:41:53.0925417Z [WebServer]  * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+2026-10-26T23:41:53.0926404Z [WebServer]  * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+2026-10-26T23:41:53.0926975Z [WebServer] 
+2026-10-26T23:41:53.0927803Z [WebServer] in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+2026-10-26T23:42:00.8557928Z [1A[2K[WebServer] [33m
+2026-10-26T23:42:00.8558658Z [WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-10-26T23:42:00.8559428Z [WebServer] - Using dynamic import() to code-split the application
+2026-10-26T23:42:00.8565165Z [WebServer] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2026-10-26T23:42:00.8566554Z [WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+2026-10-26T23:42:00.8567049Z 
+2026-10-26T23:42:03.3101141Z 
+2026-10-26T23:42:03.3101827Z Running 602 tests using 2 workers
+2026-10-26T23:42:03.3102112Z 
+2026-10-26T23:42:03.3112549Z [1A[2K[1/602] [chromium-desktop] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:42:03.3116010Z [1A[2K[2/602] [chromium-desktop] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:42:03.9424327Z [1A[2K[3/602] [chromium-desktop] › e2e/web/artist-follow.spec.mjs:50:1 › artist follow guest return stays local and never mutates @critical
+2026-10-26T23:42:03.9895243Z [1A[2K[4/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 390px @critical
+2026-10-26T23:42:05.4923445Z [1A[2K[5/602] [chromium-desktop] › e2e/web/artist-follow.spec.mjs:63:1 › artist follow requires keyboard consent and keeps intent on failure @critical
+2026-10-26T23:42:06.5293312Z [1A[2K[6/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 412px @critical
+2026-10-26T23:42:07.5980005Z [1A[2K[7/602] [chromium-desktop] › e2e/web/artist-follow.spec.mjs:88:1 › artist follow already-confirmed state consumes only the resume keys
+2026-10-26T23:42:08.5490847Z [1A[2K[8/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 834px @critical
+2026-10-26T23:42:08.7878593Z [1A[2K[9/602] [chromium-desktop] › e2e/web/artist-follow.spec.mjs:97:1 › artist follow guest CTA supports the English locale
+2026-10-26T23:42:09.9512391Z [1A[2K[10/602] [chromium-desktop] › e2e/web/artist-merch.spec.mjs:125:1 › PW-MERCH-01 keeps the closed pilot honest and actionable
+2026-10-26T23:42:10.9028313Z [1A[2K[11/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 1280px @critical
+2026-10-26T23:42:11.5484113Z [1A[2K[12/602] [chromium-desktop] › e2e/web/artist-merch.spec.mjs:137:1 › PW-MERCH-02 discovers a store and product responsively without promising checkout
+2026-10-26T23:42:13.4603912Z [1A[2K[13/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light reduce @critical
+2026-10-26T23:42:14.4186688Z [1A[2K[14/602] [chromium-desktop] › e2e/web/auth-landing.spec.mjs:58:1 › email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical
+2026-10-26T23:42:15.8052441Z [1A[2K[15/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light no-preference @critical
+2026-10-26T23:42:16.6507357Z [1A[2K[16/602] [chromium-desktop] › e2e/web/auth-landing.spec.mjs:91:1 › login returns to the interrupted action @mobile-flow
+2026-10-26T23:42:17.9082027Z [1A[2K[17/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark reduce @critical
+2026-10-26T23:42:18.0376512Z [1A[2K[18/602] [chromium-desktop] › e2e/web/auth-landing.spec.mjs:104:1 › login rejects external redirects @mobile-flow
+2026-10-26T23:42:19.6523498Z [1A[2K[19/602] [chromium-desktop] › e2e/web/auth-landing.spec.mjs:114:1 › a returning session opening the site root lands on Comunidad @mobile-flow
+2026-10-26T23:42:20.0077850Z [1A[2K[20/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark no-preference @critical
+2026-10-26T23:42:20.7859002Z [1A[2K[21/602] [chromium-desktop] › e2e/web/auth-landing.spec.mjs:125:1 › the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical
+2026-10-26T23:42:21.6575292Z [1A[2K[22/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:103:1 › Account deletion requires authentication @critical
+2026-10-26T23:42:22.1854505Z [1A[2K[23/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:111:1 › Account deletion refuses an expired session before submission @critical
+2026-10-26T23:42:23.0503011Z [1A[2K[24/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:124:1 › Account deletion refuses authentication lost between session read and POST @critical
+2026-10-26T23:42:23.8408905Z [1A[2K[25/602] [chromium-desktop] › e2e/web/account-deletion.spec.mjs:136:1 › Administrator records an auditable deletion outcome @critical
+2026-10-26T23:42:24.9594932Z [1A[2K[26/602] [chromium-desktop] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 320px @critical
+2026-10-26T23:42:28.0881903Z [1A[2K[27/602] [chromium-desktop] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 1280px @critical
+2026-10-26T23:42:32.0661896Z [1A[2K[28/602] [chromium-desktop] › e2e/web/auth-landing.spec.mjs:141:1 › a healthy page never shows the blank-screen recovery @mobile-flow
+2026-10-26T23:42:32.4356682Z [1A[2K[29/602] [chromium-desktop] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route allowed access and preserves drafts @critical
+2026-10-26T23:42:35.0741848Z [1A[2K[30/602] [chromium-desktop] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route revoked access and preserves drafts @critical
+2026-10-26T23:42:36.8295906Z [1A[2K[31/602] [chromium-desktop] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (es) @critical
+2026-10-26T23:42:38.3687327Z [1A[2K[32/602] [chromium-desktop] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (en) @critical
+2026-10-26T23:42:39.7186381Z [1A[2K[33/602] [chromium-desktop] › e2e/web/course-enrollment.spec.mjs:132:3 › Course enrollment on a small Android phone › Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow
+2026-10-26T23:42:40.8247833Z [1A[2K[34/602] [chromium-desktop] › e2e/web/course-enrollment.spec.mjs:162:3 › Course enrollment on a small Android phone › successful checkout leaves no dialog and focuses the order @mobile-flow @critical
+2026-10-26T23:42:42.3146908Z [1A[2K[35/602] [chromium-desktop] › e2e/web/course-enrollment.spec.mjs:178:3 › Course enrollment on a small Android phone › Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow
+2026-10-26T23:42:43.7583736Z [1A[2K[36/602] [chromium-desktop] › e2e/web/course-enrollment.spec.mjs:212:3 › Course enrollment on a small Android phone › Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow
+2026-10-26T23:42:45.3209817Z [1A[2K[37/602] [chromium-desktop] › e2e/web/course-enrollment.spec.mjs:238:3 › Course enrollment on a small Android phone › Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow
+2026-10-26T23:42:45.6480288Z [1A[2K[38/602] [chromium-desktop] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getter @critical
+2026-10-26T23:42:46.6218738Z [1A[2K[39/602] [chromium-desktop] › e2e/web/course-enrollment.spec.mjs:261:3 › Course enrollment on a small Android phone › Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow
+2026-10-26T23:42:48.1526836Z [1A[2K[40/602] [chromium-desktop] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getItem @critical
+2026-10-26T23:42:48.2664725Z [1A[2K[41/602] [chromium-desktop] › e2e/web/directory-favorite-recovery.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:42:50.3380153Z [1A[2K[42/602] [chromium-desktop] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies setItem @critical
+2026-10-26T23:42:52.2009128Z [1A[2K[43/602] [chromium-desktop] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:42:58.5704880Z [1A[2K[44/602] [chromium-desktop] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI dark review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:43:00.8463616Z [1A[2K[45/602] [chromium-desktop] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI light review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:43:03.1116521Z [1A[2K[46/602] [chromium-desktop] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use en @critical
+2026-10-26T23:43:04.1939050Z [1A[2K[47/602] [chromium-desktop] › e2e/web/event-raci-editor.spec.mjs:91:1 › RACI accessibility guard detects a known low-contrast fixture @critical
+2026-10-26T23:43:04.5102411Z [1A[2K[48/602] [chromium-desktop] › e2e/web/event-raci-editor.spec.mjs:107:1 › RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical
+2026-10-26T23:43:04.8890564Z [1A[2K[49/602] [chromium-desktop] › e2e/web/event-rsvp-sharing.spec.mjs:171:1 › @critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn
+2026-10-26T23:43:09.3501770Z [1A[2K[50/602] [chromium-desktop] › e2e/web/event-rsvp-sharing.spec.mjs:219:1 › private events do not enumerate and cancelled public events disable RSVP and sharing
+2026-10-26T23:43:10.4635512Z [1A[2K[51/602] [chromium-desktop] › e2e/web/event-rsvp-sharing.spec.mjs:239:1 › RSVP fixtures block unconfigured APIs and foreign module-shaped requests
+2026-10-26T23:43:11.3172035Z [1A[2K[52/602] [chromium-desktop] › e2e/web/event-task-view.spec.mjs:38:1 › task-only route renders RACI and recovers keyboard refresh without parent reads @critical
+2026-10-26T23:43:13.0063503Z [1A[2K[53/602] [chromium-desktop] › e2e/web/event-task-view.spec.mjs:68:1 › malformed successful task cannot produce a RACI view
+2026-10-26T23:43:14.0427987Z [1A[2K[54/602] [chromium-desktop] › e2e/web/event-task-view.spec.mjs:76:1 › invalid or repeated task selectors never fall back to loading the event
+2026-10-26T23:43:14.0678904Z [1A[2K[55/602] [chromium-desktop] › e2e/web/fanhub-onboarding.spec.mjs:52:1 › FanHub recovers reads and explicit keyboard exit without fake first value @critical
+2026-10-26T23:43:16.5552743Z [1A[2K[56/602] [chromium-desktop] › e2e/web/event-task-view.spec.mjs:85:1 › English task view honestly reports unconfigured responsibility
+2026-10-26T23:43:18.0582108Z [1A[2K[57/602] [chromium-desktop] › e2e/web/fanhub-onboarding.spec.mjs:94:1 › FanHub does not show already-completed onboarding or submit another exit
+2026-10-26T23:43:18.0667785Z [1A[2K[58/602] [chromium-desktop] › e2e/web/event-task-view.spec.mjs:94:1 › fixture keeps foreign module-shaped URLs and unknown API commands isolated
+2026-10-26T23:43:18.3537526Z [1A[2K[59/602] [chromium-desktop] › e2e/web/legacy-provider-playback.spec.mjs:93:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection
+2026-10-26T23:43:19.2074605Z [1A[2K[60/602] [chromium-desktop] › e2e/web/fanhub-onboarding.spec.mjs:104:1 › FanHub rejects a successful HTTP response with no authoritative progress
+2026-10-26T23:43:20.4059409Z [1A[2K[61/602] [chromium-desktop] › e2e/web/fanhub-onboarding.spec.mjs:114:1 › FanHub guest English tips are local presentation, never account completion
+2026-10-26T23:43:21.3268071Z [1A[2K[62/602] [chromium-desktop] › e2e/web/legacy-provider-playback.spec.mjs:130:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command
+2026-10-26T23:43:21.6744624Z [1A[2K[63/602] [chromium-desktop] › e2e/web/marketplace-cart.spec.mjs:116:1 › Marketplace cart stays reachable after adding on a small phone @mobile-flow
+2026-10-26T23:43:23.4169072Z [1A[2K[64/602] [chromium-desktop] › e2e/web/mobile-layout-regressions.spec.mjs:111:1 › Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow
+2026-10-26T23:43:24.6029404Z [1A[2K[65/602] [chromium-desktop] › e2e/web/mobile-layout-regressions.spec.mjs:146:1 › Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow
+2026-10-26T23:43:25.1266874Z [1A[2K[66/602] [chromium-desktop] › e2e/web/marketplace-cart.spec.mjs:181:1 › Saved cart failure stays recoverable without creating a replacement @mobile-flow
+2026-10-26T23:43:26.0454234Z [1A[2K[67/602] [chromium-desktop] › e2e/web/mobile-layout-regressions.spec.mjs:200:1 › Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow
+2026-10-26T23:43:27.1206582Z [1A[2K[68/602] [chromium-desktop] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 390px @critical
+2026-10-26T23:43:28.9191467Z [1A[2K[69/602] [chromium-desktop] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 834px @critical
+2026-10-26T23:43:30.9199729Z [1A[2K[70/602] [chromium-desktop] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 1280px @critical
+2026-10-26T23:43:33.1287441Z [1A[2K[71/602] [chromium-desktop] › e2e/web/mobile-program.spec.mjs:64:1 › Dismissed mobile promotion stays dismissed @critical
+2026-10-26T23:43:34.2752505Z [1A[2K[72/602] [chromium-desktop] › e2e/web/mobile-program.spec.mjs:73:1 › Admitted Android testers can reach Play without submitting another form @critical
+2026-10-26T23:43:34.2840263Z [1A[2K[73/602] [chromium-desktop] › e2e/web/music-catalog-discovery.spec.mjs:79:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back
+2026-10-26T23:43:36.0555837Z [1A[2K[74/602] [chromium-desktop] › e2e/web/music-player.spec.mjs:200:1 › @critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation
+2026-10-26T23:43:36.4627206Z [1A[2K[75/602] [chromium-desktop] › e2e/web/music-catalog-discovery.spec.mjs:125:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release
+2026-10-26T23:43:38.4400491Z [1A[2K[76/602] [chromium-desktop] › e2e/web/notification-navigation.spec.mjs:45:1 › notification follower keyboard/touch navigation and failed read persistence @critical
+2026-10-26T23:43:39.4815120Z [1A[2K[77/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+2026-10-26T23:43:40.3166077Z [1A[2K[78/602] [chromium-desktop] › e2e/web/notification-navigation.spec.mjs:58:1 › specific request navigation shows current state and never decides it @critical
+2026-10-26T23:43:42.0982280Z [1A[2K[79/602] [chromium-desktop] › e2e/web/notification-navigation.spec.mjs:71:1 › expired session retains notification destination and denied target stays private @critical
+2026-10-26T23:43:42.1463697Z [1A[2K[80/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+2026-10-26T23:43:44.0072572Z [1A[2K[81/602] [chromium-desktop] › e2e/web/notification-navigation.spec.mjs:85:1 › standard new-tab activation resolves the owned notification and preserves the original page @critical
+2026-10-26T23:43:44.8136951Z [1A[2K[82/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:248:1 › @critical PW-PER-01-AUTH redirects protected URLs and explains rejected login
+2026-10-26T23:43:46.6377572Z [1A[2K[83/602] [chromium-desktop] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es / @critical
+2026-10-26T23:43:47.0652818Z [1A[2K[84/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:270:1 › PW-PER-01-AUTH registers a fictional user through the UI
+2026-10-26T23:43:47.8877270Z [1A[2K[85/602] [chromium-desktop] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /comercio @critical
+2026-10-26T23:43:48.7976971Z [1A[2K[86/602] [chromium-desktop] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /distribucion @critical
+2026-10-26T23:43:49.3358684Z [1A[2K[87/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:306:1 › PW-PER-01-AUTH keeps signup labels readable in light theme
+2026-10-26T23:43:49.9345139Z [1A[2K[88/602] [chromium-desktop] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /marketplace @critical
+2026-10-26T23:43:51.4142335Z [1A[2K[89/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:315:1 › PW-PER-01-AUTH reports a reset transport failure instead of false success
+2026-10-26T23:43:52.3696062Z [1A[2K[90/602] [chromium-desktop] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en / @critical
+2026-10-26T23:43:52.5952897Z [1A[2K[91/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:327:1 › PW-PER-01-DISCOVERY completes public city discovery and preserves search state
+2026-10-26T23:43:53.5556264Z [1A[2K[92/602] [chromium-desktop] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /comercio @critical
+2026-10-26T23:43:54.5832992Z [1A[2K[93/602] [chromium-desktop] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /distribucion @critical
+2026-10-26T23:43:55.3082995Z [1A[2K[94/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:348:1 › PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport
+2026-10-26T23:43:55.4785354Z [1A[2K[95/602] [chromium-desktop] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /marketplace @critical
+2026-10-26T23:43:55.5668778Z [1A[2K[96/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:360:1 › PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance
+2026-10-26T23:43:57.6571845Z [1A[2K[97/602] [chromium-desktop] › e2e/web/public-welcome.spec.mjs:101:1 › anonymous root welcomes before search without registration or location access @critical @mobile-flow
+2026-10-26T23:43:57.7067979Z [1A[2K[98/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:401:1 › PW-PER-01-DOMO retries one truthful manual request in Ecuador time
+2026-10-26T23:43:59.3553773Z [1A[2K[99/602] [chromium-desktop] › e2e/web/public-welcome.spec.mjs:123:1 › welcome leads to public studio and services before account choices @critical @mobile-flow
+2026-10-26T23:44:00.7487873Z [1A[2K[100/602] [chromium-desktop] › e2e/web/public-welcome.spec.mjs:157:1 › welcome opens published work as a guest without an account gate @critical @mobile-flow
+2026-10-26T23:44:02.0605582Z [1A[2K[101/602] [chromium-desktop] › e2e/web/public-welcome.spec.mjs:170:1 › direct search preserves query and city across changes and browser history @critical @mobile-flow
+2026-10-26T23:44:03.7282885Z [1A[2K[102/602] [chromium-desktop] › e2e/web/public-welcome.spec.mjs:191:1 › a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow
+2026-10-26T23:44:05.4404787Z [1A[2K[103/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:560:1 › PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions
+2026-10-26T23:44:07.2240175Z [1A[2K[104/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:663:1 › PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data
+2026-10-26T23:44:08.3774305Z [1A[2K[105/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE es reset confirmation retains language
+2026-10-26T23:44:09.0562370Z [1A[2K[106/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+2026-10-26T23:44:12.7308810Z [1A[2K[107/602] [chromium-desktop] › e2e/web/public-welcome.spec.mjs:207:1 › welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow
+2026-10-26T23:44:12.9243991Z [1A[2K[108/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE en reset confirmation retains language
+2026-10-26T23:44:13.9542897Z [1A[2K[109/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+2026-10-26T23:44:15.0532832Z [1A[2K[110/602] [chromium-desktop] › e2e/web/records-thumbnails.spec.mjs:45:1 › Records handles failed images and decoded placeholders with bounded requests @critical
+2026-10-26T23:44:16.1685699Z [1A[2K[111/602] [chromium-desktop] › e2e/web/records-thumbnails.spec.mjs:64:1 › Records preserves source identities, keyboard links and responsive unavailable states @critical
+2026-10-26T23:44:17.7390766Z [1A[2K[112/602] [chromium-desktop] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getter @critical
+2026-10-26T23:44:18.4808689Z [1A[2K[113/602] [chromium-desktop] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getter @critical
+2026-10-26T23:44:18.8491581Z [1A[2K[114/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY es policy documents retain language and version
+2026-10-26T23:44:19.3176659Z [1A[2K[115/602] [chromium-desktop] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getItem @critical
+2026-10-26T23:44:20.0481522Z [1A[2K[116/602] [chromium-desktop] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getItem @critical
+2026-10-26T23:44:20.2957532Z [1A[2K[117/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY en policy documents retain language and version
+2026-10-26T23:44:20.9889082Z [1A[2K[118/602] [chromium-desktop] › e2e/web/studio-internship-audit.spec.mjs:95:1 › @critical synthetic intern records a failed case and reaches a trace-linked report draft
+2026-10-26T23:44:21.8819195Z [1A[2K[119/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es network preserves the selected language
+2026-10-26T23:44:24.1862692Z [1A[2K[120/602] [chromium-desktop] › e2e/web/studio-internship-audit.spec.mjs:139:1 › @critical synthetic administrator can see all-report controls and prepare triage without activation
+2026-10-26T23:44:27.7227047Z [1A[2K[121/602] [chromium-desktop] › e2e/web/ticket-credential.spec.mjs:6:1 › Guest issued QR downloads on a narrow screen without installing the app @critical
+2026-10-26T23:44:28.7732826Z [1A[2K[122/602] [chromium-phone] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:44:28.7735038Z [1A[2K[123/602] [chromium-phone] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:44:29.5346356Z [1A[2K[124/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 390px @critical
+2026-10-26T23:44:31.3788361Z [1A[2K[125/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 412px @critical
+2026-10-26T23:44:32.0251644Z [1A[2K[126/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language
+2026-10-26T23:44:33.2681841Z [1A[2K[127/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en network preserves the selected language
+2026-10-26T23:44:33.4789958Z [1A[2K[128/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 834px @critical
+2026-10-26T23:44:35.4417570Z [1A[2K[129/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 1280px @critical
+2026-10-26T23:44:36.9872024Z [1A[2K[130/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light reduce @critical
+2026-10-26T23:44:38.4324544Z [1A[2K[131/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light no-preference @critical
+2026-10-26T23:44:39.9452366Z [1A[2K[132/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark reduce @critical
+2026-10-26T23:44:41.4289612Z [1A[2K[133/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark no-preference @critical
+2026-10-26T23:44:43.1750747Z [1A[2K[134/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:103:1 › Account deletion requires authentication @critical
+2026-10-26T23:44:43.4682666Z [1A[2K[135/602] [chromium-desktop] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language
+2026-10-26T23:44:44.2055977Z [1A[2K[136/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:111:1 › Account deletion refuses an expired session before submission @critical
+2026-10-26T23:44:45.2796777Z [1A[2K[137/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:124:1 › Account deletion refuses authentication lost between session read and POST @critical
+2026-10-26T23:44:45.8664717Z [1A[2K[138/602] [chromium-phone] › e2e/web/artist-follow.spec.mjs:50:1 › artist follow guest return stays local and never mutates @critical
+2026-10-26T23:44:46.4508818Z [1A[2K[139/602] [chromium-phone] › e2e/web/account-deletion.spec.mjs:136:1 › Administrator records an auditable deletion outcome @critical
+2026-10-26T23:44:47.6234349Z [1A[2K[140/602] [chromium-phone] › e2e/web/artist-follow.spec.mjs:63:1 › artist follow requires keyboard consent and keeps intent on failure @critical
+2026-10-26T23:44:47.8080905Z [1A[2K[141/602] [chromium-phone] › e2e/web/artist-merch.spec.mjs:125:1 › PW-MERCH-01 keeps the closed pilot honest and actionable
+2026-10-26T23:44:49.1298060Z [1A[2K[142/602] [chromium-phone] › e2e/web/artist-merch.spec.mjs:137:1 › PW-MERCH-02 discovers a store and product responsively without promising checkout
+2026-10-26T23:44:49.7195679Z [1A[2K[143/602] [chromium-phone] › e2e/web/artist-follow.spec.mjs:88:1 › artist follow already-confirmed state consumes only the resume keys
+2026-10-26T23:44:50.8716227Z [1A[2K[144/602] [chromium-phone] › e2e/web/artist-follow.spec.mjs:97:1 › artist follow guest CTA supports the English locale
+2026-10-26T23:44:51.2390263Z [1A[2K[145/602] [chromium-phone] › e2e/web/auth-landing.spec.mjs:58:1 › email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical
+2026-10-26T23:44:52.0144247Z [1A[2K[146/602] [chromium-phone] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 320px @critical
+2026-10-26T23:44:53.2116260Z [1A[2K[147/602] [chromium-phone] › e2e/web/auth-landing.spec.mjs:91:1 › login returns to the interrupted action @mobile-flow
+2026-10-26T23:44:54.4736281Z [1A[2K[148/602] [chromium-phone] › e2e/web/auth-landing.spec.mjs:104:1 › login rejects external redirects @mobile-flow
+2026-10-26T23:44:55.7269868Z [1A[2K[149/602] [chromium-phone] › e2e/web/auth-landing.spec.mjs:114:1 › a returning session opening the site root lands on Comunidad @mobile-flow
+2026-10-26T23:44:56.8248815Z [1A[2K[150/602] [chromium-phone] › e2e/web/auth-landing.spec.mjs:125:1 › the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical
+2026-10-26T23:44:57.1975106Z [1A[2K[151/602] [chromium-phone] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 1280px @critical
+2026-10-26T23:45:01.7125264Z [1A[2K[152/602] [chromium-phone] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route allowed access and preserves drafts @critical
+2026-10-26T23:45:03.5215876Z [1A[2K[153/602] [chromium-phone] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route revoked access and preserves drafts @critical
+2026-10-26T23:45:05.1109067Z [1A[2K[154/602] [chromium-phone] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (es) @critical
+2026-10-26T23:45:06.5529569Z [1A[2K[155/602] [chromium-phone] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (en) @critical
+2026-10-26T23:45:08.0533962Z [1A[2K[156/602] [chromium-phone] › e2e/web/course-enrollment.spec.mjs:132:3 › Course enrollment on a small Android phone › Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow
+2026-10-26T23:45:08.1568040Z [1A[2K[157/602] [chromium-phone] › e2e/web/auth-landing.spec.mjs:141:1 › a healthy page never shows the blank-screen recovery @mobile-flow
+2026-10-26T23:45:09.6954578Z [1A[2K[158/602] [chromium-phone] › e2e/web/course-enrollment.spec.mjs:162:3 › Course enrollment on a small Android phone › successful checkout leaves no dialog and focuses the order @mobile-flow @critical
+2026-10-26T23:45:11.6204892Z [1A[2K[159/602] [chromium-phone] › e2e/web/course-enrollment.spec.mjs:178:3 › Course enrollment on a small Android phone › Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow
+2026-10-26T23:45:13.1068958Z [1A[2K[160/602] [chromium-phone] › e2e/web/course-enrollment.spec.mjs:212:3 › Course enrollment on a small Android phone › Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow
+2026-10-26T23:45:14.6938518Z [1A[2K[161/602] [chromium-phone] › e2e/web/course-enrollment.spec.mjs:238:3 › Course enrollment on a small Android phone › Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow
+2026-10-26T23:45:15.6195699Z [1A[2K[162/602] [chromium-phone] › e2e/web/course-enrollment.spec.mjs:261:3 › Course enrollment on a small Android phone › Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow
+2026-10-26T23:45:17.3776583Z [1A[2K[163/602] [chromium-phone] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getter @critical
+2026-10-26T23:45:19.2912583Z [1A[2K[164/602] [chromium-phone] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getItem @critical
+2026-10-26T23:45:21.3633946Z [1A[2K[165/602] [chromium-phone] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies setItem @critical
+2026-10-26T23:45:21.9299620Z [1A[2K[166/602] [chromium-phone] › e2e/web/directory-favorite-recovery.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:45:23.7284392Z [1A[2K[167/602] [chromium-phone] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:45:32.1732697Z [1A[2K[168/602] [chromium-phone] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI dark review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:45:34.8421125Z [1A[2K[169/602] [chromium-phone] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI light review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:45:35.2330092Z [1A[2K[170/602] [chromium-phone] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use en @critical
+2026-10-26T23:45:37.1331991Z [1A[2K[171/602] [chromium-phone] › e2e/web/event-raci-editor.spec.mjs:91:1 › RACI accessibility guard detects a known low-contrast fixture @critical
+2026-10-26T23:45:37.4754326Z [1A[2K[172/602] [chromium-phone] › e2e/web/event-raci-editor.spec.mjs:107:1 › RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical
+2026-10-26T23:45:37.8650996Z [1A[2K[173/602] [chromium-phone] › e2e/web/event-rsvp-sharing.spec.mjs:171:1 › @critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn
+2026-10-26T23:45:38.0584488Z [1A[2K[174/602] [chromium-phone] › e2e/web/event-rsvp-sharing.spec.mjs:219:1 › private events do not enumerate and cancelled public events disable RSVP and sharing
+2026-10-26T23:45:38.2233147Z [1A[2K[175/602] [chromium-phone] › e2e/web/event-rsvp-sharing.spec.mjs:239:1 › RSVP fixtures block unconfigured APIs and foreign module-shaped requests
+2026-10-26T23:45:38.3970163Z [1A[2K[176/602] [chromium-phone] › e2e/web/event-task-view.spec.mjs:38:1 › task-only route renders RACI and recovers keyboard refresh without parent reads @critical
+2026-10-26T23:45:39.9221826Z [1A[2K[177/602] [chromium-phone] › e2e/web/event-task-view.spec.mjs:68:1 › malformed successful task cannot produce a RACI view
+2026-10-26T23:45:40.7399951Z [1A[2K[178/602] [chromium-phone] › e2e/web/event-task-view.spec.mjs:76:1 › invalid or repeated task selectors never fall back to loading the event
+2026-10-26T23:45:42.5820876Z [1A[2K[179/602] [chromium-phone] › e2e/web/event-task-view.spec.mjs:85:1 › English task view honestly reports unconfigured responsibility
+2026-10-26T23:45:43.4758587Z [1A[2K[180/602] [chromium-phone] › e2e/web/event-task-view.spec.mjs:94:1 › fixture keeps foreign module-shaped URLs and unknown API commands isolated
+2026-10-26T23:45:43.7323575Z [1A[2K[181/602] [chromium-phone] › e2e/web/fanhub-onboarding.spec.mjs:52:1 › FanHub recovers reads and explicit keyboard exit without fake first value @critical
+2026-10-26T23:45:46.5897579Z [1A[2K[182/602] [chromium-phone] › e2e/web/legacy-provider-playback.spec.mjs:93:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection
+2026-10-26T23:45:47.0280837Z [1A[2K[183/602] [chromium-phone] › e2e/web/fanhub-onboarding.spec.mjs:94:1 › FanHub does not show already-completed onboarding or submit another exit
+2026-10-26T23:45:48.1329740Z [1A[2K[184/602] [chromium-phone] › e2e/web/fanhub-onboarding.spec.mjs:104:1 › FanHub rejects a successful HTTP response with no authoritative progress
+2026-10-26T23:45:49.2663510Z [1A[2K[185/602] [chromium-phone] › e2e/web/legacy-provider-playback.spec.mjs:130:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command
+2026-10-26T23:45:49.5584268Z [1A[2K[186/602] [chromium-phone] › e2e/web/fanhub-onboarding.spec.mjs:114:1 › FanHub guest English tips are local presentation, never account completion
+2026-10-26T23:45:50.7154566Z [1A[2K[187/602] [chromium-phone] › e2e/web/marketplace-cart.spec.mjs:116:1 › Marketplace cart stays reachable after adding on a small phone @mobile-flow
+2026-10-26T23:45:51.3204102Z [1A[2K[188/602] [chromium-phone] › e2e/web/mobile-layout-regressions.spec.mjs:111:1 › Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow
+2026-10-26T23:45:52.5334030Z [1A[2K[189/602] [chromium-phone] › e2e/web/mobile-layout-regressions.spec.mjs:146:1 › Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow
+2026-10-26T23:45:54.2607918Z [1A[2K[190/602] [chromium-phone] › e2e/web/mobile-layout-regressions.spec.mjs:200:1 › Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow
+2026-10-26T23:45:54.3469505Z [1A[2K[191/602] [chromium-phone] › e2e/web/marketplace-cart.spec.mjs:181:1 › Saved cart failure stays recoverable without creating a replacement @mobile-flow
+2026-10-26T23:45:55.5191222Z [1A[2K[192/602] [chromium-phone] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 390px @critical
+2026-10-26T23:45:57.3132772Z [1A[2K[193/602] [chromium-phone] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 834px @critical
+2026-10-26T23:45:59.6509857Z [1A[2K[194/602] [chromium-phone] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 1280px @critical
+2026-10-26T23:46:02.0619790Z [1A[2K[195/602] [chromium-phone] › e2e/web/mobile-program.spec.mjs:64:1 › Dismissed mobile promotion stays dismissed @critical
+2026-10-26T23:46:02.9198314Z [1A[2K[196/602] [chromium-phone] › e2e/web/mobile-program.spec.mjs:73:1 › Admitted Android testers can reach Play without submitting another form @critical
+2026-10-26T23:46:04.3083134Z [1A[2K[197/602] [chromium-phone] › e2e/web/music-catalog-discovery.spec.mjs:79:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back
+2026-10-26T23:46:04.4807793Z [1A[2K[198/602] [chromium-phone] › e2e/web/music-player.spec.mjs:200:1 › @critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation
+2026-10-26T23:46:06.4147899Z [1A[2K[199/602] [chromium-phone] › e2e/web/music-catalog-discovery.spec.mjs:125:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release
+2026-10-26T23:46:07.2502084Z [1A[2K[200/602] [chromium-phone] › e2e/web/notification-navigation.spec.mjs:45:1 › notification follower keyboard/touch navigation and failed read persistence @critical
+2026-10-26T23:46:08.5861271Z [1A[2K[201/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+2026-10-26T23:46:08.6446739Z [1A[2K[202/602] [chromium-phone] › e2e/web/notification-navigation.spec.mjs:58:1 › specific request navigation shows current state and never decides it @critical
+2026-10-26T23:46:10.3969222Z [1A[2K[203/602] [chromium-phone] › e2e/web/notification-navigation.spec.mjs:71:1 › expired session retains notification destination and denied target stays private @critical
+2026-10-26T23:46:12.0451697Z [1A[2K[204/602] [chromium-phone] › e2e/web/notification-navigation.spec.mjs:85:1 › standard new-tab activation resolves the owned notification and preserves the original page @critical
+2026-10-26T23:46:12.2175577Z [1A[2K[205/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+2026-10-26T23:46:14.4678728Z [1A[2K[206/602] [chromium-phone] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es / @critical
+2026-10-26T23:46:15.7478235Z [1A[2K[207/602] [chromium-phone] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /comercio @critical
+2026-10-26T23:46:15.8718414Z [1A[2K[208/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:248:1 › @critical PW-PER-01-AUTH redirects protected URLs and explains rejected login
+2026-10-26T23:46:17.0584768Z [1A[2K[209/602] [chromium-phone] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /distribucion @critical
+2026-10-26T23:46:18.0630783Z [1A[2K[210/602] [chromium-phone] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /marketplace @critical
+2026-10-26T23:46:18.2186822Z [1A[2K[211/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:270:1 › PW-PER-01-AUTH registers a fictional user through the UI
+2026-10-26T23:46:20.4560451Z [1A[2K[212/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:306:1 › PW-PER-01-AUTH keeps signup labels readable in light theme
+2026-10-26T23:46:20.7922941Z [1A[2K[213/602] [chromium-phone] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en / @critical
+2026-10-26T23:46:20.9813791Z [1A[2K[214/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:315:1 › PW-PER-01-AUTH reports a reset transport failure instead of false success
+2026-10-26T23:46:22.3004578Z [1A[2K[215/602] [chromium-phone] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /comercio @critical
+2026-10-26T23:46:22.7906674Z [1A[2K[216/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:327:1 › PW-PER-01-DISCOVERY completes public city discovery and preserves search state
+2026-10-26T23:46:23.4153392Z [1A[2K[217/602] [chromium-phone] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /distribucion @critical
+2026-10-26T23:46:24.5306384Z [1A[2K[218/602] [chromium-phone] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /marketplace @critical
+2026-10-26T23:46:25.5776654Z [1A[2K[219/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:348:1 › PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport
+2026-10-26T23:46:26.7524828Z [1A[2K[220/602] [chromium-phone] › e2e/web/public-welcome.spec.mjs:101:1 › anonymous root welcomes before search without registration or location access @critical @mobile-flow
+2026-10-26T23:46:26.8203879Z [1A[2K[221/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:360:1 › PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance
+2026-10-26T23:46:28.8118060Z [1A[2K[222/602] [chromium-phone] › e2e/web/public-welcome.spec.mjs:123:1 › welcome leads to public studio and services before account choices @critical @mobile-flow
+2026-10-26T23:46:28.9768160Z [1A[2K[223/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:401:1 › PW-PER-01-DOMO retries one truthful manual request in Ecuador time
+2026-10-26T23:46:30.5715255Z [1A[2K[224/602] [chromium-phone] › e2e/web/public-welcome.spec.mjs:157:1 › welcome opens published work as a guest without an account gate @critical @mobile-flow
+2026-10-26T23:46:32.0061873Z [1A[2K[225/602] [chromium-phone] › e2e/web/public-welcome.spec.mjs:170:1 › direct search preserves query and city across changes and browser history @critical @mobile-flow
+2026-10-26T23:46:33.9007349Z [1A[2K[226/602] [chromium-phone] › e2e/web/public-welcome.spec.mjs:191:1 › a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow
+2026-10-26T23:46:35.0619310Z [1A[2K[227/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:560:1 › PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions
+2026-10-26T23:46:36.9925130Z [1A[2K[228/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:663:1 › PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data
+2026-10-26T23:46:38.3157565Z [1A[2K[229/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE es reset confirmation retains language
+2026-10-26T23:46:39.0457605Z [1A[2K[230/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+2026-10-26T23:46:43.2315127Z [1A[2K[231/602] [chromium-phone] › e2e/web/public-welcome.spec.mjs:207:1 › welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow
+2026-10-26T23:46:43.4085958Z [1A[2K[232/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE en reset confirmation retains language
+2026-10-26T23:46:44.4189117Z [1A[2K[233/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+2026-10-26T23:46:45.4432597Z [1A[2K[234/602] [chromium-phone] › e2e/web/records-thumbnails.spec.mjs:45:1 › Records handles failed images and decoded placeholders with bounded requests @critical
+2026-10-26T23:46:46.9926163Z [1A[2K[235/602] [chromium-phone] › e2e/web/records-thumbnails.spec.mjs:64:1 › Records preserves source identities, keyboard links and responsive unavailable states @critical
+2026-10-26T23:46:49.3622788Z [1A[2K[236/602] [chromium-phone] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getter @critical
+2026-10-26T23:46:49.5626921Z [1A[2K[237/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY es policy documents retain language and version
+2026-10-26T23:46:50.0736783Z [1A[2K[238/602] [chromium-phone] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getter @critical
+2026-10-26T23:46:51.0181393Z [1A[2K[239/602] [chromium-phone] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getItem @critical
+2026-10-26T23:46:51.1819485Z [1A[2K[240/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY en policy documents retain language and version
+2026-10-26T23:46:51.7347769Z [1A[2K[241/602] [chromium-phone] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getItem @critical
+2026-10-26T23:46:52.5367486Z [1A[2K[242/602] [chromium-phone] › e2e/web/studio-internship-audit.spec.mjs:95:1 › @critical synthetic intern records a failed case and reaches a trace-linked report draft
+2026-10-26T23:46:52.8675608Z [1A[2K[243/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es network preserves the selected language
+2026-10-26T23:46:55.5981954Z [1A[2K[244/602] [chromium-phone] › e2e/web/studio-internship-audit.spec.mjs:139:1 › @critical synthetic administrator can see all-report controls and prepare triage without activation
+2026-10-26T23:46:59.1117855Z [1A[2K[245/602] [chromium-phone] › e2e/web/ticket-credential.spec.mjs:6:1 › Guest issued QR downloads on a narrow screen without installing the app @critical
+2026-10-26T23:47:00.3572342Z [1A[2K[246/602] [chromium-tablet] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:47:00.3574271Z [1A[2K[247/602] [chromium-tablet] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:47:01.1480732Z [1A[2K[248/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 390px @critical
+2026-10-26T23:47:03.1107261Z [1A[2K[249/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 412px @critical
+2026-10-26T23:47:03.3035772Z [1A[2K[250/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language
+2026-10-26T23:47:05.0045130Z [1A[2K[251/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en network preserves the selected language
+2026-10-26T23:47:05.3929021Z [1A[2K[252/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 834px @critical
+2026-10-26T23:47:07.2633077Z [1A[2K[253/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 1280px @critical
+2026-10-26T23:47:08.9827363Z [1A[2K[254/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light reduce @critical
+2026-10-26T23:47:10.2534137Z [1A[2K[255/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light no-preference @critical
+2026-10-26T23:47:11.7151243Z [1A[2K[256/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark reduce @critical
+2026-10-26T23:47:13.1503444Z [1A[2K[257/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark no-preference @critical
+2026-10-26T23:47:14.8447119Z [1A[2K[258/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:103:1 › Account deletion requires authentication @critical
+2026-10-26T23:47:15.4814785Z [1A[2K[259/602] [chromium-phone] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language
+2026-10-26T23:47:15.8258336Z [1A[2K[260/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:111:1 › Account deletion refuses an expired session before submission @critical
+2026-10-26T23:47:17.0089839Z [1A[2K[261/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:124:1 › Account deletion refuses authentication lost between session read and POST @critical
+2026-10-26T23:47:18.1433563Z [1A[2K[262/602] [chromium-tablet] › e2e/web/account-deletion.spec.mjs:136:1 › Administrator records an auditable deletion outcome @critical
+2026-10-26T23:47:18.4063510Z [1A[2K[263/602] [chromium-tablet] › e2e/web/artist-follow.spec.mjs:50:1 › artist follow guest return stays local and never mutates @critical
+2026-10-26T23:47:19.6391159Z [1A[2K[264/602] [chromium-tablet] › e2e/web/artist-merch.spec.mjs:125:1 › PW-MERCH-01 keeps the closed pilot honest and actionable
+2026-10-26T23:47:20.3283832Z [1A[2K[265/602] [chromium-tablet] › e2e/web/artist-follow.spec.mjs:63:1 › artist follow requires keyboard consent and keeps intent on failure @critical
+2026-10-26T23:47:21.0804870Z [1A[2K[266/602] [chromium-tablet] › e2e/web/artist-merch.spec.mjs:137:1 › PW-MERCH-02 discovers a store and product responsively without promising checkout
+2026-10-26T23:47:22.5675021Z [1A[2K[267/602] [chromium-tablet] › e2e/web/artist-follow.spec.mjs:88:1 › artist follow already-confirmed state consumes only the resume keys
+2026-10-26T23:47:23.3626760Z [1A[2K[268/602] [chromium-tablet] › e2e/web/auth-landing.spec.mjs:58:1 › email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical
+2026-10-26T23:47:23.8880971Z [1A[2K[269/602] [chromium-tablet] › e2e/web/artist-follow.spec.mjs:97:1 › artist follow guest CTA supports the English locale
+2026-10-26T23:47:25.2993009Z [1A[2K[270/602] [chromium-tablet] › e2e/web/auth-landing.spec.mjs:91:1 › login returns to the interrupted action @mobile-flow
+2026-10-26T23:47:25.3316948Z [1A[2K[271/602] [chromium-tablet] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 320px @critical
+2026-10-26T23:47:26.8460058Z [1A[2K[272/602] [chromium-tablet] › e2e/web/auth-landing.spec.mjs:104:1 › login rejects external redirects @mobile-flow
+2026-10-26T23:47:28.1938529Z [1A[2K[273/602] [chromium-tablet] › e2e/web/auth-landing.spec.mjs:114:1 › a returning session opening the site root lands on Comunidad @mobile-flow
+2026-10-26T23:47:29.2970993Z [1A[2K[274/602] [chromium-tablet] › e2e/web/auth-landing.spec.mjs:125:1 › the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical
+2026-10-26T23:47:30.3134860Z [1A[2K[275/602] [chromium-tablet] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 1280px @critical
+2026-10-26T23:47:34.6600821Z [1A[2K[276/602] [chromium-tablet] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route allowed access and preserves drafts @critical
+2026-10-26T23:47:36.2689236Z [1A[2K[277/602] [chromium-tablet] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route revoked access and preserves drafts @critical
+2026-10-26T23:47:37.9571263Z [1A[2K[278/602] [chromium-tablet] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (es) @critical
+2026-10-26T23:47:39.3034624Z [1A[2K[279/602] [chromium-tablet] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (en) @critical
+2026-10-26T23:47:40.7338290Z [1A[2K[280/602] [chromium-tablet] › e2e/web/auth-landing.spec.mjs:141:1 › a healthy page never shows the blank-screen recovery @mobile-flow
+2026-10-26T23:47:41.1891825Z [1A[2K[281/602] [chromium-tablet] › e2e/web/course-enrollment.spec.mjs:132:3 › Course enrollment on a small Android phone › Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow
+2026-10-26T23:47:42.5444023Z [1A[2K[282/602] [chromium-tablet] › e2e/web/course-enrollment.spec.mjs:162:3 › Course enrollment on a small Android phone › successful checkout leaves no dialog and focuses the order @mobile-flow @critical
+2026-10-26T23:47:44.2750146Z [1A[2K[283/602] [chromium-tablet] › e2e/web/course-enrollment.spec.mjs:178:3 › Course enrollment on a small Android phone › Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow
+2026-10-26T23:47:45.7023382Z [1A[2K[284/602] [chromium-tablet] › e2e/web/course-enrollment.spec.mjs:212:3 › Course enrollment on a small Android phone › Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow
+2026-10-26T23:47:47.2066429Z [1A[2K[285/602] [chromium-tablet] › e2e/web/course-enrollment.spec.mjs:238:3 › Course enrollment on a small Android phone › Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow
+2026-10-26T23:47:48.3251519Z [1A[2K[286/602] [chromium-tablet] › e2e/web/course-enrollment.spec.mjs:261:3 › Course enrollment on a small Android phone › Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow
+2026-10-26T23:47:49.9002067Z [1A[2K[287/602] [chromium-tablet] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getter @critical
+2026-10-26T23:47:51.8932728Z [1A[2K[288/602] [chromium-tablet] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getItem @critical
+2026-10-26T23:47:53.8742832Z [1A[2K[289/602] [chromium-tablet] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies setItem @critical
+2026-10-26T23:47:54.8400726Z [1A[2K[290/602] [chromium-tablet] › e2e/web/directory-favorite-recovery.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:47:56.4358036Z [1A[2K[291/602] [chromium-tablet] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:48:05.4241728Z [1A[2K[292/602] [chromium-tablet] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI dark review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:48:07.6730868Z [1A[2K[293/602] [chromium-tablet] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use en @critical
+2026-10-26T23:48:07.8607026Z [1A[2K[294/602] [chromium-tablet] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI light review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:48:10.1659712Z [1A[2K[295/602] [chromium-tablet] › e2e/web/event-raci-editor.spec.mjs:91:1 › RACI accessibility guard detects a known low-contrast fixture @critical
+2026-10-26T23:48:10.5719167Z [1A[2K[296/602] [chromium-tablet] › e2e/web/event-raci-editor.spec.mjs:107:1 › RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical
+2026-10-26T23:48:11.0432315Z [1A[2K[297/602] [chromium-tablet] › e2e/web/event-rsvp-sharing.spec.mjs:171:1 › @critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn
+2026-10-26T23:48:11.2286757Z [1A[2K[298/602] [chromium-tablet] › e2e/web/event-rsvp-sharing.spec.mjs:219:1 › private events do not enumerate and cancelled public events disable RSVP and sharing
+2026-10-26T23:48:11.4259214Z [1A[2K[299/602] [chromium-tablet] › e2e/web/event-rsvp-sharing.spec.mjs:239:1 › RSVP fixtures block unconfigured APIs and foreign module-shaped requests
+2026-10-26T23:48:11.6222006Z [1A[2K[300/602] [chromium-tablet] › e2e/web/event-task-view.spec.mjs:38:1 › task-only route renders RACI and recovers keyboard refresh without parent reads @critical
+2026-10-26T23:48:13.0910254Z [1A[2K[301/602] [chromium-tablet] › e2e/web/event-task-view.spec.mjs:68:1 › malformed successful task cannot produce a RACI view
+2026-10-26T23:48:13.9213121Z [1A[2K[302/602] [chromium-tablet] › e2e/web/event-task-view.spec.mjs:76:1 › invalid or repeated task selectors never fall back to loading the event
+2026-10-26T23:48:15.8114475Z [1A[2K[303/602] [chromium-tablet] › e2e/web/event-task-view.spec.mjs:85:1 › English task view honestly reports unconfigured responsibility
+2026-10-26T23:48:16.8823864Z [1A[2K[304/602] [chromium-tablet] › e2e/web/event-task-view.spec.mjs:94:1 › fixture keeps foreign module-shaped URLs and unknown API commands isolated
+2026-10-26T23:48:17.1895589Z [1A[2K[305/602] [chromium-tablet] › e2e/web/fanhub-onboarding.spec.mjs:52:1 › FanHub recovers reads and explicit keyboard exit without fake first value @critical
+2026-10-26T23:48:19.1529097Z [1A[2K[306/602] [chromium-tablet] › e2e/web/legacy-provider-playback.spec.mjs:93:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection
+2026-10-26T23:48:20.7590673Z [1A[2K[307/602] [chromium-tablet] › e2e/web/fanhub-onboarding.spec.mjs:94:1 › FanHub does not show already-completed onboarding or submit another exit
+2026-10-26T23:48:22.1310181Z [1A[2K[308/602] [chromium-tablet] › e2e/web/legacy-provider-playback.spec.mjs:130:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command
+2026-10-26T23:48:22.1659874Z [1A[2K[309/602] [chromium-tablet] › e2e/web/fanhub-onboarding.spec.mjs:104:1 › FanHub rejects a successful HTTP response with no authoritative progress
+2026-10-26T23:48:23.5043185Z [1A[2K[310/602] [chromium-tablet] › e2e/web/fanhub-onboarding.spec.mjs:114:1 › FanHub guest English tips are local presentation, never account completion
+2026-10-26T23:48:24.5734115Z [1A[2K[311/602] [chromium-tablet] › e2e/web/marketplace-cart.spec.mjs:116:1 › Marketplace cart stays reachable after adding on a small phone @mobile-flow
+2026-10-26T23:48:24.7934140Z [1A[2K[312/602] [chromium-tablet] › e2e/web/mobile-layout-regressions.spec.mjs:111:1 › Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow
+2026-10-26T23:48:26.0204321Z [1A[2K[313/602] [chromium-tablet] › e2e/web/mobile-layout-regressions.spec.mjs:146:1 › Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow
+2026-10-26T23:48:27.6638310Z [1A[2K[314/602] [chromium-tablet] › e2e/web/mobile-layout-regressions.spec.mjs:200:1 › Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow
+2026-10-26T23:48:28.3582743Z [1A[2K[315/602] [chromium-tablet] › e2e/web/marketplace-cart.spec.mjs:181:1 › Saved cart failure stays recoverable without creating a replacement @mobile-flow
+2026-10-26T23:48:29.0489993Z [1A[2K[316/602] [chromium-tablet] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 390px @critical
+2026-10-26T23:48:31.1495568Z [1A[2K[317/602] [chromium-tablet] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 834px @critical
+2026-10-26T23:48:33.3411745Z [1A[2K[318/602] [chromium-tablet] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 1280px @critical
+2026-10-26T23:48:35.6238207Z [1A[2K[319/602] [chromium-tablet] › e2e/web/mobile-program.spec.mjs:64:1 › Dismissed mobile promotion stays dismissed @critical
+2026-10-26T23:48:36.7794813Z [1A[2K[320/602] [chromium-tablet] › e2e/web/mobile-program.spec.mjs:73:1 › Admitted Android testers can reach Play without submitting another form @critical
+2026-10-26T23:48:37.5093044Z [1A[2K[321/602] [chromium-tablet] › e2e/web/music-catalog-discovery.spec.mjs:79:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back
+2026-10-26T23:48:38.8693573Z [1A[2K[322/602] [chromium-tablet] › e2e/web/music-player.spec.mjs:200:1 › @critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation
+2026-10-26T23:48:39.6897598Z [1A[2K[323/602] [chromium-tablet] › e2e/web/music-catalog-discovery.spec.mjs:125:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release
+2026-10-26T23:48:41.5554088Z [1A[2K[324/602] [chromium-tablet] › e2e/web/notification-navigation.spec.mjs:45:1 › notification follower keyboard/touch navigation and failed read persistence @critical
+2026-10-26T23:48:41.7792761Z [1A[2K[325/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+2026-10-26T23:48:43.1769045Z [1A[2K[326/602] [chromium-tablet] › e2e/web/notification-navigation.spec.mjs:58:1 › specific request navigation shows current state and never decides it @critical
+2026-10-26T23:48:44.9363727Z [1A[2K[327/602] [chromium-tablet] › e2e/web/notification-navigation.spec.mjs:71:1 › expired session retains notification destination and denied target stays private @critical
+2026-10-26T23:48:46.0410822Z [1A[2K[328/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+2026-10-26T23:48:46.6630737Z [1A[2K[329/602] [chromium-tablet] › e2e/web/notification-navigation.spec.mjs:85:1 › standard new-tab activation resolves the owned notification and preserves the original page @critical
+2026-10-26T23:48:49.1743558Z [1A[2K[330/602] [chromium-tablet] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es / @critical
+2026-10-26T23:48:50.1894920Z [1A[2K[331/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:248:1 › @critical PW-PER-01-AUTH redirects protected URLs and explains rejected login
+2026-10-26T23:48:50.2965418Z [1A[2K[332/602] [chromium-tablet] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /comercio @critical
+2026-10-26T23:48:51.5099855Z [1A[2K[333/602] [chromium-tablet] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /distribucion @critical
+2026-10-26T23:48:52.4343743Z [1A[2K[334/602] [chromium-tablet] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /marketplace @critical
+2026-10-26T23:48:52.7554543Z [1A[2K[335/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:270:1 › PW-PER-01-AUTH registers a fictional user through the UI
+2026-10-26T23:48:54.8830266Z [1A[2K[336/602] [chromium-tablet] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en / @critical
+2026-10-26T23:48:55.0274288Z [1A[2K[337/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:306:1 › PW-PER-01-AUTH keeps signup labels readable in light theme
+2026-10-26T23:48:55.4226716Z [1A[2K[338/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:315:1 › PW-PER-01-AUTH reports a reset transport failure instead of false success
+2026-10-26T23:48:56.2772412Z [1A[2K[339/602] [chromium-tablet] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /comercio @critical
+2026-10-26T23:48:57.2808047Z [1A[2K[340/602] [chromium-tablet] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /distribucion @critical
+2026-10-26T23:48:57.4151384Z [1A[2K[341/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:327:1 › PW-PER-01-DISCOVERY completes public city discovery and preserves search state
+2026-10-26T23:48:58.4022065Z [1A[2K[342/602] [chromium-tablet] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /marketplace @critical
+2026-10-26T23:49:00.1402919Z [1A[2K[343/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:348:1 › PW-PER-01-DISCOVERY reflows at an effective 320 CSS pixel viewport
+2026-10-26T23:49:00.3956461Z [1A[2K[344/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:360:1 › PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuance
+2026-10-26T23:49:00.7203504Z [1A[2K[345/602] [chromium-tablet] › e2e/web/public-welcome.spec.mjs:101:1 › anonymous root welcomes before search without registration or location access @critical @mobile-flow
+2026-10-26T23:49:02.6566034Z [1A[2K[346/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:401:1 › PW-PER-01-DOMO retries one truthful manual request in Ecuador time
+2026-10-26T23:49:03.1168499Z [1A[2K[347/602] [chromium-tablet] › e2e/web/public-welcome.spec.mjs:123:1 › welcome leads to public studio and services before account choices @critical @mobile-flow
+2026-10-26T23:49:05.0717661Z [1A[2K[348/602] [chromium-tablet] › e2e/web/public-welcome.spec.mjs:157:1 › welcome opens published work as a guest without an account gate @critical @mobile-flow
+2026-10-26T23:49:06.7668661Z [1A[2K[349/602] [chromium-tablet] › e2e/web/public-welcome.spec.mjs:170:1 › direct search preserves query and city across changes and browser history @critical @mobile-flow
+2026-10-26T23:49:08.7387346Z [1A[2K[350/602] [chromium-tablet] › e2e/web/public-welcome.spec.mjs:191:1 › a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow
+2026-10-26T23:49:08.7856350Z [1A[2K[351/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:560:1 › PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public actions
+2026-10-26T23:49:10.9850913Z [1A[2K[352/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:663:1 › PW-PER-01-MARKETPLACE removes fake notification capture and persistent contact data
+2026-10-26T23:49:12.2939922Z [1A[2K[353/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE es reset confirmation retains language
+2026-10-26T23:49:13.0213786Z [1A[2K[354/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+2026-10-26T23:49:17.6092939Z [1A[2K[355/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE en reset confirmation retains language
+2026-10-26T23:49:18.2841857Z [1A[2K[356/602] [chromium-tablet] › e2e/web/public-welcome.spec.mjs:207:1 › welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow
+2026-10-26T23:49:18.5704642Z [1A[2K[357/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+2026-10-26T23:49:20.4693588Z [1A[2K[358/602] [chromium-tablet] › e2e/web/records-thumbnails.spec.mjs:45:1 › Records handles failed images and decoded placeholders with bounded requests @critical
+2026-10-26T23:49:22.5615576Z [1A[2K[359/602] [chromium-tablet] › e2e/web/records-thumbnails.spec.mjs:64:1 › Records preserves source identities, keyboard links and responsive unavailable states @critical
+2026-10-26T23:49:24.2856591Z [1A[2K[360/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY es policy documents retain language and version
+2026-10-26T23:49:24.9564763Z [1A[2K[361/602] [chromium-tablet] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getter @critical
+2026-10-26T23:49:25.9536127Z [1A[2K[362/602] [chromium-tablet] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getter @critical
+2026-10-26T23:49:26.2881308Z [1A[2K[363/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY en policy documents retain language and version
+2026-10-26T23:49:26.7575891Z [1A[2K[364/602] [chromium-tablet] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getItem @critical
+2026-10-26T23:49:27.5984795Z [1A[2K[365/602] [chromium-tablet] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getItem @critical
+2026-10-26T23:49:28.3966774Z [1A[2K[366/602] [chromium-tablet] › e2e/web/studio-internship-audit.spec.mjs:95:1 › @critical synthetic intern records a failed case and reaches a trace-linked report draft
+2026-10-26T23:49:28.5754711Z [1A[2K[367/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es network preserves the selected language
+2026-10-26T23:49:31.1517402Z [1A[2K[368/602] [chromium-tablet] › e2e/web/studio-internship-audit.spec.mjs:139:1 › @critical synthetic administrator can see all-report controls and prepare triage without activation
+2026-10-26T23:49:34.5608577Z [1A[2K[369/602] [chromium-tablet] › e2e/web/ticket-credential.spec.mjs:6:1 › Guest issued QR downloads on a narrow screen without installing the app @critical
+2026-10-26T23:49:36.4446817Z [1A[2K[370/602] [android-chrome-small] › e2e/web/auth-landing.spec.mjs:58:1 › email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical
+2026-10-26T23:49:38.1477296Z [1A[2K[371/602] [android-chrome-small] › e2e/web/auth-landing.spec.mjs:91:1 › login returns to the interrupted action @mobile-flow
+2026-10-26T23:49:39.2548704Z [1A[2K[372/602] [android-chrome-small] › e2e/web/auth-landing.spec.mjs:104:1 › login rejects external redirects @mobile-flow
+2026-10-26T23:49:39.5832604Z [1A[2K[373/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language
+2026-10-26T23:49:40.6238127Z [1A[2K[374/602] [android-chrome-small] › e2e/web/auth-landing.spec.mjs:114:1 › a returning session opening the site root lands on Comunidad @mobile-flow
+2026-10-26T23:49:41.5672937Z [1A[2K[375/602] [android-chrome-small] › e2e/web/auth-landing.spec.mjs:125:1 › the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical
+2026-10-26T23:49:41.8144022Z [1A[2K[376/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en network preserves the selected language
+2026-10-26T23:49:52.2954121Z [1A[2K[377/602] [chromium-tablet] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language
+2026-10-26T23:49:52.9140750Z [1A[2K[378/602] [android-chrome-small] › e2e/web/auth-landing.spec.mjs:141:1 › a healthy page never shows the blank-screen recovery @mobile-flow
+2026-10-26T23:49:54.8967544Z [1A[2K[379/602] [android-chrome-small] › e2e/web/course-enrollment.spec.mjs:132:3 › Course enrollment on a small Android phone › Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow
+2026-10-26T23:49:56.3660848Z [1A[2K[380/602] [android-chrome-small] › e2e/web/course-enrollment.spec.mjs:162:3 › Course enrollment on a small Android phone › successful checkout leaves no dialog and focuses the order @mobile-flow @critical
+2026-10-26T23:49:58.4396948Z [1A[2K[381/602] [android-chrome-small] › e2e/web/course-enrollment.spec.mjs:178:3 › Course enrollment on a small Android phone › Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow
+2026-10-26T23:49:59.9458891Z [1A[2K[382/602] [android-chrome-small] › e2e/web/course-enrollment.spec.mjs:212:3 › Course enrollment on a small Android phone › Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow
+2026-10-26T23:50:01.5350559Z [1A[2K[383/602] [android-chrome-small] › e2e/web/course-enrollment.spec.mjs:238:3 › Course enrollment on a small Android phone › Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow
+2026-10-26T23:50:02.5513729Z [1A[2K[384/602] [android-chrome-small] › e2e/web/course-enrollment.spec.mjs:261:3 › Course enrollment on a small Android phone › Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow
+2026-10-26T23:50:04.3185725Z [1A[2K[385/602] [android-chrome-small] › e2e/web/legacy-provider-playback.spec.mjs:93:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection
+2026-10-26T23:50:05.8392811Z [1A[2K[386/602] [android-chrome-small] › e2e/web/legacy-provider-playback.spec.mjs:130:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command
+2026-10-26T23:50:06.4518189Z [1A[2K[387/602] [android-chrome-small] › e2e/web/marketplace-cart.spec.mjs:116:1 › Marketplace cart stays reachable after adding on a small phone @mobile-flow
+2026-10-26T23:50:07.4103362Z [1A[2K[388/602] [android-chrome-small] › e2e/web/mobile-layout-regressions.spec.mjs:111:1 › Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow
+2026-10-26T23:50:08.6619353Z [1A[2K[389/602] [android-chrome-small] › e2e/web/mobile-layout-regressions.spec.mjs:146:1 › Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow
+2026-10-26T23:50:09.8065411Z [1A[2K[390/602] [android-chrome-small] › e2e/web/marketplace-cart.spec.mjs:181:1 › Saved cart failure stays recoverable without creating a replacement @mobile-flow
+2026-10-26T23:50:10.5031848Z [1A[2K[391/602] [android-chrome-small] › e2e/web/mobile-layout-regressions.spec.mjs:200:1 › Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow
+2026-10-26T23:50:11.6168073Z [1A[2K[392/602] [android-chrome-small] › e2e/web/music-catalog-discovery.spec.mjs:79:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back
+2026-10-26T23:50:13.4797025Z [1A[2K[393/602] [android-chrome-small] › e2e/web/music-catalog-discovery.spec.mjs:125:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release
+2026-10-26T23:50:15.1373614Z [1A[2K[394/602] [android-chrome-small] › e2e/web/public-welcome.spec.mjs:101:1 › anonymous root welcomes before search without registration or location access @critical @mobile-flow
+2026-10-26T23:50:16.7893644Z [1A[2K[395/602] [android-chrome-small] › e2e/web/public-welcome.spec.mjs:123:1 › welcome leads to public studio and services before account choices @critical @mobile-flow
+2026-10-26T23:50:17.9296549Z [1A[2K[396/602] [android-chrome-small] › e2e/web/public-welcome.spec.mjs:157:1 › welcome opens published work as a guest without an account gate @critical @mobile-flow
+2026-10-26T23:50:19.1250162Z [1A[2K[397/602] [android-chrome-small] › e2e/web/public-welcome.spec.mjs:170:1 › direct search preserves query and city across changes and browser history @critical @mobile-flow
+2026-10-26T23:50:20.5327459Z [1A[2K[398/602] [webkit-iphone] › e2e/web/auth-landing.spec.mjs:58:1 › email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical
+2026-10-26T23:50:21.1013394Z [1A[2K[399/602] [android-chrome-small] › e2e/web/public-welcome.spec.mjs:191:1 › a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow
+2026-10-26T23:50:27.2351150Z [1A[2K[400/602] [webkit-iphone] › e2e/web/auth-landing.spec.mjs:91:1 › login returns to the interrupted action @mobile-flow
+2026-10-26T23:50:29.3293257Z [1A[2K[401/602] [webkit-iphone] › e2e/web/auth-landing.spec.mjs:104:1 › login rejects external redirects @mobile-flow
+2026-10-26T23:50:30.6341034Z [1A[2K[402/602] [android-chrome-small] › e2e/web/public-welcome.spec.mjs:207:1 › welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow
+2026-10-26T23:50:31.6805391Z [1A[2K[403/602] [webkit-iphone] › e2e/web/auth-landing.spec.mjs:114:1 › a returning session opening the site root lands on Comunidad @mobile-flow
+2026-10-26T23:50:33.0778281Z [1A[2K[404/602] [firefox-critical] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:50:33.0781408Z [1A[2K[405/602] [firefox-critical] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:50:33.3447066Z [1A[2K[406/602] [webkit-iphone] › e2e/web/auth-landing.spec.mjs:125:1 › the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical
+2026-10-26T23:50:33.9221291Z [1A[2K[407/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 390px @critical
+2026-10-26T23:50:37.6758095Z [1A[2K[408/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 412px @critical
+2026-10-26T23:50:39.2119176Z [1A[2K[409/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 834px @critical
+2026-10-26T23:50:40.7835675Z [1A[2K[410/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 1280px @critical
+2026-10-26T23:50:42.5511904Z [1A[2K[411/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light reduce @critical
+2026-10-26T23:50:44.2803222Z [1A[2K[412/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light no-preference @critical
+2026-10-26T23:50:45.0197151Z [1A[2K[413/602] [webkit-iphone] › e2e/web/auth-landing.spec.mjs:141:1 › a healthy page never shows the blank-screen recovery @mobile-flow
+2026-10-26T23:50:46.3395142Z [1A[2K[414/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark reduce @critical
+2026-10-26T23:50:48.0751613Z [1A[2K[415/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark no-preference @critical
+2026-10-26T23:50:49.5866027Z [1A[2K[416/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:103:1 › Account deletion requires authentication @critical
+2026-10-26T23:50:50.3276841Z [1A[2K[417/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:111:1 › Account deletion refuses an expired session before submission @critical
+2026-10-26T23:50:51.2456112Z [1A[2K[418/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:124:1 › Account deletion refuses authentication lost between session read and POST @critical
+2026-10-26T23:50:52.1654565Z [1A[2K[419/602] [firefox-critical] › e2e/web/account-deletion.spec.mjs:136:1 › Administrator records an auditable deletion outcome @critical
+2026-10-26T23:50:53.4650929Z [1A[2K[420/602] [firefox-critical] › e2e/web/artist-follow.spec.mjs:50:1 › artist follow guest return stays local and never mutates @critical
+2026-10-26T23:50:54.3346857Z [1A[2K[421/602] [firefox-critical] › e2e/web/artist-follow.spec.mjs:63:1 › artist follow requires keyboard consent and keeps intent on failure @critical
+2026-10-26T23:50:55.8384196Z [1A[2K[422/602] [firefox-critical] › e2e/web/auth-landing.spec.mjs:58:1 › email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical
+2026-10-26T23:50:57.3595084Z [1A[2K[423/602] [firefox-critical] › e2e/web/auth-landing.spec.mjs:125:1 › the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical
+2026-10-26T23:50:59.0525006Z [1A[2K[424/602] [webkit-iphone] › e2e/web/course-enrollment.spec.mjs:132:3 › Course enrollment on a small Android phone › Inscribirme opens the form in view and accepts an Ecuador local mobile @mobile-flow
+2026-10-26T23:51:03.0423767Z [1A[2K[425/602] [webkit-iphone] › e2e/web/course-enrollment.spec.mjs:162:3 › Course enrollment on a small Android phone › successful checkout leaves no dialog and focuses the order @mobile-flow @critical
+2026-10-26T23:51:07.8140120Z [1A[2K[426/602] [webkit-iphone] › e2e/web/course-enrollment.spec.mjs:178:3 › Course enrollment on a small Android phone › Server phone rejection is shown next to the field and a corrected retry succeeds @mobile-flow
+2026-10-26T23:51:07.9739461Z [1A[2K[427/602] [firefox-critical] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 320px @critical
+2026-10-26T23:51:13.6314940Z [1A[2K[428/602] [webkit-iphone] › e2e/web/course-enrollment.spec.mjs:212:3 › Course enrollment on a small Android phone › Sticky CTA appears after the hero, opens the form and never covers the page end @mobile-flow
+2026-10-26T23:51:15.3573796Z [1A[2K[429/602] [firefox-critical] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 1280px @critical
+2026-10-26T23:51:19.4717905Z [1A[2K[430/602] [webkit-iphone] › e2e/web/course-enrollment.spec.mjs:238:3 › Course enrollment on a small Android phone › Signed-in visitors see the sticky CTA above the docked radio bar @mobile-flow
+2026-10-26T23:51:22.6439381Z [1A[2K[431/602] [webkit-iphone] › e2e/web/course-enrollment.spec.mjs:261:3 › Course enrollment on a small Android phone › Deep link ?inscribirme=1 opens the form and closing removes the param @mobile-flow
+2026-10-26T23:51:24.1405456Z [1A[2K[432/602] [firefox-critical] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route allowed access and preserves drafts @critical
+2026-10-26T23:51:27.0939264Z [1A[2K[433/602] [webkit-iphone] › e2e/web/legacy-provider-playback.spec.mjs:93:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection
+2026-10-26T23:51:27.7797082Z [1A[2K[434/602] [firefox-critical] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route revoked access and preserves drafts @critical
+2026-10-26T23:51:31.4443125Z [1A[2K[435/602] [firefox-critical] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (es) @critical
+2026-10-26T23:51:34.4200669Z [1A[2K[436/602] [webkit-iphone] › e2e/web/legacy-provider-playback.spec.mjs:130:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command
+2026-10-26T23:51:34.8535578Z [1A[2K[437/602] [firefox-critical] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (en) @critical
+2026-10-26T23:51:38.1625409Z [1A[2K[438/602] [firefox-critical] › e2e/web/course-enrollment.spec.mjs:162:3 › Course enrollment on a small Android phone › successful checkout leaves no dialog and focuses the order @mobile-flow @critical
+2026-10-26T23:51:39.4352771Z [1A[2K[439/602] [webkit-iphone] › e2e/web/marketplace-cart.spec.mjs:116:1 › Marketplace cart stays reachable after adding on a small phone @mobile-flow
+2026-10-26T23:51:40.9078042Z [1A[2K[440/602] [firefox-critical] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getter @critical
+2026-10-26T23:51:45.5152286Z [1A[2K[441/602] [firefox-critical] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getItem @critical
+2026-10-26T23:51:48.6556427Z [1A[2K[442/602] [firefox-critical] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies setItem @critical
+2026-10-26T23:51:51.9834206Z [1A[2K[443/602] [firefox-critical] › e2e/web/directory-favorite-recovery.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:51:56.1984644Z [1A[2K[444/602] [webkit-iphone] › e2e/web/marketplace-cart.spec.mjs:181:1 › Saved cart failure stays recoverable without creating a replacement @mobile-flow
+2026-10-26T23:52:02.9818995Z [1A[2K[445/602] [firefox-critical] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:52:09.9509753Z [1A[2K[446/602] [webkit-iphone] › e2e/web/mobile-layout-regressions.spec.mjs:111:1 › Booking keeps the card full width and stacks service reviews below it at 360px @mobile-flow
+2026-10-26T23:52:11.6089050Z [1A[2K[447/602] [webkit-iphone] › e2e/web/mobile-layout-regressions.spec.mjs:146:1 › Live session registration fits 360px and keeps the access-code toggle legible on navy @mobile-flow
+2026-10-26T23:52:14.2922195Z [1A[2K[448/602] [firefox-critical] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use en @critical
+2026-10-26T23:52:14.3078555Z [1A[2K[449/602] [webkit-iphone] › e2e/web/mobile-layout-regressions.spec.mjs:200:1 › Docked radio bar fits 360px and never hides the bottom of the page @mobile-flow
+2026-10-26T23:52:18.4685148Z [1A[2K[450/602] [webkit-iphone] › e2e/web/music-catalog-discovery.spec.mjs:79:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back
+2026-10-26T23:52:23.9646932Z [1A[2K[451/602] [webkit-iphone] › e2e/web/music-catalog-discovery.spec.mjs:125:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release
+2026-10-26T23:52:25.8586010Z [1A[2K[452/602] [firefox-critical] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI dark review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:52:27.9086597Z [1A[2K[453/602] [webkit-iphone] › e2e/web/public-welcome.spec.mjs:101:1 › anonymous root welcomes before search without registration or location access @critical @mobile-flow
+2026-10-26T23:52:29.8989519Z [1A[2K[454/602] [firefox-critical] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI light review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:52:30.8198301Z [1A[2K[455/602] [webkit-iphone] › e2e/web/public-welcome.spec.mjs:123:1 › welcome leads to public studio and services before account choices @critical @mobile-flow
+2026-10-26T23:52:33.5884777Z [1A[2K[456/602] [firefox-critical] › e2e/web/event-raci-editor.spec.mjs:91:1 › RACI accessibility guard detects a known low-contrast fixture @critical
+2026-10-26T23:52:33.6571728Z [1A[2K[457/602] [webkit-iphone] › e2e/web/public-welcome.spec.mjs:157:1 › welcome opens published work as a guest without an account gate @critical @mobile-flow
+2026-10-26T23:52:34.2902828Z [1A[2K[458/602] [firefox-critical] › e2e/web/event-raci-editor.spec.mjs:107:1 › RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical
+2026-10-26T23:52:34.9546266Z [1A[2K[459/602] [firefox-critical] › e2e/web/event-rsvp-sharing.spec.mjs:171:1 › @critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn
+2026-10-26T23:52:35.4178655Z [1A[2K[460/602] [firefox-critical] › e2e/web/event-task-view.spec.mjs:38:1 › task-only route renders RACI and recovers keyboard refresh without parent reads @critical
+2026-10-26T23:52:36.2475551Z [1A[2K[461/602] [webkit-iphone] › e2e/web/public-welcome.spec.mjs:170:1 › direct search preserves query and city across changes and browser history @critical @mobile-flow
+2026-10-26T23:52:38.6559895Z [1A[2K[462/602] [firefox-critical] › e2e/web/fanhub-onboarding.spec.mjs:52:1 › FanHub recovers reads and explicit keyboard exit without fake first value @critical
+2026-10-26T23:52:39.1466561Z [1A[2K[463/602] [webkit-iphone] › e2e/web/public-welcome.spec.mjs:191:1 › a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow
+2026-10-26T23:52:43.0482123Z [1A[2K[464/602] [firefox-critical] › e2e/web/legacy-provider-playback.spec.mjs:93:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection
+2026-10-26T23:52:46.1097489Z [1A[2K[465/602] [firefox-critical] › e2e/web/legacy-provider-playback.spec.mjs:130:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command
+2026-10-26T23:52:48.3057743Z [1A[2K[466/602] [firefox-critical] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 390px @critical
+2026-10-26T23:52:49.4422365Z [1A[2K[467/602] [webkit-iphone] › e2e/web/public-welcome.spec.mjs:207:1 › welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow
+2026-10-26T23:52:52.2164724Z [1A[2K[468/602] [firefox-critical] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 834px @critical
+2026-10-26T23:52:53.2297550Z [1A[2K[469/602] [firefox-critical] › e2e/web/music-catalog-discovery.spec.mjs:79:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back
+2026-10-26T23:52:55.4795146Z [1A[2K[470/602] [firefox-critical] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 1280px @critical
+2026-10-26T23:52:57.1195425Z [1A[2K[471/602] [firefox-critical] › e2e/web/music-catalog-discovery.spec.mjs:125:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release
+2026-10-26T23:52:58.3152554Z [1A[2K[472/602] [firefox-critical] › e2e/web/mobile-program.spec.mjs:64:1 › Dismissed mobile promotion stays dismissed @critical
+2026-10-26T23:53:00.1897169Z [1A[2K[473/602] [firefox-critical] › e2e/web/mobile-program.spec.mjs:73:1 › Admitted Android testers can reach Play without submitting another form @critical
+2026-10-26T23:53:00.2724064Z [1A[2K[474/602] [firefox-critical] › e2e/web/music-player.spec.mjs:200:1 › @critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation
+2026-10-26T23:53:02.2751000Z [1A[2K[475/602] [firefox-critical] › e2e/web/notification-navigation.spec.mjs:45:1 › notification follower keyboard/touch navigation and failed read persistence @critical
+2026-10-26T23:53:04.2213581Z [1A[2K[476/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+2026-10-26T23:53:04.2544883Z [1A[2K[477/602] [firefox-critical] › e2e/web/notification-navigation.spec.mjs:58:1 › specific request navigation shows current state and never decides it @critical
+2026-10-26T23:53:06.6268000Z [1A[2K[478/602] [firefox-critical] › e2e/web/notification-navigation.spec.mjs:71:1 › expired session retains notification destination and denied target stays private @critical
+2026-10-26T23:53:06.8073349Z [1A[2K[479/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+2026-10-26T23:53:08.8765267Z [1A[2K[480/602] [firefox-critical] › e2e/web/notification-navigation.spec.mjs:85:1 › standard new-tab activation resolves the owned notification and preserves the original page @critical
+2026-10-26T23:53:09.8102547Z [1A[2K[481/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:248:1 › @critical PW-PER-01-AUTH redirects protected URLs and explains rejected login
+2026-10-26T23:53:12.0598149Z [1A[2K[482/602] [firefox-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es / @critical
+2026-10-26T23:53:12.2829900Z [1A[2K[483/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE es reset confirmation retains language
+2026-10-26T23:53:13.5758953Z [1A[2K[484/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+2026-10-26T23:53:13.6259304Z [1A[2K[485/602] [firefox-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /comercio @critical
+2026-10-26T23:53:15.2126143Z [1A[2K[486/602] [firefox-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /distribucion @critical
+2026-10-26T23:53:16.5128041Z [1A[2K[487/602] [firefox-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /marketplace @critical
+2026-10-26T23:53:18.6399451Z [1A[2K[488/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE en reset confirmation retains language
+2026-10-26T23:53:19.5579142Z [1A[2K[489/602] [firefox-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en / @critical
+2026-10-26T23:53:19.8878451Z [1A[2K[490/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+2026-10-26T23:53:21.3583006Z [1A[2K[491/602] [firefox-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /comercio @critical
+2026-10-26T23:53:22.7802330Z [1A[2K[492/602] [firefox-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /distribucion @critical
+2026-10-26T23:53:24.2287357Z [1A[2K[493/602] [firefox-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /marketplace @critical
+2026-10-26T23:53:24.8871078Z [1A[2K[494/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY es policy documents retain language and version
+2026-10-26T23:53:26.2483672Z [1A[2K[495/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY en policy documents retain language and version
+2026-10-26T23:53:26.7403183Z [1A[2K[496/602] [firefox-critical] › e2e/web/public-welcome.spec.mjs:101:1 › anonymous root welcomes before search without registration or location access @critical @mobile-flow
+2026-10-26T23:53:27.9891522Z [1A[2K[497/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es network preserves the selected language
+2026-10-26T23:53:28.5549512Z [1A[2K[498/602] [firefox-critical] › e2e/web/public-welcome.spec.mjs:123:1 › welcome leads to public studio and services before account choices @critical @mobile-flow
+2026-10-26T23:53:30.2942972Z [1A[2K[499/602] [firefox-critical] › e2e/web/public-welcome.spec.mjs:157:1 › welcome opens published work as a guest without an account gate @critical @mobile-flow
+2026-10-26T23:53:31.4126533Z [1A[2K[500/602] [firefox-critical] › e2e/web/public-welcome.spec.mjs:170:1 › direct search preserves query and city across changes and browser history @critical @mobile-flow
+2026-10-26T23:53:33.6876106Z [1A[2K[501/602] [firefox-critical] › e2e/web/public-welcome.spec.mjs:191:1 › a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow
+2026-10-26T23:53:38.4582715Z [1A[2K[502/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language
+2026-10-26T23:53:39.7225365Z [1A[2K[503/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en network preserves the selected language
+2026-10-26T23:53:42.5965023Z [1A[2K[504/602] [firefox-critical] › e2e/web/public-welcome.spec.mjs:207:1 › welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow
+2026-10-26T23:53:44.3503091Z [1A[2K[505/602] [firefox-critical] › e2e/web/records-thumbnails.spec.mjs:45:1 › Records handles failed images and decoded placeholders with bounded requests @critical
+2026-10-26T23:53:45.3741947Z [1A[2K[506/602] [firefox-critical] › e2e/web/records-thumbnails.spec.mjs:64:1 › Records preserves source identities, keyboard links and responsive unavailable states @critical
+2026-10-26T23:53:46.4013910Z [1A[2K[507/602] [firefox-critical] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getter @critical
+2026-10-26T23:53:47.1542199Z [1A[2K[508/602] [firefox-critical] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getter @critical
+2026-10-26T23:53:47.8865898Z [1A[2K[509/602] [firefox-critical] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getItem @critical
+2026-10-26T23:53:48.8583889Z [1A[2K[510/602] [firefox-critical] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getItem @critical
+2026-10-26T23:53:49.6095581Z [1A[2K[511/602] [firefox-critical] › e2e/web/studio-internship-audit.spec.mjs:95:1 › @critical synthetic intern records a failed case and reaches a trace-linked report draft
+2026-10-26T23:53:49.7389986Z [1A[2K[512/602] [firefox-critical] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language
+2026-10-26T23:53:51.4263303Z [1A[2K[513/602] [firefox-critical] › e2e/web/ticket-credential.spec.mjs:6:1 › Guest issued QR downloads on a narrow screen without installing the app @critical
+2026-10-26T23:53:53.0763213Z [1A[2K[514/602] [webkit-critical] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:53:53.0771415Z [1A[2K[515/602] [webkit-critical] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:53:53.9473692Z [1A[2K[516/602] [firefox-critical] › e2e/web/studio-internship-audit.spec.mjs:139:1 › @critical synthetic administrator can see all-report controls and prepare triage without activation
+2026-10-26T23:53:54.5318716Z [1A[2K[517/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 390px @critical
+2026-10-26T23:53:58.1422571Z [1A[2K[518/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 412px @critical
+2026-10-26T23:54:00.8940722Z [1A[2K[519/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 834px @critical
+2026-10-26T23:54:03.5543758Z [1A[2K[520/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:36:3 › Account deletion initiation 1280px @critical
+2026-10-26T23:54:06.2014620Z [1A[2K[521/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light reduce @critical
+2026-10-26T23:54:08.1593283Z [1A[2K[522/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible light no-preference @critical
+2026-10-26T23:54:10.4742380Z [1A[2K[523/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark reduce @critical
+2026-10-26T23:54:12.4731604Z [1A[2K[524/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:73:5 › Deletion confirmation remains legible dark no-preference @critical
+2026-10-26T23:54:14.7649763Z [1A[2K[525/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:103:1 › Account deletion requires authentication @critical
+2026-10-26T23:54:15.7100670Z [1A[2K[526/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:111:1 › Account deletion refuses an expired session before submission @critical
+2026-10-26T23:54:17.1885092Z [1A[2K[527/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:124:1 › Account deletion refuses authentication lost between session read and POST @critical
+2026-10-26T23:54:18.7351404Z [1A[2K[528/602] [webkit-critical] › e2e/web/account-deletion.spec.mjs:136:1 › Administrator records an auditable deletion outcome @critical
+2026-10-26T23:54:20.6266766Z [1A[2K[529/602] [webkit-critical] › e2e/web/artist-follow.spec.mjs:50:1 › artist follow guest return stays local and never mutates @critical
+2026-10-26T23:54:22.7793710Z [1A[2K[530/602] [webkit-critical] › e2e/web/artist-follow.spec.mjs:63:1 › artist follow requires keyboard consent and keeps intent on failure @critical
+2026-10-26T23:54:25.6901782Z [1A[2K[531/602] [webkit-critical] › e2e/web/auth-landing.spec.mjs:58:1 › email signup asks only for email and password and lands on artist-first Comunidad @mobile-flow @critical
+2026-10-26T23:54:28.7775054Z [1A[2K[532/602] [webkit-critical] › e2e/web/auth-landing.spec.mjs:125:1 › the app shell never stays blank: a failed bundle shows recovery actions @mobile-flow @critical
+2026-10-26T23:54:40.3533061Z [1A[2K[533/602] [webkit-critical] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 320px @critical
+2026-10-26T23:54:44.9882212Z [1A[2K[534/602] [webkit-critical] › e2e/web/campaign-accessibility.spec.mjs:7:3 › Campaign controls expose row and column names at 1280px @critical
+2026-10-26T23:54:52.9204954Z [1A[2K[535/602] [webkit-critical] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route allowed access and preserves drafts @critical
+2026-10-26T23:54:57.3579837Z [1A[2K[536/602] [webkit-critical] › e2e/web/chat-notification-navigation.spec.mjs:10:3 › chat notification reauthorizes same-route revoked access and preserves drafts @critical
+2026-10-26T23:55:02.0164725Z [1A[2K[537/602] [webkit-critical] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (es) @critical
+2026-10-26T23:55:06.2375492Z [1A[2K[538/602] [webkit-critical] › e2e/web/checkout-readiness.spec.mjs:5:3 › Checkout preserves input and permits retry/cancel without payment readiness (en) @critical
+2026-10-26T23:55:10.9086723Z [1A[2K[539/602] [webkit-critical] › e2e/web/course-enrollment.spec.mjs:162:3 › Course enrollment on a small Android phone › successful checkout leaves no dialog and focuses the order @mobile-flow @critical
+2026-10-26T23:55:13.7822177Z [1A[2K[540/602] [webkit-critical] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getter @critical
+2026-10-26T23:55:16.3597830Z [1A[2K[541/602] [webkit-critical] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies getItem @critical
+2026-10-26T23:55:18.9009917Z [1A[2K[542/602] [webkit-critical] › e2e/web/directory-entry.spec.mjs:7:3 › Directory remains searchable when city storage denies setItem @critical
+2026-10-26T23:55:21.4968458Z [1A[2K[543/602] [webkit-critical] › e2e/web/directory-favorite-recovery.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:55:34.1051132Z [1A[2K[544/602] [webkit-critical] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use es @critical
+2026-10-26T23:55:48.1362501Z [1A[2K[545/602] [webkit-critical] › e2e/web/directory-language.spec.mjs:6:3 › Directory complete search and favorite recovery use en @critical
+2026-10-26T23:56:01.9943281Z [1A[2K[546/602] [webkit-critical] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI dark review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:56:06.0966500Z [1A[2K[547/602] [webkit-critical] › e2e/web/event-raci-editor.spec.mjs:8:1 › RACI light review, keyboard confirmation and exact uncertain retry @critical
+2026-10-26T23:56:10.3391684Z [1A[2K[548/602] [webkit-critical] › e2e/web/event-raci-editor.spec.mjs:91:1 › RACI accessibility guard detects a known low-contrast fixture @critical
+2026-10-26T23:56:10.8631626Z [1A[2K[549/602] [webkit-critical] › e2e/web/event-raci-editor.spec.mjs:107:1 › RACI paint guard rejects intermediate or stuck opacity without hiding contrast defects @critical
+2026-10-26T23:56:11.5114495Z [1A[2K[550/602] [webkit-critical] › e2e/web/event-rsvp-sharing.spec.mjs:171:1 › @critical anonymous RSVP survives signup, appears once in the profile, shares publicly, and is withdrawn
+2026-10-26T23:56:11.9611570Z [1A[2K[551/602] [webkit-critical] › e2e/web/event-task-view.spec.mjs:38:1 › task-only route renders RACI and recovers keyboard refresh without parent reads @critical
+2026-10-26T23:56:14.4837192Z [1A[2K[552/602] [webkit-critical] › e2e/web/fanhub-onboarding.spec.mjs:52:1 › FanHub recovers reads and explicit keyboard exit without fake first value @critical
+2026-10-26T23:56:19.3721846Z [1A[2K[553/602] [webkit-critical] › e2e/web/legacy-provider-playback.spec.mjs:93:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-01 release provider dialog cancels cleanly and activates a safe keyboard link without native selection
+2026-10-26T23:56:24.6071964Z [1A[2K[554/602] [webkit-critical] › e2e/web/legacy-provider-playback.spec.mjs:130:1 › @critical @mobile-flow PW-LEGACY-PROVIDER-02 artist fallback remains explicit profile navigation and emits no native media command
+2026-10-26T23:56:28.2331792Z [1A[2K[555/602] [webkit-critical] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 390px @critical
+2026-10-26T23:56:34.1426392Z [1A[2K[556/602] [webkit-critical] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 834px @critical
+2026-10-26T23:56:41.1942209Z [1A[2K[557/602] [webkit-critical] › e2e/web/mobile-program.spec.mjs:22:3 › Mobile tester funnel 1280px @critical
+2026-10-26T23:56:48.1110464Z [1A[2K[558/602] [webkit-critical] › e2e/web/mobile-program.spec.mjs:64:1 › Dismissed mobile promotion stays dismissed @critical
+2026-10-26T23:56:49.8100048Z [1A[2K[559/602] [webkit-critical] › e2e/web/mobile-program.spec.mjs:73:1 › Admitted Android testers can reach Play without submitting another form @critical
+2026-10-26T23:56:53.1634971Z [1A[2K[560/602] [webkit-critical] › e2e/web/music-catalog-discovery.spec.mjs:79:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-01 reaches releases 25 and 49 with keyboard pagination and preserves page through detail/back
+2026-10-26T23:56:58.6567817Z [1A[2K[561/602] [webkit-critical] › e2e/web/music-catalog-discovery.spec.mjs:125:1 › @critical @mobile-flow PW-MUSIC-DISCOVERY-02 track-title search resets the page, preserves URL query and opens its matching release
+2026-10-26T23:57:01.6795079Z [1A[2K[562/602] [webkit-critical] › e2e/web/music-player.spec.mjs:200:1 › @critical PW-MUSIC-01 keeps one accessible global player alive across client-side navigation
+2026-10-26T23:57:09.9418461Z [1A[2K[563/602] [webkit-critical] › e2e/web/notification-navigation.spec.mjs:45:1 › notification follower keyboard/touch navigation and failed read persistence @critical
+2026-10-26T23:57:12.9378279Z [1A[2K[564/602] [webkit-critical] › e2e/web/notification-navigation.spec.mjs:58:1 › specific request navigation shows current state and never decides it @critical
+2026-10-26T23:57:15.8142788Z [1A[2K[565/602] [webkit-critical] › e2e/web/notification-navigation.spec.mjs:71:1 › expired session retains notification destination and denied target stays private @critical
+2026-10-26T23:57:17.7517510Z [1A[2K[566/602] [webkit-critical] › e2e/web/notification-navigation.spec.mjs:85:1 › standard new-tab activation resolves the owned notification and preserves the original page @critical
+2026-10-26T23:57:22.4436554Z [1A[2K[567/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies operations
+2026-10-26T23:57:26.2290457Z [1A[2K[568/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:217:3 › @critical PW-PER-STORAGE keeps login available when browser storage denies access
+2026-10-26T23:57:29.9874584Z [1A[2K[569/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:248:1 › @critical PW-PER-01-AUTH redirects protected URLs and explains rejected login
+2026-10-26T23:57:32.8614738Z [1A[2K[570/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE es reset confirmation retains language
+2026-10-26T23:57:34.2761601Z [1A[2K[571/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE es signup and recovery retain language and destination
+2026-10-26T23:57:41.2098629Z [1A[2K[572/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:693:3 › @critical PW-PER-RESET-OFFLINE en reset confirmation retains language
+2026-10-26T23:57:42.7759033Z [1A[2K[573/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:704:3 › @critical PW-PER-LOCALE en signup and recovery retain language and destination
+2026-10-26T23:57:49.8037914Z [1A[2K[574/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY es policy documents retain language and version
+2026-10-26T23:57:52.9317096Z [1A[2K[575/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:764:3 › @critical PW-PER-POLICY en policy documents retain language and version
+2026-10-26T23:57:55.8394551Z [1A[2K[576/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es network preserves the selected language
+2026-10-26T23:58:06.8641506Z [1A[2K[577/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN es unauthorized preserves the selected language
+2026-10-26T23:58:09.0339844Z [1A[2K[578/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en network preserves the selected language
+2026-10-26T23:58:20.1483153Z [1A[2K[579/602] [webkit-critical] › e2e/web/persona-public.spec.mjs:782:5 › @critical PW-PER-LOCALE-LOGIN en unauthorized preserves the selected language
+2026-10-26T23:58:22.5494181Z [1A[2K[580/602] [webkit-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es / @critical
+2026-10-26T23:58:24.1047032Z [1A[2K[581/602] [webkit-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /comercio @critical
+2026-10-26T23:58:25.3185906Z [1A[2K[582/602] [webkit-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /distribucion @critical
+2026-10-26T23:58:26.6664739Z [1A[2K[583/602] [webkit-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content es /marketplace @critical
+2026-10-26T23:58:28.6737709Z [1A[2K[584/602] [webkit-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en / @critical
+2026-10-26T23:58:30.2741776Z [1A[2K[585/602] [webkit-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /comercio @critical
+2026-10-26T23:58:31.4979605Z [1A[2K[586/602] [webkit-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /distribucion @critical
+2026-10-26T23:58:32.8877096Z [1A[2K[587/602] [webkit-critical] › e2e/web/public-text-reflow.spec.mjs:8:5 › Public text resize preserves header and content en /marketplace @critical
+2026-10-26T23:58:34.9034802Z [1A[2K[588/602] [webkit-critical] › e2e/web/public-welcome.spec.mjs:101:1 › anonymous root welcomes before search without registration or location access @critical @mobile-flow
+2026-10-26T23:58:37.3271713Z [1A[2K[589/602] [webkit-critical] › e2e/web/public-welcome.spec.mjs:123:1 › welcome leads to public studio and services before account choices @critical @mobile-flow
+2026-10-26T23:58:39.6197677Z [1A[2K[590/602] [webkit-critical] › e2e/web/public-welcome.spec.mjs:157:1 › welcome opens published work as a guest without an account gate @critical @mobile-flow
+2026-10-26T23:58:41.8003847Z [1A[2K[591/602] [webkit-critical] › e2e/web/public-welcome.spec.mjs:170:1 › direct search preserves query and city across changes and browser history @critical @mobile-flow
+2026-10-26T23:58:44.0848887Z [1A[2K[592/602] [webkit-critical] › e2e/web/public-welcome.spec.mjs:191:1 › a directory outage keeps welcome exploration useful and truthful @critical @mobile-flow
+2026-10-26T23:58:53.9207963Z [1A[2K[593/602] [webkit-critical] › e2e/web/public-welcome.spec.mjs:207:1 › welcome and direct search stay accessible without overflow at 320 pixels @critical @mobile-flow
+2026-10-26T23:58:55.8356782Z [1A[2K[594/602] [webkit-critical] › e2e/web/records-thumbnails.spec.mjs:45:1 › Records handles failed images and decoded placeholders with bounded requests @critical
+2026-10-26T23:58:58.6042830Z [1A[2K[595/602] [webkit-critical] › e2e/web/records-thumbnails.spec.mjs:64:1 › Records preserves source identities, keyboard links and responsive unavailable states @critical
+2026-10-26T23:59:01.7652049Z [1A[2K[596/602] [webkit-critical] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getter @critical
+2026-10-26T23:59:02.6893841Z [1A[2K[597/602] [webkit-critical] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getter @critical
+2026-10-26T23:59:03.8663663Z [1A[2K[598/602] [webkit-critical] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service tracking remains recoverable without optional storage getItem @critical
+2026-10-26T23:59:04.7654438Z [1A[2K[599/602] [webkit-critical] › e2e/web/service-storage-recovery.spec.mjs:5:5 › Private service return remains recoverable without optional storage getItem @critical
+2026-10-26T23:59:05.9430056Z [1A[2K[600/602] [webkit-critical] › e2e/web/studio-internship-audit.spec.mjs:95:1 › @critical synthetic intern records a failed case and reaches a trace-linked report draft
+2026-10-26T23:59:11.7099829Z [1A[2K[601/602] [webkit-critical] › e2e/web/studio-internship-audit.spec.mjs:139:1 › @critical synthetic administrator can see all-report controls and prepare triage without activation
+2026-10-26T23:59:19.5769907Z [1A[2K[602/602] [webkit-critical] › e2e/web/ticket-credential.spec.mjs:6:1 › Guest issued QR downloads on a narrow screen without installing the app @critical
+2026-10-26T23:59:21.8082185Z [1A[2K  22 skipped
+2026-10-26T23:59:21.8082582Z   580 passed (17.6m)
+2026-10-26T23:59:22.1277856Z ##[group]Run npx playwright test e2e/web/account-deletion-rollout.spec.mjs
+2026-10-26T23:59:22.1278331Z [36;1mnpx playwright test e2e/web/account-deletion-rollout.spec.mjs[0m
+2026-10-26T23:59:22.1278903Z shell: sh -e {0}
+2026-10-26T23:59:22.1279079Z env:
+2026-10-26T23:59:22.1279272Z   PLAYWRIGHT_ACCOUNT_DELETION_FORM_ENABLED: false
+2026-10-26T23:59:22.1279628Z   PLAYWRIGHT_ARTIFACT_DIR: artifacts/persona-playwright/deletion-rollout-off
+2026-10-26T23:59:22.1279955Z ##[endgroup]
+2026-10-26T23:59:29.2425940Z [1A[2K[WebServer] [33mnode_modules/zod/v4/core/regexes.js (74:0): A comment
+2026-10-26T23:59:29.2426489Z 
+2026-10-26T23:59:29.2426639Z [WebServer] 
+2026-10-26T23:59:29.2427401Z [WebServer] "/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+2026-10-26T23:59:29.2428506Z [WebServer]  * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+2026-10-26T23:59:29.2429594Z [WebServer]  * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+2026-10-26T23:59:29.2430205Z [WebServer] 
+2026-10-26T23:59:29.2431805Z [WebServer] in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+2026-10-26T23:59:29.2447034Z [1A[2K[WebServer] [33mnode_modules/zod/v4/core/util.js (400:0): A comment
+2026-10-26T23:59:29.2447557Z [WebServer] 
+2026-10-26T23:59:29.2448756Z [WebServer] "// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+2026-10-26T23:59:29.2449784Z [WebServer] 
+2026-10-26T23:59:29.2451343Z [WebServer] in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+2026-10-26T23:59:29.2452244Z 
+2026-10-26T23:59:36.8854290Z [1A[2K[WebServer] [33m
+2026-10-26T23:59:36.8854574Z 
+2026-10-26T23:59:36.8855331Z [WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-10-26T23:59:36.8856266Z [WebServer] - Using dynamic import() to code-split the application
+2026-10-26T23:59:36.8857548Z [WebServer] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2026-10-26T23:59:36.8858931Z [WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+2026-10-26T23:59:38.0302545Z 
+2026-10-26T23:59:38.0303186Z Running 10 tests using 2 workers
+2026-10-26T23:59:38.0303878Z 
+2026-10-26T23:59:38.6492119Z [1A[2K[1/10] [chromium-desktop] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:59:38.6585582Z [1A[2K[2/10] [chromium-phone] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:59:40.5071716Z [1A[2K[3/10] [chromium-desktop] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:59:40.5948506Z [1A[2K[4/10] [chromium-phone] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:59:42.5268898Z [1A[2K[5/10] [chromium-tablet] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:59:42.5598158Z [1A[2K[6/10] [firefox-critical] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:59:44.4898342Z [1A[2K[7/10] [chromium-tablet] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:59:46.3309319Z [1A[2K[8/10] [firefox-critical] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:59:46.9768114Z [1A[2K[9/10] [webkit-critical] › e2e/web/account-deletion-rollout.spec.mjs:7:1 › Disabled deletion rollout retains accessible contact without intake requests @critical
+2026-10-26T23:59:49.4127535Z [1A[2K[10/10] [webkit-critical] › e2e/web/account-deletion-rollout.spec.mjs:33:1 › Pausing intake preserves the operator queue and recorded owner @critical
+2026-10-26T23:59:50.9872206Z [1A[2K  10 passed (28.0s)
+2026-10-26T23:59:51.0443931Z ##[group]Run node node_modules/@playwright/test/cli.js test --config=playwright.discovery.config.mjs
+2026-10-26T23:59:51.0444513Z [36;1mnode node_modules/@playwright/test/cli.js test --config=playwright.discovery.config.mjs[0m
+2026-10-26T23:59:51.0444952Z shell: sh -e {0}
+2026-10-26T23:59:51.0445121Z ##[endgroup]
+2026-10-26T23:59:58.1333398Z [1A[2K[WebServer] [33mnode_modules/zod/v4/core/regexes.js (74:0): A comment
+2026-10-26T23:59:58.1333732Z 
+2026-10-26T23:59:58.1333849Z [WebServer] 
+2026-10-26T23:59:58.1334316Z [WebServer] "/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+2026-10-26T23:59:58.1348946Z [WebServer]  * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+2026-10-26T23:59:58.1349835Z [WebServer]  * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+2026-10-26T23:59:58.1350265Z [WebServer] 
+2026-10-26T23:59:58.1351704Z [WebServer] in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+2026-10-26T23:59:58.1491688Z [1A[2K[WebServer] [33mnode_modules/zod/v4/core/util.js (400:0): A comment
+2026-10-26T23:59:58.1491971Z 
+2026-10-26T23:59:58.1492055Z [WebServer] 
+2026-10-26T23:59:58.1492788Z [WebServer] "// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+2026-10-26T23:59:58.1493358Z [WebServer] 
+2026-10-26T23:59:58.1494154Z [WebServer] in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+2026-10-27T00:00:05.6848384Z [1A[2K[WebServer] [33m
+2026-10-27T00:00:05.6849085Z [WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-10-27T00:00:05.6849831Z [WebServer] - Using dynamic import() to code-split the application
+2026-10-27T00:00:05.6851534Z [WebServer] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+2026-10-27T00:00:05.6852819Z [WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+2026-10-27T00:00:05.6855958Z 
+2026-10-27T00:00:06.8619530Z 
+2026-10-27T00:00:06.8620148Z Running 25 tests using 1 worker
+2026-10-27T00:00:06.8621603Z 
+2026-10-27T00:00:07.4144425Z [1A[2K[1/25] [chromium-desktop] › e2e/web/community-discovery.spec.mjs:34:1 › community discovery preserves query, genre and scroll through profile/history, then finds the artist globally @critical
+2026-10-27T00:00:10.3583600Z [1A[2K[2/25] [chromium-desktop] › e2e/web/community-discovery.spec.mjs:74:1 › debounces typing, clears empty results, preserves inline scroll and exposes accessible controls @critical
+2026-10-27T00:00:12.4434026Z [1A[2K[3/25] [chromium-desktop] › e2e/web/community-discovery.spec.mjs:93:1 › refresh restores document position and a late anchor is reached @critical
+2026-10-27T00:00:14.6036806Z [1A[2K[4/25] [chromium-desktop] › e2e/web/community-discovery.spec.mjs:112:1 › protected scrolling container restores after async layout and public navigation @critical
+2026-10-27T00:00:16.0657925Z [1A[2K[5/25] [chromium-desktop] › e2e/web/community-discovery.spec.mjs:147:1 › loaded feature menu stays dismissible from the public header @critical
+2026-10-27T00:00:18.0820062Z [1A[2K[6/25] [chromium-phone] › e2e/web/community-discovery.spec.mjs:34:1 › community discovery preserves query, genre and scroll through profile/history, then finds the artist globally @critical
+2026-10-27T00:00:21.0442204Z [1A[2K[7/25] [chromium-phone] › e2e/web/community-discovery.spec.mjs:74:1 › debounces typing, clears empty results, preserves inline scroll and exposes accessible controls @critical
+2026-10-27T00:00:22.9275528Z [1A[2K[8/25] [chromium-phone] › e2e/web/community-discovery.spec.mjs:93:1 › refresh restores document position and a late anchor is reached @critical
+2026-10-27T00:00:25.1487649Z [1A[2K[9/25] [chromium-phone] › e2e/web/community-discovery.spec.mjs:112:1 › protected scrolling container restores after async layout and public navigation @critical
+2026-10-27T00:00:26.4080082Z [1A[2K[10/25] [chromium-phone] › e2e/web/community-discovery.spec.mjs:147:1 › loaded feature menu stays dismissible from the public header @critical
+2026-10-27T00:00:28.4465399Z [1A[2K[11/25] [chromium-tablet] › e2e/web/community-discovery.spec.mjs:34:1 › community discovery preserves query, genre and scroll through profile/history, then finds the artist globally @critical
+2026-10-27T00:00:31.6905483Z [1A[2K[12/25] [chromium-tablet] › e2e/web/community-discovery.spec.mjs:74:1 › debounces typing, clears empty results, preserves inline scroll and exposes accessible controls @critical
+2026-10-27T00:00:33.6346156Z [1A[2K[13/25] [chromium-tablet] › e2e/web/community-discovery.spec.mjs:93:1 › refresh restores document position and a late anchor is reached @critical
+2026-10-27T00:00:35.8818509Z [1A[2K[14/25] [chromium-tablet] › e2e/web/community-discovery.spec.mjs:112:1 › protected scrolling container restores after async layout and public navigation @critical
+2026-10-27T00:00:37.4060008Z [1A[2K[15/25] [chromium-tablet] › e2e/web/community-discovery.spec.mjs:147:1 › loaded feature menu stays dismissible from the public header @critical
+2026-10-27T00:00:39.5601793Z [1A[2K[16/25] [webkit-iphone] › e2e/web/community-discovery.spec.mjs:34:1 › community discovery preserves query, genre and scroll through profile/history, then finds the artist globally @critical
+2026-10-27T00:00:47.3394961Z [1A[2K[17/25] [webkit-iphone] › e2e/web/community-discovery.spec.mjs:74:1 › debounces typing, clears empty results, preserves inline scroll and exposes accessible controls @critical
+2026-10-27T00:00:50.6496644Z [1A[2K[18/25] [webkit-iphone] › e2e/web/community-discovery.spec.mjs:93:1 › refresh restores document position and a late anchor is reached @critical
+2026-10-27T00:00:54.6048068Z [1A[2K[19/25] [webkit-iphone] › e2e/web/community-discovery.spec.mjs:112:1 › protected scrolling container restores after async layout and public navigation @critical
+2026-10-27T00:00:56.7938002Z [1A[2K[20/25] [webkit-iphone] › e2e/web/community-discovery.spec.mjs:147:1 › loaded feature menu stays dismissible from the public header @critical
+2026-10-27T00:01:01.2181484Z [1A[2K[21/25] [android-small] › e2e/web/community-discovery.spec.mjs:34:1 › community discovery preserves query, genre and scroll through profile/history, then finds the artist globally @critical
+2026-10-27T00:01:04.2417951Z [1A[2K[22/25] [android-small] › e2e/web/community-discovery.spec.mjs:74:1 › debounces typing, clears empty results, preserves inline scroll and exposes accessible controls @critical
+2026-10-27T00:01:05.9974946Z [1A[2K[23/25] [android-small] › e2e/web/community-discovery.spec.mjs:93:1 › refresh restores document position and a late anchor is reached @critical
+2026-10-27T00:01:08.1884135Z [1A[2K[24/25] [android-small] › e2e/web/community-discovery.spec.mjs:112:1 › protected scrolling container restores after async layout and public navigation @critical
+2026-10-27T00:01:09.5843061Z [1A[2K[25/25] [android-small] › e2e/web/community-discovery.spec.mjs:147:1 › loaded feature menu stays dismissible from the public header @critical
+2026-10-27T00:01:10.9893616Z [1A[2K  25 passed (1.3m)
+2026-10-27T00:01:11.0126840Z ##[group]Run actions/upload-artifact@v7
+2026-10-27T00:01:11.0127091Z with:
+2026-10-27T00:01:11.0127270Z   name: persona-web-e2e-40420390116
+2026-10-27T00:01:11.0127506Z   path: artifacts/persona-playwright
+2026-10-27T00:01:11.0127725Z   retention-days: 14
+2026-10-27T00:01:11.0127910Z   if-no-files-found: warn
+2026-10-27T00:01:11.0128101Z   compression-level: 6
+2026-10-27T00:01:11.0128281Z   overwrite: false
+2026-10-27T00:01:11.0128459Z   include-hidden-files: false
+2026-10-27T00:01:11.0128706Z   archive: true
+2026-10-27T00:01:11.0128888Z ##[endgroup]
+2026-10-27T00:01:11.0132236Z ##[command]/usr/bin/docker exec  917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2 sh -c "cat /etc/*release | grep ^ID"
+2026-10-27T00:01:11.2617025Z With the provided path, there will be 100 files uploaded
+2026-10-27T00:01:11.2618771Z Artifact name is valid!
+2026-10-27T00:01:11.2619534Z Root directory input is valid!
+2026-10-27T00:01:11.7858090Z Uploading artifact: persona-web-e2e-40420390116.zip
+2026-10-27T00:01:11.7886150Z Beginning upload of artifact content to blob storage
+2026-10-27T00:01:12.7930509Z Uploaded bytes 8388608
+2026-10-27T00:01:13.0756580Z Uploaded bytes 16777216
+2026-10-27T00:01:13.1228513Z Uploaded bytes 25165824
+2026-10-27T00:01:13.3272799Z Uploaded bytes 33554432
+2026-10-27T00:01:13.5951204Z Uploaded bytes 41943040
+2026-10-27T00:01:13.7617878Z Uploaded bytes 50331648
+2026-10-27T00:01:13.7858048Z Uploaded bytes 58720256
+2026-10-27T00:01:14.1460923Z Uploaded bytes 66514562
+2026-10-27T00:01:14.2088483Z Finished uploading artifact content to blob storage!
+2026-10-27T00:01:14.2315803Z SHA256 digest of uploaded artifact is 97aa7e6ae40913dd7235101b1947c4c24d4fc9e472f2519da44d395815087f45
+2026-10-27T00:01:14.2316648Z Finalizing artifact upload
+2026-10-27T00:01:14.8083121Z Artifact persona-web-e2e-40420390116 successfully finalized. Artifact ID 12698841686
+2026-10-27T00:01:14.8083906Z Artifact persona-web-e2e-40420390116 has been successfully uploaded! Final size is 66514562 bytes. Artifact ID is 12698841686
+2026-10-27T00:01:14.8087514Z Artifact download URL: https://github.com/diegueins680/tdf-app/actions/runs/40420390116/artifacts/12698841686
+2026-10-27T00:01:14.8276256Z ##[group]Run actions/upload-artifact@v7
+2026-10-27T00:01:14.8276496Z with:
+2026-10-27T00:01:14.8276680Z   name: discovery-web-e2e-40420390116
+2026-10-27T00:01:14.8276918Z   path: artifacts/discovery-playwright
+2026-10-27T00:01:14.8277141Z   retention-days: 14
+2026-10-27T00:01:14.8277336Z   if-no-files-found: warn
+2026-10-27T00:01:14.8277532Z   compression-level: 6
+2026-10-27T00:01:14.8277863Z   overwrite: false
+2026-10-27T00:01:14.8278049Z   include-hidden-files: false
+2026-10-27T00:01:14.8278246Z   archive: true
+2026-10-27T00:01:14.8278422Z ##[endgroup]
+2026-10-27T00:01:14.8281978Z ##[command]/usr/bin/docker exec  917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2 sh -c "cat /etc/*release | grep ^ID"
+2026-10-27T00:01:15.0205812Z With the provided path, there will be 1 file uploaded
+2026-10-27T00:01:15.0212515Z Artifact name is valid!
+2026-10-27T00:01:15.0220945Z Root directory input is valid!
+2026-10-27T00:01:15.3734443Z Uploading artifact: discovery-web-e2e-40420390116.zip
+2026-10-27T00:01:15.3765161Z Beginning upload of artifact content to blob storage
+2026-10-27T00:01:15.6308554Z Uploaded bytes 3052
+2026-10-27T00:01:15.6958911Z Finished uploading artifact content to blob storage!
+2026-10-27T00:01:15.6959857Z SHA256 digest of uploaded artifact is 7b2d6061e1ac18660a8b56ded28e9595e8cc0da5a1d419b7e327414c3f0043f3
+2026-10-27T00:01:15.6961073Z Finalizing artifact upload
+2026-10-27T00:01:16.3173322Z Artifact discovery-web-e2e-40420390116 successfully finalized. Artifact ID 12698736722
+2026-10-27T00:01:16.3174072Z Artifact discovery-web-e2e-40420390116 has been successfully uploaded! Final size is 3052 bytes. Artifact ID is 12698736722
+2026-10-27T00:01:16.3176656Z Artifact download URL: https://github.com/diegueins680/tdf-app/actions/runs/40420390116/artifacts/12698736722
+2026-10-27T00:01:16.3368999Z Post job cleanup.
+2026-10-27T00:01:16.3374553Z ##[command]/usr/bin/docker exec  917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2 sh -c "cat /etc/*release | grep ^ID"
+2026-10-27T00:01:16.5047429Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-ff005079a67770f98ca82e9e2c50144e45a4db957d2b78d0946355c70ce663f3, not saving cache.
+2026-10-27T00:01:16.5189197Z Post job cleanup.
+2026-10-27T00:01:16.5195711Z ##[command]/usr/bin/docker exec  917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2 sh -c "cat /etc/*release | grep ^ID"
+2026-10-27T00:01:16.6676165Z [command]/usr/bin/git version
+2026-10-27T00:01:16.6744975Z git version 2.43.0
+2026-10-27T00:01:16.6778173Z Temporarily overriding HOME='/__w/_temp/a19759c8-5c93-4305-bd4a-8bcabf6d3763' before making global git config changes
+2026-10-27T00:01:16.6779327Z Adding repository directory to the temporary git global config as a safe directory
+2026-10-27T00:01:16.6782877Z [command]/usr/bin/git config --global --add safe.directory /__w/tdf-app/tdf-app
+2026-10-27T00:01:16.6812666Z Removing SSH command configuration
+2026-10-27T00:01:16.6813603Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-10-27T00:01:16.6848628Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-10-27T00:01:16.7084419Z Removing HTTP extra header
+2026-10-27T00:01:16.7088408Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-10-27T00:01:16.7121125Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-10-27T00:01:16.7347225Z Removing includeIf entries pointing to credentials config files
+2026-10-27T00:01:16.7353869Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-10-27T00:01:16.7378203Z includeif.gitdir:/__w/tdf-app/tdf-app/.git.path
+2026-10-27T00:01:16.7379111Z includeif.gitdir:/__w/tdf-app/tdf-app/.git/worktrees/*.path
+2026-10-27T00:01:16.7380036Z includeif.gitdir:/github/workspace/.git.path
+2026-10-27T00:01:16.7381126Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-27T00:01:16.7385202Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/__w/tdf-app/tdf-app/.git.path
+2026-10-27T00:01:16.7407382Z /__w/_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config
+2026-10-27T00:01:16.7416298Z [command]/usr/bin/git config --local --unset includeif.gitdir:/__w/tdf-app/tdf-app/.git.path \/__w\/_temp\/git\-credentials\-638d5627\-8d7b\-40d9\-8608\-7cc913f3c158\.config
+2026-10-27T00:01:16.7448124Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/__w/tdf-app/tdf-app/.git/worktrees/*.path
+2026-10-27T00:01:16.7471104Z /__w/_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config
+2026-10-27T00:01:16.7478819Z [command]/usr/bin/git config --local --unset includeif.gitdir:/__w/tdf-app/tdf-app/.git/worktrees/*.path \/__w\/_temp\/git\-credentials\-638d5627\-8d7b\-40d9\-8608\-7cc913f3c158\.config
+2026-10-27T00:01:16.7509533Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-10-27T00:01:16.7530870Z /github/runner_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config
+2026-10-27T00:01:16.7542715Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path \/github\/runner_temp\/git\-credentials\-638d5627\-8d7b\-40d9\-8608\-7cc913f3c158\.config
+2026-10-27T00:01:16.7573355Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-10-27T00:01:16.7594411Z /github/runner_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config
+2026-10-27T00:01:16.7600887Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path \/github\/runner_temp\/git\-credentials\-638d5627\-8d7b\-40d9\-8608\-7cc913f3c158\.config
+2026-10-27T00:01:16.7632342Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-10-27T00:01:16.7837588Z Removing credentials config '/__w/_temp/git-credentials-638d5627-8d7b-40d9-8608-7cc913f3c158.config'
+2026-10-27T00:01:16.7971090Z Stop and remove container: 71e78a920b364b2ba412283137989eb2_mcrmicrosoftcomplaywrightv1591noblesha256b0ab6f3cb99aa7803adbc14d9027ec1785fc6e433b97e134e0f8fe61683b6b53_bd0b72
+2026-10-27T00:01:16.7974953Z ##[command]/usr/bin/docker rm --force 917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2
+2026-10-27T00:01:16.9042578Z 917f4b39557ffb70ccf68e950dcc7e091d32386ab0ec148da560ceae4f5effb2
+2026-10-27T00:01:16.9066562Z Remove container network: github_network_65ab6ae1e5aa42a09aad9df97aef5cfb
+2026-10-27T00:01:16.9070141Z ##[command]/usr/bin/docker network rm github_network_65ab6ae1e5aa42a09aad9df97aef5cfb
+2026-10-27T00:01:16.9749104Z github_network_65ab6ae1e5aa42a09aad9df97aef5cfb
+2026-10-27T00:01:16.9814826Z Cleaning up orphan processes
+

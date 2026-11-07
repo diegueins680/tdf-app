@@ -31,6 +31,8 @@ module TDF.ServerAuth
   , appleProfileFromIdentity
   , appleDisplayName
   , PasswordResetError
+  , SessionTokenTtl(..)
+  , sessionTokenTtlFromConfig
   , findReusableActiveToken
   , normalizeAuthEmailAddress
   , parsePasswordChangeAuthToken
@@ -73,6 +75,7 @@ module TDF.ServerAuth
   ) where
 
 import Control.Applicative ((<|>))
+import TDF.Auth.AccountName (initialAccountName)
 import Control.Exception.Safe (SomeException, try)
 import TDF.App.FailureBoundary (bestEffortActivity)
 import Control.Monad (forM, forM_, guard, join, unless, void, when)
@@ -1596,8 +1599,8 @@ recordAccountCreationConsent actorId signupMethod acceptedTermsVersion marketing
 login :: LoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 login rawRequest = do
   LoginRequest{..} <- either throwError pure (validateLoginRequest rawRequest)
-  Env pool _ <- ask
-  result <- liftIO $ flip runSqlPool pool (runLogin username password)
+  Env pool cfg <- ask
+  result <- liftIO $ flip runSqlPool pool (runLogin (sessionTokenTtlFromConfig cfg) username password)
   case result of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right res -> do
@@ -1619,7 +1622,7 @@ googleLogin GoogleLoginRequest{..} = do
   case verification of
     Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right profile -> do
-      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin createNewAccount acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
+      result <- liftIO $ flip runSqlPool pool (completeGoogleLogin (sessionTokenTtlFromConfig cfg) createNewAccount acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
       case result of
         Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
         Right resp -> do
@@ -1662,7 +1665,7 @@ appleLogin AppleLoginRequest{..} = do
       case appleProfileFromIdentity fullNameClean identity of
         Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
         Right profile -> do
-          result <- liftIO $ flip runSqlPool pool (completeAppleLogin createNewAccount acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
+          result <- liftIO $ flip runSqlPool pool (completeAppleLogin (sessionTokenTtlFromConfig cfg) createNewAccount acceptedTermsVersion marketingOptIn onboardingIntentClean linkAccountClean profile)
           case result of
             Left err -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 err) }
             Right resp -> do
@@ -1692,14 +1695,10 @@ appleProfileFromIdentity fullNameClean AppleIdentity{aiSubject, aiEmail, aiEmail
     , apName = fullNameClean
     }
 
--- | Display name precedence: the name Apple shared, else the email, else a
--- neutral placeholder the user can edit later.
+-- | Use the canonical private-data-safe default for both external providers.
+-- A verified relay/contact email is never a public profile display-name fallback.
 appleDisplayName :: AppleProfile -> Text
-appleDisplayName AppleProfile{apEmail, apName} =
-  fromMaybe appleFallbackDisplayName (cleanOptional apName <|> apEmail)
-
-appleFallbackDisplayName :: Text
-appleFallbackDisplayName = "Usuario de Apple"
+appleDisplayName AppleProfile{apName} = initialAccountName apName
 
 validateAppleIdentityTokenInput :: Text -> Either ServerError Text
 validateAppleIdentityTokenInput rawToken
@@ -1822,6 +1821,7 @@ signup SignupRequest
   let emailSvc = EmailSvc.mkEmailService cfg
   result <- liftIO $ flip runSqlPool pool $
     runSignupDb
+      (sessionTokenTtlFromConfig cfg)
       emailClean
       passwordClean
       displayNameText
@@ -1860,10 +1860,10 @@ changePassword :: Maybe Text -> ChangePasswordRequest -> AppM (Api.SessionCookie
 changePassword mAuthHeader ChangePasswordRequest{..} = do
   currentPasswordClean <- either throwError pure (validateCurrentPasswordInput currentPassword)
   newPasswordClean <- either throwError pure (validateAuthPassword "New password" newPassword)
-  Env pool _ <- ask
+  Env pool cfg <- ask
   usernameClean <- resolveUsername pool username mAuthHeader
   result <- liftIO $ flip runSqlPool pool $
-    runChangePassword usernameClean currentPasswordClean newPasswordClean
+    runChangePassword (sessionTokenTtlFromConfig cfg) usernameClean currentPasswordClean newPasswordClean
   case result of
     Left PasswordInvalid ->
       throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 "Invalid username or password") }
@@ -2125,8 +2125,8 @@ passwordResetConfirm :: PasswordResetConfirmRequest -> AppM (Api.SessionCookieHe
 passwordResetConfirm PasswordResetConfirmRequest{..} = do
   tokenClean <- either throwError pure (validatePasswordResetToken token)
   newPasswordClean <- either throwError pure (validateAuthPassword "New password" newPassword)
-  Env pool _ <- ask
-  result <- liftIO $ flip runSqlPool pool (runPasswordResetConfirm tokenClean newPasswordClean)
+  Env pool cfg <- ask
+  result <- liftIO $ flip runSqlPool pool (runPasswordResetConfirm (sessionTokenTtlFromConfig cfg) tokenClean newPasswordClean)
   case result of
     Left PasswordResetInvalidToken ->
       throwError err400 { errBody = BL.fromStrict (TE.encodeUtf8 "Invalid or expired token") }
@@ -2297,7 +2297,7 @@ validateGoogleIdTokenInfo mExpectedClientId info
                 { gpIssuer = "https://accounts.google.com"
                 , gpSubject = gitSub info
                 , gpEmail = normalizedEmail
-                , gpName = normalizedName <|> Just normalizedEmail
+                , gpName = normalizedName
                 , gpPicture = gitPicture info
                 }
            in Right profile
@@ -2329,19 +2329,19 @@ sanitizeGoogleProfileName rawName = do
     then Just name
     else Nothing
 
-completeGoogleLogin :: Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeGoogleLogin creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof GoogleProfile{..} =
-  completeProviderLogin googleLoginSpec creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof
+completeGoogleLogin :: SessionTokenTtl -> Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> GoogleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeGoogleLogin ttl creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof GoogleProfile{..} =
+  completeProviderLogin ttl googleLoginSpec creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof
     ProviderProfile
       { ppIssuer = gpIssuer
       , ppSubject = gpSubject
       , ppEmail = Just gpEmail
-      , ppDisplayName = fromMaybe gpEmail (cleanOptional gpName)
+      , ppDisplayName = initialAccountName gpName
       }
 
-completeAppleLogin :: Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> AppleProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeAppleLogin creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof profile@AppleProfile{..} =
-  completeProviderLogin appleLoginSpec creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof
+completeAppleLogin :: SessionTokenTtl -> Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> AppleProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeAppleLogin ttl creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof profile@AppleProfile{..} =
+  completeProviderLogin ttl appleLoginSpec creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof
     ProviderProfile
       { ppIssuer = apIssuer
       , ppSubject = apSubject
@@ -2353,8 +2353,8 @@ completeAppleLogin creationIntent acceptedTermsVersion marketingConsent requeste
 -- unbound subject with password proof is linked, an unbound subject with
 -- explicit creation intent and current terms gets a Customer/Fan account, and
 -- anything else is refused before any write.
-completeProviderLogin :: ProviderLoginSpec -> Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> ProviderProfile -> SqlPersistT IO (Either Text LoginResponse)
-completeProviderLogin ProviderLoginSpec{..} creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof ProviderProfile{..} = do
+completeProviderLogin :: SessionTokenTtl -> ProviderLoginSpec -> Maybe Bool -> Maybe Text -> Maybe Bool -> Maybe Text -> Maybe LoginRequest -> ProviderProfile -> SqlPersistT IO (Either Text LoginResponse)
+completeProviderLogin ttl ProviderLoginSpec{..} creationIntent acceptedTermsVersion marketingConsent requestedOnboardingIntent linkProof ProviderProfile{..} = do
   -- Serialize one issuing-system subject across login, signup, linking and retries.
   -- A verified email is profile data, never authorization to an existing account.
   existingResult <- resolveGoogleCredential ppIssuer ppSubject linkProof
@@ -2371,6 +2371,7 @@ completeProviderLogin ProviderLoginSpec{..} creationIntent acceptedTermsVersion 
                 void (storeOnboardingIntent (userCredentialPartyId cred) intentValue now)
               sessionToken <-
                 createReusableSessionToken
+                  ttl
                   (userCredentialPartyId cred)
                   (Just (plsSessionLabelPrefix <> userCredentialUsername cred))
               mUser <- loadAuthedUser sessionToken
@@ -2428,7 +2429,7 @@ completeProviderLogin ProviderLoginSpec{..} creationIntent acceptedTermsVersion 
                         }
                       bindGoogleCredential ppIssuer ppSubject credentialId "new-account"
                       sessionToken <-
-                        createReusableSessionToken pid (Just (plsSessionLabelPrefix <> providerUsername))
+                        createReusableSessionToken ttl pid (Just (plsSessionLabelPrefix <> providerUsername))
                       mUser <- loadAuthedUser sessionToken
                       case mUser of
                         Nothing -> do
@@ -2439,8 +2440,8 @@ completeProviderLogin ProviderLoginSpec{..} creationIntent acceptedTermsVersion 
                           initializeSignupOnboarding pid requestedOnboardingIntent now
                           pure (Right ((toLoginResponse sessionToken user) { accountCreated = Just True }))
 
-runLogin :: Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
-runLogin identifier pwd = do
+runLogin :: SessionTokenTtl -> Text -> Text -> SqlPersistT IO (Either Text LoginResponse)
+runLogin ttl identifier pwd = do
   mCred <- lookupCredentialLocked identifier
   case mCred of
     Nothing -> pure (Left invalidMsg)
@@ -2449,7 +2450,7 @@ runLogin identifier pwd = do
       | otherwise ->
           if validatePassword (TE.encodeUtf8 (userCredentialPasswordHash cred)) (TE.encodeUtf8 pwd)
             then do
-              sessionToken <- createSessionToken (userCredentialPartyId cred) (userCredentialUsername cred)
+              sessionToken <- createSessionToken ttl (userCredentialPartyId cred) (userCredentialUsername cred)
               mUser <- loadAuthedUser sessionToken
               case mUser of
                 Nothing -> transactionUndo >> pure (Left "Failed to load user profile")
@@ -2548,7 +2549,8 @@ selectUniqueGoogleLoginCredential _ =
   Left "Hay varias cuentas asociadas a este correo de Google. Contacta a soporte."
 
 runSignupDb
-  :: Text
+  :: SessionTokenTtl
+  -> Text
   -> Text
   -> Text
   -> Maybe Text
@@ -2559,7 +2561,7 @@ runSignupDb
   -> Maybe Bool
   -> UTCTime
   -> SqlPersistT IO (Either SignupDbError LoginResponse)
-runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId requestedOnboardingIntent acceptedTermsVersion marketingConsent nowVal = do
+runSignupDb ttl emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaimArtistId requestedOnboardingIntent acceptedTermsVersion marketingConsent nowVal = do
   existing <- signupEmailExists emailVal
   if existing
     then pure (Left SignupEmailExists)
@@ -2593,7 +2595,7 @@ runSignupDb emailVal passwordVal displayNameText phoneVal fanArtistIdsVal mClaim
                 , userCredentialActive = True
                 }
               ensureFanProfileIfMissing pid partyLabel nowVal
-              sessionToken <- createSessionToken pid emailVal
+              sessionToken <- createSessionToken ttl pid emailVal
               mUser <- loadAuthedUser sessionToken
               case mUser of
                 Nothing -> do
@@ -2635,11 +2637,12 @@ resolveParty displayNameText Nothing emailVal phoneVal nowVal = do
 resolveParty _ (Just _) _ _ _ = pure (Left SignupArtistUnavailable)
 
 runChangePassword
-  :: Text
+  :: SessionTokenTtl
+  -> Text
   -> Text
   -> Text
   -> SqlPersistT IO (Either PasswordChangeError LoginResponse)
-runChangePassword uname currentPwd newPwd = do
+runChangePassword ttl uname currentPwd newPwd = do
   mCred <- lookupCredentialLocked uname
   case mCred of
     Nothing -> pure (Left PasswordInvalid)
@@ -2651,17 +2654,18 @@ runChangePassword uname currentPwd newPwd = do
           hashed <- liftIO (hashPasswordText newPwd)
           update credId [UserCredentialPasswordHash =. hashed]
           revokeInteractiveSessions (userCredentialPartyId cred)
-          sessionToken <- createSessionToken (userCredentialPartyId cred) (userCredentialUsername cred)
+          sessionToken <- createSessionToken ttl (userCredentialPartyId cred) (userCredentialUsername cred)
           mUser <- loadAuthedUser sessionToken
           case mUser of
             Nothing -> transactionUndo >> pure (Left PasswordProfileError)
             Just user -> pure (Right (toLoginResponse sessionToken user))
 
 runPasswordResetConfirm
-  :: Text
+  :: SessionTokenTtl
+  -> Text
   -> Text
   -> SqlPersistT IO (Either PasswordResetError LoginResponse)
-runPasswordResetConfirm tokenVal passwordVal = do
+runPasswordResetConfirm ttl tokenVal passwordVal = do
   mToken <- getBy (UniqueApiToken tokenVal)
   case mToken of
     Just (Entity tokenId apiToken)
@@ -2707,7 +2711,7 @@ runPasswordResetConfirm tokenVal passwordVal = do
                                   hashed <- liftIO (hashPasswordText passwordVal)
                                   update credId [UserCredentialPasswordHash =. hashed]
                                   revokeInteractiveSessions (userCredentialPartyId cred)
-                                  sessionToken <- createSessionToken (userCredentialPartyId cred) (userCredentialUsername cred)
+                                  sessionToken <- createSessionToken ttl (userCredentialPartyId cred) (userCredentialUsername cred)
                                   mUser <- loadAuthedUser sessionToken
                                   case mUser of
                                     Nothing -> transactionUndo >> pure (Left PasswordResetProfileError)
@@ -2754,34 +2758,56 @@ generateTemporaryPassword = do
   randomUuid <- nextRandom
   pure ("google-" <> toText randomUuid)
 
-createSessionToken :: PartyId -> Text -> SqlPersistT IO Text
-createSessionToken pid uname =
-  createReusableSessionToken pid (Just ("password-login:" <> uname))
+-- | Server-side lifetime of an interactive login session, in seconds.
+-- Always positive: 'TDF.Config.loadConfig' validates SESSION_TOKEN_TTL_SECONDS.
+newtype SessionTokenTtl = SessionTokenTtl { unSessionTokenTtl :: Int64 }
+  deriving (Eq, Show)
+
+sessionTokenTtlFromConfig :: AppConfig -> SessionTokenTtl
+sessionTokenTtlFromConfig = SessionTokenTtl . fromIntegral . sessionTokenTtlSeconds
+
+-- | Validity window measured on the database clock so it matches the check
+-- in 'TDF.Auth.apiTokenWithinValidity' on every replica.
+sessionValidityWindow :: SessionTokenTtl -> SqlPersistT IO (Int64, Int64)
+sessionValidityWindow (SessionTokenTtl ttl) = do
+  issued <- recoveryClockEpoch
+  pure (issued, issued + max 1 ttl)
+
+createSessionToken :: SessionTokenTtl -> PartyId -> Text -> SqlPersistT IO Text
+createSessionToken ttl pid uname =
+  createReusableSessionToken ttl pid (Just ("password-login:" <> uname))
 
 createPasswordResetToken :: Entity UserCredential -> Text -> SqlPersistT IO Text
 createPasswordResetToken (Entity credentialId credential) emailVal = do
-  tokenValue <- createTokenWithLabel (userCredentialPartyId credential) (Just ("password-reset:" <> emailVal))
+  issued <- recoveryClockEpoch
+  -- The recovery challenge row remains the authority for the 900s window; the
+  -- token row carries the same window so a stale reset token is also rejected
+  -- by the generic validity check without consulting the challenge table.
+  tokenValue <- createTokenWithLabel (userCredentialPartyId credential) (Just ("password-reset:" <> emailVal)) (Just (issued, issued+900))
   mToken <- getBy (UniqueApiToken tokenValue)
   case mToken of
     Nothing -> liftIO (fail "Recovery token missing inside issuance transaction")
     Just (Entity tokenId _) -> do
-      issued <- recoveryClockEpoch
       rawExecute
         "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,?,?)"
         [toPersistValue tokenId,toPersistValue credentialId,PersistInt64 issued,PersistInt64 (issued+900)]
       pure tokenValue
 
-createReusableSessionToken :: PartyId -> Maybe Text -> SqlPersistT IO Text
+createReusableSessionToken :: SessionTokenTtl -> PartyId -> Maybe Text -> SqlPersistT IO Text
 -- Never commit an outer credential/consent/provider transaction during issuance.
 -- A read-only database cannot issue a session; errors roll back the whole operation.
-createReusableSessionToken pid label = createTokenWithLabel pid label
+createReusableSessionToken ttl pid label = do
+  window <- sessionValidityWindow ttl
+  createTokenWithLabel pid label (Just window)
 
-createTokenWithLabel :: PartyId -> Maybe Text -> SqlPersistT IO Text
-createTokenWithLabel pid label = do
+-- | Insert a fresh random token. The validity window is @(issuedAtEpoch,
+-- expiresAtEpoch)@; 'Nothing' is only meaningful for non-interactive labels.
+createTokenWithLabel :: PartyId -> Maybe Text -> Maybe (Int64, Int64) -> SqlPersistT IO Text
+createTokenWithLabel pid label window = do
   tokenValue <- liftIO (toText <$> nextRandom)
-  inserted <- insertUnique (ApiToken tokenValue pid label True)
+  inserted <- insertUnique (ApiToken tokenValue pid label True (fst <$> window) (snd <$> window))
   case inserted of
-    Nothing -> createTokenWithLabel pid label
+    Nothing -> createTokenWithLabel pid label window
     Just _ -> pure tokenValue
 
 findReusableActiveToken :: PartyId -> Maybe Text -> SqlPersistT IO (Maybe Text)

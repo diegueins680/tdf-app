@@ -162,9 +162,13 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
   -- Recheck ticket eligibility under the event lock in the transaction that
   -- records the attempt: the check above can be overtaken by a closure.
   let ticketSalesGuard
-        | Store.ceDomainType checkout == "event_ticket_order" =
-            EventTicketCheckout.ticketSalesClosedRefusal
+        | Store.ceDomainType checkout == "event_ticket_order" = do
+            closed <- EventTicketCheckout.ticketSalesClosedRefusal
               <$> EventTicketCheckout.lockTicketOrderSalesOpen (Store.ceDomainOrderId checkout)
+            -- A hosted session is another rail: not while a PayPal capture
+            -- for this checkout is unverified.
+            maybe (EventTicketCheckout.ticketUnverifiedCaptureRefusal
+              (Checkout.pacCheckout attemptCreation)) (pure . Just) closed
         | otherwise = pure Nothing
   attempt <- liftIO (runSqlPool
       (PaymentRuntime.beginPaymentAttemptForMethodGuarded ticketSalesGuard paymentMethod attemptCreation)
@@ -244,11 +248,15 @@ getPaymentSession rawCheckoutId rawAttemptId rawLookupToken = do
   checkoutId <- either (throwError . badRequest) pure (validatedUuid "checkoutId" rawCheckoutId)
   attemptId <- either (throwError . badRequest) pure (validatedUuid "attemptId" rawAttemptId)
   lookupToken <- requireLookupToken rawLookupToken
+  let lookupHash = sha256Text lookupToken
+  authorized <- liftIO $ runSqlPool
+    (Store.authorizeCreateOperation checkoutId attemptId lookupHash) envPool
+  _ <- either (const (throwError err404)) pure authorized
   encryptionKey <- liftIO loadProviderOperationEncryptionKey
     >>= either (throwError . unavailableText) pure
   loaded <- liftIO $ runSqlPool
     (Store.loadAuthorizedCreateOperation checkoutId attemptId
-      (sha256Text lookupToken) encryptionKey) envPool
+      lookupHash encryptionKey) envPool
   operation <- either (const (throwError err404)) pure loaded
   pure (operationToDTO checkoutId operation)
 

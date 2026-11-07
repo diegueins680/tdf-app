@@ -20,13 +20,15 @@ import TDF.Auth
   ( AuthedUser (..)
   , ModuleAccess (..)
   , hasModuleAccess
+  , apiTokenWithinValidity
+  , isInteractiveSessionLabel
   , modulesForRoles
   , resolveUsernameFromLabel
   , validateModuleAccess
   )
 import TDF.DTO (AppleFullName (..), ArtistInvitationLinkCreate (..), LoginRequest (..), SignupRequest)
 import TDF.AppleSignIn (AppleIdentity (..))
-import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
+import TDF.Models (ApiToken (..), RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
   ( AppleProfile (..)
   , GoogleIdTokenInfo (..)
@@ -36,7 +38,6 @@ import TDF.ServerAuth
   , validateAppleFullName
   , validateAppleIdentityTokenInput
   , validateAppleNonceInput
-  , GoogleIdTokenInfo (..)
   , GoogleProfile (..)
   , recoveryWindowValid
   , normalizeAuthEmailAddress
@@ -70,6 +71,7 @@ import TDF.ServerAuth
 spec :: Spec
 spec = do
   recoveryWindowSpec
+  appleSessionValiditySpec
   authEmailSpec
   moduleAccessSpec
   loginRequestSpec
@@ -745,15 +747,15 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
         expectationFailure
           ("Expected malformed Google token email to be rejected, got " <> show profile)
 
-  it "falls back to email for punctuation-only Google profile names" $
+  it "preserves absence instead of private email for punctuation-only Google names" $
     case validateGoogleIdTokenInfo
       (Just "client-id")
       googleTokenInfo { gitName = Just " ... --- " } of
       Right profile ->
-        gpName profile `shouldBe` Just "ada@example.com"
+        gpName profile `shouldBe` Nothing
       Left err ->
         expectationFailure
-          ("Expected punctuation-only Google profile name to fall back, got " <> T.unpack err)
+          ("Expected punctuation-only Google profile name to remain absent, got " <> T.unpack err)
 
   it "rejects blank or unsafe Google subjects before account fallback creation" $ do
     let hiddenFormat = T.singleton (chr 0x200D)
@@ -772,20 +774,20 @@ googleTokenInfoSpec = describe "validateGoogleIdTokenInfo" $ do
     assertRejected (T.replicate 256 "a")
     assertRejected ("google-sub-" <> hiddenFormat <> "1")
 
-  it "falls back to verified email when Google profile names are unsafe" $ do
+  it "preserves absence instead of private email when Google profile names are unsafe" $ do
     let hiddenFormat = T.singleton (chr 0x200D)
-        assertFallsBack rawName =
+        assertAbsent rawName =
           case validateGoogleIdTokenInfo
             (Just "client-id")
             googleTokenInfo { gitName = Just rawName } of
             Right profile ->
-              gpName profile `shouldBe` Just "ada@example.com"
+              gpName profile `shouldBe` Nothing
             Left err ->
               expectationFailure
-                ("Expected unsafe Google profile name to fall back, got " <> T.unpack err)
-    assertFallsBack ("Ada" <> hiddenFormat <> "Lovelace")
-    assertFallsBack "Ada\nLovelace"
-    assertFallsBack (T.replicate 161 "a")
+                ("Expected unsafe Google profile name to remain absent, got " <> T.unpack err)
+    assertAbsent ("Ada" <> hiddenFormat <> "Lovelace")
+    assertAbsent "Ada\nLovelace"
+    assertAbsent (T.replicate 161 "a")
 
 loginEmailFallbackSpec :: Spec
 loginEmailFallbackSpec = describe "selectUniqueLoginEmailCredential" $ do
@@ -914,13 +916,13 @@ appleLoginInputSpec = describe "Sign in with Apple request handling" $ do
     validateAppleNonceInput (T.replicate 257 "n") `shouldSatisfy` isLeft
     validateAppleNonceInput "a b" `shouldSatisfy` isLeft
 
-  it "builds display names from Apple's name, then email, then a placeholder" $ do
+  it "builds Apple display names without exposing a relay or contact email" $ do
     validateAppleFullName (Just (AppleFullName (Just "Ada") (Just "Lovelace"))) `shouldBe` Right (Just "Ada Lovelace")
     validateAppleFullName Nothing `shouldBe` Right Nothing
     validateAppleFullName (Just (AppleFullName (Just (T.replicate 101 "a")) Nothing)) `shouldSatisfy` isLeft
     appleDisplayName (AppleProfile "i" "s" (Just "a@example.com") (Just "Ada")) `shouldBe` "Ada"
-    appleDisplayName (AppleProfile "i" "s" (Just "a@example.com") Nothing) `shouldBe` "a@example.com"
-    appleDisplayName (AppleProfile "i" "s" Nothing Nothing) `shouldBe` "Usuario de Apple"
+    appleDisplayName (AppleProfile "i" "s" (Just "a@example.com") Nothing) `shouldBe` "Cuenta TDF"
+    appleDisplayName (AppleProfile "i" "s" Nothing Nothing) `shouldBe` "Cuenta TDF"
 
   it "normalizes the token email and rejects unverified or malformed emails" $ do
     let identity email verified = AppleIdentity "sub-1" email verified True
@@ -929,3 +931,23 @@ appleLoginInputSpec = describe "Sign in with Apple request handling" $ do
     fmap apEmail (appleProfileFromIdentity Nothing (identity Nothing False)) `shouldBe` Right Nothing
     appleProfileFromIdentity Nothing (identity (Just "a@example.com") False) `shouldSatisfy` isLeft
     appleProfileFromIdentity Nothing (identity (Just "not-an-email") True) `shouldSatisfy` isLeft
+
+-- Apple-issued sessions follow the same database-clock half-open validity
+-- window as password/Google sessions; provider JWT timestamps are not app TTL.
+appleSessionValiditySpec :: Spec
+appleSessionValiditySpec = describe "Apple interactive session validity" $ do
+  let token label expiry = ApiToken "synthetic-apple-session" (toSqlKey 1)
+        label True (Just 0) expiry
+  it "recognizes canonical and normalized Apple login labels as interactive" $ do
+    isInteractiveSessionLabel (Just "apple-login:apple:subject") `shouldBe` True
+    isInteractiveSessionLabel (Just "  APPLE-LOGIN:apple:subject  ") `shouldBe` True
+  it "rejects legacy Apple sessions without a server-side expiry" $ do
+    apiTokenWithinValidity 100 (token (Just "apple-login:apple:subject") Nothing)
+      `shouldBe` False
+  it "accepts a live Apple session and rejects equality and later expiry boundaries" $ do
+    let live = token (Just "apple-login:apple:subject") (Just 100)
+    apiTokenWithinValidity 99 live `shouldBe` True
+    apiTokenWithinValidity 100 live `shouldBe` False
+    apiTokenWithinValidity 101 live `shouldBe` False
+  it "retains explicitly managed unbounded service tokens" $ do
+    apiTokenWithinValidity 100 (token (Just "service:synthetic") Nothing) `shouldBe` True

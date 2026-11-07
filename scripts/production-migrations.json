@@ -549,6 +549,9 @@
     {
       "id": "2026-09-18_identity_review_dependencies",
       "path": "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql",
+      "compatibleAppliedChecksums": [
+        "5636028805b77a1705bb364c87669e8d46983c93d9fc177da9e2187b98972f4f"
+      ],
       "introducedBy": "d442013ce79b2afefdda6a203500cf2a58532ca7"
     },
     {
@@ -1040,6 +1043,216 @@
       "id": "2026-10-11_index_declarations_not_unique",
       "path": "tdf-hq/sql/2026-10-11_index_declarations_not_unique.sql",
       "introducedBy": "9edcb9460afd79aaa7040221ccae1c72cb14a795"
+    },
+    {
+      "id": "2026-10-11_operations_failure_replay",
+      "path": "tdf-hq/sql/2026-10-11_operations_failure_replay.sql",
+      "introducedBy": "17f55075cb16ea5fbf5079c7bc290896b3ecc979"
+    },
+    {
+      "id": "2026-10-13_operations_inbound_capture_policy",
+      "path": "tdf-hq/sql/2026-10-13_operations_inbound_capture_policy.sql",
+      "introducedBy": "6ac5f68cc76479ba5d19dd9243d872b341291549"
+    },
+    {
+      "id": "2026-10-11_music_publication_isolation",
+      "path": "tdf-hq/sql/2026-10-11_music_publication_isolation.sql",
+      "introducedBy": "598de30e3e1bf47b9f37cea86bd73f5b65eb5fac"
+    },
+    {
+      "id": "2026-10-12_music_upload_rebind",
+      "path": "tdf-hq/sql/2026-10-12_music_upload_rebind.sql",
+      "introducedBy": "3f71add5783d9aefe818686abf4ee1c37ef6092b"
+    },
+    {
+      "id": "2026-10-13_community_search_indexes",
+      "path": "tdf-hq/sql/2026-10-13_community_search_indexes.sql",
+      "introducedBy": "08f3bcf50319983193d37ccec87d1c664c8ef21d"
+    },
+    {
+      "id": "2026-10-14_directory_event_search_alias_sync",
+      "path": "tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql",
+      "introducedBy": "7c74b3c3e14f53870ee8a09ba6fcc80bc645e251"
+    },
+    {
+      "id": "2026-10-13_chat_message_notifications",
+      "path": "tdf-hq/sql/2026-10-13_chat_message_notifications.sql",
+      "introducedBy": "1be9d0d7dba613ced9cfe553529a5445b000ecf9"
+    },
+    {
+      "id": "2026-10-15_music_payment_outcome_consistency",
+      "path": "tdf-hq/sql/2026-10-15_music_payment_outcome_consistency.sql",
+      "introducedBy": "8ad5722fa885c1970b20c57449eed4fc54d088eb"
+    },
+    {
+      "id": "2026-10-15_music_exact_minor_units",
+      "path": "tdf-hq/sql/2026-10-15_music_exact_minor_units.sql",
+      "introducedBy": "4fc88645f511d4c70aca2b969ec412081664978d"
+    },
+    {
+      "id": "2026-10-12_ledger_posting_integrity",
+      "path": "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql",
+      "introducedBy": "0fc94499f6a9e007abc990be8cff8a32cacad19b"
+    },
+    {
+      "id": "2026-10-12_checkout_line_snapshot_fixed",
+      "path": "tdf-hq/sql/2026-10-12_checkout_line_snapshot_fixed.sql",
+      "introducedBy": "ba43d3f9537cde1a2993aaaf7520b30f8985255a"
+    },
+    {
+      "id": "2026-10-13_checkout_policy_terms_identity",
+      "path": "tdf-hq/sql/2026-10-13_checkout_policy_terms_identity.sql",
+      "introducedBy": "4880a5cd8497a822d23adf08de76d9b4c90bb862"
+    },
+    {
+      "id": "2026-10-15_checkout_terms_historical_identity",
+      "path": "tdf-hq/sql/2026-10-15_checkout_terms_historical_identity.sql",
+      "introducedBy": "2af5a662f3e7acca133e154d0c890114f3436177"
+    },
+    {
+      "id": "2026-10-16_ledger_entry_write_fence",
+      "path": "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql",
+      "introducedBy": "493d40252f48643a14ce47c5328a13844f3b837f"
+    },
+    {
+      "id": "2026-10-22_checkout_terms_history_append_only",
+      "path": "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
+      "introducedBy": "5f32d4054a35bc76e7505ed4f83f1b6480130d25"
+    },
+    {
+      "id": "2026-10-24_ledger_guard_namespace",
+      "path": "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql",
+      "introducedBy": "9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391"
+    },
+    {
+      "id": "2026-10-25_directory_saved_search_parity",
+      "path": "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql",
+      "introducedBy": "eb2f71d62740783369a6eb2a6d35fc024484cb71"
+    },
+    {
+      "id": "2026-10-25_ledger_posted_header",
+      "path": "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+      "introducedBy": "5cc26ad46c958a029ec4539c60cc1ca77fec1d01"
+    },
+    {
+      "id": "2026-10-16_provider_domain_payment_binding",
+      "path": "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+      "introducedBy": "456be073c944dd3d76eb9e3c2169fe7fbb4041ef"
+    },
+    {
+      "id": "2026-10-25_event_memory_invitations",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_invitations.sql",
+      "introducedBy": "18690e78a9ce97255529bade31c5ce2250b7ce22"
+    },
+    {
+      "id": "2026-10-25_event_memory_source_moderation",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql",
+      "introducedBy": "3bb05ecd777a7243da6d60af0717044b15b59c41"
+    },
+    {
+      "id": "2026-10-25_event_memory_source_authorization",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_source_authorization.sql",
+      "introducedBy": "c6ecae133a93b6bab93c84cee4d72290f9e28982"
+    },
+    {
+      "id": "2026-10-25_event_memory_source_permission_locks",
+      "path": "tdf-hq/sql/2026-10-25_event_memory_source_permission_locks.sql",
+      "introducedBy": "baab857f085b74f333c9f5d29e31306072fbc496"
+    },
+    {
+      "id": "2026-10-31_api_token_session_expiry",
+      "path": "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql",
+      "introducedBy": "8187065f81fad94677c8ba27760ab2cb74f58f79"
+    },
+    {
+      "id": "2026-11-01_artist_tip_idempotency",
+      "path": "tdf-hq/sql/2026-11-01_artist_tip_idempotency.sql",
+      "introducedBy": "31f60cee197da0f5376de9f5165bac6925a86f13"
+    },
+    {
+      "id": "2026-11-01_social_sync_account_delivery_designation",
+      "path": "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql",
+      "introducedBy": "31f60cee197da0f5376de9f5165bac6925a86f13"
+    },
+    {
+      "id": "2026-11-01_domo_cancellation_policy",
+      "path": "tdf-hq/sql/2026-11-01_domo_cancellation_policy.sql",
+      "introducedBy": "31f60cee197da0f5376de9f5165bac6925a86f13"
+    },
+    {
+      "id": "2026-11-02_domo_quote_cancellation",
+      "path": "tdf-hq/sql/2026-11-02_domo_quote_cancellation.sql",
+      "introducedBy": "81a5a6e26f7b0a86c44e6bf5d0e30c654ae7c5bd"
+    },
+    {
+      "id": "2026-11-02_course_checkout_deposit_policy",
+      "path": "tdf-hq/sql/2026-11-02_course_checkout_deposit_policy.sql",
+      "introducedBy": "81a5a6e26f7b0a86c44e6bf5d0e30c654ae7c5bd"
+    },
+    {
+      "id": "2026-11-02_directory_claim_revocation",
+      "path": "tdf-hq/sql/2026-11-02_directory_claim_revocation.sql",
+      "introducedBy": "b0be7aabb94222619d72aa074307b8f17f083aef"
+    },
+    {
+      "id": "2026-11-02_identity_party_reference_refresh",
+      "path": "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
+      "introducedBy": "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f"
+    },
+    {
+      "id": "2026-11-04_domo_quote_deposit_policy_validator",
+      "path": "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
+      "introducedBy": "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5"
+    },
+    {
+      "id": "2026-11-04_directory_review_status_without_pending",
+      "path": "tdf-hq/sql/2026-11-04_directory_review_status_without_pending.sql",
+      "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
+    },
+    {
+      "id": "2026-11-04_session_invoice_issue",
+      "path": "tdf-hq/sql/2026-11-04_session_invoice_issue.sql",
+      "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
+    },
+    {
+      "id": "2026-11-04_contract_store",
+      "path": "tdf-hq/sql/2026-11-04_contract_store.sql",
+      "introducedBy": "1976242a72541ecfff90a54c72659df42f7bd085"
+    },
+    {
+      "id": "2026-11-04_content_storage",
+      "path": "tdf-hq/sql/2026-11-04_content_storage.sql",
+      "introducedBy": "40c1b42da3040b899af077cbc5be839e1c0a0abc"
+    },
+    {
+      "id": "2026-11-04_content_storage_drive",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_drive.sql",
+      "introducedBy": "62f17666954f0f3451aec8164562b20a85aefe1d"
+    },
+    {
+      "id": "2026-11-04_content_storage_deletion",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_deletion.sql",
+      "introducedBy": "f26654354f947e46aad3a41ce2180cdf283a33e0"
+    },
+    {
+      "id": "2026-11-04_content_storage_accounting",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_accounting.sql",
+      "introducedBy": "f26654354f947e46aad3a41ce2180cdf283a33e0"
+    },
+    {
+      "id": "2026-11-04_content_storage_delete_capacity",
+      "path": "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql",
+      "introducedBy": "93068dd90898bce4c4d3e482dad4366a12124029"
+    },
+    {
+      "id": "2026-10-20_video_campaigns",
+      "path": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+      "introducedBy": "4b84238abb4ca17c6aaa9902e3bec16a1cc3daa5"
+    },
+    {
+      "id": "2026-11-06_video_campaign_identity_references",
+      "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+      "introducedBy": "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
     },
     {
       "id": "2026-10-13_apple_sign_in_policy",

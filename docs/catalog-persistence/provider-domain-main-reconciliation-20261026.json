@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "ledgerParent": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+  "providerParent": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+  "currentDecisionId": "2634b239375f2ad309ba",
+  "currentManifestCount": 223,
+  "preservedPrefixCount": 222,
+  "preservedPrefixCanonicalSha256": "3de55b856b5d3d21671a9449be31f6169c93f004946a0e0752b784b4d5a0922f",
+  "mainManifestDecision": {
+    "id": "6ff395b6131079017c9d",
+    "classification": "security-system-registry",
+    "disposition": "retain-reviewed-deployment-manifest",
+    "specializedModel": "production migration manifest and applied migration ledger",
+    "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+    "justification": "The 222-entry deployment registry preserves the complete 221-entry protected main e938c72ba4b87010214f6838f06bfac45a0f45c0 prefix, including saved-alert migration eb2f71d62740783369a6eb2a6d35fc024484cb71, and appends only the posted-header guard introduced by 5cc26ad46c958a029ec4539c60cc1ca77fec1d01. Both independently developed 221-entry predecessor reviews are retained with exact canonical hashes and source references. Historical SQL and introduction SHAs are unchanged. This is a technical source review; current-head CI, independent PR approval and production authorization remain separate requirements.",
+    "reviewed": true,
+    "reviewMethod": "successor-of-reviewed-decisions",
+    "reviewBatch": "ledger-header-main-technical-review-20261025",
+    "sourceReviewReferences": [
+      {
+        "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+        "sourceEntry": {
+          "id": "3f336173e03f10fc023c"
+        },
+        "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+        "sourceEntry": {
+          "id": "2b073f20afd2f3798b1e"
+        },
+        "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+        "sourceEntry": {
+          "id": "a1eb1e750e7543b88fe1"
+        },
+        "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "5114fe95ac8e328b58162a8dcae5c9015a47ce09",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+        "sourceEntry": {
+          "id": "b7cc47848f3f9882770f"
+        },
+        "sourceEntryCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "01854565dac5ea07ff22ad6ea7ebc3c4a2e981fc",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "ba964c442ac6b466d5f0e896242023990fdc12709b7a764215679b1ee6186778",
+        "sourceEntry": {
+          "id": "c94cd70c1272ec9ede1b"
+        },
+        "sourceEntryCanonicalSha256": "409d5381c7051905c3e6b6ad7acd2e151c2d2e6787481ed0ab45d3be987b1fd4",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "55915aedf0e4e356a5bca766cdc09b7077f9d0d567523b4d496ad9c5bacb09f0",
+        "sourceEntry": {
+          "id": "8229b8202552298c955e"
+        },
+        "sourceEntryCanonicalSha256": "12f80527fcf53a3e23afc774396b08573644a371eb91e1cf1b8f854bb049651f",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "185fdfe7e3d12d10d696d3fde7c73051d70fabc9",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "881e0be06afb973c1200beb4213e72ae4bad53478e3fab280189c650a55d3b75",
+        "sourceEntry": {
+          "id": "9ada14767bee1662f97d"
+        },
+        "sourceEntryCanonicalSha256": "6528ab5a8a23254d2e4ad4222e392f7f8f052b9f2818ef6e9eb8fc3a461a7003",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      }
+    ],
+    "evidence": {
+      "file": "scripts/production-migrations.json",
+      "line": 3,
+      "kind": "json-array",
+      "name": "migrations",
+      "valueCount": 222
+    },
+    "previousDecisionReferences": {
+      "document": "docs/catalog-persistence/ledger-header-main-reconciliation-20261025.json",
+      "mainId": "8229b8202552298c955e",
+      "headerId": "9ada14767bee1662f97d"
+    }
+  },
+  "mainDecisionCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+  "providerManifestDecision": {
+    "classification": "genuine-technical-constant",
+    "disposition": "explicit-allowlist",
+    "specializedModel": "technical_constant_allowlist",
+    "priority": "P1-integrity",
+    "risk": "Migration order, immutable ancestry and checksums govern persisted consent and payment state.",
+    "justification": "Ordered209 manifest retains the exact previous208 entries and appends provider-domain payment binding. Prior SQL bytes and introduction commits are preserved. The full209 batch applied and replayed on disposable PostgreSQL16.15; the independent provider/domain matrix and witnessed concurrent retry controls passed. This technical registry classification does not authorize production application or provider activation.",
+    "reviewed": true,
+    "evidence": {
+      "file": "scripts/production-migrations.json",
+      "line": 3,
+      "kind": "json-array",
+      "name": "migrations",
+      "valueCount": 209,
+      "consumerCount": 75,
+      "exactDuplicateIds": [],
+      "similarCandidateIds": []
+    },
+    "id": "a70a9a4dd05ce44e950b",
+    "reviewMethod": "successor-of-reviewed-decisions",
+    "reviewBatch": "provider-domain-binding-20261016",
+    "supersededReviews": [
+      {
+        "sourceRevision": "2f622a8a24c87feff6a6bdc4286c42ca2f539c64",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "d894a053ba750fca305b23662422c14d5dd3568465ff933c4fc151680d63d475",
+        "sourceEntry": {
+          "id": "b925d71997a7d98258c3"
+        },
+        "sourceEntryCanonicalSha256": "ac4a765b99a58d3822b254948aa19ff4266f0cc6fe23c1e67fc37000a41c1696",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+        "reason": "Complete source review preserved in immutable ancestor; no recursive copying."
+      },
+      {
+        "sourceRevision": "9d7551353a7c278cd0937eb57d04a94241318d42",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "2c7ef4935c5cdc4399d38ab143423edcdcc4d8b64e6affc54604f0a1ccab3bef",
+        "sourceEntry": {
+          "id": "627709d9858d72128d2f"
+        },
+        "sourceEntryCanonicalSha256": "5ad0540b85150ab309aaff528bd28daff3390c32e6e69a5a3d0765624921a743",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+        "reason": "Retain exact previous 208-entry technical classification as provenance; current manifest appends one additive guard."
+      }
+    ]
+  },
+  "providerDecisionCanonicalSha256": "018a1dc08aafe97b3af2257fe2ad24bac9a8f47f724975df0eec07e729ba8058",
+  "sourceReviewReferences": [
+    {
+      "sourceRevision": "f3e3217ac12a04be2a221ee6ac8bea67875d46c5",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "529f4972e422295562c0a67e1101346a97b2549ee0544072b69476c80edd0503",
+      "sourceEntry": {
+        "id": "6ff395b6131079017c9d"
+      },
+      "sourceEntryCanonicalSha256": "866eef0dde46336e216336f13bdf9f83570314d2c17b9cf93f354de0f8ad9404",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    },
+    {
+      "sourceRevision": "bba0edc5e1ce76f0f2e62f4da698d88f85223dbd",
+      "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+      "sourceFileSha256": "be3b04226bda54e2dd6abdaddd434039ef7b457defe59942ec49dbed98013a73",
+      "sourceEntry": {
+        "id": "a70a9a4dd05ce44e950b"
+      },
+      "sourceEntryCanonicalSha256": "018a1dc08aafe97b3af2257fe2ad24bac9a8f47f724975df0eec07e729ba8058",
+      "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+    }
+  ],
+  "scope": "The 223-entry deployment registry preserves the complete 222-entry ledger candidate f3e3217ac12a04be2a221ee6ac8bea67875d46c5 prefix, including all221 protected-main migrations and the original posted-header migration, and appends only the provider/domain admission migration introduced by456be073c944dd3d76eb9e3c2169fe7fbb4041ef. Historical SQL bodies and introduction ancestors are unchanged. Both222-entry and209-entry source reviews are retained by canonical hashes. This technical review grants no provider activation, production execution or waiver of current-head CI, independent review and protected merge admission."
+}

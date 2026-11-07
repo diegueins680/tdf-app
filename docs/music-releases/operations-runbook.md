@@ -11,6 +11,24 @@ SQL/API/UI requieren despliegue coordinado con ingesta pausada; rollback
 restaura el comportamiento vulnerable y exige mantenerla pausada. Ver
 [procedimiento, atomicidad y límites](playback-identity.md).
 
+## Inventario antes de activar (observación 2026-10-26)
+
+El [inventario agregado de sólo lectura](live-catalog-inventory-2026-10-26.md)
+observó cero assets/lanzamientos/versiones/jobs/uploads canónicos y 65 filas
+legadas, con ocho referencias primarias no vacías. Esas referencias no prueban
+que sean Spotify, audio nativo, archivos disponibles ni contenido autorizado.
+Los ceros de integridad son vacuos con el catálogo vacío. No se inspeccionó
+storage ni se publicaron/importaron archivos.
+
+La captura de runtime separada conserva API `4dac175`, 213 migraciones y las cinco
+banderas musicales apagadas; el manifiesto de main tiene 222 entradas y no se
+aplicó como parte del inventario. Antes de activar una cohorte, conservar revisión
+privada de propietario/derechos, vínculos legados estables, importación privada
+por defecto, compatibilidad de despliegue y una prueba autorizada real de carga a
+reproducción. No ejecutar grants, jobs, copias de originales o publicación para
+convertir un contador desconocido en cero. Ver la evidencia y los pendientes en
+la guía enlazada; la captura no sustituye las puertas operativas de abajo.
+
 ## Preparación
 
 1. Aplicar la migración aditiva en staging y comprobar `music_%`/triggers/flags.
@@ -136,9 +154,10 @@ No editar un asset ready. Verificar causa y checksum del original. Para un fallo
 1. Registrar reporte/evidencia desde el release; personal autorizado hace triage con notas y puede marcarlo `actioned` suspendiendo atómicamente la versión publicada.
 2. Para retirada programada, fijar UTC + zona original y `takedown_scheduled`.
 3. `music_withdraw_due` retira una sola vez, limpia la versión pública y deja historial.
-4. La vista pública y las nuevas firmas dejan de autorizar al suspender/retirar. Purgar caché CDN y búsqueda/feed; una firma ya emitida puede vivir hasta cinco minutos.
-5. Si hubo entrega DDEX, generar takedown al mismo receptor después de una entrega inicial válida.
-6. Conservar máster/evidencia según política legal; no borrarlos como parte del hide público.
+4. Cada candidata se publica o retira por separado (migración `2026-10-11_music_publication_isolation`): una publicación que falla por una causa no transitoria deja la versión en `suspended` con un evento `publication_failed` (SQLSTATE y mensaje) en `music_release_audit_event`, y las demás candidatas se publican igual. Publicar una versión retira toda otra versión viva del lanzamiento y reabre un lanzamiento retirado. Revisa las versiones `suspended` con ese evento antes de reaprobarlas.
+5. La vista pública y las nuevas firmas dejan de autorizar al suspender/retirar. Purgar caché CDN y búsqueda/feed; una firma ya emitida puede vivir hasta cinco minutos.
+6. Si hubo entrega DDEX, generar takedown al mismo receptor después de una entrega inicial válida.
+7. Conservar máster/evidencia según política legal; no borrarlos como parte del hide público.
 
 ## Cuarentena y huérfanos
 

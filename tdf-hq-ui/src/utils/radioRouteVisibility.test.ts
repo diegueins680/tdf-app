@@ -1,8 +1,14 @@
 import { shouldHideRadioForRoute, shouldRenderRadioWidget } from './radioRouteVisibility';
 
 describe('shouldHideRadioForRoute', () => {
+  it('does not initially mount a competing audio client over the video launch editor', () => {
+    expect(shouldRenderRadioWidget('/mi-artista/campanas', '', true, false)).toBe(false);
+    expect(shouldRenderRadioWidget('/mi-artista/campanas', '#radio', true, false)).toBe(false);
+    expect(shouldRenderRadioWidget('/a/liquid-paper-girl', '', true, false)).toBe(false);
+    expect(shouldRenderRadioWidget('/artista/liquid-paper-girl', '', true, false)).toBe(false);
+  });
   it.each(['/musica', '/musica/single-propio', '/musica/biblioteca'])(
-    'keeps the legacy radio unmounted on canonical audio route %s, even with #radio', (path) => {
+    'does not initially open the radio on canonical audio route %s, even with #radio', (path) => {
       expect(shouldRenderRadioWidget(path, '', true, false)).toBe(false);
       expect(shouldRenderRadioWidget(path, '#radio', true, false)).toBe(false);
     },

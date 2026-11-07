@@ -1,0 +1,18 @@
+{"case": "entry-first", "control": false, "isolation": "READ COMMITTED", "operation": "insert", "outcome": "23514", "overlap": true, "rollback": false, "state": "draft|1"}
+{"case": "entry-first", "control": false, "isolation": "READ COMMITTED", "operation": "insert", "outcome": "23514", "overlap": false, "rollback": false, "state": "draft|1"}
+{"case": "entry-first", "control": false, "isolation": "READ COMMITTED", "operation": "update", "outcome": "23514", "overlap": true, "rollback": false, "state": "draft|1"}
+{"case": "entry-first", "control": false, "isolation": "READ COMMITTED", "operation": "update", "outcome": "23514", "overlap": false, "rollback": false, "state": "draft|1"}
+{"case": "entry-first", "control": false, "isolation": "READ COMMITTED", "operation": "delete", "outcome": "23514", "overlap": true, "rollback": false, "state": "draft|1"}
+{"case": "entry-first", "control": false, "isolation": "READ COMMITTED", "operation": "delete", "outcome": "23514", "overlap": false, "rollback": false, "state": "draft|1"}
+{"case": "post-first", "isolation": "READ COMMITTED", "outcome": "23514", "state": "posted|0"}
+{"case": "entry-first", "control": false, "isolation": "READ COMMITTED", "operation": "insert", "outcome": "posted after entry rollback", "overlap": true, "rollback": true, "state": "posted|0"}
+Traceback (most recent call last):
+  File "/workspace/scratch/87d34f5fc53e/tdf-app/scripts/__tests__/ledger-posting-snapshot.py", line 223, in <module>
+    run(args.negative_controls)
+  File "/workspace/scratch/87d34f5fc53e/tdf-app/scripts/__tests__/ledger-posting-snapshot.py", line 183, in run
+    entry_first(isolation, operation, overlap)
+  File "/workspace/scratch/87d34f5fc53e/tdf-app/scripts/__tests__/ledger-posting-snapshot.py", line 148, in entry_first
+    require(code != 0 and expected in error and actual == 'draft|1', (code, error, actual))
+  File "/workspace/scratch/87d34f5fc53e/tdf-app/scripts/__tests__/ledger-posting-snapshot.py", line 31, in require
+    raise AssertionError(detail)
+AssertionError: (0, '', 'posted|1')

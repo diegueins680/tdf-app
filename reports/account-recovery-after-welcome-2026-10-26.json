@@ -1,0 +1,160 @@
+{
+  "observedAt": "2026-10-26T07:03:37.936581+00:00",
+  "protectedMain": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "executionSource": "5768d8fa227163c3aca183b366726105f53b5a5f",
+  "purpose": "Qualify composed public welcome/logout/privacy and localized recovery against actual protectedmain.",
+  "scope": "Real synthetic local nativeAPI/PG221/SMTP and fresh optimized frontend; no real people/provider/device or production business action.",
+  "requirements": 144,
+  "allMainNormativeFieldsPreserved": true,
+  "onlyRequirementMappingExtension": "AUTH-ENTRY-002",
+  "freshCombinedUnitTests": {
+    "passed": 175,
+    "suites": 13,
+    "lint": "PASS",
+    "typescript": "PASS",
+    "scope": "Own auth/reset/logout/entry controls together with actualmain welcome components; not a new whole-suite execution."
+  },
+  "previousWholeSuite": {
+    "source": "72de75db2e7464f1be8b8274836a8a522c93f4e1",
+    "passed": 3438,
+    "suites": 305,
+    "scope": "Original pre-welcome execution retained. Fresh final-head hosted whole-suite remains required."
+  },
+  "strictCatalog": {
+    "candidates": 1330,
+    "unreviewed": 0,
+    "stale": 0,
+    "jsonCsvCountsMatch": true
+  },
+  "freshBundleBudget": {
+    "source": "5768d8fa227163c3aca183b366726105f53b5a5f",
+    "script": "tdf-hq-ui/scripts/check-initial-bundle.mjs",
+    "unmodifiedCanonicalScriptSha256": "2bf25db2328e21e4ee5f22d372b0d3886d8ff3ae876a7a7687531905347e148c",
+    "actualOptimizedRuntimeBuild": "/private/tmp/tdf-account-recovery-20261026-j27c24lj/build",
+    "preloads": 5,
+    "initialGzipBytes": 335850,
+    "status": "PASS unmodified canonical budget and secret scan against exact fresh local API-bound artifact; not a second compilation"
+  },
+  "native": {
+    "startedAt": "2026-10-26T06:57:24.660020+00:00",
+    "source": "5768d8fa227163c3aca183b366726105f53b5a5f",
+    "tree": "1e8561ef14087184e1d236a7025aa9b99a9cbae2",
+    "binarySource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+    "sourceStatus": [],
+    "steps": [
+      {
+        "step": "compile-loopback-bind-adapter",
+        "exitCode": 0
+      },
+      {
+        "step": "deny-nonloopback-egress",
+        "exitCode": 0
+      },
+      {
+        "step": "init",
+        "exitCode": 0
+      },
+      {
+        "step": "start",
+        "exitCode": 0
+      },
+      {
+        "step": "create",
+        "exitCode": 0
+      },
+      {
+        "step": "full-schema",
+        "exitCode": 0
+      },
+      {
+        "step": "build-web",
+        "exitCode": 0
+      },
+      {
+        "step": "browser",
+        "exitCode": 0
+      },
+      {
+        "step": "drop",
+        "exitCode": 0
+      },
+      {
+        "step": "stop",
+        "exitCode": 0
+      }
+    ],
+    "cleanup": {
+      "runtimesStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "status": "VERIFIED-synthetic-local-only",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "mailScope": "Actual native MIME generation/SMTP transport to non-relaying loopback synthetic inbox; no real mailbox, TLS/provider/deliverability claim.",
+    "harnessSha256": {
+      "run.py": "e67985de9ba266d2762d6a8d0550eb1f9b49803348ae42470e3c9bbcd41504df",
+      "smtp.py": "16c60c50bcb83b440e4549a170db2a523a1e2a6491b6a32a3d78a030916f6209",
+      "browser.mjs": "37b84eee2e8d329f878fa27b8f20850dffb5f6df5b2d7972c8f62cf3fee778f9",
+      "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+    },
+    "migrations": 221,
+    "frontend": {
+      "entry": "/assets/index-CVMeDWT2.js",
+      "sha256": "775a0b404da494f269d82bb12f715d1fddcdfa7d69052fcaa60207dc5189ddcf",
+      "sourceVerified": true,
+      "freshCompilation": true
+    },
+    "networkIsolation": {
+      "fourListenersLoopbackOnly": true,
+      "lanRequestsDenied": true,
+      "nonLoopbackEgressDeniedWithPositiveControl": true
+    },
+    "actualVersion": {
+      "buildTime": "2026-10-26T02:41:57Z",
+      "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "journey": {
+      "scope": "Real isolated native API/PostgreSQL and rendered optimized web with local synthetic SMTP. No real email/provider/device/production claim.",
+      "checks": {
+        "protectedIntentPreserved": true,
+        "uiSignupAndOriginalIntent": true,
+        "revokedSessionReturnsToLoginWithIntent": true,
+        "nativeLocalizedMailPreservesIntent": true,
+        "tokenRemovedFromVisibleUrl": true,
+        "expiredResetRejectedInUi": true,
+        "resetUiReturnsToOriginalIntent": true,
+        "oldPasswordRejected": true,
+        "newPasswordAuthenticatesSameParty": true,
+        "resetTokenSingleUse": true,
+        "earlierResetStillRejected": true,
+        "oldSessionRejected": true,
+        "activePriorSessionRevokedByReset": true,
+        "singlePersistedCredential": true
+      },
+      "blockedExternal": 10,
+      "blockedMutations": 0,
+      "blockedMutationPaths": [],
+      "pageErrors": 0,
+      "partyId": 4,
+      "status": "PASS"
+    },
+    "finishedAt": "2026-10-26T06:58:34.111049+00:00"
+  },
+  "replayFiles": {
+    "run.py": "reports/account-recovery-evidence-20261026/run.py",
+    "smtp.py": "reports/account-recovery-evidence-20261026/smtp.py",
+    "browser.mjs": "reports/account-recovery-after-welcome-evidence-20261026/browser.mjs",
+    "loopback-bind.c": "reports/account-recovery-evidence-20261026/loopback-bind.c"
+  },
+  "limits": [
+    "SMTP acceptance is local only; no real inbox/provider/TLS claim.",
+    "No ordinary session TTL or full ST-001/physical mobile qualification.",
+    "Native executable retains actualfe179 identity; frontend5768 is fresh.",
+    "Full implementation/refinement and deployment restrictions remain unchanged."
+  ],
+  "delivery": "Final containing PR head must retain exact material5768code and pass fresh CI/independent current-head review/native admission before normal merge; no production recovery claim."
+}

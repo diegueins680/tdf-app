@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
+import { alloyControls, validateAlloyCoverage } from '../lib/alloy-controls.mjs';
 const runner = 'scripts/test-event-raci-editor-context-migration.sh';
 test('editor context tests cannot target an external database', () => {
   for (const args of [['--database-url=unused'], ['extra'], ['', 'extra']]) {
@@ -19,7 +20,14 @@ test('editor context formal controls, CI and migration order remain mandatory', 
   for (const [suffix, invariant] of [['Early','PrivateOptions'],['Candidate','EligibleOptions'],['Mixed','CoherentContext']]) {
     assert.ok(gate.includes(`expect_counterexample RaciEditorContext${suffix}.cfg ${invariant}`));
   }
-  assert.match(gate, /for command_index in 0 1 2 3 4 5; do/);
+  assert.match(gate, /node "\$\{SCRIPT_DIR\}\/verify-alloy-controls\.mjs" --output/);
+  const taskRead = alloyControls.find(entry => entry.model === 'TaskReadStructure.als');
+  assert.ok(taskRead, 'Task read Alloy model remains mandatory');
+  const commands = validateAlloyCoverage(readFileSync('formal/event-operations/TaskReadStructure.als', 'utf8'), taskRead.controls);
+  for (const name of ['CandidateRequiresCurrentManager', 'CandidateIsTaskScoped']) {
+    assert.ok(commands.some(command => command.type === 'check' && command.name === name));
+    assert.ok(taskRead.controls.some(control => control[1] === name));
+  }
   const ci = readFileSync('.github/workflows/event-operations-formal.yml', 'utf8');
   assert.match(ci, /run: sh scripts\/test-event-raci-editor-context-migration.sh/);
   assert.doesNotMatch(ci, /continue-on-error/);

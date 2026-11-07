@@ -33,6 +33,7 @@ function FanProfileEditorHarness({
         { id: 'genre-soul', name: 'Soul' },
         { id: 'genre-indie', name: 'Indie' },
       ]}
+      profileReady
       profileDraft={draft}
       saving={false}
       setProfileDraft={setDraft}

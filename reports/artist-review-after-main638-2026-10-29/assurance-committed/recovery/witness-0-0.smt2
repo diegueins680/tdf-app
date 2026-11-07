@@ -1,0 +1,23 @@
+(set-option :timeout 30000)
+(set-logic QF_BV)
+(declare-fun issued () (_ BitVec 64))
+(declare-fun expires () (_ BitVec 64))
+(declare-fun current () (_ BitVec 64))
+(assert (and (= issued #x0000000000000000)
+     (= expires #x0000000000000384)
+     (= current #x0000000000000000)
+     (bvsle #x0000000000000000 issued)
+     (bvsle issued current)
+     (bvslt current expires)
+     (= #b00000000000000000000000000000000000000000000000000000001110000100
+        (bvsub ((_ sign_extend 1) expires) ((_ sign_extend 1) issued)))
+     (bvsle #x0000000000000000 issued)
+     (bvsgt expires issued)
+     (= #b00000000000000000000000000000000000000000000000000000001110000100
+        (bvsub ((_ sign_extend 1) expires) ((_ sign_extend 1) issued)))
+     (bvsge (bvsub ((_ sign_extend 1) expires) ((_ sign_extend 1) issued))
+            #b11000000000000000000000000000000000000000000000000000000000000000)
+     (bvsle (bvsub ((_ sign_extend 1) expires) ((_ sign_extend 1) issued))
+            #b00111111111111111111111111111111111111111111111111111111111111111)))
+
+(check-sat)

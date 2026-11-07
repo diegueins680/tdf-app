@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import { useTranslation } from 'react-i18next';
+import { Link as RouterLink } from 'react-router-dom';
 import { Fans } from '../api/fans';
 import { formatDateForUser } from '../utils/formatters';
 
@@ -109,14 +110,24 @@ export default function ArtistFansList({ artistId }: ArtistFansListProps) {
         {fans.map((fan) => (
           <Stack
             key={fan.afFanId}
+            component={RouterLink}
+            to={`/perfil/${fan.afFanId}`}
+            aria-label={fan.afDisplayName}
             direction="row"
             spacing={2}
             alignItems="center"
             sx={{
               p: 1.5,
               borderRadius: 2,
+              color: 'inherit',
+              textDecoration: 'none',
               '&:hover': {
                 bgcolor: 'action.hover',
+              },
+              '&:focus-visible': {
+                outline: '2px solid',
+                outlineColor: 'primary.main',
+                outlineOffset: 2,
               },
             }}
           >

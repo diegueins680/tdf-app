@@ -1,0 +1,227 @@
+{
+  "observedAt": "2026-10-26T05:52:10.101341+00:00",
+  "scope": "Synthetic local qualification of the frozen current-main preparation; not protected integration, deployment or real invitations",
+  "sourceRevision": "262295679df492dde850333779db431132092993",
+  "parents": [
+    "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+    "1c9c833cc1ba62b47822fca3c20e14e86cf28daa"
+  ],
+  "protectedMainMigrationPrefix": 221,
+  "combinedMigrations": 225,
+  "protectedNormativeObjectsExact": 142,
+  "combinedRequirements": 146,
+  "protectedSqlFilesByteExact": 405,
+  "manifestRegistryId": "cff15f30aa13965e5729",
+  "registryPolicy": "Classification/disposition match protected main; previous224 and concurrent221 reviews retained exactly with frozen-source hashes",
+  "build": {
+    "status": "PASS",
+    "ghc": "9.10.3",
+    "resolver": "lts-24.42",
+    "cleanBuildCheckout": true,
+    "actualVersion": {
+      "buildTime": "2026-10-26T05:36:20Z",
+      "commit": "262295679df492dde850333779db431132092993",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "binarySha256": "f01ef34b75f1f1c1da4a41cdbb541de9b620fd4c1f4b24aba64025e7c1b6e17d",
+    "platform": "Darwin x86_64, not a deployed Linux image"
+  },
+  "hspec": {
+    "status": "PASS_WITH_PENDING",
+    "examples": 4041,
+    "failures": 0,
+    "pending": 21,
+    "note": "Pending external integration sentinels are not passed cases"
+  },
+  "musicNonempty": {
+    "status": "PASS",
+    "groups": {
+      "domain": 25,
+      "content": 10,
+      "ddex": 22,
+      "storage": 4
+    }
+  },
+  "web": {
+    "status": "PASS",
+    "lint": "PASS",
+    "types": "PASS",
+    "tests": 3475,
+    "suites": 308,
+    "productionBuild": "PASS",
+    "initialJsGzipBytes": 335236,
+    "preloads": 5
+  },
+  "repoQuality": "PASS",
+  "lineage": {
+    "status": "PASS",
+    "tests": 8,
+    "allEarlierAssertionsPreserved": true,
+    "exactProtected221Prefix": true,
+    "exactOriginalFourMemoryEntries": true,
+    "stale221and224Rejected": true
+  },
+  "catalog": {
+    "status": "PASS",
+    "formats": [
+      "JSON",
+      "CSV"
+    ],
+    "candidates": 1336
+  },
+  "sourceAdmission": {
+    "main1c9": "PASS",
+    "source31c": "PASS"
+  },
+  "sourcePostgres": {
+    "status": "PASS",
+    "cleanSource": "262295679df492dde850333779db431132092993",
+    "migrations": 225,
+    "permissionInterleavings": 8,
+    "nullOrganizerDenied": true,
+    "guardedSuccessorsAndRollback": "PASS"
+  },
+  "invitationsPostgres": {
+    "status": "PASS",
+    "boundedPolicyStates": 160,
+    "negativeControls": 3,
+    "completeRefinement": "UNPROVEN"
+  },
+  "httpBrowser": {
+    "status": "PASS",
+    "requests": 120,
+    "groups": 17,
+    "sourceWorktreeDirty": true,
+    "dirtyScope": "Only two owned dependency links; tracked source clean",
+    "runtimeHashesMatched": 24,
+    "receipt": "http-protected-main-1c9-results.json",
+    "desktopAndPixel7Emulation": true,
+    "physicalDevice": false,
+    "externalProviderCalls": 0,
+    "runtimesStopped": true,
+    "ownedDatabaseRemoved": true
+  },
+  "httpClean": {
+    "status": "PASS",
+    "requests": 120,
+    "groups": 16,
+    "sourceWorktreeDirty": false,
+    "runtimeHashesMatched": 11,
+    "receipt": "http-clean-protected-main-1c9-results.json",
+    "runtimesStopped": true,
+    "ownedDatabaseRemoved": true
+  },
+  "directory": {
+    "initialAttempt": {
+      "status": "FAIL",
+      "locale": "C",
+      "cause": "Existing lower() did not fold uppercase accented U; real community-search assertion failed before HTTP"
+    },
+    "unicodeAttempt": {
+      "status": "PASS",
+      "locale": "en_US.UTF-8",
+      "requests": 107,
+      "actualCompiledCommit": "262295679df492dde850333779db431132092993",
+      "exactRollbackReplayPreservesRowsAndLedger": true,
+      "syntheticPlanDocuments": 4000,
+      "timings": "Descriptive only; no production performance or conversion claim"
+    },
+    "productionReadOnlyLocale": {
+      "observedAt": "2026-10-26T05:50:35Z",
+      "collation": "en_US.utf8",
+      "ctype": "en_US.utf8",
+      "uppercaseAccentFold": "lúna",
+      "encoding": "UTF8",
+      "productionWritten": false
+    },
+    "assertionsChangedForRetry": false,
+    "appliedSqlChanged": false
+  },
+  "compiledApi": {
+    "status": "observed-not-conformance-approved",
+    "operations": 913,
+    "rawMounts": 2,
+    "undocumented": 396,
+    "documentedWithoutTypedRoute": 25,
+    "statusDifferences": 8,
+    "competing": 0,
+    "declaredSnapshotMatches": true
+  },
+  "priorFinancialRegressions": {
+    "retainedSource": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+    "note": "Prior ledger/provider regressions retain their original identity; no unchanged financial SQL was rewritten and no old executable substitutes for this fresh build"
+  },
+  "hostedSourceCi": {
+    "source": "31c16bffeec5c4b27edf95f1cb6b62226534fcd6",
+    "principal": 40270126994,
+    "realRaci": 40270127036,
+    "status": "SUCCESS",
+    "scope": "Only31c; not hosted CI of this preparation"
+  },
+  "native": {
+    "commit": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+    "qualification": "Unchanged independent653tests/98suites and exact MobileValidate40248248167; no new native/device acceptance"
+  },
+  "release": {
+    "protectedRootIntegrated": false,
+    "productionDeployed": false,
+    "productionFeatureVerified": false,
+    "productionWritten": false,
+    "independentSourceReview": "PENDING",
+    "realInvitationAttempts": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0,
+    "eligibleConsented": null,
+    "excluded": null
+  },
+  "localLogSha256": {
+    "stack": {
+      "file": "tdf-event-memory-1c9-stack-tests-v1.log",
+      "sha256": "bfce469701d8d1b50a290af031f36d28e08e740aee4bfd472cf708ebf3450053"
+    },
+    "web": {
+      "file": "tdf-event-memory-1c9-ui-quality-v1.log",
+      "sha256": "66a16b27f7a88e0971279a994c9b61bd358a379a31eb8308b250a0d8d60be4e7"
+    },
+    "repo": {
+      "file": "tdf-event-memory-1c9-repo-quality-v1.log",
+      "sha256": "f5c691dac0fe7be0003028869771100ef90aa7392fe754efb53ba58a82d9d1ff"
+    },
+    "history": {
+      "file": "tdf-event-memory-1c9-catalog-history-v3.log",
+      "sha256": "13c93564b3fb3c8d644fbdd9cbb8fc3c7c69bbf480a2b5e2df91350d2cecdf65"
+    },
+    "sourceSql": {
+      "file": "tdf-event-memory-262-source-sql-v1.log",
+      "sha256": "c290482326adf2f90b86bb05e90f86b41b18e427c00aa7c0f66baea94e084ff0"
+    },
+    "invitations": {
+      "file": "tdf-event-memory-262-invitations-v1.log",
+      "sha256": "6d6969e9068aac7a5e5d278a791503f4520af9d9aa9e84599b0c4268b34f6032"
+    },
+    "music": {
+      "file": "tdf-event-memory-262-music-tests-v1.log",
+      "sha256": "b78a7abe0768e485a78d4a3fbb2bb0b82b09e5e751f9f58317e2d38ebc072276"
+    },
+    "directoryInitialC": {
+      "file": "tdf-event-memory-262-directory-parity-v1.log",
+      "sha256": "b4f31ee975ea66cf892bf3d768e9fed6bb956966d95858ea7ccb2c09cf0ba0ea"
+    },
+    "directoryUnicode": {
+      "file": "tdf-event-memory-262-directory-parity-v2.log",
+      "sha256": "c4668b0aa9203d3bd2e0f0dacec46c2538403affd0ca5c2fb30333c918796f28"
+    },
+    "compiledApi": {
+      "file": "tdf-event-memory-262-compiled-api-v1.log",
+      "sha256": "8fb582ab03e9acf0ba43c313273d36dec199b516b4ecd073d4721b83c88ac5ed"
+    }
+  },
+  "subsequentProtectedMain": {
+    "commit": "3af768dacd95c1223975c62da3ce8088bed89b47",
+    "pr": 618,
+    "includedInRuntimeQualification": false,
+    "scope": "Release-journal controls only; future preparation must preserve them and verify affected ops checks"
+  }
+}

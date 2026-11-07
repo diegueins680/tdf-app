@@ -1,17 +1,21 @@
+import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
+import { buildArtistPublicPath } from '../utils/artistIdentity';
+import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
+import MarkdownText from '../components/MarkdownText';
+import CommunityDiscovery from '../features/discovery/CommunityDiscovery';
 import RecordThumbnail from '../features/records/RecordThumbnail';
 import { primaryRecordsResource } from '../features/records/resolveRecordThumbnail';
-import { buildArtistFollowAuthPath } from '../utils/artistFollowIntent';
+import { buildArtistFollowAuthPath, safeArtistId } from '../utils/artistFollowIntent';
+import { reconcileFollowState, type FollowReadScope } from '../features/fans/reconcileFollowState';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import {
   Alert,
   AlertTitle,
   Autocomplete,
-  Avatar,
   Box,
   Button,
   Card,
-  CardActionArea,
   CardContent,
   CardMedia,
   Chip,
@@ -45,7 +49,7 @@ import type { ArtistProfileUpsert } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { Fans } from '../api/fans';
 import { Admin } from '../api/admin';
-import { useSession } from '../session/SessionContext';
+import { getActiveSession, useSession } from '../session/SessionContext';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCmsContent } from '../hooks/useCmsContent';
 import StreamingPlayer from '../components/StreamingPlayer';
@@ -55,11 +59,13 @@ import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
 import { getArtistHeroImage } from '../utils/artistFallbacks';
+import ArtistProfileImage from '../components/ArtistProfileImage';
 import { Records, type RecordsResourceDTO } from '../api/records';
 import {
   buildReleaseStreamUpdatePayload,
   dispatchReleaseToRadio,
-  resolveReleaseAudioUrl,
+  resolveReleasePlaybackAction,
+  type ExternalReleasePlayback,
   type ReleaseFeedItem,
 } from '../features/releases/ReleasePlayerActions';
 import { useReleaseFeed, type ReleaseFeedArtist } from '../features/releases/useReleaseFeed';
@@ -68,16 +74,35 @@ import { FanProfileEditor } from '../features/fans/FanProfileEditor';
 import { FollowedArtists } from '../features/fans/FollowedArtists';
 import { ProfileSectionCard } from '../features/fans/ProfileSectionCard';
 import { useFanProfile } from '../features/fans/useFanProfile';
+import { useOwnedProfileDraft } from '../features/fans/useOwnedProfileDraft';
 import { FanClubPreview } from '../features/fanclubs/FanClubPreview';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { firstNonEmptyString } from '../utils/stringValues';
-import { musicReleases, type MusicPublicReleaseSummary } from '../api/musicReleases';
+import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { useTranslation } from 'react-i18next';
+import { RADIO_TAKEOVER_EVENT } from '../player/types';
 import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
+const EMPTY_ARTIST_DRAFT: ArtistProfileUpsert = {
+  apuArtistId: 0, apuDisplayName: '', apuSlug: '', apuBio: '', apuCity: '',
+  apuHeroImageUrl: '', apuSpotifyArtistId: '', apuSpotifyUrl: '',
+  apuYoutubeChannelId: '', apuYoutubeUrl: '', apuWebsiteUrl: '',
+  apuFeaturedVideoUrl: '', apuGenreIds: [], apuHighlights: '',
+};
+
+function parseRecoverableArtistDraft(value: unknown, ownerId: number | null): ArtistProfileUpsert | undefined {
+  if (!value || typeof value !== 'object' || ownerId === null) return undefined;
+  const fields = value as Record<string, unknown>;
+  if (fields['apuArtistId'] !== ownerId || Object.keys(fields).some((key) => !(key in EMPTY_ARTIST_DRAFT))) return undefined;
+  if (!Array.isArray(fields['apuGenreIds']) || fields['apuGenreIds'].some((id: unknown) => typeof id !== 'string')) return undefined;
+  for (const [key, initial] of Object.entries(EMPTY_ARTIST_DRAFT)) {
+    if (typeof initial === 'string' && fields[key] != null && typeof fields[key] !== 'string') return undefined;
+  }
+  return fields as unknown as ArtistProfileUpsert;
+}
 const ARTIST_CATALOG_INITIAL_ROWS_PER_PAGE: number = 3 * 4;
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
@@ -101,22 +126,6 @@ function StatPill({ label, value }: { label: string; value: number }) {
   );
 }
 
-function CanonicalMusicReleaseCard({ release }: { release: MusicPublicReleaseSummary }) {
-  return (
-    <Box sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-      <CardActionArea component={RouterLink} to={`/musica/${release.slug}`} sx={{ p: 1.5 }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography fontWeight={800} noWrap>{release.title}</Typography>
-            <Typography variant="body2" color="text.secondary" noWrap>{release.displayArtist}</Typography>
-          </Box>
-          <Chip label={release.kind.toUpperCase()} size="small" />
-        </Stack>
-      </CardActionArea>
-    </Box>
-  );
-}
-
 interface CatalogRecoveryCard {
   eyebrow: string;
   title: string;
@@ -129,11 +138,13 @@ interface CatalogRecoveryCard {
 
 export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const { session, loading: sessionLoading } = useSession();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const qc = useQueryClient();
   const viewerId = session?.partyId ?? null;
+  const followActionPending = useRef(false);
+  const [recoveredFollowRequest, setRecoveredFollowRequest] = useState<FollowReadScope | null>(null);
   const activePartyRef = useRef(viewerId);
   activePartyRef.current = viewerId;
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
@@ -310,18 +321,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const {
     profileDraft,
     profileQuery,
+    profileReady,
     saveProfile: handleSaveProfile,
     setProfileDraft,
     updateProfileMutation,
   } = useFanProfile({
-    enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
+    enabled: Boolean(viewerId && isFan && hasAuthToken && !sessionLoading && !isHomeManagerView),
     viewerId,
   });
 
   const followsQuery = useQuery({
     queryKey: ['fan-follows', viewerId],
     queryFn: Fans.listFollows,
-    enabled: Boolean(viewerId && isFan && hasAuthToken && !isHomeManagerView),
+    enabled: Boolean(viewerId && isFan && hasAuthToken && !sessionLoading && !isHomeManagerView),
   });
 
   const myClubsQuery = useQuery({
@@ -336,21 +348,34 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     enabled: Boolean(viewerId && canEditArtist && hasAuthToken),
   });
 
-  const [artistDraft, setArtistDraft] = useState<ArtistProfileUpsert>({
-    apuArtistId: session?.partyId ?? 0,
-    apuDisplayName: '',
-    apuSlug: '',
-    apuBio: '',
-    apuCity: '',
-    apuHeroImageUrl: '',
-    apuSpotifyArtistId: '',
-    apuSpotifyUrl: '',
-    apuYoutubeChannelId: '',
-    apuYoutubeUrl: '',
-    apuWebsiteUrl: '',
-    apuFeaturedVideoUrl: '',
-    apuGenreIds: [],
-    apuHighlights: '',
+  const artistBaseline = useMemo(() => {
+    const dto = artistProfileQuery.data;
+    if (sessionLoading || !canEditArtist || !artistProfileQuery.isSuccess || dto?.apArtistId !== viewerId) return undefined;
+    return {
+      apuArtistId: dto.apArtistId,
+      apuDisplayName: dto.apDisplayName ?? '',
+      apuSlug: dto.apSlug ?? '',
+      apuBio: dto.apBio ?? '',
+      apuCity: dto.apCity ?? '',
+      apuHeroImageUrl: dto.apHeroImageUrl ?? '',
+      apuSpotifyArtistId: dto.apSpotifyArtistId ?? '',
+      apuSpotifyUrl: dto.apSpotifyUrl ?? '',
+      apuYoutubeChannelId: dto.apYoutubeChannelId ?? '',
+      apuYoutubeUrl: dto.apYoutubeUrl ?? '',
+      apuWebsiteUrl: dto.apWebsiteUrl ?? '',
+      apuFeaturedVideoUrl: dto.apFeaturedVideoUrl ?? '',
+      apuGenreIds: dto.apGenreIds ?? [],
+      apuHighlights: dto.apHighlights ?? '',
+    };
+  }, [artistProfileQuery.data, artistProfileQuery.isSuccess, canEditArtist, sessionLoading, viewerId]);
+  const {
+    draft: artistDraft, setDraft: setArtistDraft, ready: artistProfileReady,
+    acknowledgeSave: acknowledgeArtistSave, isCurrentOwner: isCurrentArtistOwner,
+    restored: artistDraftRestored, persistenceAvailable: artistDraftRecoveryAvailable,
+  } = useOwnedProfileDraft<ArtistProfileUpsert>({
+    ownerId: !sessionLoading && canEditArtist ? viewerId : null,
+    baseline: artistBaseline, empty: EMPTY_ARTIST_DRAFT,
+    persistence: { scope: 'artist-profile', parse: (value) => parseRecoverableArtistDraft(value, viewerId) },
   });
   const [heroImageFileName, setHeroImageFileName] = useState<string>('');
   const [expandedFeatured, setExpandedFeatured] = useState<Set<number>>(() => new Set());
@@ -361,47 +386,46 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [pendingFollowArtistId, setPendingFollowArtistId] = useState<number | null>(null);
   useEffect(() => {
-    if (artistProfileQuery.data && session?.partyId) {
-      const dto = artistProfileQuery.data;
-      artistSlugTouchedRef.current = Boolean((dto.apSlug ?? '').trim());
-      setArtistDraft({
-        apuArtistId: session.partyId,
-        apuDisplayName: dto.apDisplayName ?? '',
-        apuSlug: dto.apSlug ?? '',
-        apuBio: dto.apBio ?? '',
-        apuCity: dto.apCity ?? '',
-        apuHeroImageUrl: dto.apHeroImageUrl ?? '',
-        apuSpotifyArtistId: dto.apSpotifyArtistId ?? '',
-        apuSpotifyUrl: dto.apSpotifyUrl ?? '',
-        apuYoutubeChannelId: dto.apYoutubeChannelId ?? '',
-        apuYoutubeUrl: dto.apYoutubeUrl ?? '',
-        apuWebsiteUrl: dto.apWebsiteUrl ?? '',
-        apuFeaturedVideoUrl: dto.apFeaturedVideoUrl ?? '',
-        apuGenreIds: dto.apGenreIds ?? [],
-        apuHighlights: dto.apHighlights ?? '',
-      });
-      setHeroImageFileName(dto.apHeroImageUrl ? 'Imagen existente' : '');
-    }
-  }, [artistProfileQuery.data, session?.partyId]);
+    artistSlugTouchedRef.current = false;
+    setHeroImageFileName('');
+    setArtistToast(null);
+  }, [viewerId]);
   useEffect(() => {
-    const partyId = session?.partyId;
-    if (!partyId) return;
-    setArtistDraft((prev) => ({ ...prev, apuArtistId: partyId }));
-  }, [session?.partyId]);
-
-  useEffect(() => {
-    if (focusArtist && artistSectionRef.current) {
-      artistSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [focusArtist]);
+    if (!artistBaseline) return;
+    artistSlugTouchedRef.current = Boolean((artistBaseline.apuSlug ?? '').trim());
+  }, [artistBaseline]);
 
   const updateArtistProfileMutation = useMutation({
-    mutationFn: Fans.updateMyArtistProfile,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['artist-profile', viewerId] });
+    mutationFn: (request: {
+      payload: ArtistProfileUpsert;
+      submittedDraft: ArtistProfileUpsert;
+      isCurrentOwner: () => boolean;
+      acknowledgeSave: (draft: ArtistProfileUpsert) => void;
+    }) => {
+      if (!request.isCurrentOwner()) throw new Error('Vuelve a cargar tu perfil antes de guardar.');
+      return Fans.updateMyArtistProfile(request.payload);
+    },
+    onSuccess: (profile, request) => {
+      // A successful write is not permission to share a draft slug or another Party's identity.
+      if (profile?.apArtistId !== request.payload.apuArtistId) {
+        void qc.invalidateQueries({ queryKey: ['artist-profile', request.payload.apuArtistId] });
+        if (!request.isCurrentOwner()) return;
+        setArtistToast('No pudimos confirmar el perfil guardado. Actualiza la página antes de compartirlo.');
+        return;
+      }
+      void qc.invalidateQueries({ queryKey: ['artist-profile', profile.apArtistId] });
+      void qc.invalidateQueries({ queryKey: ['directory', 'search'] });
+      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+      void qc.invalidateQueries({ queryKey: ['public-artist'] });
+      // The public write still invalidates public projections after an account
+      // switch; only its current owner can hydrate a draft or see a save receipt.
+      if (!request.isCurrentOwner()) return;
+      qc.setQueryData(['artist-profile', profile.apArtistId], profile);
+      request.acknowledgeSave(request.submittedDraft);
       setArtistToast('Perfil de artista actualizado.');
     },
-    onError: (error) => {
+    onError: (error, request) => {
+      if (!request.isCurrentOwner()) return;
       setArtistToast(error instanceof Error ? error.message : 'No pudimos guardar tu perfil de artista.');
     },
   });
@@ -419,21 +443,43 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     },
   });
 
+  const reconcileFailedFollow = async (request: FollowReadScope, wantedFollowing: boolean) => {
+    const following = await reconcileFollowState(qc, request);
+    if (following === null) return;
+    void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+    if (following === wantedFollowing && request.ownsSession()) setRecoveredFollowRequest(request);
+    if (wantedFollowing && following && request.ownsSession()) {
+      void captureFirstValueOnce(getAnalyticsClient(), request.viewerId, 'artist_followed', undefined, request.ownsSession)
+        .catch(() => undefined);
+    }
+  };
+
   const followMutation = useMutation({
-    mutationFn: (artistId: number) => Fans.follow(artistId),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
-      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
-      void captureFirstValueOnce(getAnalyticsClient(), session?.partyId, 'artist_followed').catch(() => undefined);
+    mutationFn: (request: FollowReadScope) => {
+      if (!request.ownsSession()) throw new Error('Follow context changed');
+      return setArtistFollowing(request, true);
     },
+    onSuccess: (_result, request) => {
+      void invalidateArtistAudience(qc, request.viewerId, request.artistId);
+      if (request.ownsSession()) {
+        void captureFirstValueOnce(getAnalyticsClient(), request.viewerId, 'artist_followed', undefined, request.ownsSession)
+          .catch(() => undefined);
+      }
+    },
+    onError: (_error, request) => reconcileFailedFollow(request, true),
+    onSettled: () => { followActionPending.current = false; },
   });
 
   const unfollowMutation = useMutation({
-    mutationFn: (artistId: number) => Fans.unfollow(artistId),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: ['fan-follows', viewerId] });
-      void qc.invalidateQueries({ queryKey: ['fan-artists'] });
+    mutationFn: (request: FollowReadScope) => {
+      if (!request.ownsSession()) throw new Error('Follow context changed');
+      return setArtistFollowing(request, false);
     },
+    onSuccess: (_result, request) => {
+      void invalidateArtistAudience(qc, request.viewerId, request.artistId);
+    },
+    onError: (_error, request) => reconcileFailedFollow(request, false),
+    onSettled: () => { followActionPending.current = false; },
   });
 
   const follows = useMemo(() => followsQuery.data ?? [], [followsQuery.data]);
@@ -444,6 +490,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const [pendingUploadRelease, setPendingUploadRelease] = useState<ReleaseFeedItem | null>(null);
   const [uploadingReleaseId, setUploadingReleaseId] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [externalPlayback, setExternalPlayback] = useState<(ExternalReleasePlayback & { title: string; artist: string }) | null>(null);
+  useEffect(() => { setExternalPlayback(null); }, [viewerId]);
   const [feedLimit, setFeedLimit] = useState(4);
   const [artistEditorOpen, setArtistEditorOpen] = useState(() => focusArtist);
   const targetArtists = useMemo<ReleaseFeedArtist[]>(() => {
@@ -469,25 +517,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     }
     return [];
   }, [isFan, hasFollows, follows, canManageReleases, artists]);
-  const targetArtistIds = useMemo(
-    () => targetArtists.map((artist) => artist.id).sort((left, right) => left - right),
-    [targetArtists],
-  );
-  const canonicalReleaseFeedQuery = useQuery({
-    queryKey: ['canonical-music-release-feed', targetArtistIds],
-    enabled: canSeeReleaseFeed && targetArtistIds.length > 0,
-    retry: false,
-    queryFn: async () => {
-      const releases = (await Promise.all(
-        targetArtistIds.map((artistId) => musicReleases.listPublic('', artistId)),
-      )).flat();
-      const unique = new Map<string, MusicPublicReleaseSummary>();
-      releases.forEach((release) => unique.set(release.id, release));
-      return [...unique.values()].sort(
-        (left, right) => Date.parse(right.publishedAt) - Date.parse(left.publishedAt),
-      );
-    },
-  });
 
   const streamingFallbacks = useMemo(() => {
     const map = new Map<number, { spotify?: string | null; youtube?: string | null }>();
@@ -500,7 +529,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return map;
   }, [targetArtists]);
 
-  const { hasReleaseTargets, releaseFeed, releaseFeedQuery } = useReleaseFeed({
+  const { hasReleaseTargets, releaseFeed, releaseFeedQuery, canonicalReleaseFeed = [], partialCatalog = false } = useReleaseFeed({
     enabled: canSeeReleaseFeed,
     targetArtists,
   });
@@ -537,10 +566,17 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       setLoginPromptOpen(true);
       return;
     }
+    if (followActionPending.current || !isFan || !session || getActiveSession() !== session
+      || !safeArtistId(viewerId) || !safeArtistId(artistId)
+      || !followsQuery.isSuccess || followsQuery.isFetching) return;
+    followActionPending.current = true;
+    followMutation.reset();
+    unfollowMutation.reset();
+    const request = { artistId, viewerId, ownsSession: () => getActiveSession() === session };
     if (currentlyFollowing) {
-      unfollowMutation.mutate(artistId);
+      unfollowMutation.mutate(request);
     } else {
-      followMutation.mutate(artistId);
+      followMutation.mutate(request);
     }
   };
 
@@ -554,7 +590,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   const persistReleaseStream = async (release: ReleaseFeedItem, streamUrl: string) => {
     const streamUpdatePayload = buildReleaseStreamUpdatePayload(release, streamUrl);
     await Admin.updateArtistRelease(release.arReleaseId, streamUpdatePayload);
-    void releaseFeedQuery.refetch();
+    void invalidateArtistCatalog(qc, release.arArtistId);
     setReleaseUploadToast('Stream actualizado.');
   };
 
@@ -588,13 +624,18 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
   };
 
   const handlePlayRelease = (release: ReleaseFeedItem) => {
-    const audioUrl = resolveReleaseAudioUrl(release, releaseAudioMap, streamingFallbacks.get(release.arArtistId));
-    if (!audioUrl) {
+    setExternalPlayback(null);
+    const action = resolveReleasePlaybackAction(release, releaseAudioMap, streamingFallbacks.get(release.arArtistId));
+    if (!action) {
       setUploadError('Este lanzamiento todavía no tiene un enlace de audio. Sube el máster o pega un enlace.');
       return;
     }
     setUploadError(null);
-    dispatchReleaseToRadio(release, audioUrl);
+    if (action.kind === 'provider') {
+      setExternalPlayback({ ...action, title: release.arTitle, artist: release.artistName });
+      return;
+    }
+    dispatchReleaseToRadio(release, action.url);
   };
 
   const handleSaveReleaseLink = async () => {
@@ -666,7 +707,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
 
 
   const handleSaveArtistProfile = () => {
-    if (!session?.partyId) return;
+    if (!session?.partyId || !artistProfileReady || !isCurrentArtistOwner() || updateArtistProfileMutation.isPending) return;
     if (!genresCatalogQuery.isSuccess) {
       setArtistToast('Espera a que el catálogo de géneros esté disponible antes de guardar.');
       return;
@@ -692,14 +733,19 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       apuGenreIds: artistDraft.apuGenreIds,
       apuHighlights: normalizeField(artistDraft.apuHighlights),
     };
-    updateArtistProfileMutation.mutate(payload);
+    updateArtistProfileMutation.mutate({
+      payload, submittedDraft: artistDraft, isCurrentOwner: isCurrentArtistOwner,
+      acknowledgeSave: acknowledgeArtistSave,
+    });
   };
 
   const artistPublicPath = useMemo(() => {
-    if (!session?.partyId) return null;
-    const slug = slugify(artistDraft.apuSlug ?? '');
-    return slug ? `/a/${slug}` : `/a/${session.partyId}`;
-  }, [artistDraft.apuSlug, session?.partyId]);
+    const published = artistProfileQuery.data;
+    if (sessionLoading || !canEditArtist || !artistProfileQuery.isSuccess
+        || published?.apArtistId !== viewerId) return null;
+    // Never expose an unsaved or cross-account draft as a public, shareable URL.
+    return buildArtistPublicPath(published.apArtistId, published.apSlug);
+  }, [artistProfileQuery.data, artistProfileQuery.isSuccess, canEditArtist, sessionLoading, viewerId]);
 
   const artistPublicUrl = useMemo(() => {
     if (!artistPublicPath) return null;
@@ -912,9 +958,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       <Button component={RouterLink} to="/reservar" variant="contained" color="secondary" size="small">
                         Abrir reservas
                       </Button>
-                      <Button component={RouterLink} to="/dj-booth" variant="outlined" color="secondary" size="small">
-                        DJ Booth
-                      </Button>
                       <Button component={RouterLink} to={radioTargetPath} variant="text" size="small">
                         Radio y en vivo
                       </Button>
@@ -946,9 +989,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                       <Button component={RouterLink} to="/reservar" variant="contained" size="small">
                         Reservar ahora
-                      </Button>
-                      <Button component={RouterLink} to="/dj-booth" variant="outlined" size="small">
-                        DJ Booth
                       </Button>
                       <Button component={RouterLink} to="/live-sessions/registro" variant="text" size="small">
                         Sesión en vivo
@@ -1058,7 +1098,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         <Grid container spacing={2}>
           <Grid item xs={12} md={8}>
             <Stack spacing={2}>
-              {canSeeReleaseFeed && canonicalReleaseFeedQuery.data && canonicalReleaseFeedQuery.data.length > 0 && (
+              {canSeeReleaseFeed && canonicalReleaseFeed.length > 0 && (
                 <Card sx={{ p: 3 }} component="section" aria-labelledby="canonical-music-feed-title">
                   <Stack spacing={1.5}>
                     <Box>
@@ -1069,8 +1109,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         Música disponible ahora de los artistas de este feed.
                       </Typography>
                     </Box>
-                    {canonicalReleaseFeedQuery.data.slice(0, 8).map((release) => (
-                      <CanonicalMusicReleaseCard key={release.id} release={release} />
+                    {canonicalReleaseFeed.slice(0, 8).map((release) => (
+                      <PublishedReleaseCard compact key={release.id} release={release} />
                     ))}
                     <Button component={RouterLink} to="/musica" sx={{ alignSelf: 'flex-start' }}>
                       Ver catálogo musical
@@ -1078,7 +1118,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   </Stack>
                 </Card>
               )}
-              <ReleaseFeed
+              {canSeeReleaseFeed && (partialCatalog || releaseFeedQuery.isError) && <Alert severity="warning">No pudimos cargar todo el catálogo. <Button onClick={() => { void releaseFeedQuery.refetch(); }}>Reintentar</Button></Alert>}
+              {(!canSeeReleaseFeed || (!partialCatalog && !releaseFeedQuery.isError) || releaseFeed.length > 0) && <ReleaseFeed
                 audioFileInputRef={audioFileInputRef}
                 canManageReleases={canManageReleases}
                 canSeeReleaseFeed={canSeeReleaseFeed}
@@ -1109,7 +1150,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 onShowLess={() => setFeedLimit(4)}
                 onShowMore={() => setFeedLimit((prev) => Math.min(prev + 4, releaseFeed.length))}
                 onUploadTrigger={handleUploadTrigger}
-              />
+              />}
             </Stack>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -1229,7 +1270,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             >
                               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
-                                  <Avatar src={getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug) ?? undefined} alt={artist.apDisplayName} />
+                                  <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={artist.apHeroImageUrl} slug={artist.apSlug} width={40} height={40} sx={{ borderRadius: '50%' }} />
                                   <Box>
                                     <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                                       {artist.apDisplayName}
@@ -1245,7 +1286,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                                   variant="contained"
                                   size="small"
                                   onClick={() => handleFollowToggle(artist.apArtistId, false)}
-                                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                                  disabled={followMutation.isPending || unfollowMutation.isPending || (hasAuthToken && (!isFan || !followsQuery.isSuccess || followsQuery.isFetching))}
                                 >
                                   Seguir
                                 </Button>
@@ -1308,6 +1349,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+        {!focusArtist && <CommunityDiscovery />}
         {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
         {onboarding.loadError && (
           <Alert severity="warning" action={<Button color="inherit" onClick={onboarding.retryLoad}>{t('fanHubOnboarding.retry')}</Button>}>
@@ -1347,6 +1389,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       }
                     }}
                   />
+                  <Button component={RouterLink} to="/mi-artista/campanas" variant="contained">Lanzar video</Button>
                   {artistPublicPath && (
                     <Chip label="Ver perfil público" component={RouterLink} to={artistPublicPath} clickable variant="outlined" />
                   )}
@@ -1375,13 +1418,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     to="/reservar"
                     clickable
                   />
-                  <Chip
-                    label="DJ Booth"
-                    component={RouterLink}
-                    to="/dj-booth"
-                    clickable
-                    variant="outlined"
-                  />
                   {canManageReleases && (
                     <Chip
                       label="Editar CMS"
@@ -1406,9 +1442,18 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   variant="outlined"
                   onClick={() => {
                     void artistsQuery.refetch();
-                    if (!isHomeManagerView) {
+                    if (isFan && !isHomeManagerView) {
                       void profileQuery.refetch();
-                      void followsQuery.refetch();
+                      const failedFollow = followMutation.isError ? followMutation.variables : undefined;
+                      const failedUnfollow = unfollowMutation.isError ? unfollowMutation.variables : undefined;
+                      const failed = failedFollow ?? failedUnfollow;
+                      if (failed?.ownsSession()) {
+                        if (!followActionPending.current) {
+                          followActionPending.current = true;
+                          void reconcileFailedFollow(failed, Boolean(failedFollow))
+                            .finally(() => { followActionPending.current = false; });
+                        }
+                      } else void followsQuery.refetch();
                     }
                     if (canEditArtist) {
                       void artistProfileQuery.refetch();
@@ -1435,6 +1480,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 ? 'No pudimos cargar el catálogo completo ahora mismo. Mientras vuelve, aún puedes explorar lanzamientos, sesiones y reservas.'
                 : 'Tuvimos un problema cargando tu información. Revisa tu conexión o intenta de nuevo.'}
           </Alert>
+        )}
+
+        {((followMutation.isError && followMutation.variables?.ownsSession() && followMutation.variables !== recoveredFollowRequest)
+          || (unfollowMutation.isError && unfollowMutation.variables?.ownsSession() && unfollowMutation.variables !== recoveredFollowRequest)) && (
+          <Alert severity="warning">{t('artistFollow.changeError')}</Alert>
         )}
 
         {isHomeManagerView && hubShortcutSections}
@@ -1464,6 +1514,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
           </Alert>
         )}
 
+        {isFan && profileQuery.isError && (
+          <Alert severity="error" action={<Button onClick={() => void profileQuery.refetch()}>Reintentar perfil fan</Button>}>
+            No pudimos cargar tu perfil fan. Vuelve a cargarlo antes de guardar.
+          </Alert>
+        )}
         {isFan && (
           <FanProfileEditor
             avatarInputRef={avatarInputRef}
@@ -1471,6 +1526,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             genreCatalogError={genresCatalogQuery.isError}
             genreCatalogReady={genresCatalogQuery.isSuccess}
             genreOptions={genreOptions}
+            profileReady={profileReady}
             profileDraft={profileDraft}
             saving={updateProfileMutation.isPending}
             setProfileDraft={setProfileDraft}
@@ -1537,7 +1593,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     <Button
                       variant="contained"
                       onClick={handleSaveArtistProfile}
-                      disabled={updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
+                      disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
                     >
                       {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Actualizar perfil de artista'}
                     </Button>
@@ -1553,8 +1609,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                     </Box>
                   )}
                   {artistProfileQuery.isError && (
-                    <Alert severity="warning">
-                      No pudimos cargar todos los detalles del perfil. Igual puedes abrir el editor o revisar la vista pública.
+                    <Alert severity="warning" action={<Button onClick={() => void artistProfileQuery.refetch()}>Reintentar perfil de artista</Button>}>
+                      No pudimos cargar tu perfil de artista. Vuelve a cargarlo antes de guardar.
                     </Alert>
                   )}
                   <Stack direction="row" spacing={1} flexWrap="wrap">
@@ -1587,233 +1643,243 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                 <>
                   {artistProfileQuery.isLoading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.artistLoading')} />}
                   {artistProfileQuery.isError && (
-                    <Alert severity="error">No pudimos cargar tu perfil de artista.</Alert>
+                    <Alert severity="error" action={<Button onClick={() => void artistProfileQuery.refetch()}>Reintentar perfil de artista</Button>}>No pudimos cargar tu perfil de artista.</Alert>
                   )}
-                  <Stack spacing={2}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                  <Box component="fieldset" disabled={!artistProfileReady} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
+                    <Stack spacing={2}>
+                      {artistDraftRestored && <Alert severity="info">{i18n.language.startsWith('en')
+                        ? 'We restored your unsaved changes from this tab. If your selected file is no longer available, select only that file again.'
+                        : 'Recuperamos los cambios sin guardar de esta pestaña. Si el archivo seleccionado ya no está disponible, vuelve a seleccionar solo ese archivo.'}</Alert>}
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Nombre artístico"
+                          value={artistDraft.apuDisplayName ?? ''}
+                          onChange={(event) => {
+                            const nextName = event.target.value;
+                            setArtistDraft((prev) => {
+                              const nextSlug = slugify(nextName);
+                              return {
+                                ...prev,
+                                apuDisplayName: nextName,
+                                apuSlug: !artistSlugTouchedRef.current && nextSlug ? nextSlug : prev.apuSlug,
+                              };
+                            });
+                          }}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Slug público"
+                          value={artistDraft.apuSlug ?? ''}
+                          onChange={(event) => {
+                            artistSlugTouchedRef.current = true;
+                            setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }));
+                          }}
+                          onBlur={(event) => {
+                            const cleaned = slugify(event.target.value);
+                            setArtistDraft((prev) => ({ ...prev, apuSlug: cleaned }));
+                          }}
+                          placeholder="mi-proyecto"
+                          helperText={artistPublicPath ? `URL pública guardada: ${artistPublicPath}` : 'Guarda tu perfil para obtener un enlace público.'}
+                          fullWidth
+                        />
+                      </Stack>
                       <TextField
-                        label="Nombre artístico"
-                        value={artistDraft.apuDisplayName ?? ''}
-                        onChange={(event) => {
-                          const nextName = event.target.value;
-                          setArtistDraft((prev) => {
-                            const nextSlug = slugify(nextName);
-                            return {
-                              ...prev,
-                              apuDisplayName: nextName,
-                              apuSlug: !artistSlugTouchedRef.current && nextSlug ? nextSlug : prev.apuSlug,
-                            };
-                          });
-                        }}
+                        label="Ciudad"
+                        value={artistDraft.apuCity ?? ''}
+                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuCity: event.target.value }))}
                         fullWidth
                       />
                       <TextField
-                        label="Slug público"
-                        value={artistDraft.apuSlug ?? ''}
-                        onChange={(event) => {
-                          artistSlugTouchedRef.current = true;
-                          setArtistDraft((prev) => ({ ...prev, apuSlug: event.target.value }));
-                        }}
-                        onBlur={(event) => {
-                          const cleaned = slugify(event.target.value);
-                          setArtistDraft((prev) => ({ ...prev, apuSlug: cleaned }));
-                        }}
-                        placeholder="mi-proyecto"
-                        helperText={artistPublicPath ? `URL pública: ${artistPublicPath}` : ' '}
+                        label="Bio"
+                        multiline
+                        minRows={3}
+                        value={artistDraft.apuBio ?? ''}
+                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuBio: event.target.value }))}
                         fullWidth
                       />
-                    </Stack>
-                    <TextField
-                      label="Ciudad"
-                      value={artistDraft.apuCity ?? ''}
-                      onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuCity: event.target.value }))}
-                      fullWidth
-                    />
-                    <TextField
-                      label="Bio"
-                      multiline
-                      minRows={3}
-                      value={artistDraft.apuBio ?? ''}
-                      onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuBio: event.target.value }))}
-                      fullWidth
-                    />
-                    <Stack spacing={1}>
-                      <Typography variant="body2" fontWeight={700}>
-                        Portada principal (hosteada)
-                      </Typography>
-                      <GoogleDriveUploadWidget
-                        label="Subir portada a Drive"
-                        helperText="Sube la portada; guardaremos el enlace servido para evitar imágenes pesadas embebidas."
-                        onComplete={(files) => {
-                          const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
-                          if (link) {
-                            setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
-                            setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
-                          }
-                        }}
-                        accept="image/*"
-                        dense
-                      />
-                      <TextField
-                        label="URL de portada (opcional)"
-                        placeholder="https://"
-                        value={artistDraft.apuHeroImageUrl ?? ''}
-                        onChange={(event) => {
-                          const val = event.target.value.trim();
-                          if (val.startsWith('data:')) {
-                            setHeroImageFileName('');
-                            setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
-                            return;
-                          }
-                          setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: val }));
-                          setHeroImageFileName(val ? 'Imagen enlazada' : '');
-                        }}
-                        fullWidth
-                      />
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        {artistDraft.apuHeroImageUrl && (
-                          <Button
-                            variant="text"
-                            color="inherit"
-                            onClick={() => {
-                              setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+                      <Stack spacing={1}>
+                        <Typography variant="body2" fontWeight={700}>
+                          Portada principal (hosteada)
+                        </Typography>
+                        <GoogleDriveUploadWidget
+                          recoveryScope={`artist-cover:${viewerId ?? 'new'}`}
+                          formRecoveryAvailable={artistDraftRecoveryAvailable}
+                          multiple={false}
+                          label="Subir portada"
+                          visibility="public"
+                          helperText="Sube la portada; guardaremos el enlace servido para evitar imágenes pesadas embebidas."
+                          onComplete={(files) => {
+                            if (!isCurrentArtistOwner()) return;
+                            const link = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
+                            if (link) {
+                              setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: link }));
+                              setHeroImageFileName(files[0]?.name ?? 'Imagen en Drive');
+                            }
+                          }}
+                          accept="image/*"
+                          dense
+                        />
+                        <TextField
+                          label="URL de portada (opcional)"
+                          placeholder="https://"
+                          value={artistDraft.apuHeroImageUrl ?? ''}
+                          onChange={(event) => {
+                            const val = event.target.value.trim();
+                            if (val.startsWith('data:')) {
                               setHeroImageFileName('');
-                            }}
+                              setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+                              return;
+                            }
+                            setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: val }));
+                            setHeroImageFileName(val ? 'Imagen enlazada' : '');
+                          }}
+                          fullWidth
+                        />
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          {artistDraft.apuHeroImageUrl && (
+                            <Button
+                              variant="text"
+                              color="inherit"
+                              onClick={() => {
+                                setArtistDraft((prev) => ({ ...prev, apuHeroImageUrl: '' }));
+                                setHeroImageFileName('');
+                              }}
+                            >
+                              Quitar portada
+                            </Button>
+                          )}
+                          {artistDraft.apuHeroImageUrl && (
+                            <Typography variant="body2" color="text.secondary">
+                              {heroImageFileName || 'Imagen existente'}
+                            </Typography>
+                          )}
+                        </Stack>
+                        {artistDraft.apuHeroImageUrl && (
+                          <Card
+                            variant="outlined"
+                            sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
                           >
-                            Quitar portada
-                          </Button>
+                            <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
+                          </Card>
                         )}
-                        {heroImageFileName && (
-                          <Typography variant="body2" color="text.secondary">
-                            {heroImageFileName}
-                          </Typography>
-                        )}
+                        <Typography variant="caption" color="text.secondary">
+                          Guardamos sólo enlaces hospedados (Drive/CDN) para que el perfil cargue rápido.
+                        </Typography>
                       </Stack>
-                      {artistDraft.apuHeroImageUrl && (
-                        <Card
-                          variant="outlined"
-                          sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Spotify URL"
+                          value={artistDraft.apuSpotifyUrl ?? ''}
+                          onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSpotifyUrl: event.target.value }))}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Spotify Artist ID"
+                          value={artistDraft.apuSpotifyArtistId ?? ''}
+                          onChange={(event) =>
+                            setArtistDraft((prev) => ({ ...prev, apuSpotifyArtistId: event.target.value }))
+                          }
+                          fullWidth
+                        />
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="YouTube URL"
+                          value={artistDraft.apuYoutubeUrl ?? ''}
+                          onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuYoutubeUrl: event.target.value }))}
+                          fullWidth
+                        />
+                        <TextField
+                          label="YouTube Channel ID"
+                          value={artistDraft.apuYoutubeChannelId ?? ''}
+                          onChange={(event) =>
+                            setArtistDraft((prev) => ({ ...prev, apuYoutubeChannelId: event.target.value }))
+                          }
+                          fullWidth
+                        />
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <TextField
+                          label="Sitio web"
+                          value={artistDraft.apuWebsiteUrl ?? ''}
+                          onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuWebsiteUrl: event.target.value }))}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Video destacado"
+                          value={artistDraft.apuFeaturedVideoUrl ?? ''}
+                          onChange={(event) =>
+                            setArtistDraft((prev) => ({ ...prev, apuFeaturedVideoUrl: event.target.value }))
+                          }
+                          fullWidth
+                        />
+                      </Stack>
+                      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                        <Autocomplete
+                          multiple
+                          disabled={!genresCatalogQuery.isSuccess}
+                          options={genreOptions}
+                          value={genreOptions.filter((genre) => artistDraft.apuGenreIds.includes(genre.id))}
+                          getOptionLabel={(genre) => genre.name}
+                          isOptionEqualToValue={(option, value) => option.id === value.id}
+                          onChange={(_event, selected) => setArtistDraft((prev) => ({
+                            ...prev,
+                            apuGenreIds: selected.map((genre) => genre.id),
+                          }))}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label="Géneros"
+                              helperText="Selecciona valores del catálogo publicado."
+                            />
+                          )}
+                          fullWidth
+                        />
+                        <TextField
+                          label="Highlights"
+                          value={artistDraft.apuHighlights ?? ''}
+                          onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHighlights: event.target.value }))}
+                          fullWidth
+                        />
+                      </Stack>
+                      {genresCatalogQuery.isError && (
+                        <Alert
+                          severity="error"
+                          action={
+                            <Button
+                              color="inherit"
+                              size="small"
+                              onClick={() => { void genresCatalogQuery.refetch(); }}
+                              disabled={genresCatalogQuery.isRefetching}
+                            >
+                              {genresCatalogQuery.isRefetching ? 'Reintentando…' : 'Reintentar'}
+                            </Button>
+                          }
                         >
-                          <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
-                        </Card>
+                          No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
+                        </Alert>
                       )}
-                      <Typography variant="caption" color="text.secondary">
-                        Guardamos sólo enlaces hospedados (Drive/CDN) para que el perfil cargue rápido.
-                      </Typography>
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        label="Spotify URL"
-                        value={artistDraft.apuSpotifyUrl ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuSpotifyUrl: event.target.value }))}
-                        fullWidth
-                      />
-                      <TextField
-                        label="Spotify Artist ID"
-                        value={artistDraft.apuSpotifyArtistId ?? ''}
-                        onChange={(event) =>
-                          setArtistDraft((prev) => ({ ...prev, apuSpotifyArtistId: event.target.value }))
-                        }
-                        fullWidth
-                      />
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        label="YouTube URL"
-                        value={artistDraft.apuYoutubeUrl ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuYoutubeUrl: event.target.value }))}
-                        fullWidth
-                      />
-                      <TextField
-                        label="YouTube Channel ID"
-                        value={artistDraft.apuYoutubeChannelId ?? ''}
-                        onChange={(event) =>
-                          setArtistDraft((prev) => ({ ...prev, apuYoutubeChannelId: event.target.value }))
-                        }
-                        fullWidth
-                      />
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <TextField
-                        label="Sitio web"
-                        value={artistDraft.apuWebsiteUrl ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuWebsiteUrl: event.target.value }))}
-                        fullWidth
-                      />
-                      <TextField
-                        label="Video destacado"
-                        value={artistDraft.apuFeaturedVideoUrl ?? ''}
-                        onChange={(event) =>
-                          setArtistDraft((prev) => ({ ...prev, apuFeaturedVideoUrl: event.target.value }))
-                        }
-                        fullWidth
-                      />
-                    </Stack>
-                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                      <Autocomplete
-                        multiple
-                        disabled={!genresCatalogQuery.isSuccess}
-                        options={genreOptions}
-                        value={genreOptions.filter((genre) => artistDraft.apuGenreIds.includes(genre.id))}
-                        getOptionLabel={(genre) => genre.name}
-                        isOptionEqualToValue={(option, value) => option.id === value.id}
-                        onChange={(_event, selected) => setArtistDraft((prev) => ({
-                          ...prev,
-                          apuGenreIds: selected.map((genre) => genre.id),
-                        }))}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Géneros"
-                            helperText="Selecciona valores del catálogo publicado."
-                          />
-                        )}
-                        fullWidth
-                      />
-                      <TextField
-                        label="Highlights"
-                        value={artistDraft.apuHighlights ?? ''}
-                        onChange={(event) => setArtistDraft((prev) => ({ ...prev, apuHighlights: event.target.value }))}
-                        fullWidth
-                      />
-                    </Stack>
-                    {genresCatalogQuery.isError && (
-                      <Alert
-                        severity="error"
-                        action={
+                      {unavailableArtistGenreIds.length > 0 && (
+                        <Alert severity="warning">
+                          El perfil contiene géneros inactivos o reemplazados. Selecciona valores vigentes antes de guardar.
+                        </Alert>
+                      )}
+                      {isHomeManagerView && (
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                           <Button
-                            color="inherit"
-                            size="small"
-                            onClick={() => { void genresCatalogQuery.refetch(); }}
-                            disabled={genresCatalogQuery.isRefetching}
+                            variant="contained"
+                            onClick={handleSaveArtistProfile}
+                            disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
                           >
-                            {genresCatalogQuery.isRefetching ? 'Reintentando…' : 'Reintentar'}
+                            {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
                           </Button>
-                        }
-                      >
-                        No se pudo cargar el catálogo de géneros. Intenta nuevamente antes de guardar.
-                      </Alert>
-                    )}
-                    {unavailableArtistGenreIds.length > 0 && (
-                      <Alert severity="warning">
-                        El perfil contiene géneros inactivos o reemplazados. Selecciona valores vigentes antes de guardar.
-                      </Alert>
-                    )}
-                    {isHomeManagerView && (
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                        <Button
-                          variant="contained"
-                          onClick={handleSaveArtistProfile}
-                          disabled={updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
-                        >
-                          {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-                        </Button>
-                        <Button variant="text" onClick={() => setArtistEditorOpen(false)}>
-                          Cerrar editor
-                        </Button>
-                      </Stack>
-                    )}
-                  </Stack>
+                          <Button variant="text" onClick={() => setArtistEditorOpen(false)}>
+                            Cerrar editor
+                          </Button>
+                        </Stack>
+                      )}
+                    </Stack>
+                  </Box>
                 </>
               )}
             </ProfileSectionCard>
@@ -1968,7 +2034,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
               artist.apFeaturedVideoUrl ??
               artist.apYoutubeUrl ??
               (artist.apYoutubeChannelId ? `https://www.youtube.com/channel/${artist.apYoutubeChannelId}` : null);
-            const artistProfilePath = artist.apSlug ? `/a/${artist.apSlug}` : `/a/${artist.apArtistId}`;
+            const artistProfilePath = buildArtistPublicPath(artist.apArtistId, artist.apSlug);
             const isFollowing = follows.some((follow) => follow.ffArtistId === artist.apArtistId);
             const spotifyButtonProps = spotifyUrl
               ? { component: 'a', href: spotifyUrl, target: '_blank', rel: 'noopener noreferrer' }
@@ -1976,7 +2042,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             const youtubeButtonProps = youtubeUrl
               ? { component: 'a', href: youtubeUrl, target: '_blank', rel: 'noopener noreferrer' }
               : {};
-            const displayHeroImage = getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug);
+            const displayHeroImage = getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug, artist.apDisplayName);
             const featuredSources = artist.apFeaturedVideoUrl
               ? [
                   {
@@ -2011,10 +2077,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       outlineOffset: 2,
                     },
                   }}
-                  onClick={() => navigate(artistProfilePath)}
+                  onClick={() => { if (artistProfilePath) navigate(artistProfilePath); }}
                 >
                   {displayHeroImage && (
-                    <CardMedia component="img" height="220" image={displayHeroImage} alt={artist.apDisplayName} />
+                    <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={displayHeroImage} width={640} height={220} sx={{ width: '100%' }} />
                   )}
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack
@@ -2029,7 +2095,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           <Typography
                             variant="h5"
                             component={RouterLink}
-                            to={artistProfilePath}
+                            to={artistProfilePath ?? '/fans'}
                             sx={{ overflowWrap: 'anywhere', minWidth: 0, color: 'inherit' }}
                           >
                             {artist.apDisplayName}
@@ -2042,9 +2108,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           </Typography>
                         )}
                         {artist.apBio && (
-                          <Typography variant="body2" color="text.secondary">
+                          <MarkdownText inline variant="body2" color="text.secondary">
                             {artist.apBio.length > 180 ? `${artist.apBio.slice(0, 180)}…` : artist.apBio}
-                          </Typography>
+                          </MarkdownText>
                         )}
                         <Stack direction="row" spacing={1} flexWrap="wrap">
                           {artist.apGenres
@@ -2082,7 +2148,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                               e.stopPropagation();
                               handleFollowToggle(artist.apArtistId, isFollowing);
                             }}
-                            disabled={followMutation.isPending || unfollowMutation.isPending}
+                            disabled={followMutation.isPending || unfollowMutation.isPending || (hasAuthToken && (!isFan || !followsQuery.isSuccess || followsQuery.isFetching))}
                           >
                             {isFollowing ? 'Siguiendo' : 'Seguir'}
                           </Button>
@@ -2194,6 +2260,26 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
         {!isHomeManagerView && hubShortcutSections}
       </Stack>
       </Box>
+      <Dialog open={externalPlayback !== null} onClose={() => setExternalPlayback(null)} aria-labelledby="external-release-playback-title">
+        <DialogTitle id="external-release-playback-title">{externalPlayback?.context === 'artist'
+          ? `Perfil de ${externalPlayback.artist} en ${externalPlayback.provider}`
+          : `Escuchar en ${externalPlayback?.provider ?? ''}`}</DialogTitle>
+        <DialogContent>
+          <Typography>{externalPlayback?.context === 'artist'
+            ? 'Este enlace abre el perfil del artista; no identifica una pista de este lanzamiento.'
+            : `${externalPlayback?.title ?? ''} · ${externalPlayback?.artist ?? ''}`}</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            La reproducción y sus controles estarán en la plataforma externa.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setExternalPlayback(null)} sx={{ minHeight: 44 }}>Cerrar</Button>
+          {externalPlayback && <Button component="a" href={externalPlayback.url} target="_blank" rel="noopener noreferrer" variant="contained"
+            onClick={() => window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT))}
+            onAuxClick={(event) => { if (event.button === 1) window.dispatchEvent(new CustomEvent(RADIO_TAKEOVER_EVENT)); }}
+            aria-label={`Abrir en ${externalPlayback.provider} (nueva pestaña)`} sx={{ minHeight: 44 }}>Abrir en {externalPlayback.provider}</Button>}
+        </DialogActions>
+      </Dialog>
       <Dialog open={loginPromptOpen} onClose={() => setLoginPromptOpen(false)}>
         <DialogTitle>Inicia sesión para seguir artistas</DialogTitle>
         <DialogContent>
@@ -2208,7 +2294,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             onClick={() => {
               setLoginPromptOpen(false);
               const artist = artists.find((candidate) => candidate.apArtistId === pendingFollowArtistId);
-              const profilePath = artist ? `/a/${artist.apSlug?.trim() ? artist.apSlug : artist.apArtistId}` : null;
+              const profilePath = artist ? buildArtistPublicPath(artist.apArtistId, artist.apSlug) : null;
               navigate(buildArtistFollowAuthPath(profilePath, artist?.apArtistId ?? null));
             }}
           >

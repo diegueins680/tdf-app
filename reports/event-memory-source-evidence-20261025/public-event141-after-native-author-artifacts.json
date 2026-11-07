@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-26T16:48:26.498362+00:00",
+  "scope": "Unauthenticated public GETs only; no writes, identities, contacts or consent inspection",
+  "results": [
+    {
+      "name": "eventPage",
+      "httpStatus": 200,
+      "url": "https://www.tdfrecords.net/social/eventos/141",
+      "bodySha256": "48b30ba71b82114079fde7c978c9166c5c8db09866417334019f90ddc60e5fd9"
+    },
+    {
+      "name": "publicEvent",
+      "httpStatus": 200,
+      "url": "https://api.tdfrecords.net/directory/events/141",
+      "bodySha256": "d385b7048ebc35f568c206828bd00c51ee8692b9e0e98939b875d4e2d3baafbe",
+      "publicEventFields": {
+        "id": 141,
+        "title": "PATCH CULTURE Vol. 1",
+        "startTime": "2026-10-24T19:00:00+00:00",
+        "endTime": "2026-10-25T02:00:00+00:00",
+        "timezone": "America/Guayaquil",
+        "isPublic": true,
+        "workflowStateCode": "on_sale",
+        "rsvpEligible": true,
+        "publicShareEligible": true
+      }
+    },
+    {
+      "name": "health",
+      "httpStatus": 200,
+      "url": "https://api.tdfrecords.net/health",
+      "bodySha256": "d996479d94f900ef9b33b173ef75ebe94be72be324576712f15e9d460bb36017",
+      "body": {
+        "db": "ok",
+        "status": "ok"
+      }
+    },
+    {
+      "name": "version",
+      "httpStatus": 200,
+      "url": "https://api.tdfrecords.net/version",
+      "bodySha256": "c847904a3205e0b283456e5bceebbcb62a6a15247bcfae3ff23c158234c046e3",
+      "body": {
+        "buildTime": "2026-10-24T01:24:48Z",
+        "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      }
+    }
+  ]
+}

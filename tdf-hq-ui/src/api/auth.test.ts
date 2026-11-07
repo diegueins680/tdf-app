@@ -8,7 +8,7 @@ jest.unstable_mockModule('../utils/env', () => ({
   },
 }));
 
-const { confirmPasswordReset, loginRequest, signupRequest, requestPasswordReset } = await import('./auth');
+const { confirmPasswordReset, googleLoginRequest, loginRequest, signupRequest, requestPasswordReset } = await import('./auth');
 
 const createHeaders = (contentType?: string, extra: Record<string, string | null> = {}) => ({
   get: jest.fn((name: string) => {
@@ -259,4 +259,100 @@ describe('auth api', () => {
     await jest.advanceTimersByTimeAsync(30_000);
     await rejection;
   });
+
+  it.each(['success', 'error'] as const)('bounds a signup %s body after headers arrive', async (kind) => {
+    jest.useFakeTimers();
+    fetchMock.mockImplementation(async (_input, init) => ({
+      ok: kind === 'success',
+      status: kind === 'success' ? 200 : 400,
+      headers: createHeaders('application/json'),
+      [kind === 'success' ? 'json' : 'text']: () => new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+      }),
+    }) as unknown as Response);
+    let outcome: unknown = 'pending';
+    void signupRequest({
+      firstName: 'Elena', lastName: 'Paredes', email: 'elena@persona.test',
+      password: 'fictional-password', termsAccepted: true, termsVersion: 'test-terms',
+    }).then(() => { outcome = 'success'; }, (error: unknown) => { outcome = error; });
+
+    await jest.advanceTimersByTimeAsync(29_999);
+    expect(outcome).toBe('pending');
+    await jest.advanceTimersByTimeAsync(1);
+    expect(outcome).toMatchObject({ code: 'timeout' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it.each([loginRequest, googleLoginRequest])('does not replay a login after its response body stalls', async (request) => {
+    jest.useFakeTimers();
+    fetchMock.mockImplementation(async (_input, init) => ({
+      ok: true,
+      json: () => new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+      }),
+    }) as unknown as Response);
+    let outcome: unknown = 'pending';
+    // Both requests use the same transport; this union needs their compatible intersection.
+    void request({ username: 'synthetic', password: 'fictional', idToken: 'synthetic' })
+      .then(() => { outcome = 'success'; }, (error: unknown) => { outcome = error; });
+    await jest.advanceTimersByTimeAsync(30_000);
+    expect(outcome).toMatchObject({ code: 'timeout' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(jest.getTimerCount()).toBe(0);
+  });
+
+  it('bounds reset confirmation body reads without replaying the single-use token', async () => {
+    jest.useFakeTimers();
+    fetchMock.mockImplementation(async (_input, init) => ({
+      ok: true,
+      json: () => new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true });
+      }),
+    }) as unknown as Response);
+    let outcome: unknown = 'pending';
+    void confirmPasswordReset({ token: 'synthetic', newPassword: 'fictional' })
+      .then(() => { outcome = 'success'; }, (error: unknown) => { outcome = error; });
+    await jest.advanceTimersByTimeAsync(30_000);
+    expect(outcome).toMatchObject({ code: 'timeout' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+
+  it.each([400, 401])('classifies a rejected reset token at status %s without treating it as login credentials', async status => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status, headers: createHeaders('text/plain'),
+      text: async () => 'Invalid or expired token',
+    } as Response);
+    await expect(confirmPasswordReset({ token: 'expired', newPassword: 'fictional' }))
+      .rejects.toMatchObject({ code: 'reset-token', message: 'Invalid or expired token' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([500, 503])('does not turn a server failure at status %s into an expired-reset error', async status => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status, headers: createHeaders('text/plain'),
+      text: async () => 'Invalid or expired token',
+    } as Response);
+    await expect(confirmPasswordReset({ token: 'synthetic-token', newPassword: 'fictional' }))
+      .rejects.toMatchObject({ code: 'response', message: 'Invalid or expired token' });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves other reset validation errors and login credential classification', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status: 400, headers: createHeaders('text/plain'),
+      text: async () => 'New password is required',
+    } as Response);
+    await expect(confirmPasswordReset({ token: 'synthetic-token', newPassword: '' }))
+      .rejects.toMatchObject({ code: 'response', message: 'New password is required' });
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status: 401, headers: createHeaders('text/plain'),
+      text: async () => 'Invalid or expired token',
+    } as Response);
+    await expect(loginRequest({ username: 'synthetic', password: 'fictional' }))
+      .rejects.toMatchObject({ code: 'credentials' });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
 });

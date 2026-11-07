@@ -12,7 +12,9 @@ environment. The data model and product decisions are in
 ## Rules
 
 - **Order.** One order per buyer and `Idempotency-Key`; price, currency, release
-  version and rule are copied from the rule when the order is created.
+  version and rule are copied from the rule when the order is created. At offer
+  admission, the asset must belong to that release version and satisfy the shared
+  downloadable-asset predicate; otherwise return 404 before creating an order.
 - **Paid.** A `music_download` checkout becomes paid only when a succeeded payment
   attempt carries a provider binding whose merchant, amount, currency and merchant
   reference equal the order's (`music_checkout_require_verified_payment`). The
@@ -78,6 +80,11 @@ under it; no other module had the fault.
 
 ## Open before the feature is enabled
 
+Order creation replay is additionally governed by
+[music-purchase-replay.md](music-purchase-replay.md): the same buyer/key must match
+the original offer, normalized terms/countries and checkout environment. A
+different payload is a conflict even when another transaction reserved the key.
+
 Independent review of the payment flow found problems this change does not repair.
 None is introduced here; together they mean `music_releases.commerce` should stay
 off until they are closed.
@@ -89,17 +96,11 @@ off until they are closed.
   flow, so moving music onto it is new work. This change adds one guard only: the
   commerce flag must be enabled for the checkout environment as well as for the
   process environment.
-- **A recorded provider failure cancels the order for good.** Any failed attempt sets
-  the checkout to `failed`, and the trigger then sets the order to `cancelled`,
-  which no path leaves. This happens on a transient error creating the provider
-  order (no money moved), on a Datafast status query that returns anything other
-  than success or `000.200.000`, and on a PayPal capture whose result is lost. In
-  the last two the provider may hold or later take the money.
-- **An entitlement can be active on a cancelled order.** The checkout store accepts
-  a verified payment on a `failed` checkout, and the trigger grants the entitlement
-  even when the order is already `cancelled`. Two overlapping confirmations, one
-  failing and one succeeding, leave checkout paid, entitlement active and order
-  cancelled.
+- **Outcome projection is repaired by PAY-MUSIC-OUTCOME-001.** Attempt failure
+  no longer cancels fulfillment. Failed checkout retries remain quarantined under
+  a row lock; a closed purchase receiving verified money gets a linked review
+  case without an entitlement. See [music-payment-outcome.md](music-payment-outcome.md).
+  This does not complete ambiguous-provider or closed-checkout recovery.
 - **A failure after the provider has charged leaves no durable record.** A capture
   that completed but then fails validation or binding returns an error and writes
   nothing for staff to reconcile; PayPal webhooks exclude this domain and there is
@@ -110,9 +111,12 @@ off until they are closed.
 - **Provider orders are replayed from the stored binding forever** and the
   checkout's 30-minute expiry is not enforced, so an order whose provider checkout
   expired cannot be paid.
-- **The purchase offer does not apply the downloadable-asset predicate**; a
-  purchasable rule pointing at an asset that is not ready would take payment and
-  then refuse the download. Publication validation may prevent it; not verified.
+- **Purchase asset admission now reuses the download predicate.** The offer query
+  requires a same-version asset and the existing shared predicate. This checks
+  eligibility at the query snapshot only; it does not establish publication
+  reachability of every synthetic fixture, lock eligibility through provider
+  capture, or guarantee the object store retains the bytes. See the admission
+  evidence below; provider activation remains blocked by the other open items.
 - **Partial refunds keep the entitlement; a dispute revokes it and nothing restores
   it.** Both need a product decision.
 - **No provider was contacted.** PayPal and Datafast calls are untested for this
@@ -121,8 +125,9 @@ off until they are closed.
 ## Limits of this evidence
 
 - The model has one order and no failed or cancelled state. Its statement that an
-  active entitlement implies a paid order holds only without failed attempts (see
-  above).
+  active entitlement implies a paid order applies only within that model. The
+  companion outcome model and PostgreSQL controls cover the specified failed/closed
+  projection boundary; provider uncertainty remains outside both.
 - A replay inside the window signs from the original authorization time, so its URL
   and reported `expiresAt` end with the first one: one counted download gives access
   for 300 seconds. Signed URLs are bearer links; the limit counts authorizations, not
@@ -136,3 +141,34 @@ off until they are closed.
   its releases.
 - Entitlements granted by staff have no order; download authorization checks the
   entitlement, not the order.
+
+## Purchase asset admission (2026-10-27)
+
+The previous purchase query checked only a non-null asset identifier. The free
+grant and entitled download queries also join the same release version and apply
+`downloadableAssetPredicate`. Reusing that exact predicate in purchase admission
+prevents accepting an offer that the existing download policy already refuses.
+This correction preserves the existing policy for ready assets and immutable,
+non-quarantined valid masters; it adds no new asset-role or sale permission.
+
+The 324-case SQL relation projection covers nine processing states, three roles,
+two immutable values, three storage classes and two version relationships. Its
+oracle is independently implemented in Python. It does not instantiate the full
+asset graph or prove that all combinations pass publication. On main301 the
+extracted offer query accepted all324, including304 policy mismatches. The fixed
+query accepts the expected20 and rejects304. Removing just the download predicate
+produces142 mismatches; removing just version equality produces20. All SQL work
+uses temporary tables in a rolled-back connection on a disposable database.
+
+Nine additional `MusicPurchaseSpec` cases call the real purchase handler against
+the fully migrated schema and require404 with zero buyer orders for eight
+ineligible cover states and a foreign-version asset. They use the suite's
+existing synthetic published fixtures with publication triggers bypassed; no
+provider is contacted. These are separate from the extracted-SQL check. The
+existing `scripts/test-music-purchase.sh` requires nonempty Hspec selection and
+then runs the SQL matrix. Changes to the matrix alone select backend CI.
+
+[Source-bound evidence and exact commands](evidence/2026-10-27-music-purchase-asset/README.md).
+Whole-program refinement, provider responses, actual object bytes, historical
+purchases and future availability changes remain unverified. No existing TLA+
+model result is promoted to a proof of this new query.

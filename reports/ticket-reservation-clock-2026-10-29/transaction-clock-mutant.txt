@@ -1,0 +1,317 @@
+tdf-hq> build (test) with ghc-9.10.3
+Preprocessing test suite 'tdf-hq-test' for tdf-hq-0.1.0.0...
+Building test suite 'tdf-hq-test' for tdf-hq-0.1.0.0...
+[123 of 321] Compiling TDF.Ticketing.Inventory [Source file changed]
+[242 of 321] Compiling TDF.Server.SocialEventsHandlers [TDF.Ticketing.Inventory changed]
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:177:1: warning: [GHC-66111] [-Wunused-imports]
+    The import of ‘System.Environment’ is redundant
+      except perhaps to import instances from ‘System.Environment’
+    To import instances alone, use: import System.Environment()
+    |
+177 | import System.Environment (lookupEnv)
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:539:5: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘exists’ shadows the existing binding
+      imported from ‘Database.Persist’ at src/TDF/Server/SocialEventsHandlers.hs:189:1-23
+      (and originally defined in ‘Database.Persist.Class.PersistQuery’)
+    |
+539 |     exists <- doesDirectoryExist eventAssetsDir
+    |     ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/src/TDF/Server/SocialEventsHandlers.hs:4775:20: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘orderRecord’ shadows the existing binding
+      bound at src/TDF/Server/SocialEventsHandlers.hs:4719:13
+     |
+4775 |         (orderDto, orderRecord, ticketCodes) <-
+     |                    ^^^^^^^^^^^
+
+[253 of 321] Compiling TDF.Server.EventTicketCheckout [TDF.Ticketing.Inventory changed]
+[260 of 321] Compiling TDF.Commerce.ProviderRetrySpec [TDF.Ticketing.Inventory changed]
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:78:30: warning: [GHC-38856] [-Wunused-imports]
+    The import of ‘toSqlKey’
+    from module ‘Database.Persist.Sql’ is redundant
+   |
+78 | import Database.Persist.Sql (toSqlKey, fromSqlKey)
+   |                              ^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:372:36: warning: [GHC-68441] [-Wdeprecations]
+    In the use of ‘closeManager’
+    (imported from Network.HTTP.Client, but defined in Network.HTTP.Client.Manager):
+    Deprecated: "Manager will be closed for you automatically when no longer in use"
+    |
+372 |   bracket (HC.newManager settings) HC.closeManager $ \manager ->
+    |                                    ^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:867:62: warning: [GHC-63394] [-Wx-partial]
+    In the use of ‘head’
+    (imported from Prelude, but defined in GHC.Internal.List):
+    "This is a partial function, it throws an error on empty lists. Use pattern matching, 'Data.List.uncons' or 'Data.Maybe.listToMaybe' instead. Consider refactoring to use "Data.List.NonEmpty"."
+    |
+867 |     map Event.pesReference results `shouldSatisfy` (\refs -> head refs == last refs)
+    |                                                              ^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2195:15: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘before’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+     |
+2195 |               before <- runSqlPool (paymentSnapshot payment) pool
+     |               ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2305:13: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘creation’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:2285:7
+     |
+2305 |         let creation = Refund.RefundCreation
+     |             ^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2656:9: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘before’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+     |
+2656 |         before <- serviceOrderSnapshot pool payment
+     |         ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:3691:14: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘pending’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Spec’)
+     |
+3691 |         Just pending <- runSqlPool (get (entityKey request)) pool
+     |              ^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:4312:18: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘key’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:4314:9
+     |
+4312 |         purchase key = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+     |                  ^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:4585:18: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘key’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:4587:9
+     |
+4585 |         purchase key = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+     |                  ^^^
+
+[280 of 321] Compiling TDF.Version
+[280 of 322] Compiling TDF.Version
+[322 of 322] Linking .stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test [Objects changed]
+tdf-hq> copy/register
+Installing executable tdf-ddex-render in /private/tmp/tdf-correctness-cycle-20261028/tdf-hq/.stack-work/install/x86_64-osx/5183c6d274f593a36eae69d28d98c0a8b88f4a56934f2364cfcf4644158ab5e0/9.10.3/bin
+Installing executable tdf-hq-exe in /private/tmp/tdf-correctness-cycle-20261028/tdf-hq/.stack-work/install/x86_64-osx/5183c6d274f593a36eae69d28d98c0a8b88f4a56934f2364cfcf4644158ab5e0/9.10.3/bin
+tdf-hq> test (suite: tdf-hq-test, args: --match=ticket-reservation-clock --fail-on=empty --seed=20261029 +RTS -N2 -RTS)
+
+
+provider-retry-runtime PostgreSQL
+  ticket-reservation-clock
+    retains inclusive promotion start and end boundaries [✔]
+    retains inclusive tier start and end boundaries without committing test stock [✔]
+TICKET_CLOCK_WAIT event=43 end=2026-10-29 06:36:18.713729 UTC releasedAfter=Just 2026-10-29 06:26:18.761199 UTC
+    enforces deadline after the Event wait: checkout=False, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=44 end=2026-10-29 06:26:23.852773 UTC releasedAfter=Just 2026-10-29 06:26:23.871843 UTC
+    enforces deadline after the Event wait: checkout=False, promo=False, elapsed=True [✘]
+TICKET_CLOCK_WAIT event=45 end=2026-10-29 06:36:23.961143 UTC releasedAfter=Just 2026-10-29 06:26:23.996741 UTC
+    enforces deadline after the Event wait: checkout=True, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=46 end=2026-10-29 06:26:29.049583 UTC releasedAfter=Just 2026-10-29 06:26:29.066695 UTC
+    enforces deadline after the Event wait: checkout=True, promo=False, elapsed=True [✘]
+TICKET_CLOCK_WAIT event=47 end=2026-10-29 06:36:29.125982 UTC releasedAfter=Just 2026-10-29 06:26:29.159604 UTC
+    enforces deadline after the Event wait: checkout=True, promo=True, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=48 end=2026-10-29 06:26:34.218854 UTC releasedAfter=Just 2026-10-29 06:26:34.242017 UTC
+    enforces deadline after the Event wait: checkout=True, promo=True, elapsed=True [✘]
+TICKET_CLOCK_WAIT event=49 end=2026-10-29 06:36:34.288834 UTC releasedAfter=Just 2026-10-29 06:26:34.322381 UTC
+    enforces deadline after the Tier wait: checkout=False, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=50 end=2026-10-29 06:26:39.370503 UTC releasedAfter=Just 2026-10-29 06:26:39.387116 UTC
+    enforces deadline after the Tier wait: checkout=False, promo=False, elapsed=True [✘]
+TICKET_CLOCK_WAIT event=51 end=2026-10-29 06:36:39.441292 UTC releasedAfter=Just 2026-10-29 06:26:39.477812 UTC
+    enforces deadline after the Promo wait: checkout=True, promo=True, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=52 end=2026-10-29 06:26:44.531792 UTC releasedAfter=Just 2026-10-29 06:26:44.541286 UTC
+    enforces deadline after the Promo wait: checkout=True, promo=True, elapsed=True [✘]
+    retains a prior order and same-key promo replay after its deadline [✔]
+ticket-payment-gate-postgresql
+CANONICAL_CLOCK_WAIT event=54 end=2026-10-29 06:36:49.744741 UTC releasedAfter=Just 2026-10-29 06:26:49.788061 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=False, elapsed=False [✔]
+CANONICAL_CLOCK_WAIT event=55 end=2026-10-29 06:26:54.900622 UTC releasedAfter=Just 2026-10-29 06:26:54.911645 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=False, elapsed=True [✘]
+CANONICAL_CLOCK_WAIT event=56 end=2026-10-29 06:36:55.026169 UTC releasedAfter=Just 2026-10-29 06:26:55.059371 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=True, elapsed=False [✔]
+CANONICAL_CLOCK_WAIT event=57 end=2026-10-29 06:27:00.140879 UTC releasedAfter=Just 2026-10-29 06:27:00.155696 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=True, elapsed=True [✘]
+
+Failures:
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4441:13: 
+  1) provider-retry-runtime PostgreSQL, ticket-reservation-clock, enforces deadline after the Event wait: checkout=False, promo=False, elapsed=True
+       expected: (409, [], [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 })])
+        but got: (200, [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = "paid"
+                 })], [(Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 0
+                 })])
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/ticket-reservation-clock/enforces deadline after the Event wait: checkout=False, promo=False, elapsed=True/" --seed 20261029
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4441:13: 
+  2) provider-retry-runtime PostgreSQL, ticket-reservation-clock, enforces deadline after the Event wait: checkout=True, promo=False, elapsed=True
+       expected: (409, [], [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 })])
+        but got: (200, [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = "paid"
+                 })], [(Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 0
+                 })])
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/ticket-reservation-clock/enforces deadline after the Event wait: checkout=True, promo=False, elapsed=True/" --seed 20261029
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4441:13: 
+  3) provider-retry-runtime PostgreSQL, ticket-reservation-clock, enforces deadline after the Event wait: checkout=True, promo=True, elapsed=True
+       expected: (409, [], [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 })])
+        but got: (200, [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = "paid"
+                 })], [(Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 1
+                 })])
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/ticket-reservation-clock/enforces deadline after the Event wait: checkout=True, promo=True, elapsed=True/" --seed 20261029
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4441:13: 
+  4) provider-retry-runtime PostgreSQL, ticket-reservation-clock, enforces deadline after the Tier wait: checkout=False, promo=False, elapsed=True
+       expected: (409, [], [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 })])
+        but got: (200, [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = "paid"
+                 })], [(Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 0
+                 })])
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/ticket-reservation-clock/enforces deadline after the Tier wait: checkout=False, promo=False, elapsed=True/" --seed 20261029
+
+  test/TDF/Commerce/ProviderRetrySpec.hs:4441:13: 
+  5) provider-retry-runtime PostgreSQL, ticket-reservation-clock, enforces deadline after the Promo wait: checkout=True, promo=True, elapsed=True
+       expected: (409, [], [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 })])
+        but got: (200, [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = "paid"
+                 })], [(Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 3
+                 }, Single {
+                   unSingle = 1
+                 })])
+
+  To rerun use: --match "/provider-retry-runtime PostgreSQL/ticket-reservation-clock/enforces deadline after the Promo wait: checkout=True, promo=True, elapsed=True/" --seed 20261029
+
+  test/TDF/TicketPaymentGateSpec.hs:121:36: 
+  6) ticket-payment-gate-postgresql ticket-reservation-clock enforces canonical deadline: promo=False, elapsed=True
+       expected: (409, [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 })])
+        but got: (200, [(Single {
+                   unSingle = 1
+                 }, Single {
+                   unSingle = 1
+                 }, Single {
+                   unSingle = 0
+                 })])
+
+  To rerun use: --match "/ticket-payment-gate-postgresql/ticket-reservation-clock enforces canonical deadline: promo=False, elapsed=True/" --seed 20261029
+
+  test/TDF/TicketPaymentGateSpec.hs:121:36: 
+  7) ticket-payment-gate-postgresql ticket-reservation-clock enforces canonical deadline: promo=True, elapsed=True
+       expected: (409, [(Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 }, Single {
+                   unSingle = 0
+                 })])
+        but got: (200, [(Single {
+                   unSingle = 1
+                 }, Single {
+                   unSingle = 1
+                 }, Single {
+                   unSingle = 1
+                 })])
+
+  To rerun use: --match "/ticket-payment-gate-postgresql/ticket-reservation-clock enforces canonical deadline: promo=True, elapsed=True/" --seed 20261029
+
+Randomized with seed 20261029
+
+Finished in 41.7184 seconds
+17 examples, 7 failures
+
+
+
+tdf-hq> Test suite tdf-hq-test failed
+Completed 2 action(s).
+
+Error: [S-7282]
+       Stack failed to execute the build plan.
+       
+       While executing the build plan, Stack encountered the error:
+       
+       Error: [S-1995]
+       Test suite failure for package tdf-hq-0.1.0.0
+           tdf-hq-test:  exited with: ExitFailure 1
+       Logs printed to console
+       

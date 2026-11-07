@@ -1,0 +1,251 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-26T04:34:30.537294+00:00",
+  "status": "VERIFIED-synthetic-welcome-logout-and-activation-only",
+  "purpose": "Verify that anonymous welcome and published42b9 logout privacy work together before protected integration.",
+  "publishedPr": 619,
+  "publishedPrHead": "d8191612b1d8e185e997a4ecf72c2d23ed83fba9",
+  "runtimeSource": "ffa52950bc6157de4f1cd672742bdf97428b2a61",
+  "runtimeSourceTree": "a56cba778b8ad1fecb64ddeacd0f501e297c8199",
+  "prospectivePrivacySource": "42b9fbe8dbcd922755c4b23d85a55e030483d5cf",
+  "protectedMainAtComposition": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+  "composition": {
+    "observedAt": "2026-10-26T04:29:05.725622+00:00",
+    "preparedWelcomeHead": "7df4693922acdc5dbd5c861e1200f9abc994a169",
+    "publishedPrivacyHead": "42b9fbe8dbcd922755c4b23d85a55e030483d5cf",
+    "protectedMain": "e938c72ba4b87010214f6838f06bfac45a0f45c0",
+    "welcomeMaterialFilesExact": [
+      "e2e/web/directory-entry.spec.mjs",
+      "e2e/web/directory-favorite-recovery.spec.mjs",
+      "e2e/web/directory-language.spec.mjs",
+      "e2e/web/persona-public.spec.mjs",
+      "e2e/web/public-welcome.spec.mjs",
+      "tdf-hq-ui/src/components/PublicWelcome.tsx",
+      "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+      "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+      "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+      "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+      "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
+      "tdf-hq-ui/src/pages/TdfPlatformPage.tsx"
+    ],
+    "privacyMaterialFilesExact": [
+      "tdf-hq-ui/src/api/auth.ts",
+      "tdf-hq-ui/src/api/client.ts",
+      "tdf-hq-ui/src/api/drive.ts",
+      "tdf-hq-ui/src/api/inventory.ts",
+      "tdf-hq-ui/src/api/logoutIntent.test.ts",
+      "tdf-hq-ui/src/api/session.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+      "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+      "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx",
+      "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+      "tdf-hq-ui/src/pages/LoginPage.tsx",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
+      "tdf-hq-ui/src/session/SessionContext.tsx",
+      "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
+      "tdf-hq-ui/src/session/SessionProvider.personalData.test.tsx",
+      "tdf-hq-ui/src/session/logoutIntent.test.ts",
+      "tdf-hq-ui/src/session/logoutIntent.ts"
+    ],
+    "applicationChangesDisjoint": true,
+    "allOtherUiFilesEqualPublishedPrivacyHead": true,
+    "mainRequirementsExact": 141,
+    "privacyRequirementsExact": 142,
+    "combinedRequirements": 143,
+    "backendSchemaMobileOpsDependenciesExactMain": true,
+    "runtimeProof": "Separate receipt; not merged/protected or production.",
+    "executedSource": "ffa52950bc6157de4f1cd672742bdf97428b2a61"
+  },
+  "node": "v22.14.0",
+  "trackedSourceClean": true,
+  "untrackedAtExecution": [
+    "?? node_modules",
+    "?? tdf-hq-ui/node_modules"
+  ],
+  "binary": {
+    "sha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+    "qualifiedSource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "actualVersion": {
+      "buildTime": "2026-10-26T02:41:57Z",
+      "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "limitation": "Compatible retained executable; not a new compilation of the combined welcome source."
+  },
+  "frontend": {
+    "entry": "/assets/index-C5nwLUhD.js",
+    "sha256": "8db98d1926fe14875ee4400729f62b2df94b9e75a66cb0a01bc988b04066892a",
+    "embeddedSourceVerified": true,
+    "apiBase": "http://127.0.0.1:18819"
+  },
+  "validation": {
+    "uiTests": 213,
+    "uiSuites": 21,
+    "uiFailed": 0,
+    "typescript": "PASS",
+    "eslint": "PASS",
+    "strictCatalogCandidates": 1330,
+    "strictCatalogUnreviewed": 0,
+    "catalogRegressionTests": 8,
+    "catalogCsvRefreshed": true,
+    "inventory": "PASS",
+    "traceability": "PASS",
+    "materialSurfacesAdmitted": 30,
+    "generatedApiClients": 2,
+    "schemaMigrations": 221,
+    "schemaApplyReplayAndMusicRollback": "PASS",
+    "wholeSystemConformance": "PARTIAL/UNPROVEN; no global refinement/release clearance."
+  },
+  "welcomeAssertions": {
+    "anonymousSession": true,
+    "rootToInicio": true,
+    "imageLoaded": true,
+    "keyboardNavigation": true,
+    "studioAnchor": true,
+    "serviceAnchor": true,
+    "noSignupBeforeExplicitAction": true
+  },
+  "artistAndFanJourney": {
+    "status": "VERIFIED-synthetic-only",
+    "humanParticipants": 0,
+    "syntheticFans": 2,
+    "uiSignup": true,
+    "profilePublication": true,
+    "uploadRecovery": true,
+    "saveRecovery": true,
+    "community": true,
+    "crossWebFormFactorRelogin": true,
+    "logoutUi": true,
+    "browserSessionAbsentAfterLogout": true,
+    "originalCookieRevoked": true,
+    "artistUiFollowerCount": 2,
+    "googleProviderTested": false,
+    "nativeDevicesTested": false
+  },
+  "logoutDiagnostic": {
+    "status": "VERIFIED-isolated-failed-logout-recovery",
+    "humanParticipants": 0,
+    "logoutClickedInUi": true,
+    "logoutNetworkFailureInjected": true,
+    "serverCookieRemainedValidDuringFailure": true,
+    "reloadRemainsAnonymous": true,
+    "unsignedArtistStillReadable": true,
+    "explicitRetryRevokesServerCookie": true,
+    "freshCredentialsRecoverAfterFailure": true,
+    "otherTabSignsOut": true,
+    "bearerOnlyRetryRevokesOriginalToken": true,
+    "noCookieAvailableDuringBearerRetry": true,
+    "queuedLogoutThenLoginDiscardsOldTabScope": true,
+    "realSecondCookieActorConfirmed": true,
+    "cookieOnlyBootstrapAfterFreshLogin": true,
+    "successLogoutUiVerified": true,
+    "samePartyArtistActivationPreservesBuyerAndBookingDrafts": true,
+    "serverReal": true,
+    "productionWrites": false,
+    "scope": "Real native browser/API/PostgreSQL. Logout POST failure and queued storage-event delivery are explicit adapters; cookie removal models a bearer-only browser; no offline revocation or full Set-Cookie ordering claim."
+  },
+  "databaseAssertions": {
+    "syntheticFirstValueRecords": 2,
+    "syntheticPairs": 2,
+    "followRows": 2,
+    "evidenceRows": 2,
+    "duplicateRows": 0
+  },
+  "networkIsolation": {
+    "threeListenersLoopbackOnly": true,
+    "lanRequestsDenied": true,
+    "nonLoopbackEgressDeniedWithPositiveControl": true,
+    "noAddressRetained": true
+  },
+  "browserAdapters": {
+    "driveMediaUpload503ProfilePut503": true,
+    "logoutRequestFailure": true,
+    "queuedStorageEventDelivery": true,
+    "cookieRemovalForBearerOnlyCase": true,
+    "scope": "All accounts/data are synthetic; API persistence and session authority are real in a disposable environment."
+  },
+  "browserObservation": {
+    "blockedExternalRequests": 51,
+    "blockedMutations": 0,
+    "uploads": 1,
+    "uploadAttempts": 2,
+    "profileFailures": 2
+  },
+  "cleanup": {
+    "runtimesStopped": true,
+    "databaseRemoved": true,
+    "clusterStopped": true
+  },
+  "steps": [
+    {
+      "step": "compile-test-bind-adapter",
+      "exitCode": 0
+    },
+    {
+      "step": "deny-nonloopback-egress",
+      "exitCode": 0
+    },
+    {
+      "step": "init",
+      "exitCode": 0
+    },
+    {
+      "step": "start",
+      "exitCode": 0
+    },
+    {
+      "step": "create",
+      "exitCode": 0
+    },
+    {
+      "step": "full221-schema",
+      "exitCode": 0
+    },
+    {
+      "step": "build-isolated-web",
+      "exitCode": 0
+    },
+    {
+      "step": "actual-api-browser",
+      "exitCode": 0
+    },
+    {
+      "step": "drop",
+      "exitCode": 0
+    },
+    {
+      "step": "stop",
+      "exitCode": 0
+    }
+  ],
+  "humanParticipants": 0,
+  "humanPilotHeld": true,
+  "measuredProductionActivations": null,
+  "conversionImprovement": null,
+  "providerTested": false,
+  "nativeDeviceTested": false,
+  "productionWrites": false,
+  "delivery": {
+    "implementation": "Prepared combined source",
+    "localValidation": "PASS as scoped above",
+    "protectedMerged": false,
+    "deployed": false,
+    "verifiedInProduction": false,
+    "note": "Original619 remains d819. After616/618 merge, final main composition needs its own CI and independent approval. Synthetic privacy results do not authorize a human pilot."
+  },
+  "replayDirectory": "reports/welcome-logout-integration-evidence-20261026",
+  "executedHarnessSha256": {
+    "run.py": "b4f9c92a9b848c84e18e2c8f7b9994f44668b29288ed24d152698a80ba406f6f",
+    "runtime.mjs": "2d29b9c010771040d793519baf38ffb70927dea53467bc2bafbfece343dfa156",
+    "rehearsal.mjs": "016a5c0e9bf158b27a1fc4e4358f9955ed3e95d49adcafc2dd17376bff879eda",
+    "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+  },
+  "originalPrivacyDriverSha256": "df5dd2e15d9fb9c902543142e80b63c06b453bb769c25e692884f9a33bf8437d",
+  "priorEvidencePreserved": [
+    "reports/welcome-runtime-2026-10-26.json",
+    "reports/welcome-runtime-221-2026-10-26.json"
+  ],
+  "privateRawReceipt": "/private/tmp/tdf-welcome-logout-activation-20261026-e1w49zdm/results.json"
+}

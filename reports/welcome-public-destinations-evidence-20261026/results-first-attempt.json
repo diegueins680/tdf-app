@@ -1,0 +1,9 @@
+{
+  "startedAt": "2026-10-26T04:51:47.623Z",
+  "scope": "Anonymous read-only production destination verification. No signup, authentication, follow, booking, provider playback or other business mutation. External images/embeds blocked; media playback and thumbnail availability are not verified.",
+  "cases": [],
+  "status": "FAILED",
+  "failure": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   {\n+     method: 'POST',\n+     path: '/flags/'\n+   }\n+ ]\n- []\n",
+  "browserClosed": true,
+  "finishedAt": "2026-10-26T04:51:50.771Z"
+}

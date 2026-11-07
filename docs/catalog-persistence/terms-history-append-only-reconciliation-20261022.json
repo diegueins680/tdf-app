@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "parentRevision": "b9ae3d73b0aba7c407c8d1fc27cda99fe40c3f37",
+  "migrationCount": 217,
+  "retiredManifestDecisions": [
+    {
+      "id": "3834687cda771cfcd52b",
+      "source": {
+        "sourceRevision": "b9ae3d73b0aba7c407c8d1fc27cda99fe40c3f37",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "fa14580859598fdc3947c99242c282e8ac2fa777980638b834d488c344efcb62",
+        "sourceEntry": {
+          "id": "3834687cda771cfcd52b"
+        },
+        "sourceEntryCanonicalSha256": "728c8893997dfac2efbb08984e1d3edc903a0629b80f2161f11f2dbd87de1be4",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      }
+    }
+  ],
+  "currentManifestId": "2b073f20afd2f3798b1e",
+  "preservedPrefixCanonicalSha256": "c4652908aefa9840b21d37d41adbdd8f8342e8a993f630baec248f0ce74af6ce",
+  "scope": "Only the manifest fingerprint advances. Existing classifications and source evidence stay intact; no production migration, approval or retention authorization."
+}

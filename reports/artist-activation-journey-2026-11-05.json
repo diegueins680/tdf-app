@@ -1,0 +1,189 @@
+{
+  "date": "2026-11-05",
+  "existingPullRequest": 667,
+  "previousReviewedHead": "3fccf57ad69bdb492fb5bde5f05f05b67f3919ca",
+  "protectedMain": "41c2f474b9c72df3b2c0bdda85bf10ba727bbed4",
+  "problem": "The deployed shared artist link has no session player; its follow/signup link discards the selected video. The existing reviewed player work was still a conflicting draft.",
+  "change": "Normally integrate the existing PR with current main, retain anonymous playback and exact-session follow/auth return, explain the benefit of following and add full browser journey coverage. Reuse existing source and campaign PR; no competing implementation.",
+  "liveBefore": {
+    "at": "2026-11-05T06:03:47.694Z",
+    "url": "https://www.tdfrecords.net/a/rojo?video=youtube%3AuRNyIMLiqU8",
+    "playerRendered": false,
+    "followAuthReturnLostVideo": true,
+    "organicConversions": "Not measured by this task"
+  },
+  "sourceSha256": {
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "a281c9faac4c972df779d215ea50f765c288e523748998a67ac12b2782d15069",
+    "tdf-hq-ui/src/utils/artistFollowIntent.ts": "ce8141f4e08a7c6334db684dc85c15a9202a1e40877029da2e12f8c3b5b00cc7",
+    "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx": "a97a1b7695787cc77ed55c94fe3ece8dbe877394f882c1cf9114dba7284f15fb",
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "64c1e06b51b85af822c807a6878524bb22a063339dda0fcfa909529df50961b8",
+    "tdf-hq-ui/src/i18n/locales/es.ts": "bc8f467f4a10a129ab45e4e630fd676547fc5516f3c96e008c8dff0e8e468a2c",
+    "tdf-hq-ui/src/i18n/locales/en.ts": "02a8564ad6079993d42e0837b6b6880c9f77c54dd99ee7952be6c60514460e08",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "1699b33488035a15f8334b5247518efcca4fe2bbd745454887ce744de37665d9",
+    "e2e/web/artist-follow.spec.mjs": "d10da21417926130c94c76413f8222fb62f14a3171aa68ea1a6d46a45f7f01c4"
+  },
+  "localQualification": {
+    "web": {
+      "suites": 347,
+      "tests": 3986,
+      "failed": 0,
+      "logSha256": "b1392b7361b88f0fd202eebf66dce05b6fc2493e5e9c2f9ace195290b9c23dd1"
+    },
+    "browser": {
+      "passed": 12,
+      "failed": 0,
+      "scope": "Phone and desktop, synthetic API/auth/follow fixtures. Guest viewing, invalid auth, explicit retry, selected session and acquisition return, explicit follow, failed follow retry, reload, keyboard consent and English entry. No real accounts/follows created.",
+      "resultSha256": "f83de8ff1c6ba6078344e797dd3051887330dc9fcaf6ccddcb9fd8a4059e9085"
+    },
+    "productionBuild": {
+      "typecheck": "PASS",
+      "gzipInitialJavaScriptBytes": 389726,
+      "logSha256": "2cfd422be95694e9ee703536d90b500688ab8cc0f8f1096b9691b7b5a61f5149"
+    },
+    "lint": {
+      "result": "PASS",
+      "logSha256": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5"
+    },
+    "catalogControls": {
+      "passed": 8,
+      "failed": 0,
+      "logSha256": "53079b041de1fa78d2bf6c1249c8c14755492e218629a272a7fdeb49cfcece99"
+    },
+    "conformanceControls": {
+      "passed": 10,
+      "failed": 0,
+      "logSha256": "aabeb1167cdef926bfecc83cd45e771004ba2c7963f259aed320fed99b739954"
+    },
+    "repositoryQuality": {
+      "result": "PASS",
+      "logSha256": "23cd1ca4b205e3aa7e18276f33629c6121172cc8e55747eba1e7e72f54ad51f9"
+    },
+    "strictCatalog": {
+      "result": "PASS",
+      "candidates": 1387,
+      "reviewedActiveDecisions": 1387,
+      "unreviewed": 0,
+      "stale": 0,
+      "formats": [
+        "JSON",
+        "CSV"
+      ]
+    }
+  },
+  "realAnonymousPlayback": {
+    "at": "2026-11-05T06:13:51.429Z",
+    "scope": "Candidate production build with anonymous read-only proxy to real public artist API and actual YouTube playback; operator QA, not deployed or organic traffic.",
+    "playback": {
+      "time": 3.007625,
+      "duration": 1322.641,
+      "width": 854,
+      "height": 480,
+      "readyState": 4
+    },
+    "returnTarget": "/a/rojo?resume=follow&artistId=520&video=youtube%3AuRNyIMLiqU8&utm_source=qa#artist-session",
+    "overflow": false,
+    "writes": [],
+    "requests": [
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/catalogs/batch?code=locales&code=currencies&locale=es&page=1&pageSize=500"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/catalogs/batch?code=appearance-modes&locale=es&page=1&pageSize=50"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/session"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/artists/rojo/public"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/artists/rojo/public"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/catalogs/batch?code=locales&code=currencies&locale=es&page=1&pageSize=500"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/catalogs/batch?code=appearance-modes&locale=es&page=1&pageSize=50"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/merch/artists/520/stores"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/fans/artists/520/fans?page=1&pageSize=5"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/music/releases?artistPartyId=520&limit=100&offset=0"
+      },
+      {
+        "method": "GET",
+        "url": "http://127.0.0.1:5489/core-api/fans/artists/520/releases"
+      }
+    ],
+    "errors": [],
+    "audioListening": "Not independently audited; decoded video progress is verified.",
+    "logSha256": "19ad70a1f006baa97a17f48e4238b411f19cbfcd4567b810daf357faeb46978a"
+  },
+  "preservation": {
+    "protected_main": "41c2f474b9c72df3b2c0bdda85bf10ba727bbed4",
+    "preserved_main_requirements": 187,
+    "owned_ci_mapping_enriched": true,
+    "total_requirements": 190,
+    "main_catalog_objects_preserved_exactly": 1386,
+    "campaign_service_files_unchanged_from_previously_reviewed_3fcc": 50,
+    "core_backend_sql_ci_workflow_and_mobile_pin_equal_main": true
+  },
+  "measurement": {
+    "newEvents": 0,
+    "reuse": [
+      "tdf_video_player_opened",
+      "signup_started",
+      "signup_completed",
+      "login_completed",
+      "first_value_completed"
+    ],
+    "rules": [
+      "An external iframe opening is not a playback or listening metric.",
+      "Exclude utm_source=qa and known operator/test sessions from organic results.",
+      "Join signup/first-value cohorts with current staff/test exclusions where identity is available; unknown anonymous classification remains explicit.",
+      "Historical 3/13 first-value observation is not current conversion, causality or measured improvement."
+    ],
+    "firstValue": "Existing server-confirmed artist_followed completion; no success inferred from auth or player opening."
+  },
+  "initialDiagnostics": [
+    "The first browser run had four fixture/locator failures: exact label matching included required-field decoration, and HTTP503 login is intentionally retried automatically. Corrected the test to use an accessible email locator and explicit HTTP401/400 authentication rejection; all twelve cases then passed.",
+    "The first build could not write Vite cache under the sandbox; unchanged build passed with cache access.",
+    "Repository checks required local sockets, PyYAML and the existing jq executable; original setup failures retained.",
+    "Playback audit first missed iframe attachment and then used a desktop-only provider selector; the visible phone play control produced actual decoded playback.",
+    "Catalog controls initially found successor references to unmerged Mobile85; restored the actual main successor and retirement mappings while preserving exact old review objects. All eight unchanged controls then passed."
+  ],
+  "delivery": {
+    "state": "PREPARED_NOT_DEPLOYED",
+    "draft": true,
+    "autoMerge": false,
+    "freshHostedCI": "REQUIRED",
+    "freshIndependentReview": "REQUIRED",
+    "currentMainMobilePinPreserved": true,
+    "pairedMobile177": "Unchanged separate draft; native player not included in preserved main pin.",
+    "campaignDestinationsChanged": false,
+    "messagesSent": 0,
+    "realAccountsCreated": 0,
+    "realFollowsCreated": 0,
+    "productionBusinessWrites": 0,
+    "manualDeployments": 0
+  },
+  "releaseAcceptance": [
+    "Current-head hosted checks and independent review; ordinary protected admission.",
+    "Normal approved deployment; anonymous canonical-site playback and exact-session follow return verified after deployment.",
+    "Only then consider existing authorized campaign-link edits, preserving all external IDs and schedules."
+  ]
+}

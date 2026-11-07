@@ -105,3 +105,15 @@ not a claim of certification or completed production qualification:
 
 Executed evidence and operational procedure:
 [reconciliation evidence handoff](../payments/reconciliation-evidence-2026-09-15.md).
+
+
+## Compatibility addendum — 2026-10-15
+
+`PAY-MUSIC-OUTCOME-001` adds the known `music_paid_closed_order` reason from the
+canonical verified-money projection for an already closed music purchase. It is
+allowlisted in the server, OpenAPI and generated clients. The web report labels
+it as requiring review in Spanish and English; it never marks the financial
+case successful or restores fulfillment. A closed purchase is distinct from the
+closed-checkout observation in ADR0124. Existing authorization, redaction, exact
+minor-unit strings and read-only semantics remain authoritative. Unknown stored
+values still become `unrecognized`; the report grants no resolution authority.

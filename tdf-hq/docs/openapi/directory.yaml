@@ -9,7 +9,8 @@ paths:
       security: []
       parameters:
         - { $ref: '#/components/parameters/SearchQuery' }
-        - { name: entityType, in: query, schema: { $ref: '#/components/schemas/DirectoryEntityType' } }
+        - { name: entityType, in: query, schema: { type: string, enum: [profile, artist, classified, event, venue] } }
+        - { name: profileKind, in: query, schema: { type: string, enum: [person, artist, band, project] } }
         - { name: cityId, in: query, schema: { type: string, format: uuid } }
         - { name: latitude, in: query, description: Consented ephemeral search latitude, schema: { type: number, minimum: -90, maximum: 90 } }
         - { name: longitude, in: query, description: Consented ephemeral search longitude, schema: { type: number, minimum: -180, maximum: 180 } }
@@ -338,9 +339,10 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters: [{ name: claimId, in: path, required: true, schema: { type: string, format: uuid } }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
-      description: Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants.
+      description: Requires Admin role and Admin module with a reviewer distinct from the claimant. Decisions serialize on the current claim; identical-state retries preserve review evidence and cannot reactivate revoked grants. Revoking an approved claim (status revoked, AUTHORITY-097) requires a non-empty reason, deactivates every manager grant the claim created in the same transaction and is terminal.
       responses:
-        '200': { description: Reviewed claim; only a new approval transition creates a manager grant }
+        '200': { description: Reviewed claim; only a new approval transition creates a manager grant, and only revocation withdraws them }
+        '400': { description: Revocation without a reason }
         '401': { description: Authentication required }
         '403': { description: Missing Admin role or module or attempted self-review }
         '404': { description: Claim not found }
@@ -431,6 +433,8 @@ components:
         title: { type: string }
         subtitle: { type: string, nullable: true }
         summary: { type: string, nullable: true }
+        profileKind: { type: string, nullable: true }
+        canonicalPath: { type: string, nullable: true, description: Same-origin canonical profile path }
         imageUrl: { type: string, format: uri, nullable: true }
         location: { $ref: '#/components/schemas/PublicLocation' }
         modality: { type: object, properties: { onsite: { type: boolean }, remote: { type: boolean }, travel: { type: boolean } } }

@@ -1,4 +1,6 @@
+import { hasLogoutIntent } from '../session/logoutIntent';
 import { logger } from '../utils/logger';
+import { fetchWithDeadline, RequestTimeoutError } from './requestDeadline';
 import { buildAuthorizationHeader } from './authHeader';
 import { extractErrorDetails } from './errorMessage';
 import { getAuthSessionEpoch, isSessionAuthFailureMessage, notifyAuthSessionExpired } from '../session/authEvents';
@@ -125,49 +127,41 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   try {
     const authHeader = buildAuthorizationHeader();
+    const signedOut = hasLogoutIntent();
     const headers = buildRequestHeaders(init.headers, authHeader);
+    if (signedOut) {
+      headers.delete('Authorization');
+      headers.delete('X-Api-Token');
+    }
     if (shouldSetJsonContentType(headers, init.body)) {
       headers.set('Content-Type', 'application/json');
     }
 
     let res: Response;
-    const controller = new AbortController();
-    const callerSignal = init.signal;
-    const abortForCaller = () => controller.abort();
-    if (callerSignal?.aborted) {
-      controller.abort();
-    } else {
-      callerSignal?.addEventListener('abort', abortForCaller, { once: true });
-    }
-    const timeoutId = setTimeout(() => controller.abort(), 30_000);
-
+    let raw: string;
     try {
-      res = await fetch(joinRequestUrl(API_BASE, path), {
+      ({ res, raw } = await fetchWithDeadline(joinRequestUrl(API_BASE, path), {
         ...init,
-        credentials: 'include',
+        credentials: signedOut ? 'omit' : 'include',
         headers,
-        signal: controller.signal,
-      });
+      }, async (response) => ({
+        res: response,
+        raw: response.status === 204 || response.status === 205 ? '' : await response.text(),
+      })));
     } catch (err) {
-      if (callerSignal?.aborted) {
-        throw err;
-      }
-      if (controller.signal.aborted || (err instanceof DOMException && err.name === 'AbortError')) {
+      if (init.signal?.aborted) throw err;
+      if (err instanceof RequestTimeoutError || (err instanceof DOMException && err.name === 'AbortError')) {
         throw new ApiError(
           'La solicitud tardó demasiado. Verifica tu conexión e inténtalo de nuevo.',
           HTTP_STATUS_REQUEST_TIMEOUT,
         );
       }
       throw normalizeNetworkError(err);
-    } finally {
-      clearTimeout(timeoutId);
-      callerSignal?.removeEventListener('abort', abortForCaller);
     }
 
     if (!res.ok) {
       const contentType = res.headers.get('content-type') ?? '';
-      const bodyText = await res.text().catch(() => '');
-      const trimmed = extractErrorDetails(bodyText, contentType);
+      const trimmed = extractErrorDetails(raw, contentType);
       const statusText = res.statusText.trim();
       const statusLabel = statusText !== '' ? statusText : `HTTP ${res.status}`;
       const details = trimmed !== '' ? trimmed : statusLabel;
@@ -178,7 +172,6 @@ async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     }
 
     if (res.status === 204 || res.status === 205) return undefined as T;
-    const raw = await res.text().catch(() => '');
     const trimmedRaw = raw.trim();
     if (trimmedRaw === '') return undefined as T;
     const contentType = res.headers.get('content-type') ?? '';
