@@ -78,3 +78,5 @@ a mathematical proof or a claim that this candidate is deployed. Physical-device
 provider-account and full catalog provenance qualification remain separate.
 
 Native session-video previews coordinate a handoff: playing a preview pauses the global transport, and a new global play command retires the preview. External provider frames remain outside the native engine guarantee. Legacy browser URL forms retain stable source authorization; relative and HTTP URLs are never fetched by the HTTPS-only server probe.
+
+Owner/team/admin diagnostics use stable source-kind/source-ID cursors, default100 rows and at most500 per request. Each page rechecks current permissions; changing a health verdict does not move its identity across pages. The UI requests more rows only by explicit action and retains earlier diagnoses after a page failure. A traversal is not a snapshot: refresh to see newly inserted identities before an existing cursor. Account changes reset the displayed pages.

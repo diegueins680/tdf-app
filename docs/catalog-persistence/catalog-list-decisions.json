@@ -34598,6 +34598,25 @@
         "valueCount": 2,
         "consumerCount": 0
       }
+    },
+    {
+      "id": "e57be9414507ab590d9f",
+      "classification": "genuine-technical-constant",
+      "disposition": "explicit-allowlist",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Mixing physical source namespaces could authorize or revalidate the wrong media object.",
+      "justification": "The existing asset/legacy namespaces are fixed source identity discriminators in the health primary key and authorization API, already reviewed in the source-health SQL. This named OpenAPI type reuses those exact namespaces for pagination cursors, returned rows and revalidation paths. It introduces no artist metadata, selectable business catalog or authority grant; unknown cursor kinds fail before querying.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "music-health-pagination-20261107",
+      "evidence": {
+        "file": "tdf-hq/docs/openapi/media-health.yaml",
+        "line": 71,
+        "kind": "openapi-enum",
+        "name": "MusicMediaSourceKind",
+        "valueCount": 2
+      }
     }
   ]
 }

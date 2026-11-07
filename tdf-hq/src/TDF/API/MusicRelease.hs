@@ -91,7 +91,8 @@ type MusicReleasePublicAPI = "music" :>
 
 type MusicReleaseProtectedAPI = "music" :>
   (    "studio" :> "releases" :> QueryParam "artistPartyId" Int64 :> Get '[JSON] [Value]
-  :<|> "media-health" :> Get '[JSON] (Headers '[Header "Cache-Control" Text] [Value])
+  :<|> "media-health" :> QueryParam "limit" Int
+         :> QueryParam "afterKind" Text :> QueryParam "afterId" Text :> Get '[JSON] (Headers '[Header "Cache-Control" Text] [Value])
   :<|> "media-health" :> Capture "sourceKind" Text :> Capture "sourceId" Text
          :> "revalidate" :> Post '[JSON] (Headers '[Header "Cache-Control" Text] Value)
   :<|> "releases" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MusicReleaseCreateRequest :> PostCreated '[JSON] Value

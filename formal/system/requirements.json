@@ -16534,7 +16534,8 @@
         "Ingestion and due validation queue",
         "Bounded public HTTPS bytes",
         "Local ffprobe/ffmpeg result",
-        "Authenticated revalidation request"
+        "Authenticated revalidation request",
+        "Diagnostic limit1..500 and paired afterKind/afterId cursor"
       ],
       "state": {
         "health": [
@@ -16604,7 +16605,8 @@
         "scripts/test-event-memory-source-moderation.sh",
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16618,7 +16620,7 @@
         "classification": "PARTIAL",
         "reason": "Implemented bounded persisted validation, server projection and owner revalidation; local SQL, safe-probe and authenticated HTTP tests pass. Hosted CI, full storage ingestion, catalog provenance, provider/device and production acceptance remain pending."
       },
-      "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health.",
+      "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities.",
       "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof.",
       "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
     },
@@ -17090,6 +17092,77 @@
           "tdf-mobile/__tests__/ArtistPublicUrl.test.ts"
         ]
       }
+    },
+    {
+      "id": "SYS-URI-DECODE-001",
+      "title": "Patched URI decoding preserves the installed CommonJS caller",
+      "statement": "The exact pinned Mobile query-string7 decoder must use integrity-pinned upstream0.5.1 through a callable adapter, preserving literal-plus normalization, valid Unicode, non-string rejection and one-level percent decoding; the named repeated-invalid-byte and distinct-percent-run regression oracles must reject their respective affected0.2.2 and0.5.0 implementations.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Mobile user",
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Install the committed Mobile npm v3 lock under the supported Node20.19.4 toolchain; use the exact root gitlink."
+      ],
+      "inputs": [
+        "URI component string",
+        "Malformed percent-encoded bytes",
+        "Non-string input",
+        "Committed dependency lock and local adapter"
+      ],
+      "state": {
+        "boundary": "Stateless synchronous codec; immutable module resolution; no persistence or lifecycle mutation."
+      },
+      "allowedTransitions": [
+        "Replace the affected dependency with the pinned upstream algorithm and reviewed caller adapter after client qualification."
+      ],
+      "forbiddenTransitions": [
+        "Implicitly dispatch the ES module namespace as a function",
+        "Fallback to the legacy vulnerable decoder",
+        "Claim a universal complexity or current incoming-link exploit proof from scoped tests"
+      ],
+      "effects": [
+        "Return a decoded string preserving the caller contract; perform no network or database action."
+      ],
+      "authorization": "Pure decoding grants no capability and performs no authenticated action. Dependency repair does not authorize Mobile distribution or importing newer Mobile-main product behavior.",
+      "privacy": "Neither the adapter nor its evidence collection logs real URI payloads; regression inputs are synthetic.",
+      "concurrency": "Synchronous calls per JavaScript runtime; instrumentation is confined to serialized tests and always restored.",
+      "idempotency": "The same input and pinned decoder yield the same output without persistent effects.",
+      "failure": "Non-string values raise TypeError; no silent legacy fallback. The instrumented budgets are finite executable test oracles, not production timeouts, input-size limits or universal complexity bounds.",
+      "recovery": "Retain the matched reviewed adapter/upstream pair and reproducible lock; repair compatibility rather than restoring the affected algorithm.",
+      "observability": "Record exact Mobile/root revisions, lock integrity, clean-install result, client gates, scoped negative-control results and bundle evidence.",
+      "source": "User audit sections10,18,21-25; upstream GHSA-vcc3-ghjq-m6fr; npm override documentation; fresh inspection of installed Expo6.0.24 and React Navigation parser sources.",
+      "contract": "formal/system/uri-decoder.md",
+      "implementation": [
+        "tdf-mobile/package.json",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/vendor/decode-uri-component/package.json",
+        "tdf-mobile/vendor/decode-uri-component/index.cjs",
+        "tdf-mobile/jest.config.js"
+      ],
+      "tests": [
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped actual-consumer and finite regression obligations; candidate0.5.1 evidence must be recorded at its exact revision. No universal decoder, advisory-free app, attack-path or device proof.",
+      "ambiguity": [
+        "Device/store distribution remains separately qualified.",
+        "Source inspection does not prove every possible future or dynamic parser call is unreachable."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "PARTIAL canonical obligation. Original Mobile7d9481d and baseline6fb0.5.0 codec/client/bundle observations retain historical source identity; fresh audit GHSA-qr28-fpjm-wq7f invalidates security clearance for that algorithm. Candidate0.5.1 requires fresh exact-source codec, client, audit and bundle evidence. Global dependency security and device/store distribution remain separate."
+      },
+      "authority": "approved",
+      "property": "For N in{4,8,16,32}, decoding repeated%FF preserves input and makes1..8N+8 built-in decode calls; actual0.2.2 violates that oracle atN=32. For N in{32,64}, the distinct runs %00%<two-digit hex>x followed by%zz decode to the exact expected string while summed UTF16 receiver lengths across synchronous String.replace calls are positive and <=4 times input length; actual0.5.0 violates the same budget atN=32. The installed query-string7 caller stays callable, and covered produced percent text is decoded only once. These finite families do not establish universal complexity.",
+      "verification": "Actual-consumer Jest and seeded Unicode tests; original0.2.2 call-budget and unadapted-namespace controls;0.5.0 distinct-run replacement-work negative control; one-level percent/BOM/truncated-byte cases; fresh exact-source clean locked install, client gates, audit and native bundles. Historical executions do not qualify changed source.",
+      "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
     }
   ]
 }

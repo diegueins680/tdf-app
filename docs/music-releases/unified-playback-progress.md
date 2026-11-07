@@ -1,3 +1,13 @@
+## Continuation — 7 November2026
+
+Published105c0501c completed35 substantive hosted checks and obtained independent approval; its production hold remained. This continuation normally reconciles protected mainccea8c4, preserving the consent-gated campaign video controls and the global/native/provider playback handoff. Native session/song PR706 was inspected; it is still separate unmerged work and its video/chapter engine changes are not claimed here.
+
+Reproduced a large-catalog failure with actual HTTP against the prior backend: a request for100 diagnostics returned500, while the old UI had no next-page action. New owner diagnostics use stable bounded cursors and expose subsequent pages, page retries and exact-source revalidation. The HTTP regression creates501 legacy sources, checks complete duplicate-free traversal and revokes team access between pages. Verification outcomes are recorded after execution; a fixture setup failure and the intentional baseline failure remain in task-local logs.
+
+The focused Mobile companion182 is based on protected2c72f22 and changes only generated pagination declarations. It preserves the decoder repair already merged in Mobile165; the existing SYS-URI-DECODE-001 specification is reused without weakening its qualifications. Current client tests and startup are distinct from native-device or store delivery.
+
+A read-only diagnostic explains two canonical collector refusals: the API configured image lacks a registry digest and its Compose-file label differs from the required canonical path. Database/edge pass those particular identity checks. This is a small allowlisted observation, not a replacement valid runtime receipt or release-readiness claim. No production configuration, data, flags or media were changed. The guarded routine release executor, coordinated recovery/storage acceptance and backend-first rollout remain required.
+
 # Unified playback — implementation and remaining obligations
 
 ## Delivery candidate — 6 November 2026

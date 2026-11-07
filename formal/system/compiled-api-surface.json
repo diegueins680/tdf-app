@@ -49289,7 +49289,71 @@
       {
         "ordinal": 828,
         "path": "/music/media-health",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "GHC.Types",
+              "name": "Int"
+            }
+          },
+          {
+            "in": "query",
+            "name": "afterKind",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          },
+          {
+            "in": "query",
+            "name": "afterId",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
         "bodies": [],
         "authCombinators": [
           "bearer-token"

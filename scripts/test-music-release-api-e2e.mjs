@@ -594,8 +594,8 @@ for (const row of ownerHealth) {
   assert.deepEqual(Object.keys(row).sort(), ['artistPartyId','checkedAt','nextCheckAt','reason','sourceId','sourceKind','sourceVersion','status'].sort());
 }
 // More than the old500-source cap: every identity must be reachable without disclosure after revocation.
-sql(`INSERT INTO artist_release(artist_party_id,title,spotify_url)
- SELECT ${artist.partyId},'Health page '||i,'https://media.example/health-page-'||i||'.mp3'
+sql(`INSERT INTO artist_release(artist_party_id,title,spotify_url,created_at)
+ SELECT ${artist.partyId},'Health page '||i,'https://media.example/health-page-'||i||'.mp3',NOW()
  FROM generate_series(1,501) i;`);
 const expectedHealthKeys=sql(`SELECT source_kind||':'||source_id FROM music_media_source
  WHERE artist_party_id=${artist.partyId} ORDER BY source_kind COLLATE "C",source_id COLLATE "C"`).split('\n');
