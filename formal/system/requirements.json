@@ -213,7 +213,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence, SAT witnesses and negative controls; actual Haskell boundary oracle. Caller preconditions manually inspected; SQL/whole-program proof open.",
+      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence and outer-validator sign-precondition implication, SAT witnesses/source mutations and negative controls; independent CPC refutations; actual Haskell boundary oracle. Translation/composition, dispatch, SQL and whole-program refinement remain open.",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -276,7 +276,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Same full-width source-derived SMT and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
+      "verification": "Same full-width source-derived SMT, outer-validator sign-precondition, independent CPC and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -2831,14 +2831,16 @@
       ],
       "tests": [
         "scripts/__tests__/dependency-security.test.mjs",
-        "tdf-hq-ui/src/api/socialV2.test.ts"
+        "tdf-hq-ui/src/api/socialV2.test.ts",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "High for scoped deterministic version rejection; partial dependency reachability assessment.",
       "ambiguity": [
         "No universal reachability or transitive supply-chain proof.",
-        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open."
+        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open.",
+        "Other unresolved high/moderate dependency advisories and release exposure remain open."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -11002,7 +11004,8 @@
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "tdf-hq/test/integration/interactions/notification-properties.sql",
-        "e2e/web/chat-notification-navigation.spec.mjs"
+        "e2e/web/chat-notification-navigation.spec.mjs",
+        "e2e/web/chat-mobile-follow.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/ChatNotificationAuthorization.tla",
@@ -16914,6 +16917,77 @@
       "property": "Every installed resolver exact optional binding is present with matching version and archive integrity in the lock; canonical verification refuses runtime binding downloads.",
       "verification": "Deterministic negative fixtures, clean npmci and native probe with fallback disabled, reversible missing-binary fault; no mathematical proof.",
       "evidence": "scripts/__tests__/native-resolver-lock.test.mjs; candidate-source install/probe receipts separately recorded."
+    },
+    {
+      "id": "SYS-URI-DECODE-001",
+      "title": "Patched URI decoding preserves the installed CommonJS caller",
+      "statement": "The exact pinned Mobile query-string7 decoder must use integrity-pinned upstream0.5.1 through a callable adapter, preserving literal-plus normalization, valid Unicode, non-string rejection and one-level percent decoding; the named repeated-invalid-byte and distinct-percent-run regression oracles must reject their respective affected0.2.2 and0.5.0 implementations.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Mobile user",
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Install the committed Mobile npm v3 lock under the supported Node20.19.4 toolchain; use the exact root gitlink."
+      ],
+      "inputs": [
+        "URI component string",
+        "Malformed percent-encoded bytes",
+        "Non-string input",
+        "Committed dependency lock and local adapter"
+      ],
+      "state": {
+        "boundary": "Stateless synchronous codec; immutable module resolution; no persistence or lifecycle mutation."
+      },
+      "allowedTransitions": [
+        "Replace the affected dependency with the pinned upstream algorithm and reviewed caller adapter after client qualification."
+      ],
+      "forbiddenTransitions": [
+        "Implicitly dispatch the ES module namespace as a function",
+        "Fallback to the legacy vulnerable decoder",
+        "Claim a universal complexity or current incoming-link exploit proof from scoped tests"
+      ],
+      "effects": [
+        "Return a decoded string preserving the caller contract; perform no network or database action."
+      ],
+      "authorization": "Pure decoding grants no capability and performs no authenticated action. Dependency repair does not authorize Mobile distribution or importing newer Mobile-main product behavior.",
+      "privacy": "Neither the adapter nor its evidence collection logs real URI payloads; regression inputs are synthetic.",
+      "concurrency": "Synchronous calls per JavaScript runtime; instrumentation is confined to serialized tests and always restored.",
+      "idempotency": "The same input and pinned decoder yield the same output without persistent effects.",
+      "failure": "Non-string values raise TypeError; no silent legacy fallback. The instrumented budgets are finite executable test oracles, not production timeouts, input-size limits or universal complexity bounds.",
+      "recovery": "Retain the matched reviewed adapter/upstream pair and reproducible lock; repair compatibility rather than restoring the affected algorithm.",
+      "observability": "Record exact Mobile/root revisions, lock integrity, clean-install result, client gates, scoped negative-control results and bundle evidence.",
+      "source": "User audit sections10,18,21-25; upstream GHSA-vcc3-ghjq-m6fr; npm override documentation; fresh inspection of installed Expo6.0.24 and React Navigation parser sources.",
+      "contract": "formal/system/uri-decoder.md",
+      "implementation": [
+        "tdf-mobile/package.json",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/vendor/decode-uri-component/package.json",
+        "tdf-mobile/vendor/decode-uri-component/index.cjs",
+        "tdf-mobile/jest.config.js"
+      ],
+      "tests": [
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped actual-consumer and finite regression obligations; candidate0.5.1 evidence must be recorded at its exact revision. No universal decoder, advisory-free app, attack-path or device proof.",
+      "ambiguity": [
+        "Device/store distribution remains separately qualified.",
+        "Source inspection does not prove every possible future or dynamic parser call is unreachable."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "PARTIAL canonical obligation. Original Mobile7d9481d and baseline6fb0.5.0 codec/client/bundle observations retain historical source identity; fresh audit GHSA-qr28-fpjm-wq7f invalidates security clearance for that algorithm. Candidate0.5.1 requires fresh exact-source codec, client, audit and bundle evidence. Global dependency security and device/store distribution remain separate."
+      },
+      "authority": "approved",
+      "property": "For N in{4,8,16,32}, decoding repeated%FF preserves input and makes1..8N+8 built-in decode calls; actual0.2.2 violates that oracle atN=32. For N in{32,64}, the distinct runs %00%<two-digit hex>x followed by%zz decode to the exact expected string while summed UTF16 receiver lengths across synchronous String.replace calls are positive and <=4 times input length; actual0.5.0 violates the same budget atN=32. The installed query-string7 caller stays callable, and covered produced percent text is decoded only once. These finite families do not establish universal complexity.",
+      "verification": "Actual-consumer Jest and seeded Unicode tests; original0.2.2 call-budget and unadapted-namespace controls;0.5.0 distinct-run replacement-work negative control; one-level percent/BOM/truncated-byte cases; fresh exact-source clean locked install, client gates, audit and native bundles. Historical executions do not qualify changed source.",
+      "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
     },
     {
       "id": "UX-BRAND-ICONS-001",

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T08:03:39.409Z",
+  "generatedAt": "2026-11-07T15:04:50.947Z",
   "repositoryRoot": ".",
-  "filesScanned": 2639,
+  "filesScanned": 2640,
   "candidateCount": 1405,
   "byClassification": {
     "dynamic-business-catalog": 920,
@@ -5935,7 +5935,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 895,
+      "consumerCount": 896,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6222,7 +6222,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 895,
+      "consumerCount": 896,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -8872,7 +8872,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1554,
+      "consumerCount": 1555,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -16458,7 +16458,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 907,
+      "consumerCount": 908,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17239,7 +17239,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 903,
+      "consumerCount": 904,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17529,7 +17529,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 903,
+      "consumerCount": 904,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -25863,7 +25863,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 976,
+      "consumerCount": 977,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -28892,7 +28892,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1044,
+      "consumerCount": 1046,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32646,7 +32646,7 @@
       "lines": [
         142
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -32930,7 +32930,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33202,7 +33202,7 @@
       "lines": [
         190
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33475,7 +33475,7 @@
       "lines": [
         202
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -33761,7 +33761,7 @@
       "lines": [
         215
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -34031,7 +34031,7 @@
       "lines": [
         241
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -34303,7 +34303,7 @@
       "lines": [
         251
       ],
-      "consumerCount": 341,
+      "consumerCount": 342,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -49571,7 +49571,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 1003,
+      "consumerCount": 1004,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -57019,7 +57019,7 @@
       "lines": [
         332
       ],
-      "consumerCount": 1087,
+      "consumerCount": 1089,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -59839,7 +59839,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 1003,
+      "consumerCount": 1004,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -65964,7 +65964,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 65,
+      "consumerCount": 66,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -66034,6 +66034,7 @@
         "scripts/lib/operations_conformance.py",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-checkout-policy-terms-identity-migration.sh",
+        "scripts/test-payment-arithmetic-verifier.py",
         "scripts/test-public-ticket-checkout-runtime-migration.sh",
         "scripts/verification-report.py",
         "scripts/verify-payment-arithmetic.py"
@@ -69939,7 +69940,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 1003,
+      "consumerCount": 1004,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -70239,7 +70240,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 1003,
+      "consumerCount": 1004,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -71673,7 +71674,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 1003,
+      "consumerCount": 1004,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -72216,7 +72217,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1044,
+      "consumerCount": 1046,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -76688,7 +76689,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 35,
+      "consumerCount": 36,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -76719,7 +76720,8 @@
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
-        "tdf-mobile/src/features/interactions/DiscussionScreen.tsx"
+        "tdf-mobile/src/features/interactions/DiscussionScreen.tsx",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
       ],
       "automationConsumers": [
         "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
@@ -77652,7 +77654,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 925,
+      "consumerCount": 926,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -87396,7 +87398,7 @@
       "lines": [
         11291
       ],
-      "consumerCount": 1013,
+      "consumerCount": 1014,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -87546,12 +87548,12 @@
         "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx",
         "tdf-mobile/src/features/interactions/model.ts",
         "tdf-mobile/src/feedback/FeedbackEntry.tsx",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
         "tdf-mobile/src/lib/catalogAdmin.ts",
         "tdf-mobile/src/lib/catalogSnapshot.test.ts",
         "tdf-mobile/src/lib/catalogSnapshot.ts",
         "tdf-mobile/src/lib/firstRunFlags.ts",
-        "tdf-mobile/src/lib/formatters.ts",
-        "tdf-mobile/src/lib/nativeGoogleSignin.ts"
+        "tdf-mobile/src/lib/formatters.ts"
       ],
       "automationConsumers": [
         ".github/workflows/catalog-list-audit.yml",
@@ -95758,7 +95760,7 @@
       "lines": [
         18960
       ],
-      "consumerCount": 1008,
+      "consumerCount": 1009,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -95908,12 +95910,12 @@
         "tdf-mobile/src/features/interactions/InteractionFlows.test.tsx",
         "tdf-mobile/src/features/interactions/model.ts",
         "tdf-mobile/src/feedback/FeedbackEntry.tsx",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
         "tdf-mobile/src/lib/catalogAdmin.ts",
         "tdf-mobile/src/lib/catalogSnapshot.test.ts",
         "tdf-mobile/src/lib/catalogSnapshot.ts",
         "tdf-mobile/src/lib/firstRunFlags.ts",
-        "tdf-mobile/src/lib/formatters.ts",
-        "tdf-mobile/src/lib/nativeGoogleSignin.ts"
+        "tdf-mobile/src/lib/formatters.ts"
       ],
       "automationConsumers": [
         ".github/workflows/catalog-list-audit.yml",
@@ -108501,7 +108503,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 114,
+      "consumerCount": 115,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -108605,6 +108607,7 @@
         "scripts/test-music-release-api-e2e.mjs",
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-music-s3-local.mjs",
+        "scripts/test-payment-arithmetic-verifier.py",
         "scripts/test-physical-postgres-docker.py",
         "scripts/test-provider-domain-binding.py",
         "scripts/test-provider-execution-runtime-migration.sh",
@@ -115516,7 +115519,7 @@
       "lines": [
         782
       ],
-      "consumerCount": 16,
+      "consumerCount": 18,
       "backendConsumers": [
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
@@ -115527,6 +115530,8 @@
       "webConsumers": [
         "tdf-hq-ui/src/api/directory.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
+        "tdf-hq-ui/src/pages/ChatPage.tsx",
         "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/routes/NavigationScrollRestoration.tsx"
       ],
@@ -140597,7 +140602,7 @@
       "lines": [
         284
       ],
-      "consumerCount": 55,
+      "consumerCount": 56,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -140658,6 +140663,7 @@
         "scripts/lib/operations_conformance.py",
         "scripts/test-artist-merch-storefronts-migration.sh",
         "scripts/test-merch-reputation-migration.sh",
+        "scripts/test-payment-arithmetic-verifier.py",
         "scripts/verification-report.py",
         "scripts/verify-payment-arithmetic.py"
       ],
@@ -154924,7 +154930,7 @@
       "lines": [
         151
       ],
-      "consumerCount": 34,
+      "consumerCount": 35,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -154964,6 +154970,7 @@
         "scripts/__tests__/operations-api-schema.test.mjs",
         "scripts/lib/operations_conformance.py",
         "scripts/test-artist-merch-storefronts-migration.sh",
+        "scripts/test-payment-arithmetic-verifier.py",
         "scripts/verification-report.py",
         "scripts/verify-payment-arithmetic.py"
       ],
@@ -163791,7 +163798,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 1003,
+      "consumerCount": 1004,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",

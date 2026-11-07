@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "0f57163cc9c489e22738cac3ff7985d8ca4b647c",
+  "mobileRevision": "1c63eb038ba230005ee77afbe081a0d98bf18b92",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -36,6 +36,7 @@
       "e2e/web/booking-catalog-recovery.spec.mjs",
       "e2e/web/booking-timezone.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
+      "e2e/web/chat-mobile-follow.spec.mjs",
       "e2e/web/chat-notification-navigation.spec.mjs",
       "e2e/web/checkout-readiness.spec.mjs",
       "e2e/web/community-discovery.spec.mjs",
@@ -2819,6 +2820,8 @@
       "tdf-mobile/scripts/check-ios-iphone16-smoke-lane.sh",
       "tdf-mobile/scripts/check-release-assets.mjs",
       "tdf-mobile/scripts/check-vcard-release-truth.sh",
+      "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+      "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js",
       "tdf-mobile/scripts/generate-release-assets.mjs",
       "tdf-mobile/scripts/generate-release-assets.py",
       "tdf-mobile/scripts/generate_release_assets.py",
@@ -2921,6 +2924,7 @@
       "tdf-mobile/src/hooks/useSessionOwnership.ts",
       "tdf-mobile/src/hooks/useToast.ts",
       "tdf-mobile/src/i18n/index.ts",
+      "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
       "tdf-mobile/src/lib/api.ts",
       "tdf-mobile/src/lib/assertNever.ts",
       "tdf-mobile/src/lib/authConfig.ts",
@@ -2988,7 +2992,9 @@
       "tdf-mobile/src/theme/designTokens.ts",
       "tdf-mobile/src/types/index.ts",
       "tdf-mobile/src/utils/haptics.ts",
-      "tdf-mobile/tsconfig.json"
+      "tdf-mobile/tsconfig.json",
+      "tdf-mobile/vendor/decode-uri-component/index.cjs",
+      "tdf-mobile/vendor/decode-uri-component/package.json"
     ],
     "test": [
       "test/fixtures/music-worker/curl.mjs",
@@ -3181,9 +3187,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-36d988b722d46f36",
+      "path": "e2e/web/chat-mobile-follow.spec.mjs",
+      "sha256": "bbfd13846523d055ec4abf7df54fb0f53c231b19c74b71e97c923c2708d8a16a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2b332f1e11171387",
       "path": "e2e/web/chat-notification-navigation.spec.mjs",
-      "sha256": "eb1de6ba90bced5da55e52b727bdcd88b2f59ca3aec092d58c1f039ab47f698d",
+      "sha256": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3321,7 +3333,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "fac07b5d9a994ae4335ccd1095426dd2da5383b7ef34d70a4c86216c4e352a78",
+      "sha256": "56c9594a65f72264034209158aa9076a4578d44be41750771c7b448ba63a187b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6465,7 +6477,7 @@
     {
       "id": "SURFACE-b6c843c3e1881f94",
       "path": "scripts/test-payment-arithmetic-verifier.py",
-      "sha256": "4f3615a40957a439581d175c1b5e55797ad95b9ba31936f99b8fe834355fad97",
+      "sha256": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6513,7 +6525,7 @@
     {
       "id": "SURFACE-8e3764761ce42dca",
       "path": "scripts/test-proof-certificates.py",
-      "sha256": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
+      "sha256": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6795,7 +6807,7 @@
     {
       "id": "SURFACE-896ad45b385c665d",
       "path": "scripts/test-verification-report.py",
-      "sha256": "c3c1590e3986d54297aee1d059571da0417d5f3d317fa754a7d950bb3f93da6b",
+      "sha256": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6855,7 +6867,7 @@
     {
       "id": "SURFACE-3383da3a4aa57dc1",
       "path": "scripts/verification-report.py",
-      "sha256": "69b6d1ceaedcabb3037d3aa7b1a5b4bc0a923cc6ba44aeedcf9115287ff688b2",
+      "sha256": "f42ff320583223be02b63438108ef11eb55ff8a385d169fa3435248097b53686",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6933,7 +6945,7 @@
     {
       "id": "SURFACE-0ae5496c9a8acae5",
       "path": "scripts/verify-payment-arithmetic.py",
-      "sha256": "325b7056f348aaff08ab40e9bb434950939f4c446ef8e1c119725dcae88add7e",
+      "sha256": "b5453ad687564a682d01f363d8c74c47851bfefb5ab5f2c09025b92b675db6f8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10341,13 +10353,13 @@
     {
       "id": "SURFACE-2db984964b19dd3c",
       "path": "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
-      "sha256": "545402d0b86ef118c857130ef91a28c4e5a9fc90d4df25c914395aa81241c894",
+      "sha256": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-57bb44e2fffdfbce",
       "path": "tdf-hq-ui/src/pages/ChatPage.tsx",
-      "sha256": "554957039d5b90e5368a42c627ce91b4d39dcf7b5cec55816b91f1e8f4de423b",
+      "sha256": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19677,7 +19689,7 @@
     {
       "id": "SURFACE-724d67db609973ab",
       "path": "tdf-mobile/jest.config.js",
-      "sha256": "eddb3b1783f7b56c7470c9c29b98dca2946dab618ad0d69b6c2b38471dffa413",
+      "sha256": "b8a9bb07eccf8b0264cde1f9f2f4b1db7e11a9586e3db480c66f09d6bf90813d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19695,13 +19707,13 @@
     {
       "id": "SURFACE-6bc7940d7e94ca53",
       "path": "tdf-mobile/package-lock.json",
-      "sha256": "f6693769eddfec57f75c62329e0d01c98c5f9e3bb073559aa8ced0eb8c8553d4",
+      "sha256": "bf72d22e7893c2736a55be44f390a4a0209771ceed95025a7f765e4c6408d4d1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-74d531fc7e7a3fc1",
       "path": "tdf-mobile/package.json",
-      "sha256": "7d5b13140712c28c351854769e7b3b3f9dd851d23387edbab2501c70dd20fb3c",
+      "sha256": "80a86ed8d138c9e66e33ba42ef90ab19e61a4e591ceec7dcac95f1b1a2166a80",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19744,6 +19756,18 @@
       "id": "SURFACE-7067508915fffa03",
       "path": "tdf-mobile/scripts/check-vcard-release-truth.sh",
       "sha256": "ffc92945ac0a97d84202b2c4d2744d075fd5def7c0a17bbd190dfded0893fb8f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2725976c616ae240",
+      "path": "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+      "sha256": "3b8ba0a765e1089d11bba9a919d0d8789ecd9a6833ea078d8d9114e1db093863",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-926ccaa13a8c5894",
+      "path": "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js",
+      "sha256": "9401353df38f8010ad7035fe8d666bce6a4902bc1cff809afc4ab23fa2e0bdaa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20359,6 +20383,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-356eac9f42f687b8",
+      "path": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+      "sha256": "808e5ef62fe27e73c4a5651cf755fbcd1bb3c829f507a62ffcb2c4acbaeb34ea",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a24ed6b998974bde",
       "path": "tdf-mobile/src/lib/api.ts",
       "sha256": "4395c833e024308d1f59287254bdd3d0345bb61a60507ea8f3fd2eac18920955",
@@ -20764,6 +20794,18 @@
       "id": "SURFACE-170f8ccb5c8eba22",
       "path": "tdf-mobile/tsconfig.json",
       "sha256": "235a3431fcf05ff379c5027fcc07a65ad7b34128bee3bf85bb4725c31e1d69c5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9c0085c076f97ad3",
+      "path": "tdf-mobile/vendor/decode-uri-component/index.cjs",
+      "sha256": "d37c0eb2888700a268e79c7f49f1789f40625076bb0325705aaaf3e16bc09fac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-96f4d37d77970170",
+      "path": "tdf-mobile/vendor/decode-uri-component/package.json",
+      "sha256": "4046c5d32cb9956f3effd5c446bfe4f7d70f69e6f71d2f9b0ddf19191e5e6e6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29252,7 +29294,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "daede6c26a448b034729db6a263acc506a4788f3c25e1c1a1f681a5217455e00",
+      "sha256": "f17d2e0a91caa999a1717b45d3b3548a58cc1bd2a38bcdef4226548454daab80",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -29280,7 +29322,7 @@
     },
     {
       "path": "formal/system/assurance-report.md",
-      "sha256": "4349c7c347ca316e62a8068867c9d63390834b8360702f45c80200a9fb865ee1",
+      "sha256": "1e4474ed41bc00682d9459c32c748d05f891fbe8950ef199463ce42f807bfbeb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29308,7 +29350,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "5c7c7a228ad56bafd07f331eb40c7a4dbcbaede0cd117cb626aa6bdb9f0d47a1",
+      "sha256": "110491315eee899949c31a958e2c57d2d0fe2faccce46a3506e6e616a720e694",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29462,14 +29504,14 @@
     },
     {
       "path": "formal/system/dependency-security.json",
-      "sha256": "fecc3f6a7bb2da3cb62767f0a22b190b4cd04a00a16e2e62ed7d8286258cf12f",
+      "sha256": "1c0ebc90035f3f4cefe817c052bfaf6e2710a0d23052abfeb24b4c62d12815de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/dependency-security.md",
-      "sha256": "80e14859fa727ff124a8b6ee6246b12fdfc7c4b48267054ae32361a641472dbd",
+      "sha256": "03daf0b423977b5c66861f129f7e4e745b875e55dfeba33e1e64f12523ac5cbe",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29987,7 +30029,7 @@
     },
     {
       "path": "formal/system/payment-arithmetic.md",
-      "sha256": "12a4062aaf08facfbb3ecdb71ddc105b71a72009f1bdf607db4aac0bf48274c0",
+      "sha256": "49d57299ce6abd59eb2ad54e4d314fdb9cbc223dacfa9eacd63d2159919c20c1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30043,7 +30085,7 @@
     },
     {
       "path": "formal/system/proof-certificates.md",
-      "sha256": "147227e350f5b47377eb6eaa5f31b899425d43857a14eb92dc97002c32b633a3",
+      "sha256": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30085,7 +30127,7 @@
     },
     {
       "path": "formal/system/receipt-admission.md",
-      "sha256": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
+      "sha256": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30127,14 +30169,14 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c4c6c6e7d9b316891de13a71471c58f848938b3725ee9559fac5a3d8ed49220b",
+      "sha256": "0d62aeebcdbfd1ca8a8da59483bde6421157a3484c3190a290006feec62954a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
     },
     {
       "path": "formal/system/research.json",
-      "sha256": "67e8b2e4fc1d6d9cb1589942a30134b484c28aeb86655aa3081fd90fd9444e51",
+      "sha256": "e80a93b4baf24c1ad660c241c9135a507f6712cb48bbdccac2ee2091822f3892",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30226,6 +30268,13 @@
     {
       "path": "formal/system/ui-test-worker-memory.md",
       "sha256": "f3fcc4520c26967111489988a67ad527973fec4158abe19222ed8e8f1a6bc8bf",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/uri-decoder.md",
+      "sha256": "76b05e52e50e782016c33dd0d0500b30f4d9b6555898fb7c3045865020e9cbbc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
