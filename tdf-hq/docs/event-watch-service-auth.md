@@ -87,6 +87,11 @@ separate authority. Existing venues and legacy social artist profiles are not
 overwritten, and a denied event target creates no external references or lineup
 associations. Allowed service-owned draft/public materialization and manual-field
 replay retain the existing behavior.
+If a selected exact provider reference disappears or changes while the request
+waits for the event, the import returns409 and rolls back; an unrelated alias in
+the same namespace does not validate that stale selection. A fresh retry uses
+the current reference. Existing pilot and deferred search-sync triggers remain
+enabled throughout these checks.
 
 Changing a client's curator does not rewrite the creator of an old ingestion
 batch or transfer ownership of old events. Use a new `runKey` after that change;

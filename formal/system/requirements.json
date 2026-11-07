@@ -57,7 +57,7 @@
         "Source-backed event candidate",
         "Publication intent"
       ],
-      "authorization": "Separate AuthProtect event-watch context; client namespace and publication scope are checked inside the write transaction. Existing targets require both current event organizer and a retained current-provider reference; separate clients sharing an audit Party do not share authority.",
+      "authorization": "Separate AuthProtect event-watch context; client namespace and publication scope are checked inside the write transaction. Existing targets require both current event organizer and a retained current-provider reference; separate clients sharing an audit Party do not share authority. A provider-ref-selected target requires that exact reference key still map to the target after its event lock wait; a different alias is insufficient.",
       "privacy": "Only hashes stored; no secrets in logs, SQL, repository or public configuration.",
       "concurrency": "Parent/session locks retained through commit; expiry checked after lock waits. Existing event then namespace-reference locks retain both owner and scope through the service transaction.",
       "idempotency": "Stable client provider and external ID use existing research deduplication and audit receipts. Reused runs retain their historical creator; a changed curator must choose a new run key.",
@@ -92,7 +92,7 @@
       "formalModels": [
         "scripts/event-watch-auth-model.test.mjs"
       ],
-      "verification": "Original Hspec lifetime/hash/parser and provisioning/model negative controls; complete canonical SQL apply/replay and absent archive-guard negative control; compiled-app HTTP namespace/interactive isolation, publication/pilot eligibility, session retention, rotation/deactivation and expiry during observed row/advisory lock waits. Execution receipts retain their actual source and finite scope. Controlled original implementation fails foreign-event, linked-replay, shared-actor namespace, post-admission ownership-transfer and reused-run creator cases; final implementation must pass the same frozen HTTP harness.",
+      "verification": "Original Hspec lifetime/hash/parser and provisioning/model negative controls; complete canonical SQL apply/replay and absent archive-guard negative control; compiled-app HTTP namespace/interactive isolation, publication/pilot eligibility, session retention, rotation/deactivation and expiry during observed row/advisory lock waits. Execution receipts retain their actual source and finite scope. Controlled original implementation fails foreign-event, linked-replay, shared-actor namespace, post-admission ownership-transfer and reused-run creator cases; final implementation must pass the same frozen HTTP harness. A separate actual deleted-reference control exposes stale selection despite enabled pilot/search triggers; the exact mapping is rechecked under a retained share lock.",
       "evidence": "Candidate-specific test logs; see contract for explicit limits.",
       "ambiguity": [
         "Live multi-connection HTTP revocation/expiry behavior remains to be verified before release."

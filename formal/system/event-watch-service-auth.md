@@ -18,6 +18,11 @@ does not share client authority. A transferred or unexpected target requires
 operator review, without a force-created duplicate. The separate administrative
 entry point retains its existing authority in the same materialization engine.
 An old run's creator is immutable: a reassigned curator must select a new run key.
+When an exact provider reference selected the target before an event lock wait,
+the service also locks and rechecks that same reference key after the wait. A
+different alias does not validate a removed or changed selected mapping. The
+canonical pilot trigger already serializes direct event-ID rebinding, but it
+does not cover reference deletion; neither guard substitutes for the other.
 
 Implementation uses an isolated `AuthProtect "event-watch"` context, separate
 tables, parent-before-session row locks held through the import transaction, and

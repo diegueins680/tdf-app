@@ -430,20 +430,41 @@ withAuthorizedMaterializationTarget
     -> SocialEventId
     -> SqlPersistT IO (Either ServerError a)
     -> SqlPersistT IO (Either ServerError a)
-withAuthorizedMaterializationTarget (AdministrativeMaterialization _) _ action = action
-withAuthorizedMaterializationTarget (ServiceMaterialization partyId provider) eventId action = do
+withAuthorizedMaterializationTarget authority eventId =
+    withAuthorizedMaterializationReference authority eventId Nothing
+
+withAuthorizedMaterializationReference
+    :: MaterializationAuthority
+    -> SocialEventId
+    -> Maybe T.Text
+    -> SqlPersistT IO (Either ServerError a)
+    -> SqlPersistT IO (Either ServerError a)
+withAuthorizedMaterializationReference (AdministrativeMaterialization _) _ _ action = action
+withAuthorizedMaterializationReference (ServiceMaterialization partyId provider) eventId selectedReference action = do
     -- Event -> namespace reference is the lock order. Holding one qualifying
     -- reference FOR SHARE prevents deletion/rebinding of that authority until
     -- the outer service transaction commits or rolls back.
     events <- rawSql "SELECT ?? FROM social_event WHERE id=? FOR UPDATE" [toPersistValue eventId]
     case events :: [Entity SocialEvent] of
         [Entity _ event] | socialEventOrganizerPartyId event == Just partyId -> do
-            references <- rawSql
-                "SELECT id FROM external_event_ref WHERE event_id=? AND provider=? ORDER BY id LIMIT 1 FOR SHARE"
-                [toPersistValue eventId, PersistText provider]
-            case references :: [Single Int64] of
-                [Single _] -> action
-                _ -> pure (Left serviceMaterializationDenied)
+            case selectedReference of
+                Nothing -> do
+                    references <- rawSql
+                        "SELECT id FROM external_event_ref WHERE event_id=? AND provider=? ORDER BY id LIMIT 1 FOR SHARE"
+                        [toPersistValue eventId, PersistText provider]
+                    case references :: [Single Int64] of
+                        [Single _] -> action
+                        _ -> pure (Left serviceMaterializationDenied)
+                Just externalId -> do
+                    -- This target was selected from an exact reference before
+                    -- acquiring the event lock. An alias in the same namespace
+                    -- cannot validate a stale/deleted/rebound selected mapping.
+                    references <- rawSql
+                        "SELECT event_id FROM external_event_ref WHERE provider=? AND external_id=? FOR SHARE"
+                        [PersistText provider, PersistText externalId]
+                    case references :: [Single Int64] of
+                        [Single currentEvent] | currentEvent == fromSqlKey eventId -> action
+                        _ -> pure (Left (conflict "the service event reference changed during materialization"))
         _ -> pure (Left serviceMaterializationDenied)
 
 materializeCandidateDb
@@ -562,7 +583,7 @@ materializeUnlinkedCandidate authority pilotApproved materializationRunId candid
                             case existingRef of
                                 Just (Entity _ ref) -> do
                                     let eventId = externalEventRefEventId ref
-                                    withAuthorizedMaterializationTarget authority eventId $ do
+                                    withAuthorizedMaterializationReference authority eventId (Just (eventResearchCandidateExternalId candidate)) $ do
                                         suitable <- existingEventCanSatisfy request eventId
                                         if suitable
                                             then do

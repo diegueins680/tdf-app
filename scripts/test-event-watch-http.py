@@ -416,7 +416,8 @@ def main():
         high = []
         high_records = []
         for offset, key in [(2, 'materialize-draft'), (3, 'materialize-public'),
-                            (5, 'private-other-organizer'), (3, 'same-client-alias')]:
+                            (5, 'private-other-organizer'), (3, 'same-client-alias'),
+                            (7, 'reference-rebind')]:
             body = import_body(key)
             candidate = body['candidate']
             candidate.update(erCandidateConfidence='high', erCandidateCity='Quito',
@@ -571,6 +572,42 @@ def main():
             'afterEventArtistVenueRefs': json.loads(after_namespace)}
         boundary(namespace_status == 403 and after_namespace == before_namespace,
               'Distinct service clients sharing one audit Party cannot acquire each other event namespace')
+        # An exact provider reference is read before the canonical event lock.
+        # An alias granting authority to A must not validate a stale read when
+        # the selected reference is removed during that actual lock wait.
+        # Direct event_id rebinding is already serialized by the canonical pilot
+        # trigger; DELETE exercises the distinct, supported lifecycle without
+        # disabling that trigger or the deferred directory-sync trigger.
+        reference = high[4]
+        reference.update(materialize=True, publish=False)
+        sql("INSERT INTO external_event_ref(provider,external_id,event_id,city,country_code,"
+            "last_seen_at,missing_runs,source_status) "
+            f"VALUES('event-watch:beta-watch','reference-rebind',{public_event},'Quito','EC',clock_timestamp(),0,'on_sale')")
+        lock = hold(f"SELECT id FROM social_event WHERE id={public_event} FOR UPDATE")
+        pending = futures.submit(request, '/integrations/event-watch/import', beta, reference, 'PUT', None)
+        witness('social_event', 'event-row', 'Provider reference selected before actual materialization event-lock wait')
+        sql("SET lock_timeout='2s'; DELETE FROM external_event_ref "
+            "WHERE provider='event-watch:beta-watch' AND external_id='reference-rebind'")
+        aliases = int(value(f"SELECT count(*) FROM external_event_ref WHERE provider='event-watch:beta-watch' AND event_id={public_event}"))
+        check(value("SELECT count(*) FROM external_event_ref WHERE provider='event-watch:beta-watch' AND external_id='reference-rebind'") == '0' and aliases > 0,
+              'Independent owned actor removes exact reference while a real same-provider alias still grants event A')
+        release(lock)
+        pending.result(timeout=25)
+        reference_status = report['requests'][-1]['status']
+        linked_target = value("SELECT event_id FROM event_research_candidate WHERE provider='event-watch:beta-watch' AND external_id='reference-rebind'")
+        report['providerReferenceRebindingProbe'] = {'actualStatus': reference_status,
+            'selectedBeforeWait': public_event, 'exactReferenceRemovedDuringWait': True,
+            'candidateLinkedAfterWait': linked_target or None,
+            'sameProviderAliasesStillReferencingA': aliases}
+        denied_rebind = reference_status == 409 and linked_target == ''
+        boundary(denied_rebind, 'A same-provider alias cannot authorize a stale exact-reference target after rebinding')
+        if denied_rebind:
+            sql("INSERT INTO external_event_ref(provider,external_id,event_id,city,country_code,"
+                "last_seen_at,missing_runs,source_status) "
+                f"VALUES('event-watch:beta-watch','reference-rebind',{draft_event},'Quito','EC',clock_timestamp(),0,'on_sale')")
+            retried = imports(beta, reference)
+            check(int(retried['candidateRecord']['erCandidateEventId']) == draft_event,
+                  'Fresh retry follows the current authorized reference B without creating a duplicate')
         lock = hold("SELECT pg_advisory_xact_lock(hashtextextended('event-watch:beta-watch',0))")
         pending = futures.submit(request, '/integrations/event-watch/import', beta, publish, 'PUT', None)
         witness('pg_advisory_xact_lock', 'advisory', 'Ownership changes after HTTP admission but before materialization event lock')
