@@ -1243,6 +1243,16 @@
       "id": "2026-11-04_content_storage_delete_capacity",
       "path": "tdf-hq/sql/2026-11-04_content_storage_delete_capacity.sql",
       "introducedBy": "93068dd90898bce4c4d3e482dad4366a12124029"
+    },
+    {
+      "id": "2026-10-20_video_campaigns",
+      "path": "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+      "introducedBy": "4b84238abb4ca17c6aaa9902e3bec16a1cc3daa5"
+    },
+    {
+      "id": "2026-11-06_video_campaign_identity_references",
+      "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+      "introducedBy": "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
     }
   ]
 }

@@ -1,0 +1,52 @@
+{
+  "date": "2026-11-06",
+  "pullRequest": 667,
+  "reviewedParent": "b9c2e64eb06c7bfda89d28e00510dea66f7ee834",
+  "protectedMain": "c47c2a8d8851a58a828dec830704f8c352496c20",
+  "findings": [
+    {
+      "thread": "PRRT_kwDOQPdUrM60ZM8W",
+      "fix": "Refuse in-place piece edits whenever a persisted provider session exists, including a paused YouTube upload with no final external ID. Keep its piece version, asset, metadata and encrypted checkpoint intact; explicit reapproval of the unchanged original can resume it."
+    },
+    {
+      "thread": "PRRT_kwDOQPdUrM60ZM8Z",
+      "fix": "Reset attempts and clear the prior error after a successful pending provider-status response. Preserve the existing bound of three retries after an initial consecutive failure; never reinitialize a publication for status recovery."
+    }
+  ],
+  "qualification": {
+    "campaignService": {
+      "passed": 113,
+      "failures": 0,
+      "logSha256": "439c9b3cd2ead23da3de5f5b3ac62b33a2943e95212791a373580d248fbc8944",
+      "scope": "Local HTTP/SQLite/filesystem and mocked external-provider protocol boundaries; bounded dispatch model with negative controls also passed."
+    },
+    "negativeControls": {
+      "tests": 2,
+      "bothFailedAgainstPreviousImplementation": true,
+      "logSha256": "5a85b710906837b026000279147f9ae90d69157cf0fea3d8d92f9370e1b52cc6"
+    },
+    "youtubeProtocol": "A two-chunk synthetic file pauses after the acknowledged 8 MiB prefix. Its blocked piece cannot be edited. Explicit reapproval resumes the original suffix at the same session URL with exactly one provider initialization. No real YouTube write occurred.",
+    "tiktokProtocol": "Four healthy pending polls, a transient error, another healthy poll and eventual completion retain one publish job and issue only status fetches. A separate case stops on the fourth consecutive failed attempt, preserving the existing retry budget.",
+    "repositoryQuality": {
+      "result": "PASS on the reviewed parent before this Python-only recovery pair",
+      "runtime": "System Python3.13.5 plus checksum-pinned age1.3.2; Node dependency/runtime unchanged",
+      "logSha256": "ff99e9f767846f7e075157379f12f1cd14072a4387b628a1b379375fe872d884",
+      "earlierAttempts": "Primary runtime lacks fcntl seal constants; its failed attempts remain in the previous receipt. No verifier was weakened."
+    },
+    "web": "4,011 tests/354 suites, production typecheck/build and serial lint passed before these Python-only fixes; all web source remains unchanged.",
+    "crossProcessLock": "Same asset denied409 in another process while a different asset remained usable; after release the same permanent lock inode was reused."
+  },
+  "sourceSha256": {
+    "services/campaign-platform/domain.py": "cf06b314bbca20e151cbefbb14eafe65c453f8f175d3d0dca25a73f175a84e5f",
+    "services/campaign-platform/worker.py": "0941e599fbe6a9a2d63fcf1e261fb937b5fb71e33ad74b67ea2ac24de06fa83d",
+    "services/campaign-platform/tests/test_domain.py": "fc580a511d0ebe47c38c0319cd3f64d9e4ee6f842bdc8096ad6060e934af1c19",
+    "services/campaign-platform/tests/test_tiktok.py": "6db5a180bbf3e7e9ace7b70fefe0fe4a9156f0fadf792936cabe6f0f3f56381c"
+  },
+  "preservation": {
+    "mobileRevision": "14318a730f96b2053f71885091bbc05cffc3294d",
+    "coreGeneratedContractsAndManifest": "Identical to protectedMain",
+    "campaignDataWrites": [],
+    "publicationAndScheduleWrites": []
+  },
+  "release": "Fresh current-head hosted CI, independent approval and protected admission remain required. Previous checks/reviews do not qualify this new head. Public production playback/auth return remain unverified; no real conversion is claimed."
+}
