@@ -9,6 +9,18 @@ BEGIN
   IF to_regprocedure('identity_reject_archived_reference()') IS NULL THEN
     RAISE EXCEPTION 'Canonical identity archive guard is missing' USING ERRCODE='55000';
   END IF;
+  -- Hold every target before inspecting FKs. Catalog reads alone do not lock
+  -- their subjects: concurrent DDL must not invalidate a checked prerequisite.
+  FOR target IN SELECT table_name FROM (VALUES
+    ('event_agreement'), ('event_agreement_acceptance'), ('event_agreement_version'),
+    ('event_workspace_action'), ('event_workspace_command'), ('event_workspace_plan')
+  ) AS tables(table_name) ORDER BY table_name LOOP
+    IF NOT EXISTS (SELECT 1 FROM pg_class relation JOIN pg_namespace ns ON ns.oid=relation.relnamespace
+      WHERE ns.nspname=scope AND relation.relname=target.table_name AND relation.relkind IN ('r','p')) THEN
+      RAISE EXCEPTION 'Missing agreement table %',target.table_name USING ERRCODE='55000';
+    END IF;
+    EXECUTE format('LOCK TABLE %I.%I IN SHARE ROW EXCLUSIVE MODE',scope,target.table_name);
+  END LOOP;
   FOR target IN SELECT * FROM (VALUES
     ('event_workspace_plan','recipient_party_id',true),
     ('event_workspace_plan','created_by',true),
@@ -37,7 +49,6 @@ BEGIN
     WHERE ns.nspname=scope AND relation.relname IN
       ('event_workspace_plan','event_agreement','event_agreement_version','event_agreement_acceptance','event_workspace_action','event_workspace_command')
     ORDER BY relation.relname LOOP
-    EXECUTE format('LOCK TABLE %I.%I IN SHARE ROW EXCLUSIVE MODE',scope,target.relname);
     -- Discover actual Party FKs on just these reviewed tables. Replaying on an
     -- expanded schema preserves additional real Party columns instead of
     -- replacing an existing guard with a narrower hard-coded argument list.
