@@ -2236,6 +2236,7 @@
       "tdf-hq/src/TDF/Commerce/ArtistTipStore.hs",
       "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
       "tdf-hq/src/TDF/Commerce/CourseCheckout.hs",
+      "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
       "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellation.hs",
       "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
@@ -2265,6 +2266,7 @@
       "tdf-hq/src/TDF/Commerce/RefundStore.hs",
       "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
       "tdf-hq/src/TDF/Commerce/StateMachine.hs",
+      "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs",
       "tdf-hq/src/TDF/Config.hs",
       "tdf-hq/src/TDF/ContentStorage.hs",
       "tdf-hq/src/TDF/Contracts/API.hs",
@@ -2457,6 +2459,7 @@
       "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
       "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs",
       "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs",
+      "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
       "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
       "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
       "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs",
@@ -3391,7 +3394,7 @@
     {
       "id": "SURFACE-0e316b7ebb7a6b2c",
       "path": "e2e/web/storage-upload-recovery.spec.mjs",
-      "sha256": "2929438fa40f8fce723da34a89249135ee811e72f3ba7004a955fdf22dffb90a",
+      "sha256": "9ba8f8b0971a3568352fb46ffc77e5091c49ac50ec5f8a9b0dcc0c09603823dc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9967,13 +9970,13 @@
     {
       "id": "SURFACE-f6f49d0601363c2e",
       "path": "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
-      "sha256": "3babeeb1c94a7e77919e7aaa9d817be2a7232f918d34080b5c1e5fedbd5eab82",
+      "sha256": "74e0e9bbd074c245150edef4b0561ad2c700064a9300024201611188b3e28e86",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-21774e08e94e915e",
       "path": "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts",
-      "sha256": "7d58530d1b0c7cef442bd39786963b6ed66cf726e8120f515bf2a3341e1a7fec",
+      "sha256": "96b4122312d56f09d7c3a1e0b84796547020c2adf32b3bf7e8cff77449ac5d03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16265,6 +16268,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7c1a166cb87f734e",
+      "path": "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
+      "sha256": "a708439f9fc84fe89ce099f9bbc3078c17afaa274767e636fcaddc7a9bd2e564",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7bb4e94c65f7c89c",
       "path": "tdf-hq/src/TDF/Commerce/DepositPolicy.hs",
       "sha256": "6829fa5bf78c1d1839770e0728960967dfdbcdca62661dadd06adb2191d0a94f",
@@ -16436,6 +16445,12 @@
       "id": "SURFACE-67d742e6e43473e6",
       "path": "tdf-hq/src/TDF/Commerce/StateMachine.hs",
       "sha256": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-224b93ff1ac2bb0b",
+      "path": "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs",
+      "sha256": "f0ddbaf6649a0830f2743a520e5e7cd00e989a049e7d85eb65b08dd3fb3892ac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16945,7 +16960,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "4bb93fe0b571099ab29e38c185ee3974a57533cd47ad140b8f22da901e472d17",
+      "sha256": "43e2d3af37007f738bac8c8a8af8f5333e809c7d70d05d943a870a2c377c88be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16963,7 +16978,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "820786bd1625b5d24b0ec77368ba4d52ec24789d3f7db6b77f467fadf87f63fa",
+      "sha256": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16981,7 +16996,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "b8a46a7b1be86bde7dca4fed00ac45d2404cb62e4c083c27cc298307453fd3ca",
+      "sha256": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16993,7 +17008,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "e6789c3810025b007dd6733cf79413c622f79d3cd3b3e620614b9848c3947897",
+      "sha256": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17029,7 +17044,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "8d8fe192caa40d561ba1b25016e3ad7555e1bff84374bb5b32ab88b9a548257e",
+      "sha256": "4051230476f98bb4be15d001553c7d0241e5978b3568140e8b5a546bcd98ed44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17047,7 +17062,7 @@
     {
       "id": "SURFACE-576775b1139a1557",
       "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
-      "sha256": "6a159b7cfc3e9ba3f21c74de7191d7cfa6b4fcea2242334bfb055296575f9489",
+      "sha256": "f0e50cb9103b6da489980440202a50e7c4431bc19f0fdce666be6f738bb763ef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17083,7 +17098,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "e924dc7a2a821fcc5b1a7fa4e743801c9cb4668f842228c41470c65ca2c475af",
+      "sha256": "512078d56c654f9fcacf1e31884bdb270eef6501323c10bbf0c13159022f1ba0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17443,7 +17458,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "268b65a01160a575b03a636ee2051495bdc93dc62218d0f4d7a041a1c87d617c",
+      "sha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17521,7 +17536,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "f485cf47978d09c83ee7487bf0eefa744d10bba70ba20de95c09f6e2291361fc",
+      "sha256": "8d1061945372888e1168f90f79fa5cdf7a318860d9d8b77c5c374b3f0a0f473a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17591,6 +17606,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5d41f627dd70058b",
+      "path": "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
+      "sha256": "24df855e975e3512b11056f3513864c31a3451ad98c0a615b89d5a2c5222a473",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f6230269f76a7039",
       "path": "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
       "sha256": "ff316f0553d2db5290ad5ccebf5a730cb3ef595f42b92694da865e3de4de2e00",
@@ -17629,7 +17650,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "0d1d270fa232df67d90805c34897fc77543fa14b7193e787ca002846706c2c00",
+      "sha256": "7e6a9ed3c904d29d54e0b38c9aba972b1086e45edc369101c29f65cfd5e9d989",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29454,6 +29475,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/datafast-merchant-metadata.md",
+      "sha256": "fba22e8741f2d272a0c806cd7ec60b3859021d09035e47384a22ce7ce0f8ed73",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/ddex-validation.md",
       "sha256": "557a52a933d3db67de345c5558edbd88914b63cc1d907249b5cb226ee9919949",
       "authority": "inferred",
@@ -30141,7 +30169,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4c65d54f177b7cb02b8d554b9911ce2f416bb6149be306ff08cdecf31d01388d",
+      "sha256": "5ca138a0ad422db0d28c7e65c4811904577c98bab002de36cf456d135b40ce3c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
