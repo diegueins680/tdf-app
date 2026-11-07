@@ -1,5 +1,5 @@
 """Durable campaign authority. SQLite WAL: one host, multiple processes, transactional claims."""
-import contextlib, datetime, hashlib, json, os, shutil, sqlite3, time, uuid, urllib.parse
+import contextlib, datetime, hashlib, json, math, os, shutil, sqlite3, time, uuid, urllib.parse
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -123,13 +123,30 @@ class Store:
    c=self.access(d,actor,cid,'approve');p=d.execute('SELECT * FROM pieces WHERE id=? AND campaign=?',(data.get('piece'),cid)).fetchone()
    if not p or p['platform']!='youtube' or p['format'] not in ('video','short') or not p['external_id']:raise Denied('Selecciona el video privado ya subido.',409)
    a=d.execute('SELECT * FROM accounts WHERE id=? AND revoked=0',(p['account'],)).fetchone()
-   if not a or (a['scope']=='tdf' and not actor.get('admin')):raise Denied('Esta revisión requiere al administrador del canal.',403)
+   schedule_only='reschedule_at' in data and data.get('reschedule_only') is True
+   if not a or (a['scope']=='tdf' and not actor.get('admin') and not schedule_only):raise Denied('Esta revisión requiere al administrador del canal.',403)
    if c['approved_version']!=c['version'] or p['approved_version']!=p['version'] or data.get('version')!=p['version'] or data.get('video_id')!=p['external_id']:raise Denied('La versión cambió. Vuelve a revisar el video exacto.',409)
-   if p['status'] not in ('processing','blocked') or data.get('checks_passed') is not True:raise Denied('Confirma las comprobaciones de Studio sobre este video privado.',409)
-   settings=json.loads(p['settings']);settings['youtube_checks_reviewed']=True
-   d.execute('UPDATE pieces SET settings=?,status="processing" WHERE id=?',(json.dumps(settings),p['id']))
-   d.execute('INSERT INTO jobs(id,campaign,piece,kind,payload,due_at) VALUES(?,?,?,?,?,?) ON CONFLICT(piece,kind) DO UPDATE SET state=CASE WHEN jobs.state IN ("blocked","failed") THEN "queued" ELSE jobs.state END,attempts=CASE WHEN jobs.state IN ("blocked","failed") THEN 0 ELSE jobs.attempts END,due_at=excluded.due_at',(uid(),cid,p['id'],'verify_youtube','{}',time.time()))
-   self.audit(d,actor['id'],'youtube.studio_checks',cid,p['id'],{'video_id':p['external_id'],'version':p['version'],'reviewer_confirmation':True})
+   if p['status'] not in ('processing','blocked') or (not schedule_only and data.get('checks_passed') is not True):raise Denied('Confirma las comprobaciones de Studio sobre este video privado.',409)
+   now=time.time();verification_due=max(now,p['due_at'])
+   if 'reschedule_at' in data:
+    # Scheduling recovery is a fresh owner approval of this exact uploaded
+    # version/date. It cannot edit media, restart uploads or replay unknown jobs.
+    due=data['reschedule_at'];job=d.execute('SELECT state FROM jobs WHERE piece=? AND kind="verify_youtube"',(p['id'],)).fetchone()
+    if actor['id']!=c['owner']:raise Denied('El propietario debe reaprobar la nueva fecha.',403)
+    if c['status'] in ('cancelled','completed'):raise Denied('Campaña cerrada.',409)
+    if type(data.get('campaign_version')) is not int or data['campaign_version']!=c['version'] or type(data.get('version')) is not int or type(data.get('expected_due_at')) not in (int,float) or data.get('expected_due_at')!=p['due_at']:raise Denied('La versión o fecha cambió. Revisa el video y la fecha actuales.',409)
+    if data.get('schedule_reapproved') is not True or data.get('rights_confirmed') is not True:raise Denied('Reaprueba explícitamente la fecha y los derechos de este video.',409)
+    if type(due) not in (int,float) or not now<due<=now+31*86400 or not math.isfinite(due):raise Denied('Selecciona una nueva fecha futura dentro de31 días.',409)
+    if now<=p['due_at']+p['late_seconds'] or not job or job['state'] not in ('blocked','failed','queued'):raise Denied('La verificación no admite esta recuperación; revisa su estado actual.',409)
+    d.execute('UPDATE pieces SET due_at=? WHERE id=?',(due,p['id']));verification_due=due
+    self.audit(d,actor['id'],'youtube.schedule_reapprove',cid,p['id'],{'video_id':p['external_id'],'version':p['version'],'campaign_version':c['version'],'previous_due_at':p['due_at'],'due_at':due,'rights_confirmed':True})
+   elif now>p['due_at']+p['late_seconds']:
+    raise Denied('Venció la tolerancia de publicación. Reprograma y reaprueba este video ya subido.',409)
+   settings=json.loads(p['settings']);settings['youtube_checks_reviewed']=not schedule_only
+   d.execute('UPDATE pieces SET settings=?,status=? WHERE id=?',(json.dumps(settings),'blocked' if schedule_only else 'processing',p['id']))
+   d.execute('INSERT INTO jobs(id,campaign,piece,kind,payload,due_at) VALUES(?,?,?,?,?,?) ON CONFLICT(piece,kind) DO UPDATE SET state=CASE WHEN jobs.state IN ("blocked","failed") THEN "queued" ELSE jobs.state END,attempts=CASE WHEN jobs.state IN ("blocked","failed") THEN 0 ELSE jobs.attempts END,due_at=excluded.due_at',(uid(),cid,p['id'],'verify_youtube','{}',verification_due))
+   if schedule_only:d.execute('UPDATE jobs SET state="blocked",attempts=0 WHERE piece=? AND kind="verify_youtube"',(p['id'],))
+   self.audit(d,actor['id'],'youtube.studio_checks',cid,p['id'],{'video_id':p['external_id'],'version':p['version'],'reviewer_confirmation':not schedule_only})
  def status(self,actor,cid,status):
   if status not in ('active','paused','cancelled','completed'):raise Denied('Estado inválido.')
   with self.db(True) as d:

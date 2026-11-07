@@ -16404,7 +16404,7 @@
       "statement": "Any registered user may prepare and execute musical campaigns on their own connected accounts; TDF posts require current admin approval, and execution survives browser disconnection without automatically replaying uncertain provider effects.",
       "authority": "approved",
       "source": "Diego explicit campaign-platform implementation instruction, 2026-10-29; docs/campaign-platform/operations.md",
-      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries; upload receipt and hashing do not hold the SQLite write lock; current per-asset offsets and authority gate commit; referenced TikTok photos and existing external publication identities cannot be discarded by deletion or in-place edits; persisted provider sessions also prohibit replacing a resumable piece version before a final external ID exists; successful pending verification polls do not exhaust consecutive-error retries; email eligibility precedes its batch limit while delivered or uncertain claims remain non-replayable; generated plan graphics may attach only to the unchanged unapproved piece IDs created by that plan, preserving manual/concurrent revisions; completed clip renders attach at most once to an unchanged initial unapproved draft, preserving subsequent manual media and metadata revisions; absent or non-object Core sessions return401 without creating an actor, while upstream availability/JSON failures retain503",
+      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries; upload receipt and hashing do not hold the SQLite write lock; current per-asset offsets and authority gate commit; referenced TikTok photos and existing external publication identities cannot be discarded by deletion or in-place edits; persisted provider sessions also prohibit replacing a resumable piece version before a final external ID exists; successful pending verification polls do not exhaust consecutive-error retries; email eligibility precedes its batch limit while delivered or uncertain claims remain non-replayable; generated plan graphics may attach only to the unchanged unapproved piece IDs created by that plan, preserving manual/concurrent revisions; completed clip renders attach at most once to an unchanged initial unapproved draft, preserving subsequent manual media and metadata revisions; absent or non-object Core sessions return401 without creating an actor, while upstream availability/JSON failures retain503; expired uploaded YouTube schedules require explicit owner date/rights reapproval bound to current campaign/piece versions, prior date and exact external video, preserving upload/session identities and separate TDF Studio authority without replaying running or uncertain verification",
       "contract": "formal/system/campaign-server.md",
       "implementation": [
         ".github/workflows/campaign-platform.yml",
@@ -17084,7 +17084,7 @@
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
-    "scripts/__tests__/campaign-tiktok-ui.test.mjs": "cecd739fd225cd148b4eca7ed0c725b8a52fa3eafccefb53ca8fa0f5b2493eee",
+    "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
     "scripts/__tests__/catalog-list-audit.test.mjs": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
@@ -17403,7 +17403,7 @@
     "services/campaign-platform/backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
     "services/campaign-platform/deploy.py": "61b7066ca402a2c9277ec85335b5920ebebc30a27781b56b4a6f63739e18b366",
     "services/campaign-platform/deploy_sandbox.py": "5df04f820eb7c868703359feec18848063ddb9183f4c4a57fb50f5f091d299f2",
-    "services/campaign-platform/domain.py": "552dc1f3173a481331aec0bf3ad7a5c65f99e3d56ffa79790fb4ea188b385063",
+    "services/campaign-platform/domain.py": "f858fd2422f6bf785cfb888213a6989d04c10c7e6813fdaf0aa881565ad35ffb",
     "services/campaign-platform/drive_backup.py": "db50b9ea20536486d65bf4de1ad176e24480ed21db49d22656a0d6cc3f892763",
     "services/campaign-platform/facebook.py": "214e97cd12ed03369aba75d777d35cab47aabb17319d78c7e3a62153825abe91",
     "services/campaign-platform/graphics.py": "ef6fd3afc14080d83614611f1a9089c19bfb6246dd11ad3fc5abc4cfcd82d8fd",
@@ -17428,7 +17428,7 @@
     "services/campaign-platform/tdf-campaign-monitor.timer": "83ea2711c2318c5214e95b613b33fee646ab21076fb3024a1c195771452d482a",
     "services/campaign-platform/tdf-campaign-worker.service": "82e089e45c7f348927050071433fadd2212e19774c931effb1ac66c2555eb43b",
     "services/campaign-platform/tests/test_backups.py": "6e707a002138126284d0255aaff2b135ff15499c001db3417503ed4aecf6fe0c",
-    "services/campaign-platform/tests/test_domain.py": "bee8dbc797f6ddd8fdcc25cf3b8de4e06d02e8ed8bfd8266d888e2eb1933493d",
+    "services/campaign-platform/tests/test_domain.py": "bbf1c589c5539ba6331cc9990cb0e652f1340b3d0295339b1ead66fa79ac52cb",
     "services/campaign-platform/tests/test_facebook.py": "032f9d24458fa90e9f79e738e35c988f796d59e71cbffcffd0e0276e3cb96f3c",
     "services/campaign-platform/tests/test_http.py": "86cf231e96ae998d3367502e0a309e486f7ec9f4543320fef1f83947cd11721c",
     "services/campaign-platform/tests/test_notifications.py": "aa5b5f2e6e9998a3d1b0fe7c09ea26f98a52d6e675d0555afa9b8b8e60a27055",
@@ -17439,7 +17439,7 @@
     "services/campaign-platform/tiktok.py": "b66fa94ec5e2c2fb7d6887cc0a1971bad6b9f51ea399fe6e80e2151c4cd39ead",
     "services/campaign-platform/tiktok_environment.py": "100ddc29190a7d964b5a905958834b89908ce430e9aee7452fd50ab7d1b0e572",
     "services/campaign-platform/tiktok_token.py": "58d634247f9e327db9333ca61b6f2df6ca7bc74eac894b2ff500901dc89b6a35",
-    "services/campaign-platform/ui/app.js": "bb90be502631f44195f6d65c780eaed2ed9b21e6225260a4a8493414fadb0649",
+    "services/campaign-platform/ui/app.js": "da2dde1d312be1bc2015b13edde4dbd7499216a22709eaa50c2d9180d83d3905",
     "services/campaign-platform/ui/index.html": "ae47068e6e3f1b826c3de752be4cd53d7354c89a8dfd8501a7b7c40cfc91cf19",
     "services/campaign-platform/ui/style.css": "928cb0ef766273fed6c7010216d955d2a1f6b2d2bfd1fc269e75488819ebea07",
     "services/campaign-platform/ui/tdf-logo.png": "a0a1c050709ac1630450265e6fc0c5c7aa03f16a3733595c64f7f64c1138d0ce",
@@ -34433,7 +34433,7 @@
     {
       "id": "SURFACE-f351982a52e6f37a",
       "path": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-      "sha256": "cecd739fd225cd148b4eca7ed0c725b8a52fa3eafccefb53ca8fa0f5b2493eee",
+      "sha256": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -40837,7 +40837,7 @@
     {
       "id": "SURFACE-4d817f76014e9965",
       "path": "services/campaign-platform/domain.py",
-      "sha256": "552dc1f3173a481331aec0bf3ad7a5c65f99e3d56ffa79790fb4ea188b385063",
+      "sha256": "f858fd2422f6bf785cfb888213a6989d04c10c7e6813fdaf0aa881565ad35ffb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41149,7 +41149,7 @@
     {
       "id": "SURFACE-1d9e726769e9e1db",
       "path": "services/campaign-platform/tests/test_domain.py",
-      "sha256": "bee8dbc797f6ddd8fdcc25cf3b8de4e06d02e8ed8bfd8266d888e2eb1933493d",
+      "sha256": "bbf1c589c5539ba6331cc9990cb0e652f1340b3d0295339b1ead66fa79ac52cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41285,7 +41285,7 @@
     {
       "id": "SURFACE-39b88f2b72e34e12",
       "path": "services/campaign-platform/ui/app.js",
-      "sha256": "bb90be502631f44195f6d65c780eaed2ed9b21e6225260a4a8493414fadb0649",
+      "sha256": "da2dde1d312be1bc2015b13edde4dbd7499216a22709eaa50c2d9180d83d3905",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67394,7 +67394,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bee181ef458685ae8f379e04e6c520f2b0e34828532e47b3d9cf31be4c762632",
+      "sourceSha256": "5edf7c8c4350de5a6f2b982cf3b618c0e520c5084dce461fa1db33441d045ecc",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -67422,7 +67422,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bee181ef458685ae8f379e04e6c520f2b0e34828532e47b3d9cf31be4c762632",
+      "sourceSha256": "5edf7c8c4350de5a6f2b982cf3b618c0e520c5084dce461fa1db33441d045ecc",
       "definition": {
         "states": [
           "absent",
@@ -67452,7 +67452,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "bee181ef458685ae8f379e04e6c520f2b0e34828532e47b3d9cf31be4c762632",
+      "sourceSha256": "5edf7c8c4350de5a6f2b982cf3b618c0e520c5084dce461fa1db33441d045ecc",
       "definition": {
         "export": [
           "queued",

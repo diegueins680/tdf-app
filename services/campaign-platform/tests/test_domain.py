@@ -1,4 +1,5 @@
 import concurrent.futures, json, tempfile, time, unittest
+from unittest import mock
 from pathlib import Path
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
@@ -302,6 +303,95 @@ class CampaignTests(unittest.TestCase):
     self.assertEqual(len(claimed),1)
     self.assertEqual((claimed[0]['id'],claimed[0]['kind'],claimed[0]['attempts']),(jid,'verify_youtube',0))
     with self.store.db() as d:self.assertEqual(d.execute('SELECT attempts FROM jobs WHERE id=?',(jid,)).fetchone()[0],1)
+ def expired_youtube_recovery_fixture(self):
+  pid,jid,publication,payload,data=self.youtube_verification_recovery_fixture()
+  now=time.time();old_due=now-7200
+  with self.store.db(True) as d:d.execute('UPDATE pieces SET due_at=?,late_seconds=60 WHERE id=?',(old_due,pid))
+  version=self.store.detail(self.a,self.cid)['version']
+  recovery={**data,'campaign_version':version,'expected_due_at':old_due,'reschedule_at':now+300,'schedule_reapproved':True,'rights_confirmed':True}
+  return pid,jid,publication,data,recovery
+ def test_expired_youtube_confirmation_requires_explicit_schedule_reapproval(self):
+  pid,jid,_,data,_=self.expired_youtube_recovery_fixture()
+  with self.store.db() as d:before=list(d.iterdump())
+  with self.assertRaisesRegex(Denied,'[Rr]eprograma'):self.store.youtube_checks(self.a,self.cid,data)
+  with self.store.db() as d:self.assertEqual(list(d.iterdump()),before)
+ def test_explicit_youtube_schedule_reapproval_recovers_existing_video_without_reupload(self):
+  pid,jid,publication,_,recovery=self.expired_youtube_recovery_fixture()
+  with self.store.db() as d:
+   upload=dict(d.execute('SELECT * FROM jobs WHERE id=?',(publication,)).fetchone());session=dict(d.execute('SELECT * FROM provider_sessions WHERE piece=?',(pid,)).fetchone());before=dict(d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone());campaign=dict(d.execute('SELECT * FROM campaigns WHERE id=?',(self.cid,)).fetchone())
+  self.store.youtube_checks(self.a,self.cid,recovery)
+  with self.store.db() as d:
+   after=dict(d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone());job=dict(d.execute('SELECT * FROM jobs WHERE id=?',(jid,)).fetchone())
+   self.assertEqual(after['due_at'],recovery['reschedule_at'])
+   for key in before.keys()-{'due_at','settings','status'}:self.assertEqual(after[key],before[key],key)
+   self.assertEqual(json.loads(after['settings']),{**json.loads(before['settings']),'youtube_checks_reviewed':True})
+   self.assertEqual(dict(d.execute('SELECT * FROM jobs WHERE id=?',(publication,)).fetchone()),upload)
+   self.assertEqual(dict(d.execute('SELECT * FROM provider_sessions WHERE piece=?',(pid,)).fetchone()),session)
+   self.assertEqual(dict(d.execute('SELECT * FROM campaigns WHERE id=?',(self.cid,)).fetchone()),campaign)
+   self.assertEqual((job['state'],job['attempts'],job['due_at']),('queued',0,recovery['reschedule_at']))
+   self.assertEqual(d.execute('SELECT count(*) FROM jobs').fetchone()[0],2)
+   self.assertEqual(d.execute('SELECT count(*) FROM audit WHERE action="youtube.schedule_reapprove" AND subject=?',(pid,)).fetchone()[0],1)
+  self.assertIsNone(self.store.claim())
+  with mock.patch('domain.time.time',return_value=recovery['reschedule_at']+1),mock.patch('youtube_upload.verify',return_value={'state':'published','url':'https://www.youtube.com/watch?v=private-video'}) as verify:
+   run_one(self.store,None,lambda _:self.fail('must not upload media'))
+   verify.assert_called_once();self.assertEqual(verify.call_args.args[1]['external_id'],'private-video')
+  with self.store.db() as d:self.assertEqual(d.execute('SELECT status FROM pieces WHERE id=?',(pid,)).fetchone()[0],'published')
+ def test_youtube_schedule_reapproval_is_owner_version_date_and_job_bound(self):
+  pid,jid,_,_,recovery=self.expired_youtube_recovery_fixture()
+  self.store.member(self.a,self.cid,{'user_id':2,'role':'reviewer'})
+  cases=[(self.b,recovery),(self.a,{**recovery,'campaign_version':999}),(self.a,{**recovery,'version':999}),(self.a,{**recovery,'expected_due_at':1}),(self.a,{**recovery,'video_id':'other'}),(self.a,{**recovery,'schedule_reapproved':False}),(self.a,{**recovery,'rights_confirmed':False})]
+  cases += [(self.a,{**recovery,'reschedule_at':value}) for value in [None,True,'tomorrow',10**400,float('nan'),float('inf'),time.time()-1,time.time()+32*86400]]
+  for actor,data in cases:
+   with self.subTest(data=data):
+    with self.store.db() as d:before=list(d.iterdump())
+    with self.assertRaises(Denied):self.store.youtube_checks(actor,self.cid,data)
+    with self.store.db() as d:self.assertEqual(list(d.iterdump()),before)
+  for state in ['running','unknown','completed','cancelled']:
+   with self.subTest(job_state=state):
+    with self.store.db(True) as d:d.execute('UPDATE jobs SET state=? WHERE id=?',(state,jid))
+    with self.store.db() as d:before=list(d.iterdump())
+    with self.assertRaises(Denied):self.store.youtube_checks(self.a,self.cid,recovery)
+    with self.store.db() as d:self.assertEqual(list(d.iterdump()),before)
+ def test_closed_youtube_campaign_cannot_change_uploaded_schedule(self):
+  pid,jid,_,_,recovery=self.expired_youtube_recovery_fixture()
+  for status in ['cancelled','completed']:
+   with self.store.db(True) as d:d.execute('UPDATE campaigns SET status=? WHERE id=?',(status,self.cid))
+   with self.store.db() as d:before=list(d.iterdump())
+   with self.assertRaises(Denied):self.store.youtube_checks(self.a,self.cid,recovery)
+   with self.store.db() as d:self.assertEqual(list(d.iterdump()),before)
+ def test_tdf_owner_can_reapprove_only_schedule_without_granting_studio_admin_authority(self):
+  pid,jid,_,data,recovery=self.expired_youtube_recovery_fixture()
+  self.store.member(self.a,self.cid,{'user_id':3,'role':'reviewer'})
+  with self.store.db(True) as d:
+   d.execute('UPDATE accounts SET scope="tdf" WHERE id=?',(self.account,))
+   d.execute('UPDATE pieces SET tdf_approval_version=version WHERE id=?',(pid,))
+  with self.assertRaises(Denied):self.store.youtube_checks(self.a,self.cid,recovery)
+  denied=None
+  try:self.store.youtube_checks(self.a,self.cid,{**recovery,'reschedule_only':True,'checks_passed':False})
+  except Denied as error:denied=error
+  self.assertIsNone(denied,'Owner schedule approval must not require channel-admin Studio authority')
+  with self.store.db() as d:
+   p=d.execute('SELECT * FROM pieces WHERE id=?',(pid,)).fetchone()
+   self.assertFalse(json.loads(p['settings'])['youtube_checks_reviewed']);self.assertEqual(p['status'],'blocked')
+   self.assertEqual(d.execute('SELECT state FROM jobs WHERE id=?',(jid,)).fetchone()[0],'blocked')
+  self.assertIsNone(self.store.claim())
+  with self.assertRaises(Denied):self.store.youtube_checks(self.a,self.cid,data)
+  self.store.youtube_checks(self.admin,self.cid,data)
+  with self.store.db() as d:
+   self.assertEqual(d.execute('SELECT due_at FROM jobs WHERE id=?',(jid,)).fetchone()[0],recovery['reschedule_at'])
+   self.assertTrue(json.loads(d.execute('SELECT settings FROM pieces WHERE id=?',(pid,)).fetchone()[0])['youtube_checks_reviewed'])
+  self.assertIsNone(self.store.claim())
+ def test_concurrent_youtube_schedule_reapproval_commits_once_and_never_activates_paused_campaign(self):
+  pid,jid,_,_,recovery=self.expired_youtube_recovery_fixture();self.store.status(self.a,self.cid,'paused')
+  def confirm(_):
+   try:self.store.youtube_checks(self.a,self.cid,recovery);return True
+   except Denied:return False
+  with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:outcomes=list(pool.map(confirm,range(4)))
+  self.assertEqual(sum(outcomes),1)
+  with self.store.db() as d:
+   self.assertEqual(d.execute('SELECT count(*) FROM audit WHERE action="youtube.schedule_reapprove" AND subject=?',(pid,)).fetchone()[0],1)
+   self.assertEqual(d.execute('SELECT status FROM campaigns WHERE id=?',(self.cid,)).fetchone()[0],'paused')
+  self.assertIsNone(self.store.claim())
  def test_youtube_studio_confirmation_preserves_nonrecoverable_verification_states(self):
   pid,jid,publication,payload,data=self.youtube_verification_recovery_fixture()
   for state in ('queued','running','completed','unknown','cancelled'):

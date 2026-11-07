@@ -95,3 +95,33 @@ test('TikTok drafts remain editable when the client is not configured and do not
   assert.equal(page.calls.filter(x=>x.path.endsWith('/tiktok-consent')).length,0);
  }finally{page.close();}
 });
+
+
+async function youtubeRecoveryFixture(scope='own'){
+ const page=await setup();page.run(`session.user.id=1;session.user.admin=false;session.accounts=[{id:'yt',scope:'${scope}'}];current={id:'campaign',owner:1,version:4};open=async()=>{};`);
+ const calls=[];page.dom.window.fetch=async(url,options)=>{calls.push({url,body:JSON.parse(options.body)});return {ok:true,status:200,json:async()=>({})};};
+ const piece={id:'piece',version:3,external_id:'same-private-video',account:'yt',due_at:Date.now()/1000-7200,late_seconds:60};
+ return {...page,calls,piece,invoke:()=>page.run('confirmYouTubeReview('+JSON.stringify(piece)+')')};
+}
+test('YouTube recovery requires a chosen future date and two explicit confirmations without posting on cancel',async()=>{
+ const page=await youtubeRecoveryFixture();try{
+  page.dom.window.prompt=()=>null;page.dom.window.confirm=()=>{throw Error('unexpected confirmation');};await page.invoke();assert.equal(page.calls.length,0);
+  page.dom.window.prompt=()=>new Date(Date.now()+300000).toISOString();page.dom.window.confirm=()=>false;await page.invoke();assert.equal(page.calls.length,0);
+  let confirms=0;page.dom.window.confirm=()=>++confirms===1;await page.invoke();assert.equal(confirms,2);assert.equal(page.calls.length,0);
+  page.dom.window.confirm=()=>true;await page.invoke();assert.equal(page.calls.length,1);
+  assert.deepEqual(page.calls[0].body,{piece:'piece',version:3,video_id:'same-private-video',checks_passed:true,campaign_version:4,expected_due_at:page.piece.due_at,reschedule_at:page.calls[0].body.reschedule_at,schedule_reapproved:true,rights_confirmed:true,reschedule_only:false});
+ }finally{page.close();}
+});
+test('YouTube shared-channel schedule recovery does not claim Studio administrator approval',async()=>{
+ const page=await youtubeRecoveryFixture('tdf');try{
+  page.dom.window.prompt=()=>new Date(Date.now()+300000).toISOString();let text='';page.dom.window.confirm=message=>{text=message;return true;};
+  await page.invoke();assert.equal(page.calls.length,1);assert.equal(page.calls[0].body.reschedule_only,true);assert.equal(page.calls[0].body.checks_passed,false);assert.match(text,/administrador/);
+ }finally{page.close();}
+});
+test('YouTube recovery rejects a nonowner or an invalid date before any request',async()=>{
+ const page=await youtubeRecoveryFixture();try{
+  page.run('current.owner=99');await assert.rejects(page.invoke(),/propietario/);assert.equal(page.calls.length,0);page.run('current.owner=1');
+  for(const value of ['not-a-date',new Date(Date.now()-1000).toISOString(),new Date(Date.now()+32*86400000).toISOString()]){page.dom.window.prompt=()=>value;await assert.rejects(page.invoke(),/fecha futura/);}
+  assert.equal(page.calls.length,0);
+ }finally{page.close();}
+});

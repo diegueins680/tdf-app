@@ -176,3 +176,10 @@ La revisión remota del código detectó la incompatibilidad de Playwright con U
 
 
 Después de estas publicaciones se comprobó la recuperación del respaldo de 49 archivos y sus 52 objetos referenciados: 48 pruebas previas fijadas y cuatro descifrados en esta comprobación, con integridad y claves foráneas correctas en SQLite y cinco registros del almacén de credenciales recuperados. La clave privada permaneció local. Se mantienen los límites: no se iniciaron servicios restaurados, no se validó una conmutación del host, PostgreSQL principal ni la recuperación del sandbox.
+
+
+### Recovery of an uploaded YouTube video after schedule expiry
+
+An expired Studio confirmation is rejected without requeuing a doomed verification. The owner can explicitly choose a future date within31 days and reapprove the rights and schedule of the same uploaded video. The action binds the exact campaign version, piece version, external video ID and previous due_at. It changes only due_at, verification consent/state and its existing job deadline; upload identity, resumable session, publication payload and content/version approvals remain intact. The scheduling audit retains both dates and versions. Concurrent/stale confirmations fail; running, unknown, completed and cancelled verification cannot be reset by this path. No new upload or publication job is created.
+
+A non-admin owner of a TDF-channel campaign may approve the new date only. Studio consent remains false and verification blocked until an authorized channel administrator confirms Studio checks. Paused campaigns remain paused; verification cannot run before the newly approved time. The original lateness, account and exact-version execution guards continue to apply. These are isolated test boundaries, not proof of external publication or a production operation.
