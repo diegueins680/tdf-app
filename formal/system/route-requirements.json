@@ -5,9 +5,9 @@
     "total": 516,
     "named": 286,
     "path-named": 1,
-    "reviewed": 53,
-    "unspecified": 176,
-    "covered": 340
+    "reviewed": 64,
+    "unspecified": 165,
+    "covered": 351
   },
   "routes": [
     {
@@ -2436,68 +2436,101 @@
     {
       "method": "POST",
       "path": "/operations/approvals",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-APPROVAL-001"
+      ],
+      "note": "OPS-APPROVAL-001 specifies organization-scoped idempotency bound to requester, scope and payload, and decisions only on pending, unexpired requests by a different actor (handler and CHECK approver <> requester)."
     },
     {
       "method": "PATCH",
       "path": "/operations/approvals/{approvalId}/decision",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-APPROVAL-001"
+      ],
+      "note": "OPS-APPROVAL-001 specifies organization-scoped idempotency bound to requester, scope and payload, and decisions only on pending, unexpired requests by a different actor (handler and CHECK approver <> requester)."
     },
     {
       "method": "POST",
       "path": "/operations/integration-failures/{failureId}/replay",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-FAILURE-REPLAY-001"
+      ],
+      "note": "OPS-FAILURE-REPLAY-001 and OPS-AUX-WRITE-001 specify the replay: manager roles, the dead-lettered projection re-queued in the same transaction, nothing re-runnable is not admitted as retrying."
     },
     {
       "method": "POST",
       "path": "/operations/push-subscriptions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-AUX-WRITE-001"
+      ],
+      "note": "OPS-AUX-WRITE-001 specifies notes, saved views and push registration: session, role and scope re-validated under locks, result and audit committed together, 503 without the push key."
     },
     {
       "method": "POST",
       "path": "/operations/saved-views",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-AUX-WRITE-001"
+      ],
+      "note": "OPS-AUX-WRITE-001 specifies notes, saved views and push registration: session, role and scope re-validated under locks, result and audit committed together, 503 without the push key."
     },
     {
       "method": "POST",
       "path": "/operations/work-items",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-MANUAL-001"
+      ],
+      "note": "OPS-MANUAL-001 specifies manual creation: retry key bound to actor, scope and payload; only the server-keyed event is projected; receipt, item and evidence commit together."
     },
     {
       "method": "PATCH",
       "path": "/operations/work-items/{workItemId}/assignment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-COMMAND-001"
+      ],
+      "note": "OPS-COMMAND-001 specifies the four work-item commands: locked current version, re-validated session and role, timers and evidence committed atomically, 401/403/404/409/422 admission."
     },
     {
       "method": "POST",
       "path": "/operations/work-items/{workItemId}/notes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-AUX-WRITE-001"
+      ],
+      "note": "OPS-AUX-WRITE-001 specifies notes, saved views and push registration: session, role and scope re-validated under locks, result and audit committed together, 503 without the push key."
     },
     {
       "method": "PATCH",
       "path": "/operations/work-items/{workItemId}/priority",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-COMMAND-001"
+      ],
+      "note": "OPS-COMMAND-001 specifies the four work-item commands: locked current version, re-validated session and role, timers and evidence committed atomically, 401/403/404/409/422 admission."
     },
     {
       "method": "PATCH",
       "path": "/operations/work-items/{workItemId}/seen",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-COMMAND-001"
+      ],
+      "note": "OPS-COMMAND-001 specifies the four work-item commands: locked current version, re-validated session and role, timers and evidence committed atomically, 401/403/404/409/422 admission."
     },
     {
       "method": "PATCH",
       "path": "/operations/work-items/{workItemId}/transition",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-COMMAND-001"
+      ],
+      "note": "OPS-COMMAND-001 specifies the four work-item commands: locked current version, re-validated session and role, timers and evidence committed atomically, 401/403/404/409/422 admission."
     },
     {
       "method": "POST",

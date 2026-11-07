@@ -30049,6 +30049,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/operations-routes.md",
+      "sha256": "552f4541703d792e2b75328b0df71d414e2ba1dfb1ec918bcbdd7233f6b3ca7d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/operations-worker-tick.md",
       "sha256": "b6cbbc586efbed898f4b81d6662a8c7f1e29c45c50eded9f30dc5f7a31be6160",
       "authority": "inferred",
