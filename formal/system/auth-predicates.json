@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674"
+    "tdf-hq/tdf-hq.cabal": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6"
   },
   "obligations": [
     {
@@ -310,6 +310,24 @@
       "change": "Normal composition of current protected d6 main (including682and660/661/662) after the ce763 qualification. Current Cabal remains exact main plus the two existing credential-cache registrations. All current190 requirement records are preserved before addingMCC191.",
       "semanticReview": "The explicit NoStore/wiring/publicAPI/test files listed by native-45-ce763-receipt remain byte-identical to ce763. Other transitive main handler/test inputs changed, so whole-backend identity is false and no ce763 binary or execution is relabelled as this composition. The new ticket handlers do not alter the translated predicates; all pinned sources except the reviewed two-line Cabal extension equal current main. Fresh scoped solver/replay/controls bind the final composition; fresh final-head hosted compilation/tests remain required.",
       "qualification": "Fresh final-head hosted checks and independent review remain mandatory. No old runtime/HTTP/formal receipt is relabelled and no full-refinement or release clearance is claimed."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "d6d1d757cc99c6ea3d7c0f75567e3962c86a6fa8",
+      "previousSha256": "4dc7af5e67f1f91e0cca3f61389a8032c93848692549ced7d4f3304cba85f9c8",
+      "currentSha256": "ba78293ff4d336cf07c6b78ff8ae5fe72497885ca5c5046f4380e396adeafdbc",
+      "change": "MEDIA-VIDEO-CAMPAIGN-001 adds TDF.VideoCampaigns and TDF.VideoCampaignsSpec module registrations and the library network-uri dependency.",
+      "semanticReview": "Removing exactly these three added lines reproduces protected main Cabal bytes. Existing compiler flags, source paths, language settings and prior dependency declarations are unchanged. network-uri was already a test dependency and is resolved by the unchanged Stack snapshot. The new module imports existing authorization helpers but does not redefine their predicates; URL parsing does not enter the verified authorization or recovery expressions. Every other reviewed source hash remains unchanged.",
+      "qualification": "Snapshot review only; no broader authentication, endpoint or release proof. Fresh solver execution, serialized replay, source mutation controls and independent protected review remain required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "02df9d6c6410b0f14e014e8348fafedf3cea42bc",
+      "previousSha256": "2f923e9fbb52e90c249977d32673d1580d1b9dae867f2915a1eadee2453ec674",
+      "currentSha256": "7cf8ec7c75db5cde3ea3d85986c43888c39a4d868819c42b6d4fd5c6d0220fe6",
+      "change": "Normal composition retains the protected music credential-cache modules/tests and adds only TDF.VideoCampaigns, TDF.VideoCampaignsSpec and the library network-uri declaration.",
+      "semanticReview": "Removing exactly these three launch additions reproduces current protected Main Cabal bytes. Existing dependency declarations, flags, extensions and source paths are retained. Every other reviewed source hash matches protected Main. Both parent context histories are retained; the added URL parser does not enter authorization/recovery predicate expressions.",
+      "qualification": "Context correspondence only, not whole-system proof or release authorization. Fresh bound solver execution/replay and protected review remain required."
     }
   ]
 }

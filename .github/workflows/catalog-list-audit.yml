@@ -22,6 +22,8 @@ jobs:
           GIT_CONFIG_KEY_0: submodule.tdf-mobile.update
           GIT_CONFIG_VALUE_0: checkout
         with:
+          # The migration provenance control reads protected ancestor blobs.
+          fetch-depth: 0
           submodules: recursive
 
       - name: Set up Node.js
