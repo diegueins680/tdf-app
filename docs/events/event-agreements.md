@@ -25,15 +25,15 @@ Apply the registered SQL migration before deployment. Run Stack backend checks a
 
 No real event contract, budget approval, recipient permission or notification is created by the migration. The feature does not publish events, sell tickets, send marketing, charge money or accept a contract for either party.
 
-The companion generated Mobile change is preserved in `event-agreements-mobile.patch`, based on Mobile commit `c3b358caa7660a854ad7ac195cf99169638bf308`. The current GitHub connection returned 403 for writes to that repository. Apply/review the patch there, publish its commit and PR, update the root gitlink, then regenerate specification evidence. The current pinned Mobile feature mirror is deliberately not claimed as synchronized; its feature audit remains blocked. Do not weaken that gate or pin an unavailable commit.
+The historical source companion generated Mobile change is preserved in `event-agreements-mobile.patch`, based on Mobile commit `c3b358caa7660a854ad7ac195cf99169638bf308`. That historical GitHub connection returned 403 for writes to that repository. Apply/review the patch there, publish its commit and PR, update the root gitlink, then regenerate specification evidence. That source pinned Mobile feature mirror was deliberately not claimed as synchronized; its feature audit remains blocked. Do not weaken that gate or pin an unavailable commit.
 
-## SMTP reconciliation — 2026-11-06
+## Historical source qualification — 2026-11-06
 
 The reconciled source incorporates main `c47c2a8d8851a58a828dec830704f8c352496c20`, including #701. Generic contract storage and SMTP handlers are byte-identical to that main. Existing migrations and their review graphs are preserved, and the event agreement migration is appended after the protected 244-entry manifest.
 
-Current local checks: 11 real PostgreSQL 16.2 agreement regressions, 72 focused web tests, ESLint on the event API/page/tests, UI typecheck/build and bounded TLC with five negative controls. Catalog reconciliation tests pass (10); source audit observes 1,401 reviewed candidates. Haskell/Stack is unavailable here, so fresh hosted backend compilation and tests remain required. The compiled declaration composes the five previously compiler-observed workspace routes with main; this is not a fresh compiler result or runtime PDF qualification.
+Historical source local checks: 11 real PostgreSQL 16.2 agreement regressions, 72 focused web tests, ESLint on the event API/page/tests, UI typecheck/build and bounded TLC with five negative controls. Catalog reconciliation tests pass (10); source audit observes 1,401 reviewed candidates. Haskell/Stack was unavailable for that historical local execution; its later C5 hosted compiler and tests are recorded separately. The compiled declaration composes the five previously compiler-observed workspace routes with main; this is not a fresh compiler result or runtime PDF qualification.
 
-Mobile remains a separate integration blocker. `event-agreements-mobile-20261106.patch` is regenerated against the root's pinned Mobile `14318a730f96b2053f71885091bbc05cffc3294d`; the original companion patch remains preserved. Mobile main has independently advanced to `d5c718c23b50b83dd2dd76bbb41b835730dbf7a2` with the artist video campaign contract. Reconcile the companion with those newer operations and feature entries without deleting them, obtain Mobile review/CI, merge it, then update the root gitlink and regenerate source evidence. A fresh attempt to create the companion branch returned HTTP 403 (`Resource not accessible by integration`). No Mobile commit is published or claimed synchronized.
+At that source stage Mobile remained a separate integration blocker. `event-agreements-mobile-20261106.patch` is regenerated against the root's pinned Mobile `14318a730f96b2053f71885091bbc05cffc3294d`; the original companion patch remains preserved. Mobile main has independently advanced to `d5c718c23b50b83dd2dd76bbb41b835730dbf7a2` with the artist video campaign contract. Reconcile the companion with those newer operations and feature entries without deleting them, obtain Mobile review/CI, merge it, then update the root gitlink and regenerate source evidence. A fresh attempt to create the companion branch returned HTTP 403 (`Resource not accessible by integration`). No Mobile commit is published or claimed synchronized.
 
 Tests use synthetic accounts, isolated database schemas/files, fake PDFs and injected transports. No real contract is sent, no historical commercial document is edited, and no production mutation is part of these checks.
 
@@ -58,3 +58,26 @@ or audit evidence. Replaying the guard forward preserves its protection.
 Populated rollback refuses with55000 and retains evidence/guards; an empty
 rollback removes only the new triggers, preserving tables, FKs and canonical
 functions. No real agreement or production identity is modified by tests.
+
+
+## Current private reconciliation — 2026-11-07
+
+The current candidate normally incorporates protected main at `6033b84` and preserves
+its complete 246-entry migration prefix and current backend behavior. The old
+patches and source receipts above remain historical evidence; their provider
+403 does not describe current CLI repository permissions. The root-compatible
+Mobile companion at `751637c` is generated from the actual composed OpenAPI context
+and retains the qualified 0.5.1 URI decoder. It intentionally excludes unrelated
+future Mobile-main contracts. Its separate upstream bridge must pass review and
+mandatory CI and become reachable from Mobile main before the root's existing
+gitlink reachability check can pass; that check remains unchanged.
+
+Local qualification distinguishes execution sources. The Ccea-based repaired
+PDF boundary passed the unchanged six-case native harness, including injected
+IOException, explicit renderer failure, successful private PDF response and
+asynchronous cancellation. Its actual compiler declaration contains 932 typed
+operations: the 927 protected operations plus the five original workspace routes.
+The final main at `6033b84` composition requires its own compiled declaration inspection
+and fresh mandatory hosted tests; earlier native/CI receipts are not relabelled.
+No TeX renderer, deployed endpoint, production migration, real document or
+external notification was exercised. The default-off rollout remains in force.
