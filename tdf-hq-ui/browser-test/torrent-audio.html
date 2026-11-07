@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Isolated torrent audio fixture</title></head>
+<body><audio id="audio" controls></audio><button id="play" onclick="document.getElementById('audio').play()">Play synthetic audio</button>
+<script type="module">
+import { createTorrentAudioSession } from '/src/utils/torrentAudio.ts';
+window.tdfTorrentAudio = { createTorrentAudioSession };
+</script></body></html>
