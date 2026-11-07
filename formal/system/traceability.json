@@ -25598,7 +25598,7 @@
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Artists/Enrichment.hs": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
     "tdf-hq/src/TDF/Artists/Promotion.hs": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
-    "tdf-hq/src/TDF/Auth.hs": "e75787b3b51368e5863ee46e64332871be4cb85ca224f5a6e06202bfbbdb877a",
+    "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
@@ -25720,7 +25720,7 @@
     "tdf-hq/src/TDF/ServerInternAudit.hs": "0b7acfef1366bac9dbc8942749cefd922f20d8039d772d5a5b0672719f6ec4a7",
     "tdf-hq/src/TDF/ServerInternships.hs": "d94b9e0807f968bc1eca088fbce77d882c079f4dd8382534b8efdf966471c1f5",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
-    "tdf-hq/src/TDF/ServerRadio.hs": "c8a5cdee21df1c2e7e01273b0054ff1db45aa73b638fdae99241efa788b11125",
+    "tdf-hq/src/TDF/ServerRadio.hs": "5cf8676925d3e588a3bfd0bc564377839d6aaf6c7256f9835be7664c171a40f6",
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": "2bb64ea8ae2173a5b9d6893291d58969816d91013b1a6fca28dc513178518da3",
     "tdf-hq/src/TDF/Services/RecordsIngestion.hs": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
@@ -65915,7 +65915,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "e75787b3b51368e5863ee46e64332871be4cb85ca224f5a6e06202bfbbdb877a",
+      "sha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68972,7 +68972,7 @@
     {
       "id": "SURFACE-5a72b47f8b63ff19",
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
-      "sha256": "c8a5cdee21df1c2e7e01273b0054ff1db45aa73b638fdae99241efa788b11125",
+      "sha256": "5cf8676925d3e588a3bfd0bc564377839d6aaf6c7256f9835be7664c171a40f6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -26,7 +26,6 @@ module TDF.ServerRadio
   ) where
 
 import           Control.Applicative    ((<|>))
-import qualified Data.Set               as Set
 import           TDF.App.FailureBoundary (fixedFailure)
 import           Control.Monad          (forM, forM_, when)
 import           Control.Monad.Except   (MonadError)
@@ -66,7 +65,7 @@ import           TDF.API.Types          (RadioAutoStopOptionDTO(..), RadioAutoSt
                                          RadioMetadataRefreshRequest(..), RadioMetadataRefreshResult(..),
                                          RadioNowPlayingRequest(..), RadioNowPlayingResult(..),
                                          RadioTransmissionRequest(..), RadioTransmissionInfo(..))
-import           TDF.Auth               (AuthedUser(..), hasCoherentRoleGrants, hasValidAuthPartyId)
+import           TDF.Auth               (AuthedUser(..), ModuleAccess, hasModuleAccess)
 import qualified TDF.Catalog.Models     as Catalog
 import           TDF.DB                 (Env(..), sharedTlsManager)
 import           TDF.Models
@@ -838,9 +837,10 @@ splitStreamTitle title =
 -- fetch URLs on their behalf.
 validateRadioCatalogAccess :: AuthedUser -> Either ServerError ()
 validateRadioCatalogAccess user
-  | not (hasValidAuthPartyId user) =
+  | fromSqlKey (auPartyId user) <= 0 =
       Left err403 { errBody = "Valid authenticated party required" }
-  | not (hasCoherentRoleGrants user) || Set.null (auModules user) =
+  | not (any (`hasModuleAccess` user) [minBound .. maxBound :: ModuleAccess]) =
+      -- hasModuleAccess already requires coherent, unique role grants.
       Left err403 { errBody = "Radio catalog changes require a staff module grant" }
   | otherwise = Right ()
 

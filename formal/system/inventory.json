@@ -16137,7 +16137,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "e75787b3b51368e5863ee46e64332871be4cb85ca224f5a6e06202bfbbdb877a",
+      "sha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17175,7 +17175,7 @@
     {
       "id": "SURFACE-5a72b47f8b63ff19",
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
-      "sha256": "c8a5cdee21df1c2e7e01273b0054ff1db45aa73b638fdae99241efa788b11125",
+      "sha256": "5cf8676925d3e588a3bfd0bc564377839d6aaf6c7256f9835be7664c171a40f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
