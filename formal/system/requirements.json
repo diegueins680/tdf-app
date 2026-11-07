@@ -17036,7 +17036,7 @@
       "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses single-flight through a cancellation-safe lock. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
       "idempotency": "Repeated login for a bound subject reuses the credential.",
       "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
-      "recovery": "After key retrieval failure or cancellation, fail closed during the attempt cooldown; retry key retrieval after the cooldown. Existing cached tokens still require an unexpired valid signature/claims, or the user can use email and password or link an existing account.",
+      "recovery": "After key retrieval failure or cancellation, fail closed during the attempt cooldown; retry key retrieval after the cooldown. Existing cached tokens still require an unexpired valid signature/claims, or the user can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
       "observability": "login_apple auth activity and rejected-token warnings without token content.",
       "source": "App Store Connect rejection notice relayed by the product owner",
       "implementation": [
@@ -17072,7 +17072,8 @@
         "tdf-mobile/src/localization/onboardingCopy.ts",
         "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
         "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql",
-        "tdf-mobile/.env.example"
+        "tdf-mobile/.env.example",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "tdf-hq/test/TDF/AppleSignInSpec.hs",
@@ -17087,7 +17088,8 @@
         "scripts/verify-cors-boundary.py",
         "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
-        "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts"
+        "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts",
+        "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json"
       ],
       "formalModels": [],
       "status": "specified and implemented",
