@@ -20154,6 +20154,899 @@
       "historicalStatus": null
     },
     {
+      "id": "CAT-REVISION-WORKFLOW-001",
+      "title": "Catalog revision drafting, submission, approval and rejection",
+      "statement": "A capability holder drafts a change to a catalog item, submits it for review, and a distinct approver publishes or rejects it. Routes: POST /catalog/{catalogCode}/revisions; POST /catalog/revisions/{revisionId}/submit; POST /catalog/revisions/{revisionId}/approve; POST /catalog/revisions/{revisionId}/reject.",
+      "domain": "CAT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/catalog-routes.md.",
+      "source": "formal/system/catalog-routes.md",
+      "contract": "formal/system/catalog-routes.md",
+      "property": "Drafting validates the draft (400), the catalog (404), the adapter (422), a read-only family (403) and the base version (409) and inserts a draft revision at base version + 1 with a draft-created audit. Submission needs catalog.update and a draft or rejected revision (409). Approval needs catalog.approve and catalog.publish, a revision in review (409) and an approver distinct from the author (403, validateCatalogApproval, backed by catalog_revision_workflow_integrity); an emergency override is only accepted on a sensitive catalog (400) and does not lift that rule. Publishing upserts the typed item row conditioned on the base version (409 if changed), refreshes family tables, aliases and the catalog cache version and writes a published audit; a future scheduledPublishAt leaves the revision approved. Rejection needs catalog.review and notes (400).",
+      "actors": [
+        "Catalog editor",
+        "Catalog reviewer",
+        "Catalog approver"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /catalog/{catalogCode}/revisions",
+        "POST /catalog/revisions/{revisionId}/submit",
+        "POST /catalog/revisions/{revisionId}/approve",
+        "POST /catalog/revisions/{revisionId}/reject"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "catalog_revision",
+        "typed catalog item table",
+        "catalog_definition cache version",
+        "catalog_audit_event"
+      ],
+      "authorization": "requireCatalogCapability: ModuleCatalog (Admin, Manager, StudioManager) and a persisted security_permission grant with the named code (403 otherwise); no strict-admin check. Drafting: catalog.update (existing item) or catalog.create. Submit: catalog.update, no author check. Approve: catalog.approve and catalog.publish, author excluded. Reject: catalog.review.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Each runDB is its own transaction: publication, catalog bump, audit and the revision update are separate; the item upsert is conditioned on its version; revisions have no lock, so concurrent approvals both pass the state check and the second fails on the item version after partial work.",
+      "idempotency": "Not keyed; a second draft for the same entity and base hits UniqueCatalogEntityRevision; submit, approve and reject replay as 409 once the state moved.",
+      "failure": "400 invalid draft, notes or override; 403 capability, read-only family or self-approval; 404 catalog or revision; 409 base version, state or item version; 422 no adapter; 503 missing workflow state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/API/Catalog.hs",
+        "tdf-hq/sql/2026-08-14_catalog_integrity.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "validateCatalogApproval is tested in tdf-hq/test/TDF/Catalog/SecuritySpec.hs; the rest is read from the handlers.",
+      "evidence": "formal/system/catalog-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Submission and rejection write no audit row (every security transition does).",
+        "Anyone with catalog.update may submit another author's draft.",
+        "Publication and the revision update are separate transactions; a failure between them leaves a published item with a revision still in review.",
+        "No code path publishes a revision left in approved with a future scheduledPublishAt.",
+        "The emergency override flag no longer has any effect beyond the sensitive-catalog check; whether an emergency self-approval path should exist (as the security routes have) is an owner decision."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "CAT-DIRECT-ITEM-001",
+      "title": "Direct catalog item activation, reordering, merge drafts and CSV import",
+      "statement": "Capability holders deactivate or restore items directly, reorder a catalog atomically, draft a merge and import drafts from CSV. Routes: PATCH /catalog/{catalogCode}/items/{itemId}/activation; POST /catalog/{catalogCode}/reorder; POST /catalog/{catalogCode}/merge; POST /catalog/{catalogCode}/import.csv.",
+      "domain": "CAT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/catalog-routes.md.",
+      "source": "formal/system/catalog-routes.md",
+      "contract": "formal/system/catalog-routes.md",
+      "property": "Activation needs catalog.restore (activate) or catalog.deactivate, refuses deactivating a current default (409), updates the item conditioned on expectedVersion (409) and then bumps the catalog and writes an audit in separate transactions, bypassing the revision workflow. Reorder needs catalog.update, locks the catalog row, requires expectedCatalogRevision to match (409) and the full member set (409) and commits positions, versions, cache revision and audit together (REC-CATALOG-001). Merge needs catalog.merge and catalog.update, requires an active target (409) and creates a draft revision of the source plus a catalog_merge_operation row. Import needs catalog.import (plus approve and publish on a sensitive catalog), validates the exact 10-column header (400), records a job deduplicated by digest and, unless dryRun (default true), creates one draft revision per row.",
+      "actors": [
+        "Catalog editor",
+        "Catalog importer"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PATCH /catalog/{catalogCode}/items/{itemId}/activation",
+        "POST /catalog/{catalogCode}/reorder",
+        "POST /catalog/{catalogCode}/merge",
+        "POST /catalog/{catalogCode}/import.csv"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "typed catalog item table",
+        "catalog_definition",
+        "catalog_revision",
+        "catalog_merge_operation",
+        "catalog_import_job",
+        "catalog_audit_event"
+      ],
+      "authorization": "requireCatalogCapability: ModuleCatalog (Admin, Manager, StudioManager) and a persisted security_permission grant with the named code (403 otherwise); no strict-admin check.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Reorder is serialized by a row lock and revision compare; activation uses an optimistic version but spreads item, catalog bump and audit over three transactions; merge and import are sequences of separate transactions.",
+      "idempotency": "Activation replays as 409 on the stale version; reorder replays as 409 on the stale revision; merge repeats create duplicate merge operations; the import job is deduplicated by digest but its drafts are not, so re-posting a CSV with dryRun=false creates a second set of drafts.",
+      "failure": "400 invalid ids, header or replacement; 403 capability or read-only family; 404 catalog or item; 409 version, revision, default or membership; 422 no adapter.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/API/Catalog.hs",
+        "tdf-hq/sql/2026-08-14_catalog_integrity.sql"
+      ],
+      "tests": [
+        "scripts/test-catalog-production-cutover.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/catalog-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "catalog_merge_operation is written but never read: approving the merge draft republishes the source unchanged, with no retargeting, deactivation or replacement, so a merge has no merge effect.",
+        "Sensitive catalogs can be deactivated directly without the approval workflow.",
+        "A mid-loop import failure leaves earlier drafts and a job marked drafts-created."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "CAT-SECURITY-GRANT-001",
+      "title": "Security grant revisions (party roles and role permissions)",
+      "statement": "Security administrators draft, submit, approve and reject changes to party security roles and role permissions; a grant is applied only on approval by a distinct administrator, or by its author in a justified emergency. Routes: POST /catalog/security/party-role-revisions; POST /catalog/security/role-permission-revisions; POST /catalog/security/revisions/{revisionId}/submit; POST /catalog/security/revisions/{revisionId}/approve; POST /catalog/security/revisions/{revisionId}/reject.",
+      "domain": "CAT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/catalog-routes.md.",
+      "source": "formal/system/catalog-routes.md",
+      "contract": "formal/system/catalog-routes.md",
+      "property": "Drafting needs security.create, validates reason, sourcePlatform and correlationId, requires exactly one active credential for a party grant (409), expectedVersion equal to the current grant version (409), a real change (409) and a fresh correlationId (409), and inserts the revision with its draft-created audit in one transaction. Submit needs security.assign and the revision author (403). Approve needs security.approve and security.assign; the author is refused (403) unless an emergencyOverrideReason of at least 20 characters is given by a holder of security.emergency-recover who is a coherent emergency administrator; the grant is applied under pg_advisory_xact_lock with the revision, grant row and audit in one transaction, re-verified by security triggers. Reject needs security.review and notes.",
+      "actors": [
+        "Security administrator",
+        "Emergency administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /catalog/security/party-role-revisions",
+        "POST /catalog/security/role-permission-revisions",
+        "POST /catalog/security/revisions/{revisionId}/submit",
+        "POST /catalog/security/revisions/{revisionId}/approve",
+        "POST /catalog/security/revisions/{revisionId}/reject"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "security_grant_revision",
+        "party_security_role",
+        "role_permission",
+        "security_audit_event"
+      ],
+      "authorization": "requireSecurityCapability: ModuleAdmin and a persisted grant with the named security.* code (403). Submit: author only. Approve: distinct approver or justified emergency.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Approval serializes on a global advisory lock; a grant-version conflict inside the lock throws userError (500) instead of 409.",
+      "idempotency": "Drafts are unique per correlationId; submit, approve and reject replay as 409.",
+      "failure": "400 invalid fields or override misuse; 403 capability, author or emergency rule; 404 revision, role, party or permission; 409 credential, version, no-op, duplicate correlation or state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/Catalog.hs",
+        "tdf-hq/src/TDF/API/Catalog.hs",
+        "tdf-hq/sql/2026-08-14_catalog_integrity.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Catalog/SecuritySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/catalog-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Version conflicts detected under the lock answer 500.",
+        "The target permission is not checked for being active or grantable at draft time."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-CART-ROUTES-001",
+      "title": "Public marketplace cart and checkout",
+      "statement": "Anyone creates a cart, places listings in it and checks it out into an awaiting-payment order with a reservation hold and a lookup token. Routes: POST /marketplace/cart; POST /marketplace/cart/{cartId}/items; POST /marketplace/cart/{cartId}/checkout.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/marketplace-routes.md.",
+      "source": "formal/system/marketplace-routes.md",
+      "contract": "formal/system/marketplace-routes.md",
+      "property": "Cart creation has no input and inserts a row. Item upsert needs the cart UUID, quantity in 0..1 (400), an active listing (409), one purpose per cart and at most one rental asset (409) and valid rental dates without overlap with a held rental (400/409). Checkout needs Idempotency-Key header (16..128 visible ASCII, 400 otherwise), buyer name, email and phone, a fulfillment method and address, a non-empty cart and a positive total (400), the sales or rentals domain enabled (503) and no pending online attempt (409); under an advisory lock on the key and FOR UPDATE on cart, items, listings and assets it creates the order (awaiting_payment), items, canonical checkout and lines, runtime rows, a 15-minute reservation hold and returns a fresh lookup token; an order-created email is sent asynchronously.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /marketplace/cart",
+        "POST /marketplace/cart/{cartId}/items",
+        "POST /marketplace/cart/{cartId}/checkout"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "marketplace_cart",
+        "marketplace_cart_item",
+        "marketplace_rental_cart_selection",
+        "marketplace_order",
+        "commerce checkout and lines",
+        "sale or rental runtime",
+        "commerce_reservation_hold",
+        "email (async)"
+      ],
+      "authorization": "Cart UUID possession (capability-path); checkout: key plus cart UUID.",
+      "privacy": "Stores buyer name, email, phone and address from an anonymous caller.",
+      "concurrency": "Item overlap checks are unlocked, so two carts can both pass availability until checkout locks the asset; checkout is serialized by the key lock and cart lock.",
+      "idempotency": "Cart creation and item upsert are unkeyed; checkout replays by stored hash and refuses a different payload (409).",
+      "failure": "400 invalid; 404 cart or listing; 409 purpose, overlap, hash or pending attempt; 503 domain disabled.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/marketplace-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Anonymous cart creation is unbounded and unthrottled.",
+        "Two checkouts of the same cart under different keys are serialized by the cart lock, but no explicit check refuses a second active hold on the same asset beyond the asset status."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-PAYMENT-RAILS-001",
+      "title": "Marketplace payment rails and PayPal capture",
+      "statement": "A buyer holding the lookup token starts a Datafast or PayPal payment for a canonical order and captures the PayPal order; the Stripe rail is disabled. Routes: POST /marketplace/cart/{cartId}/stripe/payment-intent; POST /marketplace/cart/{cartId}/datafast/checkout; POST /marketplace/cart/{cartId}/paypal/create; POST /marketplace/paypal/capture.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/marketplace-routes.md.",
+      "source": "formal/system/marketplace-routes.md",
+      "contract": "formal/system/marketplace-routes.md",
+      "property": "The Stripe route answers 503 unconditionally. Datafast and PayPal creation run the cart checkout preparation, refuse while manual evidence is under review (409), require matching provider and checkout environments (500 otherwise) and an enabled provider (503), begin a payment attempt, call the provider unless an id is already stored, bind the resource and move the order to datafast_pending or paypal_pending. Capture needs X-Order-Lookup-Token whose SHA-256 matches the stored lookup hash (404 otherwise), returns a paid order without a provider call, validates the capture (502 on amount, merchant or currency mismatch) and admits money with recordVerifiedPaymentOrReconcile (PAY-CAPTURE-RECON-001); the order becomes paid only through trg_marketplace_sync_verified_checkout.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /marketplace/cart/{cartId}/stripe/payment-intent",
+        "POST /marketplace/cart/{cartId}/datafast/checkout",
+        "POST /marketplace/cart/{cartId}/paypal/create",
+        "POST /marketplace/paypal/capture"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "payment attempt",
+        "provider binding",
+        "marketplace_order status",
+        "checkout payment or reconciliation exception",
+        "provider calls"
+      ],
+      "authorization": "Cart UUID plus key for creation; lookup token for capture.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Capture relies on attempt uniqueness (sha256 of capture: plus the create key) without an advisory lock.",
+      "idempotency": "Keyed creation; capture attempt key derived from the create key.",
+      "failure": "409 attempt or binding conflict; 500 environment mismatch; 502 capture validation; 503 provider disabled.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/marketplace-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "If binding fails after the remote checkout was created, the provider id is not persisted and a retry creates a second provider checkout (orphan).",
+        "captureLegacyPaypalOrder is unreachable because the token check already requires a runtime row."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-BUYER-REQUESTS-001",
+      "title": "Buyer manual-payment evidence and customer requests",
+      "statement": "A buyer holding the lookup token reports a bank transfer and files customer requests on their order. Routes: POST /marketplace/orders/{orderId}/manual-payment/evidence; POST /marketplace/orders/{orderId}/requests.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/marketplace-routes.md.",
+      "source": "formal/system/marketplace-routes.md",
+      "contract": "formal/system/marketplace-routes.md",
+      "property": "Evidence needs X-Order-Lookup-Token whose SHA-256 matches the stored lookup hash (404 otherwise), a reference of 3..120 characters (400), a live hold (409), a selected bank-transfer attempt and no different evidence under review or paid checkout (409); it links or creates the buyer party, re-selects the manual attempt, marks the evidence submitted and writes an audit under FOR UPDATE. Requests need the token, Idempotency-Key header (16..128 visible ASCII, 400 otherwise), a request type, a reason of 3..1000 safe characters and an https URL or a managed asset path as evidence (400), a canonical order (409) and the state rule in validateMarketplaceCustomerRequest (409); the row is inserted under an advisory lock on order plus key and database triggers re-validate and record events.",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /marketplace/orders/{orderId}/manual-payment/evidence",
+        "POST /marketplace/orders/{orderId}/requests"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "party",
+        "manual payment evidence",
+        "marketplace_customer_request",
+        "audit and runtime events"
+      ],
+      "authorization": "Lookup token possession.",
+      "privacy": "Creates a buyer party from anonymous input.",
+      "concurrency": "Row locks on evidence; advisory lock on requests.",
+      "idempotency": "Same-reference evidence is a no-op; requests replay by stored hash.",
+      "failure": "400 invalid; 404 token; 409 state, hold or hash.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MarketplaceIdentitySpec.hs",
+        "scripts/test-marketplace-operations-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/marketplace-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Evidence submission has no idempotency key; identical resubmission is tolerated by content."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-OPS-ORDERS-001",
+      "title": "Operator order, fulfillment, rental and rental-terms administration",
+      "statement": "Operators edit legacy order status, drive sale fulfillment and rental states, and set rental terms. Routes: PUT /marketplace/orders/{orderId}; PUT /marketplace/orders/{orderId}/fulfillment; PUT /marketplace/orders/{orderId}/rental; PUT /marketplace/{listingId}/rental-terms.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/marketplace-routes.md.",
+      "source": "formal/system/marketplace-routes.md",
+      "contract": "formal/system/marketplace-routes.md",
+      "property": "Order update needs requireMarketplaceAccess: ModuleOps or ModuleAdmin (403). and an allowed status (400); setting paid on a canonical order is refused (409, also by trg_marketplace_protect_canonical_payment_state); stored canonical statuses (awaiting_payment, processing) are accepted as current state (validateStoredMarketplaceOrderStatus) but never as a target. Fulfillment and rental updates need ops access, a canonical runtime (409), the transition rules (409) and are compare-and-set on the current state (409 on a race); triggers require a paid checkout for outbound moves and block closing a rental before the deposit is terminal; deductions are bounded by the deposit (400). Rental terms upsert per listing with the operator as approver.",
+      "actors": [
+        "Operations staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "PUT /marketplace/orders/{orderId}",
+        "PUT /marketplace/orders/{orderId}/fulfillment",
+        "PUT /marketplace/orders/{orderId}/rental",
+        "PUT /marketplace/{listingId}/rental-terms"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "marketplace_order",
+        "marketplace_sale_order_runtime",
+        "marketplace_rental_order_runtime",
+        "marketplace_rental_listing_terms"
+      ],
+      "authorization": "requireMarketplaceAccess: ModuleOps or ModuleAdmin (403).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Fulfillment and rental are compare-and-set; order update and rental terms are last-write-wins.",
+      "idempotency": "Fulfillment and rental replay as 409 on a changed state; order update and terms are idempotent by content.",
+      "failure": "400 invalid; 403 access; 404 order or listing; 409 canonical paid, transition, runtime or race.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "validateStoredMarketplaceOrderStatus and the paidAt resolution are tested in tdf-hq/test/TDF/ServerSpec.hs; the rest is read from the handlers.",
+      "evidence": "formal/system/marketplace-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Operators may set a canonical order to cancelled or failed without releasing its hold or checkout.",
+        "Rental terms are approved by the same operator who writes them."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MKT-OPS-REVIEWS-001",
+      "title": "Operator reviews of manual payments, customer requests and deposit settlements",
+      "statement": "Staff review buyer-reported transfers, customer requests and rental deposit settlements; money is admitted only through the canonical checkout and settlements are evidence. Routes: POST /marketplace/orders/{orderId}/manual-payment/review; POST /marketplace/orders/{orderId}/customer-requests/{requestId}/review; POST /marketplace/orders/{orderId}/deposit-settlements; POST /marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review.",
+      "domain": "MKT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/marketplace-routes.md.",
+      "source": "formal/system/marketplace-routes.md",
+      "contract": "formal/system/marketplace-routes.md",
+      "property": "Manual-payment review needs ModuleInvoicing only, refuses the submitter as reviewer, finality, review by another staff member and an already paid checkout (409, recording a reconciliation exception) and approves with bindProviderResource plus recordApprovedManualPayment under FOR UPDATE. Customer-request review needs ops access and is compare-and-set on status; an approved request moves the rental runtime by trigger. Deposit settlements need ops access and ModuleInvoicing, Idempotency-Key header (16..128 visible ASCII, 400 otherwise), a rental in deposit_refund_due (409), refund = deposit - deduction (400) and the manual settlement capability (503); their review needs the same access, a reviewer distinct from the submitter (409, also by trigger) and is compare-and-set on submitted.",
+      "actors": [
+        "Invoicing staff",
+        "Operations staff"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /marketplace/orders/{orderId}/manual-payment/review",
+        "POST /marketplace/orders/{orderId}/customer-requests/{requestId}/review",
+        "POST /marketplace/orders/{orderId}/deposit-settlements",
+        "POST /marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "manual payment evidence and attempt",
+        "checkout payment",
+        "marketplace_customer_request",
+        "marketplace_rental_deposit_settlement",
+        "runtime events"
+      ],
+      "authorization": "Manual payment: ModuleInvoicing. Customer requests: requireMarketplaceAccess: ModuleOps or ModuleAdmin (403). Settlements: ops access and ModuleInvoicing; submitter never reviews.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "FOR UPDATE on checkout, attempt and evidence; compare-and-set elsewhere; advisory lock on settlement key.",
+      "idempotency": "Approve-again on a paid order is a no-op; settlements replay by hash; reviews replay the row on the same state and 409 otherwise.",
+      "failure": "400 invalid; 403 access; 404 missing; 409 state, reviewer or race; 503 capability disabled.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "scripts/test-marketplace-operations-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/marketplace-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Manual-payment review is gated by the invoicing module alone, weaker than the sibling deposit routes.",
+        "Whether a verified settlement propagates deposit_status to refunded is enforced only in SQL."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "INV-QR-PUBLIC-001",
+      "title": "Inventory loans by printed QR token",
+      "statement": "Whoever holds an asset's QR token checks it out as a party loan or rental, checks it back in and uploads condition photos. Routes: POST /public/assets/qr/{token}/checkout; POST /public/assets/qr/{token}/checkin; POST /public/assets/qr/{token}/upload.",
+      "domain": "INV",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/public-intake-routes.md.",
+      "source": "formal/system/public-intake-routes.md",
+      "contract": "formal/system/public-intake-routes.md",
+      "property": "The token is a canonical UUID matching exactly one asset qr_code (404/409). Checkout accepts party loans and rentals only, requires terms, a holder email or phone, condition, a managed photo URL and dueAt (400), refuses an already checked-out asset (409) and inserts the checkout and asset status. Checkin requires the open checkout to be a party loan or rental (409), condition and photo (400) and closes it. Upload requires the asset to be available or on a party loan (409), validates the form and 1 byte..10 MB (400) and writes the file under the public inventory root without a database row.",
+      "actors": [
+        "Anonymous QR holder"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /public/assets/qr/{token}/checkout",
+        "POST /public/assets/qr/{token}/checkin",
+        "POST /public/assets/qr/{token}/upload"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "asset_checkout",
+        "asset status",
+        "file under assetsRoot/inventory"
+      ],
+      "authorization": "QR token possession only.",
+      "privacy": "Stores holder contact details and photos submitted anonymously.",
+      "concurrency": "The open-checkout check and the insert are separate statements without a lock.",
+      "idempotency": "None: a second checkout fails only if the first committed; checkin fails once closed; every upload writes a new file.",
+      "failure": "400 invalid; 404 unknown token; 409 state.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerExtra.hs",
+        "tdf-hq/src/TDF/API/Inventory.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/public-intake-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Two concurrent checkouts can both see no open loan.",
+        "Anyone with the token can close someone else's loan.",
+        "Uploads are unbounded anonymous writes to the public media root, not bound to a checkout.",
+        "No rate limit; holder PII is stored from anonymous input."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COURSE-PUBLIC-CHECKOUT-001",
+      "title": "Public course registration and payment",
+      "statement": "A visitor registers for a course under an idempotency key and pays through Datafast or PayPal with the returned lookup token. Routes: POST /public/courses/{slug}/registrations; POST /public/courses/{slug}/registrations/{registrationId}/datafast/checkout; POST /public/courses/{slug}/registrations/{registrationId}/paypal/create; POST /public/courses/{slug}/registrations/{registrationId}/paypal/capture.",
+      "domain": "COURSE",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/public-intake-routes.md.",
+      "source": "formal/system/public-intake-routes.md",
+      "contract": "formal/system/public-intake-routes.md",
+      "property": "Registration needs Idempotency-Key header (16..128 visible ASCII, 400 otherwise), termsAccepted with the active policy version (400/409, LEGAL-CONSENT-001), normalized contact details (400), the course (404), an approved policy and free seats (409); under advisory locks on slug plus key and on the key, with the course FOR UPDATE and the policy FOR SHARE, it creates the registration, checkout, runtime, enrollment event and identity receipt. The payment routes need X-Order-Lookup-Token whose SHA-256 matches the stored lookup hash (404 otherwise) and the slug to match the registration; Context load with hold expiry (409 once expired), provider and domain enablement (503), refusal while another rail is active (409), beginPaymentAttempt under a deterministic attempt key, replay of an existing provider binding instead of a new provider call, failures recorded with recordPaymentFailure, bindings with bindProviderResource; captures compare the supplied provider order with the binding (409), validate amount, currency and merchant (reconciliation exception and 502 on mismatch), refuse after hold expiry (exception and 409) and admit money with recordVerifiedPaymentOrReconcile.",
+      "actors": [
+        "Anonymous registrant"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /public/courses/{slug}/registrations",
+        "POST /public/courses/{slug}/registrations/{registrationId}/datafast/checkout",
+        "POST /public/courses/{slug}/registrations/{registrationId}/paypal/create",
+        "POST /public/courses/{slug}/registrations/{registrationId}/paypal/capture"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "course_registration",
+        "checkout and runtime",
+        "enrollment and identity receipts",
+        "payment attempts and bindings",
+        "provider calls"
+      ],
+      "authorization": "Registration: none. Payments: lookup token.",
+      "privacy": "Stores registrant contact details and UTM data.",
+      "concurrency": "Locks and request-hash replay on registration; attempt keys on payments.",
+      "idempotency": "Registration replays by receipt and hash; payment creation replays the binding; capture is bounded by the checkout store.",
+      "failure": "400 invalid; 404 course or token; 409 seats, policy, hash or hold; 503 provider.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Routes/Courses.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/CourseIdentitySpec.hs",
+        "scripts/test-course-identity.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/public-intake-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The course lookup token is sha256(\"course-order-lookup:\" + Idempotency-Key) with no server secret, so it is derivable from the client-chosen key, unlike the HMAC tokens of Domo and tickets; changing it invalidates stored hashes of in-flight registrations and is an owner decision.",
+        "No per-email rate limit, unlike Domo and tickets.",
+        "Capture does not finalize enrollment here; where course enrollment finalizes is not identified."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DOMO-PUBLIC-QUOTE-001",
+      "title": "Public Domo quote creation, acceptance and deposit payment",
+      "statement": "A visitor requests a Domo quote that holds the date, accepts it and pays the deposit through Datafast or PayPal. Routes: POST /public/domo/quotes; POST /public/domo/quotes/{quoteId}/accept; POST /public/domo/quotes/{quoteId}/datafast/checkout; POST /public/domo/quotes/{quoteId}/paypal/create; POST /public/domo/quotes/{quoteId}/paypal/capture.",
+      "domain": "DOMO",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/public-intake-routes.md.",
+      "source": "formal/system/public-intake-routes.md",
+      "contract": "formal/system/public-intake-routes.md",
+      "property": "Creation needs Idempotency-Key header (16..128 visible ASCII, 400 otherwise), contact details and notes (400), the domain and capability (503), an approved rate card (409), a valid date window and arithmetic (400, PAY-DOMO-QUOTE-001) and at most 6 requests per hour per email hash (429); it creates the quote, lines, checkout, runtime, reservation hold and state event under an advisory lock, refusing a held date (409) and returning an HMAC lookup token (503 without the secret). Acceptance needs X-Order-Lookup-Token whose SHA-256 matches the stored lookup hash (404 otherwise) and termsAccepted, moves sent/viewed to accepted with the checkout awaiting_payment under FOR UPDATE and treats an already deposit-due quote as a no-op. Context load with hold expiry (409 once expired), provider and domain enablement (503), refusal while another rail is active (409), beginPaymentAttempt under a deterministic attempt key, replay of an existing provider binding instead of a new provider call, failures recorded with recordPaymentFailure, bindings with bindProviderResource; captures compare the supplied provider order with the binding (409), validate amount, currency and merchant (reconciliation exception and 502 on mismatch), refuse after hold expiry (exception and 409) and admit money with recordVerifiedPaymentOrReconcile. Capture finalizes deposit_due to deposit_paid and consumes the hold idempotently (PAY-DOMO-CANCEL-001).",
+      "actors": [
+        "Anonymous client"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /public/domo/quotes",
+        "POST /public/domo/quotes/{quoteId}/accept",
+        "POST /public/domo/quotes/{quoteId}/datafast/checkout",
+        "POST /public/domo/quotes/{quoteId}/paypal/create",
+        "POST /public/domo/quotes/{quoteId}/paypal/capture"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_quote and lines",
+        "checkout",
+        "domo_event_quote_runtime",
+        "commerce_reservation_hold",
+        "state and audit events",
+        "payment attempts and bindings",
+        "provider calls"
+      ],
+      "authorization": "Creation: none, rate limited by email. Others: lookup token.",
+      "privacy": "Stores client contact details.",
+      "concurrency": "Advisory lock on the key, date exclusion constraint, FOR UPDATE on runtime and checkout.",
+      "idempotency": "Creation replays by hash; acceptance and finalization are idempotent; payment creation replays bindings.",
+      "failure": "400 invalid; 404 token; 409 rate card, held date, hash or state; 429 rate; 503 domain, capability or secret.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+        "tdf-hq/src/TDF/Routes/DomoQuotes.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
+        "tdf-hq/test/TDF/Commerce/DomoCancellationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/public-intake-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The rate limit is keyed on the buyer-supplied email, so rotating emails can hold dates without limit.",
+        "A replay returns the lookup token again to whoever holds the key."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "EVT-PUBLIC-TICKET-CHECKOUT-001",
+      "title": "Public ticket orders, bank transfer evidence and online payment",
+      "statement": "A visitor orders tickets for a purchasable event, pays online or reports a bank transfer, and paid orders issue tickets once. Routes: POST /public/events/{eventId}/ticket-orders; POST /public/events/{eventId}/ticket-orders/{orderId}/bank-transfer; POST /public/events/{eventId}/ticket-orders/{orderId}/bank-transfer/evidence; POST /public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout; POST /public/events/{eventId}/ticket-orders/{orderId}/paypal/create; POST /public/events/{eventId}/ticket-orders/{orderId}/paypal/capture.",
+      "domain": "EVT",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/public-intake-routes.md.",
+      "source": "formal/system/public-intake-routes.md",
+      "contract": "formal/system/public-intake-routes.md",
+      "property": "Order creation needs Idempotency-Key header (16..128 visible ASCII, 400 otherwise), termsAccepted, buyer details and promo (400), a publicly purchasable event and tier (404), quantity within the versioned per-order limit (400), a matching currency (409), the domain (503), billing identity when invoicing and at most 10 orders per hour per event and email (429); under an advisory lock with event, tier and promo FOR UPDATE it expires holds, checks capacity (409) and creates the order, checkout, runtime, fulfillment event and billing identity with an HMAC lookup token (EVT-TICKET-001). Bank transfer needs X-Order-Lookup-Token whose SHA-256 matches the stored lookup hash (404 otherwise), open sales, no other active rail, an opted-in policy before the cutoff (409) and the rail available (503); it records the manual attempt, creates an unverified party and extends the hold once. Evidence needs a reference of 3..120 characters and a receipt up to 5 MB of an allowed type (400) written outside the public root (503 otherwise), replays identical submissions and refuses different ones under review (409). Context load with hold expiry (409 once expired), provider and domain enablement (503), refusal while another rail is active (409), beginPaymentAttempt under a deterministic attempt key, replay of an existing provider binding instead of a new provider call, failures recorded with recordPaymentFailure, bindings with bindProviderResource; captures compare the supplied provider order with the binding (409), validate amount, currency and merchant (reconciliation exception and 502 on mismatch), refuse after hold expiry (exception and 409) and admit money with recordVerifiedPaymentOrReconcile. Capture with closed sales proceeds only for an already completed PayPal order; finalization issues tickets, redeems the promo and enqueues one confirmation (NOTIF-TICKET-001).",
+      "actors": [
+        "Anonymous buyer"
+      ],
+      "preconditions": [
+        "Public route (no AuthProtect); the capability named in the authorization rule"
+      ],
+      "inputs": [
+        "POST /public/events/{eventId}/ticket-orders",
+        "POST /public/events/{eventId}/ticket-orders/{orderId}/bank-transfer",
+        "POST /public/events/{eventId}/ticket-orders/{orderId}/bank-transfer/evidence",
+        "POST /public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout",
+        "POST /public/events/{eventId}/ticket-orders/{orderId}/paypal/create",
+        "POST /public/events/{eventId}/ticket-orders/{orderId}/paypal/capture"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "event_ticket_order",
+        "checkout and runtime",
+        "billing identity",
+        "party",
+        "payment attempts, evidence and bindings",
+        "receipt file",
+        "tickets, promo redemption, confirmation queue",
+        "provider calls"
+      ],
+      "authorization": "Creation: none, rate limited by event and email. Others: lookup token.",
+      "privacy": "Stores buyer and billing identity from anonymous input; receipts outside the public root.",
+      "concurrency": "Advisory lock and FOR UPDATE on event, tier, promo, evidence and attempt; capacity checked under lock.",
+      "idempotency": "Creation replays by hash; selection replays the attempt; evidence replays identical content; issuance is idempotent.",
+      "failure": "400 invalid; 404 event, tier or token; 409 currency, capacity, sales, rail or hash; 429 rate; 503 domain, rail or evidence directory.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Routes/EventTickets.hs",
+        "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
+        "tdf-hq/test/TDF/TicketConfirmationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/public-intake-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The rate limit is keyed on the attacker-chosen email, so seat holds can be exhausted by rotating emails.",
+        "The receipt file is written inside the transaction, so a later failure leaves an orphan file.",
+        "Whether order creation checks acceptedTermsVersion as LEGAL-CONSENT-001 states was not confirmed."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",

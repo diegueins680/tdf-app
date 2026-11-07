@@ -10067,6 +10067,13 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid ("paypal_pending" <> T.singleton '\x202E')
             assertInvalid "refunded"
 
+        it "accepts the canonical checkout statuses mirrored onto a canonical order" $ do
+            resolveMarketplaceOrderPaidAtForStatus now "awaiting_payment" (Just "cancelled") Nothing Nothing
+                `shouldBe` Right Nothing
+            resolveMarketplaceOrderPaidAtForStatus now "processing" Nothing Nothing Nothing
+                `shouldBe` Right Nothing
+            validateMarketplaceOrderUpdateStatus (Just "awaiting_payment") `shouldSatisfy` isLeft
+
     describe "validateOptionalMarketplacePaymentProviderUpdate" $ do
         it "distinguishes omitted provider updates, explicit clears, and normalized provider slugs" $ do
             validateOptionalMarketplacePaymentProviderUpdate Nothing

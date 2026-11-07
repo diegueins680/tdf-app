@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 238,
+    "named": 286,
     "path-named": 1,
     "reviewed": 53,
-    "unspecified": 224,
-    "covered": 292
+    "unspecified": 176,
+    "covered": 340
   },
   "routes": [
     {
@@ -724,80 +724,106 @@
     {
       "method": "POST",
       "path": "/catalog/revisions/{revisionId}/approve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-REVISION-WORKFLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/revisions/{revisionId}/reject",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-REVISION-WORKFLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/revisions/{revisionId}/submit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-REVISION-WORKFLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/party-role-revisions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/revisions/{revisionId}/approve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/revisions/{revisionId}/reject",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/revisions/{revisionId}/submit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/role-permission-revisions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/{catalogCode}/import.csv",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-DIRECT-ITEM-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/catalog/{catalogCode}/items/{itemId}/activation",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-DIRECT-ITEM-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/{catalogCode}/merge",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-DIRECT-ITEM-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/{catalogCode}/reorder",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-DIRECT-ITEM-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/{catalogCode}/revisions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-REVISION-WORKFLOW-001"
+      ]
     },
     {
       "method": "POST",
@@ -1725,104 +1751,138 @@
     {
       "method": "POST",
       "path": "/marketplace/cart",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-CART-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-CART-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/items",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-CART-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/stripe/payment-intent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/marketplace/orders/{orderId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/customer-requests/{requestId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-REVIEWS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/deposit-settlements",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-REVIEWS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-REVIEWS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/marketplace/orders/{orderId}/fulfillment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/manual-payment/evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-BUYER-REQUESTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/manual-payment/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-REVIEWS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/marketplace/orders/{orderId}/rental",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/requests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-BUYER-REQUESTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/marketplace/{listingId}/rental-terms",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
@@ -2510,56 +2570,74 @@
     {
       "method": "POST",
       "path": "/public/assets/qr/{token}/checkin",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-QR-PUBLIC-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/assets/qr/{token}/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-QR-PUBLIC-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/assets/qr/{token}/upload",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-QR-PUBLIC-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/courses/{slug}/registrations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-PUBLIC-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/courses/{slug}/registrations/{registrationId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-PUBLIC-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/courses/{slug}/registrations/{registrationId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-PUBLIC-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/courses/{slug}/registrations/{registrationId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-PUBLIC-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/accept",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
@@ -2572,56 +2650,74 @@
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/bank-transfer",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/bank-transfer/evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",

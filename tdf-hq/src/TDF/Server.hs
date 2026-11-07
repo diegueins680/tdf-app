@@ -19702,12 +19702,23 @@ resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaid
         then Left err400 { errBody = "paidAt is required when status is paid" }
         else Right paidAtFinal
 
+-- | A stored order status is either one of the legacy statuses an operator may
+-- set, or one of the canonical checkout statuses that
+-- @trg_marketplace_sync_verified_checkout@ mirrors onto a canonical order
+-- (@awaiting_payment@ at creation, then @processing@ or @failed@). The latter
+-- are never accepted as an update target, but an order carrying one must
+-- still be editable.
 validateStoredMarketplaceOrderStatus :: Text -> Either ServerError Text
-validateStoredMarketplaceOrderStatus rawStatus =
-  case normalizeMarketplaceOrderStatus rawStatus of
-    Just normalized -> Right normalized
-    Nothing ->
-      Left err500 { errBody = "Stored marketplace order status is invalid" }
+validateStoredMarketplaceOrderStatus rawStatus
+  | T.strip rawStatus `elem` canonicalMarketplaceOrderStatuses = Right (T.strip rawStatus)
+  | otherwise =
+      case normalizeMarketplaceOrderStatus rawStatus of
+        Just normalized -> Right normalized
+        Nothing ->
+          Left err500 { errBody = "Stored marketplace order status is invalid" }
+
+canonicalMarketplaceOrderStatuses :: [Text]
+canonicalMarketplaceOrderStatuses = ["holding", "awaiting_payment", "processing"]
 
 isPaidMarketplaceOrderStatus :: Text -> Bool
 isPaidMarketplaceOrderStatus rawStatus =
