@@ -47,6 +47,7 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.VideoCampaignsSpec as VideoCampaignsSpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
@@ -18025,6 +18026,7 @@ main = hspec $ do
     EventOperationsTypesSpec.spec
     EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
+    VideoCampaignsSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
