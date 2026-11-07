@@ -16496,7 +16496,8 @@
         "scripts/production-migrations.json",
         "scripts/lib/production-release.mjs",
         "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
-        "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql"
+        "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql",
+        "scripts/render-production-schema-verification.mjs"
       ],
       "tests": [
         "scripts/test-artist-featured-track.mjs",
