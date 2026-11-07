@@ -23,6 +23,8 @@ import qualified TDF.Commerce.ProviderAdapter.PayPalRefund as Q
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import Crypto.Hash (Digest, SHA256, hash)
 import           Data.Time (UTCTime, addUTCTime, getCurrentTime)
 import           Data.UUID (toText)
 import           Data.UUID.V4 (nextRandom)
@@ -76,12 +78,15 @@ depositMinor = 200704
 
 -- | A Domo quote priced like the migration rehearsal, starting @daysAhead@ days
 -- from now, optionally with its deposit verified through a PayPal capture.
--- | A 64-hex lookup token hash unique per fixture. Repeating only the first
--- byte of the UUID (the previous construction) left 256 possible values and
--- collided across the suite's fixtures on the unique lookup_token_hash
--- columns roughly one run in six.
+-- Immutable lookup snapshots must contain a real hash of a known synthetic
+-- token from creation; an HTTP fixture must never rewrite the bound hash.
+-- Full UUID entropy preserves the original collision fix (the historical
+-- first-byte construction provided only 256 distinct fixture values).
+fixtureLookupToken :: Text -> Text
+fixtureLookupToken identifier = "synthetic-lookup:" <> identifier
+
 tokenHash :: Text -> Text
-tokenHash identifier = let hex = T.filter (/= '-') identifier in hex <> hex
+tokenHash identifier = T.pack (show (hash (TE.encodeUtf8 (fixtureLookupToken identifier)) :: Digest SHA256))
 
 seedQuote :: ConnectionPool -> Int -> Bool -> IO Fixture
 seedQuote = seedQuoteForProvider "paypal"
@@ -150,7 +155,7 @@ seedQuoteForProvider provider pool daysAhead paid = do
        \ 'sent', 'date_held', 'USD', 448000, 53760, 501760, ?, ?, 1200, 4000, 'legacy_public_formula-v1',\
        \ " <> rulesHashSql <> ", 'America/Guayaquil', 'domo-terms-legacy-draft-v1', ?, ?)")
       [ PersistText quoteId, PersistText commerceQuoteId, PersistText checkoutId
-      , PersistText (tokenHash checkoutId)
+      , PersistText (tokenHash quoteId)
       , PersistText ("domo-cancel-runtime:" <> quoteId), PersistText (T.replicate 64 "3")
       , PersistUTCTime startsAt, PersistUTCTime endsAt, PersistUTCTime setupStartsAt
       , PersistInt64 depositMinor, PersistInt64 (501760 - depositMinor), PersistUTCTime holdExpiresAt
@@ -408,6 +413,8 @@ databaseSpec = after restoreRecoveryAuthority $ describe "Domo cancellation (PAY
       forM_ [1..3 :: Int] $ \_ -> do
         response <- HC.httpLbs request manager
         statusCode (HC.responseStatus response) `shouldBe` 409
+        show (HC.responseBody response) `shouldContain`
+          "A deposit payment is being verified; retry once it settles"
         cancellationFinancialState pool fixture `shouldReturn` before
     -- The public cancellation path is database-only. Independently exercise
     -- the real refund executor with an injected transport: absent a legitimate
@@ -730,7 +737,9 @@ cancellationFinancialState pool fixture = sequence
   , scalar pool "SELECT status FROM commerce_reservation_hold WHERE checkout_id=?::uuid" [checkout]
   , scalar pool "SELECT count(*)::text FROM domo_quote_cancellation WHERE domo_quote_id=?::uuid" [quote]
   , scalar pool "SELECT count(*)::text FROM commerce_refund WHERE checkout_id=?::uuid" [checkout]
-  , scalar pool "SELECT count(*)::text FROM commerce_ledger_transaction WHERE source_id IN (?,?)" [PersistText (fxQuoteId fixture),PersistText (fxCheckoutId fixture)]
+  , scalar pool "SELECT count(*)::text FROM commerce_ledger_transaction WHERE source_id IN (?,?,?) OR source_id IN (SELECT id::text FROM commerce_refund WHERE checkout_id=?::uuid)"
+      [PersistText (fxQuoteId fixture),PersistText (fxCheckoutId fixture),
+       PersistText ("domo-quote:" <> fxQuoteId fixture),PersistText (fxCheckoutId fixture)]
   ]
   where
     quote = PersistText (fxQuoteId fixture)
@@ -738,10 +747,7 @@ cancellationFinancialState pool fixture = sequence
 
 withPublicCancellation :: ConnectionPool -> Fixture -> (HC.Request -> HC.Manager -> IO a) -> IO a
 withPublicCancellation pool fixture action = do
-  let token = "synthetic-lookup:" <> fxQuoteId fixture
-  runSqlPool (rawExecute
-    "UPDATE domo_event_quote_runtime SET lookup_token_hash=encode(digest(convert_to(?,'UTF8'),'sha256'),'hex') WHERE id=?::uuid"
-    [PersistText token,PersistText (fxQuoteId fixture)]) pool
+  let token = fixtureLookupToken (fxQuoteId fixture)
   cfg <- loadConfig
   let env = Env pool cfg
       api = Proxy :: Proxy PublicRoutes.PublicDomoQuotesAPI

@@ -1,6 +1,8 @@
 # Devoluciones por cancelación del Domo
 
-Implementación dependiente de la PR #691, base `593b1f286b75e31338d28a03f94be05a08b3777c`.
+Origen histórico: PR #691, base `593b1f286b75e31338d28a03f94be05a08b3777c`.
+La PR #691 ya se integró; esta reconciliación conserva sus correcciones y el
+main protegido `f615c862b1a7d50406cc0506d21d7650e607fa5f`.
 No autoriza activar proveedores, aplicar migraciones en producción ni devolver dinero real.
 Conserva AUTHORITY-093, PAY-DOMO-CANCEL-001 y sus importes/versiones aprobados.
 
@@ -124,25 +126,55 @@ Este cambio atiende la aprobación/ejecución ausente, el cierre anticipado,
 la carrera captura/cancelación, la restauración del resumen y el reporte de fallo
 oculto por `errexit`, y hace determinista el encabezado no hexadecimal de
 la prueba Meta. El generador CORS ya exigía una letra en la base inspeccionada;
-no se modificó. La PR base tiene además observaciones sobre validación SQL
-del depósito, tip idempotente y propiedad de cuentas sociales; no se consideran
-resueltas por la entrega de reembolsos. La integración de toda #691 con main
-requiere reconciliar esos cambios y sus conflictos por separado.
+no se modificó. Las observaciones históricas de #691 sobre validación SQL del depósito, tip
+idempotente y propiedad de cuentas sociales están integradas en el main actual;
+sus módulos y pruebas se conservan. No se atribuyen esas correcciones al nuevo
+circuito de reembolsos.
 
 ## Dependencia del contrato móvil
 
-El nuevo contrato también genera cambios en `TDF-mobile/src/api/generated/types.ts`.
-La conexión actual permite leer ese repositorio, pero su API de escritura devuelve
-`403 Resource not accessible by integration`. No se ha publicado un commit móvil
-ni cambiado el gitlink por una revisión inaccesible. La comprobación conjunta del
-API sigue bloqueada y esta PR debe permanecer en borrador.
+El contrato añade siete operaciones administrativas de devolución y exige un
+cliente generado desde la declaración Haskell compilada de la composición actual.
+`docs/payments/domo-mobile-generated-client.patch` conserva el artefacto histórico
+sobre `f4c7aba45dc153db8809dbe194bc826ff615ef88`; no es un parche apto para
+aplicar sin reconciliación al cliente actual. El error histórico de escritura
+`403 Resource not accessible by integration` describe aquel proveedor y fecha,
+no la autoridad actual de la CLI.
 
-`docs/payments/domo-mobile-generated-client.patch` contiene el cambio exacto,
-generado con el OpenAPI de esta PR sobre el pin
-`f4c7aba45dc153db8809dbe194bc826ff615ef88` (también es el mismo árbol que el main
-móvil `bee23755401f1a3cb6c31fbfb7b42f5c6ccc032f` inspeccionado).
-Después de habilitar escritura en `diegueins680/TDF-mobile`, aplicar ese parche,
-publicar la revisión móvil y fijar su SHA en `tdf-app`; regenerar inventario y
-trazabilidad y volver a ejecutar `npm run generate:api`,
-`node scripts/check-generated-api.mjs` y la integración. No se debe omitir ni
-relajar la comprobación de deriva para publicar esta entrega.
+El nuevo cliente compatible debe preservar los contratos canónicos actuales y la
+corrección URI de #592, además de los contratos futuros que ya existan en el main
+móvil. El gitlink de Root debe seleccionar exactamente el contexto de su propia
+API; la comprobación existente exige que esa revisión sea alcanzable desde el
+main móvil mediante una integración legítima. No se relajan la generación, la
+comparación de deriva ni la regla de ascendencia. La publicación como borrador
+no acredita que la dependencia móvil esté entregada ni autoriza una integración
+protegida antes de sus comprobaciones y revisión independiente.
+
+## Reconciliación y alcance de la verificación de 2026-11-07
+
+El manifiesto conserva exactamente las 246 entradas del main protegido y añade
+la migración original del circuito como entrada 247, con su introducción y su
+rollback originales. Los números son posiciones del manifiesto; sus IDs y rutas
+no cambian. Los recibos de 26 casos Domo, 344 casos de proveedor y 236 migraciones
+pertenecen a la fuente histórica y no se presentan como ejecución de esta unión.
+
+La barrera de admisión conserva ambos predicados de origen/main y vincula la
+cotización al checkout esperado después del límite de guardado, antes de crear
+intentos o contactar al proveedor. Cancelación y captura toman primero el registro
+de runtime y después el checkout; los escenarios de concurrencia observan la
+relación real de bloqueo, sin depender del orden de bloqueo de un plan JOIN.
+
+Un estado de captura `failed` sin resultado autoritativo continúa siendo incierto.
+La antigua prueba positiva basada solo en ese estado se sustituye por un rechazo
+HTTP 409 con conservación de la reserva, deuda y contabilidad. Una cotización
+separada sin intento de pago conserva la prueba legítima de cancelación sin cobro.
+No se fabrica un estado de cancelación confirmado por proveedor. El contador de
+transporte inyectado corresponde al ejecutor de reembolso; la ruta pública de
+cancelación realiza únicamente la transacción de base de datos.
+
+Las comprobaciones locales nuevas se registran con sus fuentes y resultados
+reales. La compilación, el esquema completo, los casos financieros/concurrentes,
+el contrato móvil y las comprobaciones obligatorias alojadas deben constar por
+separado; ningún resultado histórico los sustituye. Las proyecciones condicionales
+de autorización y expiración de recuperación de cuenta no prueban refinamiento
+de estos nuevos endpoints ni la recuperación financiera del reembolso.
