@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "experiment_http_fixture_signal_cleanup",
+  "at": "2026-10-30T17:24:38.757272+00:00",
+  "sourceParent": "606dde4d2602b32d6165e27ea7f8d5ce0e2678f8",
+  "failedWorkflow": 41090296194,
+  "failedBackendJob": 124182513777,
+  "failure": "HTTP/PostgreSQL scenario logged its success, then the finalizer awaited a past exit event for an already signalled child and Node exited 13.",
+  "failedStep": "node scripts/__tests__/experiment-http-runtime.mjs",
+  "applicationSourceChanged": false,
+  "functionalScenarioPrefixSha256": "cd1699ec908be445d707244f1d688a2b229f5e13da62d4f8a13e39cff5087af3",
+  "functionalScenarioPrefixUnchanged": true,
+  "isolatedDatabaseAndAuthorizationAssertionsUnchanged": true,
+  "correction": "Both finalizer guards require exitCode and signalCode to remain null before killing or waiting.",
+  "actualFinalizerExecutedByRegression": true,
+  "baselineNode24": {
+    "tests": 5,
+    "pass": 2,
+    "fail": 3,
+    "exitCode": 1
+  },
+  "fixedNode24": {
+    "tests": 5,
+    "pass": 5,
+    "fail": 0,
+    "exitCode": 0
+  },
+  "fixedNode20": {
+    "tests": 5,
+    "pass": 5,
+    "fail": 0,
+    "exitCode": 0
+  },
+  "negativeControl": "Removing both signal guards restores the exact historical finalizer and reproduces child-program exit 13.",
+  "logDescriptorClosureChecked": true,
+  "existingFunctionalAssertionPreserved": true,
+  "scopeLimits": [
+    "The new local regression executes the actual fixture finalizer with real Node child processes; it does not rerun the whole HTTP/PostgreSQL scenario.",
+    "Original failed workflow evidence is retained; the new whole hosted backend run and independent review remain required.",
+    "No production runtime, database, campaign, provider account, publication or invitation is changed."
+  ],
+  "logSha256": {
+    "baseline-tests.log": "ed7834d74e55abb8f50a82fcb2f1b1386adf9ab6eb5849c740a37f3f4c30defb",
+    "fixed-tests-node24.log": "5f58fd32b0087c5aa16939a689b1c9e89b4fde9204c8de3c2fd866c9f32b4f75",
+    "fixed-tests-node20.log": "eede15fa96aafcbf43e05f55905b1fbdd16cf604171b0f3320d2b01668c54664"
+  },
+  "originalFailedLogSha256": "35f0af407da2f45614854d526e700170afcdc4e441ab679f1e8b7fc2afa9ae05",
+  "originalHostedSourceBinding": {
+    "workflowHead": "606dde4d2602b32d6165e27ea7f8d5ce0e2678f8",
+    "testedPullMerge": "b2afa1b6c6aa54c1e8d54a84461360792a84fe47",
+    "testedTree": "4e2f53be06365193494ce07063506e1bdde867f5",
+    "entireTreeEqualWorkflowHead": true,
+    "haskellAggregateInFailedJob": {
+      "examples": 4045,
+      "failures": 0,
+      "pending": 21
+    },
+    "overallJob": "FAILURE: finalizer unsettled await exit13",
+    "newWholeBackendExecutionClaimed": false
+  },
+  "sourcePreservation": {
+    "sourceParent": "606dde4d2602b32d6165e27ea7f8d5ce0e2678f8",
+    "protectedBase": "0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5",
+    "requirements": 160,
+    "protectedRequirements": 159,
+    "unchangedProtectedRequirements": 158,
+    "amendedProtectedRequirements": [
+      "SYS-CI-SELECTED-001"
+    ],
+    "all47QualifiedServiceFilesExact": true,
+    "actualHistoricalFinalizerRestoredByGuardRemoval": true,
+    "entireFunctionalScenarioPrefixUnchanged": true,
+    "applicationAndWorkflowSourcesUnchangedFromParent": true,
+    "catalogCandidates": 1355,
+    "catalogCandidatesAndDecisionsExactParent": true,
+    "catalogCsvCanonicalSameStrictJson": true,
+    "catalogCsvSha256": "343c8f6820e3cd7e0b3bf1d0f2885a35edfe2740674653a9603f28a47fe68e77",
+    "newWholeBackendRunClaimed": false
+  },
+  "repositoryQuality": {
+    "command": "bash scripts/quality-repo.sh",
+    "exitCode": 0,
+    "includesFiveNewFinalizerRegressions": true,
+    "inheritedPlatformSkips": 11,
+    "logSha256": "2ef7b42d5b416f51332a376a773e495498663e0efd579a8898202d16103652a7"
+  },
+  "canonicalInventoryAndTraceability": "Regenerated and checked before commit; committed source admission remains required.",
+  "newHostedChecks": "Required on new pushed head, not yet executed."
+}
