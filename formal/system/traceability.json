@@ -8701,7 +8701,7 @@
       "title": "Single persistent web player and public music pages",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "One PlayerProvider owns persistent release playback above all navigation: ordinary audio and native session video/audio elements are mutually exclusive, with one active source. Native Records sessions use explicit persisted artist identities, independent audio/video renditions and bounded chapter offsets; changing format or quality preserves position, and chapter playback cannot enter an adjacent song or credits. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion.",
+      "statement": "One PlayerProvider owns persistent release playback above all navigation: ordinary audio and native session video/audio elements are mutually exclusive, with one active source. Native Records sessions use explicit persisted artist identities, independent audio/video renditions and bounded chapter offsets; changing format or quality preserves position, and chapter playback cannot enter an adjacent song or credits. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion. Imported native individual recording publications retain their stored source start/end offsets. Internally requested chapter/source pauses preserve continuation intent; an explicit user pause cancels it.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694); user native TDF sessions directive 2026-11-05; docs/native-tdf-sessions.md",
       "contract": "formal/system/player-session.md",
@@ -8819,7 +8819,7 @@
         "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
         "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx"
       ],
-      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness. Source-bound regressions cover delayed internal pause delivery, latest-source cancellation, paused-source/unmount controls, imported recording card/deep-link bounds and canonical publication interactions. A local synthetic MP4 fixture exercises actual native video/audio continuation and explicit pause; this is finite browser evidence, not all-event-order or physical-device qualification.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
@@ -17959,8 +17959,8 @@
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
     "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx": "7239d5ce0451329a04d2d56014f3ad06f00b67da9974f59b086e62dfb5e54890",
     "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx": "3ce4bc961c3be9896f91b5901501d7b2989daef2e549d893e22c4bbb2193ac37",
-    "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts": "8352ed0ca46bdb20672e0b928319a1d344782634dc8ace3246c6764a6d57fe84",
-    "tdf-hq-ui/src/features/sessions/nativeSessions.ts": "12ca70f436f38580f6d5faefa4f96536439c983779686c6241335d97183fc0d1",
+    "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts": "2596ee40090695de8cf4d8bc952daeacf621b2c1f09d2f60b97d78b97e0d7367",
+    "tdf-hq-ui/src/features/sessions/nativeSessions.ts": "4a1d0353025943fa582ea735e6726edb83495487f812da543ea119405503cdec",
     "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx": "74e0e9bbd074c245150edef4b0561ad2c700064a9300024201611188b3e28e86",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts": "96b4122312d56f09d7c3a1e0b84796547020c2adf32b3bf7e8cff77449ac5d03",
@@ -18083,7 +18083,7 @@
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
     "tdf-hq-ui/src/pages/RecentlyDiscoveredEventsPage.tsx": "6475325a20efd77e1fcd5687f1db29dd0a3d2b54a6ca94d17828fdf5fd6539b3",
-    "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx": "438f2e6a8d598777f4744759b272c18361f08ae29377262890a4c9f37ff8a3b9",
+    "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx": "81dc0f510e119cc1658f467c2c24916ba9ab1526f5c6dedf6a5108f7bf1cd454",
     "tdf-hq-ui/src/pages/RecordsPublicPage.tsx": "d98b02b415a9c01b40959a3801af5919f3e3d810ab20c86e978a1085e52dfd24",
     "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx": "23fac48ff6208ec8ca79f31118dfc63eb54d8184aedb0f8ad7f8fbe98a4b663a",
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
@@ -18108,8 +18108,8 @@
     "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "a3c9457223cbcec4ba7e3823b800925806faf322c772a0365c45d07301b5b065",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
-    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "fa2ba410d9a7fa853f345a01213e69d3a9fd0dee913c4b94baffc09b2492fadd",
-    "tdf-hq-ui/src/player/PlayerProvider.tsx": "db087da89583a1dc7bb84cb9675efa3f4a1d549dcf8c1da534971cde25808e36",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "dc8916f427fbc3e3faa05e457592df628f2788431041e18954a9691f4e675ea7",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "13e5c137922d17c9bf75d341916c6bd7f52b34db8e588aeb874884d70c9ed633",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
     "tdf-hq-ui/src/player/analytics.ts": "004329c88a0e171892b21295bf6464d3922bb379ab9c09239f1566ce6356b169",
@@ -46657,7 +46657,7 @@
     {
       "id": "SURFACE-48bc61fb013dcaf0",
       "path": "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
-      "sha256": "8352ed0ca46bdb20672e0b928319a1d344782634dc8ace3246c6764a6d57fe84",
+      "sha256": "2596ee40090695de8cf4d8bc952daeacf621b2c1f09d2f60b97d78b97e0d7367",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46669,7 +46669,7 @@
     {
       "id": "SURFACE-e26b7365f9aa6c9c",
       "path": "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
-      "sha256": "12ca70f436f38580f6d5faefa4f96536439c983779686c6241335d97183fc0d1",
+      "sha256": "4a1d0353025943fa582ea735e6726edb83495487f812da543ea119405503cdec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49417,7 +49417,7 @@
     {
       "id": "SURFACE-1393190e617db1b3",
       "path": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-      "sha256": "438f2e6a8d598777f4744759b272c18361f08ae29377262890a4c9f37ff8a3b9",
+      "sha256": "81dc0f510e119cc1658f467c2c24916ba9ab1526f5c6dedf6a5108f7bf1cd454",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50120,7 +50120,7 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "fa2ba410d9a7fa853f345a01213e69d3a9fd0dee913c4b94baffc09b2492fadd",
+      "sha256": "dc8916f427fbc3e3faa05e457592df628f2788431041e18954a9691f4e675ea7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50136,7 +50136,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "db087da89583a1dc7bb84cb9675efa3f4a1d549dcf8c1da534971cde25808e36",
+      "sha256": "13e5c137922d17c9bf75d341916c6bd7f52b34db8e588aeb874884d70c9ed633",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68238,7 +68238,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "081cb4acbac7546055b7a76f4ab7bf3ca738d08512eaf72dbfcb4439ccd0640e",
+      "sourceSha256": "7ee4a8c58533b9c93a75eef343b7c4888190e9c4ccf480f345b1905d7580d920",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -68266,7 +68266,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "081cb4acbac7546055b7a76f4ab7bf3ca738d08512eaf72dbfcb4439ccd0640e",
+      "sourceSha256": "7ee4a8c58533b9c93a75eef343b7c4888190e9c4ccf480f345b1905d7580d920",
       "definition": {
         "states": [
           "absent",
@@ -68296,7 +68296,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "081cb4acbac7546055b7a76f4ab7bf3ca738d08512eaf72dbfcb4439ccd0640e",
+      "sourceSha256": "7ee4a8c58533b9c93a75eef343b7c4888190e9c4ccf480f345b1905d7580d920",
       "definition": {
         "export": [
           "queued",
