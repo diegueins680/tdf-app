@@ -9197,7 +9197,8 @@
         "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
         "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
         "scripts/verify-google-account-name.py",
-        "tdf-hq-ui/src/utils/inAppBrowser.test.ts"
+        "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
+        "scripts/test-google-account-name-verifier.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
