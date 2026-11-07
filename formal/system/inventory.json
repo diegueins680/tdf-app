@@ -167,6 +167,7 @@
       "scripts/__tests__/event-task-revisioned-read-runner.test.mjs",
       "scripts/__tests__/experiment-http-cleanup.test.mjs",
       "scripts/__tests__/experiment-http-runtime.mjs",
+      "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json",
       "scripts/__tests__/fixtures/artist-management-claim.sql",
       "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
       "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
@@ -3908,6 +3909,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-fba290fd766254d6",
+      "path": "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json",
+      "sha256": "a66f789a8a0bb626c3bfa31f7cfa6deed7be711cec4d0dc32f1423160200ab87",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1b144472ba588c64",
       "path": "scripts/__tests__/fixtures/artist-management-claim.sql",
       "sha256": "0798a4ff9c25ef604780c568d87589e1c00ddbcaf9d41502552bad4fcd340b54",
@@ -5056,7 +5063,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "26fa9c12bac43611125ed1771e9ffe65dafd17f0d823f4279d031ebb355e6536",
+      "sha256": "fd2e37c688f7ed78bea7ed85b6bebb4ff93edf514992eb18c120a477b2b25d42",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30211,7 +30218,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "44df6e0b6b8dfccf4fe458c8286997b6a9ab72a526a37b7efb3276bd298f54a8",
+      "sha256": "34da800547219c3f9b517534a44b869b3c28d84f3e079d788e50ea122c5f9a88",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

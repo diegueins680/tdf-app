@@ -17037,7 +17037,7 @@
       "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses single-flight through a cancellation-safe lock. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
       "idempotency": "Repeated login for a bound subject reuses the credential.",
       "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
-      "recovery": "After key retrieval failure or cancellation, fail closed during the attempt cooldown; retry key retrieval after the cooldown. Existing cached tokens still require an unexpired valid signature/claims, or the user can use email and password or link an existing account.",
+      "recovery": "After key retrieval failure or cancellation, fail closed during the attempt cooldown; retry key retrieval after the cooldown. Existing cached tokens still require an unexpired valid signature/claims, or the user can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
       "observability": "login_apple auth activity and rejected-token warnings without token content.",
       "source": "App Store Connect rejection notice relayed by the product owner",
       "implementation": [
@@ -17073,7 +17073,8 @@
         "tdf-mobile/src/localization/onboardingCopy.ts",
         "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
         "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql",
-        "tdf-mobile/.env.example"
+        "tdf-mobile/.env.example",
+        "scripts/lib/production-release.mjs"
       ],
       "tests": [
         "tdf-hq/test/TDF/AppleSignInSpec.hs",
@@ -17088,7 +17089,8 @@
         "scripts/verify-cors-boundary.py",
         "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
-        "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts"
+        "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts",
+        "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -17125,7 +17127,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "4f6c028036e4d316c0d9795759c9706508c8ed8a77712db54c545fe4c25addec",
+    "docs/catalog-persistence/catalog-list-decisions.json": "a07f1a4033372e7ef7252c2313b8e7382efa9d4e65d679bdf11638ef727de25c",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -17561,6 +17563,7 @@
     "scripts/__tests__/event-report-crypto.test.mjs": "92363873ec7bf9f0567239f2687f790657eaa2801c19e2e5617baefb40642a81",
     "scripts/__tests__/experiment-http-cleanup.test.mjs": "2f41b3eb6a220db965e96b65f81bb57bc3009862a77f5d702d69777451cf56c1",
     "scripts/__tests__/experiment-http-runtime.mjs": "886cfb653ebd0a545af85954868e33ae2a9c0bf67bbac1387b945bc59af58659",
+    "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json": "a66f789a8a0bb626c3bfa31f7cfa6deed7be711cec4d0dc32f1423160200ab87",
     "scripts/__tests__/fixtures/ci-selected-job-admission-before.json": "26b3c6db0d66d9897de3d8759c0093514dfbac749fc77ef54613c1896f15909e",
     "scripts/__tests__/fixtures/event-report.mjs": "3a289551a7c9f95d1811bd50ec60d292be48097a881e61a2895d30dc3043d7b8",
     "scripts/__tests__/fixtures/provider-domain-fixtures.sql": "17d645e924bd5d6533523dcfb1e3a4522a403ac420de7dde45f94a44eca9e14d",
@@ -17674,7 +17677,7 @@
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "26fa9c12bac43611125ed1771e9ffe65dafd17f0d823f4279d031ebb355e6536",
+    "scripts/lib/production-release.mjs": "fd2e37c688f7ed78bea7ed85b6bebb4ff93edf514992eb18c120a477b2b25d42",
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -19509,6 +19512,10 @@
       },
       {
         "requirement": "PAY-LEDGER-HEADER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -33927,6 +33934,12 @@
         "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json": [
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -35843,6 +35856,18 @@
         {
           "requirement": "SYS-CI-SELECTED-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-fba290fd766254d6",
+      "path": "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json",
+      "sha256": "a66f789a8a0bb626c3bfa31f7cfa6deed7be711cec4d0dc32f1423160200ab87",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -37951,7 +37976,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "26fa9c12bac43611125ed1771e9ffe65dafd17f0d823f4279d031ebb355e6536",
+      "sha256": "fd2e37c688f7ed78bea7ed85b6bebb4ff93edf514992eb18c120a477b2b25d42",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38000,6 +38025,10 @@
         },
         {
           "requirement": "PAY-LEDGER-HEADER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-APPLE-SIGNIN-001",
           "relationship": "implementation"
         }
       ]
@@ -68835,7 +68864,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "44df6e0b6b8dfccf4fe458c8286997b6a9ab72a526a37b7efb3276bd298f54a8",
+      "sourceSha256": "34da800547219c3f9b517534a44b869b3c28d84f3e079d788e50ea122c5f9a88",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -68863,7 +68892,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "44df6e0b6b8dfccf4fe458c8286997b6a9ab72a526a37b7efb3276bd298f54a8",
+      "sourceSha256": "34da800547219c3f9b517534a44b869b3c28d84f3e079d788e50ea122c5f9a88",
       "definition": {
         "states": [
           "absent",
@@ -68893,7 +68922,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "44df6e0b6b8dfccf4fe458c8286997b6a9ab72a526a37b7efb3276bd298f54a8",
+      "sourceSha256": "34da800547219c3f9b517534a44b869b3c28d84f3e079d788e50ea122c5f9a88",
       "definition": {
         "export": [
           "queued",
