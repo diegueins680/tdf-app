@@ -16610,6 +16610,893 @@
       "historicalStatus": null
     },
     {
+      "id": "ID-ADMIN-USER-CREATE-001",
+      "title": "Strict administrators create login credentials for existing parties",
+      "statement": "A strict administrator creates a username/password credential for a party that has none, and the party is emailed its welcome message. Routes: POST /admin/users.",
+      "domain": "ID",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "The party must exist, have a valid primary email and no credential; the username is derived from the email and made unique; the request carries no roles, so it cannot grant any.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/users"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Insert UserCredential",
+        "Welcome email (failure only logged)",
+        "Activity record"
+      ],
+      "authorization": "ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants).",
+      "privacy": "The welcome email carries the initial password in clear text.",
+      "concurrency": "None: the no-credential check and the insert are separate transactions, and user_credential has no unique key on party_id.",
+      "idempotency": "Not idempotent.",
+      "failure": "400 invalid input or email; 404 party; 409 party already has a credential.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Two concurrent creates can give one party two credentials (no unique key on party_id).",
+        "The welcome email contains the temporary or administrator-chosen password in plain text."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MSG-ADMIN-WHATSAPP-001",
+      "title": "Administrator WhatsApp messages to users and resends",
+      "statement": "A strict administrator sends a WhatsApp text to a user or resends an earlier outgoing message. Routes: POST /admin/users/{userId}/communications/whatsapp; POST /admin/communications/whatsapp/{messageId}/resend.",
+      "domain": "MSG",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/users/{userId}/communications/whatsapp",
+        "POST /admin/communications/whatsapp/{messageId}/resend"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "WhatsApp Cloud API send",
+        "Outgoing WhatsAppMessage row (admin_notify, admin_reply or admin_resend)"
+      ],
+      "authorization": "ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants).",
+      "privacy": "Sends to personal phone numbers without a consent check.",
+      "concurrency": "None.",
+      "idempotency": "Not idempotent: each call sends again.",
+      "failure": "400 invalid input or unresolvable phone; 404 user or message.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "No WhatsApp consent, opt-out or 24-hour customer-service-window check is applied on this path (PRIV-WHATSAPP-001 governs consent for the public flow only).",
+        "A resend may replace the body, so any number ever messaged can be sent arbitrary text."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MSG-ADMIN-EMAIL-001",
+      "title": "Administrator email broadcast to registered users and test email",
+      "statement": "A strict administrator emails every registered user; an Admin-module holder sends a single test email to any address. Routes: POST /admin/communications/email/registered-users; POST /admin/email-test.",
+      "domain": "MSG",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Broadcast: subject, body and limit validated; recipients are the primary emails of every credential's party, deduplicated, optionally including deactivated users; sent one by one inside the request. Test email: address, subject, body and CTA URL validated; one message.",
+      "actors": [
+        "Strict administrator",
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/communications/email/registered-users",
+        "POST /admin/email-test"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "SMTP sends",
+        "Log lines and activity records"
+      ],
+      "authorization": "Broadcast: ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants). Test email: ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators.",
+      "privacy": "Broadcast reaches every registered email without a consent check.",
+      "concurrency": "None.",
+      "idempotency": "Not idempotent: a retry re-sends to everyone.",
+      "failure": "400 invalid input; 409 SMTP not configured; test email failure answered 200 with status error.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The broadcast checks no marketing consent, opt-out or unsubscribe state and can include deactivated users.",
+        "The test email lets StudioManager and Webmaster send arbitrary branded email with any link to any address."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-ADMIN-MAINTENANCE-001",
+      "title": "Clearing the server log buffer and seeding reference data",
+      "statement": "An Admin-module holder clears the in-memory server log buffer; a strict administrator holding the seed token reseeds reference data. Routes: DELETE /admin/logs; POST /admin/seed.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Seed requires strict admin, the Admin module and a seed token compared in constant time (secretTokenMatches); it is refused when seeding is disabled. Seeding upserts parties, roles, catalog and records in one transaction and creates demo credentials only where the environment allows.",
+      "actors": [
+        "Admin-module holder",
+        "Strict administrator with the seed token"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "DELETE /admin/logs",
+        "POST /admin/seed"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "In-memory log buffer cleared (activity recorded best effort)",
+        "Seed upserts; the seeded course and its sessions and syllabus are rewritten"
+      ],
+      "authorization": "Logs: ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators. Seed: ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants). plus ModuleAdmin and the X-Seed token.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Seed runs in one transaction.",
+      "idempotency": "Clearing logs is idempotent; seeding is mostly idempotent upserts.",
+      "failure": "401/403/400 seed token; 403 module or role.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Seed.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Clearing logs removes operational evidence and is open to non-strict Admin-module roles; its audit record can be lost silently.",
+        "Seeding rewrites the live seeded course."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DATA-DROPDOWN-001",
+      "title": "Administrator-managed dropdown options",
+      "statement": "An Admin-module holder creates and edits dropdown options per category. Routes: POST /admin/dropdowns/{category}; PATCH /admin/dropdowns/{category}/{optionId}.",
+      "domain": "DATA",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Category, value and label are validated; values are unique per category; an option of another category is 404.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/dropdowns/{category}",
+        "PATCH /admin/dropdowns/{category}/{optionId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Insert or update DropdownOption",
+        "Activity record"
+      ],
+      "authorization": "ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Check-then-write backed by UniqueDropdownOption.",
+      "idempotency": "Not idempotent.",
+      "failure": "400 invalid; 404 missing; 409 duplicate.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A concurrent duplicate passes the check and fails on the unique key with 500 instead of 409."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-BRAIN-001",
+      "title": "Studio knowledge entries",
+      "statement": "An Admin-module holder creates and edits studio knowledge (\"brain\") entries. Routes: POST /admin/brain/entries; PATCH /admin/brain/entries/{entryId}.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Title, body, category and tags are validated; an update with no changes is refused.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/brain/entries",
+        "PATCH /admin/brain/entries/{entryId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Insert or update StudioBrainEntry",
+        "Activity record"
+      ],
+      "authorization": "ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Last write wins.",
+      "idempotency": "Not idempotent; duplicates allowed.",
+      "failure": "400 invalid or no changes; 404 missing.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Entries are not read by any other module (no retrieval or embedding consumes them)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "REC-INGESTION-ADMIN-001",
+      "title": "Records ingestion control, sources and runs",
+      "statement": "A strict administrator with the Admin module controls the records ingestion schedule, verifies and saves YouTube sources and starts ingestion runs. Routes: PUT /admin/records-ingestion/control; PUT /admin/records-ingestion/sources; POST /admin/records-ingestion/runs.",
+      "domain": "REC",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Interval 300..86400 s; enabling a source requires approval and a collection, reserves YouTube quota under an advisory lock and verifies the channel; runs are keyed by executionKey and take a per-account advisory lock, so a completed run replays.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PUT /admin/records-ingestion/control",
+        "PUT /admin/records-ingestion/sources",
+        "POST /admin/records-ingestion/runs"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Control row and audit",
+        "social_sync_account upsert and audit",
+        "catalog_backfill_run and catalog rows; YouTube API calls"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess and ModuleAdmin (AUTH-REGISTRY-001).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Advisory locks for quota and runs; source upsert ON CONFLICT.",
+      "idempotency": "Control and source saves are idempotent; a completed run replays.",
+      "failure": "400 invalid; 429 rate or quota; 502 verification failed; 503 no key; 409 lock timeout.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
+        "tdf-hq/src/TDF/Services/RecordsIngestion.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Quota reserved for a failed verification is not refunded.",
+        "Enabling a source without party or artist ids clears previously stored ones."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MSG-SOCIAL-UNHOLD-001",
+      "title": "Releasing held social replies without answering twice",
+      "statement": "A strict administrator returns a held or failed incoming Instagram, Facebook or WhatsApp message to the reply queue; an already answered message is never queued again. Routes: POST /admin/social/unhold.",
+      "domain": "MSG",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Exactly one of externalId or senderId; by externalId the incoming, not deleted, not yet sent message is reset to pending with hold and error fields cleared; by senderId the latest held message is chosen. Before 2026-11-07 the externalId form also reset messages already answered (status sent), so the auto-reply worker could answer them again.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/social/unhold"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Reply status pending; hold and error fields cleared",
+        "Log line and activity record"
+      ],
+      "authorization": "ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants). Plus ModuleAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Single update by external id.",
+      "idempotency": "Repeating an unhold of a pending message changes nothing.",
+      "failure": "400 invalid channel or lookup; 404 no eligible message.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "ServerAdminSpec: an incoming WhatsApp message with status sent is refused (404) and stays sent; existing cases cover outgoing-only matches, non-held sender lookups and the reset of held messages.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "ART-ADMIN-CATALOG-001",
+      "title": "Administrator artist profiles, releases, promotions and payout onboarding",
+      "statement": "An Admin-module holder upserts artist profiles, manages legacy releases and promotion slots, and creates a Stripe Connect onboarding link for an artist. Routes: POST /admin/artists/profiles; POST /admin/artists/profiles/{artistProfileId}/connect/onboarding-link; POST /admin/artists/releases; PUT /admin/artists/releases/{releaseId}; POST /admin/artists/{artistId}/promotions; PUT /admin/artists/{artistId}/promotions/{promotionId}; DELETE /admin/artists/{artistId}/promotions/{promotionId}.",
+      "domain": "ART",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Profiles: slug, URL and published-genre checks, full replace of the profile and the party display name. Onboarding: https refresh and return URLs, creates the Connect account if missing and an account link. Releases and promotions check that the record belongs to the artist.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/artists/profiles",
+        "POST /admin/artists/profiles/{artistProfileId}/connect/onboarding-link",
+        "POST /admin/artists/releases",
+        "PUT /admin/artists/releases/{releaseId}",
+        "POST /admin/artists/{artistId}/promotions",
+        "PUT /admin/artists/{artistId}/promotions/{promotionId}",
+        "DELETE /admin/artists/{artistId}/promotions/{promotionId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "ArtistProfile, Party display name, genre memberships",
+        "Stripe Connect account and account link",
+        "ArtistRelease",
+        "ArtistPromoSlot"
+      ],
+      "authorization": "ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "None: profile upsert relies on unique keys; onboarding has no lock or Stripe idempotency key.",
+      "idempotency": "Profile upsert is idempotent; others are not.",
+      "failure": "400 invalid; 404 missing; 500 duplicate slug or Stripe error.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq/src/TDF/Artists/Promotion.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Artists/PromotionSpec.hs",
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "StudioManager and Webmaster can rename any party, give any party an artist profile and create payout accounts.",
+        "Concurrent onboarding calls can create orphan Connect accounts.",
+        "Release URLs are not validated although the legacy feed plays them.",
+        "Promotion changes and deletions leave no audit record."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "ART-ENRICH-IDENTITY-001",
+      "title": "Queuing artist identity candidates for review",
+      "statement": "A strict administrator records an identity candidate linking an inventory item to a provider identity. Routes: POST /admin/artists/enrichment/identity-candidates.",
+      "domain": "ART",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Inventory and party must exist; text, URLs and confidence are validated; candidates are keyed by a hash of inventory, provider, external id and URL.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/artists/enrichment/identity-candidates"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Upsert ArtistIdentityCandidate"
+      ],
+      "authorization": "ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unique hash key.",
+      "idempotency": "Same-hash upsert.",
+      "failure": "Validation failures surface as 500 (IOError).",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Artists/Enrichment.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The upsert overwrites party, evidence and confidence even on approved or rejected candidates.",
+        "The party is not checked to be an artist; approving a candidate later can grant the Artist role to it."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COURSE-ADMIN-001",
+      "title": "Course catalogue and registration administration",
+      "statement": "An Admin-module holder saves courses and manages registrations: status, notes, payment receipts and follow-ups. Routes: POST /admin/courses; PATCH /admin/courses/{slug}/registrations/{registrationId}/status; PATCH /admin/courses/{slug}/registrations/{registrationId}/notes; POST /admin/courses/{slug}/registrations/{registrationId}/receipts; PATCH /admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}; DELETE /admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}; POST /admin/courses/{slug}/registrations/{registrationId}/follow-ups; PATCH /admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}; DELETE /admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}.",
+      "domain": "COURSE",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Child records must belong to the registration and the registration to the course (404). Marking paid needs a paid canonical checkout, or for a legacy registration at least one receipt; the last receipt of a paid registration cannot be deleted.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/courses",
+        "PATCH /admin/courses/{slug}/registrations/{registrationId}/status",
+        "PATCH /admin/courses/{slug}/registrations/{registrationId}/notes",
+        "POST /admin/courses/{slug}/registrations/{registrationId}/receipts",
+        "PATCH /admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
+        "DELETE /admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
+        "POST /admin/courses/{slug}/registrations/{registrationId}/follow-ups",
+        "PATCH /admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}",
+        "DELETE /admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Course, sessions and syllabus (delete and reinsert)",
+        "Registration status, notes, receipts, follow-ups"
+      ],
+      "authorization": "validateModuleAccess ModuleAdmin (Admin, StudioManager, Webmaster). These handlers are outside AUTH-ADMIN-GUARD-001 and scripts/check-admin-guards.py, which scan ServerAdmin only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No locks: receipt checks and status writes run in separate transactions.",
+      "idempotency": "Course save is an upsert by slug; other writes are not idempotent.",
+      "failure": "400 invalid; 404 mismatch; 409 unpaid checkout or last receipt.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Routes/Courses.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A paid registration can be cancelled with no refund and no seat release.",
+        "Marking a legacy registration paid needs only a receipt URL; the money is not verified.",
+        "Concurrent receipt deletion and the paid transition can leave a paid registration without a receipt.",
+        "Receipts and system follow-ups (status_change, payment_receipt) can be edited or deleted without audit.",
+        "Course capacity can be reduced below existing registrations; Webmaster can change prices."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-STOREFRONT-ADMIN-001",
+      "title": "Service storefront fulfillment, packages, refund requests and reconciliation",
+      "statement": "A strict administrator advances service order fulfillment, manages packages, requests refunds and reconciles orders and refunds with the provider. Routes: PUT /admin/services/storefront/orders/{orderId}; POST /admin/services/storefront/orders/{orderId}/reconcile; POST /admin/services/storefront/orders/{orderId}/refunds; POST /admin/services/storefront/packages; PUT /admin/services/storefront/packages/{packageId}; POST /admin/services/storefront/refunds/{refundId}/reconcile.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Order update: one transaction that checks the fulfillment transition, refuses payment states, writes only status (normalized), deliverables URL and notes, conditional on the checked status (409 otherwise). Before 2026-11-07 it replaced the whole row from an earlier read, so a payment written meanwhile could be reverted. Refund requests need an Idempotency-Key and a paid PayPal checkout and lock the checkout; approval is a separate route by another party. Reconciliation queries the provider and records mismatches without moving money.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PUT /admin/services/storefront/orders/{orderId}",
+        "POST /admin/services/storefront/orders/{orderId}/reconcile",
+        "POST /admin/services/storefront/orders/{orderId}/refunds",
+        "POST /admin/services/storefront/packages",
+        "PUT /admin/services/storefront/packages/{packageId}",
+        "POST /admin/services/storefront/refunds/{refundId}/reconcile"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Order fulfillment fields and status history",
+        "ServiceStorefrontPackage",
+        "Refund request",
+        "Reconciliation exception or completed refund accounting; PayPal / Datafast queries"
+      ],
+      "authorization": "requireAccess: hasStrictAdminAccess.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Order update conditional on status; refund store locks the checkout; refund reconciliation locks the refund.",
+      "idempotency": "Refund requests replay by Idempotency-Key.",
+      "failure": "400 invalid; 404 missing; 409 state; 429/502/503 provider.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "ProviderRetrySpec (PostgreSQL): after a provider-verified payment, the admin update keeps payment provider, paid time and checkout, stores the normalized status with one history row, and refuses a payment state; existing hosted-order and refund specs cover the payment paths.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Order reconciliation exceptions use the order id as internal reference, while the reconciliation report links on checkout id, so they do not link to their checkout.",
+        "A refund request without an amount computes the remaining amount outside the lock, so a same-key retry may compute a different amount.",
+        "Package create drops deliverables and features (TODO) and package updates are last-write-wins."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-PROVIDER-EVENT-REPLAY-001",
+      "title": "Operator replay of dead-lettered provider events",
+      "statement": "A strict administrator returns a dead-lettered provider event to the retry queue with a reason. Routes: POST /admin/commerce/provider-events/{eventId}/replay.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Only an event in dead_letter can be requeued; the reason (8..500 characters) and actor are audited; the worker processes it later under the lease fencing of PAY-PROVIDER-INBOX-001.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/commerce/provider-events/{eventId}/replay"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_provider_event status retry",
+        "commerce_provider_event_action audit row"
+      ],
+      "authorization": "requireAccess: hasStrictAdminAccess. Outside AUTH-ADMIN-GUARD-001's ServerAdmin sweep.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "FOR UPDATE in Haskell and in commerce_requeue_provider_event.",
+      "idempotency": "A second replay is refused (no longer dead_letter).",
+      "failure": "400 invalid; 404 missing; 409 not dead_letter.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs"
+      ],
+      "tests": [
+        "scripts/test-provider-event-operations-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
@@ -18242,7 +19129,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "160a5c79bb586b3a8210344a1b2bb85569e95cdcf76ba0aaa8495b912b4e2d89",
     "formal/system/recovery-expiry-arithmetic.json": "0a529bbda939368c78f53435d3adba1d7fb991d4e0fee72b7259d2e917df216c",
-    "formal/system/route-requirements.json": "51f9846f527b8e289fcd23328d3362de7a21ae99395166dd2e9aeabe38f48e70",
+    "formal/system/route-requirements.json": "69e74dbfb3aec30a7628d00970ea52d950bfc816d6d27329979f4729390efb90",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -18380,7 +19267,7 @@
     "scripts/check-mobile-gitlink-ancestry.sh": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
     "scripts/check-new-specification-surfaces.py": "3136406f784dc400088805c90932733b171706841ef17038a21a8fece8fdc0f5",
     "scripts/check-public-routes.py": "b4bfcb949176b01e75572a08906ba4bc8f8c7ab83b6d58159137042cfaa33fc5",
-    "scripts/check-route-requirements.py": "8ff8f425dffcdda7e12d938ed019d638fca5efdb1649cda8e27d535784026730",
+    "scripts/check-route-requirements.py": "75aadc52982aba64747288b42a3e3574260a3cc75dd4b97243f4974bdcb758fe",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
     "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
     "scripts/ci-change-scope.mjs": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
@@ -18548,6 +19435,7 @@
     "scripts/test-proof-certificates.py": "838c89f9ca06fec2a42300dc2d469f68c6be3b1f30b9129b4fc833b46d667f82",
     "scripts/test-provider-domain-binding.py": "dde27908fb2bebe25c14c022cc2bf7cc123e03b4236d94e43971699272c9ba77",
     "scripts/test-provider-domain-harness.py": "b03157a0506bf162b79bc6f6ab4dbb748a5ada9ebe51514f3c2edf1217e99370",
+    "scripts/test-provider-event-operations-migration.sh": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
     "scripts/test-provider-retry-runtime.sh": "6e9f3db759644af6ba162685d6a48aac8a0b8a1b7a25b123e88cfc2f345eabbc",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
     "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
@@ -18560,7 +19448,7 @@
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-release-journal.py": "3af0e8451aeb8d2e1948174b0184f6131c58529674b1711aa0468d5dc75bb679",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
-    "scripts/test-route-requirements.py": "839d3c203611a68555d548c57d3fd3aa3d5cada6301635d84ab650e4ed7a5e4b",
+    "scripts/test-route-requirements.py": "661c482e4d0dfa7a7722e9ac102186d2074b2e9c24faad63a32bda3483c5d941",
     "scripts/test-session-invoice-issue.sh": "c19f451e8899fab4bc6d76e3c97ad73b1f927e1beccae501d32f0c3fce663fc4",
     "scripts/test-social-designation-postgres.sh": "e83d08fc7e50b5fd5b8d1adb4058fec1348a7f4a73492ad33e30cf2839f78e86",
     "scripts/test-specification-conformance.py": "893a266e97d67a0bf6538e09170ee961733e17d5b7abd407b472b88487d3f647",
@@ -19309,6 +20197,7 @@
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/Artists/Enrichment.hs": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
+    "tdf-hq/src/TDF/Artists/Promotion.hs": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
     "tdf-hq/src/TDF/Auth.hs": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
@@ -19415,13 +20304,13 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "512078d56c654f9fcacf1e31884bdb270eef6501323c10bbf0c13159022f1ba0",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "94690a5d558fa02fb4bc228da9fb7adff08e96a49998aa4950215a25a6d18ce3",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
-    "tdf-hq/src/TDF/ServerAdmin.hs": "a5dcf135b5ebd9682a0029979bbe5468e5845e2fac662505a87a17db02a80a8e",
+    "tdf-hq/src/TDF/ServerAdmin.hs": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
     "tdf-hq/src/TDF/ServerAuth.hs": "9666d010cc08c4755e4ba46a26f5e925c64d8af003e489cd1dccc3784bc5f0f5",
     "tdf-hq/src/TDF/ServerExtra.hs": "a602375a16e0480187d5ca9385ab554625096c2ba2f45ef5ef57e71d41150dd2",
     "tdf-hq/src/TDF/ServerFanClub.hs": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
@@ -19430,6 +20319,7 @@
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerRadio.hs": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": "2bb64ea8ae2173a5b9d6893291d58969816d91013b1a6fca28dc513178518da3",
+    "tdf-hq/src/TDF/Services/RecordsIngestion.hs": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
     "tdf-hq/src/TDF/Social/AccountOwnership.hs": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
@@ -19446,6 +20336,7 @@
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
     "tdf-hq/src/TDF/VideoCampaigns.hs": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
+    "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
@@ -19457,6 +20348,7 @@
     "tdf-hq/test/Spec.hs": "0772e7394dad5ab91cf0373b375f6b3871be6d21144dc7c594edc16a35c4cb49",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
+    "tdf-hq/test/TDF/Artists/PromotionSpec.hs": "25a6ee8483bbc8b485f039b6d45cdfe417979ad3f93d3fba10f05e24a12ddd83",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
@@ -19470,7 +20362,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "7e6a9ed3c904d29d54e0b38c9aba972b1086e45edc369101c29f65cfd5e9d989",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "0f365325abbec6564548389a6c805ed9d1c600c339b854fbf0c88ecae5c3b78e",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -19510,10 +20402,11 @@
     "tdf-hq/test/TDF/RagIndexPrivacySpec.hs": "52081eaf4528c2149b352cc3e1f6d55dc0af2a89875112678217d9395aae91d0",
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
-    "tdf-hq/test/TDF/ServerAdminSpec.hs": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
+    "tdf-hq/test/TDF/ServerAdminSpec.hs": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
     "tdf-hq/test/TDF/ServerSpec.hs": "52ec1c55e972f115f2a59b3d53ac6e16fa24934b729eddd72da0a478bfbdf60c",
+    "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "71751f49567e1053855c6423f1cbce2f8bcd907757fa0875f16a275cb922e705",
@@ -20163,6 +21056,10 @@
       {
         "requirement": "REF-RECOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-STOREFRONT-ADMIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/sql/2026-10-12_ledger_posting_integrity.sql": [
@@ -20581,6 +21478,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "COURSE-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "PAY-INVOICE-ISSUE-001",
         "relationship": "implementation"
       },
@@ -20704,6 +21605,10 @@
       },
       {
         "requirement": "PKG-PURCHASE-EXPIRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "COURSE-ADMIN-001",
         "relationship": "tests"
       },
       {
@@ -21241,6 +22146,10 @@
       {
         "requirement": "AUTH-ADMIN-GUARD-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "REC-INGESTION-ADMIN-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/assets/feature-registry.json": [
@@ -21635,6 +22544,46 @@
       {
         "requirement": "PAY-DOMO-CANCEL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-ADMIN-USER-CREATE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-ADMIN-WHATSAPP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-ADMIN-EMAIL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-ADMIN-MAINTENANCE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-DROPDOWN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-BRAIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "REC-INGESTION-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-SOCIAL-UNHOLD-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-ADMIN-CATALOG-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-ENRICH-IDENTITY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/ProviderIdentitySpec.hs": [
@@ -21846,6 +22795,10 @@
     "tdf-hq/src/TDF/Seed.hs": [
       {
         "requirement": "ID-SESSION-004",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-ADMIN-MAINTENANCE-001",
         "relationship": "implementation"
       }
     ],
@@ -22362,6 +23315,10 @@
       },
       {
         "requirement": "PAY-STRIPE-WEBHOOK-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-STOREFRONT-ADMIN-001",
         "relationship": "tests"
       },
       {
@@ -23703,6 +24660,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "PAY-STOREFRONT-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "PAY-DATAFAST-001",
         "relationship": "implementation"
       }
@@ -24060,6 +25021,10 @@
       },
       {
         "requirement": "LEGAL-CONSENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-ADMIN-001",
         "relationship": "implementation"
       }
     ],
@@ -24754,6 +25719,10 @@
       },
       {
         "requirement": "PAY-PROVIDER-INBOX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-PROVIDER-EVENT-REPLAY-001",
         "relationship": "implementation"
       }
     ],
@@ -29213,6 +30182,10 @@
       {
         "requirement": "AUTH-ACCESS-PROVISION-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-ADMIN-CATALOG-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/session.ts": [
@@ -31167,6 +32140,10 @@
       {
         "requirement": "PAY-MUSIC-OUTCOME-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-PROVIDER-EVENT-REPLAY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx": [
@@ -32503,6 +33480,42 @@
       {
         "requirement": "PAY-DOMO-CANCEL-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "ID-ADMIN-USER-CREATE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-ADMIN-WHATSAPP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-ADMIN-EMAIL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-ADMIN-MAINTENANCE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DATA-DROPDOWN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-BRAIN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-SOCIAL-UNHOLD-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ART-ADMIN-CATALOG-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ART-ENRICH-IDENTITY-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql": [
@@ -33373,6 +34386,52 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/WhatsApp/Transport.hs": [
+      {
+        "requirement": "MSG-ADMIN-WHATSAPP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Services/RecordsIngestion.hs": [
+      {
+        "requirement": "REC-INGESTION-ADMIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": [
+      {
+        "requirement": "REC-INGESTION-ADMIN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Artists/Promotion.hs": [
+      {
+        "requirement": "ART-ADMIN-CATALOG-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Artists/PromotionSpec.hs": [
+      {
+        "requirement": "ART-ADMIN-CATALOG-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Artists/Enrichment.hs": [
+      {
+        "requirement": "ART-ENRICH-IDENTITY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-provider-event-operations-migration.sh": [
+      {
+        "requirement": "PAY-PROVIDER-EVENT-REPLAY-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Invoice/SessionIssue.hs": [
       {
         "requirement": "PAY-INVOICE-ISSUE-001",
@@ -33600,12 +34659,6 @@
       }
     ],
     "scripts/artist-image-download.mjs": [
-      {
-        "requirement": "ART-PROFILE-MEDIA-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Artists/Enrichment.hs": [
       {
         "requirement": "ART-PROFILE-MEDIA-001",
         "relationship": "implementation"
@@ -37629,7 +38682,7 @@
     {
       "id": "SURFACE-fbfd163470f37a47",
       "path": "scripts/check-route-requirements.py",
-      "sha256": "8ff8f425dffcdda7e12d938ed019d638fca5efdb1649cda8e27d535784026730",
+      "sha256": "75aadc52982aba64747288b42a3e3574260a3cc75dd4b97243f4974bdcb758fe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41337,7 +42390,12 @@
       "path": "scripts/test-provider-event-operations-migration.sh",
       "sha256": "62d337f21e58ec877346901403ae3690d0e9365e69c78d60049d9a72d4f624f1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-PROVIDER-EVENT-REPLAY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-821047b31f93bf41",
@@ -41572,7 +42630,7 @@
     {
       "id": "SURFACE-5067a6940763ffc3",
       "path": "scripts/test-route-requirements.py",
-      "sha256": "839d3c203611a68555d548c57d3fd3aa3d5cada6301635d84ab650e4ed7a5e4b",
+      "sha256": "661c482e4d0dfa7a7722e9ac102186d2074b2e9c24faad63a32bda3483c5d941",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57850,6 +58908,10 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
+          "requirement": "ART-ENRICH-IDENTITY-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "ART-PROFILE-MEDIA-001",
           "relationship": "implementation"
         }
@@ -57860,7 +58922,12 @@
       "path": "tdf-hq/src/TDF/Artists/Promotion.hs",
       "sha256": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ART-ADMIN-CATALOG-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4ffd2a595568d8de",
@@ -58335,6 +59402,10 @@
         {
           "requirement": "PAY-PROVIDER-INBOX-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-PROVIDER-EVENT-REPLAY-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -58417,6 +59488,10 @@
         },
         {
           "requirement": "REF-RECOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-STOREFRONT-ADMIN-001",
           "relationship": "implementation"
         }
       ]
@@ -59362,6 +60437,10 @@
         {
           "requirement": "AUTH-ACCESS-PROVISION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "ART-ADMIN-CATALOG-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -59460,6 +60539,10 @@
         {
           "requirement": "LEGAL-CONSENT-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "COURSE-ADMIN-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -59503,6 +60586,10 @@
       "requirements": [
         {
           "requirement": "ID-SESSION-004",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-ADMIN-MAINTENANCE-001",
           "relationship": "implementation"
         }
       ]
@@ -59614,6 +60701,10 @@
           "relationship": "implementation"
         },
         {
+          "requirement": "COURSE-ADMIN-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "PAY-INVOICE-ISSUE-001",
           "relationship": "implementation"
         },
@@ -59663,6 +60754,10 @@
       "requirements": [
         {
           "requirement": "PAY-MUSIC-OUTCOME-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-PROVIDER-EVENT-REPLAY-001",
           "relationship": "implementation"
         }
       ]
@@ -60015,6 +61110,10 @@
         {
           "requirement": "AUTH-ADMIN-GUARD-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "REC-INGESTION-ADMIN-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -60033,7 +61132,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "512078d56c654f9fcacf1e31884bdb270eef6501323c10bbf0c13159022f1ba0",
+      "sha256": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60058,6 +61157,10 @@
         },
         {
           "requirement": "PAY-DOMO-CANCEL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-STOREFRONT-ADMIN-001",
           "relationship": "implementation"
         },
         {
@@ -60267,7 +61370,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "a5dcf135b5ebd9682a0029979bbe5468e5845e2fac662505a87a17db02a80a8e",
+      "sha256": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60284,6 +61387,46 @@
         },
         {
           "requirement": "PAY-DOMO-CANCEL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ID-ADMIN-USER-CREATE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-ADMIN-WHATSAPP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-ADMIN-EMAIL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-ADMIN-MAINTENANCE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "DATA-DROPDOWN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "OPS-BRAIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "REC-INGESTION-ADMIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-SOCIAL-UNHOLD-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ART-ADMIN-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ART-ENRICH-IDENTITY-001",
           "relationship": "implementation"
         }
       ]
@@ -60504,7 +61647,12 @@
       "path": "tdf-hq/src/TDF/Services/RecordsIngestion.hs",
       "sha256": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-INGESTION-ADMIN-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1ac6ca33fd4e0411",
@@ -60825,7 +61973,12 @@
       "path": "tdf-hq/src/TDF/WhatsApp/Transport.hs",
       "sha256": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MSG-ADMIN-WHATSAPP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-824cc950db597cff",
@@ -61173,7 +62326,12 @@
       "path": "tdf-hq/test/TDF/Artists/PromotionSpec.hs",
       "sha256": "25a6ee8483bbc8b485f039b6d45cdfe417979ad3f93d3fba10f05e24a12ddd83",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ART-ADMIN-CATALOG-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-72e82ca292de1c33",
@@ -61380,7 +62538,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "7e6a9ed3c904d29d54e0b38c9aba972b1086e45edc369101c29f65cfd5e9d989",
+      "sha256": "0f365325abbec6564548389a6c805ed9d1c600c339b854fbf0c88ecae5c3b78e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61421,6 +62579,10 @@
         },
         {
           "requirement": "PAY-STRIPE-WEBHOOK-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-STOREFRONT-ADMIN-001",
           "relationship": "tests"
         },
         {
@@ -62041,7 +63203,7 @@
     {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
-      "sha256": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
+      "sha256": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62054,6 +63216,42 @@
         },
         {
           "requirement": "PAY-DOMO-CANCEL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ID-ADMIN-USER-CREATE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-ADMIN-WHATSAPP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-ADMIN-EMAIL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-ADMIN-MAINTENANCE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DATA-DROPDOWN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-BRAIN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-SOCIAL-UNHOLD-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ART-ADMIN-CATALOG-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "ART-ENRICH-IDENTITY-001",
           "relationship": "tests"
         }
       ]
@@ -62151,6 +63349,10 @@
           "relationship": "tests"
         },
         {
+          "requirement": "COURSE-ADMIN-001",
+          "relationship": "tests"
+        },
+        {
           "requirement": "MEDIA-STORAGE-001",
           "relationship": "tests"
         },
@@ -62172,7 +63374,12 @@
       "path": "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs",
       "sha256": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "REC-INGESTION-ADMIN-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-eef0c0019f0d35ca",
@@ -66736,7 +67943,6 @@
     "SURFACE-78afe29632a7411b",
     "SURFACE-9649a5eac5beddfa",
     "SURFACE-c135b76cb25cf121",
-    "SURFACE-3c9e2b2fae1ee373",
     "SURFACE-821047b31f93bf41",
     "SURFACE-78456e994088870b",
     "SURFACE-3e964491714d824a",
@@ -67581,7 +68787,6 @@
     "SURFACE-224511e286675674",
     "SURFACE-c9bd1bcf315011ee",
     "SURFACE-fe906347e07abbb3",
-    "SURFACE-2d41912c8db6a2cf",
     "SURFACE-8c41b16bda1eb6d1",
     "SURFACE-f4b05f36ec59f290",
     "SURFACE-9655351d027b1acb",
@@ -67641,7 +68846,6 @@
     "SURFACE-d8a42e512f685ab6",
     "SURFACE-f70cbdf0bd82961f",
     "SURFACE-b4b451c7f0a9bfab",
-    "SURFACE-9aa25107f33c9fd3",
     "SURFACE-4053a4f2498e072d",
     "SURFACE-dcd6c643453694a2",
     "SURFACE-b16b93ab1b670275",
@@ -67656,7 +68860,6 @@
     "SURFACE-41f19892e354f9ef",
     "SURFACE-5460b30af99d955f",
     "SURFACE-6f165e3ac5d9480f",
-    "SURFACE-424d590d8771f755",
     "SURFACE-824cc950db597cff",
     "SURFACE-62789f17ffbc8c94",
     "SURFACE-fab784f3f5226e09",
@@ -67664,7 +68867,6 @@
     "SURFACE-347e9f1684b17032",
     "SURFACE-45b71844f2c3aac7",
     "SURFACE-13ed80492a91c67d",
-    "SURFACE-ca7f36927ef07d50",
     "SURFACE-bcc8793e04f6ed01",
     "SURFACE-08cdfc0fab026f48",
     "SURFACE-e284c62e82e2c450",
@@ -67681,7 +68883,6 @@
     "SURFACE-fa6329758744ce4e",
     "SURFACE-c6b62f6ae6aecf86",
     "SURFACE-916f8955abd0c6a2",
-    "SURFACE-b84bbb40486fa4d8",
     "SURFACE-eef0c0019f0d35ca",
     "SURFACE-3871c8d09b71bf61",
     "SURFACE-6e0e63efd78f6dcd",
@@ -68083,6 +69284,9 @@
     "UI-EVENT-FINANCE-PRECISION-001",
     "SYS-UI-TEST-WORKER-001",
     "PAY-STRIPE-WEBHOOK-001",
+    "COURSE-ADMIN-001",
+    "PAY-STOREFRONT-ADMIN-001",
+    "PAY-PROVIDER-EVENT-REPLAY-001",
     "CONTRACT-STORE-001",
     "ID-PARTY-REFERENCE-REGISTRY-001",
     "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
@@ -69203,7 +70407,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "666134ef2c183556bec7ce6abc54f5722f364eaf4d0f1fd923a1aaeb35152302",
+      "sourceSha256": "3ac9ed4106047bd2e8324f62fc6c1b418b8c71729578d335386a61f0d3874b2f",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -69231,7 +70435,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "666134ef2c183556bec7ce6abc54f5722f364eaf4d0f1fd923a1aaeb35152302",
+      "sourceSha256": "3ac9ed4106047bd2e8324f62fc6c1b418b8c71729578d335386a61f0d3874b2f",
       "definition": {
         "states": [
           "absent",
@@ -69261,7 +70465,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "666134ef2c183556bec7ce6abc54f5722f364eaf4d0f1fd923a1aaeb35152302",
+      "sourceSha256": "3ac9ed4106047bd2e8324f62fc6c1b418b8c71729578d335386a61f0d3874b2f",
       "definition": {
         "export": [
           "queued",
@@ -92211,7 +93415,7 @@
   ],
   "conformanceCounts": {
     "FAIL": 0,
-    "IMPLEMENTED BUT UNSPECIFIED": 15,
+    "IMPLEMENTED BUT UNSPECIFIED": 28,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
     "PARTIAL": 196,

@@ -499,3 +499,24 @@ El registro de listas recibe la sucesión del manifiesto (235 → 236 entradas, 
   - cualquier cuenta puede crear eventos;
   - fuera del modo canónico, los comentarios guardan un nombre de autor que envía el cliente;
   - «notificar» en la lista de espera e invitar a un evento no envían mensajes.
+
+## 45. F-05 — requisitos de las rutas `/admin` (2026-11-07)
+
+- **Cobertura:** las 53 rutas mutantes de `/admin` quedan atribuidas.
+  - 11 se vinculan, revisadas, a requisitos existentes: `ID-SESSION-001`, `PRIV-RAG-002`, `OPS-ENRICH-001`, `ART-ENRICH-REVIEW-001` y `ART-PROFILE-MEDIA-001`.
+  - 42 las nombran 13 requisitos nuevos (`implemented but unspecified`) y los ya existentes `PAY-DOMO-CANCEL-001` y `AUTH-SOCIAL-OAUTH-001`.
+  - Recuento global: 138 de 516 rutas mutantes atribuidas; **378** sin requisito.
+  - Documento de revisión: `formal/system/admin-routes.md`.
+- **Defectos corregidos:**
+  1. `PUT /admin/services/storefront/orders/{orderId}` leía el pedido y lo reemplazaba entero en otra transacción, así que podía revertir un pago registrado entretanto. Ahora es una sola transacción que escribe solo estado, entregables y notas, condicionada al estado comprobado (409 si cambió), con el estado normalizado. Prueba en PostgreSQL en `ProviderRetrySpec`.
+  2. `POST /admin/social/unhold` por `externalId` devolvía a la cola mensajes ya respondidos (`sent`), y el trabajador automático podía responderlos de nuevo. Ahora los excluye. Prueba en `ServerAdminSpec`.
+  3. `check-route-requirements.py` no reconocía una ruta seguida de dos puntos («POST /a/{id}/cancel:»). Ahora quita la puntuación final. Con ello se atribuyen las cancelaciones Domo administrativa y pública a `PAY-DOMO-CANCEL-001`.
+- **Hueco del gate de guardas:** `AUTH-ADMIN-GUARD-001` y `check-admin-guards.py` solo recorren `ServerAdmin` y `RecordsIngestion`. Los manejadores `/admin` de cursos, tienda de servicios y operaciones de comercio quedan fuera, aunque comprueban acceso por sí mismos.
+- **Pendiente de decisión** (campos `ambiguity`; lista completa en el documento de revisión):
+  - envíos y reenvíos de WhatsApp por administradores sin comprobar consentimiento ni ventana de 24 h;
+  - difusión de correo a usuarios registrados sin consentimiento de marketing;
+  - el correo de prueba está abierto a StudioManager y Webmaster;
+  - una inscripción a curso pagada puede cancelarse sin reembolso, y una inscripción heredada puede marcarse pagada solo con la URL de un recibo;
+  - aprobar un candidato de identidad puede otorgar el rol Artist a cualquier parte;
+  - `user_credential` no tiene clave única por parte;
+  - la contraseña inicial viaja en claro en el correo de bienvenida.

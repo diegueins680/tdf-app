@@ -16609,6 +16609,893 @@
       "historicalStatus": null
     },
     {
+      "id": "ID-ADMIN-USER-CREATE-001",
+      "title": "Strict administrators create login credentials for existing parties",
+      "statement": "A strict administrator creates a username/password credential for a party that has none, and the party is emailed its welcome message. Routes: POST /admin/users.",
+      "domain": "ID",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "The party must exist, have a valid primary email and no credential; the username is derived from the email and made unique; the request carries no roles, so it cannot grant any.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/users"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Insert UserCredential",
+        "Welcome email (failure only logged)",
+        "Activity record"
+      ],
+      "authorization": "ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants).",
+      "privacy": "The welcome email carries the initial password in clear text.",
+      "concurrency": "None: the no-credential check and the insert are separate transactions, and user_credential has no unique key on party_id.",
+      "idempotency": "Not idempotent.",
+      "failure": "400 invalid input or email; 404 party; 409 party already has a credential.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Two concurrent creates can give one party two credentials (no unique key on party_id).",
+        "The welcome email contains the temporary or administrator-chosen password in plain text."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MSG-ADMIN-WHATSAPP-001",
+      "title": "Administrator WhatsApp messages to users and resends",
+      "statement": "A strict administrator sends a WhatsApp text to a user or resends an earlier outgoing message. Routes: POST /admin/users/{userId}/communications/whatsapp; POST /admin/communications/whatsapp/{messageId}/resend.",
+      "domain": "MSG",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/users/{userId}/communications/whatsapp",
+        "POST /admin/communications/whatsapp/{messageId}/resend"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "WhatsApp Cloud API send",
+        "Outgoing WhatsAppMessage row (admin_notify, admin_reply or admin_resend)"
+      ],
+      "authorization": "ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants).",
+      "privacy": "Sends to personal phone numbers without a consent check.",
+      "concurrency": "None.",
+      "idempotency": "Not idempotent: each call sends again.",
+      "failure": "400 invalid input or unresolvable phone; 404 user or message.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "No WhatsApp consent, opt-out or 24-hour customer-service-window check is applied on this path (PRIV-WHATSAPP-001 governs consent for the public flow only).",
+        "A resend may replace the body, so any number ever messaged can be sent arbitrary text."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MSG-ADMIN-EMAIL-001",
+      "title": "Administrator email broadcast to registered users and test email",
+      "statement": "A strict administrator emails every registered user; an Admin-module holder sends a single test email to any address. Routes: POST /admin/communications/email/registered-users; POST /admin/email-test.",
+      "domain": "MSG",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Broadcast: subject, body and limit validated; recipients are the primary emails of every credential's party, deduplicated, optionally including deactivated users; sent one by one inside the request. Test email: address, subject, body and CTA URL validated; one message.",
+      "actors": [
+        "Strict administrator",
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/communications/email/registered-users",
+        "POST /admin/email-test"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "SMTP sends",
+        "Log lines and activity records"
+      ],
+      "authorization": "Broadcast: ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants). Test email: ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators.",
+      "privacy": "Broadcast reaches every registered email without a consent check.",
+      "concurrency": "None.",
+      "idempotency": "Not idempotent: a retry re-sends to everyone.",
+      "failure": "400 invalid input; 409 SMTP not configured; test email failure answered 200 with status error.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The broadcast checks no marketing consent, opt-out or unsubscribe state and can include deactivated users.",
+        "The test email lets StudioManager and Webmaster send arbitrary branded email with any link to any address."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-ADMIN-MAINTENANCE-001",
+      "title": "Clearing the server log buffer and seeding reference data",
+      "statement": "An Admin-module holder clears the in-memory server log buffer; a strict administrator holding the seed token reseeds reference data. Routes: DELETE /admin/logs; POST /admin/seed.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Seed requires strict admin, the Admin module and a seed token compared in constant time (secretTokenMatches); it is refused when seeding is disabled. Seeding upserts parties, roles, catalog and records in one transaction and creates demo credentials only where the environment allows.",
+      "actors": [
+        "Admin-module holder",
+        "Strict administrator with the seed token"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "DELETE /admin/logs",
+        "POST /admin/seed"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "In-memory log buffer cleared (activity recorded best effort)",
+        "Seed upserts; the seeded course and its sessions and syllabus are rewritten"
+      ],
+      "authorization": "Logs: ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators. Seed: ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants). plus ModuleAdmin and the X-Seed token.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Seed runs in one transaction.",
+      "idempotency": "Clearing logs is idempotent; seeding is mostly idempotent upserts.",
+      "failure": "401/403/400 seed token; 403 module or role.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Seed.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Clearing logs removes operational evidence and is open to non-strict Admin-module roles; its audit record can be lost silently.",
+        "Seeding rewrites the live seeded course."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "DATA-DROPDOWN-001",
+      "title": "Administrator-managed dropdown options",
+      "statement": "An Admin-module holder creates and edits dropdown options per category. Routes: POST /admin/dropdowns/{category}; PATCH /admin/dropdowns/{category}/{optionId}.",
+      "domain": "DATA",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Category, value and label are validated; values are unique per category; an option of another category is 404.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/dropdowns/{category}",
+        "PATCH /admin/dropdowns/{category}/{optionId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Insert or update DropdownOption",
+        "Activity record"
+      ],
+      "authorization": "ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Check-then-write backed by UniqueDropdownOption.",
+      "idempotency": "Not idempotent.",
+      "failure": "400 invalid; 404 missing; 409 duplicate.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A concurrent duplicate passes the check and fails on the unique key with 500 instead of 409."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "OPS-BRAIN-001",
+      "title": "Studio knowledge entries",
+      "statement": "An Admin-module holder creates and edits studio knowledge (\"brain\") entries. Routes: POST /admin/brain/entries; PATCH /admin/brain/entries/{entryId}.",
+      "domain": "OPS",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Title, body, category and tags are validated; an update with no changes is refused.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/brain/entries",
+        "PATCH /admin/brain/entries/{entryId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Insert or update StudioBrainEntry",
+        "Activity record"
+      ],
+      "authorization": "ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Last write wins.",
+      "idempotency": "Not idempotent; duplicates allowed.",
+      "failure": "400 invalid or no changes; 404 missing.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Entries are not read by any other module (no retrieval or embedding consumes them)."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "REC-INGESTION-ADMIN-001",
+      "title": "Records ingestion control, sources and runs",
+      "statement": "A strict administrator with the Admin module controls the records ingestion schedule, verifies and saves YouTube sources and starts ingestion runs. Routes: PUT /admin/records-ingestion/control; PUT /admin/records-ingestion/sources; POST /admin/records-ingestion/runs.",
+      "domain": "REC",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Interval 300..86400 s; enabling a source requires approval and a collection, reserves YouTube quota under an advisory lock and verifies the channel; runs are keyed by executionKey and take a per-account advisory lock, so a completed run replays.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PUT /admin/records-ingestion/control",
+        "PUT /admin/records-ingestion/sources",
+        "POST /admin/records-ingestion/runs"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Control row and audit",
+        "social_sync_account upsert and audit",
+        "catalog_backfill_run and catalog rows; YouTube API calls"
+      ],
+      "authorization": "requireAdmin: hasStrictAdminAccess and ModuleAdmin (AUTH-REGISTRY-001).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Advisory locks for quota and runs; source upsert ON CONFLICT.",
+      "idempotency": "Control and source saves are idempotent; a completed run replays.",
+      "failure": "400 invalid; 429 rate or quota; 502 verification failed; 503 no key; 409 lock timeout.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
+        "tdf-hq/src/TDF/Services/RecordsIngestion.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Quota reserved for a failed verification is not refunded.",
+        "Enabling a source without party or artist ids clears previously stored ones."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "MSG-SOCIAL-UNHOLD-001",
+      "title": "Releasing held social replies without answering twice",
+      "statement": "A strict administrator returns a held or failed incoming Instagram, Facebook or WhatsApp message to the reply queue; an already answered message is never queued again. Routes: POST /admin/social/unhold.",
+      "domain": "MSG",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Exactly one of externalId or senderId; by externalId the incoming, not deleted, not yet sent message is reset to pending with hold and error fields cleared; by senderId the latest held message is chosen. Before 2026-11-07 the externalId form also reset messages already answered (status sent), so the auto-reply worker could answer them again.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/social/unhold"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Reply status pending; hold and error fields cleared",
+        "Log line and activity record"
+      ],
+      "authorization": "ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants). Plus ModuleAdmin.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Single update by external id.",
+      "idempotency": "Repeating an unhold of a pending message changes nothing.",
+      "failure": "400 invalid channel or lookup; 404 no eligible message.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "ServerAdminSpec: an incoming WhatsApp message with status sent is refused (404) and stays sent; existing cases cover outgoing-only matches, non-held sender lookups and the reset of held messages.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "ART-ADMIN-CATALOG-001",
+      "title": "Administrator artist profiles, releases, promotions and payout onboarding",
+      "statement": "An Admin-module holder upserts artist profiles, manages legacy releases and promotion slots, and creates a Stripe Connect onboarding link for an artist. Routes: POST /admin/artists/profiles; POST /admin/artists/profiles/{artistProfileId}/connect/onboarding-link; POST /admin/artists/releases; PUT /admin/artists/releases/{releaseId}; POST /admin/artists/{artistId}/promotions; PUT /admin/artists/{artistId}/promotions/{promotionId}; DELETE /admin/artists/{artistId}/promotions/{promotionId}.",
+      "domain": "ART",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Profiles: slug, URL and published-genre checks, full replace of the profile and the party display name. Onboarding: https refresh and return URLs, creates the Connect account if missing and an account link. Releases and promotions check that the record belongs to the artist.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/artists/profiles",
+        "POST /admin/artists/profiles/{artistProfileId}/connect/onboarding-link",
+        "POST /admin/artists/releases",
+        "PUT /admin/artists/releases/{releaseId}",
+        "POST /admin/artists/{artistId}/promotions",
+        "PUT /admin/artists/{artistId}/promotions/{promotionId}",
+        "DELETE /admin/artists/{artistId}/promotions/{promotionId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "ArtistProfile, Party display name, genre memberships",
+        "Stripe Connect account and account link",
+        "ArtistRelease",
+        "ArtistPromoSlot"
+      ],
+      "authorization": "ensureModule ModuleAdmin only: Admin, StudioManager and Webmaster all hold the module, so this is not restricted to strict administrators.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "None: profile upsert relies on unique keys; onboarding has no lock or Stripe idempotency key.",
+      "idempotency": "Profile upsert is idempotent; others are not.",
+      "failure": "400 invalid; 404 missing; 500 duplicate slug or Stripe error.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Profiles/Artist.hs",
+        "tdf-hq/src/TDF/Artists/Promotion.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Artists/PromotionSpec.hs",
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "StudioManager and Webmaster can rename any party, give any party an artist profile and create payout accounts.",
+        "Concurrent onboarding calls can create orphan Connect accounts.",
+        "Release URLs are not validated although the legacy feed plays them.",
+        "Promotion changes and deletions leave no audit record."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "ART-ENRICH-IDENTITY-001",
+      "title": "Queuing artist identity candidates for review",
+      "statement": "A strict administrator records an identity candidate linking an inventory item to a provider identity. Routes: POST /admin/artists/enrichment/identity-candidates.",
+      "domain": "ART",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Inventory and party must exist; text, URLs and confidence are validated; candidates are keyed by a hash of inventory, provider, external id and URL.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/artists/enrichment/identity-candidates"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Upsert ArtistIdentityCandidate"
+      ],
+      "authorization": "ensureStrictAdmin (hasStrictAdminAccess: Admin role, strict-admin role scopes, coherent grants).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Unique hash key.",
+      "idempotency": "Same-hash upsert.",
+      "failure": "Validation failures surface as 500 (IOError).",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerAdmin.hs",
+        "tdf-hq/src/TDF/Artists/Enrichment.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The upsert overwrites party, evidence and confidence even on approved or rejected candidates.",
+        "The party is not checked to be an artist; approving a candidate later can grant the Artist role to it."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "COURSE-ADMIN-001",
+      "title": "Course catalogue and registration administration",
+      "statement": "An Admin-module holder saves courses and manages registrations: status, notes, payment receipts and follow-ups. Routes: POST /admin/courses; PATCH /admin/courses/{slug}/registrations/{registrationId}/status; PATCH /admin/courses/{slug}/registrations/{registrationId}/notes; POST /admin/courses/{slug}/registrations/{registrationId}/receipts; PATCH /admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}; DELETE /admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}; POST /admin/courses/{slug}/registrations/{registrationId}/follow-ups; PATCH /admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}; DELETE /admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}.",
+      "domain": "COURSE",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Child records must belong to the registration and the registration to the course (404). Marking paid needs a paid canonical checkout, or for a legacy registration at least one receipt; the last receipt of a paid registration cannot be deleted.",
+      "actors": [
+        "Admin-module holder"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/courses",
+        "PATCH /admin/courses/{slug}/registrations/{registrationId}/status",
+        "PATCH /admin/courses/{slug}/registrations/{registrationId}/notes",
+        "POST /admin/courses/{slug}/registrations/{registrationId}/receipts",
+        "PATCH /admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
+        "DELETE /admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
+        "POST /admin/courses/{slug}/registrations/{registrationId}/follow-ups",
+        "PATCH /admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}",
+        "DELETE /admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Course, sessions and syllabus (delete and reinsert)",
+        "Registration status, notes, receipts, follow-ups"
+      ],
+      "authorization": "validateModuleAccess ModuleAdmin (Admin, StudioManager, Webmaster). These handlers are outside AUTH-ADMIN-GUARD-001 and scripts/check-admin-guards.py, which scan ServerAdmin only.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "No locks: receipt checks and status writes run in separate transactions.",
+      "idempotency": "Course save is an upsert by slug; other writes are not idempotent.",
+      "failure": "400 invalid; 404 mismatch; 409 unpaid checkout or last receipt.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Routes/Courses.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "A paid registration can be cancelled with no refund and no seat release.",
+        "Marking a legacy registration paid needs only a receipt URL; the money is not verified.",
+        "Concurrent receipt deletion and the paid transition can leave a paid registration without a receipt.",
+        "Receipts and system follow-ups (status_change, payment_receipt) can be edited or deleted without audit.",
+        "Course capacity can be reduced below existing registrations; Webmaster can change prices."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-STOREFRONT-ADMIN-001",
+      "title": "Service storefront fulfillment, packages, refund requests and reconciliation",
+      "statement": "A strict administrator advances service order fulfillment, manages packages, requests refunds and reconciles orders and refunds with the provider. Routes: PUT /admin/services/storefront/orders/{orderId}; POST /admin/services/storefront/orders/{orderId}/reconcile; POST /admin/services/storefront/orders/{orderId}/refunds; POST /admin/services/storefront/packages; PUT /admin/services/storefront/packages/{packageId}; POST /admin/services/storefront/refunds/{refundId}/reconcile.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Order update: one transaction that checks the fulfillment transition, refuses payment states, writes only status (normalized), deliverables URL and notes, conditional on the checked status (409 otherwise). Before 2026-11-07 it replaced the whole row from an earlier read, so a payment written meanwhile could be reverted. Refund requests need an Idempotency-Key and a paid PayPal checkout and lock the checkout; approval is a separate route by another party. Reconciliation queries the provider and records mismatches without moving money.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "PUT /admin/services/storefront/orders/{orderId}",
+        "POST /admin/services/storefront/orders/{orderId}/reconcile",
+        "POST /admin/services/storefront/orders/{orderId}/refunds",
+        "POST /admin/services/storefront/packages",
+        "PUT /admin/services/storefront/packages/{packageId}",
+        "POST /admin/services/storefront/refunds/{refundId}/reconcile"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "Order fulfillment fields and status history",
+        "ServiceStorefrontPackage",
+        "Refund request",
+        "Reconciliation exception or completed refund accounting; PayPal / Datafast queries"
+      ],
+      "authorization": "requireAccess: hasStrictAdminAccess.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "Order update conditional on status; refund store locks the checkout; refund reconciliation locks the refund.",
+      "idempotency": "Refund requests replay by Idempotency-Key.",
+      "failure": "400 invalid; 404 missing; 409 state; 429/502/503 provider.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "ProviderRetrySpec (PostgreSQL): after a provider-verified payment, the admin update keeps payment provider, paid time and checkout, stores the normalized status with one history row, and refuses a payment state; existing hosted-order and refund specs cover the payment paths.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Order reconciliation exceptions use the order id as internal reference, while the reconciliation report links on checkout id, so they do not link to their checkout.",
+        "A refund request without an amount computes the remaining amount outside the lock, so a same-key retry may compute a different amount.",
+        "Package create drops deliverables and features (TODO) and package updates are last-write-wins."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "PAY-PROVIDER-EVENT-REPLAY-001",
+      "title": "Operator replay of dead-lettered provider events",
+      "statement": "A strict administrator returns a dead-lettered provider event to the retry queue with a reason. Routes: POST /admin/commerce/provider-events/{eventId}/replay.",
+      "domain": "PAY",
+      "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
+      "source": "formal/system/admin-routes.md",
+      "contract": "formal/system/admin-routes.md",
+      "property": "Only an event in dead_letter can be requeued; the reason (8..500 characters) and actor are audited; the worker processes it later under the lease fencing of PAY-PROVIDER-INBOX-001.",
+      "actors": [
+        "Strict administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) and the authorization rule stated"
+      ],
+      "inputs": [
+        "POST /admin/commerce/provider-events/{eventId}/replay"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "commerce_provider_event status retry",
+        "commerce_provider_event_action audit row"
+      ],
+      "authorization": "requireAccess: hasStrictAdminAccess. Outside AUTH-ADMIN-GUARD-001's ServerAdmin sweep.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "FOR UPDATE in Haskell and in commerce_requeue_provider_event.",
+      "idempotency": "A second replay is refused (no longer dead_letter).",
+      "failure": "400 invalid; 404 missing; 409 not dead_letter.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs"
+      ],
+      "tests": [
+        "scripts/test-provider-event-operations-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/admin-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",

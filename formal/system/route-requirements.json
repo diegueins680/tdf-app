@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 59,
+    "named": 100,
     "path-named": 1,
-    "reviewed": 26,
-    "unspecified": 430,
-    "covered": 86
+    "reviewed": 37,
+    "unspecified": 378,
+    "covered": 138
   },
   "routes": [
     {
@@ -49,278 +49,380 @@
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/artists/{artistId}/rerun",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-ENRICH-001"
+      ],
+      "note": "OPS-ENRICH-001 specifies strict-admin enrichment runs, run keys and the external research lease that these handlers implement."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/identity-candidates",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ENRICH-IDENTITY-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/artists/enrichment/identity-candidates/{candidateId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-ENRICH-REVIEW-001"
+      ],
+      "note": "ART-ENRICH-REVIEW-001 specifies the strict-admin source, field-decision and identity review boundaries and their stale-value guards."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/media",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-PROFILE-MEDIA-001"
+      ],
+      "note": "ART-PROFILE-MEDIA-001 specifies strict-admin media and suggestion writes with hash idempotency and pending-only suggestion updates."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/runs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-ENRICH-001"
+      ],
+      "note": "OPS-ENRICH-001 specifies strict-admin enrichment runs, run keys and the external research lease that these handlers implement."
     },
     {
       "method": "PATCH",
       "path": "/admin/artists/enrichment/runs/{runId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-ENRICH-001"
+      ],
+      "note": "OPS-ENRICH-001 specifies strict-admin enrichment runs, run keys and the external research lease that these handlers implement."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/sources",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-ENRICH-REVIEW-001"
+      ],
+      "note": "ART-ENRICH-REVIEW-001 specifies the strict-admin source, field-decision and identity review boundaries and their stale-value guards."
     },
     {
       "method": "PATCH",
       "path": "/admin/artists/enrichment/suggestion-sets/{artistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-ENRICH-REVIEW-001"
+      ],
+      "note": "ART-ENRICH-REVIEW-001 specifies the strict-admin source, field-decision and identity review boundaries and their stale-value guards."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/suggestions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-PROFILE-MEDIA-001"
+      ],
+      "note": "ART-PROFILE-MEDIA-001 specifies strict-admin media and suggestion writes with hash idempotency and pending-only suggestion updates."
     },
     {
       "method": "PATCH",
       "path": "/admin/artists/enrichment/suggestions/{suggestionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-ENRICH-REVIEW-001"
+      ],
+      "note": "ART-ENRICH-REVIEW-001 specifies the strict-admin source, field-decision and identity review boundaries and their stale-value guards."
     },
     {
       "method": "POST",
       "path": "/admin/artists/profiles",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/artists/profiles/{artistProfileId}/connect/onboarding-link",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/artists/releases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/artists/releases/{releaseId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/artists/{artistId}/promotions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/admin/artists/{artistId}/promotions/{promotionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/artists/{artistId}/promotions/{promotionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/brain/entries",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-BRAIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/brain/entries/{entryId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-BRAIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/commerce/provider-events/{eventId}/replay",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-PROVIDER-EVENT-REPLAY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/communications/email/registered-users",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-ADMIN-EMAIL-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/communications/whatsapp/{messageId}/resend",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-ADMIN-WHATSAPP-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/courses",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/notes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/domo/quotes/{quoteId}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/dropdowns/{category}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DATA-DROPDOWN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/dropdowns/{category}/{optionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DATA-DROPDOWN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/email-test",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-ADMIN-EMAIL-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/admin/logs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-ADMIN-MAINTENANCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/rag/refresh",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PRIV-RAG-002"
+      ],
+      "note": "PRIV-RAG-002 specifies the refresh: public course fields only, atomic replacement, previous index preserved on failure; ragRefreshHandler calls refreshRagIndex."
     },
     {
       "method": "PUT",
       "path": "/admin/records-ingestion/control",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REC-INGESTION-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/records-ingestion/runs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REC-INGESTION-ADMIN-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/records-ingestion/sources",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REC-INGESTION-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/seed",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-ADMIN-MAINTENANCE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/services/storefront/orders/{orderId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/services/storefront/orders/{orderId}/reconcile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/services/storefront/orders/{orderId}/refunds",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/services/storefront/packages",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/services/storefront/packages/{packageId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
@@ -333,8 +435,10 @@
     {
       "method": "POST",
       "path": "/admin/services/storefront/refunds/{refundId}/reconcile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
@@ -347,26 +451,35 @@
     {
       "method": "POST",
       "path": "/admin/social/unhold",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-SOCIAL-UNHOLD-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/users",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ID-ADMIN-USER-CREATE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/users/{userId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ID-SESSION-001"
+      ],
+      "note": "ID-SESSION-001 specifies that disabling a credential or changing its password or username atomically invalidates its sessions, under strict Admin; updateUser does so under a row lock."
     },
     {
       "method": "POST",
       "path": "/admin/users/{userId}/communications/whatsapp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-ADMIN-WHATSAPP-001"
+      ]
     },
     {
       "method": "POST",
@@ -2165,8 +2278,10 @@
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
     },
     {
       "method": "POST",
