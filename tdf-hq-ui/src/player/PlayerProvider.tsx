@@ -643,8 +643,13 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
 
   useEffect(() => {
     const engine = audioRef.current;
+    const pendingPauses = pendingInternalPausesRef.current;
     return () => {
-      if (!engine?.hasAttribute('src')) return;
+      if (!engine) return;
+      // Releasing an engine calls load(), which discards its queued media
+      // tasks. Resolve/remove its wait before that task can be discarded.
+      pendingPauses.get(engine)?.cancel();
+      if (!engine.hasAttribute('src')) return;
       engine.pause(); engine.removeAttribute('src'); engine.load();
     };
   }, [audioRef]);

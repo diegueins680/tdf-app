@@ -831,3 +831,42 @@ it('cancels a pending internal pause listener on unmount without loading or play
   expect(jest.mocked(media.play).mock.calls.length).toBe(before);
   expect(removed.mock.calls.some(([name, , options]) => name === 'pause' && options === true)).toBe(true);
 });
+
+it('cancels a discarded pause wait when switching engines so returning to native playback cannot hang', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  const states = new WeakMap<HTMLMediaElement, { paused: boolean }>();
+  const state = (media: HTMLMediaElement) => {
+    const existing = states.get(media) ?? { paused: true };
+    states.set(media, existing);
+    return existing;
+  };
+  const pauseTasks: { media: HTMLMediaElement; dispatch: () => void }[] = [];
+  jest.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockImplementation(function (this: HTMLMediaElement) { return state(this).paused; });
+  jest.spyOn(HTMLMediaElement.prototype, 'readyState', 'get').mockReturnValue(1);
+  jest.mocked(HTMLMediaElement.prototype.pause).mockImplementation(function (this: HTMLMediaElement) {
+    if (!state(this).paused) {
+      state(this).paused = true;
+      pauseTasks.push({ media: this, dispatch: () => this.dispatchEvent(new Event('pause')) });
+    }
+  });
+  jest.mocked(HTMLMediaElement.prototype.play).mockImplementation(async function (this: HTMLMediaElement) { state(this).paused = false; });
+  jest.mocked(HTMLMediaElement.prototype.load).mockImplementation(function (this: HTMLMediaElement) {
+    // The native load algorithm discards this element's pending media tasks.
+    for (let i = pauseTasks.length - 1; i >= 0; i -= 1) if (pauseTasks[i]!.media === this) pauseTasks.splice(i, 1);
+    this.currentTime = 0;
+  });
+  const video = view.container.querySelector('video')!;
+  await act(async () => { player.playTrack(nativeTrack()); });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  await act(async () => { player.playTrack({ ...nativeTrack(), id: 'aborted-native-selection' }); });
+  expect(pauseTasks.filter(task => task.media === video)).toHaveLength(1);
+  await act(async () => { player.playTrack(track('legacy-between')); });
+  expect(pauseTasks.filter(task => task.media === video)).toHaveLength(0);
+  const audio = view.container.querySelector('audio')!;
+  expect(audio.src).toBe('https://media.invalid/legacy-between.m4a');
+  await act(async () => { player.playTrack({ ...nativeTrack(), id: 'return-native' }); });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  expect(video.src).toBe('https://media.invalid/session.mp4');
+  expect(player.currentTrack?.id).toBe('return-native');
+  expect(player.status).toBe('playing');
+});
