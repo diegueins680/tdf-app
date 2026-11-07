@@ -2770,7 +2770,7 @@ BEGIN
     SELECT 1 FROM pg_trigger WHERE tgrelid='public.music_artist_featured_track'::regclass
       AND tgname='identity_archive_reference_guard' AND NOT tgisinternal
       AND tgfoid=to_regprocedure('public.identity_reject_archived_reference()')
-      AND tgtype=23 AND tgenabled IN ('O','A') AND tgattr::text=''
+      AND tgtype=23 AND tgenabled IN ('O','A') AND tgattr::text='' AND tgqual IS NULL
       AND tgnargs=1 AND encode(tgargs,'hex')='6172746973745f70617274795f696400'
   ) THEN
     RAISE EXCEPTION 'Artist featured-track archived-reference protection is missing or incompatible';
