@@ -21047,6 +21047,229 @@
       "historicalStatus": null
     },
     {
+      "id": "QA-REPORT-AUTHORING-001",
+      "title": "Internal testing report drafting, editing and submission",
+      "statement": "A tester drafts an internal report linked to their active audit task, edits it while it is a draft or needs information, and submits it; administrators triage it through its state machine. Routes: POST /feedback/internal; PATCH /feedback/internal/{reportId}; POST /feedback/internal/{reportId}/submit.",
+      "domain": "QA",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/feedback-routes.md.",
+      "source": "formal/system/feedback-routes.md",
+      "contract": "formal/system/feedback-routes.md",
+      "property": "Creation needs internal access; a non-administrator must link an intern_task that is active and assigned to them (403) under an active plan (409); title, description, published category and severity, report type matching the category, environment, bounded texts and safe public HTTPS video links are validated (400); feedback row, report (draft, version 1) and draft_created history are inserted in one transaction. Editing: reporters change content only in draft or needs_information (409) and never administrator fields (403); administrators change state through validateReportStateTransition (409), priority, assignee, duplicateOf, closure and GitHub issue URL; the write is conditional on the version (409) with a history row, and verified with a test case requires a newer passing retest (409). Submission needs a draft (409) and completeness (an error report needs reproduction, expected and actual results and a test case, 400); the conditional update moves it to received and notifies the reporter and the administrator team.",
+      "actors": [
+        "Intern tester",
+        "Report administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /feedback/internal",
+        "PATCH /feedback/internal/{reportId}",
+        "POST /feedback/internal/{reportId}/submit"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "feedback",
+        "internal_feedback_report",
+        "internal_feedback_history",
+        "notification",
+        "intern_audit_notification_outbox",
+        "audit_log"
+      ],
+      "authorization": "ensureInternalAccess: Admin, Manager, StudioManager or Intern role (403); administrator fields and decisions need an admin role; roles only, no ModuleInternships check except the deletion resolution. loadAccessibleReport: strict UUID (400), existing report (404), reporter or administrator (404 otherwise).",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "The linked task's audit plan is locked FOR UPDATE; a finalized plan answers 409 and an environment mismatch 400. Report rows are locked FOR UPDATE with an optimistic version; audit_log and team notifications are written after the transaction.",
+      "idempotency": "Creation is not idempotent (every call makes a draft); edits and submission replay as 409 on a changed version; a PATCH repeating the current state still bumps the version, writes history and re-notifies.",
+      "failure": "400 invalid; 403 role or field ownership; 404 unknown or inaccessible report; 409 state, version or finalized plan.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/API/Feedback.hs",
+        "tdf-hq/sql/2026-08-21_studio_internship_audit.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/feedback-routes.md",
+      "critical": true,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Administrator fields are gated by role only; an operator whose Internships module was revoked keeps full triage power here while the legacy queue and deletion resolution require the module.",
+        "A PATCH that repeats the current state bumps the version and re-notifies the reporter.",
+        "Team notifications and audit rows are written outside the state transaction."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "QA-REPORT-EVIDENCE-001",
+      "title": "Report comments, evidence, evidence links and retests",
+      "statement": "Reporters and administrators add comments, attachments, external links and retest results to a report. Routes: POST /feedback/internal/{reportId}/comments; POST /feedback/internal/{reportId}/evidence; POST /feedback/internal/{reportId}/evidence-links; POST /feedback/internal/{reportId}/retests.",
+      "domain": "QA",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/feedback-routes.md.",
+      "source": "formal/system/feedback-routes.md",
+      "contract": "formal/system/feedback-routes.md",
+      "property": "Comments need a body of 1..5000 (400); information_request is administrator-only and allowed from received, confirmed, prioritized or in_progress (403/409) and moves the report to needs_information by a version-conditional update; information_response is reporter-only (403) and moves needs_information back to received. Evidence needs exactly one attachment with a safe filename, allowed type and 1..10 MB (400); the file is stored under TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT/{reportId} before the row is inserted. Links need a safe public HTTPS URL (400). Retests need the report in ready_for_retest (409), a test case (400), result, notes and evidence summary (400); under plan, report and per-test-case advisory locks they append an intern_test_execution and a retest row and bump the report version.",
+      "actors": [
+        "Intern tester",
+        "Report administrator"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /feedback/internal/{reportId}/comments",
+        "POST /feedback/internal/{reportId}/evidence",
+        "POST /feedback/internal/{reportId}/evidence-links",
+        "POST /feedback/internal/{reportId}/retests"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "internal_feedback_comment",
+        "internal_feedback_evidence",
+        "file under the internal upload root",
+        "internal_feedback_retest",
+        "intern_test_execution",
+        "internal_feedback_history",
+        "notification",
+        "audit_log"
+      ],
+      "authorization": "ensureInternalAccess: Admin, Manager, StudioManager or Intern role (403); administrator fields and decisions need an admin role; roles only, no ModuleInternships check except the deletion resolution. loadAccessibleReport: strict UUID (400), existing report (404), reporter or administrator (404 otherwise). No report-state guard on plain comments, evidence or links.",
+      "privacy": "Unchanged; see the route table.",
+      "concurrency": "The linked task's audit plan is locked FOR UPDATE; a finalized plan answers 409 and an environment mismatch 400. Retests lock the report with a version check and the test case with an advisory lock; execution numbers are unique.",
+      "idempotency": "None of these is keyed: replays append a second comment, file, link or retest (and execution).",
+      "failure": "400 invalid; 403 kind ownership; 404 inaccessible report; 409 state, version or finalized plan.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/API/Feedback.hs",
+        "tdf-hq/sql/2026-08-21_studio_internship_audit.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/feedback-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "The evidence file is written inside the transaction before the insert, so a failed insert leaves an orphan file.",
+        "The production internal upload root sits under the public assets directory (/data/assets/.internal-feedback) and is hidden only by the asset server's path exclusion.",
+        "A supplied executionId is validated but not stored; the new execution is linked instead.",
+        "Any reporter or administrator may record a retest, not only the task's assigned intern.",
+        "Plain comments and evidence may be added to closed or discarded reports."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "FEEDBACK-PUBLIC-INTAKE-001",
+      "title": "Public feedback submission",
+      "statement": "Anyone submits product feedback, optionally with an attachment, with or without a session. Routes: POST /feedback.",
+      "domain": "FEEDBACK",
+      "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/feedback-routes.md.",
+      "source": "formal/system/feedback-routes.md",
+      "contract": "formal/system/feedback-routes.md",
+      "property": "The handler reads a bearer or cookie session when present and otherwise proceeds anonymously; the reserved account-deletion marker is refused (400, PRIV-INTAKE-001); title, description, published category and severity, consent, optional contact email and an attachment with safe filename, allowed type and 1..10 MB are validated (400); the file is written under uploads/feedback, one feedback row is inserted and three fixed recipients are emailed synchronously (failures logged).",
+      "actors": [
+        "Anonymous or signed-in submitter"
+      ],
+      "preconditions": [
+        "Authenticated bearer session (AuthProtect) unless stated otherwise"
+      ],
+      "inputs": [
+        "POST /feedback"
+      ],
+      "state": {
+        "initial": "Stored event-scoped rows",
+        "terminal": [
+          "Accepted write",
+          "Refusal without write"
+        ]
+      },
+      "allowedTransitions": [
+        "Write by an authorized caller after validation"
+      ],
+      "forbiddenTransitions": [
+        "Write by a caller the authorization rule refuses",
+        "Write of input the validation refuses"
+      ],
+      "effects": [
+        "feedback",
+        "file under uploads/feedback",
+        "email to the feedback recipients"
+      ],
+      "authorization": "None.",
+      "privacy": "Stores a contact email and attachment from anonymous input.",
+      "concurrency": "No lock.",
+      "idempotency": "None: no key, no deduplication, no rate limit.",
+      "failure": "400 invalid or reserved marker.",
+      "recovery": "Retry after correcting input or authority; no automatic recovery.",
+      "observability": "HTTP status and stored rows only.",
+      "implementation": [
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/API/Feedback.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "evidence": "formal/system/feedback-routes.md",
+      "critical": false,
+      "status": "implemented but unspecified",
+      "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
+      "ambiguity": [
+        "Anonymous unbounded inserts, 10 MB disk writes and three outbound emails per request with no throttle in the application.",
+        "Oversized bodies are spooled to disk before the size check because no body limit is configured.",
+        "public-routes.json records the boundary as handler-session although the handler accepts anonymous submissions; public-intake describes it more precisely."
+      ],
+      "conformance": {
+        "classification": "IMPLEMENTED BUT UNSPECIFIED",
+        "reason": "Describes current behaviour; intended behaviour awaits owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",

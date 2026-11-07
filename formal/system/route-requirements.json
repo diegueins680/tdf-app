@@ -3,11 +3,11 @@
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
     "total": 516,
-    "named": 286,
+    "named": 294,
     "path-named": 1,
-    "reviewed": 64,
-    "unspecified": 165,
-    "covered": 351
+    "reviewed": 66,
+    "unspecified": 155,
+    "covered": 361
   },
   "routes": [
     {
@@ -1399,62 +1399,84 @@
     {
       "method": "POST",
       "path": "/feedback",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "FEEDBACK-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/account-deletion",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PRIV-INTAKE-001"
+      ],
+      "note": "PRIV-INTAKE-001 specifies the reserved deletion marker: only a live matching session may submit it (origin proof, owner advisory lock, pending receipt reuse, privacy inbox) and administrator resolution is immutable, audited and re-validates role and module under locks."
     },
     {
       "method": "POST",
       "path": "/feedback/internal",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/account-deletion/{feedbackId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PRIV-INTAKE-001"
+      ],
+      "note": "PRIV-INTAKE-001 specifies the reserved deletion marker: only a live matching session may submit it (origin proof, owner advisory lock, pending receipt reuse, privacy inbox) and administrator resolution is immutable, audited and re-validates role and module under locks."
     },
     {
       "method": "PATCH",
       "path": "/feedback/internal/{reportId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/comments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-EVIDENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-EVIDENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/evidence-links",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-EVIDENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/retests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-EVIDENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/submit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",

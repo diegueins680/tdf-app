@@ -29594,6 +29594,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/feedback-routes.md",
+      "sha256": "795101fe74ea45be8141145d8f53bf27bb802d798df76432f3a83705190afb8c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/fixture-routing.md",
       "sha256": "d32d54490e8c2c32235c49367b5a75c054c7aa3f441801d6e7cf7ea72291cfbd",
       "authority": "inferred",
@@ -30218,7 +30225,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2af52e50e1c0180db7bce019ecf3457459ba14a9d08f6bae0ee4570c9ca1692c",
+      "sha256": "8be0656ebed5df133e7b8a5b2681cad50922451ffef011c869c4141cb84f16de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
