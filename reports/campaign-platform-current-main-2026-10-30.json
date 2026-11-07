@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "kind": "campaign_current_protected_main_integration",
+  "at": "2026-10-30T06:20:35.986510+00:00",
+  "protectedMain": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "rootMerge": "bc2d26f67528e1e2372b07e394d09f820438310d",
+  "mobileMerged": "3d6f911c1b7570ac439561a159101ba78be4f01b",
+  "preservation": {
+    "incomingChangedFilesExact": 103,
+    "incomingRequirementsExact": 158,
+    "combinedRequirements": 159,
+    "serviceFilesUnchanged": 47
+  },
+  "runtime": {
+    "production": "49032779d0c53f0fdca5",
+    "isolatedSandbox": "8bcb09173562d9b6df57",
+    "serviceFilesUnchanged": 47,
+    "restarted": false,
+    "protectedBackendOrDatabaseDeployed": false
+  },
+  "checks": {
+    "mobileTests": {
+      "passed": 653,
+      "suites": 98,
+      "node": "20.19.4"
+    },
+    "mobileReleaseCheck": "PASS",
+    "offlineMetro": "actual running status confirmed; owned process stopped; no device-flow claim",
+    "webLint": "PASS",
+    "webTypecheck": "PASS",
+    "webBuild": {
+      "result": "PASS",
+      "initialGzipBytes": 338341,
+      "preloads": 5
+    },
+    "webFullTests": {
+      "passed": 3760,
+      "suites": 324,
+      "failed": 0,
+      "seconds": 674.568,
+      "executionSource": "bc2d26f67528e1e2372b07e394d09f820438310d"
+    },
+    "rootQuality": "PASS: completed on the combined source before report-only qualification metadata",
+    "catalogStrict": {
+      "candidateCount": 1355,
+      "unreviewed": 0,
+      "stale": 0,
+      "result": "PASS"
+    },
+    "catalogCsv": "canonical formatter applied to the same strict JSON candidates; not a separate source scan",
+    "generatedApiTwoClients": "PASS: regeneration left web and Mobile generated clients byte-identical",
+    "inventory": "PASS after committing exact Mobile gitlink; final metadata check separately required",
+    "conformance": "PASS; final metadata check separately required"
+  },
+  "backup": {
+    "manifest": "1FTwn00ZO9SIQLErc0sBMR6x-natAbDCz",
+    "result": "PASS",
+    "readyAssets": 47,
+    "manifestObjects": 50,
+    "pinnedPriorProofs": 43,
+    "vaultRecordsRecovered": 3,
+    "sqliteIntegrity": "ok",
+    "foreignKeys": "ok",
+    "privateKeySentToServer": false,
+    "sandboxStateIncluded": false,
+    "productionFailoverClaimed": false
+  },
+  "tiktokReview": {
+    "nativeStatus": "In review",
+    "readAt": "2026-10-30T06:02:47.231Z",
+    "productionAuditApproved": false,
+    "publicPostingEnabled": false,
+    "newPostOrInvitationReplayed": false
+  },
+  "limits": [
+    "Protected integration, hosted exact-head CI and independent review remain required.",
+    "Incoming backend sources and API schema are unchanged from protected main; no new compiled backend or live provider qualification is claimed.",
+    "Existing private sandbox, publication, native playback and original full-master decryption receipts retain their actual source identities.",
+    "No automatic link-sticker Stories, public TikTok release, connected Facebook Page, full-host failover or core PostgreSQL recovery claim."
+  ],
+  "qualificationLogSha256": {
+    "mobile-tests.log": "29a8b09b0e7a51af37ebd89acb46ae679ae6081a089201aa2ec4d61f6b5ee2e4",
+    "mobile-release-check.log": "2d209cac3887f151b9fa2aa49d9afbed6cc143b656bfbf983cc0cfae1cb02d52",
+    "mobile-metro.log": "9389cae323e17ecd799f5216d14f7ba56eb0d157613c1c136f2aa4cbba47dcd2",
+    "web-tests.log": "eb129c9155a2f9a883b3a880f0f40c63ea0c4ef980581d87cb8bcfda98ca426b",
+    "web-lint.log": "28a07bb37cb319d962aeb1c220ba6ab7b71b4f767b6f6b3853f1b83464c2b5a5",
+    "web-typecheck.log": "374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3",
+    "web-build.log": "e3688b3a16ced6b27542de5f72824760c5006d023810d0bc61c170eea935afb2",
+    "repo-quality.log": "3317df57025c42d96bc86c65fcd280e3f7feb01b4cd66bd5837cb861c8ab7686",
+    "catalog-json.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "generated-api-two-clients.log": "78aba0c0a8402515864d236bff6dbe26bf863569637ef1cace7d4db005d06eaa"
+  },
+  "retainedSetupFailures": [
+    "Jest refused unsupported --run before tests; corrected normal invocation passed.",
+    "Inventory refused uncommitted Mobile gitlink mismatch; regenerated after committing the normal merge.",
+    "An incorrect literal prior-proof SHA was refused before recovery reads; actual unchanged receipt hash was computed and pinned. No guard was weakened.",
+    "The first source seal treated Git-quoted Unicode artifact paths as filenames; corrected NUL-delimited path enumeration and focused app/test/configuration inputs. No test pass was inferred from that failed seal."
+  ],
+  "sourceSeal": {
+    "files": 1294,
+    "sha256": "2e92ff8c19cc66f1c833cdebb97acf814339c75bf1fb9f6ec0ab49dcad80b394",
+    "scope": "Tracked web, campaign service, API-schema, root dependency and Mobile app/test/configuration inputs match the normally merged commits; not a claim every sealed file was executed."
+  }
+}

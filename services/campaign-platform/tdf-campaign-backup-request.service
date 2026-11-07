@@ -1,0 +1,18 @@
+[Unit]
+Description=Run requested TDF campaign backup independently of publication jobs
+[Service]
+Type=oneshot
+User=tdf-campaign
+Group=tdf-campaign
+Environment=CAMPAIGN_CONFIG=/etc/tdf-campaign-platform/config.json
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/tdf-campaign-platform/venv/bin/python /opt/tdf-campaign-platform/current/backup.py --requested
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/tdf-campaign-platform
+MemoryMax=180M
+CPUQuota=40%
+Nice=19
+TimeoutStartSec=6h
