@@ -4,7 +4,7 @@ module TDF.Social.FollowHandlerSpec (spec) where
 
 import Control.Concurrent (newEmptyMVar, putMVar, takeMVar, threadDelay, tryPutMVar)
 import Control.Concurrent.Async (wait, withAsync)
-import Control.Exception (finally)
+import Control.Exception (bracket, finally)
 import Control.Monad (forM_, void)
 import qualified Data.ByteString.Char8 as BS8
 import Database.Persist.Postgresql (createPostgresqlPool)
@@ -18,6 +18,7 @@ import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Char (chr)
 import Data.Int (Int64)
 import Data.List (sort)
+import Data.Pool (destroyAllResources)
 import qualified Data.Text as T
 import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
 import Data.Time.Clock (getCurrentTime)
@@ -46,8 +47,11 @@ import TDF.API.SocialEventsAPI
     , validateEventImageUploadForm
     )
 import TDF.DTO.SocialEventsDTO
-    ( ArtistDTO
+    ( ArtistDTO (..)
     , ArtistFollowerDTO (..)
+    , EventBudgetLineDTO (..)
+    , EventFinanceSummaryDTO (..)
+    , EventFinanceEntryDTO (..)
     , EventDTO (..)
     , EventMetadataUpdateDTO (..)
     , EventMomentCreateDTO (..)
@@ -57,6 +61,7 @@ import TDF.DTO.SocialEventsDTO
     , InvitationDTO (..)
     , InvitationUpdateDTO (..)
     , NullableFieldUpdate (..)
+    , PublicUpcomingEventDTO (..)
     , RefundDTO (..)
     , RefundRequestDTO (..)
     , RejectionReasonDTO (..)
@@ -75,7 +80,9 @@ import TDF.DB (Env (..))
 import TDF.Models (Party (..), RoleEnum (Admin, Fan))
 import TDF.Models.SocialEventsModels
 import TDF.Server.SocialEventsHandlers
-    ( postgresVisibleImportedMetadataClause
+    ( assignMissingEventOrganizer
+    , postgresVisibleImportedMetadataClause
+    , publicUpcomingEventsServer
     , decodeStoredPromoCodeTierIds
     , followArtistDb
     , removeSocialEventAssets
@@ -92,6 +99,7 @@ import TDF.Server.SocialEventsHandlers
     , validateEventMetadataUrlField
     , validateInvitationFromPartyId
     , validateInvitationUpdateAuthorization
+    , validateArtistPartyIdFilter
     , validateSocialEventsListFilter
     , validateSocialEventsListOffset
     , validateStoredEventFinanceMetadata
@@ -280,7 +288,7 @@ spec = describe "social event handler helpers" $ do
                 , eiuName = Just "poster.png"
                 }
 
-    it "publishes event and moment images atomically and rejects deletion tombstones" $
+    it "publishes event posters atomically and requires a real session for moment uploads" $
         withSystemTempDirectory "social-event-image-lock" $ \assetsRoot -> do
             cfg <- Config.loadConfig
             pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
@@ -335,6 +343,26 @@ spec = describe "social event handler helpers" $ do
                 )
                 pool
 
+            let unownedEventKey = toSqlKey 31 :: SocialEventId
+            runSqlPool
+                (insertKey unownedEventKey (seedSocialEvent "3" "Unowned event" now){socialEventOrganizerPartyId = Nothing})
+                pool
+            unowned <-
+                runHandler $
+                    runReaderT
+                        (socialEventImageUploadHandlerFor (socialEventUser 2) "31" uploadForm)
+                        env
+            case unowned of
+                Left err -> do
+                    errHTTPCode err `shouldBe` 403
+                    BL8.unpack (errBody err) `shouldContain` "This event has no organizer"
+                Right response ->
+                    expectationFailure ("Expected the unowned event upload to fail, got: " <> show response)
+            fmap socialEventOrganizerPartyId <$> runSqlPool (get unownedEventKey) pool
+                `shouldReturn` Just Nothing
+            doesDirectoryExist (assetsRoot </> "social-events" </> "events" </> "31")
+                `shouldReturn` False
+
             uploaded <-
                 runHandler $
                     runReaderT
@@ -371,11 +399,14 @@ spec = describe "social event handler helpers" $ do
                     runReaderT
                         (socialEventMomentImageUploadHandlerFor (strictAdminSocialEventUser 3) "29" uploadForm)
                         env
+            -- A synthetic SQLite actor has no real bearer witness. Positive
+            -- moment upload/bytes/path/tombstone assertions now run through the
+            -- real PostgreSQL/API lane in test-event-memories-http.py in CI.
             case uploadedMoment of
-                Left err -> expectationFailure ("Expected moment image upload to succeed, got: " <> show err)
-                Right response -> do
-                    eiuPath response `shouldSatisfy` T.isInfixOf "/moments/"
-                    doesFileExist (assetsRoot </> T.unpack (eiuPath response)) `shouldReturn` True
+                Left err -> errHTTPCode err `shouldBe` 401
+                Right response -> expectationFailure ("A synthetic actor must not upload moment media: " <> show response)
+            doesDirectoryExist (assetsRoot </> "social-events" </> "events" </> "29" </> "moments")
+                `shouldReturn` False
 
             rejectedMoment <-
                 runHandler $
@@ -383,7 +414,7 @@ spec = describe "social event handler helpers" $ do
                         (socialEventMomentImageUploadHandlerFor (strictAdminSocialEventUser 3) "30" uploadForm)
                         env
             case rejectedMoment of
-                Left err -> errHTTPCode err `shouldBe` 404
+                Left err -> errHTTPCode err `shouldBe` 401
                 Right response ->
                     expectationFailure
                         ("Expected tombstoned moment image upload to fail, got: " <> show response)
@@ -459,6 +490,172 @@ spec = describe "social event handler helpers" $ do
         assertInvalid (Just "{\"currency\":\"USDT\"}") "Stored event currency is invalid"
         assertInvalid (Just "{\"budgetCents\":-1}") "Stored event budget is invalid"
 
+    describe "event finance report range" $ do
+        it "rejects overflowing budget actuals rather than reporting a negative sum" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 0
+                rangeEntry env "expense" "manual" "posted" maxBound
+                rangeEntry env "expense" "manual" "posted" 1
+                rangeReject =<< rangeBudgetList env
+
+        it "refuses an overflowing budget update before changing stored fields" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 7
+                rangeEntry env "expense" "manual" "posted" maxBound
+                rangeEntry env "expense" "manual" "posted" 1
+                rangeReject =<< rangeBudgetUpdate env (rangeBudgetPayload 99)
+                stored <- runSqlPool (get (toSqlKey 1 :: EventBudgetLineId)) (envPool env)
+                fmap eventBudgetLinePlannedCents stored `shouldBe` Just 7
+
+        it "reports the exact supported budget boundary" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 0
+                rangeEntry env "expense" "manual" "posted" (maxBound - 1)
+                rangeEntry env "expense" "manual" "posted" 1
+                result <- rangeBudgetList env
+                fmap (map eblActualCents) result `shouldBe` Right [Just maxBound]
+
+        forM_ ["income", "expense"] $ \direction -> do
+            it ("rejects overflowing planned " <> T.unpack direction) $
+                withFinanceRangeEnv $ \env -> do
+                    rangeBudget env 1 direction maxBound
+                    rangeBudget env 2 direction 1
+                    rangeReject =<< rangeSummary env
+            it ("rejects overflowing posted manual " <> T.unpack direction) $
+                withFinanceRangeEnv $ \env -> do
+                    rangeEntry env direction "manual" "posted" maxBound
+                    rangeEntry env direction "manual" "posted" 1
+                    rangeReject =<< rangeSummary env
+
+        forM_ [("manual", "income"), ("manual", "expense"),
+               ("contract_commitment", "expense"), ("purchase_order", "expense")] $ \(source, direction) ->
+            it ("rejects overflowing draft " <> T.unpack source <> " " <> T.unpack direction) $
+                withFinanceRangeEnv $ \env -> do
+                    rangeEntry env direction source (if source `elem` ["contract_commitment", "purchase_order"] then "posted" else "draft") maxBound
+                    rangeEntry env direction source "draft" 1
+                    rangeReject =<< rangeSummary env
+
+        it "checks combined canonical and legacy ticket revenue before narrowing" $
+            withFinanceRangeEnv $ \env -> do
+                rangeTicket env 1 "paid" maxBound
+                rangeTicket env 2 "paid" 1
+                runSqlPool (do
+                    rawExecute "INSERT INTO commerce_checkout_session VALUES ('canonical',? ,0,'USD')" [toPersistValue (maxBound :: Int)]
+                    rawExecute "INSERT INTO event_ticket_checkout_runtime VALUES (1,7,'canonical')" []) (envPool env)
+                rangeReject =<< rangeSummary env
+
+        it "checks combined manual and ticket receivables" $
+            withFinanceRangeEnv $ \env -> do
+                rangeEntry env "income" "manual" "draft" maxBound
+                rangeTicket env 1 "pending" 1
+                rangeReject =<< rangeSummary env
+
+        it "preserves exact supported sums and legitimate negative balances" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 10
+                rangeEntry env "income" "manual" "posted" 20
+                rangeEntry env "expense" "liability_payment" "posted" 30
+                result <- rangeSummary env
+                fmap (\dto -> (efsActualIncomeCents dto, efsActualExpenseCents dto,
+                    efsNetCents dto, efsLiabilityBalanceCents dto, efsBudgetVarianceCents dto,
+                    efsBudgetUtilizationPct dto)) result `shouldBe` Right (20,30,-10,-30,Just (-20),Just 300)
+
+        it "allows maxBound and keeps posted, draft and void filters separate" $
+            withFinanceRangeEnv $ \env -> do
+                rangeEntry env "income" "manual" "posted" (maxBound - 1)
+                rangeEntry env "income" "manual" "posted" 1
+                rangeEntry env "income" "manual" "void" maxBound
+                rangeEntry env "expense" "manual" "draft" 3
+                result <- rangeSummary env
+                fmap (\dto -> (efsActualIncomeCents dto,efsAccountsPayableCents dto,
+                    efsActualExpenseCents dto,efsBudgetCents dto)) result `shouldBe` Right (maxBound,3,0,Nothing)
+
+    describe "event finance report currency" $ do
+        it "keeps EUR authoring allowed but refuses to label its income as USD" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEntry env "EUR" "income" "posted" 100 Nothing
+                rows <- runSqlPool (selectList [EventFinanceEntryEventId ==. toSqlKey 7] []) (envPool env)
+                [(eventFinanceEntryCurrency row,eventFinanceEntryAmountCents row) | Entity _ row <- rows]
+                    `shouldBe` [("EUR",100)]
+                currencyReject =<< rangeSummary env
+
+        it "refuses a mismatched pending amount in accounts payable" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEntry env "EUR" "expense" "pending" 20 Nothing
+                currencyReject =<< rangeSummary env
+
+        it "refuses a mismatched posted amount in budget actuals" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 1000
+                currencyEntry env "EUR" "expense" "posted" 100 (Just "1")
+                currencyReject =<< rangeBudgetList env
+
+        it "refuses mismatched budget actuals before saving the requested edit" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 7
+                currencyEntry env "EUR" "expense" "posted" 100 (Just "1")
+                currencyReject =<< rangeBudgetUpdate env (rangeBudgetPayload 99)
+                row <- runSqlPool (get (toSqlKey 1 :: EventBudgetLineId)) (envPool env)
+                fmap eventBudgetLinePlannedCents row `shouldBe` Just 7
+
+        forM_ ["paid", "refunded", "pending"] $ \status ->
+            it ("refuses mismatched legacy ticket " <> T.unpack status <> " amounts") $
+                withFinanceRangeEnv $ \env -> do
+                    currencyTicket env "EUR" status 100
+                    currencyReject =<< rangeSummary env
+
+        it "ignores valid foreign void entries when computing USD totals" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEntry env "EUR" "income" "void" 100 Nothing
+                currencyEntry env "USD" "income" "posted" 30 Nothing
+                result <- rangeSummary env
+                fmap (\dto -> (efsCurrency dto,efsActualIncomeCents dto,efsNetCents dto)) result
+                    `shouldBe` Right ("USD",30,30)
+
+        it "ignores a cancelled foreign ticket that contributes no amount" $
+            withFinanceRangeEnv $ \env -> do
+                currencyTicket env "EUR" "cancelled" 100
+                result <- rangeSummary env
+                fmap (\dto -> (efsCurrency dto,efsTicketPaidRevenueCents dto,efsTicketPendingRevenueCents dto)) result
+                    `shouldBe` Right ("USD",0,0)
+
+        it "keeps a free foreign legacy ticket reportable without inventing FX" $
+            withFinanceRangeEnv $ \env -> do
+                currencyTicket env "EUR" "paid" 0
+                result <- rangeSummary env
+                fmap (\dto -> (efsCurrency dto,efsTicketPaidRevenueCents dto,efsActualIncomeCents dto)) result
+                    `shouldBe` Right ("USD",0,0)
+
+        it "ignores foreign entries outside a budget line's actual filters" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 1000
+                currencyEntry env "USD" "expense" "posted" 30 (Just "1")
+                currencyEntry env "EUR" "expense" "posted" 20 Nothing
+                currencyEntry env "EUR" "income" "posted" 50 (Just "1")
+                result <- rangeBudgetList env
+                fmap (map eblActualCents) result `shouldBe` Right [Just 30]
+
+        it "does not require conversion for a zero historical budget actual" $
+            withFinanceRangeEnv $ \env -> do
+                rangeBudget env 1 "expense" 1000
+                rangeEntry env "expense" "manual" "posted" 0
+                runSqlPool (rawExecute "UPDATE event_finance_entry SET currency='EUR' WHERE event_id=7" []) (envPool env)
+                result <- rangeBudgetList env
+                fmap (map eblActualCents) result `shouldBe` Right [Just 0]
+
+        it "uses the explicit event currency rather than its configured default" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEvent env "eur"
+                currencyEntry env "EUR" "income" "posted" 100 Nothing
+                result <- rangeSummary env
+                fmap (\dto -> (efsCurrency dto,efsActualIncomeCents dto)) result `shouldBe` Right ("EUR",100)
+
+        it "refuses USD contributions when the event explicitly reports EUR" $
+            withFinanceRangeEnv $ \env -> do
+                currencyEvent env "EUR"
+                currencyEntry env "USD" "income" "posted" 100 Nothing
+                currencyReject =<< rangeSummary env
+
     it "decodes stored promo-code tier ids only from JSON text arrays" $ do
         decodeStoredPromoCodeTierIds Nothing `shouldBe` Nothing
         decodeStoredPromoCodeTierIds (Just "[\"tier-vip\",\"tier-general\"]")
@@ -508,6 +705,134 @@ spec = describe "social event handler helpers" $ do
         assertInvalid
             "offset must be 10000 or fewer"
             (validateSocialEventsListOffset (Just 10001))
+
+    it "lists an artist's upcoming dates only through the public projection" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let profile :: Int64 -> Maybe T.Text -> SqlPersistT IO ()
+            profile key partyIdValue =
+                insertKey
+                    (toSqlKey key :: ArtistProfileId)
+                    ArtistProfile
+                        { artistProfilePartyId = partyIdValue
+                        , artistProfileName = "Artist " <> T.pack (show key)
+                        , artistProfileBio = Nothing
+                        , artistProfileAvatarUrl = Nothing
+                        , artistProfileGenres = Nothing
+                        , artistProfileSocialLinks = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
+                        , artistProfileCreatedAt = now
+                        , artistProfileUpdatedAt = now
+                        }
+            publicEvent :: Int64 -> T.Text -> SqlPersistT IO ()
+            publicEvent key title =
+                insertKey
+                    (toSqlKey key :: SocialEventId)
+                    ((seedSocialEvent "1" title now)
+                        { socialEventMetadata = Just "{\"isPublic\":true}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        })
+            link :: Int -> Int -> SqlPersistT IO ()
+            link eventKey artistKey =
+                rawExecute
+                    "INSERT INTO event_artist(event_id,artist_id,role) VALUES (?,?,NULL)"
+                    [toPersistValue eventKey, toPersistValue artistKey]
+            listed :: Int -> SqlPersistT IO ()
+            listed eventKey =
+                rawExecute "INSERT INTO directory_public_event(id,city_name) VALUES (?,'Quito')" [toPersistValue eventKey]
+        runSqlPool
+            ( do
+                rawExecute
+                    "INSERT INTO workflow_state_capability(state_id,capability_code,enabled) VALUES (?, 'public-listable', 1)"
+                    [toPersistValue socialEventWorkflowStateFixtureId]
+                profile 50 (Just "115")
+                profile 52 (Just "999")
+                publicEvent 81 "Listed artist date"
+                publicEvent 82 "Suppressed artist date"
+                publicEvent 83 "Other artist date"
+                link 81 50
+                link 82 50
+                link 83 52
+                -- 82 is public-listable with public metadata but carries a
+                -- suppressed external reference, so the projection excludes it.
+                listed 81
+                listed 83
+            )
+            pool
+        let env = Env{envPool = pool, envConfig = error "envConfig should be unused by public upcoming tests"}
+            startAfter = UTCTime (fromGregorian 2025 12 31) (secondsToDiffTime 0)
+            list artistPartyId = runHandler (runReaderT (publicUpcomingEventsServer Nothing artistPartyId (Just startAfter) Nothing) env)
+        forArtist <- list (Just "115")
+        fmap (map publicUpcomingEventId) forArtist `shouldBe` Right ["81"]
+        unfiltered <- list Nothing
+        fmap (sort . map publicUpcomingEventId) unfiltered `shouldBe` Right ["81", "83"]
+        none <- list (Just "116")
+        fmap length none `shouldBe` Right 0
+        rejected <- list (Just "115 OR 1=1")
+        either errHTTPCode (const 0) rejected `shouldBe` 400
+
+    it "accepts only decimal party identifiers as the artist partyId filter" $ do
+        validateArtistPartyIdFilter Nothing `shouldBe` Right Nothing
+        validateArtistPartyIdFilter (Just "   ") `shouldBe` Right Nothing
+        validateArtistPartyIdFilter (Just " 115 ") `shouldBe` Right (Just "115")
+
+        let assertInvalid expectedMessage result =
+                case result of
+                    Left err -> do
+                        errHTTPCode err `shouldBe` 400
+                        BL8.unpack (errBody err) `shouldContain` expectedMessage
+                    Right value ->
+                        expectationFailure
+                            ("Expected artist partyId filter to be rejected, got: " <> show value)
+
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "115abc"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "-1"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "0115"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "0"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just "%"))
+        assertInvalid "partyId must be a positive integer party identifier" (validateArtistPartyIdFilter (Just (T.replicate 20 "9")))
+        assertInvalid "partyId must be 120 characters or fewer" (validateArtistPartyIdFilter (Just (T.replicate 121 "1")))
+
+    it "lists artists for one Party through the indexed filter instead of a catalog scan" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let profile key partyIdValue nameValue =
+                insertKey
+                    (toSqlKey key :: ArtistProfileId)
+                    ArtistProfile
+                        { artistProfilePartyId = partyIdValue
+                        , artistProfileName = nameValue
+                        , artistProfileBio = Nothing
+                        , artistProfileAvatarUrl = Nothing
+                        , artistProfileGenres = Nothing
+                        , artistProfileSocialLinks = Nothing
+                        , artistProfileCountryCode = Nothing
+                        , artistProfileCountryId = Nothing
+                        , artistProfileCreatedAt = now
+                        , artistProfileUpdatedAt = now
+                        }
+        runSqlPool
+            ( do
+                profile 50 (Just "115") "Verde 70"
+                profile 51 (Just "115") "Verde 70 (legacy duplicate)"
+                profile 52 (Just "999") "Verde 70"
+                profile 53 Nothing "Verde 70"
+            )
+            pool
+        let env = Env{envPool = pool, envConfig = error "envConfig should be unused by artist list tests"}
+            list partyIdFilter = runHandler (runReaderT (artistListHandlerFor (socialEventUser 1) partyIdFilter) env)
+        matching <- list (Just "115")
+        fmap (sort . map artistId) matching `shouldBe` Right [Just "50", Just "51"]
+        fmap (map artistPartyId) matching `shouldBe` Right [Just "115", Just "115"]
+        none <- list (Just "116")
+        fmap length none `shouldBe` Right 0
+        unfiltered <- list Nothing
+        fmap length unfiltered `shouldBe` Right 4
+        rejected <- list (Just "115;drop")
+        either errHTTPCode (const 0) rejected `shouldBe` 400
 
     it "rejects oversized or unsafe social event list filters before DB fallback scans" $ do
         validateSocialEventsListFilter "city" Nothing `shouldBe` Right Nothing
@@ -1041,7 +1366,12 @@ spec = describe "social event handler helpers" $ do
                         (EventMomentCreateDTO Nothing Nothing "https://cdn.example.com/moment.jpg" "image" (Just 800) (Just 600) Nothing)
                     )
                     env
-        assertHiddenEventRoute "moment" momentResult
+        -- This SQLite actor has no live-session witness. Session rejection must
+        -- precede source visibility; authenticated private/suppressed-parent
+        -- publication is asserted through the real HTTP/PostgreSQL lane.
+        case momentResult of
+            Left err -> errHTTPCode err `shouldBe` 401
+            Right response -> expectationFailure ("A synthetic actor must not publish a moment: " <> show response)
 
         stripeResult <-
             runHandler $
@@ -1049,6 +1379,7 @@ spec = describe "social event handler helpers" $ do
                     ( stripeHandler
                         ( TicketPurchaseWithPromoDTO
                             (TicketPurchaseRequestDTO "21" 1 Nothing Nothing Nothing)
+                            Nothing
                             Nothing
                             Nothing
                             Nothing
@@ -1308,6 +1639,58 @@ spec = describe "social event handler helpers" $ do
         stored <- runSqlPool (get eventKey) pool
         fmap socialEventTitle stored `shouldBe` Just "Original event"
 
+    it "does not hand an event without an organizer to the first user who edits it" $ do
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 7
+            env =
+                Env
+                    { envPool = pool
+                    , envConfig = error "envConfig should be unused by social event update auth tests"
+                    }
+        runSqlPool
+            ( insertKey
+                eventKey
+                (seedSocialEvent "1" "Unowned event" now){socialEventOrganizerPartyId = Nothing}
+            )
+            pool
+        result <-
+            runHandler $
+                runReaderT
+                    (socialEventUpdateHandlerFor (socialEventUser 2) "7" (socialEventUpdatePayload "Hijacked event"))
+                    env
+        case result of
+            Left err -> do
+                errHTTPCode err `shouldBe` 403
+                BL8.unpack (errBody err) `shouldContain` "This event has no organizer"
+            Right updated ->
+                expectationFailure ("Expected the unowned event update to fail, got: " <> show updated)
+        stored <- runSqlPool (get eventKey) pool
+        fmap socialEventOrganizerPartyId stored `shouldBe` Just Nothing
+        fmap socialEventTitle stored `shouldBe` Just "Unowned event"
+
+        -- A strict administrator passes the gate, but an edit that is then
+        -- refused assigns nobody.
+        refusedEdit <-
+            runHandler $
+                runReaderT
+                    (socialEventUpdateHandlerFor (strictAdminSocialEventUser 3) "7" (socialEventUpdatePayload "Admin edit"))
+                    env
+        either errHTTPCode (const 200) refusedEdit `shouldBe` 422
+        afterRefusal <- runSqlPool (get eventKey) pool
+        fmap socialEventOrganizerPartyId afterRefusal `shouldBe` Just Nothing
+
+        -- The assignment itself happens once; a later party is refused by
+        -- the stored organizer.
+        assigned <- runSqlPool (assignMissingEventOrganizer "3" now eventKey) pool
+        fmap socialEventOrganizerPartyId assigned `shouldSatisfy` either (const False) (== Just "3")
+        late <- runSqlPool (assignMissingEventOrganizer "4" now eventKey) pool
+        either errHTTPCode (const 200) late `shouldBe` 403
+        afterwards <- runSqlPool (get eventKey) pool
+        fmap socialEventOrganizerPartyId afterwards `shouldBe` Just (Just "3")
+
     it "allows strict admins, but not unrelated users, to delete another organizer's event" $ do
         now <- getCurrentTime
         let event = seedSocialEvent "1" "Admin-managed event" now
@@ -1434,6 +1817,53 @@ spec = describe "social event handler helpers" $ do
             Left err ->
                 expectationFailure
                     ("Expected strict-admin event list to succeed, got: " <> show err)
+
+    it "reports RSVP eligibility in the event list exactly as the event detail does" $ do
+        cfg <- Config.loadConfig
+        pool <- runNoLoggingT $ createSqlitePool ":memory:" 1
+        runSqlPool initializeSocialSchema pool
+        now <- getCurrentTime
+        let eventKey :: SocialEventId
+            eventKey = toSqlKey 28
+            user = strictAdminSocialEventUser 1
+            env = Env{envPool = pool, envConfig = cfg}
+        runSqlPool
+            ( do
+                rawExecute
+                    "INSERT INTO workflow_state_capability(state_id,capability_code,enabled) VALUES (?, 'public-listable', 1), (?, 'rsvp', 1)"
+                    [toPersistValue socialEventWorkflowStateFixtureId, toPersistValue socialEventWorkflowStateFixtureId]
+                insertKey eventKey
+                    ((seedSocialEvent "1" "Listed RSVP event" now)
+                        { socialEventMetadata = Just "{\"isPublic\":true}"
+                        , socialEventWorkflowStateId = Just socialEventWorkflowStateFixtureId
+                        })
+            )
+            pool
+        listed <-
+            runHandler $
+                runReaderT
+                    ( socialEventListHandlerFor
+                        user
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                        Nothing
+                    )
+                    env
+        detail <- runHandler $ runReaderT (socialEventGetHandlerFor user "28") env
+        case (listed, detail) of
+            (Right [listedEvent], Right detailEvent) -> do
+                eventRsvpEligible detailEvent `shouldBe` Just True
+                eventRsvpEligible listedEvent `shouldBe` Just True
+                eventPublicListable listedEvent `shouldBe` eventPublicListable detailEvent
+            other ->
+                expectationFailure
+                    ("Expected one listed event and its detail, got: " <> show other)
 
     it "turns an imported event deletion into a private tombstone" $ do
         let suppressed =
@@ -2194,6 +2624,10 @@ socialEventIndirectTicketHandlersFor user =
                     :<|> rejectRefundHandler
                     :<|> _listManualPayments
                     :<|> _reviewManualPayment
+                    :<|> _getManualPaymentReceipt
+                    :<|> _listTaxDocuments
+                    :<|> _retryTaxDocument
+                    :<|> _completeBankTransferRefund
                     :<|> _createTransfer
                     :<|> _listTransfers
                     :<|> acceptTransferHandler
@@ -2234,6 +2668,34 @@ artistGetHandlerFor user =
                     :<|> _followArtist
                     :<|> _unfollowArtist ->
                     getArtistHandler
+
+artistListHandlerFor
+    :: AuthedUser
+    -> Maybe T.Text
+    -> ReaderT Env Handler [ArtistDTO]
+artistListHandlerFor user partyIdFilter =
+    case socialEventsServer user of
+        _events
+            :<|> _cities
+            :<|> _sources
+            :<|> _research
+            :<|> _venues
+            :<|> artistsServer
+            :<|> _rsvps
+            :<|> _invitations
+            :<|> _moments
+            :<|> _tickets
+            :<|> _budget
+            :<|> _finance ->
+            case artistsServer of
+                listArtistsHandler
+                    :<|> _createArtist
+                    :<|> _getArtist
+                    :<|> _updateArtist
+                    :<|> _listArtistFollowers
+                    :<|> _followArtist
+                    :<|> _unfollowArtist ->
+                    listArtistsHandler Nothing Nothing Nothing partyIdFilter Nothing Nothing
 
 socialEventInvitationCreateHandlerFor
     :: AuthedUser
@@ -2633,6 +3095,15 @@ initializeSocialSchema = do
         \FOREIGN KEY(\"event_id\") REFERENCES \"social_event\"(\"id\") ON DELETE CASCADE\
         \)"
         []
+    -- Stub of the PostgreSQL directory_public_event view: rows present here are
+    -- the events the anonymous listing may show (public-listable, public
+    -- metadata, no suppressed external reference). Tests insert them explicitly.
+    rawExecute
+        "CREATE TABLE IF NOT EXISTS \"directory_public_event\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"city_name\" VARCHAR NULL\
+        \)"
+        []
     rawExecute
         "CREATE TABLE IF NOT EXISTS \"event_artist\" (\
         \\"event_id\" INTEGER NOT NULL,\
@@ -2652,3 +3123,109 @@ initializeSocialSchema = do
         \FOREIGN KEY(\"artist_id\") REFERENCES \"social_artist_profile\"(\"id\") ON DELETE CASCADE\
         \)"
         []
+
+-- These SQLite fixtures exercise the real Servant handlers and Haskell Int
+-- arithmetic. They do not attest production PostgreSQL DDL or provider behavior.
+withFinanceRangeEnv :: (Env -> IO ()) -> IO ()
+withFinanceRangeEnv action = do
+    cfg <- Config.loadConfig
+    bracket (runNoLoggingT $ createSqlitePool ":memory:" 1) destroyAllResources $ \pool -> do
+        runSqlPool (do
+            initializeSocialSchema
+            rawExecute "CREATE TABLE event_budget_line (id INTEGER PRIMARY KEY,event_id INTEGER NOT NULL,code TEXT NOT NULL,name TEXT NOT NULL,line_type TEXT NOT NULL,category TEXT NOT NULL,planned_cents INTEGER NOT NULL,notes TEXT,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL,UNIQUE(event_id,code))" []
+            rawExecute "CREATE TABLE event_finance_entry (id INTEGER PRIMARY KEY,event_id INTEGER NOT NULL,budget_line_id INTEGER,direction TEXT NOT NULL,source TEXT NOT NULL,category TEXT NOT NULL,concept TEXT NOT NULL,amount_cents INTEGER NOT NULL,currency TEXT NOT NULL,status TEXT NOT NULL,external_ref TEXT,notes TEXT,metadata TEXT,occurred_at TIMESTAMP NOT NULL,recorded_by_party_id TEXT,created_at TIMESTAMP NOT NULL,updated_at TIMESTAMP NOT NULL)" []
+            rawExecute "ALTER TABLE event_ticket_checkout_runtime ADD COLUMN event_id INTEGER" []
+            rawExecute "ALTER TABLE event_ticket_checkout_runtime ADD COLUMN checkout_id TEXT" []
+            rawExecute "CREATE TABLE commerce_checkout_session (id TEXT PRIMARY KEY,paid_minor INTEGER NOT NULL,refunded_minor INTEGER NOT NULL,currency TEXT NOT NULL)" []
+            insertKey (toSqlKey 7) (seedSocialEvent "1" "Finance range fixture" socialEventStartFixture)
+            rawExecute "INSERT INTO event_ticket_tier (id,event_id,code,name,price_cents,currency,quantity_total,quantity_sold,is_active,enable_waitlist,allow_transfers,refund_policy,created_at,updated_at) VALUES (1,7,'range','Range',1,'USD',10,0,1,0,1,'full',?,?)" [toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture]
+
+            ) pool
+        action Env{envPool=pool,envConfig=cfg{Config.defaultCurrency="USD"}}
+
+rangeBudget :: Env -> Int -> T.Text -> Int -> IO ()
+rangeBudget env key direction amount = runSqlPool
+    (rawExecute "INSERT INTO event_budget_line (id,event_id,code,name,line_type,category,planned_cents,created_at,updated_at) VALUES (?,7,?,'Range',?,'other',?,?,?)"
+        [toPersistValue key,toPersistValue (T.pack (show key)),toPersistValue direction,toPersistValue amount,
+         toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture]) (envPool env)
+
+rangeEntry :: Env -> T.Text -> T.Text -> T.Text -> Int -> IO ()
+rangeEntry env direction source status amount = runSqlPool
+    (rawExecute "INSERT INTO event_finance_entry (event_id,budget_line_id,direction,source,category,concept,amount_cents,currency,status,occurred_at,created_at,updated_at) VALUES (7,(SELECT id FROM event_budget_line WHERE id=1),?,?,'other','Range',?,'USD',?,?,?,?)"
+        [toPersistValue direction,toPersistValue source,toPersistValue amount,toPersistValue status,
+         toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture]) (envPool env)
+
+rangeTicket :: Env -> Int -> T.Text -> Int -> IO ()
+rangeTicket env key status amount = runSqlPool
+    (rawExecute "INSERT INTO event_ticket_order (id,event_id,tier_id,quantity,amount_cents,currency,status,purchased_at,created_at,updated_at) VALUES (?,7,1,1,?,'USD',?,?,?,?)"
+        [toPersistValue key,toPersistValue amount,toPersistValue status,toPersistValue socialEventStartFixture,
+         toPersistValue socialEventStartFixture,toPersistValue socialEventStartFixture]) (envPool env)
+
+rangeBudgetPayload :: Int -> EventBudgetLineDTO
+rangeBudgetPayload amount = EventBudgetLineDTO Nothing Nothing "1" "Range" "expense" "other" amount Nothing Nothing Nothing Nothing
+
+rangeBudgetList :: Env -> IO (Either ServerError [EventBudgetLineDTO])
+rangeBudgetList env = case socialEventsServer (strictAdminSocialEventUser 1) of
+    _events :<|> _cities :<|> _discovery :<|> _research :<|> _venues
+        :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _broadcasts :<|> _tickets
+        :<|> (listHandler :<|> _ :<|> _) :<|> _ ->
+        runHandler $ runReaderT (listHandler "7") env
+
+rangeBudgetUpdate :: Env -> EventBudgetLineDTO -> IO (Either ServerError EventBudgetLineDTO)
+rangeBudgetUpdate env dto = case socialEventsServer (strictAdminSocialEventUser 1) of
+    _events :<|> _cities :<|> _discovery :<|> _research :<|> _venues
+        :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _broadcasts :<|> _tickets
+        :<|> (_ :<|> _ :<|> updateHandler) :<|> _ ->
+        runHandler $ runReaderT (updateHandler "7" "1" dto) env
+
+rangeSummary :: Env -> IO (Either ServerError EventFinanceSummaryDTO)
+rangeSummary env = case socialEventsServer (strictAdminSocialEventUser 1) of
+    _events :<|> _cities :<|> _discovery :<|> _research :<|> _venues
+        :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _broadcasts :<|> _tickets
+        :<|> _budget :<|> (_ :<|> _ :<|> _ :<|> summaryHandler) :<|> _ ->
+        runHandler $ runReaderT (summaryHandler "7") env
+
+rangeReject :: Show a => Either ServerError a -> Expectation
+rangeReject (Left err) = do
+    errHTTPCode err `shouldBe` 500
+    BL8.unpack (errBody err) `shouldContain` "supported reporting range"
+rangeReject (Right value) = expectationFailure ("Expected range refusal, got " <> show value)
+
+-- Foreign-currency authoring is intentional; reporting must check the rows
+-- that actually contribute instead of relabelling or silently dropping them.
+currencyEntry :: Env -> T.Text -> T.Text -> T.Text -> Int -> Maybe T.Text -> IO ()
+currencyEntry env currency direction status amount budget = do
+    let dto = EventFinanceEntryDTO
+            { efeId=Nothing, efeEventId=Nothing, efeBudgetLineId=budget
+            , efeDirection=direction, efeSource="manual", efeCategory="other"
+            , efeConcept="Currency fixture", efeAmountCents=amount, efeCurrency=currency
+            , efeStatus=status, efeExternalRef=Nothing, efeNotes=Nothing
+            , efeOccurredAt=socialEventStartFixture, efeRecordedByPartyId=Nothing
+            , efeCreatedAt=Nothing, efeUpdatedAt=Nothing }
+    result <- case socialEventsServer (strictAdminSocialEventUser 1) of
+        _events :<|> _cities :<|> _discovery :<|> _research :<|> _venues
+            :<|> _artists :<|> _rsvps :<|> _invitations :<|> _moments :<|> _broadcasts :<|> _tickets
+            :<|> _budget :<|> (_ :<|> createHandler :<|> _ :<|> _) :<|> _ ->
+            runHandler $ runReaderT (createHandler "7" dto) env
+    fmap (\row -> (efeCurrency row,efeAmountCents row,efeStatus row)) result
+        `shouldBe` Right (currency,amount,status)
+
+currencyTicket :: Env -> T.Text -> T.Text -> Int -> IO ()
+currencyTicket env currency status amount = do
+    -- Keep the ordinary legacy order and its tier currency/unit price coherent.
+    runSqlPool (rawExecute "UPDATE event_ticket_tier SET currency=?,price_cents=? WHERE id=1"
+        [toPersistValue currency,toPersistValue amount]) (envPool env)
+    rangeTicket env 1 status amount
+    runSqlPool (rawExecute "UPDATE event_ticket_order SET currency=? WHERE id=1"
+        [toPersistValue currency]) (envPool env)
+
+currencyEvent :: Env -> T.Text -> IO ()
+currencyEvent env currency = runSqlPool
+    (rawExecute "UPDATE social_event SET metadata=? WHERE id=7"
+        [toPersistValue (T.pack (BL8.unpack (Aeson.encode (Aeson.object ["currency" Aeson..= currency]))))]) (envPool env)
+
+currencyReject :: Show a => Either ServerError a -> Expectation
+currencyReject (Left err) = do
+    errHTTPCode err `shouldBe` 500
+    BL8.unpack (errBody err) `shouldContain` "currency"
+currencyReject (Right value) = expectationFailure ("Expected currency refusal, got " <> show value)

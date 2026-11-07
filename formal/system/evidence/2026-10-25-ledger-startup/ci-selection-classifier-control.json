@@ -1,0 +1,181 @@
+{
+  "originalRevision": "d3d5e57591e6d372eed66ebec76bf1b9b7bbaec8",
+  "originalClassifierSha256": "82c4039bc5f2abcb2f3a9cc990d67e689a1491843b0f38048356f615762c2bb2",
+  "regressionSha256": "c95c36e8dd5bd2e15c38999f86f05e33c2a5cee096141db132b855be6a713ae7",
+  "fixedClassifierSha256": "84da33d7f0b87eba2a126db681bb0127abe666871de48f05a0b14746f1d967ae",
+  "originalRegressionExitCode": 1,
+  "control": "new ledger scope test fails; prior selector tests pass",
+  "cases": [
+    {
+      "path": "scripts/lib/production-release.mjs",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": true
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": true
+      }
+    },
+    {
+      "path": "scripts/render-production-schema-verification.mjs",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": true
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": true
+      }
+    },
+    {
+      "path": "scripts/test-ledger-posting.sh",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": false
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      }
+    },
+    {
+      "path": "scripts/test-provider-retry-runtime.sh",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": false
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      }
+    },
+    {
+      "path": "scripts/verify-payment-intent-expiry.py",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": false
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      }
+    },
+    {
+      "path": "scripts/__tests__/ledger-posting-upgrade.py",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": false
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      }
+    },
+    {
+      "path": "scripts/__tests__/ledger-posting-snapshot.py",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": false
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      }
+    },
+    {
+      "path": "scripts/__tests__/ledger-posting-namespace.py",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": false
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      }
+    },
+    {
+      "path": "scripts/__tests__/ledger-startup-namespace.mjs",
+      "original": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": false,
+        "contracts": false,
+        "migrations": false
+      },
+      "fixed": {
+        "repo": true,
+        "ui": false,
+        "mobile": false,
+        "backend": true,
+        "contracts": false,
+        "migrations": false
+      }
+    }
+  ]
+}

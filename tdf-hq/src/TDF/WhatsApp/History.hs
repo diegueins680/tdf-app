@@ -15,6 +15,7 @@ module TDF.WhatsApp.History
   , messageBelongsToParty
   , resolveWhatsAppContactSnapshot
   , recordIncomingWhatsAppMessage
+  , receiveIncomingWhatsAppMessage
   , recordOutgoingWhatsAppMessage
   , applyWhatsAppDeliveryUpdate
   ) where
@@ -165,7 +166,17 @@ recordIncomingWhatsAppMessage
   :: UTCTime
   -> IncomingWhatsAppRecord
   -> SqlPersistT IO (Entity ME.WhatsAppMessage)
-recordIncomingWhatsAppMessage now IncomingWhatsAppRecord{..} = do
+recordIncomingWhatsAppMessage now record = snd <$> receiveIncomingWhatsAppMessage now record
+
+-- | Like 'recordIncomingWhatsAppMessage', and also says whether this call
+-- stored the message (True) or found it already stored (False). Providers
+-- deliver a message more than once; whatever a message asks for is done by the
+-- call that stored it.
+receiveIncomingWhatsAppMessage
+  :: UTCTime
+  -> IncomingWhatsAppRecord
+  -> SqlPersistT IO (Bool, Entity ME.WhatsAppMessage)
+receiveIncomingWhatsAppMessage now IncomingWhatsAppRecord{..} = do
   snapshot <- resolveWhatsAppContactSnapshot Nothing (Just iwrSenderId)
   let senderId = nonEmptyOr "unknown" iwrSenderId
   externalId <-
@@ -201,7 +212,7 @@ recordIncomingWhatsAppMessage now IncomingWhatsAppRecord{..} = do
       if null updates
         then pure ()
         else update key updates
-      getJustEntity key
+      (,) False <$> getJustEntity key
     Nothing -> do
       key <- insert ME.WhatsAppMessage
         { ME.whatsAppMessageExternalId = externalId
@@ -242,7 +253,7 @@ recordIncomingWhatsAppMessage now IncomingWhatsAppRecord{..} = do
           , "phoneE164" .= wcsPhoneE164 snapshot
           , "source" .= sourceVal
           ]
-      pure entity
+      pure (True, entity)
 
 recordOutgoingWhatsAppMessage
   :: UTCTime

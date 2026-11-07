@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 import {
@@ -10,6 +10,7 @@ import {
   runtimeEnvBlockers,
 } from '../production-release.mjs';
 import {
+  MUSIC_RUNTIME_FUNCTION_SIGNATURES,
   buildDatabaseSqlInvocation,
   buildDeployPlan,
   buildMachineDeployArgs,
@@ -969,7 +970,9 @@ test('buildMigrationBatchSql enables psql fail-fast behavior and preserves migra
   assert.equal((sql.match(/\\unset\s+run_code/g) ?? []).length, 2);
   assert.equal((sql.match(/\\unset\s+safety_threshold/g) ?? []).length, 2);
   assert.match(sql, /pg_try_advisory_lock/i);
-  assert.match(sql, /\\quit\s+3/i);
+  // A held lock must end the batch with a non-zero psql status: \quit cannot.
+  assert.doesNotMatch(sql, /\\quit/i);
+  assert.match(sql, /\\else\n\n\\echo Another production schema migration is active[^\n]*\n\nDO \$lock\$ BEGIN RAISE EXCEPTION 'Another production schema migration is active[^']*'; END \$lock\$;/);
   assert.doesNotMatch(sql, /SELECT\s+pg_advisory_lock\s*\(/i);
   assert.ok(sql.indexOf(ticketMigration) >= 0, 'ticket migration must be included');
   assert.ok(sql.indexOf(discoveryMigration) > sql.indexOf(ticketMigration), 'migration order must be preserved');
@@ -982,6 +985,71 @@ test('buildMigrationBatchSql validates every path before rendering psql input', 
     () => buildMigrationBatchSql([ticketMigration, 'tdf-hq/sql/../secrets.sql']),
     /migration|path|unsafe/i,
   );
+});
+
+test('buildMigrationBatchSql commits each ledger row together with its migration', () => {
+  const migration = { id: 'atomic-test', path: 'tdf-hq/sql/2026-10-12_atomic_test.sql', checksum: 'a'.repeat(64),
+    content: 'CREATE TABLE atomic_test ();' };
+  const sql = buildMigrationBatchSql([migration]);
+  const block = sql.slice(sql.indexOf('\\if :apply_migration_1'), sql.indexOf('\\else'));
+  const order = ['BEGIN;', 'INSERT INTO public.tdf_schema_migration', migration.content, 'COMMIT;'].map(part => block.indexOf(part));
+  assert.ok(order.every(index => index >= 0) && order.every((index, n) => n === 0 || index > order[n - 1]),
+    'the ledger insert must sit inside the transaction, before the migration source');
+  assert.equal((block.match(/INSERT INTO public\.tdf_schema_migration/g) ?? []).length, 1);
+});
+
+test('every manifest migration can run inside the batch transaction', async () => {
+  // Precondition of the atomic ledger row: a file with its own transaction ends
+  // with its COMMIT, so nothing escapes the transaction opened by the batch, and
+  // no statement refuses a transaction block. Checked on the expanded SQL the
+  // batch runs, includes resolved.
+  const manifest = JSON.parse(readFileSync(new URL('../production-migrations.json', import.meta.url), 'utf8'));
+  const read = relative => readFileSync(new URL(`../../${relative}`, import.meta.url), 'utf8');
+  for (const entry of manifest.migrations) {
+    const content = await expandMigrationIncludes({ path: entry.path, content: read(entry.path) }, read);
+    const lines = content.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('--'));
+    assert.doesNotMatch(content, /\bCONCURRENTLY\b|^\s*(?:VACUUM|REINDEX|CLUSTER|DISCARD|LISTEN|UNLISTEN)\b|ALTER\s+SYSTEM|(?:CREATE|DROP)\s+(?:DATABASE|TABLESPACE|SUBSCRIPTION)|ALTER\s+TYPE[^;]*\bADD\s+VALUE|^\s*(?:START\s+TRANSACTION|SET\s+TRANSACTION)\b|^\s*BEGIN\s+(?:ISOLATION|READ|DEFERRABLE)|\r/im,
+      `${entry.id} uses a statement that cannot run inside the batch transaction`);
+    const begins = content.match(/^\s*BEGIN(?:\s+(?:TRANSACTION|WORK))?\s*;/gim) ?? [];
+    // END is not counted as COMMIT: PL/pgSQL blocks end with it. A file that
+    // used END as the commit synonym would fail the tail check below.
+    const commits = content.match(/^\s*COMMIT(?:\s+(?:TRANSACTION|WORK))?\s*;/gim) ?? [];
+    assert.ok(begins.length <= 1 && commits.length <= 1 && !lines.some(line => /^(?:ROLLBACK|SAVEPOINT|PREPARE\s+TRANSACTION)\b/i.test(line)),
+      `${entry.id} must hold at most one transaction and never roll it back`);
+    if (begins.length) {
+      assert.equal(commits.length, 1, `${entry.id} opens a transaction it does not commit`);
+      assert.match(lines.at(-1), /^COMMIT(?:\s+(?:TRANSACTION|WORK))?\s*;$/i, `${entry.id} has statements after its COMMIT`);
+    }
+  }
+});
+
+test('buildMigrationBatchSql verifies the pre-designation social shape only on explicit opt-out', () => {
+  const before = {
+    id: '2026-10-25_event_memory_invitations',
+    path: 'tdf-hq/sql/2026-10-25_event_memory_invitations.sql',
+    checksum: '1'.repeat(64),
+    content: 'SELECT 1;',
+  };
+  const designation = {
+    id: '2026-11-01_social_sync_account_delivery_designation',
+    path: 'tdf-hq/sql/2026-11-01_social_sync_account_delivery_designation.sql',
+    checksum: '2'.repeat(64),
+    content: 'SELECT 2;',
+  };
+  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false });
+  const full = buildMigrationBatchSql([before, designation]);
+  // Without the explicit opt-out a batch verifies the current production shape.
+  assert.match(buildMigrationBatchSql([before]), /table_name = 'social_sync_account'\n\s*\) <> 17 OR/);
+  const socialCount = (sql) => sql.match(/table_name = 'social_sync_account'\n\s*\) <> (\d+) OR/)[1];
+  const socialForeignKeys = (sql) => sql.match(/<> (\d+) THEN\n\s*RAISE EXCEPTION 'A social-sync foreign key/)[1];
+  assert.equal(socialCount(prefix), '13');
+  assert.equal(socialForeignKeys(prefix), '7');
+  assert.doesNotMatch(prefix, /'social_sync_account', 'delivery_designated'/);
+  assert.equal(socialCount(full), '17');
+  assert.equal(socialForeignKeys(full), '9');
+  assert.match(full, /'social_sync_account', 'designated_by_party_id', 'bigint', 'YES'/);
+  // Production verification outside a batch always expects the full shape.
+  assert.equal(socialCount(buildSchemaVerificationSql()), '17');
 });
 
 test('buildMigrationBatchSql rejects unexpanded include directives', () => {
@@ -1019,6 +1087,16 @@ test('buildSchemaVerificationSql fails closed over every registered runtime sche
     'checkout_idempotency_key',
     'unique_event_ticket_checkout',
     'uq_event_ticket_order_stripe_payment_intent',
+    'index_chat_message_thread',
+    'index_course_registration_party',
+    'index_course_registration_follow_up_next',
+    'index_course_registration_follow_up_party',
+    'index_course_registration_follow_up_registration',
+    'index_course_registration_receipt_party',
+    'index_course_registration_receipt_registration',
+    'index_whats_app_message_party',
+    'index_whats_app_message_phone',
+    'A declared index is unique, missing or invalid',
     'external_venue_ref',
     'external_artist_ref',
     'external_event_ref',
@@ -1391,5 +1469,43 @@ test('release planning preserves captured discovery gates for canary, remaining 
   for (const command of commands) {
     assert.ok(command.includes('EVENT_DISCOVERY_ENABLED=true'));
     assert.ok(command.includes('EVENT_DISCOVERY_AUTO_PUBLISH=true'));
+  }
+});
+
+test('schema verification covers every music SQL function called at runtime', () => {
+  const sqlDirectory = new URL('../../tdf-hq/sql/', import.meta.url);
+  const defined = new Set();
+  for (const name of readdirSync(sqlDirectory)) {
+    if (!name.endsWith('.sql') || name.includes('rollback')) continue;
+    const source = readFileSync(new URL(name, sqlDirectory), 'utf8');
+    for (const match of source.matchAll(/CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+(?:public\.)?(music_[a-z0-9_]+)/gi)) {
+      defined.add(match[1].toLowerCase());
+    }
+  }
+  const sourceRoots = [
+    ['../../tdf-hq/src/', /\.hs$/],
+    ['../', /\.(?:sh|mjs)$/],
+  ];
+  const called = new Set();
+  for (const [root, pattern] of sourceRoots) {
+    const directory = new URL(root, import.meta.url);
+    for (const entry of readdirSync(directory, { recursive: true })) {
+      const relative = String(entry);
+      if (!pattern.test(relative) || relative.includes('__tests__') || relative.includes('node_modules')) continue;
+      const source = readFileSync(new URL(relative, directory), 'utf8');
+      for (const match of source.matchAll(/\b(music_[a-z0-9_]+)\s*\(/g)) {
+        if (defined.has(match[1])) called.add(match[1]);
+      }
+    }
+  }
+  const verified = new Set(MUSIC_RUNTIME_FUNCTION_SIGNATURES.map((signature) => signature.slice(0, signature.indexOf('('))));
+  assert.ok(called.size > 0, 'expected to find music function calls in source');
+  assert.deepEqual([...called].filter((name) => !verified.has(name)).sort(), [],
+    'music functions called at runtime but not verified by the release schema gate');
+  assert.deepEqual([...verified].filter((name) => !defined.has(name)).sort(), [],
+    'verified music functions that no forward migration defines');
+  const sql = buildSchemaVerificationSql();
+  for (const signature of MUSIC_RUNTIME_FUNCTION_SIGNATURES) {
+    assert.ok(sql.includes(`'${signature}'`), `schema verification omits ${signature}`);
   }
 });

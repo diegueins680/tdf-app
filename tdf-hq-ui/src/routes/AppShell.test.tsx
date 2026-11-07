@@ -67,6 +67,11 @@ jest.unstable_mockModule('./RouteLoadingFallback', () => ({
   default: () => <div data-testid="route-loading" />,
 }));
 
+jest.unstable_mockModule('../components/events/UpcomingEventsCarousel', () => ({
+  EVENTS_PATH: '/social/eventos',
+  default: () => null,
+}));
+
 const { Shell } = await import('./AppShell');
 const { default: OnboardingRecovery } = await import('../session/OnboardingRecovery');
 

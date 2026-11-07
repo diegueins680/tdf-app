@@ -1,0 +1,61 @@
+{
+  "source": "213f9f661d4f4b9d447c40f8346888f5df5543e3",
+  "sourceSha256": {
+    "scripts/test-directory-saved-search-parity.mjs": "f4d9e034b9c1c80ce8a526224897079a06158baf8856f92b1dbc199f1baa9365",
+    "scripts/lib/production-release.mjs": "837a2952f669b8d9819a31548652d1491b35dd37282603dd333a64a2303166c3",
+    "scripts/production-migrations.json": "c8e2f00d8360f62878aa6672c5a0c45709b118ee133db61da7acc28dd1492529"
+  },
+  "steps": [
+    {
+      "name": "init",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "start",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "create",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "original-saved-search-runner",
+      "exitCode": 1,
+      "expectedFailure": true
+    },
+    {
+      "name": "prefix-witness",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "drop",
+      "exitCode": 0,
+      "expectedFailure": false
+    },
+    {
+      "name": "stop",
+      "exitCode": 0,
+      "expectedFailure": false
+    }
+  ],
+  "cleanup": {
+    "ownedDatabaseRemoved": true,
+    "ownedClusterStopped": true
+  },
+  "productionOperations": false,
+  "versions": {
+    "python": "Python 3.13.5",
+    "node": "v24.13.1",
+    "psql": "psql (PostgreSQL) 16.13 (Homebrew)"
+  },
+  "counterexample": {
+    "rejection": "Posted ledger header immutability guard is missing or changed",
+    "prefixState": "220|f|f",
+    "classification": "Historical setup incorrectly invokes current full-schema readiness before later mandatory migrations. Production rejection is correct; harness model is wrong."
+  },
+  "finishedAt": "2026-10-26T05:57:48.407164+00:00"
+}

@@ -1,3 +1,5 @@
+import MarkdownText from '../components/MarkdownText';
+import { directoryResultPath, useDebouncedSearch, useDirectorySearch } from '../features/discovery/useDirectorySearch';
 import { useTranslation } from 'react-i18next';
 import {
   Alert,
@@ -7,7 +9,6 @@ import {
   Card,
   CardActions,
   CardContent,
-  CardMedia,
   Chip,
   CircularProgress,
   Container,
@@ -35,9 +36,10 @@ import ShareIcon from '@mui/icons-material/Share';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import LoginIcon from '@mui/icons-material/Login';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import EventIcon from '@mui/icons-material/Event';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, NavigationType, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 
 import {
   Directory,
@@ -52,40 +54,96 @@ import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getActiveSession, useSession } from '../session/SessionContext';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
-import { API_BASE_URL } from '../api/client';
+import DirectoryPreviewImage from '../components/directory/DirectoryPreviewImage';
+import PublicWelcome from '../components/PublicWelcome';
+import MusicSearchResults from '../features/discovery/MusicSearchResults';
 
-const resolveImageUrl = (value: string | null | undefined): string | undefined => {
-  if (!value) return undefined;
-  try { return new URL(value, API_BASE_URL || window.location.origin).toString(); } catch { return undefined; }
-};
-
-const DIRECTORY_IMAGE_FALLBACKS: Record<DirectoryEntityType, string> = {
-  profile: '/artist-fallback.svg',
-  classified: '/directory-fallback.svg',
-  event: '/event-fallback.svg',
-  venue: '/directory-fallback.svg',
-};
-
-const CITY_STORAGE_KEY = 'tdf.directory.cityId';
-const ENTITY_LABELS: Record<DirectoryEntityType | 'all', string> = {
+const ENTITY_LABELS: Record<DirectoryEntityType | 'artist' | 'all', string> = {
   all: 'directorySearch.entityAll',
+  artist: 'directorySearch.entityArtist',
   profile: 'directorySearch.entityProfile',
   classified: 'directorySearch.entityClassified',
   event: 'directorySearch.entityEvent',
   venue: 'directorySearch.entityVenue',
 };
 
-const resultPath = (item: DirectorySearchItem) => {
-  if (item.type === 'profile') return `/directorio/${item.slug}`;
-  if (item.type === 'classified') return `/clasificados/${item.slug}`;
-  if (item.type === 'event') return `/eventos/${item.id}`;
-  return `/venues/${item.id}`;
+const resultPath = directoryResultPath;
+
+// Own keys only: `in` would accept prototype names such as "constructor".
+const isEntityTypeKey = (value: string): value is DirectoryEntityType | 'artist' | 'all' =>
+  Object.prototype.hasOwnProperty.call(ENTITY_LABELS, value);
+
+// Profession, service, instrument, availability and remote filters describe
+// people and listings. The server ignores them for events and venues, so the
+// controls are hidden on those tabs (their values stay in the URL).
+const PERSON_FILTER_KINDS: ReadonlySet<DirectoryEntityType | 'artist' | 'all'> = new Set(['all', 'profile', 'artist', 'classified']);
+
+// The URL is the only source of the search state, so a deep link, a reload
+// and the browser's back and forward buttons all hydrate the same way.
+interface SearchUrlState {
+  q: string;
+  profileKind?: DirectorySearchQuery['profileKind'];
+  entityType: DirectoryEntityType | 'artist' | 'all';
+  cityId: string | null;
+  professionId: string;
+  serviceId: string;
+  instrumentId: string;
+  genreId: string;
+  remote: boolean;
+  available: boolean;
+  radiusKm: number;
+}
+
+const parseSearchUrl = (search: string): SearchUrlState => {
+  const params = new URLSearchParams(search);
+  const requestedType = params.get('entityType');
+  const radius = Number(params.get('radiusKm') ?? 25);
+  return {
+    q: params.get('q') ?? '',
+    profileKind: (params.get('profileKind') ?? undefined) as DirectorySearchQuery['profileKind'],
+    entityType: requestedType !== null && requestedType !== 'all' && isEntityTypeKey(requestedType)
+      ? (requestedType as DirectoryEntityType)
+      : 'all',
+    cityId: params.get('cityId'),
+    professionId: params.get('professionId') ?? '',
+    serviceId: params.get('serviceId') ?? '',
+    instrumentId: params.get('instrumentId') ?? '',
+    genreId: params.get('genreId') ?? '',
+    remote: params.get('remote') === 'true',
+    available: params.get('available') === 'true',
+    radiusKm: Number.isFinite(radius) ? Math.min(500, Math.max(1, radius)) : 25,
+  };
+};
+
+const buildSearchUrl = (state: SearchUrlState, nearby: boolean) => {
+  const params = new URLSearchParams();
+  if (state.q) params.set('q', state.q);
+  if (state.profileKind) params.set('profileKind', state.profileKind);
+  if (state.entityType !== 'all') params.set('entityType', state.entityType);
+  if (state.cityId && !nearby) params.set('cityId', state.cityId);
+  if (state.professionId) params.set('professionId', state.professionId);
+  if (state.serviceId) params.set('serviceId', state.serviceId);
+  if (state.instrumentId) params.set('instrumentId', state.instrumentId);
+  if (state.genreId) params.set('genreId', state.genreId);
+  if (state.remote) params.set('remote', 'true');
+  if (state.available) params.set('available', 'true');
+  if (nearby) params.set('radiusKm', String(state.radiusKm));
+  return params.toString();
+};
+
+const formatEventDate = (value: string | null | undefined, language: string) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 };
 
 export default function DirectorySearchPage() {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage?.startsWith('es') ? 'es' : 'en';
   const location = useLocation();
+  const showWelcome = location.pathname.replace(/\/+$/, '').toLowerCase() === '/inicio';
+  const showMusic = location.pathname.replace(/\/+$/, '').toLowerCase() === '/buscar';
   const navigate = useNavigate();
   const { session } = useSession();
   const queryClient = useQueryClient();
@@ -97,28 +155,53 @@ export default function DirectorySearchPage() {
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const isActiveParty = (expectedPartyId: number) => mounted.current && session?.partyId === expectedPartyId
     && getActiveSession() === session && occurrence.current.generation === generation;
-  const initial = useMemo(() => new URLSearchParams(location.search), []); // eslint-disable-line react-hooks/exhaustive-deps
-  const [draftQuery, setDraftQuery] = useState(initial.get('q') ?? '');
-  const [query, setQuery] = useState(initial.get('q') ?? '');
-  const [entityType, setEntityType] = useState<DirectoryEntityType | 'all'>(
-    (initial.get('entityType') as DirectoryEntityType | null) ?? 'all',
-  );
-  const [cityId, setCityId] = useState(() => {
-    const requestedCity = initial.get('cityId');
-    if (requestedCity !== null) return requestedCity;
-    try { return window.localStorage.getItem(CITY_STORAGE_KEY) ?? ''; }
-    catch { return ''; } // A saved city is optional; search remains available.
-  });
-  const [professionId, setProfessionId] = useState(initial.get('professionId') ?? '');
-  const [serviceId, setServiceId] = useState(initial.get('serviceId') ?? '');
-  const [instrumentId, setInstrumentId] = useState(initial.get('instrumentId') ?? '');
-  const [genreId, setGenreId] = useState(initial.get('genreId') ?? '');
-  const [remote, setRemote] = useState(initial.get('remote') === 'true');
-  const [available, setAvailable] = useState(initial.get('available') === 'true');
-  const [radiusKm, setRadiusKm] = useState(Number(initial.get('radiusKm') ?? 25));
+  const urlState = useMemo(() => parseSearchUrl(location.search), [location.search]);
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const { q: query, entityType, professionId, serviceId, instrumentId, genreId, remote, available, radiusKm } = urlState;
+  const taxonomies = useQuery({
+    queryKey: ['directory', 'taxonomies', language],
+    queryFn: () => Directory.taxonomies(language),
+    staleTime: 30 * 60 * 1000,
+  });
+  const cityId = urlState.cityId ?? '';
+  const [draftQuery, setDraftQuery] = useState(query);
+  useEffect(() => { setDraftQuery(query); }, [query]);
   const [geoMessage, setGeoMessage] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'grid' | 'map'>('list');
+  const personFilters = PERSON_FILTER_KINDS.has(entityType);
+
+  // Back or forward restored a city search while nearby coordinates are still
+  // held: the restored entry wins. The coordinates are dropped during this
+  // render, before the canonicalisation effect below could rewrite the entry
+  // as a nearby one, so Back returns to the earlier city search. Only a
+  // history move does this; entering nearby mode on a city URL keeps them.
+  const navigationType = useNavigationType();
+  const [handledLocationKey, setHandledLocationKey] = useState(location.key);
+  if (handledLocationKey !== location.key) {
+    setHandledLocationKey(location.key);
+    if (navigationType === NavigationType.Pop && coordinates && urlState.cityId !== null) setCoordinates(null);
+  }
+
+  // User actions push a history entry, so back and forward move between
+  // searches; normalisations (default city, canonical path) replace it. In
+  // nearby mode every change replaces: the consented coordinates live only in
+  // memory, so a nearby entry restored by Back could never show its results.
+  const updateSearch = (patch: Partial<SearchUrlState>, mode: 'push' | 'replace' = 'push', nearby = Boolean(coordinates)) => {
+    const next = buildSearchUrl({ ...urlState, cityId, ...patch }, nearby);
+    if (location.search.replace(/^\?/, '') === next) return;
+    navigate({ pathname: location.pathname, search: next }, { replace: mode === 'replace' || Boolean(coordinates) });
+  };
+  const debouncedQuery = useDebouncedSearch(draftQuery);
+  const previousQuery = useRef(query);
+  useEffect(() => {
+    if (previousQuery.current !== query) { previousQuery.current = query; return; }
+    if (debouncedQuery !== query && debouncedQuery === draftQuery.trim().replace(/\s+/gu, ' ')) updateSearch({ q: debouncedQuery }, 'replace');
+  }, [debouncedQuery, draftQuery, query]); // eslint-disable-line react-hooks/exhaustive-deps
+  const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates));
+  useEffect(() => {
+    if (location.search.replace(/^\?/, '') === canonicalSearch) return;
+    navigate({ pathname: location.pathname, search: canonicalSearch }, { replace: true });
+  }, [canonicalSearch, location.pathname, location.search, navigate]);
 
   useMetaTags({
     title: query ? t('directorySearch.searchTitle', { query }) : t('directorySearch.title'),
@@ -133,27 +216,11 @@ export default function DirectorySearchPage() {
     },
   });
 
-  const taxonomies = useQuery({
-    queryKey: ['directory', 'taxonomies', language],
-    queryFn: () => Directory.taxonomies(language),
-    staleTime: 30 * 60 * 1000,
-  });
 
-  useEffect(() => {
-    if (coordinates || !taxonomies.data?.cities.length) return;
-    if (taxonomies.data.cities.some((city) => city.id === cityId)) return;
-    const quito = taxonomies.data.cities.find((city) => city.code === 'quito-ec-p');
-    setCityId(quito?.id ?? taxonomies.data.cities[0]?.id ?? '');
-  }, [cityId, coordinates, taxonomies.data]);
-
-  useEffect(() => {
-    if (!cityId) return;
-    try { window.localStorage.setItem(CITY_STORAGE_KEY, cityId); }
-    catch { /* Keep the selected city in memory and in the search URL. */ }
-  }, [cityId]);
 
   const searchBase: DirectorySearchQuery = {
     q: query || undefined,
+    profileKind: entityType === 'profile' || entityType === 'artist' ? urlState.profileKind : undefined,
     entityType: entityType === 'all' ? undefined : entityType,
     cityId: coordinates ? undefined : cityId || undefined,
     professionId: professionId || undefined,
@@ -168,13 +235,7 @@ export default function DirectorySearchPage() {
     limit: 20,
   };
 
-  const results = useInfiniteQuery({
-    queryKey: ['directory', 'search', searchBase],
-    initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => Directory.search({ ...searchBase, cursor: pageParam }),
-    getNextPageParam: (page) => page.nextCursor ?? undefined,
-    staleTime: 30_000,
-  });
+  const results = useDirectorySearch(searchBase);
   const pages = results.data?.pages ?? [];
   const items = pages.flatMap((page) => page.items);
   const sponsored = pages[0]?.sponsoredItems ?? [];
@@ -244,24 +305,9 @@ export default function DirectorySearchPage() {
     void favorites.refetch();
   };
 
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (query) params.set('q', query);
-    if (entityType !== 'all') params.set('entityType', entityType);
-    if (cityId && !coordinates) params.set('cityId', cityId);
-    if (professionId) params.set('professionId', professionId);
-    if (serviceId) params.set('serviceId', serviceId);
-    if (instrumentId) params.set('instrumentId', instrumentId);
-    if (genreId) params.set('genreId', genreId);
-    if (remote) params.set('remote', 'true');
-    if (available) params.set('available', 'true');
-    if (coordinates) params.set('radiusKm', String(radiusKm));
-    navigate({ pathname: '/buscar', search: params.toString() }, { replace: true });
-  }, [available, cityId, coordinates, entityType, genreId, instrumentId, navigate, professionId, query, radiusKm, remote, serviceId]);
-
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
-    setQuery(draftQuery.trim());
+    updateSearch({ q: draftQuery.trim() });
   };
 
   const locate = () => {
@@ -281,25 +327,26 @@ export default function DirectorySearchPage() {
   };
 
   const suggestions = useQuery({
-    queryKey: ['directory', 'suggestions', draftQuery, cityId],
-    queryFn: () => Directory.suggestions(draftQuery, cityId || undefined),
-    enabled: draftQuery.trim().length >= 2,
+    queryKey: ['directory', 'suggestions', debouncedQuery, cityId],
+    queryFn: () => Directory.suggestions(debouncedQuery, cityId || undefined),
+    enabled: debouncedQuery.trim().length >= 2,
     staleTime: 60_000,
   });
 
   return (
     <Box sx={{ pb: 8 }}>
+      {showWelcome && <PublicWelcome />}
       <Box sx={{ background: 'linear-gradient(135deg, #17112d 0%, #3b1d66 52%, #0e6470 100%)', color: 'white', py: { xs: 6, md: 10 } }}>
         <Container maxWidth="lg">
           <Stack spacing={3} maxWidth={900}>
             <Chip label={t('directorySearch.region')} sx={{ alignSelf: 'flex-start', bgcolor: 'rgba(255,255,255,.14)', color: 'white' }} />
-            <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '4rem' } }}>
+            <Typography component={showWelcome ? 'h2' : 'h1'} variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '4rem' } }}>
               {t('directorySearch.heading')}
             </Typography>
             <Typography variant="h6" sx={{ maxWidth: 760, color: 'rgba(255,255,255,.82)' }}>
               {t('directorySearch.intro')}
             </Typography>
-            <Paper component="form" onSubmit={submitSearch} elevation={8} sx={{ p: 1.5, borderRadius: 3 }}>
+            <Paper component="form" role="search" aria-label={t('directorySearch.welcomeSearch')} onSubmit={submitSearch} elevation={8} sx={{ p: 1.5, borderRadius: 3 }}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                 <Autocomplete
                   freeSolo
@@ -311,7 +358,9 @@ export default function DirectorySearchPage() {
                 />
                 <FormControl sx={{ minWidth: { sm: 220 } }}>
                   <InputLabel id="directory-city-label">{t('directorySearch.city')}</InputLabel>
-                  <Select labelId="directory-city-label" label={t('directorySearch.city')} value={citySelectValue} onChange={(event) => { setCoordinates(null); setCityId(event.target.value); }}>
+                  {/* Leaving nearby mode replaces the entry: the consented coordinates are held in memory only, so a nearby URL cannot be restored by Back. */}
+                  <Select labelId="directory-city-label" label={t('directorySearch.city')} value={citySelectValue} onChange={(event) => { setCoordinates(null); updateSearch({ cityId: event.target.value }, coordinates ? 'replace' : 'push', false); }}>
+                    <MenuItem value="">{t('directorySearch.allCities')}</MenuItem>
                     {coordinates && <MenuItem value="__nearby">{t('directorySearch.nearby')}</MenuItem>}
                     {(taxonomies.data?.cities ?? []).map((city) => <MenuItem key={city.id} value={city.id}>{city.name}</MenuItem>)}
                   </Select>
@@ -335,39 +384,49 @@ export default function DirectorySearchPage() {
       <Container maxWidth="xl" sx={{ mt: 4 }}>
         <Stack spacing={3}>
           <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}>
+            <Typography variant="body2" sx={{ mb: 2 }}>{t('directorySearch.searchPurpose')}</Typography>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ md: 'center' }}>
-              <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-profession-label">{t('directorySearch.profession')}</InputLabel>
-                <Select labelId="directory-profession-label" label={t('directorySearch.profession')} value={professionId} onChange={(event) => setProfessionId(event.target.value)}>
-                  <MenuItem value="">{t('directorySearch.allFeminine')}</MenuItem>
-                  {(taxonomies.data?.professions ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-service-label">{t('directorySearch.service')}</InputLabel>
-                <Select labelId="directory-service-label" label={t('directorySearch.service')} value={serviceId} onChange={(event) => setServiceId(event.target.value)}>
-                  <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
-                  {(taxonomies.data?.serviceOfferings ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 190 }}>
-                <InputLabel id="directory-instrument-label">{t('directorySearch.instrument')}</InputLabel>
-                <Select labelId="directory-instrument-label" label={t('directorySearch.instrument')} value={instrumentId} onChange={(event) => setInstrumentId(event.target.value)}>
-                  <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
-                  {(taxonomies.data?.instruments ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
-                </Select>
-              </FormControl>
+              {personFilters && (
+                <>
+                  <FormControl size="small" sx={{ minWidth: 190 }}>
+                    <InputLabel id="directory-profession-label">{t('directorySearch.profession')}</InputLabel>
+                    <Select labelId="directory-profession-label" label={t('directorySearch.profession')} value={professionId} onChange={(event) => updateSearch({ professionId: event.target.value })}>
+                      <MenuItem value="">{t('directorySearch.allFeminine')}</MenuItem>
+                      {(taxonomies.data?.professions ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                  <FormControl size="small" sx={{ minWidth: 190 }}>
+                    <InputLabel id="directory-service-label">{t('directorySearch.service')}</InputLabel>
+                    <Select labelId="directory-service-label" label={t('directorySearch.service')} value={serviceId} onChange={(event) => updateSearch({ serviceId: event.target.value })}>
+                      <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
+                      {(taxonomies.data?.serviceOfferings ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                  <FormControl size="small" sx={{ minWidth: 190 }}>
+                    <InputLabel id="directory-instrument-label">{t('directorySearch.instrument')}</InputLabel>
+                    <Select labelId="directory-instrument-label" label={t('directorySearch.instrument')} value={instrumentId} onChange={(event) => updateSearch({ instrumentId: event.target.value })}>
+                      <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
+                      {(taxonomies.data?.instruments ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+                </>
+              )}
               <FormControl size="small" sx={{ minWidth: 190 }}>
                 <InputLabel id="directory-genre-label">{t('directorySearch.genre')}</InputLabel>
-                <Select labelId="directory-genre-label" label={t('directorySearch.genre')} value={genreId} onChange={(event) => setGenreId(event.target.value)}>
+                <Select labelId="directory-genre-label" label={t('directorySearch.genre')} value={genreId} onChange={(event) => updateSearch({ genreId: event.target.value })}>
                   <MenuItem value="">{t('directorySearch.allMasculine')}</MenuItem>
                   {(taxonomies.data?.genres ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
                 </Select>
               </FormControl>
-              {coordinates && <TextField size="small" type="number" label={t('directorySearch.radius')} value={radiusKm} onChange={(event) => setRadiusKm(Math.min(500, Math.max(1, Number(event.target.value))))} inputProps={{ min: 1, max: 500 }} sx={{ width: 140 }} />}
-              <FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label={t('directorySearch.remote')} />
-              <FormControlLabel control={<Switch checked={available} onChange={(event) => setAvailable(event.target.checked)} />} label={t('directorySearch.available')} />
-              <Button onClick={() => { setProfessionId(''); setServiceId(''); setInstrumentId(''); setGenreId(''); setRemote(false); setAvailable(false); }}>{t('directorySearch.clearFilters')}</Button>
+              {coordinates && <TextField size="small" type="number" label={t('directorySearch.radius')} value={radiusKm} onChange={(event) => updateSearch({ radiusKm: Math.min(500, Math.max(1, Number(event.target.value))) }, 'replace')} inputProps={{ min: 1, max: 500 }} sx={{ width: 140 }} />}
+              {personFilters && (
+                <>
+                  <FormControlLabel control={<Switch checked={remote} onChange={(event) => updateSearch({ remote: event.target.checked })} />} label={t('directorySearch.remote')} />
+                  <FormControlLabel control={<Switch checked={available} onChange={(event) => updateSearch({ available: event.target.checked })} />} label={t('directorySearch.available')} />
+                </>
+              )}
+              {!personFilters && <Typography variant="body2" color="text.secondary">{t('directorySearch.placeFiltersHint')}</Typography>}
+              <Button onClick={() => updateSearch({ profileKind: undefined, professionId: '', serviceId: '', instrumentId: '', genreId: '', remote: false, available: false })}>{t('directorySearch.clearFilters')}</Button>
             </Stack>
           </Paper>
 
@@ -381,10 +440,13 @@ export default function DirectorySearchPage() {
           ) : null}
 
           <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}>
-            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && value in ENTITY_LABELS) setEntityType(value as DirectoryEntityType | 'all'); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
-              {(Object.keys(ENTITY_LABELS) as (DirectoryEntityType | 'all')[]).map((type) => (
-                <Tab key={type} value={type} label={`${t(ENTITY_LABELS[type])}${type === 'all' ? facets?.total ? ` (${facets.total})` : '' : facets?.entityTypes[type] != null ? ` (${facets.entityTypes[type]})` : ''}`} />
-              ))}
+            <Tabs value={entityType} onChange={(_, value: unknown) => { if (typeof value === 'string' && isEntityTypeKey(value)) updateSearch({ entityType: value, profileKind: value === 'profile' || value === 'artist' ? urlState.profileKind : undefined }); }} variant="scrollable" aria-label={t('directorySearch.resultTypes')}>
+              {(Object.keys(ENTITY_LABELS) as (DirectoryEntityType | 'artist' | 'all')[]).map((type) => {
+                // Every tab is counted under the current filters whichever tab
+                // is selected; `all` is the mixed tab's own count.
+                const count = type === 'all' ? facets?.entityTypes['all'] ?? (entityType === 'all' ? facets?.total : undefined) : facets?.entityTypes[type];
+                return <Tab key={type} value={type} label={`${t(ENTITY_LABELS[type])}${count != null ? ` (${count})` : ''}`} />;
+              })}
             </Tabs>
             <ToggleButtonGroup exclusive size="small" value={view} onChange={(_, value: unknown) => { if (value === 'list' || value === 'grid' || value === 'map') setView(value); }} aria-label={t('directorySearch.resultView')}>
               <ToggleButton value="list" aria-label={t('directorySearch.list')}><ViewListIcon /></ToggleButton>
@@ -400,16 +462,19 @@ export default function DirectorySearchPage() {
             </Box>
           )}
 
+          {showMusic && <MusicSearchResults query={query} changingQuery={draftQuery.trim().replace(/\s+/gu, ' ') !== query.trim().replace(/\s+/gu, ' ')} />}
+
           <Typography component="h2" variant="h5" fontWeight={800}>{t('directorySearch.organicResults', { count: facets?.total ?? items.length })}</Typography>
 
           {results.isLoading ? <Stack alignItems="center" py={8}><CircularProgress aria-label={t('directorySearch.searchingLabel')} /><Typography mt={2}>{t('directorySearch.searching')}</Typography></Stack> : null}
           {results.isError ? <Alert severity="error" action={<Button onClick={() => { void results.refetch(); }}>{t('directorySearch.retry')}</Button>}>{t('directorySearch.searchError')}</Alert> : null}
-          {!results.isLoading && !results.isError && items.length === 0 ? (
+          {!results.isLoading && !results.isError && items.length === 0 && sponsored.length === 0 ? (
             <Paper variant="outlined" sx={{ p: 5, textAlign: 'center', borderRadius: 3 }}>
               <Typography variant="h5" fontWeight={800}>{t('directorySearch.emptyTitle')}</Typography>
+              {showMusic && query.trim() && <Typography color="text.secondary" mt={1}>{t('directorySearch.music.directoryEmpty')}</Typography>}
               <Typography color="text.secondary" mt={1}>{t('directorySearch.emptyHelp')}</Typography>
               <Stack direction="row" justifyContent="center" gap={1} mt={3} flexWrap="wrap">
-                {[t('directorySearch.hintMusician'), t('directorySearch.hintProducer'), t('directorySearch.hintStudio'), t('directorySearch.hintConcert')].map((value) => <Chip key={value} label={value} onClick={() => { setDraftQuery(value); setQuery(value); }} clickable />)}
+                {[t('directorySearch.hintMusician'), t('directorySearch.hintProducer'), t('directorySearch.hintStudio'), t('directorySearch.hintConcert')].map((value) => <Chip key={value} label={value} onClick={() => { setDraftQuery(value); updateSearch({ q: value }); }} clickable />)}
               </Stack>
             </Paper>
           ) : null}
@@ -446,10 +511,10 @@ function ResultCard({
   onRefreshFavorites: () => Promise<boolean>;
   isActiveParty: (partyId: number) => boolean;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const path = resultPath(item);
-  const fallbackImageUrl = new URL(DIRECTORY_IMAGE_FALLBACKS[item.type], window.location.origin).toString();
-  const imageUrl = resolveImageUrl(item.imageUrl) ?? fallbackImageUrl;
+  const sourceProfile = item.sourceProfile ?? null;
+  const eventDate = item.type === 'event' ? formatEventDate(item.effectiveAt, i18n.resolvedLanguage ?? 'es') : null;
   const favorite = useMutation({
     mutationFn: async ({ ownerPartyId, saved }: { ownerPartyId: number; saved: boolean }) => {
       if (!isActiveParty(ownerPartyId)) throw new Error(t('directorySearch.sessionChanged'));
@@ -506,21 +571,21 @@ function ResultCard({
         overflow: 'hidden',
       }}
     >
-      <CardMedia
-        component="img"
-        image={imageUrl}
-        alt={item.imageUrl ? t('directorySearch.photo', { title: item.title }) : t('directorySearch.fallbackPhoto', { title: item.title })}
-        loading="lazy"
-        onError={(event) => {
-          if (event.currentTarget.src !== fallbackImageUrl) event.currentTarget.src = fallbackImageUrl;
-        }}
+      <DirectoryPreviewImage
+        profileName={item.type === 'profile' ? item.title : undefined}
+        kind={item.type}
+        imageUrl={item.imageUrl}
+        alt={t('directorySearch.photo', { title: item.title })}
+        fallbackAlt={t('directorySearch.fallbackPhoto', { title: item.title })}
+        width={440}
+        height={440}
+        sizes={layout === 'grid' ? '(min-width: 900px) 33vw, 100vw' : '(min-width: 600px) 220px, 100vw'}
         sx={{
           width: layout === 'grid' ? '100%' : { xs: '100%', sm: 220 },
-          height: layout === 'grid' ? 220 : { xs: 240, sm: 'auto' },
+          height: layout === 'grid' ? 220 : { xs: 240, sm: 220 },
+          aspectRatio: 'auto',
+          alignSelf: layout === 'list' ? { sm: 'stretch' } : undefined,
           minHeight: layout === 'list' ? { sm: 220 } : undefined,
-          objectFit: 'cover',
-          objectPosition: 'center',
-          flexShrink: 0,
         }}
       />
       <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', minWidth: 0 }}>
@@ -542,16 +607,21 @@ function ResultCard({
             </Box>
             {item.location.distanceKm != null && <Chip label={`≈ ${item.location.distanceKm} km`} color="primary" variant="outlined" />}
           </Stack>
-          <Typography mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</Typography>
+          <MarkdownText inline mt={2} sx={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.summary ?? t('directorySearch.summaryFallback')}</MarkdownText>
           <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
+            {eventDate && <Chip size="small" color="primary" variant="outlined" icon={<EventIcon />} label={eventDate} aria-label={t('directorySearch.eventDate', { date: eventDate })} />}
             {item.location.city && <Chip size="small" label={`${item.location.city}${item.location.countryCode ? `, ${item.location.countryCode}` : ''}`} />}
             {item.location.precision && <Chip size="small" variant="outlined" label={item.location.precision === 'city' ? t('directorySearch.approximateLocation') : t('directorySearch.locationPrecision', { precision: item.location.precision })} />}
           </Stack>
         </CardContent>
         <CardActions sx={{ px: 2, pb: 2, flexWrap: 'wrap' }}>
-          <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>{t('directorySearch.detail')}</Button>
+          {sourceProfile ? (
+            <Button component={RouterLink} to={sourceProfile.canonicalUrl} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: 'profile', entity_id: sourceProfile.id, sponsored: item.sponsored, via: 'artist_listing' })}>{t('directorySearch.viewProfile')}</Button>
+          ) : (
+            <Button component={RouterLink} to={path} variant="contained" onClick={() => getAnalyticsClient().capture('directory_result_opened', { entity_type: item.type, entity_id: item.id, sponsored: item.sponsored })}>{t('directorySearch.detail')}</Button>
+          )}
           <Button onClick={() => { void share(); }} disabled={shareStatus === 'pending'} aria-busy={shareStatus === 'pending' || undefined} startIcon={<ShareIcon />}>{t(shareStatus === 'pending' ? 'directorySearch.sharePending' : 'directorySearch.share')}</Button>
-          {partyId ? (
+          {item.id.startsWith('artist-') ? null : partyId ? (
             <Button
               onClick={() => { if (isActiveParty(partyId)) favorite.mutate({ ownerPartyId: partyId, saved: !isFavorite }); }}
               disabled={favorite.isPending || favoriteAvailability !== 'ready'}

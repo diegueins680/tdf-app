@@ -48,8 +48,9 @@ completion are different states.
   route alone never marks payment paid.
 - **POST .../{id}/paypal/create** and **POST .../{id}/paypal/capture** → create and server-verify a
   bound PayPal Orders capture.
-- Legacy Stripe payment-intent/subscription endpoints reject canonical runtime registrations; they
-  remain only for historical compatibility while the shared rollout is gated.
+- The legacy public Stripe payment-intent and subscription checkout-session endpoints were retired
+  on 2026-10-06 (AUTH-PUBLIC-001). They were unauthenticated and keyed by sequential registration
+  IDs. The shared Stripe webhook still settles historical PaymentIntents already created.
 - **PATCH /admin/courses/{slug}/registrations/{id}/status** (bearer auth, ModuleAdmin) → body `{ "status": "pending_payment" | "paid" | "cancelled" }`.
   - A canonical registration cannot be marked paid by this endpoint. It must already have a verified
     paid checkout; receipt upload is not payment proof.

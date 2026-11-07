@@ -5,12 +5,14 @@ import type { MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session/SessionContext';
 import { useTranslation } from 'react-i18next';
+import { useMobileTelemetry } from '../mobile/telemetry';
 
 export default function SessionMenu() {
   const { session, logout } = useSession();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const trackMobile = useMobileTelemetry('settings');
 
   if (!session) {
     return null;
@@ -56,7 +58,7 @@ export default function SessionMenu() {
           </Stack>
         </MenuItem>
         <Divider sx={{ my: 0.5 }} />
-        <MenuItem onClick={() => { handleClose(); navigate('/app?surface=settings'); }}>{t('app.menu')}</MenuItem>
+        <MenuItem onClick={() => { handleClose(); trackMobile('mobile_testing_interest_clicked'); navigate('/app?surface=settings'); }}>{t('app.menu')}</MenuItem>
         <MenuItem onClick={handleLogout}>
           <Stack direction="row" spacing={1} alignItems="center">
             <LogoutIcon fontSize="small" />

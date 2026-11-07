@@ -4,7 +4,13 @@ set -eu
 TDF_DIRECTORY_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 TDF_DIRECTORY_CONTAINER="tdf-directory-migration-test-$$"
 TDF_DIRECTORY_DATABASE="tdf_directory_test"
-TDF_DIRECTORY_API_PORT=$((18000 + ($$ % 1000)))
+TDF_DIRECTORY_API_PORT=$(node -e '
+  const server = require("node:net").createServer();
+  server.listen(0, "127.0.0.1", () => {
+    console.log(server.address().port);
+    server.close();
+  });
+')
 TDF_DIRECTORY_API_LOG="${TMPDIR:-/tmp}/tdf-directory-api-$$.log"
 TDF_DIRECTORY_API_PID=""
 
@@ -54,6 +60,7 @@ TDF_DIRECTORY_DB_PORT=$(docker port "$TDF_DIRECTORY_CONTAINER" 5432/tcp | sed 's
 
 (
   cd "$TDF_DIRECTORY_ROOT/tdf-hq"
+  exec env \
   DB_HOST=127.0.0.1 \
   DB_PORT="$TDF_DIRECTORY_DB_PORT" \
   DB_USER=postgres \
@@ -97,6 +104,10 @@ psql_file() {
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-14_music_directory_core.sql" >/dev/null
 # A restart/retry before the migration ledger is committed must be harmless.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-14_music_directory_core.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-11-02_directory_claim_revocation.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-11-02_directory_claim_revocation_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-11-02_directory_claim_revocation.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-11-02_directory_claim_revocation.sql" >/dev/null
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
 # Exercise the actual incremental deploy retry and operational rollback path.
 psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-16_music_directory_verified_reviews.sql" >/dev/null
@@ -383,6 +394,7 @@ BEGIN
 END
 $$;
 
+
 DO $$
 DECLARE public_json JSONB;
 BEGIN
@@ -409,6 +421,43 @@ BEGIN
     ORDER BY source_updated_at DESC,entity_kind,entity_id LIMIT 50;
   elapsed_ms := extract(epoch FROM (clock_timestamp()-started))*1000;
   IF elapsed_ms>750 THEN RAISE EXCEPTION 'representative search exceeded 750ms: % ms',elapsed_ms; END IF;
+END
+$$;
+SQL
+
+# AUTHORITY-097: revocation of an approved claim requires reviewer evidence and
+# a reason, refuses to leave an active grant behind, and is terminal in code.
+psql_exec <<'SQL' >/dev/null
+DO $$
+DECLARE
+  fixture_party BIGINT;
+  target_id UUID;
+  claim_id UUID := gen_random_uuid();
+BEGIN
+  SELECT id INTO fixture_party FROM party WHERE display_name='Synthetic directory migration fixture';
+  SELECT id INTO target_id FROM directory_profile WHERE slug='synthetic-canonical-profile';
+  INSERT INTO directory_claim(id,profile_id,claimant_party_id,claim_type,status,evidence,submitted_at,reviewer_party_id,reviewed_at)
+  VALUES (claim_id,target_id,fixture_party,'profile','approved','[]',now(),fixture_party,now());
+  INSERT INTO directory_profile_manager(profile_id,account_party_id,can_edit,source_claim_id)
+  VALUES (target_id,fixture_party,TRUE,claim_id)
+  ON CONFLICT (profile_id,account_party_id) DO UPDATE SET active=TRUE,revoked_at=NULL,source_claim_id=EXCLUDED.source_claim_id;
+  BEGIN
+    UPDATE directory_claim SET status='revoked' WHERE id=claim_id;
+    RAISE EXCEPTION 'revocation without a reason was accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  BEGIN
+    UPDATE directory_claim SET status='revoked',reviewer_notes='Fraudulent evidence' WHERE id=claim_id;
+    RAISE EXCEPTION 'revocation left an active manager grant';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  UPDATE directory_profile_manager SET active=FALSE,revoked_at=now(),version=version+1 WHERE source_claim_id=claim_id AND active;
+  UPDATE directory_claim SET status='revoked',reviewer_notes='Fraudulent evidence' WHERE id=claim_id;
+  IF (SELECT status FROM directory_claim WHERE id=claim_id)<>'revoked' THEN RAISE EXCEPTION 'revocation did not persist'; END IF;
+  IF EXISTS (SELECT 1 FROM directory_profile_manager WHERE source_claim_id=claim_id AND active) THEN RAISE EXCEPTION 'grant survived revocation'; END IF;
+  -- Clean up so later fixtures keep their management expectations.
+  DELETE FROM directory_profile_manager WHERE source_claim_id=claim_id;
+  DELETE FROM directory_claim WHERE id=claim_id;
 END
 $$;
 SQL
@@ -489,10 +538,25 @@ INSERT INTO directory_search_document(
 );
 SQL
 
+# Current handlers read the RSVP projection and derived-listing columns.
+# Keep the preceding historical migration/rollback tests, then establish these
+# existing release prerequisites before serving the current API from the fixture.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-08-13_unified_checkout_core.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-07_directory_event_visibility_and_favorite_evidence.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-08_event_rsvp_identity_privacy_feed.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-09_music_directory_suppressed_event_privacy.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql" >/dev/null
+# Later directory migrations the current handlers depend on (kept in manifest order).
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql" >/dev/null
+
 # Exercise the anonymous taxonomy handler against the migrated database. This catches
 # drift between the SQL implementation and the canonical OpenAPI/client projection.
 (
   cd "$TDF_DIRECTORY_ROOT/tdf-hq"
+  exec env \
   DB_HOST=127.0.0.1 \
   DB_PORT="$TDF_DIRECTORY_DB_PORT" \
   DB_USER=postgres \
@@ -944,5 +1008,176 @@ expired_state=$(psql_exec -Atc "SELECT status FROM directory_invitation WHERE id
 test "$expired_state" = "expired"
 stop_api
 
+# Events and venues stay searchable as they are created and edited
+# (2026-10-09): apply twice, verify, roll back, reapply and verify again.
+# The backfill must not notify saved searches about events that already
+# existed: drop the event documents, subscribe, then apply the migration.
+psql_exec >/dev/null <<'SQL'
+-- Earlier privacy fixtures deliberately suppress every imported event. Supply
+-- a separate public event so backfill cannot pass by exposing a tombstone.
+INSERT INTO social_event (
+  organizer_party_id,title,description,event_type_id,workflow_state_id,
+  start_time,end_time,venue_id,created_at,updated_at
+)
+SELECT 'synthetic-directory-backfill','Synthetic visible backfill event',
+  'Public positive control alongside suppressed event fixtures.',event_type_id,
+  workflow_state_id,start_time,end_time,venue_id,now(),now()
+FROM social_event WHERE title='Synthetic suppressed directory event';
+DELETE FROM directory_search_document WHERE entity_kind IN ('event', 'venue');
+INSERT INTO party (display_name, is_org, created_at) VALUES ('Event backfill subscriber', FALSE, now());
+INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+SELECT id, 'Event backfill alert', '{}'::jsonb, repeat('e', 64), TRUE, 'instant'
+FROM party WHERE display_name = 'Event backfill subscriber';
+SQL
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE entity_kind = 'event';")" -gt 0
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_alert_delivery delivery JOIN directory_saved_search saved ON saved.id = delivery.saved_search_id WHERE saved.name = 'Event backfill alert';")" = "0"
+test "$(psql_exec -Atc "SELECT tgenabled FROM pg_trigger WHERE tgrelid = 'directory_search_document'::regclass AND tgname = 'directory_search_alert_trigger';")" = "O"
+psql_exec -c "DELETE FROM directory_saved_search WHERE name = 'Event backfill alert';" >/dev/null
+# Remove only this phase's positive control before exact HTTP facet counts.
+psql_exec -c "DELETE FROM social_event WHERE organizer_party_id='synthetic-directory-backfill' AND title='Synthetic visible backfill event';" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync_rollback.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-09_directory_event_search_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_sync.sql" >/dev/null
+# The artist-listing migration follows the event sync in the manifest and
+# redefines the venue projection (venue image); keep the database in release
+# order before serving searches from it.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-07_directory_artist_derived_listings.sql" >/dev/null
+# Later directory migrations the current handlers depend on (kept in manifest order).
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql" >/dev/null
+# A genre search alias edit resyncs the events it reaches (2026-10-14):
+# apply twice, verify, roll back, reapply and verify again.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_alias_sync.sql" >/dev/null
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync_rollback.sql" >/dev/null
+# An alias added while the trigger is absent leaves a stale document; applying
+# the migration repairs it without alerting a matching saved search.
+psql_exec >/dev/null <<'SQL'
+INSERT INTO social_artist_profile (name, genres, created_at, updated_at)
+VALUES ('Alias repair headliner', ARRAY['alias repair word'], now(), now());
+INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+                          workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+SELECT NULL, 'Alias repair night', 'Synthetic lineup', NULL, (SELECT id FROM event_type ORDER BY sort_order, id LIMIT 1),
+       (SELECT state.id FROM workflow_state state JOIN workflow_state_capability capability
+          ON capability.state_id = state.id AND capability.capability_code = 'public-listable' AND capability.enabled
+        WHERE state.active LIMIT 1),
+       'America/Guayaquil', now() + interval '2 days', now() + interval '2 days 3 hours', '{"isPublic": true}', now(), now();
+INSERT INTO event_artist (event_id, artist_id, role)
+SELECT event.id, artist.id, 'headliner' FROM social_event event, social_artist_profile artist
+WHERE event.title = 'Alias repair night' AND artist.name = 'Alias repair headliner';
+-- Subscribed after the event exists, so only the repair could alert it.
+INSERT INTO party (display_name, is_org, created_at) VALUES ('Alias repair subscriber', FALSE, now());
+INSERT INTO directory_saved_search (account_party_id, name, canonical_query, query_hash, alerts_enabled, alert_frequency)
+SELECT id, 'Alias repair alert', '{}'::jsonb, repeat('a', 64), TRUE, 'instant'
+FROM party WHERE display_name = 'Alias repair subscriber';
+INSERT INTO catalog_search_alias (catalog_id, entity_kind, entity_id, locale_id, term, normalized_term, source)
+SELECT catalog.id, 'genre', (SELECT id FROM genre WHERE active ORDER BY sort_order, id LIMIT 1),
+       (SELECT id FROM locale_reference WHERE code = 'es'), 'alias repair word',
+       directory_normalize_text('alias repair word'), 'migration-test'
+FROM catalog_definition catalog WHERE catalog.code = 'genres';
+SQL
+alias_repair_genres="SELECT document.genre_ids = ARRAY[(SELECT id FROM genre WHERE active ORDER BY sort_order, id LIMIT 1)] FROM directory_search_document document JOIN social_event event ON event.id::text = document.entity_id WHERE document.entity_kind = 'event' AND event.title = 'Alias repair night';"
+test "$(psql_exec -Atc "$alias_repair_genres")" = "f"
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/sql/2026-10-14_directory_event_search_alias_sync.sql" >/dev/null
+test "$(psql_exec -Atc "$alias_repair_genres")" = "t"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_alert_delivery delivery JOIN directory_saved_search saved ON saved.id = delivery.saved_search_id WHERE saved.name = 'Alias repair alert';")" = "0"
+test "$(psql_exec -Atc "SELECT tgenabled FROM pg_trigger WHERE tgrelid = 'directory_search_document'::regclass AND tgname = 'directory_search_alert_trigger';")" = "O"
+psql_exec >/dev/null <<'SQL'
+DELETE FROM directory_saved_search WHERE name = 'Alias repair alert';
+DELETE FROM event_artist WHERE event_id IN (SELECT id FROM social_event WHERE title = 'Alias repair night');
+DELETE FROM social_event WHERE title = 'Alias repair night';
+SQL
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_alias_sync.sql" >/dev/null
+
+# /directory/search over the migrated database: Eventos + city, Todo, tab
+# counts, people-only filters, lineup genre, event card fields.
+psql_file "$TDF_DIRECTORY_ROOT/tdf-hq/test/integration/directory_event_search_http_seed.sql" >/dev/null
+event_search_genre_id=$(psql_exec -Atc "SELECT id FROM genre WHERE active ORDER BY sort_order, id LIMIT 1;")
+event_search_profession_id=$(psql_exec -Atc "SELECT id FROM profession WHERE active ORDER BY sort_order, id LIMIT 1;")
+(
+  cd "$TDF_DIRECTORY_ROOT/tdf-hq"
+  exec env \
+  DB_HOST=127.0.0.1 \
+  DB_PORT="$TDF_DIRECTORY_DB_PORT" \
+  DB_USER=postgres \
+  DB_PASS=unused-local-test-value \
+  DB_NAME="$TDF_DIRECTORY_DATABASE" \
+  APP_PORT="$TDF_DIRECTORY_API_PORT" \
+  RUN_MIGRATIONS=false \
+  RESET_DB=false \
+  SEED_DB=false \
+  EVENT_DISCOVERY_ENABLED=false \
+  sh -c 'if [ -n "${TDF_DIRECTORY_SERVER_BIN:-}" ]; then exec "$TDF_DIRECTORY_SERVER_BIN"; else exec stack exec -- tdf-hq-exe; fi'
+) >"$TDF_DIRECTORY_API_LOG" 2>&1 &
+TDF_DIRECTORY_API_PID=$!
+attempt=0
+until curl -fsS "http://127.0.0.1:$TDF_DIRECTORY_API_PORT/health" 2>/dev/null | grep -q '"db":"ok"'; do
+  if ! kill -0 "$TDF_DIRECTORY_API_PID" >/dev/null 2>&1; then
+    tail -80 "$TDF_DIRECTORY_API_LOG" >&2
+    echo "Backend exited before the event search HTTP checks" >&2
+    exit 1
+  fi
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 60 ]; then
+    tail -80 "$TDF_DIRECTORY_API_LOG" >&2
+    echo "Backend did not become ready for the event search HTTP checks" >&2
+    exit 1
+  fi
+  sleep 1
+done
+node "$TDF_DIRECTORY_ROOT/scripts/__tests__/directory-event-search-http.mjs" \
+  "http://127.0.0.1:$TDF_DIRECTORY_API_PORT" "$event_search_genre_id" "$event_search_profession_id"
+stop_api
+
+# Two real sessions: a venue rename that overlaps an uncommitted event edit
+# must not overwrite the event's newer projection with an older snapshot.
+psql_exec >/dev/null <<'SQL'
+INSERT INTO venue (name, city, created_at, updated_at) VALUES ('Race venue', 'Quito', now(), now());
+INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+  workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+SELECT NULL, 'Race event', 'Synthetic lineup', (SELECT id FROM venue WHERE name = 'Race venue'),
+  (SELECT id FROM event_type ORDER BY sort_order, id LIMIT 1),
+  (SELECT state.id FROM workflow_state state
+     JOIN workflow_state_capability capability ON capability.state_id = state.id
+      AND capability.capability_code = 'public-listable' AND capability.enabled
+    WHERE state.active LIMIT 1),
+  'America/Guayaquil', now() + interval '1 day', now() + interval '2 days', '{"isPublic": true}', now(), now();
+SQL
+psql_exec -c "BEGIN; UPDATE social_event SET title = 'Race event edited', updated_at = now() WHERE title = 'Race event'; SELECT pg_sleep(3); COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "UPDATE venue SET name = 'Race venue renamed', updated_at = now() WHERE name = 'Race venue';" >/dev/null
+wait "$race_event_session"
+race_projection=$(psql_exec -Atc "SELECT title || ' @ ' || subtitle FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = (SELECT id::text FROM social_event WHERE title LIKE 'Race event%');")
+test "$race_projection" = "Race event edited @ Race venue renamed"
+# A transaction that edits two events must not deadlock with a writer that
+# already holds the second one (the sync lock is only taken at commit).
+psql_exec >/dev/null <<'SQL'
+INSERT INTO social_event (organizer_party_id, title, description, venue_id, event_type_id,
+  workflow_state_id, timezone, start_time, end_time, metadata, created_at, updated_at)
+SELECT NULL, 'Race event second', 'Synthetic lineup', venue_id, event_type_id, workflow_state_id, timezone,
+  start_time, end_time, metadata, now(), now()
+FROM social_event WHERE title = 'Race event edited';
+SQL
+race_second_id=$(psql_exec -Atc "SELECT id FROM social_event WHERE title = 'Race event second';")
+psql_exec -c "BEGIN; UPDATE social_event SET description = 'first' WHERE title = 'Race event edited'; SELECT pg_sleep(3); UPDATE social_event SET description = 'both' WHERE id = $race_second_id; COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "BEGIN; SELECT id FROM social_event WHERE id = $race_second_id FOR UPDATE; SELECT pg_sleep(1); UPDATE social_event SET title = 'Race event second edited' WHERE id = $race_second_id; COMMIT;" >/dev/null
+wait "$race_event_session"
+test "$(psql_exec -Atc "SELECT title || ' / ' || summary FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = '$race_second_id';")" = "Race event second edited / both"
+# Same overlap with a deletion: the deleted event's document must stay gone.
+race_event_id=$(psql_exec -Atc "SELECT id FROM social_event WHERE title = 'Race event edited';")
+psql_exec -c "BEGIN; DELETE FROM social_event WHERE id = $race_event_id; SELECT pg_sleep(3); COMMIT;" >/dev/null &
+race_event_session=$!
+sleep 1
+psql_exec -c "UPDATE venue SET name = 'Race venue renamed twice', updated_at = now() WHERE name = 'Race venue renamed';" >/dev/null
+wait "$race_event_session"
+test "$(psql_exec -Atc "SELECT count(*) FROM directory_search_document WHERE entity_kind = 'event' AND entity_id = '$race_event_id';")" = "0"
+psql_exec -c "DELETE FROM social_event WHERE title LIKE 'Race event%'; DELETE FROM venue WHERE name LIKE 'Race venue%';" >/dev/null
+
 psql_file "$TDF_DIRECTORY_ROOT/scripts/__tests__/fixtures/artist-management-claim.sql"
-echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, separate artist-management identities, verified-review API and aggregation, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."
+echo "Music directory migration passed restart, backfill, rollback/reapply, rich profile compatibility, privacy, claim, separate artist-management identities, verified-review API and aggregation, event search sync, alert, merge, search-volume, taxonomy, invitation-participant, blocking, expiry, and invariant checks."

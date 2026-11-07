@@ -6255,7 +6255,8 @@ spec = do
                 case stored of
                     Nothing -> expectationFailure "Expected stored Instagram message"
                     Just (Entity _ row) -> do
-                        M.instagramMessageText row `shouldBe` Just "hola de nuevo"
+                        -- A message delivered again after its deletion is not rewritten.
+                        M.instagramMessageText row `shouldBe` Just "hola"
                         M.instagramMessageDeletedAt row `shouldBe` Just deletedAt
                 length visible `shouldBe` 0
 
@@ -6274,6 +6275,10 @@ spec = do
                 , M.socialSyncAccountLastSyncedAt = Nothing
                 , M.socialSyncAccountCreatedAt = now
                 , M.socialSyncAccountUpdatedAt = Just now
+                , M.socialSyncAccountDeliveryDesignated = False
+                , M.socialSyncAccountConnectedByPartyId = Nothing
+                , M.socialSyncAccountDesignatedByPartyId = Nothing
+                , M.socialSyncAccountDesignatedAt = Nothing
                 }
             persistMetaInbound MetaInstagram now
                 [ MetaInboundMessage
@@ -6850,6 +6855,10 @@ initializeMetaInboxSchema = do
         \\"last_synced_at\" TIMESTAMP NULL,\
         \\"created_at\" TIMESTAMP NOT NULL,\
         \\"updated_at\" TIMESTAMP NULL,\
+        \\"delivery_designated\" BOOLEAN NOT NULL DEFAULT 0,\
+        \\"connected_by_party_id\" INTEGER NULL,\
+        \\"designated_by_party_id\" INTEGER NULL,\
+        \\"designated_at\" TIMESTAMP NULL,\
         \CONSTRAINT \"unique_social_sync_account\" UNIQUE (\"platform\", \"external_user_id\")\
         \)"
         []

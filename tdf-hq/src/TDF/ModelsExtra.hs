@@ -75,6 +75,26 @@ derivePersistField "DeliverableKind"
 
 share [mkPersist sqlSettings, mkMigrate "migrateExtra"] [persistLowerCase|
 
+VideoCampaign
+    artistPartyId PartyId
+    campaignKey Text
+    revision Int64
+    document Text
+    createdAt UTCTime
+    updatedAt UTCTime
+    UniqueVideoCampaign artistPartyId campaignKey
+    deriving Show Generic
+
+VideoCampaignConversion
+    campaignId VideoCampaignId
+    viewerPartyId PartyId
+    kind Text
+    source Text
+    piece Text
+    createdAt UTCTime
+    UniqueVideoCampaignConversion campaignId viewerPartyId kind
+    deriving Show Generic
+
 Campaign
     name        Text
     objective   Text Maybe
@@ -98,7 +118,6 @@ CampaignAutomation
     updatedAt   UTCTime default=now()
     UniqueCampaignAutomationCampaign campaignId
     UniqueCampaignAutomationTemplate templateKey
-    IndexCampaignAutomationStatus status startAt !force
     deriving Show Generic
 
 CampaignAutomationStep
@@ -114,7 +133,6 @@ CampaignAutomationStep
     createdAt            UTCTime default=now()
     updatedAt            UTCTime default=now()
     UniqueCampaignAutomationStep automationId position
-    IndexCampaignAutomationStepActive automationId active position !force
     deriving Show Generic
 
 CampaignEnrollment
@@ -129,8 +147,6 @@ CampaignEnrollment
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
     UniqueCampaignEnrollment automationId partyId
-    IndexCampaignEnrollmentDue automationId status nextRunAt !force
-    IndexCampaignEnrollmentParty partyId createdAt !force
     deriving Show Generic
 
 CampaignDelivery
@@ -149,7 +165,6 @@ CampaignDelivery
     createdAt         UTCTime default=now()
     updatedAt         UTCTime default=now()
     UniqueCampaignDelivery enrollmentId stepId
-    IndexCampaignDeliveryAutomation automationId status createdAt !force
     deriving Show Generic
 
 AdCreative
@@ -217,8 +232,6 @@ WhatsAppMessage
     resendOfMessageId  WhatsAppMessageId Maybe
     createdAt          UTCTime
     UniqueWhatsAppMessage externalId
-    IndexWhatsAppMessageParty partyId createdAt !force
-    IndexWhatsAppMessagePhone phoneE164 createdAt !force
     deriving Show Generic
 
 FacebookMessage
@@ -253,6 +266,7 @@ WhatsAppConsent
     note         Text Maybe
     consentedAt  UTCTime Maybe
     revokedAt    UTCTime Maybe
+    confirmationRequestedAt UTCTime Maybe
     createdAt    UTCTime default=now()
     updatedAt    UTCTime default=now()
     UniqueWhatsAppConsent phoneE164
@@ -277,7 +291,6 @@ CourseRegistration
     subscriptionStatus    Text Maybe
     createdAt    UTCTime default=now()
     updatedAt    UTCTime default=now()
-    IndexCourseRegistrationParty partyId createdAt !force
     UniqueCourseRegistrationStripePaymentIntent stripePaymentIntentId !force
     UniqueCourseRegistrationStripeSubscription stripeSubscriptionId !force
     deriving Show Generic
@@ -292,8 +305,6 @@ CourseRegistrationReceipt
     uploadedBy     PartyId Maybe
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
-    IndexCourseRegistrationReceiptRegistration registrationId createdAt !force
-    IndexCourseRegistrationReceiptParty partyId createdAt !force
     deriving Show Generic
 
 CourseRegistrationFollowUp
@@ -308,9 +319,6 @@ CourseRegistrationFollowUp
     createdBy      PartyId Maybe
     createdAt      UTCTime default=now()
     updatedAt      UTCTime default=now()
-    IndexCourseRegistrationFollowUpRegistration registrationId createdAt !force
-    IndexCourseRegistrationFollowUpParty partyId createdAt !force
-    IndexCourseRegistrationFollowUpNext nextFollowUpAt !force
     deriving Show Generic
 
 CourseEmailEvent
@@ -568,6 +576,43 @@ SessionInvoice
     invoiceId   InvoiceId
     createdAt   UTCTime default=now()
     UniqueSessionInvoice sessionId invoiceId
+    deriving Show Generic
+
+-- CONTRACT-STORE-001: contracts live in the database (they were JSON files in
+-- a relative directory outside the persistent volume). payload is the
+-- canonical JSON the API validated.
+Contract
+    Id                  UUID
+    kind                Text
+    payload             Text
+    createdByPartyId    PartyId Maybe
+    createdAt           UTCTime default=now()
+    deriving Show Generic
+
+-- CONTRACT-SEND-001: one row per send request, written before SMTP is
+-- contacted; acceptedAt or failedAt records the transport outcome.
+ContractDelivery
+    contractId          ContractId
+    recipientEmail      Text
+    requestedByPartyId  PartyId Maybe
+    requestedAt         UTCTime default=now()
+    acceptedAt          UTCTime Maybe
+    failedAt            UTCTime Maybe
+    failure             Text Maybe
+    deriving Show Generic
+
+-- PAY-INVOICE-ISSUE-001: one reservation per (session, idempotency key) before a
+-- session invoice is created or an SRI document is issued. completedAt and
+-- response are set together once the request has an answer to replay.
+SessionInvoiceIssue
+    sessionId       SessionId
+    idempotencyKey  Text
+    requestSha256   Text
+    invoiceId       InvoiceId Maybe
+    response        Text Maybe
+    createdAt       UTCTime default=now()
+    completedAt     UTCTime Maybe
+    UniqueSessionInvoiceIssue sessionId idempotencyKey
     deriving Show Generic
 
 InputListTemplate
@@ -1083,10 +1128,12 @@ ArtistTip
     stripePaymentIntentId Text Maybe
     status                Text default='pending'
     message               Text Maybe
+    idempotencyKey        Text Maybe
+    requestSha256         Text Maybe
     createdAt             UTCTime default=now()
     updatedAt             UTCTime default=now()
-    IndexArtistTipArtist artistProfileId createdAt !force
     UniqueArtistTipStripePaymentIntent stripePaymentIntentId !force
+    UniqueArtistTipIdempotency artistProfileId idempotencyKey !force
     deriving Show Generic
 
 ServiceStorefrontPackage
@@ -1191,9 +1238,6 @@ FeatureAccessRequest sql=feature_access_requests
     decidedAt UTCTime Maybe
     cancelledAt UTCTime Maybe
     expiresAt UTCTime Maybe
-    IndexFeatureAccessRequestRequester requesterPartyId requestedAt !force
-    IndexFeatureAccessRequestQueue status reviewerGroup requestedAt !force
-    IndexFeatureAccessRequestDuplicate requesterPartyId featureId action status !force
     deriving Show Generic
 
 FeatureAccessRequestHistory sql=feature_access_request_history
@@ -1204,7 +1248,6 @@ FeatureAccessRequestHistory sql=feature_access_request_history
     toStatus Text
     note Text Maybe
     createdAt UTCTime
-    IndexFeatureAccessRequestHistory requestId createdAt !force
     deriving Show Generic
 
 FeatureNavigationPreference sql=feature_navigation_preferences
@@ -1217,8 +1260,6 @@ FeatureNavigationPreference sql=feature_navigation_preferences
     useCount Int default=0
     updatedAt UTCTime
     UniqueFeatureNavigationPreference partyId featureId
-    IndexFeatureNavigationPreferencePinned partyId pinned pinOrder !force
-    IndexFeatureNavigationPreferenceRecent partyId lastVisitedAt !force
     deriving Show Generic
 
 |]

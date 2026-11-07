@@ -280,8 +280,10 @@ test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }
   await page.getByRole('button', { name: 'Crear cuenta general' }).click();
   const signupDialog = page.getByRole('dialog', { name: /crear cuenta/i });
   await expect(signupDialog).toBeVisible();
-  await signupDialog.getByLabel('Nombre').fill('Elena');
-  await signupDialog.getByLabel('Apellido').fill('Paredes');
+  // Signup asks only for email and password; terms are acknowledged next to the CTA.
+  await expect(signupDialog.getByLabel('Nombre')).toHaveCount(0);
+  await expect(signupDialog.getByRole('checkbox')).toHaveCount(0);
+  await expect(signupDialog.locator('#signup-consent-notice')).toContainText('Al crear tu cuenta aceptas');
   const signupEmail = signupDialog.locator('input[name="email"]');
   const signupPassword = signupDialog.locator('input[name="newPassword"]');
   await expect(signupEmail).toHaveAttribute('autocomplete', 'email');
@@ -289,12 +291,12 @@ test('PW-PER-01-AUTH registers a fictional user through the UI', async ({ page }
   await expectNoSeriousAxeViolations(page, testInfo);
   await signupEmail.fill('per-01.elena@persona.test');
   await signupPassword.fill('fictional-password-not-a-secret');
-  await page.getByLabel('Acepto los términos y la política de privacidad').check();
   await signupPassword.press('Enter');
 
   await expect(page).toHaveURL(/\/fans$/);
   expect(signupPayload).toMatchObject({
-    firstName: 'Elena', lastName: 'Paredes', email: 'per-01.elena@persona.test',
+    firstName: 'Cuenta TDF', lastName: '', email: 'per-01.elena@persona.test',
+    termsAccepted: true, termsVersion: 'tdf-account-terms-v1',
     password: 'fictional-password-not-a-secret',
     marketingOptIn: false,
   });
@@ -328,13 +330,16 @@ test('PW-PER-01-DISCOVERY completes public city discovery and preserves search s
   await expect(page.locator('main#main-content')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Encuentra a la gente');
   await expect(page.getByText('Bajista Sintética de Quito')).toBeVisible();
-  await page.getByLabel('¿Qué necesitas?').fill('bajista');
+  // City scope is deliberate; global discovery no longer silently selects Quito.
+  await page.getByRole('combobox', { name: 'Ciudad', exact: true }).click();
+  await page.getByRole('option', { name: 'Quito', exact: true }).click();
+  await page.getByLabel('Buscar artistas, profesionales o eventos').fill('bajista');
   await page.getByRole('button', { name: 'Buscar' }).click();
   await expect(page).toHaveURL(new RegExp(`q=bajista.*cityId=${fictionalCityId}`));
   await page.getByRole('link', { name: 'Ver detalle' }).click();
   await expect(page).toHaveURL(/\/directorio\/synthetic-bassist/);
   await page.goBack();
-  await expect(page.getByLabel('¿Qué necesitas?')).toHaveValue('bajista');
+  await expect(page.getByLabel('Buscar artistas, profesionales o eventos')).toHaveValue('bajista');
   await expectNoSeriousAxeViolations(page, testInfo);
   expect(runtime.failedRequests).toEqual([]);
   expect(runtime.consoleErrors).toEqual([]);
@@ -367,8 +372,15 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   await expect(page.locator('main#main-content')).toHaveCount(1);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Festival Sintético TDF');
   await expect(page.getByText(/General.*25[,.]00/)).toBeVisible();
+  // Terms and refund policy start collapsed; the buyer can open each before accepting.
+  const ticketTerms = page.getByRole('button', { name: /Términos de las entradas/ });
+  const refundPolicy = page.getByRole('button', { name: /Política de reembolso/ });
+  await expect(ticketTerms).toHaveAttribute('aria-expanded', 'false');
+  await expect(refundPolicy).toHaveAttribute('aria-expanded', 'false');
+  await ticketTerms.click();
   await expect(page.getByText('Aceptas el precio, las tarifas y las condiciones mostradas.')).toBeVisible();
-  await expect(page.getByText('Política de reembolso: Reembolso total.')).toBeVisible();
+  await refundPolicy.click();
+  await expect(page.getByText('Reembolso total.')).toBeVisible();
   await page.getByLabel('Nombre completo').fill('Elena Paredes');
   await page.getByLabel('Email').fill('per-01.elena@persona.test');
   await page.getByLabel(/Acepto los términos versionados/).check();
@@ -698,10 +710,12 @@ for (const locale of ['es', 'en']) {
     await expect(signup).toBeVisible();
     await expect(signup.getByText(en ? /continue to “follow artists”/ : /continuarás con “seguir artistas”/)).toBeVisible();
     await expect(signup.getByRole('link', { name: en ? 'account terms' : 'términos de la cuenta', exact: true })).toHaveAttribute('href', en ? '/account/terms.html' : '/account/terms-es.html');
-    await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeDisabled();
-    await signup.getByLabel(en ? 'First name' : 'Nombre').fill('Synthetic');
-    await signup.getByLabel(en ? 'I accept the terms and privacy policy' : 'Acepto los términos y la política de privacidad', { exact: true }).check();
-    await expect(signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true })).toBeEnabled();
+    // Clickwrap: no consent checkbox gates the CTA; the notice is tied to it.
+    await expect(signup.getByRole('checkbox')).toHaveCount(0);
+    const create = signup.getByRole('button', { name: en ? 'Create account and sign in' : 'Crear e ingresar', exact: true });
+    await expect(create).toBeEnabled();
+    await expect(create).toHaveAttribute('aria-describedby', 'signup-consent-notice');
+    await expect(signup.locator('#signup-consent-notice')).toContainText(en ? 'By creating your account you accept' : 'Al crear tu cuenta aceptas');
     await expectNoSeriousAxeViolations(page, testInfo);
     await page.goto('/reset?redirect=%2Ffans');
     await expect(page.getByRole('heading', { name: en ? 'Incomplete link' : 'Enlace incompleto' })).toBeVisible();

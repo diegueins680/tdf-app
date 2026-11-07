@@ -84,6 +84,34 @@ psql "${database_url}" -X -v ON_ERROR_STOP=1 \
 node "${repo_root}/scripts/render-production-schema-verification.mjs" \
   | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
 
+# A rolled-back migration keeps its ledger row and may restore an older object
+# under the same name. Roll the registered music/invitation migrations back along
+# their designed path, newest first; after each step the gate must reject the
+# schema and name exactly that migration. Reapplying them must satisfy the gate.
+music_migrations="2026-09-14_artist_invitation_auto_approval 2026-09-15_music_preview_ranges
+2026-09-15_music_version_parties 2026-09-15_music_party_details
+2026-09-16_music_correction_asset_graph 2026-09-16_music_correction_concurrency
+2026-09-16_music_resource_graph_validation 2026-09-16_music_ddex_operations
+2026-09-16_music_playback_identity 2026-10-07_artist_invitation_links"
+for migration in $(printf '%s\n' ${music_migrations} | sed '1!G;h;$!d'); do
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${repo_root}/tdf-hq/sql/${migration}_rollback.sql" >/dev/null
+  if gate_output="$(node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+    | psql "${database_url}" -X -v ON_ERROR_STOP=1 2>&1 >/dev/null)"; then
+    echo "Schema gate accepted rolled-back migration ${migration}" >&2
+    exit 1
+  fi
+  if ! printf '%s' "${gate_output}" | grep -Fq "Music migration ${migration} is not applied"; then
+    printf '%s\n' "${gate_output}" >&2
+    echo "Schema gate did not identify rolled-back migration ${migration}" >&2
+    exit 1
+  fi
+done
+for migration in ${music_migrations}; do
+  psql "${database_url}" -X -v ON_ERROR_STOP=1 -f "${repo_root}/tdf-hq/sql/${migration}.sql" >/dev/null
+done
+node "${repo_root}/scripts/render-production-schema-verification.mjs" \
+  | psql "${database_url}" -X -v ON_ERROR_STOP=1 >/dev/null
+
 # Both historical orders occurred: late registration can apply an older view
 # after a newer privacy repair is already recorded in the immutable ledger.
 privacy_repair="${repo_root}/tdf-hq/sql/2026-09-17_directory_event_privacy_composition.sql"
@@ -130,17 +158,17 @@ FROM (
 SQL
 )"
 
-# A reviewed rollout may already have enabled PayPal webhook intake. A restart
-# must preserve that state while continuing to reject absent or unstaged gates.
+# A reviewed rollout may already have enabled PayPal webhook intake and refunds.
+# Restart both enabled flags without changing the AUTHORITY-050 provider policy.
 psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
-  "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';" >/dev/null
+  "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds');" >/dev/null
 start_and_verify
-test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT enabled FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';")" = "t"
+test "$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 -c "SELECT string_agg(enabled::text, ',' ORDER BY flag_key) FROM revenue_feature_flag WHERE environment = 'production' AND flag_key IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds');")" = "true,true"
 
 verification_sql="$(node "${repo_root}/scripts/render-production-schema-verification.mjs")"
 assert_gate_rejected() {
   local mutation="$1"
-  local expected_error="${2:-Production provider capability gates must exist; refunds and Datafast must remain disabled}"
+  local expected_error="${2:-Production provider capability gates must exist; PlaceToPay and Payphone must remain staged}"
   local output
   if output="$(psql "${database_url}" -X -v ON_ERROR_STOP=1 2>&1 <<SQL
 BEGIN;
@@ -162,15 +190,37 @@ SQL
 assert_gate_rejected "ALTER TABLE google_calendar_config DROP COLUMN access_token;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_config DISABLE TRIGGER identity_archive_reference_guard;" "Calendar runtime columns or archived-owner guard are incompatible"
 assert_gate_rejected "ALTER TABLE google_calendar_event DROP CONSTRAINT unique_calendar_event;" "Calendar runtime columns or archived-owner guard are incompatible"
+# The 2026-10-11 rollback restores the UNIQUE constraints under the same names.
+assert_gate_rejected "DROP INDEX index_whats_app_message_phone; ALTER TABLE whats_app_message ADD CONSTRAINT index_whats_app_message_phone UNIQUE (phone_e164, created_at);" "A declared index is unique, missing or invalid"
+assert_gate_rejected "DROP INDEX index_chat_message_thread;" "A declared index is unique, missing or invalid"
 
-for flag in checkout.paypal.webhooks checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
+assert_gate_accepted() {
+  local mutation="$1"
+  if ! psql "${database_url}" -X -q -v ON_ERROR_STOP=1 >/dev/null <<SQL
+BEGIN;
+${mutation}
+${verification_sql}
+ROLLBACK;
+SQL
+  then
+    echo "Schema verification rejected an approved provider state: ${mutation}" >&2
+    exit 1
+  fi
+}
+
+for flag in checkout.paypal.webhooks checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds checkout.placetopay.webhooks checkout.payphone.notifications; do
   assert_gate_rejected "DELETE FROM revenue_feature_flag WHERE environment = 'production' AND flag_key = '${flag}';"
 done
+# Approved production capabilities (AUTHORITY-050) must not block a restart.
 for flag in checkout.paypal.refunds checkout.datafast.webhooks checkout.datafast.refunds; do
+  assert_gate_accepted "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = '${flag}';"
+done
+assert_gate_accepted "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds', 'checkout.datafast.webhooks', 'checkout.datafast.refunds');"
+for flag in checkout.placetopay.webhooks checkout.payphone.notifications; do
   assert_gate_rejected "UPDATE revenue_feature_flag SET enabled = TRUE WHERE environment = 'production' AND flag_key = '${flag}';"
 done
 psql "${database_url}" -X -v ON_ERROR_STOP=1 -c \
-  "UPDATE revenue_feature_flag SET enabled = FALSE WHERE environment = 'production' AND flag_key = 'checkout.paypal.webhooks';" >/dev/null
+  "UPDATE revenue_feature_flag SET enabled = FALSE WHERE environment = 'production' AND flag_key IN ('checkout.paypal.webhooks', 'checkout.paypal.refunds');" >/dev/null
 
 schema_after="$(psql "${database_url}" -X -qAt -v ON_ERROR_STOP=1 <<'SQL'
 SELECT md5(string_agg(definition, E'\n' ORDER BY definition))

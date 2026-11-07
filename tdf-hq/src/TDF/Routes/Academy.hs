@@ -6,6 +6,7 @@
 
 module TDF.Routes.Academy
   ( AcademyAPI
+  , AcademyAccountAPI
   , EnrollReq(..)
   , ProgressReq(..)
   , ReferralClaimReq(..)
@@ -113,12 +114,17 @@ data NextCohortDTO = NextCohortDTO
 
 instance ToJSON NextCohortDTO
 
+-- | Public academy content.
 type AcademyAPI =
+       "academy" :> "microcourse" :> Capture "slug" Text :> Get '[JSON] MicrocourseDTO
+  :<|> "cohorts" :> "next" :> Get '[JSON] NextCohortDTO
+
+-- | Enrollment, progress and referral attribution act on a person's academy
+-- record, so they require a session and bind to the signed-in account email.
+type AcademyAccountAPI =
        "academy" :> "enroll" :> ReqBody '[JSON] EnrollReq :> Post '[JSON] NoContent
-  :<|> "academy" :> "microcourse" :> Capture "slug" Text :> Get '[JSON] MicrocourseDTO
   :<|> "academy" :> "progress" :> ReqBody '[JSON] ProgressReq :> Post '[JSON] NoContent
   :<|> "referrals" :> "claim" :> ReqBody '[JSON] ReferralClaimReq :> Post '[JSON] NoContent
-  :<|> "cohorts" :> "next" :> Get '[JSON] NextCohortDTO
 
 strictObjectOptions :: Options
 strictObjectOptions = defaultOptions { rejectUnknownFields = True }

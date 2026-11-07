@@ -23,6 +23,7 @@ export default {
 
   title: 'Eliminar tu cuenta TDF',
   intro: 'Puedes solicitar aquí la eliminación de tu cuenta completa y sus datos personales, incluido el contenido que publicaste. No necesitas enviar un correo ni explicar el motivo.',
+  termsTitle: 'Plazos y conservación de datos',
   timing: 'El equipo tramita la eliminación manualmente. Nuestro objetivo es completar la solicitud en 30 días y confirmar el resultado por el contacto verificado de tu cuenta. Recibir la solicitud no significa que la cuenta ya esté eliminada.',
   retention: 'Los registros que debamos conservar por obligaciones legales, fiscales, de seguridad o disputas se tratarán por separado; te explicaremos cuáles y por qué.',
   login: 'Iniciar sesión para continuar',

@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useMemo, useState, type MouseEvent } from 'react';
 import {
   Alert,
@@ -37,6 +38,7 @@ import { Rooms } from '../api/rooms';
 import { buildInventoryScanUrl } from '../config/appConfig';
 import PageShell, { EmptyState } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { firstNonEmptyString } from '../utils/stringValues';
 import {
@@ -428,9 +430,9 @@ function InventoryAssetSummaryCard({
             <Typography variant="h6" fontWeight={700}>
               {title}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <MarkdownText variant="body2" color="text.secondary">
               {description}
-            </Typography>
+            </MarkdownText>
           </Stack>
           <Stack spacing={0.5}>
             <Typography variant="body1" fontWeight={700}>
@@ -1293,11 +1295,13 @@ export default function InventoryPage() {
                             </Typography>
                           )}
                           {h.termsAndConditions && (
-                            <Typography variant="caption" color="text.secondary">
-                              Términos: {h.termsAndConditions}
-                            </Typography>
+                            <LegalDisclosure dense title="Términos y condiciones">
+                              <MarkdownText variant="body2">
+                                {h.termsAndConditions}
+                              </MarkdownText>
+                            </LegalDisclosure>
                           )}
-                          <Typography variant="body2">{h.notes ?? '—'}</Typography>
+                          <MarkdownText variant="body2">{h.notes ?? '—'}</MarkdownText>
                         </Stack>
                       </TableCell>
                     </TableRow>

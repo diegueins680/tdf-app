@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 for (const [label, scriptName, variable, database] of [
   ['ticket admission', 'test-ticket-admission.sh', 'TICKET_ADMISSION_TEST_DSN', 'tdf_ticket_admission_test'],
+  ['ticket manual review', 'test-ticket-manual-review.sh', 'TICKET_MANUAL_REVIEW_TEST_DSN', 'tdf_ticket_manual_review_test'],
   ['merchandise', 'test-artist-merch-runtime.sh', 'TDF_MERCH_RUNTIME_DATABASE_URL', 'merch_runtime_test'],
   ['provider retry', 'test-provider-retry-runtime.sh', 'TDF_PROVIDER_RETRY_DATABASE_URL', 'tdf_provider_retry_test'],
 ]) test(`actual ${label} fixture runner validates routing before its first SQL command`, () => {
@@ -33,7 +34,7 @@ for (const [label, scriptName, variable, database] of [
       assert.notEqual(r.status, 0);
       assert.equal(existsSync(marker), false, 'invalid routing must never reach psql');
     }
-    if (label === 'ticket admission') {
+    if (label === 'ticket admission' || label === 'ticket manual review') {
       for (const url of [`postgresql://localhost:5433/${database}`, `postgresql://user@localhost/${database}`]) {
         assert.notEqual(invoke(url).status, 0);
         assert.equal(existsSync(marker), false, 'unsupported direct-harness URL must fail before fixture setup');

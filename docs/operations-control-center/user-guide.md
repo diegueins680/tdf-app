@@ -20,4 +20,4 @@ Refunds, reversals/voids, financial chargeback outcomes, paid or near-term cance
 
 Mobile notifications contain no customer or financial detail. Opening the deep link fetches the item again under current authorization. If access was removed, the item remains unavailable even if the OS notification is still visible.
 
-If a provider fails, Managers/Admins use the integration failure queue, inspect the redacted code, fix configuration, and replay with a reason. Never paste a token, certificate, raw payload, card value, or customer secret into a note.
+If a provider fails, Managers/Admins use the integration failure queue, inspect the redacted code, fix configuration, and replay with a reason. The replay puts the failed projection back in the worker's queue: the failure shows as retrying until the projection runs (resolved) or fails eight more times (dead letter again, and it can be replayed again). Never paste a token, certificate, raw payload, card value, or customer secret into a note.

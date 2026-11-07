@@ -51,7 +51,7 @@ try {
 }
 
 const slug = metadata.slug ?? payload.slug;
-const landingUrl = metadata.landingUrl ?? payload.landingUrl ?? `https://tdf-app.pages.dev/curso/${slug}`;
+const landingUrl = metadata.landingUrl ?? payload.landingUrl ?? `https://www.tdfrecords.net/curso/${slug}`;
 
 console.log(`Published course: ${metadata.title ?? payload.title}`);
 console.log(`Slug: ${slug}`);

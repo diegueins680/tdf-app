@@ -28,7 +28,26 @@ captures/refunds remain accepted. No monetary limit or provider assumption was n
 
 Ledger accumulation now converts each Int64 entry to `Integer` before grouping/summing.
 The old `[M,M,2]` false balance and large valid compensating sums are regressions. This helper
-has no discovered runtime caller; SQL ledger correctness is a separate open obligation.
+has no discovered runtime caller.
+
+The runtime authority is `commerce_validate_ledger_posting`
+(`2026-08-13_unified_checkout_core.sql`): on `draft -> posted` it groups entries by
+currency and rejects any nonzero `SUM(amount_minor)`. PostgreSQL sums `bigint` as
+`numeric`, so the comparison is exact. All three live writers (`CheckoutStore`
+capture posting, `RefundStore` refund posting, the marketplace deposit settlement
+function) insert `draft`, add entries, then post. On 2026-10-09
+`tdf-hq/test/integration/ledger_posting_balance.sql` ran on the production schema
+snapshot plus the migration batch: balanced, unbalanced, cross-currency, the
+`[M,M,2]` modular wrap, extreme compensating values and empty postings behave as
+required. With the trigger disabled the test fails.
+
+The historical direct-insert and append enforcement gaps are addressed by the
+2026-10-12 integrity migration on PR #551; they are still gaps on the observed
+main until integration. Its lock-only entry fence was then refuted under stale
+REPEATABLE READ snapshots. The additive 2026-10-16 write fence and named SQL
+schedules are documented in [ledger-refinement-2026-10-16.md](ledger-refinement-2026-10-16.md).
+Neither these integrations nor the arithmetic helper proofs establish complete
+SQL/MVCC or whole-program refinement.
 
 ## Machine-checked claims
 
@@ -53,13 +72,42 @@ and exits unsuccessfully.
 These are source-derived solver proofs of the recognized arithmetic fragments over the full
 64-bit domain, conditional on the trusted translation. They are not bounded random tests, but
 also not a mechanically verified GHC translation or whole-program refinement proof.
-No proof certificate is independently checked; Z3 is trusted.
+The ordinary runner trusts Z3. The separate [CPC runner](proof-certificates.md)
+checks refutation certificates for all six negated arithmetic/caller claims.
 
-The outer lifecycle validator's nonnegative guards and the selector of authorized/total/captured
-ceilings discharge the arithmetic precondition by manual source inspection. Its full dispatch,
+The complete recognized `transitionPayment` validator is now lowered from its
+actual guards, including the actual list of selectors passed to `any (< 0)`.
+For arbitrary defined signed Int64 lifecycle fields, two further obligations are:
+
+```
+validatorAdmits => captured >= 0 AND selectedCaptureCeiling >= 0
+validatorAdmits => refunded >= 0 AND captured >= 0
+```
+
+The capture ceiling is the actual helper's recognized choice between authorized
+and total amounts. An arbitrary Boolean selects either branch, covering every
+state without restricting the numeric domain. The complete helper shape,
+including that case expression, must still match before this mapping is admitted.
+Neither implication assumes nonnegative fields. Each has a SAT admission witness
+at the maximum total amount and a SAT source-mutation control: omitting authorized
+or refunded from the validator's sign-check list admits `-1` in the relevant field.
+Unsigned solver model numerals are interpreted as signed two's-complement Int64;
+`18446744073709551615` denotes `-1`. Omitting only the captured sign guard does
+not refute the claim: `refunded >= 0` and `refunded <= captured` already imply it.
+This observation changes no application guard or requirement.
+
+These source-derived implications replace the manual sign-precondition argument
+at the validator/helper boundary. Source-to-formula correspondence and composition
+with the existing arithmetic theorems remain trusted. Full dispatch/reachability,
 state-consistency policy, caller authentication, locking/transactions, provider signatures,
 concurrent history, retries and liveness remain outside this proof. No environment fairness
 assumption is needed for this terminating pure arithmetic fragment.
+
+The arithmetic export now retains sixteen exact SMT inputs: six UNSAT claims and
+ten SAT witnesses/controls. A missing/unsupported validator, additional early
+success branch, changed selector grammar, or bypass of `applyPaymentEvent` is
+refused. These are conditional source-derived proofs, not a verified Haskell
+semantics or a complete `transitionPayment` contract.
 
 The registered Hspec module `TDF.Commerce.PaymentArithmeticSpec` checks 400 transition cases against an independent
 Integer oracle and 512 ledger sequences. Hspec regressions cover exact bug vectors and maximum

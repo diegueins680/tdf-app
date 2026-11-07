@@ -3,6 +3,7 @@ import { Box, Skeleton, Stack } from '@mui/material';
 export default function RouteLoadingFallback() {
   return (
     <Box
+      data-route-loading="true"
       role="status"
       aria-live="polite"
       aria-busy="true"

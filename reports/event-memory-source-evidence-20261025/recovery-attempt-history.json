@@ -1,0 +1,84 @@
+{
+  "recordedAt": "2026-10-27T00:19:45.686459+00:00",
+  "attempts": [
+    {
+      "attempt": 1,
+      "source": "a51c6ebe8b6220cbf9728f8d1d6f457580d5b2cf",
+      "overallPass": false,
+      "directRequests": 120,
+      "browserStatus": "FAIL",
+      "browserAssertionCount": 11,
+      "reason": "Fixture incorrectly expected204; actual declared PostJSONNoContent is200",
+      "apiStopped": true,
+      "ownedDatabaseRemoved": true,
+      "frontendStopped": true,
+      "httpResultsSha256": "11091aaec19725e449a0eeb57ee2c89e1885daf18f05e9c6fecd7cc4c586840d"
+    },
+    {
+      "attempt": 2,
+      "source": "8bd9646dbe0dbc78905d522c5d2e386715aa8239",
+      "overallPass": false,
+      "directRequests": 120,
+      "browserStatus": "FAIL",
+      "browserAssertionCount": 11,
+      "reason": "Fixture used/reset-password; actual Email/public route is/reset",
+      "apiStopped": true,
+      "ownedDatabaseRemoved": true,
+      "frontendStopped": true,
+      "httpResultsSha256": "909b1c28c45515250a25bdb3ee664e882b0a605093774f7b8099fb16229edfb3"
+    },
+    {
+      "attempt": 3,
+      "source": "a5b2bf36d9b344cd7c9277691cb14519f7fc2d33",
+      "overallPass": false,
+      "directRequests": 127,
+      "browserStatus": "PASS",
+      "browserAssertionCount": 13,
+      "reason": "Browser and credential/restart checks passed; whole run failed because actual SMTP-disabled stdout had not been retained",
+      "apiStopped": true,
+      "ownedDatabaseRemoved": true,
+      "frontendStopped": true,
+      "httpResultsSha256": "31857f5278ff0a73d766bcef95d7b79a0e17c23815fea6303a2d13cc7120b619"
+    },
+    {
+      "attempt": 4,
+      "source": "8b2bc818bc2a1eff130e105af0e94464133692a8",
+      "overallPass": false,
+      "directRequests": 0,
+      "browserStatus": "NOT_EXECUTED",
+      "browserAssertionCount": 0,
+      "reason": "ENOSPC during createdb before API/business requests",
+      "apiStopped": true,
+      "ownedDatabaseRemoved": null,
+      "frontendStopped": null,
+      "httpResultsSha256": "be2bdf5beaac1294600c331b61314cac6d5bb2553d60f14bd3a0181fd1ea63d8"
+    },
+    {
+      "attempt": 5,
+      "source": "8b2bc818bc2a1eff130e105af0e94464133692a8",
+      "overallPass": true,
+      "directRequests": 127,
+      "browserStatus": "PASS",
+      "browserAssertionCount": 13,
+      "reason": "PASS with actual private-PTY output and unchanged security assertions",
+      "apiStopped": true,
+      "ownedDatabaseRemoved": true,
+      "frontendStopped": true,
+      "httpResultsSha256": "360c406293d3811b099f549d5b9145bfdf7002d0fbd7789dbc6b231f16948ac7"
+    }
+  ],
+  "otherPreflights": [
+    {
+      "result": "BLOCKED_NOT_EXECUTED",
+      "reason": "Traceability was stale after a fixture correction; regenerated before continuing"
+    },
+    {
+      "result": "UNQUALIFIED_FOR_FINAL",
+      "reason": "An interim JSON/CSV scan completed but source changed during analysis; replaced with fresh scans of frozen8b2"
+    }
+  ],
+  "applicationBackendNativeUnchanged": true,
+  "noFailedRunCountedAsPass": true,
+  "productionWrites": 0,
+  "realInvitations": 0
+}

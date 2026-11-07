@@ -22,9 +22,13 @@ parents; they are not independent vulnerability or exploitable endpoint counts.
 The production-only audit has a different scope and cannot override this result.
 
 Remaining exposure decisions live in the policy's `remaining` records. In
-particular, the URI decoder is reached by React Navigation/Expo query parsing.
-Upstream0.5.0 exports an ES module, while installed query-string7 requires a
-CommonJS callable. A blind override is not admitted as a compatibility repair.
+particular, the older URI reachability claim was too broad: current Expo incoming
+query parsing uses `URLSearchParams`, and React Navigation has its own parser.
+The installed query-string7 decoder is replaced under the scoped
+[URI compatibility contract](uri-decoder.md). Its explicit adapter preserves the
+CommonJS caller while selecting unchanged upstream0.5.1; actual-consumer tests and
+affected-release and namespace negative controls cover those finite boundaries. No incoming deep-link exploit or
+complete dependency clearance is claimed.
 Metro image-size1.2.1 similarly cannot be blindly replaced with its changed2.x
 export API. Forge verification exists in Expo signing tooling; no reachability
 clearance follows merely from labeling it a build dependency. Upstream forge1.4.0
@@ -36,3 +40,41 @@ material. Source inspection is scoped evidence, not a proof that every dynamic
 import, native build or provider-supplied input is safe. Primary forge report:
 https://github.com/digitalbazaar/forge/issues/1149; decoder maintainer advisory:
 https://github.com/SamVerschueren/decode-uri-component/security/advisories/GHSA-vcc3-ghjq-m6fr.
+
+
+The 22 October root-lock repair updates DOMPurify3.4.16 to3.4.17 and
+ip-address10.7.2 to10.7.4 within the existing dependency ranges. The additional
+reviewed floors reject regression below these patched versions; these packages
+are absent from the exact pinned Mobile lock. The production audit policy and
+its dated WebTorrent exception are unchanged. The older full-scan receipt above
+retains its original execution identity and unresolved exposures.
+
+Primary upstream advisories identify the affected versions and patches:
+[DOMPurify shadow-root template handling](https://github.com/cure53/DOMPurify/security/advisories/GHSA-cg2g-xh64-v4q7),
+[DOMPurify XHTML SMIL handling](https://github.com/cure53/DOMPurify/security/advisories/GHSA-c6gr-qvv4-5v3f),
+[DOMPurify detached hook subtrees](https://github.com/cure53/DOMPurify/security/advisories/GHSA-mrv2-3pqr-j5jr),
+and [ip-address zone parsing](https://github.com/beaugunderson/ip-address/security/advisories/GHSA-rxp7-6hxx-x8q5).
+An accepted version floor does not establish that every input or browser mode is
+safe, and it does not clear the separately recorded runtime/tooling exposures.
+
+
+The 23 October root web repair replaces Zod3.25.76 with4.6.7 and upgrades
+its form resolver to5.9.2; the resolver requires the declared React Hook Form
+minimum7.55.0, while the actual locked version remains7.66.0. This addresses
+[GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5).
+The existing SocialV2 client regression suite now verifies that an oversized
+discovery page rejects before inspecting elements, and that a page at the
+limit still validates its elements. The former control fails against the
+original Zod3 library, which reads all51 elements. These tests cover the
+compatible client update; they do not prove the version-floor checker or
+unrestricted collection/input safety. The existing deterministic floor policy
+and production-only audit configuration are unchanged. The pinned Mobile
+dependency tree and the older full-scan findings retain their separate scope.
+
+
+The 31 October browser-boundary correction removes the unused Node WebTorrent
+production graph and its now-expired `ip` exception. The older dated reports
+above retain their original scope; the exception is no longer current policy.
+The browser artifact remains byte-exact and receives separate conservative
+component advisory checks. See [webtorrent-browser.md](webtorrent-browser.md)
+for the acceptance criteria, regression controls and explicit provenance limits.

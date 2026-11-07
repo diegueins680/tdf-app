@@ -8,8 +8,11 @@ import { reportMissingEnv } from './utils/env';
 import { LocalePreferencesProvider } from './contexts/LocalePreferencesContext';
 import { CurrencyProvider } from './contexts/CurrencyContext';
 import './styles/print.css';
+import './styles/navigation.css';
+import { BootErrorBoundary, installGlobalErrorHandlers } from './bootSafety';
 
 reportMissingEnv(['VITE_PAYPAL_CLIENT_ID']);
+installGlobalErrorHandlers();
 
 // Initialize analytics as early as possible so pageviews captured by
 // posthog-js include the landing route. If VITE_POSTHOG_KEY is unset
@@ -24,16 +27,25 @@ void import('./analytics/posthog')
   })
   .catch(() => undefined);
 
+// Campaign links land directly on /login inside in-app browsers on slow mobile
+// data. Fetch the page chunk alongside the route table instead of after it;
+// the routed lazy() import reuses this same module request.
+if (window.location.pathname === '/login') {
+  void import('./pages/LoginPage').catch(() => undefined);
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <SessionProviders>
-        <LocalePreferencesProvider>
-          <CurrencyProvider>
-            <App />
-          </CurrencyProvider>
-        </LocalePreferencesProvider>
-      </SessionProviders>
-    </BrowserRouter>
+    <BootErrorBoundary>
+      <BrowserRouter>
+        <SessionProviders>
+          <LocalePreferencesProvider>
+            <CurrencyProvider>
+              <App />
+            </CurrencyProvider>
+          </LocalePreferencesProvider>
+        </SessionProviders>
+      </BrowserRouter>
+    </BootErrorBoundary>
   </React.StrictMode>
 );

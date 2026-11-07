@@ -2,14 +2,21 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Server.SocialEventsHandlers (
     publicUpcomingEventsServer,
     collectMatchingRows,
+    decodeTicketAcceptedTermsVersion,
+    encodeTicketCheckoutMetadata,
+    ticketPlatformFeeBreakdown,
+    ticketTermsAcceptance,
     replaceLogisticsActivityDependencies,
+    resolveLogisticsTimezone,
     socialEventsServer,
+    socialEventsServerWithStripeRefund,
     stripeWebhookServer,
     validateRsvpPageLimit,
     decodeRsvpCursor,
@@ -67,6 +74,7 @@ module TDF.Server.SocialEventsHandlers (
     validateEventCreateUpdateDimensions,
     validateSocialEventsListOffset,
     validateSocialEventsListFilter,
+    validateArtistPartyIdFilter,
     postgresVisibleImportedMetadataClause,
     validateDiscoverySourceWrite,
     validateVenueCreateUpdateFields,
@@ -95,6 +103,7 @@ module TDF.Server.SocialEventsHandlers (
     validateTicketCheckoutAmount,
     isImageUpload,
     validateEventImageUploadSize,
+    validMomentMediaSignature,
     validateEventTitleInput,
     validateEventTimeRange,
     validateArtistName,
@@ -103,6 +112,8 @@ module TDF.Server.SocialEventsHandlers (
     validateArtistProfileWriteAccess,
     validateAuthenticatedPartyReference,
     validateEventDeleteAccess,
+    requireEventManager,
+    assignMissingEventOrganizer,
     validateEventDeletionCheckoutHistory,
     removeSocialEventAssets,
     suppressImportedEventMetadata,
@@ -138,6 +149,7 @@ import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import Data.Aeson.Types (Object, Parser, parseMaybe)
 import qualified Data.ByteString.Char8 as BS8
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Base64.URL as B64URL
 import Data.Char (
@@ -148,6 +160,8 @@ import Data.Char (
     isAsciiLower,
     isAsciiUpper,
     isControl,
+    isDigit,
+    isHexDigit,
  )
 import Data.Int (Int64)
 import Data.List (nub, sortOn)
@@ -179,6 +193,7 @@ import Database.Persist
 import Database.Persist.Sql
     ( ConnectionPool
     , FilterTablePrefix (PrefixTableName)
+    , IsolationLevel (ReadCommitted)
     , Single (..)
     , SqlBackend
     , SqlPersistT
@@ -186,8 +201,10 @@ import Database.Persist.Sql
     , fromSqlKey
     , orderClause
     , rawExecute
+    , rawExecuteCount
     , rawSql
     , runSqlPool
+    , runSqlPoolWithIsolation
     , toSqlKey
     , updateWhereCount
     )
@@ -201,12 +218,15 @@ import Database.PostgreSQL.Simple (SqlError (..))
 import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
+import qualified TDF.Ticketing.Inventory as TicketInventory
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Server.TicketManualPayments as ManualPayments
+import qualified TDF.Server.TicketPaymentReceipt as Receipt
+import qualified TDF.Server.TicketTaxDocuments as TaxDocuments
 import qualified TDF.Server.TicketRefunds as TicketRefunds
 import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.EventResearch as EventResearch
-import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName)
+import TDF.Auth (AuthedUser (..), hasStrictAdminAccess, moduleName, withCurrentAuthSession)
 import qualified TDF.Catalog.Models as Catalog
 import TDF.Config (AppConfig (..), EmailConfig, assetsRootDir, resolveConfiguredAssetsBase)
 import TDF.Internationalization (normalizeCurrencyCode)
@@ -243,6 +263,7 @@ import TDF.DTO.SocialEventsDTO (
     EventMomentCommentCreateDTO (..),
     EventMomentCommentDTO (..),
     EventMomentCreateDTO (..),
+    EventMomentEditDTO (..),
     EventMomentDTO (..),
     EventMomentReactionDTO (..),
     EventMomentReactionRequestDTO (..),
@@ -258,6 +279,8 @@ import TDF.DTO.SocialEventsDTO (
     RejectionReasonDTO (..),
     TicketManualPaymentDTO (..),
     TicketManualPaymentReviewDTO (..),
+    TicketTaxDocumentDTO (..),
+    BankRefundCompletionDTO (..),
     RsvpCreateDTO (..),
     RsvpDTO (..),
     RsvpSummaryDTO (..),
@@ -313,16 +336,20 @@ import qualified TDF.Trials.Server as TrialsServer (isValidHttpUrl)
 
 type AppM = ReaderT Env Handler
 
-publicUpcomingEventsServer :: Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
-publicUpcomingEventsServer mCity mStartAfter mLimit = do
+publicUpcomingEventsServer :: Maybe T.Text -> Maybe T.Text -> Maybe UTCTime -> Maybe Int -> AppM [PublicUpcomingEventDTO]
+publicUpcomingEventsServer mCity mArtistPartyId mStartAfter mLimit = do
     Env{..} <- ask
     now <- liftIO getCurrentTime
+    -- Artist profile carousels read through this public projection so every
+    -- anonymous-listing predicate (public-listable state, public metadata and
+    -- no suppressed external reference) applies to them as well.
+    artistPartyFilter <- either throwError pure (validateArtistPartyIdFilter mArtistPartyId)
     let startAfter = fromMaybe now mStartAfter
         limit = min 200 (max 1 (fromMaybe 50 mLimit))
     liftIO $
         runSqlPool
             ( do
-                rows <- selectPublicUpcomingSocialEvents mCity startAfter limit
+                rows <- selectPublicUpcomingSocialEvents mCity artistPartyFilter startAfter limit
                 catMaybes
                     <$> mapM
                         (\(eventEntity, Single canonicalCity) ->
@@ -337,17 +364,34 @@ publicUpcomingEventsServer mCity mStartAfter mLimit = do
 -- complete future-event table when a city has few or no matches.
 selectPublicUpcomingSocialEvents ::
     Maybe T.Text ->
+    Maybe T.Text ->
     UTCTime ->
     Int ->
     SqlPersistT IO [(Entity SocialEvent, Single (Maybe T.Text))]
-selectPublicUpcomingSocialEvents mCity startAfter limit = do
+selectPublicUpcomingSocialEvents mCity mArtistPartyId startAfter limit = do
     eventTable <- getEscapedRawName "social_event"
     eventIdField <- getEscapedRawName "id"
     eventStartField <- getEscapedRawName "start_time"
     eventMetadataField <- getEscapedRawName "metadata"
     publicEventView <- getEscapedRawName "directory_public_event"
+    eventArtistTable <- getEscapedRawName "event_artist"
+    artistProfileTable <- getEscapedRawName "social_artist_profile"
     backendName <- T.toCaseFold <$> getRDBMS
     let eventIdColumn = eventTable <> "." <> eventIdField
+        -- Exact Party equality through the event/artist link; the view above
+        -- already restricts the candidate events, so this only narrows them.
+        (artistClause, artistValues) = case mArtistPartyId of
+            Nothing -> ("", [])
+            Just partyIdText ->
+                ( " AND EXISTS (SELECT 1 FROM "
+                    <> eventArtistTable
+                    <> " AS artist_link INNER JOIN "
+                    <> artistProfileTable
+                    <> " AS artist_profile ON artist_profile.id=artist_link.artist_id WHERE artist_link.event_id="
+                    <> eventIdColumn
+                    <> " AND artist_profile.party_id=?)"
+                , [PersistText partyIdText]
+                )
         eventStartColumn = eventTable <> "." <> eventStartField
         eventMetadataColumn = eventTable <> "." <> eventMetadataField
         metadataClause = visibleImportedMetadataClause backendName eventMetadataColumn
@@ -375,13 +419,14 @@ selectPublicUpcomingSocialEvents mCity startAfter limit = do
                 <> ">=? AND "
                 <> metadataClause
                 <> cityClause
+                <> artistClause
                 <> " ORDER BY "
                 <> eventStartColumn
                 <> " ASC,"
                 <> eventIdColumn
                 <> " ASC"
     query <- getConnLimitOffset (limit, 0) orderedQuery
-    rawSql query (toPersistValue startAfter : cityValues)
+    rawSql query (toPersistValue startAfter : cityValues ++ artistValues)
 
 collectMatchingRows ::
     Monad m =>
@@ -481,6 +526,33 @@ validateEventDeletionCheckoutHistory hasTicketOrders
                     "Events with ticket orders cannot be deleted; unpublish the event instead to preserve checkout history"
                 }
     | otherwise = Right ()
+
+-- | Terms version of the event's approved, active ticket policy (same predicate as
+-- the public storefront), or Nothing when the event has no such policy.
+loadActiveTicketTermsVersion :: UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+loadActiveTicketTermsVersion = selectActiveTicketTermsVersion ""
+
+-- | The same read, holding a share lock on the policy row until the transaction
+-- ends: a writer that withdraws or replaces the policy waits for the order, and
+-- one that got there first leaves no matching row (fail closed).
+lockActiveTicketTermsVersion :: UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+lockActiveTicketTermsVersion = selectActiveTicketTermsVersion " FOR SHARE"
+
+selectActiveTicketTermsVersion :: T.Text -> UTCTime -> SocialEventId -> SqlPersistT IO (Maybe T.Text)
+selectActiveTicketTermsVersion lockClause now eventKey = do
+    rows <-
+        rawSql
+            ( "SELECT terms_version FROM event_ticket_checkout_policy\
+              \ WHERE event_id = ? AND active AND approval_status = 'approved'\
+              \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
+              \ AND (effective_from IS NULL OR effective_from <= ?)\
+              \ AND (effective_until IS NULL OR effective_until > ?)"
+                <> lockClause
+            )
+            [toPersistValue eventKey, PersistUTCTime now, PersistUTCTime now]
+    pure $ case rows of
+        [Single version] -> Just version
+        _ -> Nothing
 
 removeSocialEventAssets :: FilePath -> SocialEventId -> IO ()
 removeSocialEventAssets assetsRoot eventKey = do
@@ -661,6 +733,31 @@ parseStripeRefundResponse =
         "Could not parse Stripe refund response"
         (Aeson.withObject "refund" (Aeson..: "id"))
 
+-- A returned identifier is correlation evidence, not proof of completion.
+-- This endpoint does not request expanded PaymentIntents from Stripe.
+stripeRefundCompletionMatches :: T.Text -> Int -> T.Text -> Aeson.Value -> Bool
+stripeRefundCompletionMatches expectedIntent expectedAmount expectedCurrency =
+    isJust . parseMaybe (Aeson.withObject "refund" $ \response -> do
+        objectType <- response Aeson..: "object" :: Parser T.Text
+        status <- response Aeson..: "status" :: Parser T.Text
+        amount <- response Aeson..: "amount" :: Parser Int
+        currency <- response Aeson..: "currency" :: Parser T.Text
+        paymentIntent <- response Aeson..: "payment_intent" :: Parser T.Text
+        let storedCurrency = T.toLower expectedCurrency
+        unless
+            ( objectType == "refund" && status == "succeeded"
+                && expectedAmount > 0 && amount == expectedAmount
+                && T.length storedCurrency == 3 && T.all isAsciiLower storedCurrency
+                && currency == storedCurrency
+                && not (T.null expectedIntent) && paymentIntent == expectedIntent
+            )
+            (fail "Refund completion evidence does not match its request"))
+
+validObservedStripeRefundId :: T.Text -> Bool
+validObservedStripeRefundId value =
+    not (T.null value) && T.length value <= 128
+        && T.all (\ch -> isAscii ch && ch >= '!' && ch <= '~') value
+
 parseStripeCustomerId :: Aeson.Value -> Either T.Text T.Text
 parseStripeCustomerId =
     parseStripeRequiredText
@@ -761,6 +858,17 @@ runStripeRequestSafely action = do
 tryAny :: IO a -> IO (Either SomeException a)
 tryAny = try
 
+-- Like tryAny, but cancellation and other asynchronous exceptions propagate.
+trySynchronous :: IO a -> IO (Either SomeException a)
+trySynchronous action = do
+    result <- try action
+    case result of
+        Left err ->
+            case fromException err :: Maybe SomeAsyncException of
+                Just _ -> throwIO err
+                Nothing -> pure (Left err)
+        Right value -> pure (Right value)
+
 isEventTicketCheckoutConflict :: SomeException -> Bool
 isEventTicketCheckoutConflict exception =
     case fromException exception of
@@ -824,7 +932,9 @@ stripeWebhookServer mSignature rawBody = do
                                 )
                                 envPool
                     pure dispatchResult
-        _ -> throwError err500{errBody = "Stripe is not configured"}
+        -- Public unsigned callback on an unconfigured provider: unavailable, not a
+        -- server fault, like the other provider callbacks (AUTH-PUBLIC-001).
+        _ -> throwError err503{errBody = "Stripe is not configured"}
 
 handleStripePaymentIntentSucceeded :: UTCTime -> Aeson.Value -> AppM NoContent
 handleStripePaymentIntentSucceeded now payload =
@@ -1117,12 +1227,13 @@ ticketPlatformFeeBreakdown faceValue =
             , ticketCheckoutTotalCents = faceValue + buyerFee
             }
 
-encodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe T.Text -> TicketPlatformFeeBreakdown -> Maybe T.Text
-encodeTicketCheckoutMetadata mIdempotencyKey mPromoCode TicketPlatformFeeBreakdown{..} =
+encodeTicketCheckoutMetadata :: Maybe T.Text -> Maybe T.Text -> Maybe T.Text -> TicketPlatformFeeBreakdown -> Maybe T.Text
+encodeTicketCheckoutMetadata mIdempotencyKey mPromoCode mAcceptedTermsVersion TicketPlatformFeeBreakdown{..} =
     Just . TE.decodeUtf8 . BL.toStrict . Aeson.encode $
         Aeson.object
             [ "checkout_idempotency_key" Aeson..= mIdempotencyKey
             , "promo_code" Aeson..= mPromoCode
+            , "accepted_terms_version" Aeson..= mAcceptedTermsVersion
             , "face_value_cents" Aeson..= ticketFaceValueCents
             , "buyer_platform_fee_cents" Aeson..= ticketBuyerPlatformFeeCents
             , "organizer_platform_fee_cents" Aeson..= ticketOrganizerPlatformFeeCents
@@ -1139,6 +1250,44 @@ decodeTicketCheckoutMetadata mRawMetadata = do
                 <*> obj Aeson..:? "promo_code"
         )
         metadata
+
+-- | Terms version the buyer accepted when this order was created, when the event
+-- had an approved ticket policy. Orders older than this evidence decode to Nothing.
+decodeTicketAcceptedTermsVersion :: Maybe T.Text -> Maybe T.Text
+decodeTicketAcceptedTermsVersion mRawMetadata = do
+    rawMetadata <- mRawMetadata
+    metadata <- Aeson.decodeStrict' (TE.encodeUtf8 rawMetadata)
+    join $
+        parseMaybe
+            (Aeson.withObject "ticket_terms_metadata" (Aeson..:? "accepted_terms_version"))
+            metadata
+
+-- | Terms acceptance to record for a legacy ticket purchase. A new order must
+-- accept the policy that is active now. A replay stays bound to the acceptance
+-- its order recorded, so a later policy change neither blocks the retry nor
+-- lets it claim a version the buyer did not accept for that order.
+ticketTermsAcceptance ::
+    -- | Terms version of the approved active policy, if the event has one.
+    Maybe T.Text ->
+    -- | Version submitted with this request.
+    Maybe T.Text ->
+    -- | Acceptance recorded by the existing order for this idempotency key.
+    Maybe (Maybe T.Text) ->
+    Either ServerError (Maybe T.Text)
+ticketTermsAcceptance _ submitted (Just recorded)
+    | maybe True ((== submitted) . Just) recorded = Right recorded
+    | otherwise =
+        Left err409{errBody = "ticketPurchaseIdempotencyKey was already used for different checkout details"}
+ticketTermsAcceptance Nothing _ Nothing = Right Nothing
+ticketTermsAcceptance (Just _) Nothing Nothing =
+    Left err400{errBody = "Ticket terms must be accepted before seats can be held"}
+ticketTermsAcceptance (Just active) (Just accepted) Nothing
+    | accepted == active = Right (Just active)
+    | otherwise = Left ticketTermsChangedError
+
+ticketTermsChangedError :: ServerError
+ticketTermsChangedError =
+    err409{errBody = "Ticket terms changed; review the current terms and accept them again"}
 
 decodeTicketPlatformFeeBreakdown :: EventTicketOrder -> TicketPlatformFeeBreakdown
 decodeTicketPlatformFeeBreakdown order =
@@ -1300,17 +1449,20 @@ markCourseRegistrationStatus now newStatus piId mMarketplaceOrderId = do
                 (translateToArtistTipStatus newStatus)
                 piId
                 mMarketplaceOrderId
-        Just (Entity regKey reg) -> do
-            when (ME.courseRegistrationStatus reg == "pending_payment") $
-                liftIO $
-                    runSqlPool
-                        ( update
-                            regKey
-                            [ ME.CourseRegistrationStatus =. newStatus
-                            , ME.CourseRegistrationUpdatedAt =. now
-                            ]
-                        )
-                        envPool
+        Just (Entity regKey _) -> do
+            -- Conditional update: concurrent or reordered deliveries can
+            -- never replace a recorded outcome (formal/payments/StripeIntentOutcome.tla).
+            liftIO $
+                runSqlPool
+                    ( updateWhere
+                        [ ME.CourseRegistrationId ==. regKey
+                        , ME.CourseRegistrationStatus ==. "pending_payment"
+                        ]
+                        [ ME.CourseRegistrationStatus =. newStatus
+                        , ME.CourseRegistrationUpdatedAt =. now
+                        ]
+                    )
+                    envPool
             pure NoContent
 
 {- | Webhook fallback for artist tip PaymentIntents. Same shape as
@@ -1332,17 +1484,19 @@ markArtistTipStatus now newStatus piId mMarketplaceOrderId = do
                 (translateToMarketplaceOrderStatus newStatus)
                 piId
                 mMarketplaceOrderId
-        Just (Entity tipKey tip) -> do
-            when (ME.artistTipStatus tip == "pending") $
-                liftIO $
-                    runSqlPool
-                        ( update
-                            tipKey
-                            [ ME.ArtistTipStatus =. newStatus
-                            , ME.ArtistTipUpdatedAt =. now
-                            ]
-                        )
-                        envPool
+        Just (Entity tipKey _) -> do
+            -- Conditional update (PAY-TIP-001; formal/payments/StripeIntentOutcome.tla).
+            liftIO $
+                runSqlPool
+                    ( updateWhere
+                        [ ME.ArtistTipId ==. tipKey
+                        , ME.ArtistTipStatus ==. "pending"
+                        ]
+                        [ ME.ArtistTipStatus =. newStatus
+                        , ME.ArtistTipUpdatedAt =. now
+                        ]
+                    )
+                    envPool
             pure NoContent
 
 {- | Webhook fallback for marketplace Stripe PaymentIntents. Idempotent: only
@@ -1358,19 +1512,22 @@ markMarketplaceOrderStatus now newStatus piId mOrderId = do
                 envPool
     case mOrder of
         Just (Entity orderKey order) -> do
-            when (ME.marketplaceOrderStatus order `elem` ["stripe_pending", "pending"]) $
-                liftIO $
-                    runSqlPool
-                        ( update
-                            orderKey
-                            [ ME.MarketplaceOrderStatus =. newStatus
-                            , ME.MarketplaceOrderPaymentProvider =. Just "stripe"
-                            , ME.MarketplaceOrderStripePaymentIntentId =. Just piId
-                            , ME.MarketplaceOrderPaidAt =. if newStatus == "paid" then Just now else ME.marketplaceOrderPaidAt order
-                            , ME.MarketplaceOrderUpdatedAt =. now
-                            ]
-                        )
-                        envPool
+            -- Conditional update, like the recovery branch below
+            -- (formal/payments/StripeIntentOutcome.tla).
+            liftIO $
+                runSqlPool
+                    ( updateWhere
+                        [ ME.MarketplaceOrderId ==. orderKey
+                        , ME.MarketplaceOrderStatus <-. ["stripe_pending", "pending"]
+                        ]
+                        [ ME.MarketplaceOrderStatus =. newStatus
+                        , ME.MarketplaceOrderPaymentProvider =. Just "stripe"
+                        , ME.MarketplaceOrderStripePaymentIntentId =. Just piId
+                        , ME.MarketplaceOrderPaidAt =. if newStatus == "paid" then Just now else ME.marketplaceOrderPaidAt order
+                        , ME.MarketplaceOrderUpdatedAt =. now
+                        ]
+                    )
+                    envPool
             pure NoContent
         Nothing -> do
             mOrderByMetadata <-
@@ -1867,6 +2024,19 @@ validateSocialEventsListOffset (Just rawOffset)
 maxSocialEventsListOffset :: Int
 maxSocialEventsListOffset = 10000
 
+-- | Party identifiers are rendered as decimal Int64 keys; accept only that shape
+-- so a filter cannot become a wildcard or a scan over unrelated text values.
+validateArtistPartyIdFilter :: Maybe T.Text -> Either ServerError (Maybe T.Text)
+validateArtistPartyIdFilter mRaw = do
+    cleaned <- validateSocialEventsListFilter "partyId" mRaw
+    case cleaned of
+        Nothing -> Right Nothing
+        Just value
+            | T.length value <= 19 && T.all isDigit value && not (T.isPrefixOf "0" value) ->
+                Right (Just value)
+            | otherwise ->
+                Left err400{errBody = "partyId must be a positive integer party identifier"}
+
 validateSocialEventsListFilter :: T.Text -> Maybe T.Text -> Either ServerError (Maybe T.Text)
 validateSocialEventsListFilter _ Nothing = Right Nothing
 validateSocialEventsListFilter fieldName (Just rawFilter) =
@@ -2121,7 +2291,13 @@ venueMatchesEventCity venue (Entity _ city) =
                 | otherwise -> True
 
 socialEventsServer :: AuthedUser -> ServerT SocialEventsAPI AppM
-socialEventsServer user =
+socialEventsServer = socialEventsServerWithStripeRefund Stripe.createRefund
+
+-- Keep provider execution injectable for transaction/failure regressions.
+socialEventsServerWithStripeRefund
+    :: (Stripe.StripeConfig -> T.Text -> Int -> IO (Either T.Text Aeson.Value))
+    -> AuthedUser -> ServerT SocialEventsAPI AppM
+socialEventsServerWithStripeRefund issueStripeRefund user =
     eventsServer
         :<|> eventCitiesServer
         :<|> eventDiscoverySourcesServer
@@ -2136,6 +2312,7 @@ socialEventsServer user =
         :<|> budgetServer
         :<|> financeServer
         :<|> logisticsServer
+        :<|> memoryInvitationsServer
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
@@ -2156,6 +2333,42 @@ socialEventsServer user =
         eventKey <- parseKeyOr400 "event" rawId
         requireEventVisibleToUser eventKey
         pure eventKey
+
+    memoryInvitationsServer :: ServerT MemoryInvitationRoutes AppM
+    memoryInvitationsServer =
+        memoryPreferences Nothing
+        :<|> (memoryPreferences . Just)
+        :<|> (\eventId -> memoryCampaign eventId Nothing)
+        :<|> (\eventId desired -> memoryCampaign eventId (Just desired))
+        :<|> (\eventId deliveryId -> do
+            eventKey <- (parseKeyOr400 "event" eventId :: AppM SocialEventId)
+            memoryQuery "SELECT event_memory_open(?,?,?::uuid)::text"
+                [toPersistValue eventKey, toPersistValue (auPartyId user), PersistText (UUID.toText deliveryId)])
+      where
+        memoryPreferences desired = memoryQuery "SELECT event_memory_preferences(?,?)::text"
+            [toPersistValue (auPartyId user), maybe PersistNull PersistBool desired]
+        memoryCampaign eventId desired = do
+            eventKey <- (parseKeyOr400 "event" eventId :: AppM SocialEventId)
+            memoryQuery "SELECT event_memory_summary(?,?,?)::text"
+                [toPersistValue eventKey, toPersistValue (auPartyId user), maybe PersistNull PersistBool desired]
+        memoryQuery :: T.Text -> [PersistValue] -> AppM (Headers '[Header "Cache-Control" T.Text] Aeson.Value)
+        memoryQuery statement parameters = do
+            Env{..} <- ask
+            result <- liftIO $ try $ runSqlPool (withCurrentAuthSession user $ do
+                installed <- rawSql "SELECT to_regprocedure('event_memory_dispatch_batch(integer)') IS NOT NULL" [] :: SqlPersistT IO [Single Bool]
+                if installed == [Single True]
+                    then (rawSql statement parameters :: SqlPersistT IO [Single T.Text])
+                    else pure []) envPool
+            rows <- case result of
+                Left (_ :: SqlError) -> throwError err503{errBody="Memory invitations are temporarily unavailable",errHeaders=[("Cache-Control","no-store")]}
+                Right Nothing -> throwError err401
+                Right (Just value) -> pure value
+            case rows of
+                [Single body] -> case Aeson.eitherDecodeStrict' (TE.encodeUtf8 body) of
+                    Right value@(Aeson.Object fields)
+                        | not (AesonKeyMap.member "error" fields) -> pure (addHeader ("no-store" :: T.Text) value)
+                    _ -> throwError err404
+                _ -> throwError err404{errBody="Memory invitations are not installed",errHeaders=[("Cache-Control","no-store")]}
 
     -- Events
     eventsServer :: ServerT EventsRoutes AppM
@@ -2684,7 +2897,18 @@ socialEventsServer user =
         eventKey <- parseVisibleEventKey rawId
         mExisting <- liftIO $ runSqlPool (get eventKey) envPool
         existing <- maybe (throwError err404{errBody = "Event not found"}) pure mExisting
-        managedEvent <- claimOrRequireEventManager currentPartyId envPool eventKey existing
+        -- A strict administrator may edit an event without an organizer and is
+        -- assigned as its organizer together with the accepted edit, under
+        -- the event lock; a refused edit assigns nobody.
+        let editAccess row = case cleanMaybeText (socialEventOrganizerPartyId row) of
+                Just owner
+                    | owner == currentPartyId -> Right False
+                    | otherwise -> Left eventNotOrganizerError
+                Nothing
+                    | hasStrictAdminAccess user -> Right True
+                    | otherwise -> Left eventWithoutOrganizerError
+        _ <- either throwError pure (editAccess existing)
+        let managedEvent = existing
         let dto = eudEvent
         validateEventReadOnlyProjectionOmitted dto
         requestedEventTypeId <-
@@ -2743,8 +2967,7 @@ socialEventsServer user =
             case locked of
                 Nothing -> pure (Left err404{errBody = "Event not found"})
                 Just (Entity _ currentEvent)
-                    | cleanMaybeText (socialEventOrganizerPartyId currentEvent) /= Just currentPartyId ->
-                        pure (Left err403{errBody = "Only the event organizer can manage this event"})
+                    | Left refused <- editAccess currentEvent -> pure (Left refused)
                     | socialEventWorkflowStateId currentEvent /= socialEventWorkflowStateId managedEvent
                         && (case eudWorkflowStateIdUpdate of FieldMissing -> False; _ -> True) ->
                         pure (Left err409{errBody = "Event workflow changed; reload before updating"})
@@ -2766,23 +2989,40 @@ socialEventsServer user =
                                                 }
                                             updated = proposed{socialEventMetadata =
                                                 EventDiscoveryOwnership.preserveEventOwnership currentEvent proposed}
-                                        update eventKey
-                                            [ SocialEventTitle =. socialEventTitle updated
-                                            , SocialEventDescription =. socialEventDescription updated
-                                            , SocialEventVenueId =. socialEventVenueId updated
-                                            , SocialEventTimezone =. socialEventTimezone updated
-                                            , SocialEventStartTime =. socialEventStartTime updated
-                                            , SocialEventEndTime =. socialEventEndTime updated
-                                            , SocialEventPriceCents =. socialEventPriceCents updated
-                                            , SocialEventCapacity =. socialEventCapacity updated
-                                            , SocialEventEventTypeId =. socialEventEventTypeId updated
-                                            , SocialEventWorkflowStateId =. socialEventWorkflowStateId updated
-                                            , SocialEventMetadata =. socialEventMetadata updated
-                                            , SocialEventUpdatedAt =. now
-                                            ]
-                                        deleteWhere [EventArtistEventId ==. eventKey]
-                                        forM_ artistKeys $ \artistKey -> insert_ (EventArtist eventKey artistKey Nothing)
-                                        pure (Right updated)
+                                        assigned <-
+                                            if editAccess currentEvent == Right True
+                                                then assignMissingEventOrganizer
+                                                    currentPartyId now eventKey
+                                                else pure (Right currentEvent)
+                                        case assigned of
+                                          Left refused -> pure (Left refused)
+                                          Right holder -> do
+                                           update eventKey
+                                               [ SocialEventTitle =. socialEventTitle updated
+                                               , SocialEventDescription
+                                                   =. socialEventDescription updated
+                                               , SocialEventVenueId =. socialEventVenueId updated
+                                               , SocialEventTimezone =. socialEventTimezone updated
+                                               , SocialEventStartTime
+                                                   =. socialEventStartTime updated
+                                               , SocialEventEndTime =. socialEventEndTime updated
+                                               , SocialEventPriceCents
+                                                   =. socialEventPriceCents updated
+                                               , SocialEventCapacity =. socialEventCapacity updated
+                                               , SocialEventEventTypeId
+                                                   =. socialEventEventTypeId updated
+                                               , SocialEventWorkflowStateId
+                                                   =. socialEventWorkflowStateId updated
+                                               , SocialEventMetadata =. socialEventMetadata updated
+                                               , SocialEventUpdatedAt =. now
+                                               ]
+                                           deleteWhere [EventArtistEventId ==. eventKey]
+                                           forM_ artistKeys $ \artistKey ->
+                                               insert_ (EventArtist eventKey artistKey Nothing)
+                                           pure (Right updated
+                                               { socialEventOrganizerPartyId =
+                                                   socialEventOrganizerPartyId holder
+                                               })
             ) envPool) >>= either throwError pure
         liftIO (runSqlPool (eventEntityToDTO (defaultCurrency envConfig) eventKey updatedEvent (eventArtists dto)) envPool)
             >>= either throwError pure
@@ -2832,16 +3072,11 @@ socialEventsServer user =
                                         Just owner
                                             | owner /= currentPartyId ->
                                                 pure (Left err403{errBody = "Only the event organizer can manage this event"})
-                                        owner ->
+                                        Nothing -> pure (Left eventWithoutOrganizerError)
+                                        Just _ ->
                                             case decodeStoredEventMetadata (socialEventMetadata eventRow) of
                                                 Left message -> pure (Left (storedEventMetadataServerError message))
                                                 Right existingMeta -> do
-                                                    when (isNothing owner) $
-                                                        update
-                                                            eventKey
-                                                            [ SocialEventOrganizerPartyId =. Just currentPartyId
-                                                            , SocialEventUpdatedAt =. now
-                                                            ]
                                                     -- Keep file creation and metadata publication inside
                                                     -- the event lock. Deletion either waits and removes this
                                                     -- file afterward, or commits first and makes this branch
@@ -2883,6 +3118,67 @@ socialEventsServer user =
                             :: SqlPersistT IO [Entity SocialEvent]
                         )
             else fmap (Entity eventKey) <$> get eventKey
+
+    -- Only new purchases use this admission check. Settlement, recovery and
+    -- existing checkout reuse retain their own authorization/state contracts.
+    lockTicketPurchaseEvent :: SocialEventId -> SqlPersistT IO (Either ServerError ())
+    lockTicketPurchaseEvent eventKey = do
+        locked <- lockSocialEventForMutation eventKey
+        case locked of
+            Nothing -> pure (Left err404{errBody = "Event not found"})
+            Just (Entity _ event) -> do
+                enabled <- eventTicketPurchaseEnabledFor event
+                pure (validateTicketPurchaseEventEligibility (socialEventMetadata event) enabled)
+
+    -- New holds bind the pricing inputs under the Tier lock. Existing order
+    -- snapshots remain valid after later tier edits and are not repriced here.
+    lockTicketPurchaseTierPricing ::
+        SocialEventId -> EventTicketTierId -> EventTicketTier ->
+        SqlPersistT IO (Either ServerError ())
+    lockTicketPurchaseTierPricing eventKey tierKey quotedTier = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        current <-
+            if "postgres" `T.isInfixOf` backendName
+                then listToMaybe <$> (rawSql
+                    "SELECT ?? FROM event_ticket_tier WHERE id = ? AND event_id = ? FOR UPDATE"
+                    [toPersistValue tierKey, toPersistValue eventKey]
+                    :: SqlPersistT IO [Entity EventTicketTier])
+                else getEntity tierKey
+        pure $ case current of
+            Just (Entity _ tier)
+                | eventTicketTierEventId tier == eventKey
+                , eventTicketTierPriceCents tier == eventTicketTierPriceCents quotedTier
+                , T.toUpper (eventTicketTierCurrency tier)
+                    == T.toUpper (eventTicketTierCurrency quotedTier) -> Right ()
+            _ -> Left err409{errBody = "Ticket tier pricing changed; reload before buying"}
+
+    lockTicketPurchasePromo :: Maybe (Entity PromoCode) -> SqlPersistT IO (Either ServerError ())
+    lockTicketPurchasePromo Nothing = pure (Right ())
+    lockTicketPurchasePromo (Just (Entity promoKey quoted)) = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        current <-
+            if "postgres" `T.isInfixOf` backendName
+                then listToMaybe <$> (rawSql
+                    "SELECT ?? FROM promo_code WHERE id = ? FOR UPDATE"
+                    [toPersistValue promoKey] :: SqlPersistT IO [Entity PromoCode])
+                else getEntity promoKey
+        -- Counters and caps stay authoritative at the atomic claim. Harmless
+        -- descriptive edits and later changes to stored orders are independent.
+        let sameTerms actual =
+                SM.promoCodeEventId actual == SM.promoCodeEventId quoted
+                    && SM.promoCodeDiscountType actual == SM.promoCodeDiscountType quoted
+                    && SM.promoCodeDiscountValue actual == SM.promoCodeDiscountValue quoted
+                    && T.toUpper (SM.promoCodeCurrency actual)
+                        == T.toUpper (SM.promoCodeCurrency quoted)
+                    && SM.promoCodeValidFrom actual == SM.promoCodeValidFrom quoted
+                    && SM.promoCodeValidUntil actual == SM.promoCodeValidUntil quoted
+                    && SM.promoCodeTierIds actual == SM.promoCodeTierIds quoted
+                    && SM.promoCodeMinPurchaseAmountCents actual
+                        == SM.promoCodeMinPurchaseAmountCents quoted
+                    && SM.promoCodeIsActive actual == SM.promoCodeIsActive quoted
+        pure $ case current of
+            Just (Entity _ promo) | sameTerms promo -> Right ()
+            _ -> Left err409{errBody = "Promotion changed; reload before buying"}
 
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
@@ -3262,8 +3558,8 @@ socialEventsServer user =
             :<|> followArtist
             :<|> unfollowArtist
 
-    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
-    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mLimit mOffset = do
+    listArtists :: Maybe T.Text -> Maybe UUID.UUID -> Maybe T.Text -> Maybe T.Text -> Maybe Int -> Maybe Int -> AppM [ArtistDTO]
+    listArtists mNameFilter mGenreIdFilter mLegacyGenreFilter mPartyIdFilter mLimit mOffset = do
         Env{..} <- ask
         when (isJust mLegacyGenreFilter) $
             throwError err400{errBody = "genre is obsolete; use the canonical genreId UUID parameter"}
@@ -3272,12 +3568,17 @@ socialEventsServer user =
         nameFilter <-
             either throwError pure $
                 fmap T.toCaseFold <$> validateSocialEventsListFilter "name" mNameFilter
+        -- Party relationship lookup is an exact indexed equality, so callers never
+        -- have to page through the whole catalog (bounded by the offset cap) to
+        -- find the one profile that belongs to a Party.
+        partyFilter <- either throwError pure (validateArtistPartyIdFilter mPartyIdFilter)
         let hasFilter = isJust nameFilter || isJust mGenreIdFilter
+            partyCondition = maybe [] (\partyIdText -> [ArtistProfilePartyId ==. Just partyIdText]) partyFilter
         rows <-
             liftIO $
                 runSqlPool
                     ( selectList
-                        []
+                        partyCondition
                         ( [Desc ArtistProfileCreatedAt]
                             ++ if hasFilter
                                 then [LimitTo 1000]
@@ -3664,8 +3965,11 @@ socialEventsServer user =
         listMoments
             :<|> createMoment
             :<|> uploadMomentImage
+            :<|> (\eventId (EventMemoryMediaUploadForm form) -> uploadMomentFile False eventId form)
             :<|> reactToMoment
             :<|> commentOnMoment
+            :<|> editMoment
+            :<|> deleteMoment
 
     liveBroadcastsServer :: ServerT LiveBroadcastsRoutes AppM
     liveBroadcastsServer =
@@ -3814,27 +4118,47 @@ socialEventsServer user =
             ) envPool
         either throwError pure result
 
+    -- Reuse the existing per-account budget in its own committed transaction,
+    -- so validation/storage failures cannot refund an abusive write attempt.
+    chargeMomentWrite :: AppM ()
+    chargeMomentWrite = do
+        Env{..} <- ask
+        charged <- liftIO $ runSqlPool (withCurrentAuthSession user
+            (rawSql "SELECT interaction_consume_write_budget(?)" [toPersistValue (auPartyId user)] :: SqlPersistT IO [Single Bool])) envPool
+        case charged of
+            Nothing -> throwError err401
+            Just [Single True] -> pure ()
+            _ -> throwError err429{errBody="Too many memory write attempts; wait before retrying",errHeaders=[("Retry-After","60"),("Cache-Control","no-store")]}
+
     -- Moments
-    listMoments :: T.Text -> AppM [EventMomentDTO]
-    listMoments eventIdStr = do
+    listMoments :: T.Text -> Bool -> AppM (Headers '[Header "Cache-Control" T.Text] [EventMomentDTO])
+    listMoments eventIdStr extended = do
         Env{..} <- ask
         eventKey <- parseVisibleEventKey eventIdStr
         allowed <- liftIO $ runSqlPool (Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)) envPool
         unless allowed $ throwError err404{errBody = "Event not found"}
         _ <- requireExistingEvent envPool eventKey
-        liftIO $ loadEventMoments envPool currentPartyId eventKey
+        moments <- liftIO $ loadEventMoments envPool currentPartyId eventKey
+        pure $ addHeader ("private, no-store" :: T.Text) $ if extended then moments else filter (\moment -> emMediaType moment `elem` ["image", "video"]) moments
 
     createMoment :: T.Text -> EventMomentCreateDTO -> AppM EventMomentDTO
     createMoment eventIdStr EventMomentCreateDTO{..} = do
+        chargeMomentWrite
         Env{..} <- ask
         now <- liftIO getCurrentTime
         eventKey <- parseVisibleEventKey eventIdStr
         allowed <- liftIO $ runSqlPool (Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)) envPool
         unless allowed $ throwError err404{errBody = "Event not found"}
         _ <- requireExistingEvent envPool eventKey
-        mediaUrl <- maybe (throwError err400{errBody = "Moment media URL is required"}) pure (cleanMaybeText (Just emCreateMediaUrl))
-        mediaType <- maybe (throwError err400{errBody = "Moment media type must be image or video"}) pure (normalizeMomentMediaType emCreateMediaType)
+        mediaType <- maybe (throwError err400{errBody = "Invalid moment media type"}) pure (normalizeMomentMediaType emCreateMediaType)
         caption <- either throwError pure (normalizeMomentCaption emCreateCaption)
+        mediaUrl <- if mediaType == "text" then do
+            when (isNothing caption || not (T.null (T.strip emCreateMediaUrl))) $
+                throwError err400{errBody="A text memory requires a caption and no media URL"}
+            pure ""
+          else do
+            normalized <- either throwError pure (validateEventMetadataUrlField "Moment media URL" (Just emCreateMediaUrl))
+            maybe (throwError err400{errBody="Moment media URL is required"}) pure normalized
         mediaWidth <-
             either
                 throwError
@@ -3853,11 +4177,14 @@ socialEventsServer user =
         -- Attribution is derived from the authenticated Party, never from a
         -- client-supplied display name.
         authorName <- liftIO $ loadAuthenticatedPartyDisplayName envPool currentPartyId
-        momentKey <-
+        inserted <-
             liftIO $
                 runSqlPool
-                    ( insert
-                        EventMoment
+                    (withCurrentAuthSession user $ do
+                        _ <- lockSocialEventForMutation eventKey
+                        visible <- Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)
+                        if not visible then pure (Left err404{errBody="Event not found"}) else Right <$> insert
+                            EventMoment
                             { eventMomentEventId = eventKey
                             , eventMomentAuthorPartyId = Just currentPartyId
                             , eventMomentAuthorName = authorName
@@ -3872,13 +4199,68 @@ socialEventsServer user =
                             }
                     )
                     envPool
+        momentKey <- maybe (throwError err401) (either throwError pure) inserted
         liftIO $ loadMomentDTO envPool currentPartyId momentKey
 
+    -- Source authorship, parent visibility and the live session are all required.
+    -- Canonical interaction deletion triggers retain conversation tombstones.
+    editMoment :: T.Text -> T.Text -> EventMomentEditDTO -> AppM EventMomentDTO
+    editMoment rawEvent rawMoment EventMomentEditDTO{..} = do
+        caption <- either throwError pure (normalizeMomentCaption (Just emeCaption))
+        momentKey <- changeOwnMoment rawEvent rawMoment $ \key row ->
+          do
+            visible <- Interactions.visible (auPartyId user) "event_moment" (renderKeyText key)
+            if not visible then pure (Left err404{errBody="Memory not found"})
+            else if eventMomentUpdatedAt row /= emeExpectedUpdatedAt then pure (Left err409{errBody="The memory changed; refresh before editing"})
+            else if eventMomentMediaType row == "text" && isNothing caption then pure (Left err400{errBody="A text memory requires a caption"})
+            else do
+                now <- liftIO getCurrentTime
+                update key [EventMomentCaption =. caption, EventMomentUpdatedAt =. now]
+                pure (Right key)
+        Env{..} <- ask
+        liftIO $ loadMomentDTO envPool currentPartyId momentKey
+
+    deleteMoment :: T.Text -> T.Text -> AppM NoContent
+    deleteMoment rawEvent rawMoment = do
+        _ <- changeOwnMoment rawEvent rawMoment $ \key _ -> do
+            canonical <- Interactions.activated
+            -- After cutover, direct writes to frozen children are fenced. The
+            -- parent deletion trigger clears them and retains canonical
+            -- tombstones, including when interaction commands are paused.
+            unless canonical $ do
+                deleteWhere [EventMomentReactionMomentId ==. key]
+                deleteWhere [EventMomentCommentMomentId ==. key]
+            delete key
+            pure (Right key)
+        pure NoContent
+
+    changeOwnMoment :: T.Text -> T.Text -> (EventMomentId -> EventMoment -> SqlPersistT IO (Either ServerError EventMomentId)) -> AppM EventMomentId
+    changeOwnMoment rawEvent rawMoment action = do
+        chargeMomentWrite
+        Env{..} <- ask
+        eventKey <- parseKeyOr400 "event" rawEvent
+        momentKey <- parseKeyOr400 "moment" rawMoment
+        checked <- liftIO $ runSqlPool (withCurrentAuthSession user $ do
+            -- Same parent-first lock order as event deletion and media upload.
+            _ <- lockSocialEventForMutation eventKey
+            allowed <- Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)
+            rows <- rawSql "SELECT ?? FROM event_moment WHERE id=? AND event_id=? FOR UPDATE"
+                [toPersistValue momentKey,toPersistValue eventKey]
+            case rows of
+                [Entity _ row] | allowed && eventMomentAuthorPartyId row == Just currentPartyId -> action momentKey row
+                _ -> pure (Left err404{errBody="Memory not found"})) envPool
+        result <- maybe (throwError err401) pure checked
+        either throwError pure result
+
     uploadMomentImage :: T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
-    uploadMomentImage rawId rawUploadForm = do
+    uploadMomentImage = uploadMomentFile True
+
+    uploadMomentFile :: Bool -> T.Text -> EventImageUploadForm -> AppM EventImageUploadDTO
+    uploadMomentFile imageOnly rawId rawUploadForm = do
+        chargeMomentWrite
         EventImageUploadForm{..} <-
             either (throwError . eventImageUploadFormServerError) pure $
-                validateEventImageUploadForm rawUploadForm
+                (if imageOnly then validateEventImageUploadForm else validateEventMemoryMediaUploadForm) rawUploadForm
         Env{..} <- ask
         eventKey <- parseVisibleEventKey rawId
         let mimeTypeVal = T.toLower (T.strip (fdFileCType eiuFile))
@@ -3886,10 +4268,11 @@ socialEventsServer user =
             requestedName = eiuName >>= nonEmptyText
             nameWithExt = applyUploadExtension (requestedName <|> fallbackName) fallbackName
             safeName = sanitizeUploadFileName nameWithExt
-        unless (isImageUpload mimeTypeVal safeName) $
-            throwError err400 { errBody = "Only raster image uploads with matching MIME type and extension are allowed" }
         fileSize <- liftIO (getFileSize (fdPayload eiuFile))
-        either throwError pure (validateEventImageUploadSize fileSize)
+        if "image/" `T.isPrefixOf` mimeTypeVal then either throwError pure (validateEventImageUploadSize fileSize)
+          else unless (fileSize > 0 && fileSize <= 25 * 1024 * 1024) $ throwError err400{errBody="Audio and video files must be between 1 byte and 25 MB"}
+        signature <- liftIO $ BS.take 32 <$> BS.readFile (fdPayload eiuFile)
+        unless (validMomentMediaSignature mimeTypeVal signature) $ throwError err400{errBody="File content does not match its declared media type"}
         uuid <- liftIO UUIDV4.nextRandom
         let eventIdTxt = renderKeyText eventKey
             storedName = UUID.toText uuid <> "-" <> safeName
@@ -3899,13 +4282,17 @@ socialEventsServer user =
             publicUrl = buildUploadAssetUrl (resolveConfiguredAssetsBase envConfig) relPath
         uploadResult <- liftIO $
             runSqlPool
-                ( do
+                (withCurrentAuthSession user $ do
                     lockedEvent <- lockSocialEventForMutation eventKey
                     case lockedEvent of
                         Nothing -> pure (Left err404{errBody = "Event not found"})
                         Just _ -> do
+                            visible <- Interactions.visible (auPartyId user) "event" (renderKeyText eventKey)
+                            publicRows <- rawSql "SELECT id FROM directory_public_rsvp_event WHERE id=?" [toPersistValue eventKey] :: SqlPersistT IO [Single Int64]
                             refs <- selectList [ExternalEventRefEventId ==. eventKey] []
-                            if any (externalEventRefIsSuppressed . entityVal) refs
+                            if not visible then pure (Left err404{errBody="Event not found"})
+                            else if null publicRows then pure (Left err403{errBody="This upload produces a public file; private-event uploads are unavailable"})
+                            else if any (externalEventRefIsSuppressed . entityVal) refs
                                 then pure (Left err404{errBody = "Event not found"})
                                 else do
                                     -- Deletion uses the same event lock before removing
@@ -3917,7 +4304,7 @@ socialEventsServer user =
                                     pure (Right ())
                 )
                 envPool
-        either throwError pure uploadResult
+        maybe (throwError err401) (either throwError pure) uploadResult
         pure EventImageUploadDTO
             { eiuEventId = eventIdTxt
             , eiuFileName = storedName
@@ -4106,6 +4493,11 @@ socialEventsServer user =
             -- Manual bank transfer review
             :<|> listManualPayments
             :<|> reviewManualPayment
+            :<|> getManualPaymentReceipt
+            -- SRI electronic invoices
+            :<|> listTaxDocuments
+            :<|> retryTaxDocument
+            :<|> completeBankTransferRefund
             -- Transfers
             :<|> createTransfer
             :<|> listTransfers
@@ -4139,7 +4531,7 @@ socialEventsServer user =
         eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+        _ <- requireEventManager currentPartyId eventVal
         let tierName = T.strip (ticketTierName dto)
         when (T.null tierName) $ throwError err400{errBody = "ticket tier name is required"}
         when (ticketTierPriceCents dto < 0) $ throwError err400{errBody = "ticket tier price must be >= 0"}
@@ -4200,7 +4592,7 @@ socialEventsServer user =
         tierKey <- parseKeyOr400 "ticket tier" tierIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+        _ <- requireEventManager currentPartyId eventVal
         mTier <- liftIO $ runSqlPool (get tierKey) envPool
         tier <- maybe (throwError err404{errBody = "Ticket tier not found"}) pure mTier
         when (eventTicketTierEventId tier /= eventKey) $ throwError err400{errBody = "Ticket tier does not belong to this event"}
@@ -4228,10 +4620,14 @@ socialEventsServer user =
                 | existingKey /= tierKey ->
                     throwError err409{errBody = "ticket tier code already exists for this event"}
             _ -> pure ()
-        liftIO $
+        mUpdated <- liftIO $
             runSqlPool
-                ( update
-                    tierKey
+                ( do
+                  changed <- updateWhereCount
+                    [ EventTicketTierId ==. tierKey
+                    , EventTicketTierEventId ==. eventKey
+                    , EventTicketTierQuantitySold <=. ticketTierQuantityTotal dto
+                    ]
                     [ EventTicketTierCode =. tierCode
                     , EventTicketTierName =. tierName
                     , EventTicketTierDescription =. cleanMaybeText (ticketTierDescription dto)
@@ -4244,11 +4640,11 @@ socialEventsServer user =
                     , EventTicketTierPosition =. ticketTierPosition dto
                     , EventTicketTierUpdatedAt =. now
                     ]
+                  if changed == 1 then getEntity tierKey else pure Nothing
                 )
                 envPool
-        mUpdated <- liftIO $ runSqlPool (getEntity tierKey) envPool
         maybe
-            (throwError err500{errBody = "Could not update ticket tier"})
+            (throwError err409{errBody = "Ticket tier changed; quantity cannot be below sold quantity"})
             (pure . ticketTierEntityToDTO eventKey)
             mUpdated
 
@@ -4393,38 +4789,21 @@ socialEventsServer user =
                     , eventTicketOrderUpdatedAt = now
                     }
 
-        createdOrder <-
+        createdOrderResult <-
             liftIO $
                 runSqlPool
                     ( do
-                        lockedEvents <-
-                            rawSql
-                                "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
-                                [toPersistValue eventKey]
-                        when (null (lockedEvents :: [Entity SocialEvent])) $
-                            fail "Event not found while reserving tickets"
-                        soldAcross <- selectList [EventTicketTierEventId ==. eventKey] []
-                        let soldCount =
-                                sum (map (eventTicketTierQuantitySold . entityVal) soldAcross)
-                            capacityAvailable =
-                                maybe
-                                    True
-                                    (\cap -> soldCount + ticketPurchaseQuantity <= cap)
-                                    (socialEventCapacity eventVal)
-                        if not capacityAvailable
-                            then pure Nothing
-                            else do
-                                reservedCount <-
-                                    updateWhereCount
-                                        [ EventTicketTierId ==. tierKey
-                                        , EventTicketTierIsActive ==. True
-                                        , EventTicketTierQuantitySold
-                                            <=. eventTicketTierQuantityTotal tier - ticketPurchaseQuantity
-                                        ]
-                                        [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
-                                        , EventTicketTierUpdatedAt =. now
-                                        ]
-                                if reservedCount == 0
+                        eligibility <- lockTicketPurchaseEvent eventKey
+                        admission <- case eligibility of
+                            Left refused -> pure (Left refused)
+                            Right () -> lockTicketPurchaseTierPricing eventKey tierKey tier
+                        case admission of
+                            Left refused -> pure (Left refused)
+                            Right () -> Right <$> do
+                                admissionTime <- TicketInventory.ticketReservationTime
+                                reserved <- TicketInventory.reserveTicketInventory
+                                    eventKey tierKey ticketPurchaseQuantity admissionTime
+                                if not reserved
                                     then pure Nothing
                                     else do
                                         orderKey <- insert orderRecord
@@ -4443,6 +4822,7 @@ socialEventsServer user =
                                             )
                     )
                     envPool
+        createdOrder <- either throwError pure createdOrderResult
         (orderDto, orderRecord, ticketCodes) <-
             maybe
                 (throwError err409{errBody = "Not enough tickets available"})
@@ -4490,7 +4870,7 @@ socialEventsServer user =
                     && oldStatus == "pending"
                     && newStatus == "cancelled"
         when (not buyerOwnPendingCancellation) $ do
-            _ <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+            _ <- requireEventManager currentPartyId eventVal
             pure ()
 
         when (oldStatus == "pending" && newStatus == "cancelled") $
@@ -4803,6 +5183,9 @@ socialEventsServer user =
         purchaseEnabled <- liftIO $ runSqlPool (eventTicketPurchaseEnabledFor eventVal) envPool
         either throwError pure $
             validateTicketPurchaseEventEligibility (socialEventMetadata eventVal) purchaseEnabled
+        -- Events with an approved ticket policy need the buyer to accept its current terms,
+        -- exactly as the public storefront checkout does.
+        mTermsVersion <- liftIO $ runSqlPool (loadActiveTicketTermsVersion now eventKey) envPool
         when (ticketPurchaseQuantity <= 0) $ throwError err400{errBody = "Quantity must be > 0"}
         when (not (isTicketTierSaleOpen now tier)) $
             throwError err400{errBody = "Ticket sales are closed for this tier"}
@@ -4856,6 +5239,12 @@ socialEventsServer user =
                         && storedPromoCode == tpwpPromoCode
             unless requestMatches $
                 throwError err409{errBody = "ticketPurchaseIdempotencyKey was already used for different checkout details"}
+        acceptedTermsVersion <-
+            either throwError pure $
+                ticketTermsAcceptance
+                    mTermsVersion
+                    tpwpAcceptedTermsVersion
+                    (decodeTicketAcceptedTermsVersion . eventTicketOrderMetadata . entityVal <$> mExistingCheckout)
         baseAmountCents <-
             either throwError pure $
                 validateTicketCheckoutAmount
@@ -4928,22 +5317,21 @@ socialEventsServer user =
                     , True
                     )
             Nothing -> do
+                -- Admission bounds the actual fee-inclusive provider amount.
+                -- Existing checkouts keep their stored amount/recovery contract.
+                _ <- either throwError pure (validateTicketCheckoutAmount 1 finalAmountCents)
                 let createReservedOrder = do
                         promoClaimed <- case mPromoCodeEnt of
                             Nothing -> pure True
-                            Just (Entity promoKey promo) -> do
-                                let redemptionFilters =
-                                        [ PromoCodeId ==. promoKey
-                                        , PromoCodeIsActive ==. True
-                                        ]
-                                            ++ maybe
-                                                []
-                                                (\limit -> [PromoCodeCurrentRedemptions <. limit])
-                                                (SM.promoCodeMaxRedemptions promo)
-                                (> 0)
-                                    <$> updateWhereCount
-                                        redemptionFilters
-                                        [PromoCodeCurrentRedemptions +=. 1]
+                            Just (Entity promoKey _) ->
+                                -- The organizer can change the cap while this
+                                -- checkout waits. Bind the claim to the current
+                                -- row, including NULL/unlimited, atomically.
+                                (> 0) <$> rawExecuteCount
+                                    "UPDATE promo_code SET current_redemptions=current_redemptions+1 \
+                                    \WHERE id=? AND is_active=TRUE AND \
+                                    \(max_redemptions IS NULL OR current_redemptions<max_redemptions)"
+                                    [toPersistValue promoKey]
                         if not promoClaimed
                             then do
                                 update
@@ -4969,6 +5357,7 @@ socialEventsServer user =
                                                 encodeTicketCheckoutMetadata
                                                     tpwpIdempotencyKey
                                                     tpwpPromoCode
+                                                    acceptedTermsVersion
                                                     feeBreakdown
                                             , eventTicketOrderCheckoutIdempotencyKey = tpwpIdempotencyKey
                                             , eventTicketOrderPurchasedAt = now
@@ -4993,38 +5382,28 @@ socialEventsServer user =
                     createOrder =
                         runSqlPool
                             ( do
-                                lockedEvents <-
-                                    rawSql
-                                        "SELECT ?? FROM social_event WHERE id = ? FOR UPDATE"
-                                        [toPersistValue eventKey]
-                                when (null (lockedEvents :: [Entity SocialEvent])) $
-                                    fail "Event not found while reserving tickets"
-                                soldAcross <-
-                                    selectList [EventTicketTierEventId ==. eventKey] []
-                                let soldCount =
-                                        sum
-                                            (map (eventTicketTierQuantitySold . entityVal) soldAcross)
-                                    capacityAvailable =
-                                        maybe
-                                            True
-                                            (\cap -> soldCount + ticketPurchaseQuantity <= cap)
-                                            (socialEventCapacity eventVal)
-                                if not capacityAvailable
-                                    then pure Nothing
-                                    else do
-                                        reservedCount <-
-                                            updateWhereCount
-                                                [ EventTicketTierId ==. tierKey
-                                                , EventTicketTierIsActive ==. True
-                                                , EventTicketTierQuantitySold
-                                                    <=. eventTicketTierQuantityTotal tier - ticketPurchaseQuantity
-                                                ]
-                                                [ EventTicketTierQuantitySold +=. ticketPurchaseQuantity
-                                                , EventTicketTierUpdatedAt =. now
-                                                ]
-                                        if reservedCount == 0
-                                            then pure Nothing
-                                            else createReservedOrder
+                                eligibility <- lockTicketPurchaseEvent eventKey
+                                either (liftIO . throwIO) pure eligibility
+                                -- The acceptance was checked before this transaction. Read the
+                                -- policy again now that the hold is being taken: a policy
+                                -- replaced in between must not be recorded as accepted. The
+                                -- row stays share-locked until the order is committed.
+                                termsVersionAtHold <- lockActiveTicketTermsVersion now eventKey
+                                when (termsVersionAtHold /= mTermsVersion) $
+                                    liftIO (throwIO ticketTermsChangedError)
+                                pricing <- lockTicketPurchaseTierPricing eventKey tierKey tier
+                                either (liftIO . throwIO) pure pricing
+                                promotion <- lockTicketPurchasePromo mPromoCodeEnt
+                                either (liftIO . throwIO) pure promotion
+                                admissionTime <- TicketInventory.ticketReservationTime
+                                forM_ mPromoCodeEnt $ \(Entity _ promo) ->
+                                    either (const $ liftIO $ throwIO err409
+                                        {errBody = "Promotion is outside its validity window; reload before buying"})
+                                        pure (validatePromoCodeDateWindow admissionTime
+                                            (SM.promoCodeValidFrom promo) (SM.promoCodeValidUntil promo))
+                                reserved <- TicketInventory.reserveTicketInventory
+                                    eventKey tierKey ticketPurchaseQuantity admissionTime
+                                if reserved then createReservedOrder else pure Nothing
                             )
                             envPool
                 createResult <- liftIO (tryAny createOrder)
@@ -5034,6 +5413,8 @@ socialEventsServer user =
                         case fromException createErr :: Maybe SomeAsyncException of
                             Just _ -> liftIO (throwIO createErr)
                             Nothing
+                                | Just serverError <- fromException createErr ->
+                                    throwError (serverError :: ServerError)
                                 | isEventTicketCheckoutConflict createErr ->
                                     case tpwpIdempotencyKey of
                                         Nothing -> liftIO (throwIO createErr)
@@ -5075,7 +5456,14 @@ socialEventsServer user =
             currency = eventTicketOrderCurrency orderRecord
             -- Roll the order back to a state where the caller can retry without
             -- double-selling tickets or double-counting promo redemptions.
-            rollbackOrder errText = do
+            rollbackOrder providerError = do
+                liftIO . hPutStrLn stderr . T.unpack . TE.decodeUtf8 . BL.toStrict . Aeson.encode $
+                    Aeson.object
+                        [ "event" Aeson..= ("stripe_ticket_checkout_failed" :: T.Text)
+                        , "orderId" Aeson..= renderKeyText orderKey
+                        , "reason" Aeson..= (if "No valid payment method types" `T.isInfixOf` providerError
+                            then "payment_methods_unavailable" else "initialization_failed" :: T.Text)
+                        ]
                 unless reusedCheckout $
                     liftIO $
                         runSqlPool
@@ -5091,7 +5479,8 @@ socialEventsServer user =
                                     Just promoKey -> update promoKey [PromoCodeCurrentRedemptions +=. (-1)]
                             )
                             envPool
-                throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe error: " <> errText))}
+                throwError err503
+                    { errBody = "Ticket card payments are temporarily unavailable. Please try again later." }
             storedPromoCode =
                 decodeTicketCheckoutMetadata (eventTicketOrderMetadata orderRecord)
                     >>= snd
@@ -5105,6 +5494,10 @@ socialEventsServer user =
                     && eventTicketOrderCheckoutIdempotencyKey orderRecord
                         == tpwpIdempotencyKey
                     && storedPromoCode == tpwpPromoCode
+                    && maybe
+                        True
+                        ((== tpwpAcceptedTermsVersion) . Just)
+                        (decodeTicketAcceptedTermsVersion (eventTicketOrderMetadata orderRecord))
         when (reusedCheckout && not canonicalRequestMatches) $
             throwError err409{errBody = "ticketPurchaseIdempotencyKey was already used for different checkout details"}
         when
@@ -5268,6 +5661,18 @@ socialEventsServer user =
                         maybe createLegacyPaymentIntent createMobilePaymentSheetIntent tpwpMobileSdkStripeVersion
 
     -- Refunds
+    refundProvidersForOrder :: EventTicketOrderId -> SqlPersistT IO (Bool, [Single T.Text])
+    refundProvidersForOrder key = do
+        canonical <- rawSql
+            "SELECT order_id FROM event_ticket_checkout_runtime WHERE order_id=?"
+            [toPersistValue key] :: SqlPersistT IO [Single Int64]
+        providers <- if null canonical then pure [] else rawSql
+            "SELECT DISTINCT attempt.provider FROM event_ticket_checkout_runtime runtime\
+            \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=runtime.checkout_id\
+            \ WHERE runtime.order_id=? AND attempt.status='succeeded'"
+            [toPersistValue key]
+        pure (not (null canonical), providers)
+
     createRefundRequest :: T.Text -> T.Text -> RefundRequestDTO -> AppM RefundDTO
     createRefundRequest eventIdStr orderIdStr RefundRequestDTO{..} = do
         Env{..} <- ask
@@ -5296,17 +5701,10 @@ socialEventsServer user =
             throwError err400{errBody = "Only paid orders can be refunded"}
         unless (manager || ownsOrder) $
             throwError err403{errBody = "You can only request refunds for your own orders"}
-        canonical <- liftIO $ runSqlPool
-            (rawSql "SELECT order_id FROM event_ticket_checkout_runtime WHERE order_id=?" [toPersistValue orderKey]
-                :: SqlPersistT IO [Single Int64]) envPool
-        providers <- if null canonical then pure [] else liftIO $ runSqlPool
-            (rawSql "SELECT DISTINCT attempt.provider FROM event_ticket_checkout_runtime runtime\
-                \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=runtime.checkout_id\
-                \ WHERE runtime.order_id=? AND attempt.status='succeeded'"
-                [toPersistValue orderKey] :: SqlPersistT IO [Single T.Text]) envPool
-        when (not (null canonical) && length providers /= 1) $
+        (canonical, providers) <- liftIO $ runSqlPool (refundProvidersForOrder orderKey) envPool
+        when (canonical && length providers /= 1) $
             throwError err409 {errBody = "Refund requires one unambiguous verified payment provider"}
-        if providers == [Single "paypal"] then do
+        if providers `elem` [[Single "paypal"], [Single "bank_transfer"]] then do
             result <- liftIO $ try (runSqlPool
                 (TicketRefund.requestTicketRefundForOrder currentPartyId eventKey orderKey
                     refundRequestAmountCents refundRequestReason now) envPool)
@@ -5314,42 +5712,59 @@ socialEventsServer user =
             either (const (throwError err409 {errBody="Refund selection or state is not eligible"}))
                 (pure . refundEntityToDTO (eventTicketOrderCurrency order)) result
         else do
-            mExisting <-
-                liftIO $
-                    runSqlPool
-                        (selectFirst [TicketRefundRequestOrderId ==. orderKey] [])
-                        envPool
-            when (isJust mExisting) $
-                throwError err409{errBody = "Refund request already exists for this order"}
-            let amountCents = fromMaybe (eventTicketOrderAmountCents order) refundRequestAmountCents
-            when (amountCents > eventTicketOrderAmountCents order) $
-                throwError err400{errBody = "Refund amount cannot exceed order amount"}
-            when (amountCents <= 0) $ throwError err400{errBody = "Refund amount must be > 0"}
-            refundKey <-
-                liftIO $
-                    runSqlPool
-                        ( insert
-                            TicketRefundRequest
-                                { ticketRefundRequestOrderId = orderKey
-                                , ticketRefundRequestRequestedByPartyId = Just currentPartyId
-                                , ticketRefundRequestReason = refundRequestReason
-                                , ticketRefundRequestAmountCents = amountCents
-                                , ticketRefundRequestStatus = "pending"
-                                , ticketRefundRequestApprovedByPartyId = Nothing
-                                , ticketRefundRequestApprovedAt = Nothing
-                                , ticketRefundRequestRejectionReason = Nothing
-                                , ticketRefundRequestStripeRefundId = Nothing
-                                , ticketRefundRequestProcessedAt = Nothing
-                                , ticketRefundRequestCreatedAt = now
-                                , ticketRefundRequestUpdatedAt = now
-                                }
-                        )
-                        envPool
-            mRefund <- liftIO $ runSqlPool (getEntity refundKey) envPool
-            maybe
-                (throwError err500{errBody = "Could not create refund request"})
-                (pure . refundEntityToDTO (eventTicketOrderCurrency order))
-                mRefund
+            -- Use the canonical event -> order lock order. The existence read
+            -- must get a fresh snapshot AFTER a competing request commits.
+            result <- liftIO $ runSqlPoolWithIsolation
+                (do
+                    backendName <- T.toCaseFold <$> getRDBMS
+                    let lockSuffix = if "postgres" `T.isInfixOf` backendName then " FOR UPDATE" else ""
+                    events <- rawSql ("SELECT ?? FROM social_event WHERE id=?" <> lockSuffix)
+                        [toPersistValue eventKey]
+                    orders <- rawSql ("SELECT ?? FROM event_ticket_order WHERE id=?" <> lockSuffix)
+                        [toPersistValue orderKey]
+                    case (events, orders) of
+                        ([Entity _ currentEvent], [Entity _ currentOrder])
+                            | eventTicketOrderEventId currentOrder /= eventKey ->
+                                pure (Left err400{errBody = "Ticket order does not belong to this event"})
+                            | eventTicketOrderStatus currentOrder /= "paid" ->
+                                pure (Left err400{errBody = "Only paid orders can be refunded"})
+                            | not (isEventManager currentPartyId currentEvent
+                                || eventTicketOrderBuyerPartyId currentOrder == Just currentPartyId) ->
+                                pure (Left err403{errBody = "You can only request refunds for your own orders"})
+                            | otherwise -> do
+                                currentRoute <- refundProvidersForOrder orderKey
+                                if currentRoute /= (canonical, providers) then
+                                    pure (Left err409{errBody = "Refund payment routing changed; reload the order"})
+                                else do
+                                    existing <- selectFirst [TicketRefundRequestOrderId ==. orderKey] []
+                                    let amountCents = fromMaybe (eventTicketOrderAmountCents currentOrder)
+                                            refundRequestAmountCents
+                                    if isJust existing then
+                                        pure (Left err409{errBody = "Refund request already exists for this order"})
+                                    else if amountCents > eventTicketOrderAmountCents currentOrder then
+                                        pure (Left err400{errBody = "Refund amount cannot exceed order amount"})
+                                    else if amountCents <= 0 then
+                                        pure (Left err400{errBody = "Refund amount must be > 0"})
+                                    else do
+                                        created <- insertEntity TicketRefundRequest
+                                            { ticketRefundRequestOrderId = orderKey
+                                            , ticketRefundRequestRequestedByPartyId = Just currentPartyId
+                                            , ticketRefundRequestReason = refundRequestReason
+                                            , ticketRefundRequestAmountCents = amountCents
+                                            , ticketRefundRequestStatus = "pending"
+                                            , ticketRefundRequestApprovedByPartyId = Nothing
+                                            , ticketRefundRequestApprovedAt = Nothing
+                                            , ticketRefundRequestRejectionReason = Nothing
+                                            , ticketRefundRequestStripeRefundId = Nothing
+                                            , ticketRefundRequestProcessedAt = Nothing
+                                            , ticketRefundRequestCreatedAt = now
+                                            , ticketRefundRequestUpdatedAt = now
+                                            }
+                                        pure (Right (created, eventTicketOrderCurrency currentOrder))
+                        ([], _) -> pure (Left err404{errBody = "Event not found"})
+                        _ -> pure (Left err404{errBody = "Ticket order not found"})
+                ) envPool ReadCommitted
+            either throwError (\(created, currency) -> pure (refundEntityToDTO currency created)) result
 
     listRefunds :: T.Text -> AppM [RefundDTO]
     listRefunds eventIdStr = do
@@ -5436,7 +5851,7 @@ socialEventsServer user =
                 TicketRefunds.approvePaypalTicketRefund user eventKey refundKey
             Nothing -> do
                 when (ticketRefundRequestStatus refund /= "pending") $
-                    throwError err400{errBody = "Refund request is not pending"}
+                    throwError err409{errBody = "Refund request is not pending"}
                 case (eventTicketOrderStripePaymentIntentId order, stripeSecretKey envConfig, stripeWebhookSecret envConfig) of
                     (Just piId, Just secretKey, Just webhookSecret) -> do
                         let stripeCfg =
@@ -5445,18 +5860,82 @@ socialEventsServer user =
                                     , Stripe.stripeWebhookSecret = webhookSecret
                                     , Stripe.stripeApiVersion = Stripe.defaultStripeApiVersion
                                     }
-                        result <- liftIO $ Stripe.createRefund stripeCfg piId (ticketRefundRequestAmountCents refund)
+                        -- Commit a non-expiring execution fence before provider IO.
+                        -- A lost response or process crash must never grant a second POST.
+                        claim <- liftIO $ runSqlPoolWithIsolation
+                            (do
+                                -- Creation uses the same event -> order locks.
+                                -- Count ALL history after waiting, including rejected
+                                -- or completed identities; ambiguity needs reconciliation.
+                                lockedEvent <- lockSocialEventForMutation eventKey
+                                backendName <- T.toCaseFold <$> getRDBMS
+                                let lockSuffix = if "postgres" `T.isInfixOf` backendName then " FOR UPDATE" else ""
+                                lockedOrders <- rawSql
+                                    ("SELECT ?? FROM event_ticket_order WHERE id=?" <> lockSuffix)
+                                    [toPersistValue orderKey] :: SqlPersistT IO [Entity EventTicketOrder]
+                                history <- selectKeysList [TicketRefundRequestOrderId ==. orderKey] []
+                                currentBinding <- TicketRefund.loadTicketRefundReference refundKey
+                                if history /= [refundKey] || isJust currentBinding then
+                                    pure (Left err409{errBody = "Refund history requires reconciliation"})
+                                else case (lockedEvent, lockedOrders) of
+                                    (Just _, [Entity _ lockedOrder])
+                                        | eventTicketOrderEventId lockedOrder == eventKey -> Right <$> updateWhereCount
+                                            [ TicketRefundRequestId ==. refundKey
+                                            , TicketRefundRequestOrderId ==. orderKey
+                                            , TicketRefundRequestAmountCents ==. ticketRefundRequestAmountCents refund
+                                            , TicketRefundRequestStatus ==. "pending"
+                                            ]
+                                            [ TicketRefundRequestStatus =. "processing"
+                                            , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
+                                            , TicketRefundRequestApprovedAt =. Just now
+                                            , TicketRefundRequestUpdatedAt =. now
+                                            ]
+                                    _ -> pure (Left err409{errBody = "Refund order changed; reload the request"})
+                            ) envPool ReadCommitted
+                        claimed <- either throwError pure claim
+                        unless (claimed == 1) $
+                            throwError err409{errBody = "Refund request was already claimed or changed"}
+                        result <- liftIO $ issueStripeRefund stripeCfg piId (ticketRefundRequestAmountCents refund)
                         case result of
                             Left err -> throwError err500{errBody = BL.fromStrict (TE.encodeUtf8 ("Stripe refund error: " <> err))}
                             Right refundResponse -> do
+                                let unverified = err502
+                                        { errBody = "Refund outcome requires reconciliation; request remains processing" }
                                 refundId <-
-                                    eitherStripeServerError $
+                                    either (const (throwError unverified)) pure $
                                         parseStripeRefundResponse refundResponse
-                                liftIO $
+                                unless (validObservedStripeRefundId refundId) $
+                                    throwError unverified
+                                -- Retain an observed ID even when status or money
+                                -- fails validation. It is not verified payment binding.
+                                observed <- liftIO $ runSqlPool
+                                    (updateWhereCount
+                                        ([ TicketRefundRequestId ==. refundKey
+                                         , TicketRefundRequestOrderId ==. orderKey
+                                         , TicketRefundRequestAmountCents
+                                            ==. ticketRefundRequestAmountCents refund
+                                         , TicketRefundRequestStatus ==. "processing"
+                                         ] <>
+                                         ([TicketRefundRequestStripeRefundId ==. Nothing]
+                                            ||. [TicketRefundRequestStripeRefundId ==. Just refundId]))
+                                        [ TicketRefundRequestStripeRefundId =. Just refundId
+                                        , TicketRefundRequestUpdatedAt =. now
+                                        ]) envPool
+                                unless (observed == 1 && stripeRefundCompletionMatches
+                                    piId (ticketRefundRequestAmountCents refund)
+                                    (eventTicketOrderCurrency order) refundResponse) $
+                                    throwError unverified
+                                completed <- liftIO $ trySynchronous $
                                     runSqlPool
                                         ( do
-                                            update
-                                                refundKey
+                                            changed <- updateWhereCount
+                                                [ TicketRefundRequestId ==. refundKey
+                                                , TicketRefundRequestOrderId ==. orderKey
+                                                , TicketRefundRequestAmountCents
+                                                    ==. ticketRefundRequestAmountCents refund
+                                                , TicketRefundRequestStatus ==. "processing"
+                                                , TicketRefundRequestStripeRefundId ==. Just refundId
+                                                ]
                                                 [ TicketRefundRequestStatus =. "approved"
                                                 , TicketRefundRequestApprovedByPartyId =. Just currentPartyId
                                                 , TicketRefundRequestApprovedAt =. Just now
@@ -5464,15 +5943,28 @@ socialEventsServer user =
                                                 , TicketRefundRequestProcessedAt =. Just now
                                                 , TicketRefundRequestUpdatedAt =. now
                                                 ]
+                                            unless (changed == 1) $
+                                                fail "Refund execution state changed before completion"
                                             update orderKey [EventTicketOrderStatus =. "refunded", EventTicketOrderUpdatedAt =. now]
                                             updateWhere
                                                 [EventTicketOrderRefId ==. orderKey]
                                                 [EventTicketStatus =. "refunded", EventTicketUpdatedAt =. now]
-                                            update
-                                                (eventTicketOrderTierId order)
-                                                [EventTicketTierQuantitySold +=. (negate (eventTicketOrderQuantity order))]
+                                            let quantity = eventTicketOrderQuantity order
+                                            unless (quantity > 0) $
+                                                fail "Refund inventory release requires a positive quantity"
+                                            released <- updateWhereCount
+                                                [ EventTicketTierId ==. eventTicketOrderTierId order
+                                                , EventTicketTierEventId ==. eventTicketOrderEventId order
+                                                , EventTicketTierQuantitySold >=. quantity
+                                                ]
+                                                [ EventTicketTierQuantitySold +=. negate quantity
+                                                , EventTicketTierUpdatedAt =. now
+                                                ]
+                                            unless (released == 1) $
+                                                fail "Refund inventory release requires reconciliation"
                                         )
                                         envPool
+                                either (const (throwError unverified)) pure completed
                                 mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
                                 maybe
                                     (throwError err500{errBody = "Could not approve refund"})
@@ -5494,22 +5986,29 @@ socialEventsServer user =
         when (eventTicketOrderEventId order /= eventKey) $
             throwError err400{errBody = "Refund does not belong to this event"}
         when (ticketRefundRequestStatus refund /= "pending") $
-            throwError err400{errBody = "Refund request is not pending"}
+            throwError err409{errBody = "Refund request is not pending"}
         when (T.null (T.strip rrReason)) $
             throwError err400{errBody = "Rejection reason is required"}
-        liftIO $
+        rejected <- liftIO $ trySynchronous $
             runSqlPool
                 ( do
                     binding <- TicketRefund.loadTicketRefundReference refundKey
                     forM_ binding $ \ref -> TicketRefund.cancelTicketRefundAs user ref now
-                    update
-                     refundKey
-                     [ TicketRefundRequestStatus =. "rejected"
-                     , TicketRefundRequestRejectionReason =. Just rrReason
-                     , TicketRefundRequestUpdatedAt =. now
-                     ]
+                    -- Recheck after a competing approval's row lock. Raising on
+                    -- loss also rolls back any canonical cancellation above.
+                    changed <- updateWhereCount
+                        [ TicketRefundRequestId ==. refundKey
+                        , TicketRefundRequestOrderId ==. orderKey
+                        , TicketRefundRequestStatus ==. "pending"
+                        ]
+                        [ TicketRefundRequestStatus =. "rejected"
+                        , TicketRefundRequestRejectionReason =. Just rrReason
+                        , TicketRefundRequestUpdatedAt =. now
+                        ]
+                    unless (changed == 1) $ fail "Refund request is no longer pending"
                 )
                 envPool
+        either (const (throwError err409{errBody = "Refund request is no longer pending"})) pure rejected
         mUpdated <- liftIO $ runSqlPool (getEntity refundKey) envPool
         maybe
             (throwError err500{errBody = "Could not reject refund"})
@@ -5538,16 +6037,87 @@ socialEventsServer user =
                     { ManualPayments.mrPartyId = fromSqlKey (auPartyId user)
                     , ManualPayments.mrStrictAdmin = hasStrictAdminAccess user
                     }
-        result <- liftIO $
-            runSqlPool (ManualPayments.reviewTicketManualPayment reviewer eventKey orderKey action notes now) envPool
-        paid <- either (\msg -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure result
-        -- Issuance is idempotent and runs after the payment commit, as for provider captures.
-        when paid $
-            void $ liftIO $ runSqlPool (finalizePaidTicketOrder now orderKey) envPool
+        -- Approval and the idempotent issuance commit together; a failed
+        -- issuance leaves the transfer reviewable instead of paid without tickets.
+        outcome <- liftIO $ trySynchronous $
+            runSqlPool
+                ( ManualPayments.reviewTicketManualPayment reviewer eventKey orderKey action notes now
+                    (void (finalizePaidTicketOrder now orderKey))
+                )
+                envPool
+        result <- either
+            (const (throwError err409{errBody = "Tickets could not be issued, so the transfer was not approved; try again"}))
+            pure
+            outcome
+        _ <- either (\msg -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure result
         rows <- liftIO $ runSqlPool (ManualPayments.listTicketManualPayments eventKey) envPool
         case filter ((== T.pack (show (fromSqlKey orderKey))) . tmpOrderId) rows of
             dto : _ -> pure dto
             [] -> throwError err404{errBody = "Ticket order not found"}
+
+    getManualPaymentReceipt :: T.Text -> T.Text -> AppM (Headers '[Header "Cache-Control" T.Text] Receipt.TicketPaymentReceipt)
+    getManualPaymentReceipt eventIdStr orderIdStr = do
+        Env{..} <- ask
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        orderKey <- parseKeyOr400 "order" orderIdStr
+        rows <- liftIO $ runSqlPool (rawSql
+            "SELECT evidence.evidence_object_key FROM commerce_manual_payment_evidence evidence\
+            \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
+            \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id = evidence.checkout_id\
+            \ WHERE runtime.event_id = ? AND runtime.order_id = ?\
+            \ AND attempt.checkout_id = evidence.checkout_id\
+            \ AND attempt.provider = 'bank_transfer' AND attempt.operation = 'manual_verify'"
+            [toPersistValue eventKey, toPersistValue (orderKey :: EventTicketOrderId)]
+            :: SqlPersistT IO [Single (Maybe T.Text)]) envPool
+        case rows of
+            [Single (Just key)] -> addHeader ("no-store" :: T.Text) <$> Receipt.loadReceipt (fromSqlKey orderKey) key
+            _ -> throwError err404{errBody = "No receipt was attached to this transfer"}
+
+    -- SRI electronic invoices
+    listTaxDocuments :: T.Text -> AppM [TicketTaxDocumentDTO]
+    listTaxDocuments eventIdStr = do
+        Env{..} <- ask
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        liftIO $ runSqlPool (TaxDocuments.listTicketTaxDocuments eventKey) envPool
+
+    retryTaxDocument :: T.Text -> T.Text -> AppM [TicketTaxDocumentDTO]
+    retryTaxDocument eventIdStr documentIdStr = do
+        Env{..} <- ask
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        unless (hasStrictAdminAccess user) $
+            throwError err403{errBody = "Only administrators may resend an invoice"}
+        when (T.length documentIdStr /= 36 || T.any (\c -> not (c == '-' || isHexDigit c)) documentIdStr) $
+            throwError err400{errBody = "Invalid invoice document id"}
+        retried <- liftIO $ runSqlPool (TaxDocuments.retryFailedTicketTaxDocument eventKey documentIdStr) envPool
+        unless retried $
+            throwError err409{errBody = "Only invoices the provider refused before creating them can be resent"}
+        liftIO $ runSqlPool (TaxDocuments.listTicketTaxDocuments eventKey) envPool
+
+    completeBankTransferRefund :: T.Text -> T.Text -> BankRefundCompletionDTO -> AppM RefundDTO
+    completeBankTransferRefund eventIdStr refundIdStr BankRefundCompletionDTO{..} = do
+        Env{..} <- ask
+        now <- liftIO getCurrentTime
+        (eventKey, _) <- requireRefundManagedEvent eventIdStr
+        refundKey <- parseKeyOr400 "refund" refundIdStr
+        providerRefund <- either (\msg -> throwError err400{errBody = BL.fromStrict (TE.encodeUtf8 msg)}) pure $
+            ManualPayments.validateBankRefundReference brcReference
+        let reviewer =
+                ManualPayments.ManualReviewer
+                    { ManualPayments.mrPartyId = fromSqlKey (auPartyId user)
+                    , ManualPayments.mrStrictAdmin = hasStrictAdminAccess user
+                    }
+        result <- liftIO $ try (runSqlPool
+            (ManualPayments.completeBankTransferTicketRefund reviewer eventKey refundKey providerRefund now) envPool)
+            :: AppM (Either IOException (Either T.Text ()))
+        case result of
+            Left _ -> throwError err409{errBody = "Refund tickets or state do not permit completion"}
+            Right (Left msg) -> throwError err409{errBody = BL.fromStrict (TE.encodeUtf8 msg)}
+            Right (Right ()) -> pure ()
+        mRefund <- liftIO $ runSqlPool (getEntity refundKey) envPool
+        refund <- maybe (throwError err404{errBody = "Refund request not found"}) pure mRefund
+        mOrder <- liftIO $ runSqlPool (get (ticketRefundRequestOrderId (entityVal refund))) envPool
+        order <- maybe (throwError err404{errBody = "Ticket order not found"}) pure mOrder
+        pure (refundEntityToDTO (eventTicketOrderCurrency order) refund)
 
     -- Transfers
     createTransfer :: T.Text -> T.Text -> TicketTransferCreateDTO -> AppM TicketTransferDTO
@@ -5811,7 +6381,7 @@ socialEventsServer user =
     listBudgetLines :: T.Text -> AppM [EventBudgetLineDTO]
     listBudgetLines eventIdStr = do
         Env{..} <- ask
-        (eventKey, _) <- requireManagedEvent eventIdStr
+        (eventKey, eventRec) <- requireManagedEvent eventIdStr
         budgetRows <-
             liftIO $
                 runSqlPool
@@ -5822,20 +6392,16 @@ socialEventsServer user =
                 runSqlPool
                     (selectList [EventFinanceEntryEventId ==. eventKey, EventFinanceEntryStatus ==. "posted"] [])
                     envPool
-        pure $
-            map
-                ( \lineEnt@(Entity lineKey lineRec) ->
-                    let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
-                        actualCents =
-                            sum
-                                [ eventFinanceEntryAmountCents entry
-                                | Entity _ entry <- postedEntries
-                                , eventFinanceEntryBudgetLineId entry == Just lineKey
-                                , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                                ]
-                     in budgetLineEntityToDTO eventKey (Just actualCents) lineEnt
-                )
-                budgetRows
+        forM budgetRows $ \lineEnt@(Entity lineKey lineRec) -> do
+            let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
+                contributingEntries =
+                    [ entryEnt
+                    | entryEnt@(Entity _ entry) <- postedEntries
+                    , eventFinanceEntryBudgetLineId entry == Just lineKey
+                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                    ]
+            actualCents <- checkedEventBudgetActualCents (defaultCurrency envConfig) eventRec contributingEntries
+            pure (budgetLineEntityToDTO eventKey (Just actualCents) lineEnt)
 
     createBudgetLine :: T.Text -> EventBudgetLineDTO -> AppM EventBudgetLineDTO
     createBudgetLine eventIdStr dto = do
@@ -5876,7 +6442,7 @@ socialEventsServer user =
     updateBudgetLine eventIdStr lineIdStr dto = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        (eventKey, _) <- requireManagedEvent eventIdStr
+        (eventKey, eventRec) <- requireManagedEvent eventIdStr
         lineKey <- parseKeyOr400 "budget line" lineIdStr
         mLine <- liftIO $ runSqlPool (get lineKey) envPool
         lineRec <- maybe (throwError err404{errBody = "Budget line not found"}) pure mLine
@@ -5893,6 +6459,23 @@ socialEventsServer user =
                 | existingKey /= lineKey ->
                     throwError err409{errBody = "budget line code already exists for this event"}
             _ -> pure ()
+        postedEntries <-
+            liftIO $
+                runSqlPool
+                    ( selectList
+                        [ EventFinanceEntryEventId ==. eventKey
+                        , EventFinanceEntryBudgetLineId ==. Just lineKey
+                        , EventFinanceEntryStatus ==. "posted"
+                        ]
+                        []
+                    )
+                    envPool
+        let contributingEntries =
+                [ entryEnt
+                | entryEnt@(Entity _ entry) <- postedEntries
+                , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                ]
+        actualCents <- checkedEventBudgetActualCents (defaultCurrency envConfig) eventRec contributingEntries
         liftIO $
             runSqlPool
                 ( update
@@ -5907,24 +6490,7 @@ socialEventsServer user =
                     ]
                 )
                 envPool
-        postedEntries <-
-            liftIO $
-                runSqlPool
-                    ( selectList
-                        [ EventFinanceEntryEventId ==. eventKey
-                        , EventFinanceEntryBudgetLineId ==. Just lineKey
-                        , EventFinanceEntryStatus ==. "posted"
-                        ]
-                        []
-                    )
-                    envPool
         mUpdated <- liftIO $ runSqlPool (getEntity lineKey) envPool
-        let actualCents =
-                sum
-                    [ eventFinanceEntryAmountCents entry
-                    | Entity _ entry <- postedEntries
-                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                    ]
         maybe
             (throwError err500{errBody = "Could not update budget line"})
             (pure . budgetLineEntityToDTO eventKey (Just actualCents))
@@ -6103,7 +6669,7 @@ socialEventsServer user =
             either
                 (throwError . financeInvariantServerError)
                 pure
-                (traverse storedFinanceEntrySummaryFields allFinanceRows)
+                (traverse (storedFinanceEntrySummaryFields eventCurrencyVal) allFinanceRows)
         captured <- liftIO $ runSqlPool (TicketRefund.capturedTicketRevenue eventKey eventCurrencyVal) envPool
         let capturedIds = Set.fromList [key | (key,_,_) <- captured]
             canonicalGross = sum [toInteger paid | (_,paid,_) <- captured]
@@ -6114,21 +6680,21 @@ socialEventsServer user =
             either
                 (throwError . financeInvariantServerError)
                 pure
-                (traverse storedTicketOrderSummaryFields (filter (\(Entity key _) -> key `Set.notMember` capturedIds) ticketOrders))
+                (traverse (storedTicketOrderSummaryFieldsInCurrency eventCurrencyVal) (filter (\(Entity key _) -> key `Set.notMember` capturedIds) ticketOrders))
 
         let plannedIncomeCents =
                 sum
-                    [ plannedCents
+                    [ toInteger plannedCents
                     | (plannedCents, lineTypeVal) <- normalizedBudgetRows
                     , lineTypeVal == "income"
                     ]
             plannedExpenseCents =
                 sum
-                    [ plannedCents
+                    [ toInteger plannedCents
                     | (plannedCents, lineTypeVal) <- normalizedBudgetRows
                     , lineTypeVal == "expense"
                     ]
-            entryAmount (amountCents, _, _, _) = amountCents
+            entryAmount (amountCents, _, _, _) = toInteger amountCents
             entryDirection (_, directionVal, _, _) = directionVal
             entrySource (_, _, sourceVal, _) = sourceVal
             entryStatus (_, _, _, statusVal) = statusVal
@@ -6152,20 +6718,20 @@ socialEventsServer user =
                     , entryDirection entry == "expense"
                     ]
             ticketPaidRevenueCents =
-                fromInteger canonicalGross + sum
-                    [ amountCents
+                canonicalGross + sum
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "paid"
                     ]
             ticketRefundedRevenueCents =
-                fromInteger canonicalRefunded + sum
-                    [ amountCents
+                canonicalRefunded + sum
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "refunded"
                     ]
             ticketPendingRevenueCents =
                 sum
-                    [ amountCents
+                    [ toInteger amountCents
                     | (amountCents, statusVal) <- normalizedTicketOrders
                     , statusVal == "pending"
                     ]
@@ -6239,7 +6805,7 @@ socialEventsServer user =
             actualIncomeCents = manualIncomeCents + ticketPaidRevenueCents
             actualExpenseCents = manualExpenseCents + ticketRefundedRevenueCents
             netCents = actualIncomeCents - actualExpenseCents
-            budgetCentsVal = budgetOverride <|> fallbackBudget plannedExpenseCents
+            budgetCentsVal = fmap toInteger budgetOverride <|> fallbackBudget plannedExpenseCents
             budgetVarianceCents = fmap (\budgetCap -> budgetCap - actualExpenseCents) budgetCentsVal
             budgetUtilizationPct =
                 case budgetCentsVal of
@@ -6248,28 +6814,40 @@ socialEventsServer user =
                             Just ((fromIntegral actualExpenseCents / fromIntegral budgetCap) * 100)
                     _ -> Nothing
 
+        -- All sums and differences above are Integer. Validate every monetary
+        -- output before constructing the bounded DTO; no wrapped value is sent.
+        forM_ (
+            [ plannedIncomeCents, plannedExpenseCents, actualIncomeCents, actualExpenseCents
+            , netCents, ticketPaidRevenueCents, ticketRefundedRevenueCents, ticketPendingRevenueCents
+            , accountsPayableCents, accountsReceivableCents, contractCommittedCents, contractPaidCents
+            , procurementCommittedCents, procurementPaidCents, assetInvestmentCents, liabilityBalanceCents
+            ]
+            ++ maybe [] pure budgetCentsVal
+            ++ maybe [] pure budgetVarianceCents
+            ) checkedEventFinanceCents
+
         pure
             EventFinanceSummaryDTO
                 { efsEventId = renderKeyText eventKey
                 , efsCurrency = eventCurrencyVal
-                , efsBudgetCents = budgetCentsVal
-                , efsPlannedIncomeCents = plannedIncomeCents
-                , efsPlannedExpenseCents = plannedExpenseCents
-                , efsActualIncomeCents = actualIncomeCents
-                , efsActualExpenseCents = actualExpenseCents
-                , efsNetCents = netCents
-                , efsTicketPaidRevenueCents = ticketPaidRevenueCents
-                , efsTicketRefundedRevenueCents = ticketRefundedRevenueCents
-                , efsTicketPendingRevenueCents = ticketPendingRevenueCents
-                , efsAccountsPayableCents = accountsPayableCents
-                , efsAccountsReceivableCents = accountsReceivableCents
-                , efsContractCommittedCents = contractCommittedCents
-                , efsContractPaidCents = contractPaidCents
-                , efsProcurementCommittedCents = procurementCommittedCents
-                , efsProcurementPaidCents = procurementPaidCents
-                , efsAssetInvestmentCents = assetInvestmentCents
-                , efsLiabilityBalanceCents = liabilityBalanceCents
-                , efsBudgetVarianceCents = budgetVarianceCents
+                , efsBudgetCents = fmap fromInteger budgetCentsVal
+                , efsPlannedIncomeCents = fromInteger plannedIncomeCents
+                , efsPlannedExpenseCents = fromInteger plannedExpenseCents
+                , efsActualIncomeCents = fromInteger actualIncomeCents
+                , efsActualExpenseCents = fromInteger actualExpenseCents
+                , efsNetCents = fromInteger netCents
+                , efsTicketPaidRevenueCents = fromInteger ticketPaidRevenueCents
+                , efsTicketRefundedRevenueCents = fromInteger ticketRefundedRevenueCents
+                , efsTicketPendingRevenueCents = fromInteger ticketPendingRevenueCents
+                , efsAccountsPayableCents = fromInteger accountsPayableCents
+                , efsAccountsReceivableCents = fromInteger accountsReceivableCents
+                , efsContractCommittedCents = fromInteger contractCommittedCents
+                , efsContractPaidCents = fromInteger contractPaidCents
+                , efsProcurementCommittedCents = fromInteger procurementCommittedCents
+                , efsProcurementPaidCents = fromInteger procurementPaidCents
+                , efsAssetInvestmentCents = fromInteger assetInvestmentCents
+                , efsLiabilityBalanceCents = fromInteger liabilityBalanceCents
+                , efsBudgetVarianceCents = fmap fromInteger budgetVarianceCents
                 , efsBudgetUtilizationPct = budgetUtilizationPct
                 , efsGeneratedAt = now
                 }
@@ -6597,11 +7175,10 @@ socialEventsServer user =
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         role <- case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
-            Nothing -> do
-                managed <- claimOrRequireEventManager currentPartyId envPool eventKey eventRow
-                pure (if socialEventOrganizerPartyId managed == Just currentPartyId then "owner" else "viewer")
             Just owner | owner == currentPartyId -> pure "owner"
-            Just _ -> do
+            -- With no organizer the event has no owner role to hand out;
+            -- only its recorded logistics team keeps access.
+            _ -> do
                 mMember <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsMember eventKey currentPartyId)) envPool
                 maybe (throwError err403{errBody = "You are not on this event's logistics team"}) (pure . eventLogisticsMemberMemberRole . entityVal) mMember
         when (requireEdit && role == "viewer") $ throwError err403{errBody = "This logistics team role is read-only"}
@@ -6741,7 +7318,7 @@ socialEventsServer user =
         eventKey <- parseVisibleEventKey rawEventId
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+        claimed <- requireEventManager currentPartyId eventVal
         pure (eventKey, claimed)
 
     requireRefundManagedEvent :: T.Text -> AppM (SocialEventId, SocialEvent)
@@ -6754,7 +7331,7 @@ socialEventsServer user =
             then pure (eventKey, eventVal)
             else do
                 requireEventVisibleToUser eventKey
-                claimed <- claimOrRequireEventManager currentPartyId envPool eventKey eventVal
+                claimed <- requireEventManager currentPartyId eventVal
                 pure (eventKey, claimed)
 
     requireExistingEvent :: ConnectionPool -> SocialEventId -> AppM SocialEvent
@@ -6883,13 +7460,21 @@ validateLogisticsAssignments pool assignments = forM_ assignments $ \assignment 
         when (T.length email > 320 || not ("@" `T.isInfixOf` email)) $
             throwError err400{errBody = "external assignee email is invalid"}
 
+-- Explicit logistics settings win; a new plan inherits the event's clock.
+resolveLogisticsTimezone :: T.Text -> Maybe T.Text -> Maybe T.Text -> T.Text
+resolveLogisticsTimezone fallbackTimezone eventTimezone logisticsTimezone =
+    fromMaybe fallbackTimezone (logisticsTimezone <|> eventTimezone)
+
 loadLogisticsSettings :: T.Text -> ConnectionPool -> SocialEventId -> AppM EventLogisticsSettingsDTO
 loadLogisticsSettings fallbackTimezone pool eventKey = do
     row <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsPlan eventKey)) pool
-    pure $ case row of
-        Nothing -> EventLogisticsSettingsDTO fallbackTimezone "drive"
-        Just (Entity _ value) -> EventLogisticsSettingsDTO
-            { elsTimezone = eventLogisticsPlanTimezone value
+    case row of
+        Nothing -> do
+            event <- liftIO $ runSqlPool (get eventKey) pool
+            pure $ EventLogisticsSettingsDTO
+                (resolveLogisticsTimezone fallbackTimezone (event >>= socialEventTimezone) Nothing) "drive"
+        Just (Entity _ value) -> pure $ EventLogisticsSettingsDTO
+            { elsTimezone = resolveLogisticsTimezone fallbackTimezone Nothing (Just $ eventLogisticsPlanTimezone value)
             , elsDefaultTravelMode = eventLogisticsPlanDefaultTravelMode value
             }
 
@@ -7866,6 +8451,8 @@ normalizeMomentMediaType raw =
         "picture" -> Just "image"
         "video" -> Just "video"
         "clip" -> Just "video"
+        "audio" -> Just "audio"
+        "text" -> Just "text"
         _ -> Nothing
 
 loadSelectableMomentReactionTypeId :: T.Text -> SqlPersistT IO (Either ServerError UUID.UUID)
@@ -8869,7 +9456,7 @@ eventImageUploadFormServerError :: T.Text -> ServerError
 eventImageUploadFormServerError message =
     err400{errBody = BL.fromStrict (TE.encodeUtf8 message)}
 
-fallbackBudget :: Int -> Maybe Int
+fallbackBudget :: Integer -> Maybe Integer
 fallbackBudget plannedExpenseCents
     | plannedExpenseCents > 0 = Just plannedExpenseCents
     | otherwise = Nothing
@@ -8937,6 +9524,30 @@ isUnsafeUploadMetadataChar ch =
     isControl ch
         || generalCategory ch `elem` [Format, LineSeparator, ParagraphSeparator]
 
+-- File signatures supplement MIME/extension and byte limits. No untrusted
+-- document/SVG/HTML is accepted. Container validation is not transcoding.
+validMomentMediaSignature :: T.Text -> BS.ByteString -> Bool
+validMomentMediaSignature mime bytes = case normalizeUploadMimeType mime of
+    "image/jpeg" -> BS.pack [255,216,255] `BS.isPrefixOf` bytes
+    "image/png" -> BS.pack [137,80,78,71,13,10,26,10] `BS.isPrefixOf` bytes
+    "image/gif" -> any (`BS.isPrefixOf` bytes) ["GIF87a","GIF89a"]
+    "image/webp" -> riff && BS.take 4 (BS.drop 8 bytes) == "WEBP"
+    "image/bmp" -> "BM" `BS.isPrefixOf` bytes
+    "video/mp4" -> mp4
+    "video/quicktime" -> mp4
+    "audio/mp4" -> mp4
+    "video/webm" -> BS.pack [26,69,223,163] `BS.isPrefixOf` bytes
+    "audio/mpeg" -> "ID3" `BS.isPrefixOf` bytes || (BS.length bytes >= 2 && BS.head bytes == 255 && BS.index bytes 1 >= 224)
+    "audio/wav" -> wav
+    "audio/x-wav" -> wav
+    "audio/ogg" -> "OggS" `BS.isPrefixOf` bytes
+    "audio/flac" -> "fLaC" `BS.isPrefixOf` bytes
+    _ -> False
+  where
+    riff = "RIFF" `BS.isPrefixOf` bytes
+    wav = riff && BS.take 4 (BS.drop 8 bytes) == "WAVE"
+    mp4 = BS.take 4 (BS.drop 4 bytes) == "ftyp"
+
 maxEventImageUploadBytes :: Integer
 maxEventImageUploadBytes = 10 * 1024 * 1024
 
@@ -8984,18 +9595,49 @@ isEventManager currentParty eventRow =
         Nothing -> False
         Just owner -> owner == currentParty
 
-claimOrRequireEventManager :: T.Text -> ConnectionPool -> SocialEventId -> SocialEvent -> AppM SocialEvent
-claimOrRequireEventManager currentParty pool eventKey eventRow =
+eventWithoutOrganizerError :: ServerError
+eventWithoutOrganizerError =
+    err403{errBody = "This event has no organizer; \
+                    \a strict administrator must assign one by editing the event"}
+
+eventNotOrganizerError :: ServerError
+eventNotOrganizerError =
+    err403{errBody = "Only the event organizer can manage this event"}
+
+-- An event without an organizer is never taken by whoever reaches it first:
+-- organizer-only routes refuse it and write nothing.
+requireEventManager :: T.Text -> SocialEvent -> AppM SocialEvent
+requireEventManager currentParty eventRow =
     case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
         Just owner | owner == currentParty -> pure eventRow
-        Just _ -> throwError err403{errBody = "Only the event organizer can manage this event"}
-        Nothing -> do
-            now <- liftIO getCurrentTime
-            liftIO $
-                runSqlPool
-                    (update eventKey [SocialEventOrganizerPartyId =. Just currentParty, SocialEventUpdatedAt =. now])
-                    pool
-            pure eventRow{socialEventOrganizerPartyId = Just currentParty, socialEventUpdatedAt = now}
+        Just _ -> throwError eventNotOrganizerError
+        Nothing -> throwError eventWithoutOrganizerError
+
+-- The one assignment of a missing organizer. The caller has established that
+-- the party may be assigned. Whether the field is empty is judged here with the
+-- same rule as every other check (cleanMaybeText), and the update applies only
+-- while the field still holds exactly the empty value that was read, so the
+-- database decides between simultaneous callers, and the stored row, not an
+-- earlier read, decides the outcome.
+assignMissingEventOrganizer
+    :: T.Text -> UTCTime -> SocialEventId -> SqlPersistT IO (Either ServerError SocialEvent)
+assignMissingEventOrganizer party now eventKey = do
+    before <- get eventKey
+    case before of
+        Just row | isNothing (cleanMaybeText (socialEventOrganizerPartyId row)) ->
+            rawExecute
+                "UPDATE social_event SET organizer_party_id = ?, updated_at = ? \
+                \WHERE id = ? AND organizer_party_id IS NOT DISTINCT FROM ?"
+                [ toPersistValue party, toPersistValue now, toPersistValue eventKey
+                , toPersistValue (socialEventOrganizerPartyId row)
+                ]
+        _ -> pure ()
+    stored <- get eventKey
+    pure $ case stored of
+        Nothing -> Left err404{errBody = "Event not found"}
+        Just current
+            | cleanMaybeText (socialEventOrganizerPartyId current) == Just party -> Right current
+            | otherwise -> Left eventNotOrganizerError
 
 loadEventArtists :: ConnectionPool -> SocialEventId -> AppM [ArtistDTO]
 loadEventArtists pool eventKey = do
@@ -9244,7 +9886,7 @@ loadEventWorkflowProjections eventRows = do
             [PersistText EventLifecycle.socialEventWorkflowCode]
     capabilityRows <-
         rawSql
-            "SELECT capability.state_id, capability.capability_code FROM workflow_state_capability capability JOIN workflow_state state ON state.id=capability.state_id JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code=? AND workflow.active=TRUE AND state.active=TRUE AND capability.enabled=TRUE AND capability.capability_code IN ('public-listable','ticket-purchase') ORDER BY capability.state_id, capability.capability_code"
+            "SELECT capability.state_id, capability.capability_code FROM workflow_state_capability capability JOIN workflow_state state ON state.id=capability.state_id JOIN workflow_definition workflow ON workflow.id=state.workflow_id WHERE workflow.code=? AND workflow.active=TRUE AND state.active=TRUE AND capability.enabled=TRUE AND capability.capability_code IN ('public-listable','rsvp','ticket-purchase') ORDER BY capability.state_id, capability.capability_code"
             [PersistText EventLifecycle.socialEventWorkflowCode]
     let typedStateRows =
             stateRows
@@ -10023,6 +10665,14 @@ budgetLineEntityToDTO eventKey mActualCents (Entity lineKey lineRec) =
         , eblUpdatedAt = Just (eventBudgetLineUpdatedAt lineRec)
         }
 
+-- Event DTO amounts use host Int. Arithmetic must be exact before checking
+-- both bounds: negative net, liability and budget-variance values are valid.
+checkedEventFinanceCents :: Integer -> AppM Int
+checkedEventFinanceCents exact
+    | exact < toInteger (minBound :: Int) || exact > toInteger (maxBound :: Int) =
+        throwError (financeInvariantServerError "Event finance amount exceeds the supported reporting range")
+    | otherwise = pure (fromInteger exact)
+
 financeInvariantServerError :: T.Text -> ServerError
 financeInvariantServerError message =
     err500{errBody = BL.fromStrict (TE.encodeUtf8 message)}
@@ -10050,9 +10700,31 @@ financeEntryEntityToDTOEither (Entity entryKey entryRec) = do
             , efeUpdatedAt = Just (eventFinanceEntryUpdatedAt entryRec)
             }
 
-storedFinanceEntrySummaryFields :: Entity EventFinanceEntry -> Either T.Text (Int, T.Text, T.Text, T.Text)
-storedFinanceEntrySummaryFields (Entity _ entryRec) = do
+-- Authoring may retain other currencies; a single-currency report cannot
+-- combine their contributing amounts without an established conversion.
+validateEventFinanceReportCurrency :: T.Text -> T.Text -> Either T.Text ()
+validateEventFinanceReportCurrency eventCurrency rawCurrency =
+    case normalizeEventCurrencyCode rawCurrency of
+        Just currency | currency == eventCurrency -> Right ()
+        _ -> Left "Contributing amount currency does not match the event reporting currency"
+
+checkedEventBudgetActualCents :: T.Text -> SocialEvent -> [Entity EventFinanceEntry] -> AppM Int
+checkedEventBudgetActualCents reportDefault eventRec entries = do
+    let contributingAmounts = filter ((/= 0) . eventFinanceEntryAmountCents . entityVal) entries
+    unless (null contributingAmounts) $ do
+        (eventCurrency, _) <-
+            either (throwError . storedEventMetadataServerError) pure
+                (validateStoredEventFinanceMetadata reportDefault eventRec)
+        forM_ contributingAmounts $ \(Entity _ entry) ->
+            either (throwError . financeInvariantServerError) pure
+                (validateEventFinanceReportCurrency eventCurrency (eventFinanceEntryCurrency entry))
+    checkedEventFinanceCents (sum [toInteger (eventFinanceEntryAmountCents entry) | Entity _ entry <- entries])
+
+storedFinanceEntrySummaryFields :: T.Text -> Entity EventFinanceEntry -> Either T.Text (Int, T.Text, T.Text, T.Text)
+storedFinanceEntrySummaryFields eventCurrency (Entity _ entryRec) = do
     (directionVal, sourceVal, statusVal) <- validateStoredFinanceEntryDimensions entryRec
+    when (statusVal /= "void") $
+        validateEventFinanceReportCurrency eventCurrency (eventFinanceEntryCurrency entryRec)
     pure (eventFinanceEntryAmountCents entryRec, directionVal, sourceVal, statusVal)
 
 storedBudgetLineSummaryFields :: Entity EventBudgetLine -> Either T.Text (Int, T.Text)
@@ -10064,6 +10736,13 @@ storedTicketOrderSummaryFields (Entity _ orderRec) =
     case parseTicketOrderStatus (eventTicketOrderStatus orderRec) of
         Just statusVal -> Right (eventTicketOrderAmountCents orderRec, statusVal)
         Nothing -> Left "Stored ticket order status is invalid"
+
+storedTicketOrderSummaryFieldsInCurrency :: T.Text -> Entity EventTicketOrder -> Either T.Text (Int, T.Text)
+storedTicketOrderSummaryFieldsInCurrency eventCurrency orderEnt@(Entity _ orderRec) = do
+    fields@(amountCents, statusVal) <- storedTicketOrderSummaryFields orderEnt
+    when (amountCents /= 0 && statusVal /= "cancelled") $
+        validateEventFinanceReportCurrency eventCurrency (eventTicketOrderCurrency orderRec)
+    pure fields
 
 ticketOrderAccountingEntriesEither ::
     SocialEventId ->

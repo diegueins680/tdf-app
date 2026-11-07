@@ -1,0 +1,5 @@
+Exact synthetic combined welcome/privacy execution at ffa52950bc6157de4f1cd672742bdf97428b2a61.
+Manifest PREPARED state is preserved; completed result is ../welcome-logout-integration-2026-10-26.json.
+Default plan starts no services. Requires Darwin sandbox-exec, exact retained hash-checked fe179 executable, Node22.14.0, existing dependencies, free owned ports, and an isolated checkout of the exact source. Use manifest.command with --source adjusted to that checkout; do not alter expected source/binary hashes just to pass.
+Owner privacy/draft assertion blocks are retained byte-for-byte; new welcome navigation/photo/anchors precede explicit signup. Runtime changes only local import/ports/welcome entry, with no manual mode.
+No human, live provider, device or production claim.

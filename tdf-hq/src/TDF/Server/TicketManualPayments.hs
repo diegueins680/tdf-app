@@ -11,6 +11,8 @@ module TDF.Server.TicketManualPayments
   , validateManualReviewNotes
   , listTicketManualPayments
   , reviewTicketManualPayment
+  , validateBankRefundReference
+  , completeBankTransferTicketRefund
   ) where
 
 import           Control.Monad (when)
@@ -21,10 +23,12 @@ import qualified Data.Text as T
 import           Data.Time (UTCTime)
 import           Database.Persist.Sql
   ( PersistValue(..), Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql
-  , toPersistValue, transactionSave, transactionUndo
+  , toPersistValue
   )
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
+import qualified TDF.Commerce.RefundStore as Refund
+import qualified TDF.Ticketing.Refund as TicketRefund
 import           TDF.DTO.SocialEventsDTO (TicketManualPaymentDTO(..))
 import qualified TDF.Models.SocialEventsModels as SM
 
@@ -58,7 +62,7 @@ listTicketManualPayments eventKey = do
     "SELECT runtime.order_id, ticket_order.buyer_name, ticket_order.buyer_email,\
     \ runtime.quantity, runtime.checkout_total_minor, runtime.currency, evidence.status,\
     \ evidence.customer_reference, evidence.submitted_at, evidence.reviewed_at,\
-    \ evidence.review_notes, checkout.status,\
+    \ evidence.review_notes, checkout.status, evidence.evidence_object_key IS NOT NULL,\
     \ GREATEST(runtime.hold_expires_at, runtime.manual_hold_expires_at)\
     \ FROM event_ticket_checkout_runtime runtime\
     \ JOIN event_ticket_order ticket_order ON ticket_order.id = runtime.order_id\
@@ -74,14 +78,14 @@ listTicketManualPayments eventKey = do
     :: SqlPersistT IO
       [( Single Int64, Single (Maybe Text), Single (Maybe Text), Single Int, Single Int64
        , Single Text, Single Text, Single (Maybe Text), Single (Maybe UTCTime)
-       , Single (Maybe UTCTime), Single (Maybe Text), Single Text, Single UTCTime
+       , Single (Maybe UTCTime), Single (Maybe Text), Single Text, Single Bool, Single UTCTime
        )]
   pure (map toDTO rows)
   where
     toDTO ( Single orderId, Single buyerName, Single buyerEmail, Single quantity
           , Single amountMinor, Single currency, Single evidenceStatus
           , Single customerReference, Single submittedAt, Single reviewedAt
-          , Single reviewNotes, Single checkoutStatus, Single holdExpiresAt
+          , Single reviewNotes, Single checkoutStatus, Single hasReceipt, Single holdExpiresAt
           ) = TicketManualPaymentDTO
       { tmpOrderId = T.pack (show orderId)
       , tmpPaymentReference = "TDF-" <> T.pack (show orderId)
@@ -92,6 +96,7 @@ listTicketManualPayments eventKey = do
       , tmpCurrency = currency
       , tmpEvidenceStatus = evidenceStatus
       , tmpCustomerReference = customerReference
+      , tmpHasReceipt = hasReceipt
       , tmpSubmittedAt = submittedAt
       , tmpReviewedAt = reviewedAt
       , tmpReviewNotes = reviewNotes
@@ -100,7 +105,10 @@ listTicketManualPayments eventKey = do
       }
 
 -- | Returns 'True' when this call (or an identical earlier approval) left the
--- checkout paid, so the caller must run the idempotent ticket issuance.
+-- checkout paid. The idempotent ticket issuance then runs in the same
+-- transaction: a manual approval has no external effect to preserve, so an
+-- issuance failure rolls the approval back and the evidence stays reviewable,
+-- instead of leaving a paid order without tickets and no review action left.
 reviewTicketManualPayment
   :: ManualReviewer
   -> SM.SocialEventId
@@ -108,8 +116,22 @@ reviewTicketManualPayment
   -> ManualReviewAction
   -> Text
   -> UTCTime
+  -> SqlPersistT IO ()
   -> SqlPersistT IO (Either Text Bool)
-reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
+reviewTicketManualPayment reviewer eventKey orderKey action notes now issueTickets = do
+  result <- decideTicketManualPayment reviewer eventKey orderKey action notes now
+  when (result == Right True) issueTickets
+  pure result
+
+decideTicketManualPayment
+  :: ManualReviewer
+  -> SM.SocialEventId
+  -> SM.EventTicketOrderId
+  -> ManualReviewAction
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO (Either Text Bool)
+decideTicketManualPayment reviewer eventKey orderKey action notes now = do
   rows <- rawSql
     "SELECT checkout.id::text, checkout.status, checkout.environment,\
     \ GREATEST(runtime.hold_expires_at, runtime.manual_hold_expires_at),\
@@ -201,7 +223,9 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
           && dCheckoutStatus d `notElem` ["awaiting_payment", "failed", "processing"] =
           pure (Left "This ticket checkout no longer accepts manual payment approval")
       | otherwise = do
-          transactionSave
+          -- A savepoint, not a commit: the row locks taken above must cover the
+          -- decision, or a concurrent reviewer acts on the same pre-image.
+          rawExecute "SAVEPOINT tdf_manual_review" []
           when (dEvidenceStatus d == "submitted") $
             rawExecute
               "UPDATE commerce_manual_payment_evidence\
@@ -219,6 +243,7 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
                 (Checkout.PaymentAttemptReference (dAttempt d))
                 Checkout.ProviderBankTransfer "manual_evidence_rejected" correlation now
               audit d "manual_payment_rejected"
+              keepDecision
               pure (Right False)
             ManualApprove -> do
               rawExecute
@@ -243,7 +268,7 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
                 , Checkout.pbcCorrelationId = correlation
                 }
               case binding of
-                Left problem -> transactionUndo >> pure (Left problem)
+                Left problem -> undoDecision >> pure (Left problem)
                 Right () -> do
                   verified <- Checkout.recordApprovedManualPayment Checkout.VerifiedPayment
                     { Checkout.vpAttempt = Checkout.PaymentAttemptReference (dAttempt d)
@@ -263,8 +288,17 @@ reviewTicketManualPayment reviewer eventKey orderKey action notes now = do
                     , Checkout.vpCorrelationId = correlation
                     }
                   case verified of
-                    Left problem -> transactionUndo >> pure (Left problem)
-                    Right _ -> audit d "manual_payment_approved" >> pure (Right True)
+                    Left problem -> undoDecision >> pure (Left problem)
+                    Right _ -> do
+                      audit d "manual_payment_approved"
+                      keepDecision
+                      pure (Right True)
+
+    keepDecision, undoDecision :: SqlPersistT IO ()
+    keepDecision = rawExecute "RELEASE SAVEPOINT tdf_manual_review" []
+    undoDecision = do
+      rawExecute "ROLLBACK TO SAVEPOINT tdf_manual_review" []
+      keepDecision
 
     exception :: Decision -> Text -> SqlPersistT IO ()
     exception d code = Checkout.recordReconciliationException
@@ -303,3 +337,62 @@ data Decision = Decision
   , dOrganizer      :: Maybe Text
   , dReviewerEmail  :: Maybe Text
   }
+
+-- | The reference of the bank transfer staff made back to the buyer. It becomes
+-- the canonical provider refund ID, so it must be stable and unique per refund.
+validateBankRefundReference :: Text -> Either Text Text
+validateBankRefundReference raw
+  | T.length clean < 3 || T.length clean > 60 =
+      Left "Bank refund reference must contain 3 to 60 characters"
+  | T.any (\c -> not (isAsciiAlphaNum c || c `elem` ("-_." :: String))) clean =
+      Left "Bank refund reference may contain letters, digits, '-', '_' and '.'"
+  | otherwise = Right ("BT-" <> clean)
+  where
+    clean = T.strip raw
+    isAsciiAlphaNum c = (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+
+-- | Complete a requested refund of a bank-transfer ticket order after staff
+-- returned the money. The completing party must differ from the requester
+-- (RefundStore), and only the event organizer or an administrator may act.
+-- Ticket invalidation and inventory release follow the canonical projection.
+completeBankTransferTicketRefund
+  :: ManualReviewer
+  -> SM.SocialEventId
+  -> SM.TicketRefundRequestId
+  -> Text
+  -> UTCTime
+  -> SqlPersistT IO (Either Text ())
+completeBankTransferTicketRefund reviewer eventKey requestKey providerRefund now = do
+  binding <- TicketRefund.loadTicketRefundReference requestKey
+  case binding of
+    Nothing -> pure (Left "This refund request has no canonical refund")
+    Just ref -> do
+      authority <- rawSql
+        "SELECT event.organizer_party_id FROM ticket_refund_request request\
+        \ JOIN event_ticket_order ticket_order ON ticket_order.id = request.order_id\
+        \ JOIN social_event event ON event.id = ticket_order.event_id\
+        \ WHERE request.id = ? AND ticket_order.event_id = ?"
+        [toPersistValue requestKey, toPersistValue eventKey]
+        :: SqlPersistT IO [Single (Maybe Text)]
+      record <- Refund.loadRefund ref
+      case (authority, record) of
+        ([Single organizer], Just existing)
+          | not (mrStrictAdmin reviewer || organizer == Just (T.pack (show (mrPartyId reviewer)))) ->
+              pure (Left "Only the event organizer or an administrator may complete this refund")
+          | Refund.rrProvider existing /= "bank_transfer" ->
+              pure (Left "Only bank-transfer payments are refunded manually; use refund approval")
+          | otherwise -> do
+              approved <- Refund.approveRefundForProcessing ref (mrPartyId reviewer) now
+              case approved of
+                Left problem -> pure (Left problem)
+                Right _ -> do
+                  _ <- TicketRefund.completeTicketRefund Refund.VerifiedRefund
+                    { Refund.vrRefund = ref
+                    , Refund.vrProviderRefund = providerRefund
+                    , Refund.vrAmountMinor = Refund.rrAmountMinor existing
+                    , Refund.vrCurrency = Refund.rrCurrency existing
+                    , Refund.vrOccurredAt = now
+                    , Refund.vrCorrelationId = "event-ticket-refund:" <> Refund.refundReferenceId ref <> ":bank_transfer:manual"
+                    }
+                  pure (Right ())
+        _ -> pure (Left "Refund request does not belong to this event")

@@ -1,0 +1,61 @@
+{
+  "checkedAt": "2026-10-12T17:05:00Z",
+  "source": "Play Console (Dashboard and Closed testing pages) in the operator's signed-in Chrome, read-only; public TestFlight invite page fetched anonymously with an iPhone user agent; App Store Connect was signed out and was not opened; no store API, no tester identities or credentials retained",
+  "decision": "Proposed seven-day extension of both channels on the same evidence standard the product owner accepted on 2026-10-11 (iOS verified only from the public invite page). The owner approves or rejects it when reviewing the pull request that carries this file.",
+  "previousEvidence": "distribution-2026-10-11.json",
+  "ios": {
+    "checkedAt": "2026-10-12T17:05:00Z",
+    "method": "Anonymous HTTPS request with an iPhone user agent; no account",
+    "testFlightUrl": "https://testflight.apple.com/join/7k3VE2JJ",
+    "httpStatus": 200,
+    "pageTitle": "Join the TDF Records Mobile beta - TestFlight - Apple",
+    "joinActionPresent": true,
+    "fullOrClosedNoticePresent": false,
+    "appStoreListing": {
+      "url": "https://apps.apple.com/app/id6779786470",
+      "httpStatus": 404,
+      "meaning": "no public App Store listing"
+    },
+    "appStoreConnectChecked": false,
+    "appStoreConnectSessionState": "signed out in the operator's Chrome (login page); not signed in by the agent",
+    "notVerified": [
+      "build 31 processing and expiry state",
+      "build 32 Beta App Review state (READY_FOR_BETA_SUBMISSION on 2026-10-06 per evidence/mobile-program-20261004/STATUS-2026-10-06.md)",
+      "external group assignment and tester count",
+      "App Store review state (REJECTED on 2026-10-05 per the same record)"
+    ],
+    "version": "1.0.1",
+    "build": "31"
+  },
+  "android": {
+    "checkedAt": "2026-10-12T17:02:00Z",
+    "method": "Authenticated Google Play Console, read-only; nothing changed",
+    "packageName": "com.tdf.records",
+    "appStatus": "Closed testing",
+    "productionTrack": "Inactive",
+    "activeTrack": "Closed testing - Alpha",
+    "release": "1.0.1 (24) - TDF tester analytics",
+    "releaseLastUpdated": "2026-10-05",
+    "productionAccessChecklist": {
+      "closedTestingReleasePublished": true,
+      "testersOptedIn": 5,
+      "testersRequired": 12,
+      "continuousDaysRequired": 14,
+      "applyForProductionEnabled": false
+    },
+    "openTesting": "requires production access; not available",
+    "storeListing": {
+      "url": "https://play.google.com/store/apps/details?id=com.tdf.records",
+      "httpStatus": 404,
+      "meaning": "no public Play listing"
+    },
+    "admission": "approval_required",
+    "notVerified": [
+      "country list",
+      "tester email-list sizes",
+      "review state of the saved feedback URL"
+    ],
+    "version": "1.0.1",
+    "build": "24"
+  }
+}

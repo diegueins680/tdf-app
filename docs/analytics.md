@@ -13,6 +13,31 @@ Both surfaces emit the **same event names** and the **same property shapes** so 
 
 Both surfaces fall back to a **no-op client** if no PostHog key is configured. Calls to `capture` / `identify` / `reset` are safe in dev, in preview builds, in tests.
 
+## Web credential boundary
+
+The web client uses PostHog only for sanitized event capture and identity. It sets
+`advanced_disable_flags: true`: SDK `/flags` and remote configuration requests
+otherwise include persisted initial-person URLs outside the event `before_send`
+callback. A slow recovery-route chunk can leave a reset credential in that URL
+while analytics starts or identifies a session. Disabling only feature flag
+*evaluation* does not disable that request.
+
+TDF application flags remain authoritative in the session API `featureFlags`
+response. The web application does not consume PostHog feature flags, surveys,
+remote site apps or experiments that depend on `/flags`. Adding such a dependency
+requires a separately reviewed privacy boundary. Event capture, public campaign
+attribution, identification and the existing event-envelope sanitizer remain active.
+See the [SDK configuration contract](https://posthog.com/docs/libraries/js/config).
+
+`e2e/web/analytics-privacy.spec.mjs` exercises the actual bundled SDK with a
+synthetic reset URL before route cleanup, both anonymously and with a synthetic
+identified session. All business and telemetry traffic is intercepted. The test
+emulates ordinary visitor browser metadata because the SDK deliberately drops
+bot events; it requires real decoded pageview/identify requests rather than
+accepting an empty capture as privacy evidence. No real credentials, account,
+mail, provider receipt or universal privacy guarantee is involved. SDK local
+persistence and provider consent/retention remain separate audit surfaces.
+
 ## Environment variables
 
 ### Mobile
@@ -132,3 +157,17 @@ VITE_POSTHOG_KEY=phc_your_dev_key npm run dev
 If you see nothing in PostHog, check the browser console / Metro log — the no-op client prints a single `[analytics] PostHog disabled: <reason>` line on startup so you know immediately whether the env var was picked up.
 
 Privacy references: [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html) recommends excluding access credentials and unnecessary personal information from logs. The existing PostHog `before_send` integration enforces the same boundary for analytics payloads.
+
+
+### Failure diagnostics
+
+The `client_error` reporter redacts error names/messages and selected diagnostic
+context before capture, drops unknown context and prevents replacement of its
+core event fields. Section error boundaries use this reporter rather than
+native exception capture with a raw Error and complete URL. Application-issued
+console diagnostics contain only the redacted name/message, without raw stack,
+cause or custom Error fields. Embedded URLs/paths are masked even inside prose.
+Pattern redaction does not recognize arbitrary personal text: do not put account
+or form data in error messages or allowed context. Browser/React/third-party
+logs and historical provider retention are separate obligations. See
+[the scoped failure diagnostic contract](../formal/system/client-error-privacy.md).

@@ -7,14 +7,14 @@ for (const language of ['es']) {
     const english = language === 'en';
     const copy = english ? {
       heading: 'Find the people and opportunities that make music', loading: 'Searching for results',
-      query: 'What are you looking for?', searchError: 'The search could not be completed.', retry: 'Retry',
+      query: 'Search artists, professionals or events', searchError: 'The search could not be completed.', retry: 'Retry',
       save: 'Save Synthetic Event to your account', unsave: 'Remove Synthetic Event from your saved items',
       favoriteError: 'We could not confirm this change.', refresh: 'Refresh saved items',
       location: 'Use my location', locationError: 'Your location could not be obtained.',
       map: 'Map', mapTitle: 'OpenStreetMap of results', mapPrivacy: 'The map uses authorized approximate locations.',
     } : {
       heading: 'Encuentra a la gente y las oportunidades que hacen música', loading: 'Buscando resultados',
-      query: '¿Qué necesitas?', searchError: 'No se pudo completar la búsqueda.', retry: 'Reintentar',
+      query: 'Buscar artistas, profesionales o eventos', searchError: 'No se pudo completar la búsqueda.', retry: 'Reintentar',
       save: 'Guardar Synthetic Event en tu cuenta', unsave: 'Quitar Synthetic Event de tus guardados',
       favoriteError: 'No pudimos confirmar el cambio', refresh: 'Consultar guardados',
       location: 'Usar mi ubicación', locationError: 'No se obtuvo tu ubicación.',

@@ -1,0 +1,37 @@
+name: Check Mobile Distribution Expiry
+
+on:
+  schedule:
+    # Daily at 08:00 America/Guayaquil
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-expiry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Check published manifest expiry (read-only)
+        run: node scripts/check-mobile-distribution.mjs
+
+      - name: Notify on Failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "📱 The /app tester links expire within 48 hours (or the manifest could not be read). Re-verify TestFlight and Google Play, then renew tdf-hq-ui/public/mobile-distribution.json — see docs/mobile-program/README.md.\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_id }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,0 +1,3 @@
+[fix/legacy-ticket-reservation-clock-20261029 05e123929] fix(ticketing): validate sale and promo windows at reservation
+ 13 files changed, 423 insertions(+), 78 deletions(-)
+ create mode 100644 formal/system/ticket-reservation-clock.md

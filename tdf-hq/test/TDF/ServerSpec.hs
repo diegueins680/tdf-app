@@ -3,6 +3,7 @@
 
 module TDF.ServerSpec (spec) where
 
+import qualified TDF.CoursePhone as CoursePhone
 import Control.Monad (forM_)
 import Control.Exception (bracket, toException, try)
 import Control.Monad.IO.Class (liftIO)
@@ -24,8 +25,9 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Database.Persist
-    ( Entity(..), Key, PersistValue(PersistText, PersistUTCTime), count, get, getJust, insert, insert_, insertKey
+    ( Entity(..), Filter, Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
@@ -77,7 +79,7 @@ import TDF.Auth
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import qualified TDF.Routes.Academy as Academy
-import Servant (ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
+import Servant (err400, NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -100,8 +102,7 @@ import qualified TDF.Catalog.Models as Catalog
 import TDF.DB (Env (..))
 import TDF.DTO.SocialEventsDTO (ArtistDTO (..), EventMomentReactionDTO (..))
 import TDF.Handlers.InputList
-    ( AssetField (..)
-    , renderInputListLatex
+    ( renderInputListLatex
     , renderInputListLatexWithAssets
     )
 import TDF.Models
@@ -141,7 +142,8 @@ import TDF.DTO
 import qualified TDF.DTO as DTO
 import qualified TDF.Server as NotificationServer
 import TDF.Server
-    ( MarketplaceCartTotalsState(..)
+    ( createPurchase
+    , MarketplaceCartTotalsState(..)
     , DriveApiResp(..)
     , DriveMetaResp(..)
     , GoogleToken(..)
@@ -149,7 +151,6 @@ import TDF.Server
     , PayPalToken(..)
     , MetaBackfillOptions(..)
     , PreparedLine(..)
-    , SessionInputLookup(..)
     , WAInbound(..)
     , extractWhatsAppInbound
     , normalizeOptionalInput
@@ -293,8 +294,6 @@ import TDF.Server
     , validatePositiveIdField
     , validateOptionalPositiveIdField
     , validateSessionPathId
-    , validateSessionInputLookup
-    , validateInputListInventoryFilters
     , listInventory
     , resolveSocialTargetPartyId
     , validateSocialProfilePartyIds
@@ -349,6 +348,9 @@ import TDF.Server
     , validateCourseRegistrationFollowUpId
     , whatsAppConsentStatusFromRow
     , validateDriveAccess
+    , resolveDriveUploadVisibility
+    , resolveDriveUploadAuthority
+    , storageProviderError
     , resolveResourcesForBooking
     , runDb
     , resolvePackagePurchaseRefs
@@ -426,7 +428,8 @@ import qualified TDF.ServerRadio as Radio
 import qualified TDF.Server.SocialSync as SocialSync
 import qualified TDF.WhatsApp.Types as WA
 import TDF.ServerAuth
-    ( findReusableActiveToken
+    ( SessionTokenTtl (..)
+    , findReusableActiveToken
     , normalizeAuthEmailAddress
     , parsePasswordChangeAuthToken
     , resolvePasswordResetDelivery
@@ -625,12 +628,6 @@ allFutureStubs user =
        , experienceAuditing
        ]
 
-inputListSessionKey :: ME.SessionId
-inputListSessionKey =
-    case fromPathPiece ("00000000-0000-0000-0000-000000000084" :: Text) of
-        Just keyVal -> keyVal
-        Nothing -> error "Expected fixture input-list session id to parse"
-
 mkDriveMultipart :: [(Text, Text)] -> [FileData Tmp] -> MultipartData Tmp
 mkDriveMultipart fields uploads =
     MultipartData
@@ -738,6 +735,28 @@ isLeft (Right _) = False
 
 spec :: Spec
 spec = describe "TDF.Server helpers" $ do
+    describe "served music credential cache boundary" $ do
+        forM_ ["GET", "HEAD"] $ \method ->
+            it ("protects the actual public asset-access route before UUID parsing for " <> show method) $ do
+                let env = Env (error "TEST_ONLY_UNUSED_DATABASE") (marketplaceTestConfig False)
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    original <- NotificationHTTP.parseRequest
+                        ("http://127.0.0.1:" <> show port <> "/music/assets/not-a-uuid/access")
+                    response <- NotificationHTTP.httpLbs
+                        (original { NotificationHTTP.method = method }) manager
+                    statusCode (NotificationHTTP.responseStatus response) `shouldBe` 400
+                    lookup "Cache-Control" (NotificationHTTP.responseHeaders response)
+                        `shouldBe` Just "private, no-store"
+        it "leaves catalog validation responses outside the credential cache policy" $ do
+            let env = Env (error "TEST_ONLY_UNUSED_DATABASE") (marketplaceTestConfig False)
+            testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                request <- NotificationHTTP.parseRequest
+                    ("http://127.0.0.1:" <> show port <> "/music/releases?limit=not-an-int")
+                response <- NotificationHTTP.httpLbs request manager
+                statusCode (NotificationHTTP.responseStatus response) `shouldBe` 400
+                lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Nothing
     describe "live database readiness" $ do
         it "returns503 rather than success when the handler cannot acquire its database" $ do
             let env = Env (error "PRIVATE_DATABASE_CONNECTION_DETAILS") (marketplaceTestConfig False)
@@ -760,6 +779,135 @@ spec = describe "TDF.Server helpers" $ do
                     lookup "Cache-Control" (NotificationHTTP.responseHeaders response) `shouldBe` Just "no-store"
                     (eitherDecode (NotificationHTTP.responseBody response) :: Either String A.Value)
                         `shouldBe` Right (object ["status" .= ("ok" :: Text), "db" .= ("ok" :: Text)])
+    describe "served authorization boundary (AUTH-PUBLIC-001)" $ do
+        it "denies staff ads assistance and foreign academy writes, and no longer serves legacy course Stripe routes" $
+            withNotificationFixture $ \env _ _ _ _ ->
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    let post path body authenticated = do
+                            base <- NotificationHTTP.parseRequest ("http://127.0.0.1:" <> show port <> path)
+                            NotificationHTTP.httpLbs (base
+                                { NotificationHTTP.method = "POST"
+                                , NotificationHTTP.requestBody = NotificationHTTP.RequestBodyLBS body
+                                , NotificationHTTP.requestHeaders =
+                                    ("Content-Type","application/json")
+                                      : [("Authorization","Bearer google-token") | authenticated]
+                                }) manager
+                        status = statusCode . NotificationHTTP.responseStatus
+                        assistBody = "{\"aarMessage\":\"precio de grabacion\",\"aarChannel\":\"whatsapp\"}"
+                    anonymousAssist <- post "/ads/assist" assistBody False
+                    status anonymousAssist `shouldBe` 401
+                    BL8.unpack (NotificationHTTP.responseBody anonymousAssist) `shouldNotContain` "Detalle:"
+                    customerAssist <- post "/ads/assist" assistBody True
+                    status customerAssist `shouldBe` 403
+                    paymentIntent <- post "/public/courses/beatmaking/registrations/1/payment-intent"
+                        "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\"}" False
+                    status paymentIntent `shouldBe` 404
+                    checkoutSession <- post "/public/courses/beatmaking/registrations/1/checkout-session"
+                        "{\"successUrl\":\"https://example.com/ok\",\"cancelUrl\":\"https://example.com/no\"}" False
+                    status checkoutSession `shouldBe` 404
+                    let enrollBody email = BL8.pack ("{\"email\":\"" <> email <> "\",\"role\":\"artist\"}")
+                    anonymousEnroll <- post "/academy/enroll" (enrollBody "victim@example.com") False
+                    status anonymousEnroll `shouldBe` 401
+                    anonymousProgress <- post "/academy/progress"
+                        "{\"email\":\"victim@example.com\",\"slug\":\"intro\",\"day\":1}" False
+                    status anonymousProgress `shouldBe` 401
+                    anonymousReferral <- post "/referrals/claim"
+                        "{\"email\":\"victim@example.com\",\"code\":\"ABC123\"}" False
+                    status anonymousReferral `shouldBe` 401
+                    runSqlPool (rawExecute "UPDATE party SET primary_email='owner@example.com' WHERE id IN (SELECT party_id FROM api_token WHERE token='google-token')" []) (envPool env)
+                    foreignEnroll <- post "/academy/enroll" (enrollBody "victim@example.com") True
+                    status foreignEnroll `shouldBe` 403
+    describe "WhatsApp double opt-in (PRIV-WHATSAPP-001)" $ do
+        it "treats only an exact affirmative reply as confirmation" $ do
+            map NotificationServer.isWhatsAppConsentConfirmationMessage ["SI", " Sí! ", "yes", "Acepto"]
+                `shouldBe` [True, True, True, True]
+            map NotificationServer.isWhatsAppConsentConfirmationMessage ["si quiero", "no", "STOP", ""]
+                `shouldBe` [False, False, False, False]
+        it "confirms only a pending request inside the window and only by a later reply" $
+            bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+                now <- getCurrentTime
+                runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
+                let hourAgo = addUTCTime (-3600) now
+                    twoHoursAgo = addUTCTime (-7200) now
+                    rowNoted note phone requested consent =
+                        ME.WhatsAppConsent phone Nothing consent (Just "public") note
+                            (if consent then Just now else Nothing) Nothing requested now now
+                    row = rowNoted (Just "pending_confirmation")
+                    unsent = rowNoted (Just "pending_unsent")
+                runSqlPool (do
+                    _ <- insert (row "+593990000001" (Just hourAgo) False)
+                    _ <- insert (row "+593990000002" (Just (addUTCTime (-8 * 86400) now)) False)
+                    _ <- insert (row "+593990000003" Nothing False)
+                    _ <- insert (row "+593990000004" (Just hourAgo) False)
+                    _ <- insert (unsent "+593990000005" (Just (addUTCTime (-600) now)) False)
+                    _ <- insert (unsent "+593990000006" (Just twoHoursAgo) False)
+                    _ <- insert (rowNoted (Just "staff note") "+593990000007" (Just hourAgo) False)
+                    pure ()) pool
+                let confirm sentAt phone =
+                        runSqlPool (NotificationServer.applyWhatsAppConsentConfirmation now sentAt phone) pool
+                -- A reply sent before the request (delayed or replayed) cannot confirm it.
+                confirm (Just (addUTCTime (-7200) now)) "+593990000004" `shouldReturn` False
+                confirm Nothing "+593990000004" `shouldReturn` False
+                confirm (Just now) "+593990000001" `shouldReturn` True
+                confirm (Just now) "+593990000001" `shouldReturn` False
+                confirm (Just now) "+593990000002" `shouldReturn` False
+                confirm (Just now) "+593990000003" `shouldReturn` False
+                confirm (Just now) "+593990000099" `shouldReturn` False
+                -- A request the provider did not deliver stays confirmable, but only briefly.
+                confirm (Just (addUTCTime (-900) now)) "+593990000005" `shouldReturn` False
+                confirm (Just now) "+593990000005" `shouldReturn` True
+                confirm (Just now) "+593990000006" `shouldReturn` False
+                -- Only the two recognised pending states can be confirmed.
+                confirm (Just now) "+593990000007" `shouldReturn` False
+                confirmed <- runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000001")) pool
+                fmap (ME.whatsAppConsentConsent . entityVal) confirmed `shouldBe` Just True
+                -- The request instant survives so the per-number interval still applies.
+                fmap ((/= Nothing) . ME.whatsAppConsentConfirmationRequestedAt . entityVal) confirmed `shouldBe` Just True
+                -- A withdrawal after the request invalidates it, even for a later reply.
+                runSqlPool (rawExecute "UPDATE whats_app_consent SET revoked_at=? WHERE phone_e164='+593990000004'" [PersistUTCTime now]) pool
+                confirm (Just now) "+593990000004" `shouldReturn` False
+        it "claims one confirmation request per interval and keeps an undelivered request retryable" $
+            bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+                now <- getCurrentTime
+                runSqlPool (rawExecute "CREATE TABLE whats_app_consent (id INTEGER PRIMARY KEY, phone_e164 TEXT NOT NULL UNIQUE, display_name TEXT, consent BOOLEAN NOT NULL, source TEXT, note TEXT, consented_at TIMESTAMP, revoked_at TIMESTAMP, confirmation_requested_at TIMESTAMP, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)" []) pool
+                let claim at = (/= Nothing) <$> runSqlPool
+                        (NotificationServer.claimWhatsAppConfirmationRequest at "+593990000010" Nothing (Just "public")) pool
+                    pendingRow = runSqlPool (getBy (ME.UniqueWhatsAppConsent "+593990000010")) pool
+                claim now `shouldReturn` True
+                claim (addUTCTime 60 now) `shouldReturn` False
+                -- A failure reported for another request instant changes nothing.
+                runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent (addUTCTime 1 now) "+593990000010") pool
+                claim (addUTCTime 90 now) `shouldReturn` False
+                runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent now "+593990000010") pool
+                unsent <- pendingRow
+                fmap (ME.whatsAppConsentNote . entityVal) unsent `shouldBe` Just (Just "pending_unsent")
+                -- A prompt retry is allowed and keeps the original request instant.
+                claim (addUTCTime 120 now) `shouldReturn` True
+                retried <- pendingRow
+                fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) retried
+                    `shouldBe` fmap (ME.whatsAppConsentConfirmationRequestedAt . entityVal) unsent
+                claim (addUTCTime 180 now) `shouldReturn` False
+                -- After the short window an undelivered request waits for the interval.
+                runSqlPool (NotificationServer.markWhatsAppConfirmationRequestUnsent now "+593990000010") pool
+                claim (addUTCTime 3700 now) `shouldReturn` False
+                claim (addUTCTime (25 * 3600) now) `shouldReturn` True
+                runSqlPool (rawExecute "UPDATE whats_app_consent SET consent=1, consented_at=? WHERE phone_e164='+593990000010'" [PersistUTCTime now]) pool
+                claim (addUTCTime (50 * 3600) now) `shouldReturn` False
+        it "reads Meta message timestamps as POSIX seconds" $ do
+            NotificationServer.parseWhatsAppMessageTimestamp (Just "1791300000")
+                `shouldBe` Just (posixSecondsToUTCTime 1791300000)
+            map NotificationServer.parseWhatsAppMessageTimestamp [Nothing, Just "", Just "12a", Just "9999999999999"]
+                `shouldBe` [Nothing, Nothing, Nothing, Nothing]
+        it "serves no public consent lookup" $
+            withNotificationFixture $ \env _ _ _ _ ->
+                testWithApplication (pure (NotificationServer.mkApp env)) $ \port -> do
+                    manager <- NotificationHTTP.newManager NotificationHTTP.defaultManagerSettings
+                    request <- NotificationHTTP.parseRequest
+                        ("http://127.0.0.1:" <> show port <> "/public/whatsapp/consent?phone=%2B593990000001")
+                    response <- NotificationHTTP.httpLbs request manager
+                    statusCode (NotificationHTTP.responseStatus response) `shouldBe` 410
+                    BL8.unpack (NotificationHTTP.responseBody response) `shouldNotContain` "consent\":true"
     describe "notification navigation reads" $ do
         it "keeps notification and specific-request identity through the authenticated HTTP boundary and rejects expired sessions" $
             withNotificationFixture $ \env _ _ requestId notificationId ->
@@ -1351,60 +1499,25 @@ spec = describe "TDF.Server helpers" $ do
             partySelectorVisibleLegalName "social_connection" legalName `shouldBe` Nothing
             partySelectorVisibleLegalName "crm_assignment" legalName `shouldBe` legalName
 
-    describe "validateSessionInputLookup" $ do
-        it "accepts exactly one public input-list session selector" $ do
-            let validSessionId = "00000000-0000-0000-0000-000000000084"
-            validateSessionInputLookup Nothing Nothing `shouldBe` Right (SessionInputByIndex 1)
-            validateSessionInputLookup (Just 2) Nothing `shouldBe` Right (SessionInputByIndex 2)
-            case validateSessionInputLookup Nothing (Just validSessionId) of
-                Right (SessionInputByKey keyVal) ->
-                    toPathPiece keyVal `shouldBe` validSessionId
-                Right other ->
-                    expectationFailure ("Expected sessionId lookup, got: " <> show other)
-                Left serverErr ->
-                    expectationFailure ("Expected valid sessionId lookup, got: " <> show serverErr)
-
-        it "rejects ambiguous or malformed public input-list session selectors" $ do
-            let validSessionId = "00000000-0000-0000-0000-000000000084"
-            let assertInvalid expectedMessage result =
+    describe "listInventory" $
+        it "refuses session-scoped availability on the anonymous inventory list (AUTH-PUBLIC-001)" $ do
+            let reject mSession mChannel = do
+                    result <-
+                        runHandler $
+                            runReaderT
+                                (listInventory (Just "mic") mSession mChannel)
+                                (error "listInventory must reject session context before reading Env")
                     case result of
                         Left serverErr -> do
                             errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
+                            BL8.unpack (errBody serverErr)
+                                `shouldContain` "not available on the public inventory list"
                         Right value ->
                             expectationFailure
-                                ("Expected invalid input-list selector to be rejected, got: " <> show value)
-            assertInvalid
-                "Provide either index or sessionId, not both"
-                (validateSessionInputLookup (Just 1) (Just validSessionId))
-            assertInvalid
-                "index must be greater than or equal to 1"
-                (validateSessionInputLookup (Just 0) Nothing)
-            assertInvalid
-                "Invalid sessionId"
-                (validateSessionInputLookup Nothing (Just "not-a-session-id"))
-            assertInvalid
-                "Invalid sessionId"
-                (validateSessionInputLookup Nothing (Just "AAAAAAAA-0000-0000-0000-000000000084"))
-
-    describe "listInventory" $
-        it "rejects non-canonical public session ids before inventory fallback lookup" $ do
-            result <-
-                runHandler $
-                    runReaderT
-                        ( listInventory
-                            (Just "mic")
-                            (Just "AAAAAAAA-0000-0000-0000-000000000084")
-                            Nothing
-                        )
-                        (error "listInventory should reject invalid sessionId before reading Env")
-            case result of
-                Left serverErr -> do
-                    errHTTPCode serverErr `shouldBe` 400
-                    BL8.unpack (errBody serverErr) `shouldContain` "Invalid sessionId"
-                Right value ->
-                    expectationFailure
-                        ("Expected non-canonical inventory sessionId to be rejected, got: " <> show value)
+                                ("Expected session-scoped public inventory to be rejected, got: " <> show value)
+            reject (Just "00000000-0000-0000-0000-000000000084") Nothing
+            reject (Just "00000000-0000-0000-0000-000000000084") (Just 1)
+            reject Nothing (Just 1)
 
     describe "validateSessionPathId" $ do
         it "accepts canonical session UUID path identifiers" $ do
@@ -1432,45 +1545,6 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid " 00000000-0000-0000-0000-000000000084"
             assertInvalid "AAAAAAAA-0000-0000-0000-000000000084"
             assertInvalid "00000000000000000000000000000084"
-
-    describe "validateInputListInventoryFilters" $ do
-        it "accepts broad inventory browsing and scoped field availability lookups" $ do
-            validateInputListInventoryFilters Nothing Nothing Nothing `shouldBe` Right ()
-            validateInputListInventoryFilters (Just AssetFieldMic) Nothing Nothing
-                `shouldBe` Right ()
-            validateInputListInventoryFilters
-                (Just AssetFieldMic)
-                (Just inputListSessionKey)
-                (Just 3)
-                `shouldBe` Right ()
-
-        it "rejects ignored availability context before inventory queries run" $ do
-            let assertInvalid expectedMessage result =
-                    case result of
-                        Left serverErr -> do
-                            errHTTPCode serverErr `shouldBe` 400
-                            BL8.unpack (errBody serverErr) `shouldContain` expectedMessage
-                        Right value ->
-                            expectationFailure
-                                ( "Expected invalid inventory filters to be rejected, got: "
-                                    <> show value
-                                )
-            assertInvalid
-                "channel must be greater than or equal to 1"
-                ( validateInputListInventoryFilters
-                    (Just AssetFieldMic)
-                    (Just inputListSessionKey)
-                    (Just 0)
-                )
-            assertInvalid
-                "channel requires field"
-                (validateInputListInventoryFilters Nothing Nothing (Just 1))
-            assertInvalid
-                "sessionId requires field"
-                (validateInputListInventoryFilters Nothing (Just inputListSessionKey) Nothing)
-            assertInvalid
-                "channel requires sessionId"
-                (validateInputListInventoryFilters (Just AssetFieldMic) Nothing (Just 1))
 
     describe "renderInputListLatex" $ do
         it "keeps generated headings single-line by neutralizing control and formatting characters" $ do
@@ -3342,6 +3416,79 @@ spec = describe "TDF.Server helpers" $ do
                 "{\"buyerId\":42,\"productId\":7,\"packageId\":9}"
                 `shouldSatisfy` isLeft
 
+    describe "createPurchase expiry" $ do
+        forM_ [1, 120, 365] $ \days ->
+            it ("persists " <> show days <> " elapsed days from the stored purchase time") $
+                withPackagePurchaseFixture (Just days) True $ \env buyerKey productKey -> do
+                    before <- getCurrentTime
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                    after <- getCurrentTime
+                    assertPackagePurchaseSuccess result
+                    rows <- runSqlPool (selectList [] []) (envPool env)
+                    case rows of
+                        [Entity _ purchase] -> do
+                            M.packagePurchasePurchasedAt purchase `shouldSatisfy` (>= before)
+                            M.packagePurchasePurchasedAt purchase `shouldSatisfy` (<= after)
+                            M.packagePurchaseExpiresAt purchase `shouldBe`
+                                Just (addUTCTime (fromIntegral days * 86400)
+                                    (M.packagePurchasePurchasedAt purchase))
+                            M.packagePurchaseBuyerId purchase `shouldBe` buyerKey
+                            M.packagePurchaseProductId purchase `shouldBe` productKey
+                            M.packagePurchasePriceCents purchase `shouldBe` 50000
+                            M.packagePurchaseRemainingUnits purchase `shouldBe` 24
+                            M.packagePurchaseStatus purchase `shouldBe` "Active"
+                        _ -> expectationFailure "Expected exactly one persisted package purchase"
+
+        forM_ [0, -1] $ \days ->
+            it ("refuses nonpositive validity " <> show days <> " without creating a purchase") $
+                withPackagePurchaseFixture (Just days) True $ \env buyerKey productKey -> do
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                    assertPackagePurchaseFailure 409 result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        it "keeps an explicitly nonexpiring product nonexpiring" $
+            withPackagePurchaseFixture Nothing True $ \env buyerKey productKey -> do
+                result <- runHandler $ runReaderT
+                    (createPurchase (mkUser [Admin])
+                        (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                assertPackagePurchaseSuccess result
+                rows <- runSqlPool (selectList [] []) (envPool env)
+                case rows of
+                    [Entity _ purchase] -> M.packagePurchaseExpiresAt purchase `shouldBe` Nothing
+                    _ -> expectationFailure "Expected exactly one persisted nonexpiring purchase"
+
+        forM_ [("inactive product", True), ("unknown product", False)] $ \(label, inactive) ->
+            it ("preserves rejection of an " <> label <> " without writing a purchase") $
+                withPackagePurchaseFixture (Just 120) (not inactive) $ \env buyerKey productKey -> do
+                    let selectedProduct = if inactive then fromSqlKey productKey else 999999
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq (fromSqlKey buyerKey) selectedProduct)) env
+                    assertPackagePurchaseFailure (if inactive then 409 else 422) result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        forM_ [("malformed buyer", 0, 400), ("unknown buyer", 999999, 422)] $ \(label, buyer, code) ->
+            it ("preserves rejection of an " <> label <> " without writing a purchase") $
+                withPackagePurchaseFixture (Just 120) True $ \env _ productKey -> do
+                    result <- runHandler $ runReaderT
+                        (createPurchase (mkUser [Admin])
+                            (DTO.PackagePurchaseReq buyer (fromSqlKey productKey))) env
+                    assertPackagePurchaseFailure code result
+                    runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
+        it "preserves the module permission guard before writing a purchase" $
+            withPackagePurchaseFixture (Just 120) True $ \env buyerKey productKey -> do
+                let denied = (mkUser [Fan]) { auModules = Set.empty }
+                result <- runHandler $ runReaderT
+                    (createPurchase denied
+                        (DTO.PackagePurchaseReq (fromSqlKey buyerKey) (fromSqlKey productKey))) env
+                assertPackagePurchaseFailure 403 result
+                runSqlPool (count ([] :: [Filter M.PackagePurchase])) (envPool env) `shouldReturn` 0
+
     describe "resolvePackagePurchaseRefs" $ do
         it "resolves existing active package products for known buyers" $ do
             (expectedBuyerId, expectedProductId, result) <- runPackageSqlite $ do
@@ -4885,7 +5032,58 @@ spec = describe "TDF.Server helpers" $ do
                             <> show value
                         )
 
-    describe "loadAuthedUser" $
+    describe "loadAuthedUser" $ do
+        it "enforces the server-side validity window and fails closed on legacy interactive sessions" $ do
+            results <- runAuthSqlite $ do
+                now <- liftIO getCurrentTime
+                partyId <- insert Party
+                    { partyLegalName = Nothing
+                    , partyDisplayName = "Session Window User"
+                    , partyIsOrg = False
+                    , partyTaxId = Nothing
+                    , partyPrimaryEmail = Just "window@example.com"
+                    , partyPrimaryPhone = Nothing
+                    , partyWhatsapp = Nothing
+                    , partyInstagram = Nothing
+                    , partyEmergencyContact = Nothing
+                    , partyNotes = Nothing
+                    , partyStripeCustomerId = Nothing
+                    , partyCountryCode = Nothing
+                    , partyCountryId = Nothing
+                    , partyCreatedAt = now
+                    }
+                let token value label window = insert_ ApiToken
+                        { apiTokenToken = value
+                        , apiTokenPartyId = partyId
+                        , apiTokenLabel = label
+                        , apiTokenActive = True
+                        , apiTokenIssuedAtEpoch = fst <$> window
+                        , apiTokenExpiresAtEpoch = snd <$> window
+                        }
+                token "live-login-token" (Just "password-login:window@example.com") (Just (0, farFutureEpoch))
+                token "expired-login-token" (Just "password-login:window@example.com") (Just (0, 1))
+                token "legacy-login-token" (Just "password-login:window@example.com") Nothing
+                token "legacy-google-token" (Just "google-login:window@example.com") Nothing
+                token "unbounded-service-token" Nothing Nothing
+                token "expired-service-token" (Just "service:synthetic") (Just (0, 1))
+                rawExecute
+                    "INSERT INTO party_security_role (party_id,role_id,granted_by,approved_by,approval_mode,emergency_reason,source_revision_id,source_policy_id,active,created_at,revoked_at,version) SELECT ?,id,NULL,NULL,'bootstrap',NULL,NULL,NULL,TRUE,CURRENT_TIMESTAMP,NULL,1 FROM security_role WHERE code IN ('fan','customer')"
+                    [toPersistValue partyId]
+                live <- loadAuthedUser "live-login-token"
+                expiredLogin <- loadAuthedUser "expired-login-token"
+                legacyLogin <- loadAuthedUser "legacy-login-token"
+                legacyGoogle <- loadAuthedUser "legacy-google-token"
+                unboundedService <- loadAuthedUser "unbounded-service-token"
+                expiredService <- loadAuthedUser "expired-service-token"
+                pure (partyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService, expiredService)
+            let (expectedPartyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService, expiredService) = results
+            fmap auPartyId live `shouldBe` Just expectedPartyId
+            fmap auPartyId unboundedService `shouldBe` Just expectedPartyId
+            expiredLogin `shouldBe` Nothing
+            legacyLogin `shouldBe` Nothing
+            legacyGoogle `shouldBe` Nothing
+            expiredService `shouldBe` Nothing
+
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
             authResults <- runAuthSqlite $ do
                 now <- liftIO getCurrentTime
@@ -4910,18 +5108,24 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "reset-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "mixed-reset-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "Password-Reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 insert_
                     UserCredential
@@ -5004,6 +5208,8 @@ spec = describe "TDF.Server helpers" $ do
                             , apiTokenPartyId = partyId
                             , apiTokenLabel = Nothing
                             , apiTokenActive = True
+                            , apiTokenIssuedAtEpoch = Nothing
+                            , apiTokenExpiresAtEpoch = Nothing
                             }
                 singlePartyId <- insertTestParty "Single Login User" "single@example.com"
                 _ <- insertCredential singlePartyId "single@example.com"
@@ -5049,8 +5255,8 @@ spec = describe "TDF.Server helpers" $ do
                                     , partyCreatedAt = now
                                     }
                         (,)
-                            <$> insert (ApiToken "authorization-token" partyId (Just "password-login:logout@example.com") True)
-                            <*> insert (ApiToken "cookie-token" partyId (Just "password-login:logout@example.com") True)
+                            <$> insert (ApiToken "authorization-token" partyId (Just "password-login:logout@example.com") True (Just 0) (Just farFutureEpoch))
+                            <*> insert (ApiToken "cookie-token" partyId (Just "password-login:logout@example.com") True (Just 0) (Just farFutureEpoch))
                     let env =
                             Env
                                 { envPool = pool
@@ -5940,7 +6146,7 @@ spec = describe "TDF.Server helpers" $ do
                                 , M.partyCountryId = Nothing
                                 , M.partyCreatedAt = now
                                 }
-                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True)
+                        insert_ (M.ApiToken "expired-experiment-token" partyIdValue Nothing True Nothing Nothing)
                         pure partyIdValue
                     let signupAt = addUTCTime (-3600) now
                         insertProgress partyIdValue signupAtValue =
@@ -7183,6 +7389,34 @@ spec = describe "TDF.Server helpers" $ do
                     [ "client_secret" .= ("session-secret" :: Text)
                     , "expires_after" .= object ["seconds" .= (0 :: Int)]
                     ])
+
+    describe "Drive storage failure isolation" $ do
+        it "defaults explicit personal destinations to private without changing legacy sharing" $ do
+            resolveDriveUploadVisibility (Just "google_drive") Nothing `shouldBe` Just "private"
+            resolveDriveUploadVisibility Nothing Nothing `shouldBe` Nothing
+
+        it "refuses missing personal credentials instead of selecting TDF credentials" $
+            case resolveDriveUploadAuthority (Just "user") Nothing of
+                Left failure -> do
+                    errHTTPCode failure `shouldBe` 409
+                    BL8.unpack (errBody failure) `shouldContain` "storage_reconnect_required"
+                Right _ -> expectationFailure "Personal upload selected shared credentials"
+        it "recognizes an explicit personal upload" $
+            resolveDriveUploadAuthority (Just "user") (Just "personal") `shouldBe` Right True
+        it "rejects mixed service and personal authority" $
+            case resolveDriveUploadAuthority (Just "server") (Just "personal") of
+                Left failure -> errHTTPCode failure `shouldBe` 400
+                Right _ -> expectationFailure "Mixed authority accepted"
+        it "does not turn service revocation into an expired TDF session" $ do
+            let failure = storageProviderError False (err400 { errBody = "invalid_grant synthetic-secret" })
+            errHTTPCode failure `shouldBe` 503
+            BL8.unpack (errBody failure) `shouldContain` "storage_service_unavailable"
+            BL8.unpack (errBody failure) `shouldNotContain` "synthetic-secret"
+        it "offers personal reconnection without disclosing the provider payload" $ do
+            let failure = storageProviderError True (err400 { errBody = "invalid_grant synthetic-secret" })
+            errHTTPCode failure `shouldBe` 409
+            BL8.unpack (errBody failure) `shouldContain` "storage_reconnect_required"
+            BL8.unpack (errBody failure) `shouldNotContain` "synthetic-secret"
 
     describe "DriveUploadForm FromMultipart" $ do
         it "trims optional upload fields before handler fallback resolution" $ do
@@ -9188,11 +9422,13 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 rawExecute
                     "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
                     [toPersistValue tokenId, toPersistValue credId]
-                result <- runPasswordResetConfirm "reset-token" "new-password-123"
+                result <- runPasswordResetConfirm testSessionTokenTtl "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
                 pure
@@ -9238,11 +9474,13 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-reset:user@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 rawExecute
                     "INSERT INTO auth_recovery_challenge(api_token_id,credential_id,issued_at_epoch,expires_at_epoch) VALUES (?,?,CAST(strftime('%s','now') AS INTEGER),CAST(strftime('%s','now') AS INTEGER)+900)"
                     [toPersistValue tokenId, toPersistValue credId]
-                result <- runPasswordResetConfirm "reset-token" "new-password-123"
+                result <- runPasswordResetConfirm testSessionTokenTtl "reset-token" "new-password-123"
                 updatedCred <- get credId
                 updatedToken <- get tokenId
                 pure
@@ -9284,12 +9522,16 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Nothing
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Nothing
+                    , apiTokenExpiresAtEpoch = Nothing
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "different-login-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:old-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 findReusableActiveToken partyId (Just "password-login:login@example.com")
 
@@ -9319,12 +9561,16 @@ spec = describe "TDF.Server helpers" $ do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:duplicate-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 _ <- insert ApiToken
                     { apiTokenToken = "second-login-token"
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = Just "password-login:duplicate-login@example.com"
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch
                     }
                 findReusableActiveToken partyId (Just "password-login:duplicate-login@example.com")
 
@@ -11048,6 +11294,47 @@ spec = describe "TDF.Server helpers" $ do
             validateCourseRegistrationPhoneE164 (Just "   ") `shouldBe` Right Nothing
             validateCourseRegistrationPhoneE164 (Just " +593 99 123 4567 ") `shouldBe` Right (Just "+593991234567")
 
+        it "accepts Ecuador national numbers as typed by local visitors and stores E.164" $ do
+            validateCourseRegistrationPhoneE164 (Just "0988384849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just " 098 838 4849 ") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "098-838-4849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "(02) 234-5678") `shouldBe` Right (Just "+59322345678")
+
+        it "normalizes course phones exactly like the web form (tdf-hq-ui/src/utils/phone.test.ts)" $ do
+            -- Same table as the web test, so server and web store the same E.164 value.
+            forM_
+              [ ("0988384849", "+593988384849"), ("098 838 4849", "+593988384849")
+              , ("098-838-4849", "+593988384849"), ("(098) 838.4849", "+593988384849")
+              , ("988384849", "+593988384849"), ("+593988384849", "+593988384849")
+              , ("+593 98 838 4849", "+593988384849"), ("+593 098 838 4849", "+593988384849")
+              , ("00593988384849", "+593988384849"), ("593988384849", "+593988384849")
+              , ("022345678", "+59322345678"), ("(02) 234-5678", "+59322345678")
+              , ("072345678", "+59372345678"), ("+593 2 234 5678", "+59322345678")
+              , ("+44 20 7946 0018", "+442079460018"), ("0044 20 7946 0018", "+442079460018")
+              , ("+1 (415) 555-0100", "+14155550100")
+              ] $ \(input, expected) ->
+                (input, CoursePhone.normalizeCoursePhone input) `shouldBe` (input, Just expected)
+            forM_
+              [ "", "   ", "call me at 099 123 4567", "12345", "0812345678", "012345678"
+              , "+0988384849", "+593 98 838 48", "099+1234567", "++593988384849"
+              , "+1234567890123456", "098838484912"
+              ] $ \input ->
+                (input, CoursePhone.normalizeCoursePhone input) `shouldBe` (input, Nothing)
+            -- Both registration paths use it: the legacy lead path stores the same value.
+            validateCourseRegistrationPhoneE164 (Just "+593 098 838 4849") `shouldBe` Right (Just "+593988384849")
+            validateCourseRegistrationPhoneE164 (Just "988384849") `shouldBe` Right (Just "+593988384849")
+
+        it "keeps rejecting local-looking numbers with the wrong length or prefix" $ do
+            let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
+                    Left serverErr -> errHTTPCode serverErr `shouldBe` 400
+                    Right phoneVal ->
+                        expectationFailure ("Expected invalid local phone to be rejected, got: " <> show phoneVal)
+            assertInvalid "098838484"
+            assertInvalid "09883848490"
+            assertInvalid "0188384849"
+            assertInvalid "0088384849"
+            assertInvalid "099 123 4567 ext"
+
         it "rejects explicitly invalid or implausible phones instead of silently discarding them" $ do
             let assertInvalid rawPhone = case validateCourseRegistrationPhoneE164 (Just rawPhone) of
                     Left serverErr -> do
@@ -11735,6 +12022,7 @@ spec = describe "TDF.Server helpers" $ do
                         , ME.whatsAppConsentNote = Just "consent"
                         , ME.whatsAppConsentConsentedAt = Just now
                         , ME.whatsAppConsentRevokedAt = Nothing
+                        , ME.whatsAppConsentConfirmationRequestedAt = Nothing
                         , ME.whatsAppConsentCreatedAt = now
                         , ME.whatsAppConsentUpdatedAt = now
                         }
@@ -11757,6 +12045,7 @@ spec = describe "TDF.Server helpers" $ do
                         , ME.whatsAppConsentNote = Just "consent"
                         , ME.whatsAppConsentConsentedAt = Just now
                         , ME.whatsAppConsentRevokedAt = Nothing
+                        , ME.whatsAppConsentConfirmationRequestedAt = Nothing
                         , ME.whatsAppConsentCreatedAt = now
                         , ME.whatsAppConsentUpdatedAt = now
                         }
@@ -15649,6 +15938,7 @@ marketplaceTestConfig seedFlag =
         , sessionCookieSecure = False
         , sessionCookieSameSite = "Lax"
         , sessionCookieMaxAgeSeconds = Nothing
+        , sessionTokenTtlSeconds = 3600
         , stripeSecretKey = Nothing
         , stripePublishableKey = Nothing
         , stripeWebhookSecret = Nothing
@@ -15796,6 +16086,7 @@ seedSessionUsernameFallbackRows = do
                     , userCredentialPasswordHash = "hash"
                     , userCredentialActive = True
                     }
+        -- Interactive labels need a validity window; unlabeled tokens stay unbounded.
         insertToken partyId tokenValue labelValue =
             insert_
                 ApiToken
@@ -15803,6 +16094,8 @@ seedSessionUsernameFallbackRows = do
                     , apiTokenPartyId = partyId
                     , apiTokenLabel = labelValue
                     , apiTokenActive = True
+                    , apiTokenIssuedAtEpoch = Just 0 <* labelValue
+                    , apiTokenExpiresAtEpoch = Just farFutureEpoch <* labelValue
                     }
     ambiguousPartyId <- insertParty "Ambiguous Session User" "ambiguous-session@example.com"
     insertCredential ambiguousPartyId "first-session@example.com"
@@ -15814,6 +16107,44 @@ seedSessionUsernameFallbackRows = do
     insertCredential googlePartyId "second-google-session@example.com"
     insertToken googlePartyId "google-token" (Just "google-login:google@example.com")
     pure (ambiguousPartyId, googlePartyId)
+
+assertPackagePurchaseSuccess :: Either ServerError NoContent -> Expectation
+assertPackagePurchaseSuccess (Right NoContent) = pure ()
+assertPackagePurchaseSuccess (Left err) = expectationFailure ("Unexpected purchase error: " <> show err)
+
+assertPackagePurchaseFailure :: Int -> Either ServerError NoContent -> Expectation
+assertPackagePurchaseFailure code (Left err) = errHTTPCode err `shouldBe` code
+assertPackagePurchaseFailure _ (Right _) = expectationFailure "Unexpected successful package purchase"
+
+withPackagePurchaseFixture
+    :: Maybe Int -> Bool -> (Env -> Key Party -> Key PackageProduct -> IO a) -> IO a
+withPackagePurchaseFixture days active action =
+    bracket (runNoLoggingT (createSqlitePool ":memory:" 1)) destroyAllResources $ \pool -> do
+        now <- getCurrentTime
+        (buyerKey, productKey) <- runSqlPool (do
+            initializeAuthSchema
+            initializePackageSchema
+            rawExecute "CREATE TABLE package_purchase(id INTEGER PRIMARY KEY,buyer_id INTEGER NOT NULL REFERENCES party(id),product_id INTEGER NOT NULL REFERENCES package_product(id),purchased_at TIMESTAMP NOT NULL,price_cents INTEGER NOT NULL,expires_at TIMESTAMP NULL,remaining_units INTEGER NOT NULL,status TEXT NOT NULL)" []
+            buyer <- insert Party
+                { partyLegalName = Nothing
+                , partyDisplayName = "Synthetic expiry buyer"
+                , partyIsOrg = False
+                , partyTaxId = Nothing
+                , partyPrimaryEmail = Nothing
+                , partyPrimaryPhone = Nothing
+                , partyWhatsapp = Nothing
+                , partyInstagram = Nothing
+                , partyEmergencyContact = Nothing
+                , partyNotes = Nothing
+                , partyStripeCustomerId = Nothing
+                , partyCountryCode = Nothing
+                , partyCountryId = Nothing
+                , partyCreatedAt = now
+                }
+            product <- insert (PackageProduct "Synthetic expiring product" Classes Hours 24 50000
+                days False CreditOnly active)
+            pure (buyer, product)) pool
+        action (Env pool (marketplaceTestConfig False)) buyerKey productKey
 
 runPackageSqlite :: SqlPersistT IO a -> IO a
 runPackageSqlite action =
@@ -15829,6 +16160,14 @@ runResourceSqlite action =
         backend <- ask
         liftIO $ runReaderT initializeResourceSchema backend
         liftIO $ runReaderT action backend
+
+-- Interactive session fixtures need a validity window that cannot elapse
+-- during a test run; service-token fixtures stay unbounded (Nothing).
+farFutureEpoch :: Int64
+farFutureEpoch = 4102444800 -- 2100-01-01T00:00:00Z
+
+testSessionTokenTtl :: SessionTokenTtl
+testSessionTokenTtl = SessionTokenTtl 3600
 
 initializeAuthSchema :: SqlPersistT IO ()
 initializeAuthSchema = do
@@ -16080,6 +16419,8 @@ initializeAuthSchema = do
         \\"party_id\" INTEGER NOT NULL,\
         \\"label\" VARCHAR NULL,\
         \\"active\" BOOLEAN NOT NULL,\
+        \\"issued_at_epoch\" INTEGER NULL,\
+        \\"expires_at_epoch\" INTEGER NULL,\
         \CONSTRAINT \"unique_api_token\" UNIQUE (\"token\"),\
         \FOREIGN KEY(\"party_id\") REFERENCES \"party\"(\"id\")\
         \)"

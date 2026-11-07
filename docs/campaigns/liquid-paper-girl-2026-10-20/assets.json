@@ -1,0 +1,114 @@
+{
+  "status": "review_required",
+  "artist": {
+    "id": 51,
+    "name": "Liquid Paper Girl",
+    "url": "https://www.tdfrecords.net/a/liquid-paper-girl",
+    "identityEvidence": "Existing production artist profile, exact display name; no new account/profile created"
+  },
+  "budgetCents": 0,
+  "timezone": "America/Guayaquil",
+  "launchDate": null,
+  "original": {
+    "file": "VID-20261017-WA0001(1).mp4",
+    "sha256": "93ecdbda4b9f0e66a4eba28cd27593c380b1198740963bc7f3fb2e628e257626",
+    "durationSeconds": 610.08,
+    "bytes": 174844627,
+    "width": 1920,
+    "height": 1080,
+    "fps": 25,
+    "audio": "AAC stereo, 48000 Hz",
+    "integratedLUFS": -15.39,
+    "truePeakDBTP": -0.03,
+    "loudnessRangeLU": 3.7
+  },
+  "derivatives": {
+    "clips": 6,
+    "durationPerClip": 30,
+    "size": "720x1280",
+    "audioGainDB": -1.2,
+    "encoding": "H.264/AAC, faststart",
+    "selection": "Candidates around nonuniform spectral-flux transitions, at least 60 seconds apart. Human musical review required; no claim of beat/bar alignment.",
+    "visualTreatment": "Full landscape composition preserved within a vertical layout; blurred duplicate background. Original artist footage and repository TDF wordmark."
+  },
+  "blockers": [
+    "Original attachment and historical derived files are not accessible; full inspection, musical selection and rendering remain blocked.",
+    "Backend production release executor is unfinished in ops/hetzner/README.md; source integration alone cannot authorize deployment.",
+    "Saving a production campaign requires an authorized TDF session and deployed API; only the importable review plan exists here.",
+    "Private original upload uses the existing recoverable storage service and current quota; it does not grant public access or ensure a playable public URL.",
+    "No verified Instagram/TikTok artist handle, final recording date, credits or rights approval supplied.",
+    "No authorized per-artist provider connection available; manual export is supported.",
+    "Musical cuts, credits and file permissions require review before publication."
+  ],
+  "currentAudit": {
+    "date": "2026-11-05",
+    "originalAvailable": false,
+    "derivativesAvailable": false,
+    "historicalMeasurementsOnly": true,
+    "publicProfileRechecked": true,
+    "publicProfileId": 51,
+    "externalPublicationActivated": false
+  },
+  "assetManifest": [
+    {
+      "file": "clip-01.mp4",
+      "sourceStart": 94.55,
+      "sourceEnd": 124.55,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-02.mp4",
+      "sourceStart": 171.75,
+      "sourceEnd": 201.75,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-03.mp4",
+      "sourceStart": 241.2,
+      "sourceEnd": 271.2,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-04.mp4",
+      "sourceStart": 344.15,
+      "sourceEnd": 374.15,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-05.mp4",
+      "sourceStart": 461.4,
+      "sourceEnd": 491.4,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    },
+    {
+      "file": "clip-06.mp4",
+      "sourceStart": 537.75,
+      "sourceEnd": 567.75,
+      "purpose": [
+        "Instagram Reel",
+        "TikTok manual"
+      ],
+      "state": "historical_candidate_not_reverified"
+    }
+  ]
+}

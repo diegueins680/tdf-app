@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "status": "PRIVATE_PRIVACY_ONLY_DISPOSAL_LOCAL_UNITS_NATIVE_FULL_UI_STATIC_BUILD_PASS_FINAL_METADATA_HOSTED_RELEASE_PENDING",
+  "recordedAt": "2026-10-27T04:45:25.274266+00:00",
+  "source": {
+    "privatePrivacyParent": "3de0406ff241c03a1878810f718b2e587ee4ad8b",
+    "integrationBaseline": "1129112f89d3c00d33b8c86043a6bd197031dcff",
+    "worktree": "/private/tmp/tdf-player-privacy-release-20261027",
+    "sourceBeforeAfter": {
+      "tdf-hq-ui/src/player/PlayerProvider.tsx": "7ccf9982a287ff7f7f3125f87a2b95aab80a10baa00598f8e4b77180757e997c",
+      "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "0cf881b0228da9a69f8699e618deb53cbdd73af28e2242750fb75a47833dccc4",
+      "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "1194d26ed369572fb3eeace97fb54f925a4b0af6c5e72b2f52064f1dca5e9810"
+    },
+    "scope": "At evidence capture, this was the privacy provider plus disposal cleanup only. No PR640 search or metadata-readiness implementation or combined pending-metadata tests were copied.",
+    "parentHostedApprovalInherited": false,
+    "workingTreeUncommittedAtCapture": true
+  },
+  "issue": {
+    "severity": "P1_RESOURCE_CLEANUP",
+    "trigger": "Actual listener replacement or App unmount",
+    "rootCause": "Pause-only cleanup retains the old src on the detached element.",
+    "before": "Two desired actual-App/JSDOM tests fail because A.m4a remains attached. The separate root-owned Chromium native baseline also fails its disposal predicate.",
+    "fix": "Keep retry, generation, play-attempt and intent fences; pause the old element, remove its src attribute and call load once.",
+    "securityBoundary": "No production protected-byte disclosure or server access-revocation result is inferred."
+  },
+  "verification": {
+    "desiredUnitBaseline": {
+      "failed": 2,
+      "notSelected": 23,
+      "actualExitCode": 1,
+      "retainedSource": "https://media.invalid/A.m4a",
+      "logSha256": "c09cac3df7fee075692b79cdba08079e8a4e295f2198fc34c694e77b1a1ee059"
+    },
+    "correctedFocusedUnits": {
+      "tests": 87,
+      "suites": 8,
+      "failed": 0,
+      "lintFiles": 3,
+      "appTypecheckExitCode": 0,
+      "node": "v22.14.0",
+      "receiptSha256": "c6e002d4cdaf3904f0888116e13f3f3efe6da6ec6df04061fef97a6ebc2c3686"
+    },
+    "native": {
+      "status": "PASS_LOCAL_THREE_PROJECTS",
+      "actualExitCode": 0,
+      "singleAttemptCases": 30,
+      "decoderFixturePairs": 24,
+      "denialFixturePairs": 3,
+      "explicitMockSmokePairs": 3,
+      "sourceInputsUnchanged": 491,
+      "baselineNativeChromiumFailures": 1,
+      "sameCase09CurrentThreeProjectsPass": true,
+      "receiptSha256": "2db7590c4e73ab32b600c8a0cabc3d81915bfd1cf293a0e701b7b0a32a9aa07e",
+      "scope": "Synthetic API, session, authorization and generated-media fixtures with native clocks and decoders, except three explicitly mocked smoke cases. Physical devices, WebKit and live protected bytes remain unverified."
+    },
+    "wholeUi": {
+      "status": "PASS",
+      "tests": 3578,
+      "suites": 311,
+      "failed": 0,
+      "pending": 0,
+      "todo": 0,
+      "actualRootExitCode": 0,
+      "durationSeconds": 626.042,
+      "resultsSha256": "92e9f627fc71d5046ab89647e5c1211a5f599a5cfd92c90e9f0917814302fea6",
+      "scope": "Whole Jest UI suite with declared API, media and JSDOM fixtures; not production API or playback acceptance."
+    },
+    "metadata": "Pending final canonical generation and immutable admission at evidence capture; no parent or combined-candidate metadata result is borrowed.",
+    "historicalHarness": "The first relative-path test append failed and selected no desired tests; its log is separate from the actual two-failure baseline.",
+    "testBoundary": "Actual App and session composition with declared route, API and JSDOM media doubles. Root-owned native decoder and clock evidence is separate; no SLO or mathematical proof.",
+    "wholeLint": {
+      "actualExitCode": 0
+    },
+    "productionModeBuild": {
+      "actualExitCode": 0,
+      "appTscViteBudget": "PASS",
+      "preloads": 5,
+      "initialJsGzipBytes": 337618,
+      "scope": "Local production-mode build, not deployment or a startup SLO."
+    },
+    "wholeUiLaunchHistory": "The initial root launcher used the wrong hoisted Jest path and failed module lookup before running any tests. The corrected existing launcher ran the same source and unchanged assertions, filters and budgets; both logs remain retained.",
+    "packetReplay": "PASS_ROOT_OFFLINE_BYTE_EXACT_REPLAY",
+    "credentialReview": {
+      "matches": 0,
+      "patterns": 3,
+      "scope": "Three known high-confidence patterns only; not an exhaustive secret scan."
+    }
+  },
+  "contract": "formal/system/player-listening-privacy.md",
+  "requirement": "Inherited MEDIA-MUSIC-PRIVACY-001 normative object remains unchanged; the contract gains a focused cleanup obligation.",
+  "acceptanceScope": {
+    "AC-001": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-002": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-003": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-004": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-005": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-006": "TESTED WITHIN LOCAL SCOPE: native fixtures cover same-owner continuity and owner-change disposal in three browser projects. An owner change intentionally ends the previous session; production continuity is unverified.",
+    "AC-007": "PARTIAL: detached old-source reset and new-owner playback pass in actual-App/JSDOM and native fixtures. No all-surface or cross-tab duplicate-audio proof.",
+    "AC-008": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-009": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-010": "PARTIAL CLIENT BOUNDARY: the old client media resource is detached and reset. Real account, backend and private-byte authorization remain unverified.",
+    "AC-011": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-012": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-013": "PARTIAL: 30 native cases pass across three installed projects: 24 decoder, 3 denial and 3 mocked smoke cases. Private-candidate WebKit, physical devices and OS background behavior remain unverified.",
+    "AC-014": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-015": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-016": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-017": "TESTED WITHIN SCOPE: executable cleanup regressions; no new formal model, refinement theorem or liveness proof.",
+    "AC-018": "PARTIAL RELEASE GATE: 87 focused tests/8 suites, full UI 3578/311, scoped and whole lint, app TypeScript, production-mode build and 30 single-attempt native cases pass. Final metadata, immutable admission, candidate-hosted CI, review, protected merge and deployment remain separate gates.",
+    "AC-019": "PARTIAL: the identified resource cleanup defect is corrected and tested locally; broad privacy, security and audio acceptance is not certified.",
+    "AC-020": "UNVERIFIED in this focused disposal increment; previous source-bound parent evidence remains separate.",
+    "AC-021": "UNCHANGED: no media, schema, ownership or data migration is introduced.",
+    "AC-022": "UNVERIFIED: rollback was not executed; owner-scoped listening must remain protected during rollback.",
+    "AC-023": "TESTED WITHIN LOCAL SCOPE: actual-App/session and native fixtures exercise the reachable listener change and disposal behavior. Production upload-to-playback remains unverified."
+  },
+  "performance": {
+    "playbackInitiationP95": null,
+    "searchP95": null,
+    "rebuffering": null,
+    "reason": "No definedreferenceconditions or SLOmeasurement inthisincrement."
+  },
+  "publication": {
+    "private": true,
+    "published": false,
+    "approved": false,
+    "merged": false,
+    "deployed": false,
+    "productionWrites": false,
+    "parentReviewsInherited": false,
+    "observedAt": "2026-10-27T04:45:25.274266+00:00",
+    "scope": "These publication flags describe evidence capture; a later commit or publication requires independent source-bound CI and review."
+  },
+  "remainingRisks": [
+    "No candidate-specific hosted CI, review, protected merge or deployment is inherited; final canonical metadata and immutable admission remain separate.",
+    "Physical devices, WebKit, background behavior, OS audio focus and cross-tab coordination remain unverified.",
+    "Actual backend authorization, object delivery, revocation and protected-media rights are not qualified.",
+    "Rollback must preserve owner-scoped listening; no rollback drill was executed."
+  ],
+  "nextHighestValueAction": "Finish canonical metadata, freshness and immutable admission; retain the exact candidate commit; obtain fresh hosted CI and independent review before protected integration. Production acceptance remains separate.",
+  "evidencePacket": {
+    "readme": "reports/player-listener-disposal-evidence-20261027/README.md",
+    "summary": "reports/player-listener-disposal-evidence-20261027/summary.json",
+    "leafHashes": "reports/player-listener-disposal-evidence-20261027/artifact-hashes.json",
+    "memberHashes": "reports/player-listener-disposal-evidence-20261027/archive-member-hashes.json",
+    "archive": "reports/player-listener-disposal-evidence-20261027/listener-disposal-evidence.tar.gz",
+    "members": 47,
+    "bytes": 382695,
+    "sha256": "66a064efd55498b0cde56ad67002661c2e049a3433e127468fc9360706d7c5d6",
+    "sourceCaptures": "All 491 root runtime/specification inputs and the three changed unit inputs match their before/after captures. This is not a clean committed-candidate claim.",
+    "selfHashes": "The document and report omit their own hashes to avoid self-reference; the packet is independently sealed."
+  }
+}

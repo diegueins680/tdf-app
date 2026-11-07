@@ -9,6 +9,7 @@ import { Catalogs } from '../api/catalogs';
 import { requestAccountDeletion } from '../api/accountDeletion';
 import { loadSessionSnapshot } from '../api/session';
 import { useSession } from '../session/SessionContext';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 
 function DeletionForm({ partyId, username, onAuthenticationLost }: { partyId: number; username: string; onAuthenticationLost: () => void }) {
@@ -73,8 +74,10 @@ export default function AccountDeletionPage() {
     </Stack>
     <Typography component="h1" variant="h3">{t('accountDeletion.title')}</Typography>
     <Typography>{t(formEnabled ? 'accountDeletion.intro' : 'accountDeletion.emailIntro')}</Typography>
-    <Typography>{t('accountDeletion.timing')}</Typography>
-    <Typography>{t('accountDeletion.retention')}</Typography>
+    <LegalDisclosure id="account-deletion-terms" language={i18n.language.startsWith('en') ? 'en' : 'es'} headingLevel={2} title={t('accountDeletion.termsTitle')}>
+      <Typography>{t('accountDeletion.timing')}</Typography>
+      <Typography>{t('accountDeletion.retention')}</Typography>
+    </LegalDisclosure>
     {!formEnabled ? <Stack spacing={2}>
       <Typography>{t('accountDeletion.emailHelp')}</Typography>
       <Button component="a" href="mailto:info@tdfrecords.net?subject=TDF%20account%20deletion" variant="contained">{t('accountDeletion.emailRequest')}</Button>

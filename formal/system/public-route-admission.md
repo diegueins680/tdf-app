@@ -1,0 +1,159 @@
+# Public route admission: AUTH-PUBLIC-001
+
+Every operation in [compiled-api-surface.json](compiled-api-surface.json) that is
+served without a Servant `AuthProtect` combinator, and every opaque Raw mount, must
+appear exactly once in [public-routes.json](public-routes.json) with a reviewed
+boundary. `scripts/check-public-routes.py` enforces this in CI; the snapshot itself
+is proven to match the built executable by the compiled-API gate (SYS-API-003).
+
+## Boundaries
+
+| Boundary | Admits | Structural check |
+|---|---|---|
+| `public-read` | Content intended for public display | Not allowed on POST/PUT/PATCH/DELETE |
+| `public-diagnostic` | Version, health, OpenAPI, docs, health-only `/mcp` | Mutation only for `/mcp` |
+| `capability-header` | Follow-up access with a server-issued lookup secret | Named header is a route input |
+| `capability-path` | Random UUIDv4 bearer identifier in the path | Reviewed; sequential IDs inadmissible |
+| `signed-provider-callback` | Provider webhooks and notifications | Mutations receive the exact raw body; declared signature header present |
+| `provider-verification-challenge` | Meta subscription challenge | `hub.verify_token` query present |
+| `handler-session` | Handler resolves `Authorization`/`Cookie` itself | One of those headers is a route input |
+| `credential-intake` | Login, signup, password reset | Reviewed |
+| `public-intake` | Anonymous creation of the submitter's own new record | Reviewed |
+| `operator-secret` | Seed operations | Named secret header is a route input |
+| `public-static-files` | Raw static file mounts from the public media root | Only Raw mounts may use it, and Raw mounts may use nothing else |
+| `public-withdrawal` | Anonymous withdrawal of a permission (WhatsApp opt-out) | Reviewed: may only reduce permissions, never disclose prior state |
+| `known-debt` | Reviewed and found insufficient | Must reference a registered debt |
+
+The gate rejects unregistered routes, stale or duplicate entries, unknown
+boundaries and structural inconsistencies. Fourteen mutation controls in
+`scripts/test-public-routes.py` exercise each rejection. Passing establishes that
+the declaration is reviewed and structurally consistent. It does **not** prove that
+a handler verifies its capability; handler enforcement needs its own HTTP evidence.
+
+## Repairs from the 2026-10-06 audit
+
+The audit of main `1f99d143900a67aa9b82f4138630684afbd7db2f` found 89 mutating and
+90 read routes without `AuthProtect`. Four groups were repaired:
+
+- `POST /public/courses/{slug}/registrations/{registrationId}/payment-intent` and
+  `/checkout-session` were retired. They served only legacy registrations, which
+  have no lookup token, keyed by a sequential ID. For a party-linked registration
+  the mobile branch returned a Stripe ephemeral key for that party's Stripe
+  customer, and any caller could consume the registration's single PaymentIntent
+  slot. No web or Mobile client called them and OpenAPI did not document them.
+  Canonical course checkout (ADR-0111) uses lookup-token Datafast/PayPal routes.
+- `POST /ads/assist` now requires authentication and `hasSocialInboxAccess`
+  (product-owner decision, AUTHORITY-049). Retrieval already rendered only current
+  public course data (PRIV-RAG-001), but anonymous callers received the six latest
+  staff-authored ad conversation examples, scopable by ad or campaign ID, and could
+  invoke the paid model without metering. The staff Social Inbox page is its only
+  caller; a future public assistant needs its own reviewed endpoint.
+- `GET /input-list/sessions` and `/input-list/sessions/pdf` were retired. They
+  enumerated studio sessions by index and disclosed client names. Scheduling staff
+  keep `GET /sessions/{id}/input-list` and `/sessions/{id}/input-list.pdf`.
+- `GET /input-list/inventory` now rejects `sessionId` and `channel`. Those filters
+  derived availability from a session's private input rows; no client used them.
+
+`tdf-hq/test/TDF/ServerSpec.hs` ("served authorization boundary") exercises the
+served application: anonymous assistance returns 401, a signed-in user without
+Social Inbox access receives 403, and the retired course routes return 404.
+`scripts/test-booking-conformance.py` repeats the 401/403 checks against a real
+PostgreSQL-backed server and exercises retrieval privacy as authenticated staff.
+
+## Open debt
+
+No registered debt remains.
+
+`DEBT-AUTH-ACADEMY-001` was repaired on 2026-10-07 (AUTHORITY-051): academy enroll,
+progress and referral claim require a session and bind to the signed-in account's
+email; a different email is refused with 403.
+
+`DEBT-PRIV-WHATSAPP-001` was repaired on 2026-10-07 (AUTHORITY-052, PRIV-WHATSAPP-001):
+public consent is a double opt-in request activated only by a timely SI reply from
+the number, the public lookup is retired (410), and public opt-out is a non-disclosing
+withdrawal. Existing consent rows are unchanged by the additive migration.
+
+## Handler verification audit (2026-10-08, main f8b70bc)
+
+A static review traced every route registered as `capability-header` to its
+handler. Each handler passes the supplied lookup token to a verifier before
+returning or changing the resource: `requirePublicCourseLookupToken`,
+`requireLookupToken` (Domo quotes, event tickets, merch carts/orders, commerce
+payment sessions), `requireMarketplaceOrderLookupToken`,
+`requirePublicBookingLookupToken`/`requireServiceBookingPaymentContext` and the
+storefront `requireOrderLookupToken`. The only handler that ignores its token is
+`POST /services/storefront/order/{orderId}/stripe/payment-intent`, which returns
+503 unconditionally without reading data. The guarantee is about disclosure and
+mutation, not about database reads: verifiers that compare against the stored
+record, such as the storefront one, load the row by its identifier first and
+reject before anything is returned or written. This is a point-in-time review, not a
+mechanical gate; a route-to-handler correspondence check remains future work.
+
+## Handler denial sweep (2026-10-13, AUTHORITY-079)
+
+`scripts/lib/public_routes_conformance.py`, a section of
+`scripts/test-booking-conformance.py` (real backend, PostgreSQL fixture), requests
+every route registered under `capability-header`, `capability-path`,
+`handler-session`, `operator-secret`, `signed-provider-callback` and
+`provider-verification-challenge` (90 routes) twice: without the capability and
+with a wrong one (random lookup token, random bearer token, zero signature, wrong
+verify token). Sequential identifiers probe the first record; UUID-typed
+identifiers, capability paths and slugs get values no record carries. No answer
+may succeed (every one is 400, 401, 403, 404, 405, 415 or 422; provider callbacks
+and challenges, and the provider-gated storefront Stripe payment-intent route,
+may also answer 503 while the provider is unconfigured), none may be a server
+fault, none may carry fixture-private content, a wrong verify token must not echo
+the challenge, and a wrong bearer token must receive the anonymous status on every
+session route and, on the two anonymous-answer routes, exactly the anonymous body. The marketplace cart (`capability-path`) is created and then read with its
+own identifier (200), another random UUID (404) and a sequential one (400), and the
+identifier is checked to be a random version-4 UUID.
+
+Two findings. `GET /session` and `POST /session/logout` answer an anonymous caller
+200 with the anonymous value (`null`, empty); a wrong bearer token receives the same
+(the handler resolves no session for it).
+The `handler-session` rule said "rejects missing sessions"; the rule now reads:
+rejects, or answers the anonymous value without resolving any session (AUTHORITY-079).
+`POST /social-events/stripe/webhook` answered 500 "Stripe is not configured" to an
+unsigned caller when the provider was unconfigured, a server fault for a public
+unauthenticated POST where its sibling callbacks answer 503; it now answers 503.
+
+Bounds. The sweep shows that no deny-boundary route answers these two requests
+with success, a server fault or fixture-private content. It observes the
+capability comparison itself only where the request reaches it: the four
+Meta/WhatsApp signatures, the session routes, the random-identifier paths and the
+merch cart header. Every other route denies earlier (body, path or query parsing,
+absent record, unconfigured provider or disabled endpoint), so for those the
+sweep bounds the outcome, not the check; for records that exist only after a
+provider-backed intake (orders, registrations, quotes, storefront orders) the
+wrong-token path is exercised by their own suites. Sessions are probed with a
+bearer token only, not a cookie. Other "Stripe is not configured" 500s remain on
+authenticated routes (artist tips, ticket checkout reuse, admin), outside this
+register. The OpenAPI document does not list the social-events Stripe webhook. Query-back callbacks (Datafast, Payphone,
+PlaceToPay) answer 503 unconfigured; their body authentication is AUTH-WEBHOOK-001.
+
+### Denial-sweep server faults
+
+An HTTP 503 is tolerated only for provider callback/challenge boundaries and the
+explicitly named provider-gated Stripe intent route, where the synthetic backend
+has no provider configured. An ordinary session, capability or operator route
+returning 503 fails the server-fault assertion. Other 5xx statuses also fail on
+provider routes. `scripts/test-public-route-denial.py` exercises the entire sweep
+against local HTTP fixtures, including both anonymous and wrong-capability
+responses; restoring the former global 503 exemption fails the regression. These
+fixtures test the checker, not real handler authorization.
+
+## Payment-status polling and unavailable encryption configuration
+
+The checkout/attempt/lookup-token binding is authorized before consulting the
+provider-operation encryption key. Missing or invalid capabilities, unknown
+checkouts and unrelated attempts receive 404 even when that key is unavailable.
+An authorized caller still receives 503 if the key is missing or invalid; a
+configured authorized caller retains access to an expired or closed checkout's
+existing outcome. This read does not authorize a new charge. The data load
+rechecks the same binding after the preliminary authorization, and polling
+changes no payment or audit state. The ordinary-route 503 rejection in the
+public denial sweep remains unchanged.
+
+ProviderRetrySpec's closed-checkout cases exercise these branches for both
+PlaceToPay and PayPhone, with absent and invalid configuration. Fresh compiled
+PostgreSQL qualification is required; source reconciliation is not a test pass.

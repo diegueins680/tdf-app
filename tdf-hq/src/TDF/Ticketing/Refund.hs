@@ -258,18 +258,23 @@ requestTicketRefundForOrder actor eventKey orderKey requestedAmount reason now =
           fail "A different refund request is already active for this order"
         pure entity
       Nothing -> do
+        -- PayPal refunds are executed by the provider; staff-verified bank
+        -- transfers are returned by staff and completed with the bank reference.
         bindings <- rawSql
           "SELECT runtime.checkout_id::text,attempt.id::text,attempt.environment,attempt.merchant_account_ref,\
-          \ runtime.checkout_total_minor,runtime.currency FROM event_ticket_checkout_runtime runtime\
+          \ runtime.checkout_total_minor,runtime.currency,attempt.provider FROM event_ticket_checkout_runtime runtime\
           \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id=runtime.checkout_id\
-          \ WHERE runtime.order_id=? AND runtime.event_id=? AND attempt.provider='paypal'\
+          \ WHERE runtime.order_id=? AND runtime.event_id=? AND attempt.provider IN ('paypal','bank_transfer')\
           \ AND attempt.status='succeeded' AND attempt.currency=runtime.currency\
           \ AND attempt.amount_minor=runtime.checkout_total_minor"
           [toPersistValue orderKey,toPersistValue eventKey]
-        (checkout,attempt,environment,merchant,total,currency) <- case bindings of
-          [(Single checkout,Single attempt,Single environment,Single merchant,Single total,Single currency)] ->
-            pure (checkout,attempt,environment,merchant,total,currency)
-          _ -> fail "Refund requires one verified PayPal ticket payment"
+        (checkout,attempt,environment,merchant,total,currency,provider) <- case bindings of
+          [(Single checkout,Single attempt,Single environment,Single merchant,Single total,Single currency,Single providerText)] ->
+            case (providerText :: Text) of
+              "paypal" -> pure (checkout,attempt,environment,merchant,total,currency,C.ProviderPayPal)
+              "bank_transfer" -> pure (checkout,attempt,environment,merchant,total,currency,C.ProviderBankTransfer)
+              _ -> fail "Refund requires one verified ticket payment"
+          _ -> fail "Refund requires one verified ticket payment"
         parsedEnvironment <- case (environment :: Text) of
           "sandbox" -> pure C.CheckoutSandbox
           "production" -> pure C.CheckoutProduction
@@ -301,7 +306,7 @@ requestTicketRefundForOrder actor eventKey orderKey requestedAmount reason now =
         requestKey <- insert request
         result <- requestTicketRefund actor eventKey orderKey R.RefundCreation
           { R.rcCheckout=C.CheckoutReference checkout,R.rcPaymentAttempt=C.PaymentAttemptReference attempt
-          , R.rcProvider=C.ProviderPayPal,R.rcEnvironment=parsedEnvironment,R.rcMerchantRef=merchant
+          , R.rcProvider=provider,R.rcEnvironment=parsedEnvironment,R.rcMerchantRef=merchant
           , R.rcAmountMinor=target,R.rcCurrency=currency,R.rcReasonCode="customer_request"
           , R.rcIdempotencyKey="event-ticket-refund-request-" <> T.pack (show (fromSqlKey requestKey))
           , R.rcRequestedBy=actorId,R.rcCreatedAt=now } (map (toSqlKey . fst) selected)

@@ -6,6 +6,16 @@
 module TDF.Server.EventTicketCheckout
   ( publicEventTicketsServer
   , deriveTicketLookupToken
+  , ticketCheckoutAwaitsPayment
+  , ticketPaymentAllowed
+  , ticketPaymentMethodsOffered
+  , ticketOrderSalesOpen
+  , lockTicketEventSalesOpen
+  , lockTicketOrderSalesOpen
+  , ticketSalesClosedRefusal
+  , paypalCaptureFailureCode
+  , ticketCaptureUnverified
+  , ticketUnverifiedCaptureRefusal
   ) where
 
 import           Control.Exception
@@ -26,6 +36,7 @@ import           Data.Either (isRight)
 import           Data.Int (Int64)
 import           Data.Maybe (fromMaybe, isJust, isNothing)
 import           Data.Text (Text)
+import           Text.Read (readMaybe)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import           Data.Time (UTCTime, addUTCTime, getCurrentTime)
@@ -41,10 +52,13 @@ import           System.Environment (lookupEnv)
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.EventTickets as TicketDomain
+import TDF.Commerce.TicketBuyerContact (ticketPaymentBuyerPhone, normalizeTicketBuyerPhone)
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..))
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
 import qualified TDF.Internationalization as Internationalization
+import qualified TDF.Invoice.BuyerIdentity as BuyerId
+import qualified TDF.Invoice.Datil as Datil
 import qualified TDF.Models as Models
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Routes.EventTickets as Routes
@@ -53,6 +67,7 @@ import qualified TDF.Ticketing.Transfer as Transfer
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 import qualified TDF.Server.PaymentAvailability as PaymentAvailability
 import qualified TDF.Server.SocialEventsHandlers as SocialEvents
+import qualified TDF.Server.TicketPaymentReceipt as Receipt
 
 type AppM = ReaderT Env Handler
 
@@ -72,6 +87,7 @@ data ApprovedTicketPolicy = ApprovedTicketPolicy
   , atpMaxTicketsPerOrder :: Int
   , atpManualTransferHoldMinutes :: Maybe Int
   , atpManualTransferCutoffAt :: Maybe UTCTime
+  , atpTaxInvoiceRequired :: Bool
   } deriving (Eq, Show)
 
 data TicketRuntimeView = TicketRuntimeView
@@ -176,14 +192,7 @@ validatePositiveKey fieldName value
   | otherwise = Right value
 
 normalizePhone :: Maybe Text -> Either ServerError (Maybe Text)
-normalizePhone raw = case T.strip <$> raw of
-  Nothing -> Right Nothing
-  Just "" -> Right Nothing
-  Just clean
-    | T.length clean > 24 -> Left (badRequest "buyerPhone is too long")
-    | T.any (\char -> not (isAlphaNum char || char `elem` ['+','-',' ','(',')'])) clean ->
-        Left (badRequest "buyerPhone contains unsupported characters")
-    | otherwise -> Right (Just clean)
+normalizePhone = either (Left . badRequest) Right . normalizeTicketBuyerPhone
 
 normalizePromoCode :: Maybe Text -> Either ServerError (Maybe Text)
 normalizePromoCode raw = case T.toUpper . T.strip <$> raw of
@@ -210,7 +219,7 @@ loadApprovedTicketPolicy now eventKey = do
     "SELECT id::text, policy_version, currency, buyer_fee_bps,\
     \ organizer_fee_bps, tax_bps, hold_minutes, terms_version,\
     \ terms_summary, refund_policy, transfer_allowed, max_tickets_per_order, tax_included,\
-    \ manual_transfer_hold_minutes, manual_transfer_cutoff_at\
+    \ manual_transfer_hold_minutes, manual_transfer_cutoff_at, tax_invoice_required\
     \ FROM event_ticket_checkout_policy\
     \ WHERE event_id = ? AND active AND approval_status = 'approved'\
     \ AND approved_at IS NOT NULL AND approved_by IS NOT NULL\
@@ -221,6 +230,7 @@ loadApprovedTicketPolicy now eventKey = do
       [( Single Text, Single Text, Single Text, Single Int, Single Int
        , Single Int, Single Int, Single Text, Single Text, Single Text
        , Single Bool, Single Int, Single Bool, Single (Maybe Int), Single (Maybe UTCTime)
+       , Single Bool
        )])
   pure $ case rows of
     [( Single atpId, Single atpVersion, Single atpCurrency
@@ -228,6 +238,7 @@ loadApprovedTicketPolicy now eventKey = do
      , Single atpHoldMinutes, Single atpTermsVersion, Single atpTermsSummary
      , Single atpRefundPolicy, Single atpTransferAllowed, Single atpMaxTicketsPerOrder, Single atpTaxIncluded
      , Single atpManualTransferHoldMinutes, Single atpManualTransferCutoffAt
+     , Single atpTaxInvoiceRequired
      )] -> Just ApprovedTicketPolicy{..}
     _ -> Nothing
 
@@ -294,8 +305,11 @@ getPublicEventTicketStorefront rawEventId = do
             (fromIntegral (SM.eventTicketTierPriceCents firstTier))
             (T.toUpper (SM.eventTicketTierCurrency firstTier)) True
     _ -> pure False
+  invoicingOk <- case policy of
+    Just ApprovedTicketPolicy{ atpTaxInvoiceRequired = True } -> invoicingReadyFor checkoutEnvironment
+    _ -> pure True
   let hasInventory = any ((> 0) . Routes.remaining) publicTiers
-      available = domainEnabled && isJust policy && hasInventory
+      available = domainEnabled && isJust policy && hasInventory && invoicingOk
       publicPolicy = (\ApprovedTicketPolicy{..} ->
         Routes.PublicEventTicketPolicyDTO
           { Routes.policyVersion = atpVersion
@@ -312,12 +326,14 @@ getPublicEventTicketStorefront rawEventId = do
           , Routes.maxTicketsPerOrder = atpMaxTicketsPerOrder
           , Routes.bankTransferAvailableUntil =
               if bankTransferReady then atpManualTransferCutoffAt else Nothing
+          , Routes.taxInvoiceIssued = atpTaxInvoiceRequired
           }) <$> policy
       reason
         | not domainEnabled = Just "Public ticket checkout is disabled in this environment"
         | not (isJust policy) = Just "This event has no approved active ticket price and fee policy"
         | null publicTiers = Just "No ticket tiers are currently on sale"
         | not hasInventory = Just "Ticket inventory is currently exhausted"
+        | not invoicingOk = Just "Ticket sales open once electronic invoicing is configured"
         | otherwise = Nothing
   pure Routes.PublicEventTicketStorefrontDTO
     { Routes.eventId = eventId
@@ -328,6 +344,8 @@ getPublicEventTicketStorefront rawEventId = do
     , Routes.timezone = SM.socialEventTimezone eventRow
     , Routes.venueName = venueName
     , Routes.venueAddress = venueAddress
+    , Routes.imageUrl = either (const Nothing) SocialEvents.emImageUrl
+        (SocialEvents.decodeStoredEventMetadata (SM.socialEventMetadata eventRow))
     , Routes.tiers = publicTiers
     , Routes.policy = publicPolicy
     , Routes.checkoutAvailable = available
@@ -460,6 +478,16 @@ createPublicEventTicketCheckout rawEventId mIdempotency
   when (TicketDomain.tpbCheckoutTotalMinor price <= 0) $
     throwError (badRequest
       "A fully discounted ticket requires an explicit no-payment entitlement workflow")
+  billing <- if atpTaxInvoiceRequired policy
+    then do
+      ready <- invoicingReadyFor checkoutEnvironment
+      unless ready $
+        throwError err503 { errBody = "Ticket sales open once electronic invoicing is configured" }
+      either (throwError . badRequest) (pure . Just) $
+        BuyerId.validateBillingIdentity (TicketDomain.tpbCheckoutTotalMinor price)
+          (Routes.billingIdType request) (Routes.billingIdNumber request)
+          (Routes.billingName request)
+    else pure Nothing
   lookupSecret <- loadTicketLookupTokenSecret
   lookupToken <- either (throwError . internal) pure $
     deriveTicketLookupToken lookupSecret idempotencyKey eventId
@@ -474,6 +502,7 @@ createPublicEventTicketCheckout rawEventId mIdempotency
         , "policy_id" .= atpId policy
         , "policy_version" .= atpVersion policy
         , "terms_version" .= atpTermsVersion policy
+        , "billing" .= fmap show billing
         ]
       lookupHash = sha256Text lookupToken
       holdExpiresAt = addUTCTime (fromIntegral (atpHoldMinutes policy) * 60) now
@@ -488,7 +517,7 @@ createPublicEventTicketCheckout rawEventId mIdempotency
       orderKey <- createTicketCheckoutTransaction
         checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
         buyerName buyerEmail buyerPhone eventKey tierKey tier
-        requestedQuantity policy validPromo price
+        requestedQuantity policy validPromo price billing
       loadTicketCheckoutDTO orderKey (Just lookupToken)
 
 lookupTicketCheckoutIdempotency
@@ -539,11 +568,12 @@ createTicketCheckoutTransaction
   -> ApprovedTicketPolicy
   -> Maybe ValidPromo
   -> TicketDomain.TicketPriceBreakdown
+  -> Maybe BuyerId.BillingIdentity
   -> AppM SM.EventTicketOrderId
 createTicketCheckoutTransaction
     checkoutEnvironment now holdExpiresAt idempotencyKey requestHash lookupHash
     buyerName buyerEmail buyerPhone eventKey tierKey tier quantityInt
-    policy validPromo price = do
+    policy validPromo price billing = do
   Env{ envPool } <- ask
   result <- liftIO $
     (try (runSqlPool transactionBody envPool)
@@ -611,17 +641,26 @@ createTicketCheckoutTransaction
               | otherwise -> Left (conflict
                   "Promotion changed or became unavailable while ticket inventory was being held")
             _ -> Left (conflict "Promotion is no longer available")
+      -- The last possible row-lock wait includes the policy and promotion.
+      -- Use this same database-time sample for promo and tier admission only;
+      -- original request/audit timestamps and hold duration remain unchanged.
+      admissionTime <- Inventory.ticketReservationTime
       case (lockedEventEligibility, lockedTiers, lockedPromo) of
         (Left eventError, _, _) -> pure (Left eventError)
         (Right (), [Entity _ lockedTier], Right transactionPromo)
           | SM.eventTicketTierEventId lockedTier == eventKey
           , SM.eventTicketTierIsActive lockedTier
-          , SocialEvents.isTicketTierSaleOpen now lockedTier ->
-              reserveAndCreate transactionPromo
+          , SocialEvents.isTicketTierSaleOpen admissionTime lockedTier ->
+              case transactionPromo of
+                Just (ValidPromo (Entity _ promo) _)
+                  | Left message <- SocialEvents.validatePromoCodeDateWindow admissionTime
+                      (SM.promoCodeValidFrom promo) (SM.promoCodeValidUntil promo) ->
+                      pure (Left (conflict message))
+                _ -> reserveAndCreate admissionTime transactionPromo
         (_, _, Left promoError) -> pure (Left promoError)
         _ -> pure (Left (conflict "Ticket tier is no longer available"))
-    reserveAndCreate transactionPromo = do
-      reserved <- Inventory.reserveTicketInventory eventKey tierKey quantityInt now
+    reserveAndCreate admissionTime transactionPromo = do
+      reserved <- Inventory.reserveTicketInventory eventKey tierKey quantityInt admissionTime
       if not reserved
         then pure (Left (conflict "Event or ticket tier inventory is exhausted"))
         else claimPromoAndCreate transactionPromo
@@ -750,6 +789,14 @@ createTicketCheckoutTransaction
         \) VALUES (?, NULL, 'seat_held', 'system', 'checkout_created',\
         \ 'Atomic expiring seat hold created; payment and issuance remain separate')"
         [toPersistValue orderKey]
+      forM_ billing $ \identity -> rawExecute
+        "INSERT INTO event_ticket_billing_identity(order_id, id_type, id_number, legal_name)\
+        \ VALUES (?, ?, ?, ?)"
+        [ toPersistValue orderKey
+        , PersistText (BuyerId.billingIdentityType identity)
+        , maybe PersistNull PersistText (billingNumber identity)
+        , maybe PersistNull PersistText (billingLegalName identity)
+        ]
       pure (Right orderKey)
 
 loadTicketRuntimeView
@@ -843,8 +890,10 @@ loadTicketCheckoutDTO orderKey lookupToken = do
 loadPublicTicketPaymentMethods :: TicketRuntimeView -> AppM [Text]
 loadPublicTicketPaymentMethods runtime = do
   now <- liftIO getCurrentTime
-  if trvPaymentStatus runtime `notElem` ["holding", "awaiting_payment", "failed"]
-      || trvHoldExpiresAt runtime <= now
+  -- An order stays readable after its event leaves the on-sale lifecycle, but it
+  -- must not offer a way to pay for it.
+  salesOpen <- ticketSalesOpen (toSqlKey (trvEventId runtime))
+  if not (ticketPaymentMethodsOffered now (trvPaymentStatus runtime) (trvHoldExpiresAt runtime) salesOpen)
     then pure []
     else do
       let checkout = Checkout.CheckoutReference (trvCheckoutId runtime)
@@ -858,12 +907,17 @@ loadPublicTicketPaymentMethods runtime = do
             then pure []
             else do
               terms <- runDB (loadManualTransferTerms (toSqlKey (trvOrderId runtime)))
-              PaymentAvailability.availableImplementedPaymentMethods
+              methods <- PaymentAvailability.availableImplementedPaymentMethods
                 environment
                 PaymentAvailability.FlowEventTicket
                 (trvCheckoutTotalMinor runtime)
                 (trvCurrency runtime)
                 (manualTransferSelectable now terms)
+              -- While a PayPal capture is unverified only PayPal stays offered:
+              -- retrying it reconciles the same provider order, whereas another
+              -- rail could charge the buyer a second time.
+              unverified <- runDB (ticketCaptureUnverified checkout)
+              pure (if unverified then filter (== paypalMethodCode) methods else methods)
 
 requireLookupToken :: SM.EventTicketOrderId -> Maybe Text -> AppM ()
 requireLookupToken orderKey mLookupToken = do
@@ -933,7 +987,7 @@ loadTicketPaymentContext orderKey = do
   case rows of
     [( Single eventId, Single checkoutId, Single createKey, Single checkoutStatus
      , Single environmentText, Single amountMinor, Single currency
-     , Single holdExpiresAt, Single mBuyerName, Single mBuyerEmail, _
+     , Single holdExpiresAt, Single mBuyerName, Single mBuyerEmail, Single mMetadata
      )] -> do
       environment <- either (throwError . internal) pure $
         Checkout.resolveCheckoutEnvironment (Just (T.unpack environmentText))
@@ -951,7 +1005,7 @@ loadTicketPaymentContext orderKey = do
         , tpcHoldExpiresAt = holdExpiresAt
         , tpcBuyerName = buyerName
         , tpcBuyerEmail = buyerEmail
-        , tpcBuyerPhone = Nothing
+        , tpcBuyerPhone = ticketPaymentBuyerPhone mMetadata
         }
     [] -> throwError notFound
     _ -> throwError (internal "Ticket payment context is ambiguous")
@@ -975,6 +1029,141 @@ requireTicketPaymentContext rawEventId rawOrderId mLookupToken = do
       ["holding", "awaiting_payment", "processing", "failed", "paid"]) $
     throwError (conflict "This ticket checkout no longer accepts payment actions")
   pure context
+
+-- | Whether the event still sells tickets: the same eligibility the storefront
+-- and order creation apply.
+ticketSalesOpen :: SM.SocialEventId -> AppM Bool
+ticketSalesOpen = runDB . ticketEventSalesOpen
+
+ticketEventSalesOpen :: SM.SocialEventId -> SqlPersistT IO Bool
+ticketEventSalesOpen eventKey = do
+  mEvent <- get eventKey
+  case mEvent of
+    Nothing -> pure False
+    Just eventRow -> do
+      purchaseEnabled <- SocialEvents.eventTicketPurchaseEnabledFor eventRow
+      pure . isRight $ SocialEvents.validateTicketPurchaseEventEligibility
+        (SM.socialEventMetadata eventRow) purchaseEnabled
+
+-- | 'ticketEventSalesOpen' while holding a share lock on the event row until the
+-- transaction ends. A lifecycle change has to update that row, so it either
+-- committed before this read or waits for the caller's transaction: recording a
+-- payment attempt in the same transaction gives closure and a new payment a
+-- definite order.
+lockTicketEventSalesOpen :: SM.SocialEventId -> SqlPersistT IO Bool
+lockTicketEventSalesOpen eventKey = do
+  _ <- rawSql "SELECT id FROM social_event WHERE id = ? FOR SHARE"
+    [toPersistValue eventKey] :: SqlPersistT IO [Single Int64]
+  ticketEventSalesOpen eventKey
+
+-- | 'ticketOrderSalesOpen' under the same event lock, for shared provider
+-- execution to call in the transaction that records its payment attempt.
+lockTicketOrderSalesOpen :: Text -> SqlPersistT IO Bool
+lockTicketOrderSalesOpen domainOrderId =
+  case readMaybe (T.unpack domainOrderId) :: Maybe Int64 of
+    Nothing -> pure False
+    Just rawOrderId -> do
+      mOrder <- get (toSqlKey rawOrderId :: SM.EventTicketOrderId)
+      maybe (pure False) (lockTicketEventSalesOpen . SM.eventTicketOrderEventId) mOrder
+
+-- | The same question for a commerce checkout's ticket order, addressed by the
+-- checkout's domain order id. Shared provider execution starts hosted sessions
+-- for ticket checkouts without passing through this module's handlers.
+ticketOrderSalesOpen :: Text -> SqlPersistT IO Bool
+ticketOrderSalesOpen domainOrderId =
+  case readMaybe (T.unpack domainOrderId) :: Maybe Int64 of
+    Nothing -> pure False
+    Just rawOrderId -> do
+      mOrder <- get (toSqlKey rawOrderId :: SM.EventTicketOrderId)
+      maybe (pure False) (ticketEventSalesOpen . SM.eventTicketOrderEventId) mOrder
+
+-- | Refuse to start or take a payment once the event no longer sells tickets.
+-- Checkouts already processing or paid pass, so a payment in flight settles and
+-- retries stay idempotent; evidence for a transfer already made is not gated.
+requireTicketSalesOpen :: TicketPaymentContext -> AppM ()
+requireTicketSalesOpen context =
+  when (ticketCheckoutAwaitsPayment (tpcCheckoutStatus context)) $ do
+    salesOpen <- ticketSalesOpen (tpcEventKey context)
+    either throwError pure (ticketPaymentAllowed (tpcCheckoutStatus context) salesOpen)
+
+-- | Checkout statuses in which a payment can still be started or taken.
+ticketCheckoutAwaitsPayment :: Text -> Bool
+ticketCheckoutAwaitsPayment status = status `elem` ["holding", "awaiting_payment", "failed"]
+
+-- | The decision behind 'requireTicketSalesOpen': checkout status, then whether
+-- the event still sells tickets.
+ticketPaymentAllowed :: Text -> Bool -> Either ServerError ()
+ticketPaymentAllowed status salesOpen
+  | ticketCheckoutAwaitsPayment status && not salesOpen =
+      Left ticketSalesClosedError
+  | otherwise = Right ()
+
+ticketSalesClosedError :: ServerError
+ticketSalesClosedError = conflict ticketSalesClosedMessage
+
+ticketSalesClosedMessage :: Text
+ticketSalesClosedMessage =
+  "Tickets are no longer on sale for this event; this order cannot be paid"
+
+-- | Guard result for the payment-attempt transaction: a refusal unless the
+-- event still sells tickets.
+ticketSalesClosedRefusal :: Bool -> Maybe Text
+ticketSalesClosedRefusal salesOpen
+  | salesOpen = Nothing
+  | otherwise = Just ticketSalesClosedMessage
+
+-- | Whether an order view may list payment methods at all: only for an unpaid
+-- order with a live hold on an event that still sells tickets.
+ticketPaymentMethodsOffered :: UTCTime -> Text -> UTCTime -> Bool -> Bool
+ticketPaymentMethodsOffered now status holdExpiresAt salesOpen =
+  ticketCheckoutAwaitsPayment status && holdExpiresAt > now && salesOpen
+
+-- | Classify the nested capture status, never the enclosing order status.
+-- Only an explicit declined/failed capture establishes no charge. Missing,
+-- ambiguous or unknown captures, and refund evidence, require reconciliation.
+-- Completed captures follow the existing binding and money validation path.
+paypalCaptureFailureCode :: Maybe Text -> Text
+paypalCaptureFailureCode (Just "DECLINED") = "paypal_capture_request"
+paypalCaptureFailureCode (Just "FAILED") = "paypal_capture_request"
+paypalCaptureFailureCode _ = paypalCaptureUnverifiedCode
+
+paypalCaptureUnverifiedCode :: Text
+paypalCaptureUnverifiedCode = "paypal_capture_unverified"
+
+paypalMethodCode :: Text
+paypalMethodCode = Checkout.paymentProviderText Checkout.ProviderPayPal
+
+-- | Whether the checkout's PayPal capture ended without the provider confirming
+-- either outcome. A later capture attempt replays the same attempt row, so its
+-- definite result (succeeded, or a confirmed no-charge failure) clears this.
+-- A completed capture with mismatched binding/money still may have charged the
+-- buyer, so its reconciliation exception must keep other rails fenced.
+ticketCaptureUnverified :: Checkout.CheckoutReference -> SqlPersistT IO Bool
+ticketCaptureUnverified checkout = do
+  rows <- rawSql
+    "SELECT EXISTS (SELECT 1 FROM commerce_payment_attempt\
+    \ WHERE checkout_id = ?::uuid AND provider = ? AND operation = 'capture'\
+    \ AND status = 'failed' AND failure_code IN (?, 'provider_binding_mismatch'))"
+    [ PersistText (Checkout.checkoutReferenceId checkout)
+    , PersistText paypalMethodCode
+    , PersistText paypalCaptureUnverifiedCode
+    ] :: SqlPersistT IO [Single Bool]
+  pure (rows == [Single True])
+
+-- | Guard result for starting a payment on another rail: refused while a PayPal
+-- capture for the same checkout is unverified.
+ticketUnverifiedCaptureRefusal :: Checkout.CheckoutReference -> SqlPersistT IO (Maybe Text)
+ticketUnverifiedCaptureRefusal checkout = do
+  -- Sales guards take the event lock first. Take the checkout lock next and
+  -- only then read capture uncertainty; beginPaymentAttempt will retain this
+  -- same lock through intent/attempt creation. Failure writers use this lock
+  -- before updating attempts, so a blocked reader observes their committed code.
+  _ <- rawSql "SELECT id::text FROM commerce_checkout_session WHERE id = ?::uuid FOR UPDATE"
+    [PersistText (Checkout.checkoutReferenceId checkout)] :: SqlPersistT IO [Single Text]
+  unverified <- ticketCaptureUnverified checkout
+  pure $ if unverified
+    then Just "A PayPal payment for this order could not be verified; retry PayPal so it is reconciled before using another payment method"
+    else Nothing
 
 ticketReference :: TicketPaymentContext -> Text
 ticketReference = T.pack . show . fromSqlKey . tpcOrderKey
@@ -1027,9 +1216,32 @@ beginTicketPaymentAttempt
   -> Text
   -> Text
   -> AppM Checkout.PaymentAttemptReference
-beginTicketPaymentAttempt context provider operation merchantRef operationLabel = do
+beginTicketPaymentAttempt = beginTicketPaymentAttemptWith False
+
+-- | Record the attempt that authorizes starting or taking a payment. For a
+-- checkout still awaiting payment, eligibility is rechecked under the event lock
+-- in the transaction that inserts the attempt, so a concurrent closure cannot
+-- fall between the check and the authorization.
+beginSalesGatedTicketPaymentAttempt
+  :: TicketPaymentContext
+  -> Checkout.PaymentProvider
+  -> Checkout.PaymentOperation
+  -> Text
+  -> Text
+  -> AppM Checkout.PaymentAttemptReference
+beginSalesGatedTicketPaymentAttempt = beginTicketPaymentAttemptWith True
+
+beginTicketPaymentAttemptWith
+  :: Bool
+  -> TicketPaymentContext
+  -> Checkout.PaymentProvider
+  -> Checkout.PaymentOperation
+  -> Text
+  -> Text
+  -> AppM Checkout.PaymentAttemptReference
+beginTicketPaymentAttemptWith salesGated context provider operation merchantRef operationLabel = do
   now <- liftIO getCurrentTime
-  result <- runDB $ PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
+  result <- runDB $ PaymentRuntime.beginPaymentAttemptGuarded salesGuard Checkout.PaymentAttemptCreation
     { Checkout.pacCheckout = tpcCheckout context
     , Checkout.pacProvider = provider
     , Checkout.pacEnvironment = tpcEnvironment context
@@ -1042,6 +1254,15 @@ beginTicketPaymentAttempt context provider operation merchantRef operationLabel 
     , Checkout.pacCorrelationId = ticketPaymentCorrelationId context provider operationLabel
     }
   either (throwError . conflict) pure result
+  where
+    salesGuard
+      | salesGated && ticketCheckoutAwaitsPayment (tpcCheckoutStatus context) = do
+          closed <- ticketSalesClosedRefusal <$> lockTicketEventSalesOpen (tpcEventKey context)
+          case (closed, provider) of
+            (Just refusal, _) -> pure (Just refusal)
+            (Nothing, Checkout.ProviderPayPal) -> pure Nothing
+            (Nothing, _) -> ticketUnverifiedCaptureRefusal (tpcCheckout context)
+      | otherwise = pure Nothing
 
 failTicketPaymentAttempt
   :: TicketPaymentContext
@@ -1141,13 +1362,14 @@ createPublicEventTicketDatafastCheckout
   -> AppM APITypes.DatafastCheckoutDTO
 createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
     throwError (conflict "This ticket order is already paid")
   ensureNoOtherActiveTicketAttempt context Checkout.ProviderDatafast
-  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireTicketProvider context
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
-  attempt <- beginTicketPaymentAttempt context Checkout.ProviderDatafast
+  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast
     Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
   existing <- loadTicketProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
@@ -1259,7 +1481,7 @@ confirmPublicEventTicketDatafastStatus rawEventId rawOrderId mLookupToken rawRes
         bindTicketProviderResource context attempt Checkout.ProviderDatafast
           (tpcEnvironment context) (ServiceStorefront.sdfEntityId datafast)
           "payment" paymentId (Just resourcePath) Checkout.AttemptProcessing "status"
-        verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+        verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
           { Checkout.vpAttempt = attempt
           , Checkout.vpCheckout = tpcCheckout context
           , Checkout.vpProvider = Checkout.ProviderDatafast
@@ -1296,13 +1518,14 @@ createPublicEventTicketPaypalOrder
   -> AppM APITypes.PaypalCreateDTO
 createPublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
     throwError (conflict "This ticket order is already paid")
   ensureNoOtherActiveTicketAttempt context Checkout.ProviderPayPal
   (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
     ServiceStorefront.loadPaypalEnvForService
   requireTicketProvider context paypalEnvironment Checkout.ProviderPayPal
-  attempt <- beginTicketPaymentAttempt context Checkout.ProviderPayPal
+  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderPayPal
     Checkout.OperationCreate merchantRef "create"
   existing <- loadTicketProviderBinding context Checkout.ProviderPayPal merchantRef "order"
   (paypalOrderId, approvalUrl) <- case existing of
@@ -1342,26 +1565,65 @@ capturePublicEventTicketPaypalOrder
   -> AppM Routes.PublicEventTicketCheckoutResponse
 capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  -- Once sales close no new capture is sent. A capture PayPal already accepted
+  -- (its readback or our recording failed earlier) must still be reconciled, so
+  -- the bound order is read back instead and recorded only if PayPal reports it
+  -- completed. Anything short of that proof is refused.
+  salesClosed <- if ticketCheckoutAwaitsPayment (tpcCheckoutStatus context)
+    then not <$> ticketSalesOpen (tpcEventKey context)
+    else pure False
+  let refuseWhenClosed :: ServerError -> AppM a
+      refuseWhenClosed providerError
+        | salesClosed = throwError ticketSalesClosedError
+        | otherwise = throwError providerError
   if tpcCheckoutStatus context == "paid"
     then finalizeVerifiedTicketOrder context >> loadTicketCheckoutDTO (tpcOrderKey context) Nothing
     else do
       suppliedOrderId <- either throwError pure $
         validatePaypalOrderId (Routes.paypalOrderId request)
       (clientId, clientSecret, baseUrl, paypalEnvironment, merchantRef) <-
-        ServiceStorefront.loadPaypalEnvForService
+        ServiceStorefront.loadPaypalEnvForService `catchError` refuseWhenClosed
       requireTicketProvider context paypalEnvironment Checkout.ProviderPayPal
+        `catchError` refuseWhenClosed
       existing <- loadTicketProviderBinding context Checkout.ProviderPayPal merchantRef "order"
       storedOrderId <- maybe
-        (throwError (conflict "This ticket order has no bound PayPal order"))
+        (refuseWhenClosed (conflict "This ticket order has no bound PayPal order"))
         (pure . fst) existing
       unless (storedOrderId == suppliedOrderId) $
         throwError (conflict "PayPal order does not match the immutable ticket binding")
-      attempt <- beginTicketPaymentAttempt context Checkout.ProviderPayPal
-        Checkout.OperationCapture merchantRef "capture"
-      outcome <- ServiceStorefront.capturePaypalOrderRemoteForService
-        sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
-        `catchError` failTicketPaymentAttempt context attempt
-          Checkout.ProviderPayPal "paypal_capture_request"
+      alreadyCaptured <- if salesClosed
+        then do
+          known <- ServiceStorefront.getPaypalOrderRemoteForService
+            sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
+            `catchError` refuseWhenClosed
+          unless (ServiceStorefront.spcoStatus known == "COMPLETED") $
+            throwError ticketSalesClosedError
+          pure (Just known)
+        else pure Nothing
+      -- A reconciled capture already happened at PayPal; only a new one needs
+      -- sales to still be open when it is authorized.
+      attempt <- (if isJust alreadyCaptured
+          then beginTicketPaymentAttempt
+          else beginSalesGatedTicketPaymentAttempt)
+        context Checkout.ProviderPayPal Checkout.OperationCapture merchantRef "capture"
+      outcome <- case alreadyCaptured of
+        Just known -> pure known
+        -- The request can fail after PayPal took the capture (its response or
+        -- the follow-up read was lost), so the order is read back before the
+        -- attempt is failed: a completed order is recorded as the payment it
+        -- is, and a failed or still-open readback leaves the capture marked
+        -- unverified.
+        Nothing -> ServiceStorefront.capturePaypalOrderRemoteForService
+          sharedProviderManager clientId clientSecret baseUrl suppliedOrderId
+          `catchError` \captureError -> do
+            readback <- (Just <$> ServiceStorefront.getPaypalOrderRemoteForService
+                sharedProviderManager clientId clientSecret baseUrl suppliedOrderId)
+              `catchError` const (pure Nothing)
+            case readback of
+              Just known | ServiceStorefront.spcoStatus known == "COMPLETED" -> pure known
+              _ -> failTicketPaymentAttempt context attempt Checkout.ProviderPayPal
+                (paypalCaptureFailureCode (ServiceStorefront.spcoStatus <$> readback))
+                captureError
       now <- liftIO getCurrentTime
       case ServiceStorefront.spcoStatus outcome of
         "COMPLETED" -> do
@@ -1395,7 +1657,7 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
             merchantRef "capture" captureId
             (Just ("/v2/checkout/orders/" <> suppliedOrderId <> "/capture"))
             Checkout.AttemptProcessing "capture"
-          verified <- runDB $ Checkout.recordVerifiedPayment Checkout.VerifiedPayment
+          verified <- runDB $ Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
             { Checkout.vpAttempt = attempt
             , Checkout.vpCheckout = tpcCheckout context
             , Checkout.vpProvider = Checkout.ProviderPayPal
@@ -1422,10 +1684,14 @@ capturePublicEventTicketPaypalOrder rawEventId rawOrderId mLookupToken request =
         "PENDING" -> runDB $ Checkout.recordPaymentProcessing
           (tpcCheckout context) attempt Checkout.ProviderPayPal
           (ticketPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
-        providerStatus -> runDB $ Checkout.recordPaymentFailure
-          (tpcCheckout context) attempt Checkout.ProviderPayPal
-          ("paypal_" <> T.toLower providerStatus)
-          (ticketPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
+        providerStatus -> do
+          let classified = paypalCaptureFailureCode (Just providerStatus)
+              failureCode
+                | classified == paypalCaptureUnverifiedCode = classified
+                | otherwise = "paypal_" <> T.toLower providerStatus
+          runDB $ Checkout.recordPaymentFailure
+            (tpcCheckout context) attempt Checkout.ProviderPayPal failureCode
+            (ticketPaymentCorrelationId context Checkout.ProviderPayPal "capture") now
       loadTicketCheckoutDTO (tpcOrderKey context) Nothing
 
 finalizeVerifiedTicketOrder :: TicketPaymentContext -> AppM ()
@@ -1486,15 +1752,16 @@ ticketPaymentReference orderId = "TDF-" <> T.pack (show orderId)
 loadBankTransferView :: TicketRuntimeView -> AppM (Maybe Routes.PublicEventTicketBankTransferDTO)
 loadBankTransferView runtime = do
   rows <- runDB (rawSql
-    "SELECT evidence.status, evidence.customer_reference, evidence.review_notes\
+    "SELECT evidence.status, evidence.customer_reference, evidence.review_notes,\
+    \ evidence.evidence_object_key IS NOT NULL\
     \ FROM commerce_manual_payment_evidence evidence\
     \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
     \ WHERE evidence.checkout_id = ?::uuid AND attempt.checkout_id = evidence.checkout_id\
     \ AND attempt.provider = 'bank_transfer' AND attempt.operation = 'manual_verify'"
     [PersistText (trvCheckoutId runtime)]
-    :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single (Maybe Text))])
+    :: SqlPersistT IO [(Single Text, Single (Maybe Text), Single (Maybe Text), Single Bool)])
   case rows of
-    [(Single evidenceStatus, Single customerReference, Single notes)] -> do
+    [(Single evidenceStatus, Single customerReference, Single notes, Single receiptAttached)] -> do
       instructions <- liftIO loadBankTransferInstructions
       pure $ Just Routes.PublicEventTicketBankTransferDTO
         { Routes.instructions = instructions
@@ -1503,6 +1770,7 @@ loadBankTransferView runtime = do
         , Routes.currency = trvCurrency runtime
         , Routes.evidenceStatus = evidenceStatus
         , Routes.customerReference = customerReference
+        , Routes.receiptAttached = receiptAttached
         -- Only a rejection reason is buyer-facing; approval notes stay internal.
         , Routes.reviewNotes = if evidenceStatus == "rejected" then notes else Nothing
         }
@@ -1568,6 +1836,7 @@ selectPublicEventTicketBankTransfer
   -> AppM Routes.PublicEventTicketCheckoutResponse
 selectPublicEventTicketBankTransfer rawEventId rawOrderId mLookupToken = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
+  requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
     throwError (conflict "This ticket order is already paid")
   when (tpcCheckoutStatus context == "processing") $
@@ -1585,7 +1854,7 @@ selectPublicEventTicketBankTransfer rawEventId rawOrderId mLookupToken = do
   unless ("bank_transfer" `elem` available) $
     throwError err503 { errBody = "Bank transfer is not configured in this environment" }
   requireTicketProvider context (tpcEnvironment context) Checkout.ProviderBankTransfer
-  attempt <- beginTicketPaymentAttempt context Checkout.ProviderBankTransfer
+  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderBankTransfer
     Checkout.OperationManualVerify manualSettlementMerchantRef "manual-select"
   let holdUntil = min mttCutoffAt
         (addUTCTime (fromIntegral mttHoldMinutes * 60) now)
@@ -1620,17 +1889,23 @@ submitPublicEventTicketBankTransferEvidence
   -> Routes.PublicEventTicketBankTransferEvidenceRequest
   -> AppM Routes.PublicEventTicketCheckoutResponse
 submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
-    Routes.PublicEventTicketBankTransferEvidenceRequest{ Routes.customerReference = suppliedReference } = do
+    Routes.PublicEventTicketBankTransferEvidenceRequest
+      { Routes.customerReference = suppliedReference, Routes.receipt = suppliedReceipt } = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
   customerReference <- either throwError pure $
     validateBankTransferReference suppliedReference
+  receiptUpload <- traverse (\receipt -> do
+    validated <- either (throwError . badRequest) pure (Receipt.validateReceipt receipt)
+    Receipt.prepareReceipt rawOrderId validated) suppliedReceipt
+  let receiptKey = fmap fst receiptUpload
   now <- liftIO getCurrentTime
   terms <- runDB (loadManualTransferTerms (tpcOrderKey context))
     >>= maybe (throwError (conflict "Bank transfer is not available for this event")) pure
   outcome <- runDB $ do
     rows <- rawSql
       "SELECT evidence.id::text, evidence.status, evidence.customer_reference,\
-      \ evidence.submitted_by, attempt.id::text, runtime.manual_submitter_party_id\
+      \ evidence.submitted_by, attempt.id::text, runtime.manual_submitter_party_id,\
+      \ evidence.evidence_object_key\
       \ FROM commerce_manual_payment_evidence evidence\
       \ JOIN commerce_payment_attempt attempt ON attempt.id = evidence.payment_attempt_id\
       \ JOIN event_ticket_checkout_runtime runtime ON runtime.checkout_id = evidence.checkout_id\
@@ -1642,21 +1917,23 @@ submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
       [PersistText (Checkout.checkoutReferenceId (tpcCheckout context))]
       :: SqlPersistT IO
         [( Single Text, Single Text, Single (Maybe Text), Single (Maybe Int64)
-         , Single Text, Single (Maybe Int64)
+         , Single Text, Single (Maybe Int64), Single (Maybe Text)
          )]
     case rows of
       [( Single evidenceId, Single status, Single existingReference
-       , Single existingSubmitter, Single attemptId, Single mSubmitter
+       , Single existingSubmitter, Single attemptId, Single mSubmitter, Single existingReceipt
        )] -> case mSubmitter of
         Nothing -> pure (Left "Select bank transfer before submitting evidence")
         Just submitterId
           | status `elem` ["submitted", "under_review"]
               && existingReference == Just customerReference
+              && existingReceipt == receiptKey
               && existingSubmitter == Just submitterId -> pure (Right ())
           | status == "approved" -> pure (Right ())
           | status `elem` ["submitted", "under_review"] ->
               pure (Left "Different transfer evidence is already under review")
           | status `elem` ["awaiting_evidence", "rejected"] -> do
+              forM_ receiptUpload (liftIO . snd)
               when (status == "rejected") $
                 Checkout.recordManualPaymentSelection (tpcCheckout context)
                   (Checkout.PaymentAttemptReference attemptId)
@@ -1665,11 +1942,12 @@ submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
                   now
               rawExecute
                 "UPDATE commerce_manual_payment_evidence\
-                \ SET customer_reference = ?, submitted_amount_minor = ?, currency = ?,\
+                \ SET customer_reference = ?, evidence_object_key = ?, submitted_amount_minor = ?, currency = ?,\
                 \ submitted_at = ?, submitted_by = ?, status = 'submitted',\
                 \ reviewed_by = NULL, reviewed_at = NULL, review_notes = NULL\
                 \ WHERE id = ?::uuid"
                 [ PersistText customerReference
+                , maybe PersistNull PersistText receiptKey
                 , PersistInt64 (tpcAmountMinor context)
                 , PersistText (tpcCurrency context)
                 , PersistUTCTime now
@@ -1698,3 +1976,22 @@ submitPublicEventTicketBankTransferEvidence rawEventId rawOrderId mLookupToken
       _ -> pure (Left "Manual payment evidence is ambiguous")
   either (throwError . conflict) pure outcome
   loadTicketCheckoutDTO (tpcOrderKey context) Nothing
+
+invoicingReadyFor :: Checkout.CheckoutEnvironment -> AppM Bool
+invoicingReadyFor environment = do
+  Env{ envPool } <- ask
+  liftIO (Datil.invoicingReady envPool (Checkout.checkoutEnvironmentText environment))
+
+billingNumber :: BuyerId.BillingIdentity -> Maybe Text
+billingNumber identity = case identity of
+  BuyerId.BillingConsumidorFinal -> Nothing
+  BuyerId.BillingCedula number _ -> Just number
+  BuyerId.BillingRuc number _ -> Just number
+  BuyerId.BillingPasaporte number _ -> Just number
+
+billingLegalName :: BuyerId.BillingIdentity -> Maybe Text
+billingLegalName identity = case identity of
+  BuyerId.BillingConsumidorFinal -> Nothing
+  BuyerId.BillingCedula _ name -> Just name
+  BuyerId.BillingRuc _ name -> Just name
+  BuyerId.BillingPasaporte _ name -> Just name

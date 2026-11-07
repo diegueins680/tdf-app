@@ -122,7 +122,7 @@ BEGIN
  SELECT notification_id INTO notif FROM interaction_notification WHERE comment_id=(parent->>'id')::uuid
    AND recipient_id=910000003 AND event_kind='moderation';
  ASSERT notif IS NOT NULL,'Owner block must not silently complete moderation without notifying the eligible author';
- ASSERT interaction_notification_visible(notif,910000003);
+ ASSERT interaction_notification_visible(notif,910000003), 'Blocked author must retain audited moderation notices';
  ASSERT interaction_destination(910000003,'comment',(parent->>'id')::uuid)->'context'->'comment'->>'state'='removed';
  UPDATE notification SET is_read=true WHERE id=notif;
  PERFORM interaction_dispatch_events(50);

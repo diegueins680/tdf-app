@@ -121,6 +121,7 @@ data DirectoryProfileUpsert = DirectoryProfileUpsert
   , remote :: Bool
   , availableToTravel :: Bool
   , travelRadiusKm :: Maybe Double
+  , coverImageUrl :: Maybe Text
   } deriving (Show, Generic)
 instance FromJSON DirectoryProfileUpsert
 instance ToJSON DirectoryProfileUpsert
@@ -277,6 +278,7 @@ type DirectoryPublicAPI = "directory" :>
            :> QueryParam "dateTo" UTCTime
            :> QueryParam "cursor" Text
            :> QueryParam "limit" Int
+           :> QueryParam "profileKind" Text
            :> Get '[JSON] DirectorySearchResponse
     :<|> "suggestions" :> QueryParam "q" Text :> QueryParam "cityId" UUID :> Get '[JSON] [DirectorySuggestion]
     :<|> "taxonomies" :> QueryParam "locale" Text :> Get '[JSON] Value

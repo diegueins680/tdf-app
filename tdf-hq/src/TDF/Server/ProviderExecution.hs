@@ -10,7 +10,7 @@ module TDF.Server.ProviderExecution
   ) where
 
 import           Control.Exception.Safe (tryAny)
-import           Control.Monad (unless)
+import           Control.Monad (unless, when)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Reader (ReaderT, ask)
 import           Crypto.Hash (Digest, SHA256, hash)
@@ -40,6 +40,7 @@ import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderExecutionStore as Store
 import           TDF.Commerce.ProviderRuntimeConfig
 import           TDF.DB (Env(..))
+import qualified TDF.Server.EventTicketCheckout as EventTicketCheckout
 import           TDF.Server.PaymentAvailability (loadRuntimeReadyRoutes)
 import           TDF.Server.PaymentCapabilities (parsePaymentMethod)
 
@@ -95,6 +96,13 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
   checkout <- liftIO (runSqlPool
       (Store.loadAuthorizedCheckout checkoutId lookupHash now) envPool)
     >>= either (const (throwError err404)) pure
+  -- A ticket checkout reaches this shared path with only its checkout id, so the
+  -- ticket handlers' sales-closed gate has to be applied here as well.
+  when (Store.ceDomainType checkout == "event_ticket_order") $ do
+    salesOpen <- liftIO (runSqlPool
+      (EventTicketCheckout.ticketOrderSalesOpen (Store.ceDomainOrderId checkout)) envPool)
+    unless salesOpen $
+      throwError (conflict "Tickets are no longer on sale for this event; this order cannot be paid")
   flow <- maybe
     (throwError (conflict "Checkout domain does not support shared provider execution"))
     pure
@@ -151,8 +159,20 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
         , Checkout.pacCreatedAt = now
         , Checkout.pacCorrelationId = correlationId
         }
+  -- Recheck ticket eligibility under the event lock in the transaction that
+  -- records the attempt: the check above can be overtaken by a closure.
+  let ticketSalesGuard
+        | Store.ceDomainType checkout == "event_ticket_order" = do
+            closed <- EventTicketCheckout.ticketSalesClosedRefusal
+              <$> EventTicketCheckout.lockTicketOrderSalesOpen (Store.ceDomainOrderId checkout)
+            -- A hosted session is another rail: not while a PayPal capture
+            -- for this checkout is unverified.
+            maybe (EventTicketCheckout.ticketUnverifiedCaptureRefusal
+              (Checkout.pacCheckout attemptCreation)) (pure . Just) closed
+        | otherwise = pure Nothing
   attempt <- liftIO (runSqlPool
-      (PaymentRuntime.beginPaymentAttemptForMethod paymentMethod attemptCreation) envPool)
+      (PaymentRuntime.beginPaymentAttemptForMethodGuarded ticketSalesGuard paymentMethod attemptCreation)
+      envPool)
     >>= either (throwError . conflict) pure
   previousReference <- liftIO (runSqlPool (Store.loadAttemptProviderReference attempt) envPool)
     >>= either (throwError . conflict) pure
@@ -228,11 +248,15 @@ getPaymentSession rawCheckoutId rawAttemptId rawLookupToken = do
   checkoutId <- either (throwError . badRequest) pure (validatedUuid "checkoutId" rawCheckoutId)
   attemptId <- either (throwError . badRequest) pure (validatedUuid "attemptId" rawAttemptId)
   lookupToken <- requireLookupToken rawLookupToken
+  let lookupHash = sha256Text lookupToken
+  authorized <- liftIO $ runSqlPool
+    (Store.authorizeCreateOperation checkoutId attemptId lookupHash) envPool
+  _ <- either (const (throwError err404)) pure authorized
   encryptionKey <- liftIO loadProviderOperationEncryptionKey
     >>= either (throwError . unavailableText) pure
   loaded <- liftIO $ runSqlPool
     (Store.loadAuthorizedCreateOperation checkoutId attemptId
-      (sha256Text lookupToken) encryptionKey) envPool
+      lookupHash encryptionKey) envPool
   operation <- either (const (throwError err404)) pure loaded
   pure (operationToDTO checkoutId operation)
 

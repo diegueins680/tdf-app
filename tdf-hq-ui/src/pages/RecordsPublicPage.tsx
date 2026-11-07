@@ -1,3 +1,5 @@
+import MarkdownText from '../components/MarkdownText';
+import SessionVideoPreview from '../components/SessionVideoPreview';
 import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import RecordThumbnail from '../features/records/RecordThumbnail';
@@ -771,6 +773,7 @@ const RecordingsGrid = ({ items, selection }: { items: RecordingItem[]; selectio
             <RecordThumbnail resource={item.resource} title={item.title} />
           </Box>
           <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {item.url && item.resource.availability !== 'unavailable' && item.resource.providerMetadata?.['embeddable'] !== false && <SessionVideoPreview url={item.url} title={item.title} />}
             <Stack direction="row" spacing={1} alignItems="center">
               <Chip label={item.vibe} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.08)' }} />
               {(item.duration ?? item.recordedAt) && (
@@ -797,9 +800,9 @@ const RecordingsGrid = ({ items, selection }: { items: RecordingItem[]; selectio
             <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
               {item.artist}
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            <MarkdownText variant="body2" sx={{ color: 'text.secondary' }}>
               {item.description}
-            </Typography>
+            </MarkdownText>
             {item.url && (
               <Box sx={{ mt: 'auto' }}>
                 <Button
@@ -986,9 +989,9 @@ const SessionsGrid = ({ items, selection }: { items: SessionItem[]; selection: P
               <Typography variant="subtitle2" sx={{ color: 'text.secondary', fontWeight: 700 }}>
                 {video.guests}
               </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              <MarkdownText variant="body2" sx={{ color: 'text.secondary' }}>
                 {video.description}
-              </Typography>
+              </MarkdownText>
               <InteractionPanel kind="recording_session" entityKey={video.id} />
             </CardContent>
           </Card>

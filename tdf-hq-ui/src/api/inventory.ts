@@ -1,3 +1,4 @@
+import { assertNoLogoutIntent } from '../session/logoutIntent';
 import type { DriveFileInfo } from '../services/googleDrive';
 import { del, get, patch, post } from './client';
 import { buildAuthorizationHeader } from './authHeader';
@@ -64,6 +65,7 @@ export interface AssetQrDTO {
 export interface AssetUploadOptions {
   name?: string;
   onProgress?: (pct: number) => void;
+  signal?: AbortSignal;
 }
 
 async function uploadAssetPhotoToPath(
@@ -71,6 +73,8 @@ async function uploadAssetPhotoToPath(
   file: File,
   options: AssetUploadOptions = {},
 ): Promise<DriveFileInfo> {
+  assertNoLogoutIntent();
+  if (options.signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
   const base = resolveApiBase();
   const authHeader = buildAuthorizationHeader();
 
@@ -83,9 +87,18 @@ async function uploadAssetPhotoToPath(
     xhr.open('POST', `${base}${path}`);
     // Google sessions use HttpOnly cookies, like the shared fetch client.
     xhr.withCredentials = true;
+    xhr.timeout = 120_000;
+    const abort = () => xhr.abort();
+    const cleanup = () => options.signal?.removeEventListener('abort', abort);
+    options.signal?.addEventListener('abort', abort, { once: true });
+    xhr.onerror = () => { cleanup(); reject(new Error('No pudimos confirmar la carga. Reintenta cuando vuelva la conexión.')); };
+    xhr.ontimeout = () => { cleanup(); reject(new Error('No pudimos confirmar la carga dentro del tiempo disponible.')); };
+    xhr.onabort = () => { cleanup(); reject(new DOMException('Upload cancelled', 'AbortError')); };
     if (authHeader) xhr.setRequestHeader('Authorization', authHeader);
     xhr.onreadystatechange = () => {
       if (xhr.readyState !== XMLHttpRequest.DONE) return;
+      cleanup();
+      if (options.signal?.aborted) { reject(new DOMException('Upload cancelled', 'AbortError')); return; }
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           resolve(JSON.parse(xhr.responseText) as AssetUploadDTO);

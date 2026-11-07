@@ -199,9 +199,11 @@ const en = {
     followedSince: 'Fan since {{date}}',
   },
   artistFollow: {
+    changeError: 'We could not confirm the follow change. Check your connection and try again.',
     stateError: 'We could not check whether you follow this artist.',
     retry: 'Retry',
     authCta: 'Create an account or sign in to follow',
+    benefit: 'Follow {{artist}} to find them again in your community. You can watch their videos without creating an account.',
     resumeMessage: 'You are signed in. Continue where you left off and follow {{artist}}.',
     resumeAction: 'Follow now',
     resumeError: 'We could not follow {{artist}}. Check your connection and try again.',
@@ -343,6 +345,13 @@ const en = {
       cancel: 'Cancel',
       continue: 'Continue to Payment',
       close: 'Close',
+      retryTerms: 'Retry',
+    },
+    terms: {
+      title: 'Ticket terms',
+      refundTitle: 'Refund policy',
+      version: 'Terms version: {{version}}',
+      accept: 'I accept the ticket terms (version {{version}}) and the refund policy above.',
     },
     errors: {
       requiredFields: 'Please fill in all required fields',
@@ -351,8 +360,12 @@ const en = {
       paymentFailed: 'Payment failed',
       paymentUnclear: 'Payment status unclear. Please contact support.',
       unavailable: 'Payment is unavailable right now. No tickets were reserved. Please try again later.',
+      cardUnavailable: 'Card payments are temporarily unavailable. Please try again later.',
       paymentIntent: 'Failed to create payment intent',
       unexpected: 'An unexpected error occurred',
+      termsRequired: 'Accept the ticket terms and refund policy to continue.',
+      termsChanged: 'The ticket terms were updated. Review the new version and accept it again.',
+      termsUnavailable: 'We could not load the ticket terms. Nothing was reserved; retry to continue.',
     },
     status: {
       buyer: 'Buyer',

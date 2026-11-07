@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Avatar, Box, Button, Card, CardActionArea, CardContent, CardMedia, Chip, CircularProgress, Grid, Stack, Typography } from '@mui/material';
@@ -7,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { Merch } from '../api/merch';
 import { MerchReputation } from '../api/merchReputation';
 import { MerchReputationSummary } from '../components/merch/MerchReputationSummary';
+import { LegalDisclosure } from '../components/legal/LegalDisclosure';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { formatMerchMoney, merchLanguage, resolveMerchImageUrl } from '../utils/merch';
@@ -58,7 +60,7 @@ export default function MerchStorefrontPage() {
             <Avatar src={resolveMerchImageUrl(data.logoImageUrl)} alt="" sx={{ width: 72, height: 72 }}>{data.displayName.slice(0, 1)}</Avatar>
             <Box flex={1}>
               <Typography component="h1" variant="h3" fontWeight={900}>{data.displayName}</Typography>
-              {data.description && <Typography color="text.secondary">{data.description}</Typography>}
+              {data.description && <MarkdownText color="text.secondary">{data.description}</MarkdownText>}
             </Box>
             {profile?.url && <Button component={RouterLink} to={profile.url} startIcon={<GroupsIcon />}>{language === 'en' ? 'Artist profile & community' : 'Perfil y comunidad'}</Button>}
           </Stack>
@@ -92,7 +94,23 @@ export default function MerchStorefrontPage() {
           </Grid>
         </Box>
 
-        {policies && <Box component="section" aria-labelledby="store-policies"><Typography id="store-policies" component="h2" variant="h6" fontWeight={800}>{language === 'en' ? 'Shipping and returns' : 'Envíos y devoluciones'}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{shippingPolicy}</Typography><Typography sx={{ whiteSpace: 'pre-wrap' }}>{returnPolicy}</Typography></Box>}
+        {(shippingPolicy || returnPolicy) && (
+          <Box component="section" aria-labelledby="store-policies">
+            <Typography id="store-policies" component="h2" variant="h6" fontWeight={800} mb={1}>{language === 'en' ? 'Shipping and returns' : 'Envíos y devoluciones'}</Typography>
+            <Stack spacing={1}>
+              {shippingPolicy && (
+                <LegalDisclosure id="store-shipping-policy" language={language} headingLevel={3} title={language === 'en' ? 'Shipping policy' : 'Política de envíos'}>
+                  <MarkdownText>{shippingPolicy}</MarkdownText>
+                </LegalDisclosure>
+              )}
+              {returnPolicy && (
+                <LegalDisclosure id="store-return-policy" language={language} headingLevel={3} title={language === 'en' ? 'Return policy' : 'Política de devoluciones'}>
+                  <MarkdownText>{returnPolicy}</MarkdownText>
+                </LegalDisclosure>
+              )}
+            </Stack>
+          </Box>
+        )}
       </Stack>
     </Box>
   );

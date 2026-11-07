@@ -44,6 +44,7 @@ interface ImportMetaEnv {
   readonly VITE_STUDIO_WHATSAPP_URL?: string;
   readonly VITE_TIDAL_AGENT_MODEL?: string;
   readonly VITE_TRIALS_WHATSAPP_URL?: string;
+  readonly VITE_WHATSAPP_OPTIN_URL?: string;
 }
 
 interface ImportMeta {

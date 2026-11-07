@@ -58,6 +58,8 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
   const [selectedRefund, setSelectedRefund] = useState<RefundDTO | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [bankRefund, setBankRefund] = useState<RefundDTO | null>(null);
+  const [bankReference, setBankReference] = useState('');
   const [approveConfirmOpen, setApproveConfirmOpen] = useState(false);
   const [pendingApproveRefundId, setPendingApproveRefundId] = useState<string | null>(null);
   const [approveConfirmMessage, setApproveConfirmMessage] = useState('');
@@ -119,6 +121,18 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
     });
   };
 
+  // Bank-transfer payments are returned by staff; recording the transfer
+  // reference completes the canonical refund and invalidates the tickets.
+  const bankRefundMutation = useMutation({
+    mutationFn: ({ refundId, reference }: { refundId: string; reference: string }) =>
+      SocialEventsAPI.completeBankTransferRefund(eventId, refundId, reference),
+    onSuccess: () => {
+      setBankRefund(null);
+      setBankReference('');
+      void qc.invalidateQueries({ queryKey: ['refunds', eventId] });
+    },
+  });
+
   const formatMoney = (cents: number, currency?: string | null): string => {
     const currencyText = currency?.trim();
     const code = currencyText ? currencyText.toUpperCase() : resolveRuntimeCurrency();
@@ -149,6 +163,11 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
 
   const panelContent = (
     <Box>
+      {bankRefundMutation.isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {bankRefundMutation.error instanceof Error ? bankRefundMutation.error.message : t('refunds.actionError')}
+        </Alert>
+      )}
       {(approveMutation.isError || rejectMutation.isError) && (
         <Alert severity="error" sx={{ mb: 2 }}>{t('refunds.actionError')}</Alert>
       )}
@@ -235,6 +254,14 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
                             >
                               {t('refunds.reject')}
                             </Button>
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              onClick={() => setBankRefund(refund)}
+                              disabled={bankRefundMutation.isPending || !refund.refundId}
+                            >
+                              {t('refunds.bankTransferComplete', 'Devuelto por transferencia')}
+                            </Button>
                           </Stack>
                         )}
                         {refund.refundStatus === 'processing' && (
@@ -290,6 +317,38 @@ export function RefundManagementPanel({ eventId }: RefundManagementPanelProps) {
               : t('refunds.rejectRefund')}
           </Button>
         </DialogActions>
+        </form>
+      </Dialog>
+      <Dialog open={bankRefund !== null} onClose={() => setBankRefund(null)} maxWidth="sm" fullWidth aria-labelledby="bank-refund-dialog-title">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (bankRefund?.refundId && bankReference.trim().length >= 3) {
+            bankRefundMutation.mutate({ refundId: bankRefund.refundId, reference: bankReference.trim() });
+          }
+        }}>
+          <DialogTitle id="bank-refund-dialog-title">
+            {t('refunds.bankTransferTitle', 'Registrar devolución por transferencia')}
+          </DialogTitle>
+          <DialogContent>
+            <Alert severity="info" sx={{ mb: 1 }}>
+              {t('refunds.bankTransferHelp', 'Solo para órdenes pagadas por transferencia. Transfiere primero el monto al comprador y registra aquí el número de comprobante; las entradas quedarán anuladas. Debe registrarlo una persona distinta de quien solicitó el reembolso.')}
+            </Alert>
+            <TextField
+              label={t('refunds.bankTransferReference', 'Comprobante de la devolución')}
+              fullWidth
+              required
+              value={bankReference}
+              onChange={(e) => setBankReference(e.target.value)}
+              inputProps={{ minLength: 3, maxLength: 60 }}
+              margin="normal"
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setBankRefund(null)}>{t('refunds.cancel')}</Button>
+            <Button type="submit" variant="contained" disabled={bankReference.trim().length < 3 || bankRefundMutation.isPending}>
+              {t('refunds.bankTransferConfirm', 'Registrar devolución')}
+            </Button>
+          </DialogActions>
         </form>
       </Dialog>
       <ConfirmDialog

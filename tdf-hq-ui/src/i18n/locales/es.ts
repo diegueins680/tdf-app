@@ -200,9 +200,11 @@ const es = {
     followedSince: 'Fan desde {{date}}',
   },
   artistFollow: {
+    changeError: 'No pudimos confirmar el cambio de seguimiento. Comprueba tu conexión y vuelve a intentarlo.',
     stateError: 'No pudimos comprobar si sigues a este artista.',
     retry: 'Reintentar',
     authCta: 'Crear cuenta o ingresar para seguir',
+    benefit: 'Sigue a {{artist}} para volver a encontrarlo en tu comunidad. Puedes ver sus videos sin crear una cuenta.',
     resumeMessage: 'Ya ingresaste. Continúa donde estabas y sigue a {{artist}}.',
     resumeAction: 'Seguir ahora',
     resumeError: 'No pudimos seguir a {{artist}}. Revisa tu conexión e inténtalo de nuevo.',
@@ -344,6 +346,13 @@ const es = {
       cancel: 'Cancelar',
       continue: 'Continuar al pago',
       close: 'Cerrar',
+      retryTerms: 'Reintentar',
+    },
+    terms: {
+      title: 'Términos de las entradas',
+      refundTitle: 'Política de reembolso',
+      version: 'Versión de términos: {{version}}',
+      accept: 'Acepto los términos de las entradas (versión {{version}}) y la política de reembolso indicados arriba.',
     },
     errors: {
       requiredFields: 'Por favor completa todos los campos obligatorios',
@@ -352,8 +361,12 @@ const es = {
       paymentFailed: 'Error en el pago',
       paymentUnclear: 'No se pudo confirmar el estado del pago. Por favor contacta con soporte.',
       unavailable: 'El pago no está disponible ahora. No se reservó ninguna entrada. Inténtalo de nuevo más tarde.',
+      cardUnavailable: 'El pago con tarjeta no está disponible en este momento. Inténtalo de nuevo más tarde.',
       paymentIntent: 'Error al crear la intención de pago',
       unexpected: 'Ocurrió un error inesperado',
+      termsRequired: 'Acepta los términos y la política de reembolso para continuar.',
+      termsChanged: 'Los términos de las entradas se actualizaron. Revisa la nueva versión y vuelve a aceptarla.',
+      termsUnavailable: 'No pudimos cargar los términos de las entradas. No se reservó nada; reintenta para continuar.',
     },
     status: {
       buyer: 'Comprador',

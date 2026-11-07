@@ -1,16 +1,23 @@
 import SignupMobileInvitation from '../mobile/SignupMobileInvitation';
 import MobilePromo from '../mobile/MobilePromo';
+import { useMobileTelemetry } from '../mobile/telemetry';
 import { useTranslation } from 'react-i18next';
-import { Box, Button, Container, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Container, Drawer, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import BrandLogo from './BrandLogo';
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { lazyWithReload as lazy } from '../utils/lazyWithReload';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import InstagramEntryLinks from './InstagramEntryLinks';
 import SessionMenu from './SessionMenu';
+import UpcomingEventsCarousel, { EVENTS_PATH } from './events/UpcomingEventsCarousel';
+import MarketplaceCartButton from './MarketplaceCartButton';
 import { useSession } from '../session/SessionContext';
 import {
   hasInstagramTrafficSignal,
@@ -18,16 +25,18 @@ import {
   rememberInstagramTraffic,
 } from '../utils/instagramTraffic';
 
+const FeatureMenu = lazy(() => import('./SidebarNav'));
+
 const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.search', to: '/buscar' },
+  { label: 'authEntry.events', to: EVENTS_PATH },
   { label: 'TDF', to: '/tdf' },
-  { label: 'app.title', to: '/app' },
+  { label: 'app.title', to: '/app', surface: 'nav' },
   { label: 'authEntry.services', to: '/comercio' },
   { label: 'authEntry.community', to: '/fans' },
   { label: 'authEntry.shop', to: '/marketplace' },
   { label: 'Domo', to: '/domo-del-pululahua' },
   { label: 'authEntry.book', to: '/reservar' },
-  { label: 'DJ Booth', to: '/dj-booth' },
   { label: 'authEntry.releases', to: '/records' },
 ] as const;
 
@@ -49,6 +58,8 @@ export default function PublicBranding({
   const { t } = useTranslation();
   const { session } = useSession();
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [featureMenuOpen, setFeatureMenuOpen] = useState(false);
+  useEffect(() => { setFeatureMenuOpen(false); }, [session?.partyId]);
   const location = useLocation();
   const [showInstagramEntryLinks, setShowInstagramEntryLinks] = useState(() => {
     const referrer = typeof document === 'undefined' ? '' : document.referrer;
@@ -56,6 +67,9 @@ export default function PublicBranding({
   });
   const open = Boolean(menuAnchor);
   const profileRoute = /^\/(artista|a|perfil)\//.test(location.pathname);
+  // Commerce pages keep the header (and its cart control) pinned so the cart
+  // stays one tap away after scrolling to a product, on every width.
+  const stickyHeader = location.pathname === '/marketplace' || location.pathname.startsWith('/marketplace/');
   const signupInvitation = Boolean(session && (location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation);
   const contextualLoginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
@@ -63,10 +77,15 @@ export default function PublicBranding({
   );
   const isActiveNavItem = (path: string) =>
     location.pathname === path || location.pathname.startsWith(`${path}/`);
+  const trackMobileNav = useMobileTelemetry('nav');
+  // The TDF Mobile entry carries its surface so the landing can attribute the visit, and its click is measured
+  // as interest; the other items stay plain links.
+  const navItemProps = (item: { to: string; surface?: string }) => item.surface
+    ? { to: `${item.to}?surface=${item.surface}`, onClick: () => trackMobileNav('mobile_testing_interest_clicked') }
+    : { to: item.to };
   const footerPrimaryAction = useMemo<FooterAction>(() => {
     if (
       location.pathname.startsWith('/reservar') ||
-      location.pathname.startsWith('/dj-booth') ||
       location.pathname.startsWith('/domo-del-pululahua')
     ) {
       return { label: t('authEntry.whatsappBookings'), kind: 'external', value: STUDIO_WHATSAPP_URL };
@@ -80,14 +99,16 @@ export default function PublicBranding({
     if (location.pathname.startsWith('/marketplace')) {
       return { label: t('authEntry.help'), kind: 'route', value: '/feedback' };
     }
+    if (/^\/(?:social\/)?eventos\/[1-9]\d{0,18}$/.test(location.pathname)) {
+      const params = new URLSearchParams(contextualLoginPath.split('?')[1]);
+      params.set('signup', '1');
+      return { label: t('authEntry.createAccount'), kind: 'route', value: `/login?${params.toString()}` };
+    }
     return { label: t('authEntry.createAccount'), kind: 'route', value: '/login?signup=1&redirect=/fans' };
-  }, [location.pathname, t]);
+  }, [contextualLoginPath, location.pathname, t]);
   const footerSecondaryAction = useMemo<FooterAction>(() => {
     if (location.pathname.startsWith('/reservar')) {
       return { label: t('authEntry.signInAutofill'), kind: 'route', value: contextualLoginPath };
-    }
-    if (location.pathname.startsWith('/dj-booth')) {
-      return { label: t('authEntry.generalBooking'), kind: 'route', value: '/reservar' };
     }
     if (location.pathname.startsWith('/domo-del-pululahua')) {
       return { label: t('authEntry.bookStudio'), kind: 'route', value: '/reservar' };
@@ -148,16 +169,31 @@ export default function PublicBranding({
       {showHeader && (
         <Box
           component="header"
+          data-navigation-sticky-header={stickyHeader ? 'true' : undefined}
           sx={{
             borderBottom: '1px solid',
             borderColor: 'divider',
             bgcolor: 'background.paper',
             py: 1.5,
+            ...(stickyHeader
+              ? { position: 'sticky', top: 'env(safe-area-inset-top, 0px)', zIndex: (theme) => theme.zIndex.appBar }
+              : {}),
           }}
         >
           <Container maxWidth="xl">
             <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }}>
               <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
+                {session && (
+                  <Tooltip title={t('authEntry.featureMenu')}>
+                    <IconButton
+                      aria-label={t('authEntry.featureMenu')}
+                      aria-haspopup="dialog"
+                      aria-expanded={featureMenuOpen}
+                      onClick={() => setFeatureMenuOpen(true)}
+                      sx={{ minWidth: 44, minHeight: 44 }}
+                    ><MenuIcon /></IconButton>
+                  </Tooltip>
+                )}
                 <Box
                   component={RouterLink}
                   to="/tdf"
@@ -185,7 +221,7 @@ export default function PublicBranding({
                     <Button
                       key={item.to}
                       component={RouterLink}
-                      to={item.to}
+                      {...navItemProps(item)}
                       aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
                       sx={{
                         textTransform: 'none',
@@ -205,7 +241,9 @@ export default function PublicBranding({
                   ))}
                 </Stack>
               </Stack>
-              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ maxWidth: '100%', minWidth: 0 }}>
+              <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
+                <MarketplaceCartButton />
+                <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
@@ -234,8 +272,15 @@ export default function PublicBranding({
                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 >
+                  {/* The main navigation already shows these from md up; here they serve phones only. */}
                   {PUBLIC_NAV_ITEMS.map((item) => (
-                    <MenuItem key={item.to} component={RouterLink} to={item.to} onClick={() => setMenuAnchor(null)}>
+                    <MenuItem
+                      key={item.to}
+                      component={RouterLink}
+                      to={navItemProps(item).to}
+                      onClick={() => { navItemProps(item).onClick?.(); setMenuAnchor(null); }}
+                      sx={{ display: { md: 'none' } }}
+                    >
                       {t(item.label)}
                     </MenuItem>
                   ))}
@@ -251,6 +296,27 @@ export default function PublicBranding({
           </Container>
         </Box>
       )}
+      {session && featureMenuOpen && (
+        <Drawer
+          anchor="left"
+          open
+          onClose={() => setFeatureMenuOpen(false)}
+          PaperProps={{
+            role: 'dialog', 'aria-modal': true, 'aria-label': t('authEntry.featureMenu'),
+            // The mobile sidebar is fixed-position and does not size its parent.
+            sx: { width: { xs: 260, md: 240 }, overflow: 'hidden' },
+          }}
+        >
+          <IconButton
+            aria-label={t('authEntry.closeFeatureMenu')}
+            onClick={() => setFeatureMenuOpen(false)}
+            sx={{ position: 'absolute', top: 4, right: 4, zIndex: (theme) => theme.zIndex.drawer + 1, minWidth: 44, minHeight: 44 }}
+          ><CloseIcon /></IconButton>
+          <Suspense fallback={<CircularProgress aria-label={t('authEntry.featureMenu')} sx={{ m: 4 }} />}>
+            <FeatureMenu open onNavigate={() => setFeatureMenuOpen(false)} />
+          </Suspense>
+        </Drawer>
+      )}
       <Container
         component="main"
         id="main-content"
@@ -260,6 +326,7 @@ export default function PublicBranding({
       >
         {location.pathname !== '/cuenta/eliminar' && <SignupMobileInvitation />}
         {showInstagramEntryLinks && <InstagramEntryLinks />}
+        {!['/login', '/reset', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && <UpcomingEventsCarousel />}
         {children}
         {!signupInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
         {!signupInvitation && profileRoute && <MobilePromo surface="profile" />}
@@ -348,7 +415,7 @@ export default function PublicBranding({
                     key={item.to}
                     size="small"
                     component={RouterLink}
-                    to={item.to}
+                    {...navItemProps(item)}
                     aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
                     sx={{
                       textTransform: 'none',

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
   Alert,
@@ -11,14 +11,33 @@ import {
   Paper,
   Stack,
   TextField,
+  ThemeProvider,
   Tooltip,
   Typography,
+  createTheme,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { LiveSessionIntakeForm } from './LiveSessionIntakePage';
 import { resolveApiBase } from '../config/apiBase';
+import { createAppTheme } from '../theme/appTheme';
+
+/**
+ * The public registration shell is always a dark navy surface, regardless of
+ * the visitor's app theme. Nesting a dark ThemeProvider (built from the same
+ * brand tokens as the app theme) gives every descendant (inputs, outlines,
+ * adornment icons, text.secondary copy and the embedded intake Papers)
+ * dark-surface colors instead of light-theme ones painted on navy.
+ */
+function createLiveSessionShellTheme() {
+  return createTheme(createAppTheme('dark'), {
+    palette: {
+      background: { default: '#0b1224', paper: '#111a2e' },
+      text: { primary: '#f1f5f9', secondary: '#cbd5e1' },
+    },
+  });
+}
 
 export default function LiveSessionPublicPage() {
   const [sp] = useSearchParams();
@@ -39,6 +58,7 @@ export default function LiveSessionPublicPage() {
   }, []);
   useEffect(() => invalidateValidation, [invalidateValidation]);
   const [showCode, setShowCode] = useState(false);
+  const shellTheme = useMemo(() => createLiveSessionShellTheme(), []);
 
   const validateAccessCode = useCallback(async (codeOverride?: string) => {
     const code = (codeOverride ?? accessCode).trim();
@@ -100,7 +120,9 @@ export default function LiveSessionPublicPage() {
   }, [accessCode, validateAccessCode]);
 
   return (
+    <ThemeProvider theme={shellTheme}>
     <Box
+      data-testid="live-session-public-shell"
       sx={{
         minHeight: '100vh',
         background: 'radial-gradient(circle at 20% 20%, rgba(56,189,248,0.12), transparent 25%), radial-gradient(circle at 80% 0%, rgba(167,139,250,0.12), transparent 26%), linear-gradient(135deg, #0b1224, #0f172a)',
@@ -108,7 +130,10 @@ export default function LiveSessionPublicPage() {
         py: { xs: 4, md: 6 },
       }}
     >
-      <Container maxWidth="lg">
+      {/* At phone widths the public layout already provides side gutters, so
+          dropping the Container's own gutters keeps nested paddings from
+          squeezing the form below a usable width. */}
+      <Container maxWidth="lg" sx={{ px: { xs: 0, sm: 3 } }}>
         <Stack spacing={3}>
           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
             <PublicBrandBar tagline="Sesiones en vivo · Formulario" compact />
@@ -116,7 +141,9 @@ export default function LiveSessionPublicPage() {
           <Paper
             elevation={0}
             sx={{
-              p: { xs: 3, md: 4 },
+              px: { xs: 2, sm: 3, md: 4 },
+              py: { xs: 3, md: 4 },
+              minWidth: 0,
               bgcolor: 'rgba(15,23,42,0.82)',
               border: '1px solid rgba(255,255,255,0.08)',
               backdropFilter: 'blur(12px)',
@@ -161,7 +188,6 @@ export default function LiveSessionPublicPage() {
                     }}
                     placeholder="Pega el código recibido"
                     fullWidth
-                    InputLabelProps={{ sx: { color: '#cbd5f5' } }}
                     type={showCode ? 'text' : 'password'}
                     error={codeStatus === 'invalid'}
                     helperText={codeStatus === 'invalid' ? validationMessage ?? 'No pudimos validar el código.' : ' '}
@@ -172,6 +198,7 @@ export default function LiveSessionPublicPage() {
                             <IconButton
                               edge="end"
                               onClick={() => setShowCode((prev) => !prev)}
+                              sx={{ minWidth: 44, minHeight: 44 }}
                               aria-label={showCode ? 'Ocultar código' : 'Mostrar código'}
                             >
                               {showCode ? <VisibilityOffIcon /> : <VisibilityIcon />}
@@ -227,5 +254,6 @@ export default function LiveSessionPublicPage() {
         </Stack>
       </Container>
     </Box>
+    </ThemeProvider>
   );
 }

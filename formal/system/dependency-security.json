@@ -47,6 +47,12 @@
     },
     "undici": {
       "6": "6.28.1"
+    },
+    "dompurify": {
+      "3": "3.4.17"
+    },
+    "ip-address": {
+      "10": "10.7.4"
     }
   },
   "remaining": [
@@ -54,11 +60,6 @@
       "package": "braces",
       "advisory": "GHSA-vfj7-8cjw-p6xm",
       "status": "Unpatched upstream3.0.3; developer glob input, no known TDF runtime use. Restrict untrusted patterns; build availability remains open."
-    },
-    {
-      "package": "ip",
-      "advisory": "GHSA-2p57-rm9w-gvfp",
-      "status": "Existing dated production audit exception for browser-only WebTorrent path; not a server allowlist."
     },
     {
       "package": "stream-json",
@@ -82,8 +83,8 @@
     },
     {
       "package": "decode-uri-component",
-      "advisory": "GHSA-vcc3-ghjq-m6fr",
-      "status": "Runtime-reachable through React Navigation/Expo query-string. Patched0.5.0 is ESM; current query-string expects CommonJS callable. Compatibility repair remains open."
+      "advisory": "GHSA-vcc3-ghjq-m6fr;GHSA-qr28-fpjm-wq7f",
+      "status": "Scoped candidate repair: Mobile pins official0.5.1 through the callable CommonJS adapter. Original0.5.0 observations are historical and do not clear the later distinct-run advisory. SYS-URI-DECODE-001 retains both affected-release controls and actual query-string7 semantics; fresh exact-source client, audit and bundle qualification remains required. Expo incoming queries use URLSearchParams; current incoming-link exploit and complete dependency clearance are not asserted."
     }
   ]
 }

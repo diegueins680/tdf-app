@@ -2,6 +2,10 @@ import type { AnalyticsClient } from './posthog';
 
 const STORAGE_KEY = 'tdf:growth-attribution:v1';
 const MAX_VALUE_LENGTH = 160;
+// Campaign tags are labels. An email, URL, token or search term in a utm parameter is never persisted, because the
+// stored value later reaches analytics as attribution_* and that property name is not on the sensitive-field list.
+const LABEL_PATTERN = /^[a-zA-Z0-9_-]{1,80}$/;
+const LABEL_PROPERTIES: ReadonlySet<string> = new Set(['source', 'medium', 'campaign', 'content', 'term']);
 
 const ATTRIBUTION_PARAM_MAP = {
   utm_source: 'source',
@@ -38,6 +42,11 @@ const cleanValue = (value: string | null): string | undefined => {
   return cleaned ?? undefined;
 };
 
+const cleanLabel = (value: string | null): string | undefined => {
+  const cleaned = cleanValue(value);
+  return cleaned && LABEL_PATTERN.test(cleaned) ? cleaned : undefined;
+};
+
 const safePath = (pathname: string): string => {
   const cleaned = cleanValue(pathname);
   return cleaned?.startsWith('/') ? cleaned : '/';
@@ -62,11 +71,11 @@ const parseStoredAttribution = (
     const parsed = JSON.parse(raw) as Partial<GrowthAttribution>;
     if (typeof parsed.landingPath !== 'string' || typeof parsed.capturedAt !== 'string') return null;
     return {
-      source: cleanValue(parsed.source ?? null),
-      medium: cleanValue(parsed.medium ?? null),
-      campaign: cleanValue(parsed.campaign ?? null),
-      content: cleanValue(parsed.content ?? null),
-      term: cleanValue(parsed.term ?? null),
+      source: cleanLabel(parsed.source ?? null),
+      medium: cleanLabel(parsed.medium ?? null),
+      campaign: cleanLabel(parsed.campaign ?? null),
+      content: cleanLabel(parsed.content ?? null),
+      term: cleanLabel(parsed.term ?? null),
       referralCode: cleanValue(parsed.referralCode ?? null),
       landingPath: safePath(parsed.landingPath),
       capturedAt: parsed.capturedAt,
@@ -87,7 +96,7 @@ export function captureGrowthAttribution({
   const incoming: Partial<GrowthAttribution> = {};
 
   Object.entries(ATTRIBUTION_PARAM_MAP).forEach(([queryParam, property]) => {
-    const value = cleanValue(params.get(queryParam));
+    const value = LABEL_PROPERTIES.has(property) ? cleanLabel(params.get(queryParam)) : cleanValue(params.get(queryParam));
     if (value) (incoming as Record<string, string>)[property] = value;
   });
 

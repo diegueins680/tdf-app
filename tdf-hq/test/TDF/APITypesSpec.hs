@@ -406,7 +406,7 @@ spec = do
                 Left err ->
                     expectationFailure
                         ("Expected session invoice payload without customerId to decode, got: " <> err)
-                Right (DTO.GenerateSessionInvoiceReq customerIdVal currencyVal _ _ lineItemsVal _ issueSriVal _) -> do
+                Right (DTO.GenerateSessionInvoiceReq customerIdVal currencyVal _ _ lineItemsVal _ issueSriVal _ _ _) -> do
                     customerIdVal `shouldBe` Nothing
                     currencyVal `shouldBe` Just "USD"
                     length lineItemsVal `shouldBe` 1
@@ -417,7 +417,7 @@ spec = do
                 Left err ->
                     expectationFailure
                         ("Expected explicit session invoice customerId to decode, got: " <> err)
-                Right (DTO.GenerateSessionInvoiceReq customerIdVal _ _ _ _ _ _ _) ->
+                Right (DTO.GenerateSessionInvoiceReq customerIdVal _ _ _ _ _ _ _ _ _) ->
                     customerIdVal `shouldBe` Just 42
 
         it "rejects null customerId instead of silently using the session-client fallback" $
@@ -536,19 +536,47 @@ spec = do
                 "{\"senderId\":\"fb-sender\",\"message\":\"Hola\",\"externalId\":\"mid\\u202E1\"}"
                 `shouldSatisfy` isLeft
 
+    describe "CourseRegistrationRequest ToJSON" $ do
+        let legacyRequest = Courses.CourseRegistrationRequest (Just "Ada Lovelace") (Just "ada@example.com") Nothing "landing" Nothing Nothing (Just True) Nothing
+        it "keeps the stored identity of requests recorded before terms versions existed" $
+            -- Idempotent retries compare this encoding with the saved jsonb payload.
+            toJSON legacyRequest
+                `shouldBe` object
+                    [ "fullName" .= ("Ada Lovelace" :: T.Text)
+                    , "email" .= ("ada@example.com" :: T.Text)
+                    , "phoneE164" .= (Nothing :: Maybe T.Text)
+                    , "source" .= ("landing" :: T.Text)
+                    , "howHeard" .= (Nothing :: Maybe T.Text)
+                    , "utm" .= (Nothing :: Maybe Value)
+                    , "termsAccepted" .= True
+                    ]
+        it "includes the accepted terms version when one was sent" $
+            toJSON (legacyRequest { Courses.acceptedTermsVersion = Just "course-terms-v1" })
+                `shouldBe` object
+                    [ "fullName" .= ("Ada Lovelace" :: T.Text)
+                    , "email" .= ("ada@example.com" :: T.Text)
+                    , "phoneE164" .= (Nothing :: Maybe T.Text)
+                    , "source" .= ("landing" :: T.Text)
+                    , "howHeard" .= (Nothing :: Maybe T.Text)
+                    , "utm" .= (Nothing :: Maybe Value)
+                    , "termsAccepted" .= True
+                    , "acceptedTermsVersion" .= ("course-terms-v1" :: T.Text)
+                    ]
+
     describe "CourseRegistrationRequest FromJSON" $ do
         it "accepts canonical public course registration payloads" $
             case decodeCourseRegistration
-                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"},\"termsAccepted\":true}" of
+                "{\"fullName\":\"Ada Lovelace\",\"email\":\"ada@example.com\",\"phoneE164\":\"+593991234567\",\"source\":\"landing\",\"howHeard\":\"instagram\",\"utm\":{\"source\":\"ig\",\"medium\":\"social\",\"campaign\":\"launch\",\"content\":\"reel\"},\"termsAccepted\":true,\"acceptedTermsVersion\":\"course-terms-v1\"}" of
                 Left err ->
                     expectationFailure ("Expected canonical course registration payload to decode, got: " <> err)
-                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal termsAcceptedVal) -> do
+                Right (Courses.CourseRegistrationRequest fullNameVal emailVal phoneVal sourceVal howHeardVal utmVal termsAcceptedVal acceptedTermsVersionVal) -> do
                     fullNameVal `shouldBe` Just "Ada Lovelace"
                     emailVal `shouldBe` Just "ada@example.com"
                     phoneVal `shouldBe` Just "+593991234567"
                     sourceVal `shouldBe` "landing"
                     howHeardVal `shouldBe` Just "instagram"
                     termsAcceptedVal `shouldBe` Just True
+                    acceptedTermsVersionVal `shouldBe` Just "course-terms-v1"
                     case utmVal of
                         Nothing ->
                             expectationFailure "Expected canonical course registration payload to preserve utm tags"
@@ -575,37 +603,6 @@ spec = do
                 `shouldSatisfy` isLeft
             decodeCourseRegistration
                 "{\"email\":\"ada@example.com\",\"source\":\"landing\",\"utm\":{\"source\":null}}"
-                `shouldSatisfy` isLeft
-
-    describe "CoursePaymentIntentRequest FromJSON" $ do
-        it "accepts omitted and canonical mobile Stripe version selectors" $ do
-            case decodeCoursePaymentIntent "{}" of
-                Left err ->
-                    expectationFailure
-                        ("Expected omitted course payment intent selector to decode, got: " <> err)
-                Right (Courses.CoursePaymentIntentRequest mobileSdkStripeVersionVal) ->
-                    mobileSdkStripeVersionVal `shouldBe` Nothing
-
-            case decodeCoursePaymentIntent
-                "{\"mobileSdkStripeVersion\":\" 2026-04-22.dahlia \"}" of
-                Left err ->
-                    expectationFailure
-                        ("Expected course payment intent payload to decode, got: " <> err)
-                Right (Courses.CoursePaymentIntentRequest mobileSdkStripeVersionVal) ->
-                    mobileSdkStripeVersionVal `shouldBe` Just "2026-04-22.dahlia"
-
-        it "rejects ambiguous or unsafe mobile Stripe version selectors" $ do
-            decodeCoursePaymentIntent
-                "{\"mobileSdkStripeVersion\":null}"
-                `shouldSatisfy` isLeft
-            decodeCoursePaymentIntent
-                "{\"mobileSdkStripeVersion\":\"   \"}"
-                `shouldSatisfy` isLeft
-            decodeCoursePaymentIntent
-                "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\\nInjected: yes\"}"
-                `shouldSatisfy` isLeft
-            decodeCoursePaymentIntent
-                "{\"mobileSdkStripeVersion\":\"2026-04-22.dahlia\",\"stripeVersion\":\"typo\"}"
                 `shouldSatisfy` isLeft
 
     describe "AdsInquiry FromJSON" $ do
@@ -2725,7 +2722,8 @@ spec = do
                     , ",\"ticketPurchaseBuyerEmail\":\"ada@example.com\""
                     , ",\"ticketPurchasePromoCode\":null"
                     , ",\"ticketPurchaseMobileSdkStripeVersion\":\"2025-04-30.basil\""
-                    , ",\"ticketPurchaseIdempotencyKey\":\"ticket-checkout-123\"}"
+                    , ",\"ticketPurchaseIdempotencyKey\":\"ticket-checkout-123\""
+                    , ",\"ticketPurchaseAcceptedTermsVersion\":\" event-ticket-terms-v1 \"}"
                     ]
                 ) of
                 Left err ->
@@ -2741,6 +2739,8 @@ spec = do
                         `shouldBe` Just "2025-04-30.basil"
                     SocialEvents.tpwpIdempotencyKey payload
                         `shouldBe` Just "ticket-checkout-123"
+                    SocialEvents.tpwpAcceptedTermsVersion payload
+                        `shouldBe` Just "event-ticket-terms-v1"
 
             case decodeTicketOrderStatus "{\"ticketOrderStatus\":\"paid\"}" of
                 Left err ->
@@ -3235,8 +3235,6 @@ spec = do
     decodeCmsContent :: BL8.ByteString -> Either String API.CmsContentIn
     decodeCmsContent = eitherDecode
     decodeCourseRegistration = eitherDecode
-    decodeCoursePaymentIntent :: BL8.ByteString -> Either String Courses.CoursePaymentIntentRequest
-    decodeCoursePaymentIntent = eitherDecode
     decodeFollowUpCreate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpCreate
     decodeFollowUpCreate = eitherDecode
     decodeFollowUpUpdate :: BL8.ByteString -> Either String Courses.CourseRegistrationFollowUpUpdate

@@ -33,6 +33,18 @@ hidden zero quantity, wrapped legacy sum and wrapped legacy product, plus four m
 error does not count as detecting an invalid model; every control must reach a
 failing Hspec assertion. The seed, source/test hashes and output are retained.
 
+The verifier must observe all61 examples with no pending work. Its intended run
+must report zero failures and three completed QuickCheck runs of1000 cases each;
+each source mutation must report at least one assertion failure in the same
+complete, nonpending61-example suite. Empty, partial, ambiguous or compiler-only
+output fails closed. Changing all three property limits to1 reproduced an exit0
+from the old verifier while it still claimed three1000-case runs. The corrected
+runner rejects that counterexample. `test-checkout-money-verifier.py` protects
+execution completeness and the actual runner path in repository CI; backend CI
+still compiles and executes the real unchanged arithmetic and all nine mutants.
+These checks establish evidence completeness under the trusted Hspec/QuickCheck
+reporting contract, not a proof of test adequacy or arithmetic refinement.
+
 The shared real-HTTP fixture checks invalid stored data, exact ordinary totals
 and rollback of an overflowing cart update. It uses no provider endpoint.
 This is property and boundary execution evidence, not a proof over all cart sizes,

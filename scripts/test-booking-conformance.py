@@ -137,9 +137,18 @@ try:
                  'AUTO_APPLY_PRODUCTION_MIGRATIONS': 'false', 'SEED_DB': 'false',
                  'HQ_ASSETS_DIR': str(assets), 'DEFAULT_LOCALE': 'es',
                  'FACEBOOK_APP_SECRET': 'synthetic-local-webhook-secret',
+                 # Invalid synthetic credentials only exercise stored-binding responses;
+                 # the music fixture never calls a provider or starts a new attempt.
+                 'PAYPAL_ENV': 'sandbox', 'PAYPAL_CLIENT_ID': 'synthetic-local-client',
+                 'PAYPAL_CLIENT_SECRET': 'synthetic-local-secret', 'PAYPAL_MERCHANT_ID': 'music-state-fixture',
+                 'COMMERCE_CHECKOUT_ENV': 'sandbox',
                  'DDEX_STORAGE_BACKEND': 'local-private', 'DDEX_PRIVATE_STORAGE_ROOT': str(OUTPUT / 'ddex-private'),
                  'EVENT_DISCOVERY_ENABLED': 'false', 'ARTIST_ENRICHMENT_ENABLED': 'false',
                  'EVENT_LOGISTICS_RECHECK_ENABLED': 'false', 'REPUTATION_AGGREGATION_WORKER_ENABLED': 'false'}
+    # /version permits this runtime override ahead of the compiled commit.
+    # A controlled fixture must reject files, directories and dangling symlinks.
+    if os.path.lexists('/app/COMMIT'):
+        raise RuntimeError('Fixture refuses /app/COMMIT runtime revision override')
     with (OUTPUT / 'backend.log').open('w') as log:
         server = subprocess.Popen([str(BINARY)], cwd=OUTPUT, stdout=log, stderr=log, env=server_env)
     for _ in range(120):
@@ -150,6 +159,12 @@ try:
         except urllib.error.URLError: pass
         time.sleep(.25)
     else: raise RuntimeError('Fixture backend did not become ready')
+
+    status, body = request('/version', token='')
+    version_info = json.loads(body) if status == 200 else {}
+    (OUTPUT / 'backend-version.json').write_text(json.dumps(version_info, indent=2) + '\n')
+    check('fixture executable revision matches candidate source',
+          status == 200 and version_info.get('commit') == revision)
 
     # OpenAPI requires bearer authentication for party radio presence. A removed
     # shadow public declaration must never turn listener state into anonymous data.
@@ -537,7 +552,8 @@ try:
     check('catalog stale retry returns conflict', request(catalog_path, valid, method='POST')[0] == 409)
     check('catalog stale retry has no effect', catalog_state() == after)
 
-    # Anonymous assistant retrieval must not treat the internal index as public.
+    # Staff assistant retrieval must still render only current public course data
+    # (PRIV-RAG-001); the assistant itself is staff-only (AUTH-PUBLIC-001).
     # No OPENAI_API_KEY is present; local embeddings and fallback reply are used.
     embedding = [0] * 1536
     word_hash = 5381
@@ -545,9 +561,11 @@ try:
     embedding[word_hash % 1536] = 1
     def rag_chunk(source, identity, content):
         sql("INSERT INTO rag_chunk(source,source_id,chunk_index,content,metadata,embedding) VALUES ('" + source + "','" + identity + "',0,'" + content + "','{}','" + json.dumps(embedding) + "'::vector)")
+    check('assistant rejects anonymous caller', request('/ads/assist', {'aarMessage': 'hola'}, token=None, method='POST')[0] == 401)
+    check('assistant rejects caller without Social Inbox access', request('/ads/assist', {'aarMessage': 'hola'}, token='fixture-fan', method='POST')[0] == 403)
     def knowledge():
-        status, body = request('/ads/assist', {'aarMessage': 'hola'}, token=None, method='POST')
-        check('anonymous assistant remains available', status == 200)
+        status, body = request('/ads/assist', {'aarMessage': 'hola'}, token='fixture-admin', method='POST')
+        check('staff assistant remains available', status == 200)
         return json.loads(body)['aasKnowledgeUsed']
     for source in ['availability', 'studio_brain', 'campaign', 'ad', 'resource', 'service', 'unknown']:
         rag_chunk(source, 'private-' + source, 'PRIVATE_SENTINEL_' + source)
@@ -558,6 +576,15 @@ try:
     sql("UPDATE course SET title='PUBLIC_CURRENT',updated_at=now()+interval '1 minute' WHERE slug='public-conformance-course'")
     content = ' '.join(knowledge())
     check('RAG renders current public course rather than cached private text', 'PUBLIC_CURRENT' in content and all(value not in content for value in ['PRIVATE_SENTINEL', 'POISONED_CACHED_PRIVATE_TEXT', 'PUBLIC_BEFORE']))
+    # Matching a current course slug is not source authorization. Without this
+    # collision, the join alone excludes the earlier private-source fixtures.
+    sql("DELETE FROM rag_chunk WHERE source='course' AND source_id='public-conformance-course'")
+    for source in ['availability', 'studio_brain', 'campaign', 'ad', 'resource', 'service', 'unknown']:
+        rag_chunk(source, 'public-conformance-course', 'PRIVATE_COLLIDING_' + source)
+    check('non-course index entries cannot nominate a public course by matching its slug', knowledge() == [])
+    rag_chunk('course', 'public-conformance-course', 'POISONED_CACHED_PRIVATE_TEXT')
+    content = ' '.join(knowledge())
+    check('eligible course remains retrievable alongside colliding private index entries', 'PUBLIC_CURRENT' in content and 'PRIVATE_COLLIDING_' not in content)
     sql("DELETE FROM course WHERE slug='public-conformance-course'")
     check('deleted course cannot survive through stale index', knowledge() == [])
     for channel, object_name in [('facebook', 'page'), ('instagram', 'instagram')]:
@@ -712,11 +739,21 @@ try:
     verify_invoice_receipts(sql, request, check, ENV, NAME, OUTPUT, actors)
     from operations_conformance import verify_operations
     verify_operations(sql, request, check, ENV, NAME, OUTPUT, actors)
+    from whatsapp_consent_conformance import verify_whatsapp_consent
+    verify_whatsapp_consent(sql, request, check)
+
+    from public_routes_conformance import verify_public_route_denial
+    verify_public_route_denial(ROOT, http_port, check)
+
+    from music_money_conformance import verify_music_money
+    verify_music_money(sql, request, check, actor, ROOT)
+    from music_payment_conformance import verify_music_payment_outcomes
+    verify_music_payment_outcomes(sql, check, ENV, NAME, OUTPUT, ROOT, request)
 
     from readiness_conformance import verify_readiness
     verify_readiness(run, NAME, http_port, check)
 
-    result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'checks': checks, 'status': 'passed'}
+    result = {'revision': revision, 'workingTreeDirty': dirty, 'binarySha256': hashlib.sha256(BINARY.read_bytes()).hexdigest(), 'reportedCommit': version_info.get('commit'), 'checks': checks, 'status': 'passed'}
 finally:
     if server is not None:
         server.terminate()

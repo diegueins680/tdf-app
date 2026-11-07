@@ -25,7 +25,7 @@ export function normalizeLocale(value: string | null | undefined): SupportedLoca
 }
 
 export function requestedAuthLocale(): SupportedLocale | null {
-  if (typeof window === 'undefined' || !['/reset', '/login'].includes(window.location.pathname)) return null;
+  if (typeof window === 'undefined' || !['/reset', '/login', '/app'].includes(window.location.pathname)) return null;
   const value = new URLSearchParams(window.location.search).get('lang');
   return value === 'en' || value === 'es' ? value : null;
 }

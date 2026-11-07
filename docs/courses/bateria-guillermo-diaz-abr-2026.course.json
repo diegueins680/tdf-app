@@ -12,7 +12,7 @@
   "locationLabel": "TDF Records - Quito",
   "locationMapUrl": "https://maps.app.goo.gl/6pVYZ2CsbvQfGhAz6",
   "whatsappCtaUrl": null,
-  "landingUrl": "https://tdf-app.pages.dev/curso/bateria-guillermo-diaz-abr-2026",
+  "landingUrl": "https://www.tdfrecords.net/curso/bateria-guillermo-diaz-abr-2026",
   "daws": [
     "Bateria acustica",
     "Tecnica de manos",
@@ -30,7 +30,7 @@
   ],
   "instructorName": "Guillermo Diaz",
   "instructorBio": "Baterista e instructor enfocado en tecnica funcional, groove, lectura aplicada y preparacion para tocar y grabar con seguridad en contexto de banda.",
-  "instructorAvatarUrl": "https://tdf-app.pages.dev/assets/tdf-ui/guillermo-diaz-bateria.jpg",
+  "instructorAvatarUrl": "https://www.tdfrecords.net/assets/tdf-ui/guillermo-diaz-bateria.jpg",
   "sessions": [
     {
       "label": "Nivel 1 - Fundamentos fisicos y sonido base",

@@ -6,7 +6,7 @@
     {
       "id": "RES-HTTP-001",
       "source": "https://www.rfc-editor.org/rfc/rfc9110.html#section-9.2.2",
-      "title": "RFC 9110 \u00a79.2.2",
+      "title": "RFC 9110 §9.2.2",
       "recommendation": "Automatic retry of a non-idempotent method needs knowledge that its semantics are idempotent or that the original request was not applied.",
       "applicability": "Checkout, event commands and Mobile mutation retries",
       "decision": "adopted",
@@ -615,6 +615,167 @@
       "decision": "adopted",
       "rationale": "Compare exact trusted system identifier and shut-down state; this complements copied bytes and does not establish source writer fencing.",
       "verifiedAt": "2026-10-05"
+    },
+    {
+      "id": "RES-AUTH-PUBLIC-001",
+      "source": "https://api-security.owasp.org/editions/2023/en/0xa1-broken-object-level-authorization",
+      "title": "OWASP API1:2023 Broken Object Level Authorization",
+      "recommendation": "Check that the caller may act on the record in every function that uses a client-supplied identifier; prefer random, unpredictable record identifiers.",
+      "applicability": "Unauthenticated routes acting on existing records by path identifier",
+      "decision": "adopted",
+      "rationale": "The public-route register admits path identifiers only as random UUIDv4 capabilities and requires lookup secrets for sequential IDs. The retired course Stripe routes acted on sequential registration IDs without either.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-AUTH-PUBLIC-002",
+      "source": "https://api-security.owasp.org/editions/2023/en/0xa5-broken-function-level-authorization",
+      "title": "OWASP API5:2023 Broken Function Level Authorization",
+      "recommendation": "Deny access by default and require explicit role grants for every function, especially administrative ones.",
+      "applicability": "Staff functions mounted in the public API",
+      "decision": "adopted",
+      "rationale": "Every route outside AuthProtect must be explicitly registered; staff ads assistance moved behind authentication and the Social Inbox role predicate.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-AUTH-PUBLIC-003",
+      "source": "https://docs.stripe.com/payments/accept-a-payment.md?payment-ui=mobile&platform=react-native",
+      "title": "Stripe mobile Payment Sheet customer credentials",
+      "recommendation": "Customer information is sensitive and cannot be retrieved directly from an app; the server issues a short-lived customer-scoped credential that grants the SDK temporary access to that Customer.",
+      "applicability": "Issuing a party-bound ephemeral key from an unauthenticated route",
+      "decision": "adopted",
+      "rationale": "A customer-scoped key must be issued only to the authenticated owner of that customer; the legacy course route issued it to any caller presenting a sequential registration ID, so it was retired.",
+      "verifiedAt": "2026-10-06"
+    },
+    {
+      "id": "RES-OPS-CAPTURE-LOCK-001",
+      "source": "https://www.postgresql.org/docs/17/explicit-locking.html#LOCKING-ROWS",
+      "title": "PostgreSQL17 row-level lock modes",
+      "verifiedAt": "2026-10-15",
+      "recommendation": "FOR SHARE conflicts with non-key UPDATE; FOR KEY SHARE does not. Successful row locks last through transaction completion, while exception/savepoint rollback releases locks acquired within the failed scope.",
+      "applicability": "OPS-INBOUND-CAPTURE-001 admission versus operations_enabled/active updates",
+      "decision": "adopted",
+      "rationale": "Take SHARE locks on both authority rows inside the capture transaction. A non-key disablement must not race a previously checked boolean. Actual PostgreSQL17 tests witness both lock orders; capture errors remain contained and do not promise successful delivery."
+    },
+    {
+      "id": "RES-OPS-CAPTURE-RETENTION-001",
+      "source": "https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html#disposal-of-logs",
+      "title": "OWASP Logging Cheat Sheet: sensitive data and disposal",
+      "verifiedAt": "2026-10-15",
+      "recommendation": "Review personal data in logging and set retention/disposal periods for records, copies, backups and extracts according to their purpose and applicable obligations.",
+      "applicability": "Sender identifiers copied into permanent Operations events/audits",
+      "decision": "adopted as activation prerequisite",
+      "rationale": "The source does not supply a TDF retention duration or authorize identifier collection. Keep capture disabled until product-specific retention, deletion/anonymization, exceptions and backup expiry are defined and executable. No arbitrary duration or blanket financial-record exception is inferred."
+    },
+    {
+      "id": "RES-RAG-SNAPSHOT-001",
+      "source": "https://www.postgresql.org/docs/17/transaction-iso.html#XACT-READ-COMMITTED",
+      "title": "PostgreSQL17 Read Committed statement snapshots",
+      "recommendation": "Successive statements in one transaction may observe different committed versions. State the observation point for a current-data guarantee.",
+      "applicability": "PRIV-RAG-001 ranking followed by course metadata reads",
+      "decision": "adopted",
+      "rationale": "Model edits/deletion between ranking, metadata read and delivery. Require current public data at metadata read, not deletion-linearized delivery. Do not infer production isolation configuration from the default or claim full SQL/Haskell refinement.",
+      "checkedAt": "2026-10-13"
+    },
+    {
+      "id": "RES-ALLOY-CONTROLS-001",
+      "source": "https://alloytools.org/spec.html",
+      "supportingSource": "https://alloytools.org/tutorials/online/sidenote-format-fact.html",
+      "title": "Alloy language specification and fact overconstraint guidance",
+      "recommendation": "A check searches for a counterexample under facts and finite scopes; inconsistent or overly restrictive facts can conceal assertion violations. Run commands witness consistency.",
+      "applicability": "EventStructure and TaskReadStructure assertion admission",
+      "decision": "adopted",
+      "rationale": "Keep original satisfiable scenarios; remove selected guards in separate copies without weakening assertions or enlarging scopes, and require their counterexamples. Retain original scope limits and separate implementation refinement.",
+      "verifiedAt": "2026-10-13"
+    },
+    {
+      "id": "RES-MUSIC-PURCHASE-REPLAY-001",
+      "source": "https://docs.stripe.com/api/idempotent_requests",
+      "title": "Stripe API v1 parameter-bound idempotency",
+      "recommendation": "Compare replay parameters to the original request and reject a mismatch.",
+      "applicability": "Music purchase creation currently scopes keys to a buyer but omits payload binding.",
+      "decision": "adopted",
+      "rationale": "Compare TDF immutable snapshot fields after unique reservation, including the concurrent loser path. Do not copy provider response caching/24-hour expiry or treat this vendor contract as a universal HTTP mandate. RFC 9110 identical-request semantics are already indexed in RES-HTTP-001.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-MUSIC-MONEY-WIRE-001",
+      "source": "https://www.rfc-editor.org/rfc/rfc8259.html#section-6",
+      "title": "RFC8259 JSON number interoperability",
+      "recommendation": "Use interoperable integer representations; binary64 consumers cannot preserve every Int64 value as a JSON number.",
+      "applicability": "Music BIGINT prices and web Number decoding/input conversion.",
+      "decision": "adopted",
+      "rationale": "Retain exact small-number compatibility and decimal strings outside the safe range. This is a transport correction, not a business price cap.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-MUSIC-MONEY-WIRE-002",
+      "source": "https://tc39.es/ecma402/2022/#sec-formatnumerictoparts",
+      "title": "ECMA402 BigInt numeric formatting parts",
+      "recommendation": "Use BigInt-compatible Intl parts to retain exact whole units.",
+      "applicability": "USD music-price display through the signed64 monetary domain.",
+      "decision": "adopted",
+      "rationale": "Format whole units as BigInt and convert only a remainder in0..99; do not divide the whole amount as Number. Device/provider behavior remains separately verified.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-VERSION-STACK-001",
+      "source": "https://docs.haskellstack.org/en/stable/commands/build_command/#-no-force-dirty-flag",
+      "title": "Stack local-package dirty admission",
+      "recommendation": "Use --force-dirty when local inputs outside tracked Haskell source require rebuilding an otherwise clean package.",
+      "applicability": "Restored .stack-work may contain a valid package cache with stale Git/time metadata.",
+      "decision": "adopted",
+      "rationale": "Force the canonical local package invocation, while retaining immutable dependency and unrelated GHC object caches. Actual source-identical HEAD-change regression verifies this boundary.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-VERSION-GHC-001",
+      "source": "https://downloads.haskell.org/ghc/9.10.3/docs/users_guide/separate_compilation.html#recompilation",
+      "title": "GHC recompilation checking for external splice inputs",
+      "recommendation": "Disable recompilation checking selectively when source alone cannot capture the changing external input.",
+      "applicability": "TDF.Version embeds Git identity and current time using Template Haskell.",
+      "decision": "adopted",
+      "rationale": "Use module-local -fforce-recomp together with Stack dirty admission. Independent controls removing either layer reproduce the stale metadata; unrelated Main object remains reused in the probe. No global force-recompile or source attestation claim.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-URI-DECODE-001",
+      "source": "https://github.com/SamVerschueren/decode-uri-component/security/advisories/GHSA-vcc3-ghjq-m6fr",
+      "title": "Maintainer advisory for malformed URI decoding resource consumption",
+      "recommendation": "Use patched0.5.0 or bound input as a workaround.",
+      "applicability": "The pinned Mobile graph installs affected0.2.2 beneath query-string7. Current incoming route-parser reachability is narrower than historical prose claimed.",
+      "decision": "adopted",
+      "rationale": "Use unchanged pinned0.5.0 via a compatible callable adapter; actual old-release regression and consumer tests demonstrate detection without inventing a current app exploit claim.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-URI-DECODE-002",
+      "source": "https://docs.npmjs.com/cli/v10/configuring-npm/package-json/#overrides",
+      "title": "Root dependency-reference overrides and local package dependencies",
+      "recommendation": "Use an explicit root dependency specification and its dollar-prefixed reference for transitive overrides; local linked packages require their dependencies to be installed explicitly.",
+      "applicability": "Private decoder adapter and upstream alias must resolve reproducibly on clean Mobile npm installs.",
+      "decision": "adopted",
+      "rationale": "The initial relative-only experiment produced an invalid nested lock path and did not install linked dependencies. Explicit root adapter/alias dependencies and the reference override yield a portable four-record lock change and pass clean npm installation.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-URI-DECODE-003",
+      "source": "https://nodejs.org/download/release/v20.19.4/docs/api/modules.html#loading-ecmascript-modules-using-require",
+      "title": "Node20.19.4 require of synchronous ES modules",
+      "recommendation": "An ES module required from CommonJS exposes a namespace; the default export is accessed explicitly.",
+      "applicability": "query-string7 expects a function, while upstream decoder0.5.0 is an ES module.",
+      "decision": "adopted",
+      "rationale": "The adapter selects default; an actual-consumer namespace substitution fails in the negative control. Native Metro/Hermes qualification remains separate from Node interoperability.",
+      "verifiedAt": "2026-10-15"
+    },
+    {
+      "id": "RES-URI-DECODE-004",
+      "source": "https://github.com/advisories/GHSA-qr28-fpjm-wq7f",
+      "title": "Subsequent quadratic percent-run replacement advisory",
+      "recommendation": "Use official patched0.5.1; versions through0.5.0 remain affected.",
+      "applicability": "The old0.5.0 algorithm used by original Mobile165 and private6fb has a distinct-run fallback gap not covered by the repeated-%FF family. Current incoming app exploit reachability remains unproven.",
+      "decision": "adopted",
+      "rationale": "Preserve unchanged official0.5.1 and caller adapter; retain original24 tests, add finite distinct-run work/output and one-level-decoding controls against genuine old0.5.0, and require fresh revision-bound qualification. No universal complexity or device/security clearance is inferred.",
+      "verifiedAt": "2026-11-07"
     }
   ]
 }

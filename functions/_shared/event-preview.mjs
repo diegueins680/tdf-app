@@ -1,4 +1,4 @@
-const PUBLIC_ORIGIN = 'https://tdf-app.pages.dev';
+export const PUBLIC_ORIGIN = 'https://www.tdfrecords.net';
 const SAFE_EVENT_ID = /^[1-9][0-9]{0,18}$/;
 
 export function isSafeEventId(value) {

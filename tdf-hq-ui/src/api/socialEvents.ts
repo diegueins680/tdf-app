@@ -1,7 +1,9 @@
+import { assertSafeEventFinanceMoney } from '../utils/eventFinanceMoney';
 import { del, get, post, postForm, put } from './client';
 
 export interface SocialArtistDTO {
   artistId?: string | null;
+  artistPartyId?: string | null;
   artistName: string;
   /** Canonical relationship identifiers used by writes and filters. */
   artistGenreIds?: string[];
@@ -93,16 +95,32 @@ export interface SocialEventMomentDTO {
   emMediaHeight?: number | null;
   emMediaDurationMs?: number | null;
   emCreatedAt?: string | null;
+  emUpdatedAt?: string | null;
 }
 
 export interface SocialEventMomentCreateDTO {
   emCreateAuthorName?: string;
   emCreateCaption?: string;
   emCreateMediaUrl: string;
-  emCreateMediaType: 'image' | 'video';
+  emCreateMediaType: 'image' | 'video' | 'audio' | 'text';
   emCreateMediaWidth?: number;
   emCreateMediaHeight?: number;
   emCreateMediaDurationMs?: number;
+}
+
+// An HTTP 200/HTML fallback is not a committed publication acknowledgement.
+function confirmedMoment(value: unknown, eventId: string, momentId?: string): SocialEventMomentDTO {
+  const row = value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
+  if (!row || typeof row['emId'] !== 'string' || !row['emId'].trim()
+    || (momentId !== undefined && row['emId'] !== momentId)
+    || (row['emEventId'] != null && row['emEventId'] !== eventId)
+    || typeof row['emAuthorName'] !== 'string' || typeof row['emMediaUrl'] !== 'string'
+    || typeof row['emMediaType'] !== 'string' || !['image', 'video', 'audio', 'text'].includes(row['emMediaType'])
+    || (row['emCaption'] != null && typeof row['emCaption'] !== 'string')
+    || (row['emMediaType'] === 'text' ? !String(row['emCaption'] ?? '').trim() : !row['emMediaUrl'].trim())) {
+    throw new Error('No se pudo confirmar la publicación. Revisa el evento antes de reintentar; tu borrador se conserva.');
+  }
+  return value as SocialEventMomentDTO;
 }
 
 export interface SocialInvitationDTO {
@@ -401,6 +419,8 @@ export interface TicketPurchaseWithPromoDTO {
   ticketPurchaseBuyerEmail?: string | null;
   ticketPurchasePromoCode?: string | null;
   ticketPurchaseMobileSdkStripeVersion?: string | null;
+  /** Terms version of the event's approved ticket policy that the buyer accepted. */
+  ticketPurchaseAcceptedTermsVersion?: string | null;
 }
 
 export interface StripePaymentIntentDTO {
@@ -422,11 +442,27 @@ export interface TicketManualPaymentDTO {
   tmpCurrency: string;
   tmpEvidenceStatus: 'awaiting_evidence' | 'submitted' | 'under_review' | 'approved' | 'rejected';
   tmpCustomerReference?: string | null;
+  tmpHasReceipt?: boolean;
   tmpSubmittedAt?: string | null;
   tmpReviewedAt?: string | null;
   tmpReviewNotes?: string | null;
   tmpCheckoutStatus: string;
   tmpHoldExpiresAt: string;
+}
+
+export interface TicketTaxDocumentDTO {
+  ttdId: string;
+  ttdKind: 'invoice' | 'credit_note';
+  ttdOrderId: string;
+  ttdNumber: string;
+  ttdStatus: 'pending' | 'submitted' | 'authorized' | 'rejected' | 'uncertain' | 'failed';
+  ttdAmountMinor: number;
+  ttdAccessKey?: string | null;
+  ttdAuthorizationNumber?: string | null;
+  ttdAuthorizedAt?: string | null;
+  ttdLastError?: string | null;
+  ttdEnvironment: string;
+  ttdCreatedAt: string;
 }
 
 export interface TicketManualPaymentReviewDTO {
@@ -589,10 +625,20 @@ export const SocialEventsAPI = {
     if (trimmed) form.append('name', trimmed);
     return await postFormUnknown(`/social-events/events/${encodeURIComponent(eventId)}/image`, form) as SocialEventImageUploadDTO;
   },
+  editMoment: async (eventId: string, momentId: string, caption: string, expectedUpdatedAt: string) =>
+    confirmedMoment(await put<unknown>(`/social-events/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`, { emeCaption: caption, emeExpectedUpdatedAt: expectedUpdatedAt }), eventId, momentId),
+  deleteMoment: async (eventId: string, momentId: string) => {
+    const result = await del<unknown>(`/social-events/events/${encodeURIComponent(eventId)}/moments/${encodeURIComponent(momentId)}`);
+    if (result !== undefined) throw new Error('No se pudo confirmar la eliminación. Actualiza el evento antes de reintentar.');
+  },
   listMoments: async (eventId: string) =>
-    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`) as SocialEventMomentDTO[],
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments?extended`) as SocialEventMomentDTO[],
   createMoment: async (eventId: string, payload: SocialEventMomentCreateDTO) =>
-    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`, payload) as SocialEventMomentDTO,
+    confirmedMoment(await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/moments`, payload), eventId),
+  uploadMomentMedia: (eventId: string, file: File) => {
+    const form = new FormData(); form.append('file', file);
+    return postForm<SocialEventImageUploadDTO>(`/social-events/events/${encodeURIComponent(eventId)}/moments/media`, form);
+  },
   uploadMomentImage: async (eventId: string, file: File, name?: string) => {
     const form = new FormData();
     form.append('file', file);
@@ -673,21 +719,21 @@ export const SocialEventsAPI = {
   checkInTicket: async (eventId: string, payload: { ticketCheckInTicketId?: string | null; ticketCheckInTicketCode?: string | null }) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/check-in`, payload) as SocialTicketDTO,
   listBudgetLines: async (eventId: string) =>
-    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`) as SocialEventBudgetLineDTO[],
+    (await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`) as SocialEventBudgetLineDTO[]).map(assertSafeEventFinanceMoney),
   createBudgetLine: async (eventId: string, payload: SocialEventBudgetLineDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines`, payload) as SocialEventBudgetLineDTO,
   updateBudgetLine: async (eventId: string, lineId: string, payload: SocialEventBudgetLineDTO) =>
     await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/budget-lines/${encodeURIComponent(lineId)}`, payload) as SocialEventBudgetLineDTO,
   listFinanceEntries: async (eventId: string, opts?: { direction?: string; source?: string; status?: string }) => {
     const qs = buildQuery({ direction: opts?.direction, source: opts?.source, status: opts?.status });
-    return await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries${qs}`) as SocialEventFinanceEntryDTO[];
+    return (await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries${qs}`) as SocialEventFinanceEntryDTO[]).map(assertSafeEventFinanceMoney);
   },
   createFinanceEntry: async (eventId: string, payload: SocialEventFinanceEntryDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries`, payload) as SocialEventFinanceEntryDTO,
   updateFinanceEntry: async (eventId: string, entryId: string, payload: SocialEventFinanceEntryDTO) =>
     await putUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-entries/${encodeURIComponent(entryId)}`, payload) as SocialEventFinanceEntryDTO,
   getFinanceSummary: async (eventId: string) =>
-    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-summary`) as SocialEventFinanceSummaryDTO,
+    assertSafeEventFinanceMoney(await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/finance-summary`) as SocialEventFinanceSummaryDTO),
   getLogisticsPlan: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/logistics`) as EventLogisticsPlanDTO,
   updateLogisticsSettings: async (eventId: string, payload: EventLogisticsSettingsDTO) =>
@@ -756,8 +802,17 @@ export const SocialEventsAPI = {
   // Manual bank transfer review
   listManualPayments: async (eventId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/manual-payments`) as TicketManualPaymentDTO[],
+  getManualPaymentReceipt: async (eventId: string, orderId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/manual-payment/receipt`) as { contentType: string; base64: string },
   reviewManualPayment: async (eventId: string, orderId: string, data: TicketManualPaymentReviewDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/ticket-orders/${encodeURIComponent(orderId)}/manual-payment/review`, data) as TicketManualPaymentDTO,
+  completeBankTransferRefund: async (eventId: string, refundId: string, reference: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/refunds/${encodeURIComponent(refundId)}/bank-transfer-complete`, { brcReference: reference }) as RefundDTO,
+  // SRI electronic invoices
+  listTaxDocuments: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tax-documents`) as TicketTaxDocumentDTO[],
+  retryTaxDocument: async (eventId: string, documentId: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tax-documents/${encodeURIComponent(documentId)}/retry`, {}) as TicketTaxDocumentDTO[],
   // Transfers
   createTransfer: async (eventId: string, ticketId: string, data: TicketTransferCreateDTO) =>
     await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/transfer`, data) as TicketTransferDTO,

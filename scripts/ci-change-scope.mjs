@@ -45,6 +45,10 @@ function affectsMigrations(file) {
     || file === 'scripts/lib/production-release.mjs'
     || file.startsWith('scripts/render-production-')
     || isPathOrChild(file, 'scripts/__tests__/fixtures')
+    || /^docs\/[^/]+\/formal-model\.yaml$/.test(file)
+    || file === 'formal/system/state-machine-bindings.json'
+    || file === 'scripts/check-state-machines.py'
+    || file === 'scripts/test-state-machines.py'
     || /^tdf-hq\/src\/TDF\/(Models(?:Extra)?|Models\/[^/]+)\.hs$/.test(file);
 }
 
@@ -52,10 +56,24 @@ function isPipelineDefinition(file) {
   return file === '.github/workflows/ci.yml'
     || file === '.github/workflows/build.yml'
     || file === 'scripts/ci-change-scope.mjs'
+    || file === 'scripts/ci-job-admission.mjs'
     || file === 'scripts/quality-check.sh'
     || file.startsWith('scripts/quality-')
     || file === 'scripts/__tests__/ci-change-scope.test.mjs'
+    || file === 'scripts/__tests__/ci-job-admission.test.mjs'
     || file === 'scripts/__tests__/ci-pipeline.test.mjs';
+}
+
+function affectsLedgerRuntime(file) {
+  return file === 'scripts/lib/production-release.mjs'
+    || file === 'scripts/render-production-schema-verification.mjs'
+    || file === 'scripts/test-ledger-posting.sh'
+    || file === 'scripts/test-provider-retry-runtime.sh'
+    || file === 'scripts/verify-payment-intent-expiry.py'
+    || file === 'scripts/verify-checkout-money.py'
+    || file === 'scripts/test-checkout-money-verifier.py'
+    || file === 'scripts/verify-google-account-name.py'
+    || file.startsWith('scripts/__tests__/ledger-');
 }
 
 export function allChangeScopes() {
@@ -86,10 +104,15 @@ export function classifyChangedFiles(files, options = {}) {
         || file === 'scripts/generate-notification-navigation.mjs'),
     backend: options.forceBackend === true
       || pipelineChanged
+      || changed.some(affectsLedgerRuntime)
       || changed.some((file) => isPathOrChild(file, 'tdf-hq')
         || file === 'fly.toml'
         || file === '.dockerignore'
         || file === 'scripts/test-public-booking-http-concurrency.sh'
+        || file === 'scripts/test-music-catalog-search.mjs'
+        || file === 'scripts/test-music-purchase-asset-query.py'
+        || file === 'scripts/test-music-source-projection.mjs'
+        || file === 'scripts/test-music-track-search.mjs'
         || file === 'scripts/test-event-operations-http.sh'
         || file === 'scripts/test-event-operations-http-ci.sh'
         || file === 'scripts/run-event-operations-http-harness.sh'

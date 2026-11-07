@@ -1,0 +1,38 @@
+{
+  "observedAt": "2026-10-26T08:07:17.032279+00:00",
+  "scope": "Public read-only availability; no new feature or deployment attestation",
+  "requests": [
+    {
+      "url": "https://www.tdfrecords.net/social/eventos/141",
+      "curlExit": 0,
+      "httpStatus": 200
+    },
+    {
+      "url": "https://api.tdfrecords.net/health",
+      "curlExit": 0,
+      "httpStatus": 200,
+      "health": {
+        "db": "ok",
+        "status": "ok"
+      }
+    },
+    {
+      "url": "https://api.tdfrecords.net/version",
+      "curlExit": 0,
+      "httpStatus": 200,
+      "version": {
+        "buildTime": "2026-10-24T01:24:48Z",
+        "commit": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "name": "tdf-hq",
+        "version": "0.1.0.0"
+      }
+    }
+  ],
+  "productionWritten": false,
+  "realInvitations": {
+    "attempted": 0,
+    "sent": 0,
+    "delivered": 0,
+    "failed": 0
+  }
+}

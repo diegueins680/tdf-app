@@ -1,8 +1,8 @@
 import { mkdir } from 'node:fs/promises';
 import { chromium } from 'playwright';
 
-const URL = process.env.TDF_REVIEW_URL ?? 'https://tdf-app.pages.dev/social/instagram?review=1';
-const INBOX_URL = process.env.TDF_REVIEW_INBOX_URL ?? 'https://tdf-app.pages.dev/social/inbox?review=1';
+const URL = process.env.TDF_REVIEW_URL ?? 'https://www.tdfrecords.net/social/instagram?review=1';
+const INBOX_URL = process.env.TDF_REVIEW_INBOX_URL ?? 'https://www.tdfrecords.net/social/inbox?review=1';
 const OUT_DIR = process.env.TDF_SCREENCAST_OUT_DIR ?? 'screencast/meta-app-review/output';
 const REVIEW_USER = process.env.TDF_REVIEW_USERNAME ?? 'admin';
 const REVIEW_PASS = process.env.TDF_REVIEW_PASSWORD ?? 'password123';

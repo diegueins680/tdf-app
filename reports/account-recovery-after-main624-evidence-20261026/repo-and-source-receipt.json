@@ -1,0 +1,37 @@
+{
+  "source": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+  "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "observedAt": "2026-10-26T21:58:23.897082+00:00",
+  "repoQuality": {
+    "command": "bash scripts/quality-repo.sh",
+    "exitCode": 0,
+    "completeInvocation": true,
+    "logSha256": "d1d389224c7455323ed947ebaa91c6c95ebd73273e1a5b8b99d4b0ebdbee0eb5"
+  },
+  "catalog": {
+    "reportSha256": "1d7bfe7002c79c16509018963f14ade28771b1193d2af7a0546e12f0292f7f01",
+    "candidates": 1341,
+    "filesScanned": 2400,
+    "unreviewed": 0,
+    "stale": 0,
+    "jsonExitCode": 0,
+    "csvExitCode": 0
+  },
+  "newSourceAdmission": {
+    "base": "2e01bbe1263e8761fa2692bd951f828c01142449",
+    "head": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+    "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "mappedChangedSurfaces": [
+      "tdf-hq-ui/src/api/auth.test.ts",
+      "tdf-hq-ui/src/api/auth.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+      "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+      "tdf-hq-ui/src/utils/authErrorMessage.ts"
+    ],
+    "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+  },
+  "backendWholeTreeExactMain": "31c739558ac9a830403f27b122838fe725343324"
+}

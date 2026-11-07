@@ -1,3 +1,4 @@
+import MarkdownText from '../components/MarkdownText';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import {
   Alert,
@@ -18,6 +19,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import LoginIcon from '@mui/icons-material/Login';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import ShareIcon from '@mui/icons-material/Share';
@@ -27,17 +29,21 @@ import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
-import { API_BASE_URL } from '../api/client';
+import { EventTickets } from '../api/eventTickets';
+import { findExternalTicketLink, localizeTicketUnavailableReason } from '../utils/externalTicketing';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
-import { buildLoginRedirectPath } from '../utils/loginRouting';
+import { ApiError } from '../api/client';
+import { buildEventSignupPath, buildLoginRedirectPath } from '../utils/loginRouting';
 import {
   buildDirectoryContactLoginPath,
   shouldResumeDirectoryContact,
 } from '../utils/directoryContactRouting';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
-import { canonicalEventUrl, safePublicImageUrl } from '../utils/eventSharing';
+import { canonicalEventUrl } from '../utils/eventSharing';
+import { resolveDirectoryPreviewImage } from '../utils/directoryPreviewImage';
+import DirectoryPreviewImage from '../components/directory/DirectoryPreviewImage';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
@@ -61,7 +67,8 @@ const formatEventDate = (value: unknown, locale: string, timezone?: string): str
     return parsed.toLocaleString(locale, { dateStyle: 'full', timeStyle: 'short' });
   }
 };
-export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }) {
+const PUBLIC_EVENT_ID = /^[1-9]\d{0,17}$/;
+export default function DirectoryPublicDetailPage({ kind, authenticationFallback }: { kind: DetailKind; authenticationFallback?: string }) {
   const params = useParams();
   const location = useLocation();
   const { session } = useSession();
@@ -78,23 +85,30 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
       return await Directory.venue(identifier) as unknown as Record<string, unknown>;
     },
     enabled: Boolean(identifier),
+    ...(authenticationFallback ? { retry: false } : {}),
+  });
+  // Whether the TDF checkout actually sells this event. Imported events
+  // (Eventbrite and similar) have no storefront, so the ticket card must
+  // point at the external vendor instead of an empty order form.
+  const storefront = useQuery({
+    queryKey: ['public-event-ticket-storefront', Number(identifier)],
+    queryFn: () => EventTickets.getStorefront(Number(identifier)),
+    enabled: kind === 'event' && PUBLIC_EVENT_ID.test(identifier),
+    retry: false,
+    staleTime: 60_000,
   });
   const value = detail.data ?? {};
   const displayLocale = navigator.language || 'es';
   const english = displayLocale.toLowerCase().startsWith('en');
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
-  const absoluteProfileImage = kind === 'profile'
-    ? rows(value['portfolio'])
-        .filter((item) => text(item['itemType']) === 'image')
-        .flatMap((item) => [text(item['thumbnailUrl']), text(item['url'])])
-        .map((url) => safePublicImageUrl(url, API_BASE_URL || window.location.origin))
-        .find((url): url is string => Boolean(url))
-    : undefined;
-  const absoluteEventImage = kind === 'event'
-    ? safePublicImageUrl(text(value['imageUrl']), API_BASE_URL || window.location.origin)
-    : undefined;
-  const absolutePreviewImage = absoluteProfileImage ?? absoluteEventImage;
+  const externalTickets = kind === 'event' ? findExternalTicketLink(text(value['description'])) : null;
+  const checkoutOpen = storefront.data?.checkoutAvailable === true;
+  // The backend resolves the canonical preview image for every entity kind.
+  const absolutePreviewImage = resolveDirectoryPreviewImage(
+    kind === 'profile' ? value['previewImageUrl'] : value['imageUrl'],
+  );
+  const sourceProfile = kind === 'classified' ? record(value['sourceProfile']) : undefined;
   const eventDate = kind === 'event' ? formatEventDate(value['startTime'], displayLocale, text(value['timezone'])) : undefined;
   const eventCancelled = kind === 'event' && text(value['workflowStateCode']) === 'cancelled';
   const canonicalPath = text(value['canonicalUrl']) ?? location.pathname;
@@ -158,7 +172,19 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   const whatsapp = `https://wa.me/?text=${encodeURIComponent(`${title} · ${canonical}`)}`;
 
   if (detail.isLoading) return <Stack minHeight="55vh" alignItems="center" justifyContent="center"><CircularProgress aria-label="Cargando perfil del directorio" /></Stack>;
-  if (detail.isError) return <Container maxWidth="md" sx={{ py: 8 }}><Alert severity="error">Este contenido no está publicado, vigente o disponible.</Alert></Container>;
+  if (detail.isError) {
+    const status = detail.error instanceof ApiError ? detail.error.status : undefined;
+    if (authenticationFallback && (status === 401 || status === 403 || status === 404)) {
+      return <Navigate to={authenticationFallback} replace />;
+    }
+    return <Container maxWidth="md" sx={{ py: 8 }}>
+      <Alert severity="error">Este contenido no está publicado, vigente o disponible.</Alert>
+      {authenticationFallback && <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+        <Button onClick={() => { void detail.refetch(); }} disabled={detail.isFetching}>Reintentar</Button>
+        <Button component={RouterLink} to={authenticationFallback}>Iniciar sesión</Button>
+      </Stack>}
+    </Container>;
+  }
 
   // Moment media uses the existing authenticated event endpoint. Preserve old
   // public discussion URLs while sending them through the normal login route.
@@ -166,6 +192,17 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
   if (kind === 'event' && requestedMoment && /^[1-9][0-9]{0,17}$/.test(requestedMoment)) {
     return <Navigate replace to={`/social/eventos/${encodeURIComponent(identifier)}?moment=${requestedMoment}`} />;
   }
+
+  // A shareable invitation link (`/eventos/:id?signup=1`) sends a visitor
+  // without a session straight to account creation and back to this event.
+  // Signed-in visitors just see the event.
+  if (kind === 'event' && !session && new URLSearchParams(location.search).get('signup') === '1') {
+    return <Navigate replace to={buildEventSignupPath(identifier)} />;
+  }
+
+  const composeSearch = new URLSearchParams(location.search);
+  composeSearch.set('compose', '1');
+  const composePath = `/social/eventos/${encodeURIComponent(identifier)}?${composeSearch.toString()}#momentos`;
 
   const locationValue = record(value['location']) ?? rows(value['locations'])[0];
   const professions = rows(value['professions']);
@@ -195,21 +232,23 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
-                  {absolutePreviewImage && (
-                    <Box
-                      component="img"
-                      src={absolutePreviewImage}
-                      alt={kind === 'event' ? `Afiche de ${title}` : `Foto de ${title}`}
-                      sx={{
-                        width: { xs: '100%', sm: 220 },
-                        height: { xs: 300, sm: 220 },
-                        borderRadius: 3,
-                        objectFit: 'cover',
-                        objectPosition: 'center',
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
+                  {/* Always mounted: without media it shows the kind's placeholder. */}
+                  <DirectoryPreviewImage
+                    kind={kind === 'profile' || kind === 'classified' || kind === 'event' ? kind : 'venue'}
+                    imageUrl={absolutePreviewImage}
+                    alt={kind === 'event' ? `Afiche de ${title}` : `Foto de ${title}`}
+                    fallbackAlt={`Imagen de referencia de ${title}`}
+                    width={440}
+                    height={440}
+                    sizes="(min-width: 600px) 220px, 100vw"
+                    eager
+                    sx={{
+                      width: { xs: '100%', sm: 220 },
+                      height: { xs: 300, sm: 220 },
+                      aspectRatio: 'auto',
+                      borderRadius: 3,
+                    }}
+                  />
                   <Box>
                     <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
                       <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />
@@ -219,6 +258,16 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                     <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
                     {eventDate && <Typography variant="h6" color="text.secondary" mt={1}>{eventDate}</Typography>}
                     {author && <Typography variant="h6" color="text.secondary" mt={1}>Publicado por {text(author['name'])}</Typography>}
+                    {sourceProfile && text(sourceProfile['canonicalUrl']) && (
+                      <Button
+                        component={RouterLink}
+                        to={text(sourceProfile['canonicalUrl']) ?? '/buscar'}
+                        variant="contained"
+                        sx={{ mt: 2 }}
+                      >
+                        Ver perfil
+                      </Button>
+                    )}
                     {venue && <Typography variant="h6" color="text.secondary" mt={1}>{text(venue['name'])}</Typography>}
                   </Box>
                 </Stack>
@@ -234,7 +283,7 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                 </Alert>
               )}
               <Divider />
-              <Typography sx={{ whiteSpace: 'pre-wrap', fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</Typography>
+              <MarkdownText sx={{ fontSize: '1.08rem', lineHeight: 1.75 }}>{description}</MarkdownText>
 
               {kind === 'event' && (
                 <Stack spacing={2}>
@@ -256,18 +305,47 @@ export default function DirectoryPublicDetailPage({ kind }: { kind: DetailKind }
                       origin="public_event_detail"
                     />
                   </Paper>
-                  <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
-                    <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
-                    <Typography color="text.secondary" mt={1}>Consulta disponibilidad y paga como invitado con un checkout verificado por el servidor.</Typography>
-                    <Button
-                      component={RouterLink}
-                      to={`/eventos/${encodeURIComponent(identifier)}/entradas`}
-                      variant="contained"
-                      sx={{ mt: 2 }}
-                    >
-                      Ver entradas
-                    </Button>
+                  <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+                    <Typography variant="h5" fontWeight={800}>Recuerdos y comunidad</Typography>
+                    <Typography color="text.secondary" mt={1}>Encuentra los momentos del evento y comparte tu experiencia. Inicia sesión o crea una cuenta para participar.</Typography>
+                    <Button component={RouterLink} to={composePath} variant="contained" sx={{ mt: 2 }}>Compartir mis momentos</Button>
                   </Paper>
+                  {checkoutOpen ? (
+                    <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
+                      <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
+                      <Typography color="text.secondary" mt={1}>Consulta disponibilidad y paga como invitado con un checkout verificado por el servidor.</Typography>
+                      <Button
+                        component={RouterLink}
+                        to={`/eventos/${encodeURIComponent(identifier)}/entradas`}
+                        variant="contained"
+                        sx={{ mt: 2 }}
+                      >
+                        Ver entradas
+                      </Button>
+                    </Paper>
+                  ) : externalTickets ? (
+                    <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
+                      <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
+                      <Typography color="text.secondary" mt={1}>
+                        {`Las entradas de este evento se venden en ${externalTickets.vendor ?? 'la página del organizador'}.`}
+                      </Typography>
+                      <Button
+                        href={externalTickets.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        variant="contained"
+                        endIcon={<OpenInNewIcon />}
+                        sx={{ mt: 2 }}
+                      >
+                        {`Comprar entradas en ${externalTickets.vendor ?? 'la venta oficial'}`}
+                      </Button>
+                    </Paper>
+                  ) : storefront.data ? (
+                    <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
+                      <Typography variant="h5" fontWeight={800}>Entradas del evento</Typography>
+                      <Typography color="text.secondary" mt={1}>{localizeTicketUnavailableReason(storefront.data.unavailableReason, english)}</Typography>
+                    </Paper>
+                  ) : null}
                 </Stack>
               )}
 
@@ -435,7 +513,7 @@ function ReviewCard({ review, authenticated }: { review: DirectoryReviewPage['it
         <Box><Typography component={RouterLink} to={`/directorio/${review.authorProfile.slug}`} color="text.primary" fontWeight={800} sx={{ textDecoration: 'none' }}>{review.authorProfile.name}</Typography><Typography variant="body2" color="text.secondary">Interacción completada verificada</Typography></Box>
         <Rating value={review.rating} readOnly size="small" aria-label={`${review.rating} de 5 estrellas`} />
       </Stack>
-      {review.body && <Typography sx={{ whiteSpace: 'pre-wrap' }}>{review.body}</Typography>}
+      {review.body && <MarkdownText>{review.body}</MarkdownText>}
       <Typography variant="caption" color="text.secondary">{new Date(review.createdAt).toLocaleDateString()}</Typography>
       {authenticated && <Button size="small" color="inherit" sx={{ alignSelf: 'flex-start' }} disabled={report.isPending || report.isSuccess} onClick={() => report.mutate()}>{report.isSuccess ? 'Reportada' : 'Reportar reseña'}</Button>}
     </Stack>

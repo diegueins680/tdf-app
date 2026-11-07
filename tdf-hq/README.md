@@ -62,7 +62,16 @@ SESSION_COOKIE_PATH=/
 SESSION_COOKIE_SECURE=true
 SESSION_COOKIE_SAMESITE=None
 SESSION_COOKIE_MAX_AGE=2592000
+SESSION_TOKEN_TTL_SECONDS=2592000
 ```
+
+`SESSION_TOKEN_TTL_SECONDS` is the lifetime the API itself enforces on
+password/Google login sessions, measured on the database clock from issuance.
+It defaults to `SESSION_COOKIE_MAX_AGE` and may be shorter but never longer:
+the cookie only tells the browser when to forget the token, the TTL is what
+rejects it. Interactive sessions issued before this enforcement carry no
+validity window and are rejected fail-closed, so the first deploy signs
+everyone in again once. Service tokens (any other label) keep no expiry.
 
 ### Drive upload proxy
 
@@ -108,7 +117,7 @@ Override `APP_BASE_URL` when using the `version` Make target, or export environm
 ## Feature overview
 
 - **CRM & parties**: Manage parties, roles, and tokens with module-based access control.
-- **Scheduling**: Bookings, sessions, trial lesson flows, and PDF input lists (`/input-list/sessions` + PDF rendering).
+- **Scheduling**: Bookings, sessions, trial lesson flows, and PDF input lists (authenticated `/sessions/{id}/input-list` and its PDF, scheduling module).
 - **Packages & invoicing**: Package catalog, purchases, invoices, and receipts tied to payments (see `docs/openapi/lessons-and-receipts.yaml`).
 - **Inventory & rooms**: Track assets, room setups, and inventory seeding utilities.
 - **Pipelines & bands**: Sales/production pipelines and performance band management.

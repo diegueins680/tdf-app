@@ -33,6 +33,7 @@ module TDF.DTO.SocialEventsDTO (
     InvitationUpdateDTO (..),
     EventMomentDTO (..),
     EventMomentCreateDTO (..),
+    EventMomentEditDTO (..),
     EventMomentReactionDTO (..),
     EventMomentReactionRequestDTO (..),
     EventMomentCommentDTO (..),
@@ -55,6 +56,8 @@ module TDF.DTO.SocialEventsDTO (
     RejectionReasonDTO (..),
     TicketManualPaymentDTO (..),
     TicketManualPaymentReviewDTO (..),
+    TicketTaxDocumentDTO (..),
+    BankRefundCompletionDTO (..),
     TicketTransferCreateDTO (..),
     TicketTransferDTO (..),
     WaitlistJoinDTO (..),
@@ -792,12 +795,14 @@ instance FromJSON EventMomentCreateDTO where
             , "emCreateMediaDurationMs"
             ]
             o
-        mediaUrl <-
-            o .: "emCreateMediaUrl"
-                >>= normalizeRequiredText "emCreateMediaUrl"
         mediaType <-
             o .: "emCreateMediaType"
                 >>= normalizeMomentCreateMediaType
+        mediaUrl <- if mediaType == "text"
+            then do
+                url <- o .:? "emCreateMediaUrl" .!= ""
+                if T.null (T.strip url) then pure "" else fail "Text memories cannot contain a media URL"
+            else o .: "emCreateMediaUrl" >>= normalizeRequiredText "emCreateMediaUrl"
         mediaWidth <-
             o .:? "emCreateMediaWidth"
                 >>= validateOptionalPositiveInt "emCreateMediaWidth"
@@ -837,7 +842,9 @@ normalizeMomentCreateMediaType rawValue =
         "picture" -> pure "image"
         "video" -> pure "video"
         "clip" -> pure "video"
-        _ -> fail "emCreateMediaType must be one of: image, video"
+        "audio" -> pure "audio"
+        "text" -> pure "text"
+        _ -> fail "emCreateMediaType must be one of: image, video, audio, text"
 
 validateOptionalPositiveInt :: String -> Maybe Int -> Parser (Maybe Int)
 validateOptionalPositiveInt _ Nothing = pure Nothing
@@ -850,6 +857,16 @@ validateOptionalNonNegativeInt _ Nothing = pure Nothing
 validateOptionalNonNegativeInt fieldName (Just value)
     | value >= 0 = pure (Just value)
     | otherwise = fail (fieldName <> " must be greater than or equal to 0")
+
+data EventMomentEditDTO = EventMomentEditDTO
+    { emeCaption :: Text
+    , emeExpectedUpdatedAt :: UTCTime
+    } deriving (Show, Eq, Generic)
+instance ToJSON EventMomentEditDTO
+instance FromJSON EventMomentEditDTO where
+    parseJSON = withObject "EventMomentEditDTO" $ \o -> do
+        rejectUnknownObjectFields "EventMomentEditDTO" ["emeCaption", "emeExpectedUpdatedAt"] o
+        EventMomentEditDTO <$> o .: "emeCaption" <*> o .: "emeExpectedUpdatedAt"
 
 data EventMomentReactionRequestDTO = EventMomentReactionRequestDTO
     { emrrReactionTypeId :: Text
@@ -1299,6 +1316,8 @@ data TicketPurchaseWithPromoDTO = TicketPurchaseWithPromoDTO
     -- ^ When present, signals the request originates from a mobile PaymentSheet
     -- and carries the Stripe-Version the mobile SDK was built against. The server
     -- creates an attached Customer + ephemeral key and returns 'spiPaymentSheet'.
+    , tpwpAcceptedTermsVersion :: Maybe Text
+    -- ^ Terms version of the event's approved ticket policy that the buyer accepted.
     }
     deriving (Show, Eq, Generic)
 
@@ -1313,6 +1332,7 @@ instance ToJSON TicketPurchaseWithPromoDTO where
             , "ticketPurchasePromoCode" .= tpwpPromoCode
             , "ticketPurchaseMobileSdkStripeVersion" .= tpwpMobileSdkStripeVersion
             , "ticketPurchaseIdempotencyKey" .= tpwpIdempotencyKey
+            , "ticketPurchaseAcceptedTermsVersion" .= tpwpAcceptedTermsVersion
             ]
 
 instance FromJSON TicketPurchaseWithPromoDTO where
@@ -1326,7 +1346,10 @@ instance FromJSON TicketPurchaseWithPromoDTO where
         idempotencyKey <-
             o .:? "ticketPurchaseIdempotencyKey"
                 >>= traverse validateTicketPurchaseIdempotencyKey
-        pure $ TicketPurchaseWithPromoDTO purchase promoCode mobileSdkVer idempotencyKey
+        acceptedTermsVersion <-
+            o .:? "ticketPurchaseAcceptedTermsVersion"
+                >>= traverse validateTicketPurchaseAcceptedTermsVersion
+        pure $ TicketPurchaseWithPromoDTO purchase promoCode mobileSdkVer idempotencyKey acceptedTermsVersion
     parseJSON _ = fail "TicketPurchaseWithPromoDTO must be an object"
 
 ticketPurchaseWithPromoKeys :: [Text]
@@ -1339,7 +1362,15 @@ ticketPurchaseWithPromoKeys =
     , "ticketPurchasePromoCode"
     , "ticketPurchaseMobileSdkStripeVersion"
     , "ticketPurchaseIdempotencyKey"
+    , "ticketPurchaseAcceptedTermsVersion"
     ]
+
+validateTicketPurchaseAcceptedTermsVersion :: Text -> Parser Text
+validateTicketPurchaseAcceptedTermsVersion rawVersion =
+    let version = T.strip rawVersion
+     in if T.null version || T.length version > 80
+            then fail "ticketPurchaseAcceptedTermsVersion must be between 1 and 80 characters"
+            else pure version
 
 validateTicketPurchaseIdempotencyKey :: Text -> Parser Text
 validateTicketPurchaseIdempotencyKey rawKey =
@@ -1434,6 +1465,7 @@ data TicketManualPaymentDTO = TicketManualPaymentDTO
     , tmpCurrency :: Text
     , tmpEvidenceStatus :: Text
     , tmpCustomerReference :: Maybe Text
+    , tmpHasReceipt :: Bool
     , tmpSubmittedAt :: Maybe UTCTime
     , tmpReviewedAt :: Maybe UTCTime
     , tmpReviewNotes :: Maybe Text
@@ -1444,6 +1476,38 @@ data TicketManualPaymentDTO = TicketManualPaymentDTO
 
 instance ToJSON TicketManualPaymentDTO
 instance FromJSON TicketManualPaymentDTO
+
+-- | Bank reference of the money staff returned for a bank-transfer ticket order.
+data BankRefundCompletionDTO = BankRefundCompletionDTO
+    { brcReference :: Text
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON BankRefundCompletionDTO
+instance FromJSON BankRefundCompletionDTO where
+    parseJSON = withObject "BankRefundCompletionDTO" $ \o -> do
+        rejectUnknownObjectFields "BankRefundCompletionDTO" ["brcReference"] o
+        BankRefundCompletionDTO <$> o .: "brcReference"
+
+-- | Staff view of the SRI electronic invoice for a paid ticket order.
+data TicketTaxDocumentDTO = TicketTaxDocumentDTO
+    { ttdId :: Text
+    , ttdKind :: Text
+    , ttdOrderId :: Text
+    , ttdNumber :: Text
+    , ttdStatus :: Text
+    , ttdAmountMinor :: Int
+    , ttdAccessKey :: Maybe Text
+    , ttdAuthorizationNumber :: Maybe Text
+    , ttdAuthorizedAt :: Maybe UTCTime
+    , ttdLastError :: Maybe Text
+    , ttdEnvironment :: Text
+    , ttdCreatedAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+
+instance ToJSON TicketTaxDocumentDTO
+instance FromJSON TicketTaxDocumentDTO
 
 data TicketManualPaymentReviewDTO = TicketManualPaymentReviewDTO
     { tmprAction :: Text

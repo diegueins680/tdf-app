@@ -468,6 +468,11 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     };
   });
 
+  // AUTHORITY-094 (2026-11-01) adds four ownership columns and two Party
+  // foreign keys to social_sync_account. Production batches and synthetic
+  // batches over the current schema verify that shape; only a caller that
+  // renders a manifest prefix ending before that migration opts out.
+  const socialDesignationIncluded = options.socialDesignationIncluded !== false;
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [
@@ -491,9 +496,17 @@ export function buildMigrationBatchSql(migrations, options = {}) {
       `SELECT NOT EXISTS (SELECT 1 FROM public.tdf_schema_migration WHERE migration_id = ${sqlLiteral(entry.id)}) AS ${applyVariable} \\gset`,
       `\\if :${applyVariable}`,
       `\\echo Applying migration ${entry.id}`,
-      entry.source,
+      // The ledger row and the migration's effects commit together: the row is
+      // inserted inside a transaction opened here, a migration's own BEGIN only
+      // warns, and its COMMIT (or the trailing one, for files without their own
+      // transaction) commits both. A failure anywhere leaves neither. Every
+      // manifest file ends with its COMMIT and uses no statement that refuses a
+      // transaction block (checked by production-release.test.mjs).
+      'BEGIN;',
       'INSERT INTO public.tdf_schema_migration (migration_id, checksum, source_commit)',
       `VALUES (${sqlLiteral(entry.id)}, ${sqlLiteral(entry.checksum)}, ${sqlLiteral(sourceCommit)});`,
+      entry.source,
+      'COMMIT;',
       '\\else',
       `\\echo Already applied ${entry.id}`,
       '\\endif',
@@ -512,11 +525,13 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     '  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
     ');',
     body,
-    buildSchemaVerificationSql({ includePsqlHeader: false }),
+    buildSchemaVerificationSql({ includePsqlHeader: false, socialDesignationIncluded }),
     "SELECT pg_advisory_unlock(hashtextextended('tdf-production-schema-migrations', 0));",
     '\\else',
     '\\echo Another production schema migration is active; refusing to wait',
-    '\\quit 3',
+    // psql's \quit takes no exit status (a numeric argument is ignored with a
+    // warning and the batch exited 0); an SQL error under ON_ERROR_STOP exits 3.
+    'DO $lock$ BEGIN RAISE EXCEPTION \'Another production schema migration is active; refusing to wait\'; END $lock$;',
     '\\endif',
     '',
   ].join('\n\n');
@@ -683,8 +698,38 @@ ROLLBACK;
 `.trim();
 }
 
+// Every music SQL function the backend or a release worker calls directly, by exact
+// argument signature. A dropped or mis-signed function would otherwise surface only
+// as undefined_function at request time. The release test derives the called set
+// from source and fails if a newly called function is missing here.
+export const MUSIC_RUNTIME_FUNCTION_SIGNATURES = Object.freeze([
+  'music_can(bigint,bigint,text)',
+  'music_checkout_payment_attempt_allowed(uuid)',
+  'music_check_ddex_export(uuid)',
+  'music_check_ddex_operation(uuid,uuid,uuid,text)',
+  'music_check_submission(uuid)',
+  'music_create_release_correction(uuid,uuid,bigint)',
+  'music_merge_party_identifiers(jsonb,jsonb)',
+  'music_minor_units_json(bigint)',
+  'music_preview_matches(uuid)',
+  'music_preview_spec(bigint,bigint,bigint)',
+  'music_public_asset_accessible(uuid,text)',
+  'music_publish_due(integer)',
+  'music_queue_preview_jobs(integer)',
+  'music_rebuild_daily_metrics(date)',
+  'music_record_playback_event(uuid,uuid,integer,bigint,text,uuid,uuid,text,bigint,bigint,text,text,timestamp with time zone,jsonb)',
+  'music_refresh_validation_flags(uuid)',
+  'music_scan_legacy_release_sanitation(bigint,integer)',
+  'music_version_parties(uuid)',
+  'music_withdraw_due(integer)',
+]);
+
 export function buildSchemaVerificationSql(options = {}) {
   const header = options.includePsqlHeader === false ? '' : '\\set ON_ERROR_STOP on\n';
+  // Production verification expects the full AUTHORITY-094 social shape; only a
+  // batch rendered from a manifest prefix that stops before that migration
+  // passes false (see buildMigrationBatchSql).
+  const socialDesignationIncluded = options.socialDesignationIncluded !== false;
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
@@ -697,6 +742,7 @@ DECLARE
   social_table TEXT;
   ticketing_table TEXT;
   enrichment_table TEXT;
+  music_table TEXT;
 BEGIN
   IF to_regclass('public.receipt_number_counter') IS NULL THEN
     RAISE EXCEPTION 'Receipt number allocation counter is missing';
@@ -727,7 +773,9 @@ BEGIN
     SELECT 1 FROM (VALUES
       ('commerce_checkout_session', 'trg_commerce_checkout_total', 'commerce_check_checkout_line_total', true, 5),
       ('commerce_checkout_line_item', 'trg_commerce_checkout_line_total', 'commerce_check_checkout_line_total', true, 5),
-      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19)
+      ('commerce_checkout_session', 'trg_commerce_checkout_money_immutable', 'commerce_protect_checkout_money', false, 19),
+      ('commerce_checkout_line_item', 'trg_commerce_checkout_line_fixed', 'commerce_reject_late_checkout_line', false, 7),
+      ('commerce_checkout_session', 'trg_commerce_checkout_created', 'commerce_register_checkout_creation', false, 5)
     ) expected(table_name, trigger_name, function_name, deferred, trigger_type)
     WHERE NOT EXISTS (
       SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
@@ -1000,6 +1048,46 @@ BEGIN
        NOT ILIKE '%directory_public_venue%' THEN
     RAISE EXCEPTION 'directory_public_search_document does not recheck live event and venue eligibility';
   END IF;
+  IF to_regprocedure('public.directory_profile_preview_image_url(uuid)') IS NULL
+     OR to_regprocedure('public.directory_sync_profile_listing(uuid)') IS NULL
+     OR to_regprocedure('public.directory_reconcile_artist_listings()') IS NULL
+     OR to_regprocedure('public.directory_artist_listing_audit()') IS NULL
+     OR directory_safe_image_url('javascript:alert(1)') IS NOT NULL
+     OR directory_safe_image_url('https://drive.google.com/file/d/abc_123/view')
+        IS DISTINCT FROM 'https://drive.google.com/uc?export=view&id=abc_123' THEN
+    RAISE EXCEPTION 'Canonical directory preview image resolution is missing or invalid';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public' AND tablename = 'classified'
+      AND indexname = 'classified_source_profile_uidx'
+      AND indexdef ILIKE '%UNIQUE%(source_profile_id)%WHERE (source_profile_id IS NOT NULL)%'
+  ) THEN
+    RAISE EXCEPTION 'classified_source_profile_uidx must keep one derived listing per profile';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.directory_profile'::regclass
+      AND tgname = 'directory_profile_artist_listing_sync_trigger' AND tgenabled <> 'D'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgrelid = 'public.classified'::regclass
+      AND tgname = 'directory_classified_derivation_guard_trigger' AND tgenabled <> 'D'
+  ) THEN
+    RAISE EXCEPTION 'Artist-profile listing synchronization triggers are missing or disabled';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM classified_category
+    WHERE code = 'artist-profile' AND active AND requirements->>'derivation' = 'artist-profile'
+  ) THEN
+    RAISE EXCEPTION 'The artist-profile derived classified category is missing';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM directory_artist_listing_audit()
+    WHERE finding_kind IN ('missing_listing','duplicate_derived_listing','public_listing_non_public_profile','stale_listing_search_document')
+  ) THEN
+    RAISE EXCEPTION 'Artist-profile derived listings are inconsistent with their profiles';
+  END IF;
   IF EXISTS (
     SELECT 1
     FROM directory_public_event event
@@ -1228,6 +1316,42 @@ BEGIN
        OR position(lower(expected.definition_fragment) IN lower(pg_get_indexdef(actual.indexrelid))) = 0
   ) THEN
     RAISE EXCEPTION 'A ticketing index definition is missing or invalid';
+  END IF;
+
+  -- Persistent reads a capitalised "Index..." model line as UNIQUE; the
+  -- 2026-10-11 migration replaced nine such constraints with plain indexes.
+  -- Its rollback restores the constraints while the ledger keeps the entry,
+  -- so a release must see the plain indexes themselves.
+  IF EXISTS (
+    SELECT 1
+    FROM (
+      VALUES
+        ('chat_message', 'index_chat_message_thread', '(thread_id)'),
+        ('course_registration', 'index_course_registration_party', '(party_id, created_at)'),
+        ('course_registration_follow_up', 'index_course_registration_follow_up_next', '(next_follow_up_at)'),
+        ('course_registration_follow_up', 'index_course_registration_follow_up_party', '(party_id, created_at)'),
+        ('course_registration_follow_up', 'index_course_registration_follow_up_registration', '(registration_id, created_at)'),
+        ('course_registration_receipt', 'index_course_registration_receipt_party', '(party_id, created_at)'),
+        ('course_registration_receipt', 'index_course_registration_receipt_registration', '(registration_id, created_at)'),
+        ('whats_app_message', 'index_whats_app_message_party', '(party_id, created_at)'),
+        ('whats_app_message', 'index_whats_app_message_phone', '(phone_e164, created_at)')
+    ) AS expected(table_name, index_name, definition_fragment)
+    LEFT JOIN pg_class AS relation
+      ON relation.oid = ('public.' || expected.table_name)::regclass
+    LEFT JOIN pg_class AS index_relation
+      ON index_relation.relnamespace = 'public'::regnamespace
+     AND index_relation.relname = expected.index_name
+     AND index_relation.relkind = 'i'
+    LEFT JOIN pg_index AS actual
+      ON actual.indrelid = relation.oid
+     AND actual.indexrelid = index_relation.oid
+    WHERE actual.indexrelid IS NULL
+       OR actual.indisunique
+       OR NOT actual.indisvalid
+       OR NOT actual.indisready
+       OR position(lower(expected.definition_fragment) IN lower(pg_get_indexdef(actual.indexrelid))) = 0
+  ) THEN
+    RAISE EXCEPTION 'A declared index is unique, missing or invalid';
   END IF;
 
   FOREACH discovery_table IN ARRAY ARRAY[
@@ -1524,7 +1648,7 @@ BEGIN
   IF (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_account'
-  ) <> 13 OR (
+  ) <> ${socialDesignationIncluded ? 17 : 13} OR (
     SELECT COUNT(*) FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'social_sync_post'
   ) <> 20 OR (
@@ -1546,7 +1670,11 @@ BEGIN
         ('social_sync_account', 'artist_profile_id', 'bigint', 'YES'),
         ('social_sync_account', 'platform', 'character varying', 'NO'),
         ('social_sync_account', 'external_user_id', 'character varying', 'NO'),
-        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),
+        ('social_sync_account', 'created_at', 'timestamp with time zone', 'NO'),${socialDesignationIncluded ? `
+        ('social_sync_account', 'delivery_designated', 'boolean', 'NO'),
+        ('social_sync_account', 'connected_by_party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'designated_by_party_id', 'bigint', 'YES'),
+        ('social_sync_account', 'designated_at', 'timestamp with time zone', 'YES'),` : ''}
         ('social_sync_post', 'account_id', 'bigint', 'YES'),
         ('social_sync_post', 'platform', 'character varying', 'NO'),
         ('social_sync_post', 'external_post_id', 'character varying', 'NO'),
@@ -1604,7 +1732,7 @@ BEGIN
       'public.social_sync_post'::regclass,
       'public.social_discovery_review'::regclass
     ) AND contype = 'f' AND convalidated
-  ) <> 7 THEN
+  ) <> ${socialDesignationIncluded ? 9 : 7} THEN
     RAISE EXCEPTION 'A social-sync foreign key is missing or invalid';
   END IF;
 
@@ -1818,6 +1946,35 @@ BEGIN
        OR actual.is_nullable <> expected.is_nullable
   ) THEN
     RAISE EXCEPTION 'ddex_document does not match the inbox runtime schema';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid
+    WHERE t.tgrelid=to_regclass('public.commerce_ledger_transaction')
+      AND t.tgname='trg_commerce_ledger_header_immutable'
+      AND p.oid=to_regprocedure('public.commerce_protect_posted_ledger_header()')
+      AND t.tgenabled IN ('O','A') AND NOT t.tgisinternal
+      AND t.tgtype=19 AND t.tgqual IS NULL AND t.tgattr=''::int2vector
+      AND NOT t.tgdeferrable AND NOT t.tginitdeferred
+      AND p.proconfig @> ARRAY['search_path=pg_catalog']::text[]
+      AND NOT p.prosecdef AND p.prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Posted ledger header immutability guard is missing or changed';
+  END IF;
+  -- Replaying an older CREATE OR REPLACE FUNCTION can discard proconfig while
+  -- leaving its migration receipt and trigger binding intact. Inspect both
+  -- installed lookup boundaries instead of trusting those receipts.
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_validate_ledger_posting()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_proc
+    WHERE oid=to_regprocedure('public.commerce_protect_posted_ledger()')
+      AND proconfig @> ARRAY['search_path=pg_catalog, public, pg_temp']::text[]
+      AND NOT prosecdef AND prorettype='trigger'::regtype
+  ) THEN
+    RAISE EXCEPTION 'Ledger trigger trusted lookup settings are missing or changed';
   END IF;
   FOREACH commerce_table IN ARRAY ARRAY[
     'commerce_checkout_session',
@@ -2456,12 +2613,14 @@ BEGIN
     ) AS expected(flag_key)
     LEFT JOIN revenue_feature_flag AS flag
       ON flag.flag_key = expected.flag_key AND flag.environment = 'production'
-    -- PayPal webhook intake is an approved production capability. Restarts
-    -- must preserve its configured state; refunds and Datafast stay staged.
+    -- PayPal webhooks/refunds and Datafast webhooks/refunds are approved
+    -- production capabilities (AUTHORITY-050). Restarts must preserve their
+    -- configured state; only PlaceToPay and Payphone remain staged.
     WHERE flag.flag_key IS NULL
-       OR (flag.enabled AND expected.flag_key <> 'checkout.paypal.webhooks')
+       OR (flag.enabled AND expected.flag_key IN
+             ('checkout.placetopay.webhooks', 'checkout.payphone.notifications'))
   ) THEN
-    RAISE EXCEPTION 'Production provider capability gates must exist; refunds and Datafast must remain disabled';
+    RAISE EXCEPTION 'Production provider capability gates must exist; PlaceToPay and Payphone must remain staged';
   END IF;
 
   IF EXISTS (
@@ -2523,6 +2682,86 @@ BEGIN
        AND table_name='interaction_notification' AND column_name='last_event_id'
        AND data_type='bigint' AND is_nullable='NO') THEN
     RAISE EXCEPTION 'Canonical interaction schema and review repairs are missing or incomplete';
+  END IF;
+  -- A rolled-back migration keeps its ledger row, and several rollbacks restore an
+  -- older object under the same name. Each registered migration is therefore
+  -- verified by an object or definition only it introduces, oldest first, so the
+  -- first failure names the missing migration.
+  IF NOT EXISTS (SELECT 1 FROM security_role_assignment_policy
+       WHERE code='artist.invitation.artist' AND active)
+     OR position('''artist-invitation-redeemed''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0 THEN
+    RAISE EXCEPTION 'Music migration 2026-09-14_artist_invitation_auto_approval is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_preview_spec' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_preview_ranges is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_copy_version_parties' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_version_parties is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_merge_party_identifiers' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-15_music_party_details is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_create_release_correction'
+       AND pronamespace='public'::regnamespace
+       AND position('correction asset graph has a cycle' IN prosrc)>0) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_correction_asset_graph is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_create_release_correction'
+       AND pronamespace='public'::regnamespace
+       AND position('music-correction:' IN prosrc)>0) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_correction_concurrency is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_check_resource_graph' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_resource_graph_validation is not applied';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_check_ddex_operation' AND pronamespace='public'::regnamespace)
+     OR NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname='music_ddex_release_identifier' AND pronamespace='public'::regnamespace) THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_ddex_operations is not applied';
+  END IF;
+  IF to_regprocedure('music_record_playback_event_unbound_v1(uuid,uuid,integer,bigint,text,uuid,uuid,text,bigint,bigint,text,text,timestamp with time zone,jsonb)') IS NULL
+     OR to_regclass('public.music_playback_session_sanitation') IS NULL THEN
+    RAISE EXCEPTION 'Music migration 2026-09-16_music_playback_identity is not applied';
+  END IF;
+  IF to_regclass('public.artist_invitation_link') IS NULL THEN
+    RAISE EXCEPTION 'Music migration 2026-10-07_artist_invitation_links is not applied';
+  END IF;
+  FOREACH music_table IN ARRAY ARRAY[
+    'music_release', 'music_release_version', 'music_party', 'music_party_identifier',
+    'music_recording', 'music_release_track', 'music_credit', 'music_identifier',
+    'music_rights_declaration', 'music_rights_split', 'music_asset', 'music_upload_session',
+    'music_upload_part', 'music_processing_job', 'music_availability_rule',
+    'music_terms_acceptance', 'music_editorial_comment', 'music_release_audit_event',
+    'music_infringement_report', 'music_purchase_order', 'music_entitlement',
+    'music_download_event', 'music_playback_event', 'music_ddex_party_registry',
+    'music_ddex_export', 'music_release_version_party', 'artist_release_team_member',
+    'music_legacy_sanitation_item', 'music_favorite', 'music_playlist', 'music_playlist_item',
+    'music_playback_history', 'music_daily_metric', 'music_public_release',
+    'music_legacy_release_sanitation_queue', 'music_resource_graph_sanitation_queue'
+  ] LOOP
+    IF to_regclass('public.' || music_table) IS NULL THEN
+      RAISE EXCEPTION 'Music release relation public.% is missing', music_table;
+    END IF;
+  END LOOP;
+  FOREACH music_table IN ARRAY ARRAY[
+    ${MUSIC_RUNTIME_FUNCTION_SIGNATURES.map((signature) => `'${signature}'`).join(',\n    ')}
+  ] LOOP
+    IF to_regprocedure(music_table) IS NULL THEN
+      RAISE EXCEPTION 'Music runtime function % is missing', music_table;
+    END IF;
+  END LOOP;
+  IF to_regclass('public.artist_invitation_link') IS NULL
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+       WHERE conrelid='public.artist_invitation_link'::regclass
+         AND conname='artist_invitation_link_redeemed_or_revoked' AND contype='c' AND convalidated
+     )
+     OR NOT EXISTS (
+       SELECT 1 FROM security_role_assignment_policy
+       WHERE code='artist.invitation.artist' AND trigger_code='artist-invitation-redeemed'
+     )
+     OR position('''artist-invitation-redeemed''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0
+     OR position('''artist-self-service-activated''' IN pg_get_functiondef('security_validate_assignment_policy()'::regprocedure))=0 THEN
+    RAISE EXCEPTION 'Personal artist invitation links or their assignment policy are missing';
   END IF;
 END
 $verify$;`;

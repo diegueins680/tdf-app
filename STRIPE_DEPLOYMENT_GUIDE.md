@@ -217,8 +217,8 @@ The code path is identical; only the key value changes.
 | Method | Path | Purpose | Phase |
 |--------|------|---------|-------|
 | POST | `/social-events/stripe/create-payment-intent` (extended) | Same ticket-buy flow, now returns optional `spiPaymentSheet` block when the request includes `ticketPurchaseMobileSdkStripeVersion` | 2 |
-| POST | `/public/courses/:slug/registrations/:registrationId/payment-intent` | Attendee one-off course payment | 3 |
-| POST | `/public/courses/:slug/registrations/:registrationId/checkout-session` | Hosted Stripe Checkout in `subscription` mode for recurring courses | 4 |
+| ~~POST~~ | ~~`/public/courses/:slug/registrations/:registrationId/payment-intent`~~ | Retired 2026-10-06 (AUTH-PUBLIC-001): unauthenticated, sequential-ID route that issued customer-scoped Stripe keys. Courses use the lookup-token Datafast/PayPal checkout (ADR-0111). | 3 |
+| ~~POST~~ | ~~`/public/courses/:slug/registrations/:registrationId/checkout-session`~~ | Retired 2026-10-06 (AUTH-PUBLIC-001) for the same reason. | 4 |
 | POST | `/artists/:artistId/tips` | Public Connect destination charge that pays out to the artist's connected account, keeping `artistTipPlatformFeeBps` (1000 = 10%) for the platform | 5 |
 
 ### New environment variables
@@ -253,10 +253,10 @@ PR.
 ### Verifying the rollout
 
 ```sh
-# 1. Backend boots and the new endpoints are reachable
-curl -X POST https://api.tdfrecords.net/public/courses/UNKNOWN/registrations/1/payment-intent \
+# 1. Backend boots and the ticket payment-intent endpoint is reachable
+curl -X POST https://api.tdfrecords.net/social-events/stripe/create-payment-intent \
   -H "Content-Type: application/json" -d '{}'
-# expect 404 "Registro no encontrado" (the endpoint is wired)
+# expect 401 without a session (the route is wired and authenticated)
 
 # 2. Webhook still verifies signatures
 # Inspect the current Hetzner API logs through ops/hetzner/README.md; verify stripe-webhook events.

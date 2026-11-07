@@ -1,0 +1,185 @@
+{
+  "observedAt": "2026-10-26T15:49:44.420462+00:00",
+  "protectedBase": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+  "executionSource": "dbd4d902933250582ac8d9b4f63e1a02dbd748af",
+  "executionTree": "b1cd23a18d70fe05589465fc625ecafd0d210472",
+  "status": "LOCAL_QUALIFIED_SOURCE_NOT_PUBLISHED_TO625",
+  "publicationReason": "Original625head140 remains independentlyapproved. Earlierfinancial621 head950 needs CI/review/integration. Hold preparedmain620 composition until actualnextbase to avoid unnecessary approval churn.",
+  "originalApprovedRemoteHead": "140c43fc160c7ab441c19cd634a4cf2cc6821464",
+  "all144MainNormativeFieldsPreserved": true,
+  "catalogCandidates": 1339,
+  "onlyAuthEntryRequirementMappingExtended": "AUTH-ENTRY-002",
+  "freshWebQuality": {
+    "status": "PASS canonicalquality-ui exit0",
+    "tests": 3464,
+    "suites": 306,
+    "lint": "PASS",
+    "typescript": "PASS",
+    "build": "PASS",
+    "initialGzipBytes": 336487,
+    "preloads": 5,
+    "scope": "Started on merged working source before merge commit; all material app/test bytes were unchanged through the immutable dbd4 merge commit and completion. Runtime build independently requires exact dbd4 embeddedidentity."
+  },
+  "freshRuntime": {
+    "startedAt": "2026-10-26T15:38:42.900641+00:00",
+    "source": "dbd4d902933250582ac8d9b4f63e1a02dbd748af",
+    "tree": "b1cd23a18d70fe05589465fc625ecafd0d210472",
+    "binarySource": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+    "binarySha256": "cfe718ef2465e872e9db2ab3892b60f5df81642e5c959d6ad07a6ff20bf8e76a",
+    "sourceStatus": [],
+    "steps": [
+      {
+        "step": "compile-loopback-bind-adapter",
+        "exitCode": 0
+      },
+      {
+        "step": "deny-nonloopback-egress",
+        "exitCode": 0
+      },
+      {
+        "step": "init",
+        "exitCode": 0
+      },
+      {
+        "step": "start",
+        "exitCode": 0
+      },
+      {
+        "step": "create",
+        "exitCode": 0
+      },
+      {
+        "step": "full-schema",
+        "exitCode": 0
+      },
+      {
+        "step": "build-web",
+        "exitCode": 0
+      },
+      {
+        "step": "browser",
+        "exitCode": 0
+      },
+      {
+        "step": "drop",
+        "exitCode": 0
+      },
+      {
+        "step": "stop",
+        "exitCode": 0
+      }
+    ],
+    "cleanup": {
+      "runtimesStopped": true,
+      "databaseRemoved": true,
+      "clusterStopped": true
+    },
+    "status": "VERIFIED-synthetic-local-only",
+    "humanParticipants": 0,
+    "productionWrites": false,
+    "mailScope": "Actual native MIME generation/SMTP transport to non-relaying loopback synthetic inbox; no real mailbox, TLS/provider/deliverability claim.",
+    "harnessSha256": {
+      "run.py": "e67985de9ba266d2762d6a8d0550eb1f9b49803348ae42470e3c9bbcd41504df",
+      "smtp.py": "16c60c50bcb83b440e4549a170db2a523a1e2a6491b6a32a3d78a030916f6209",
+      "browser.mjs": "37b84eee2e8d329f878fa27b8f20850dffb5f6df5b2d7972c8f62cf3fee778f9",
+      "loopback-bind.c": "ac5c10bf168409be0b35931262a0d248a731975b197039590fd0dcdb8f247101"
+    },
+    "migrations": 221,
+    "frontend": {
+      "entry": "/assets/index-DVcsMU_l.js",
+      "sha256": "e71ec5211516b5989e990a4543fbe9f07e55d3536fdb4d0169ad3fdf6de743c4",
+      "sourceVerified": true,
+      "freshCompilation": true
+    },
+    "networkIsolation": {
+      "fourListenersLoopbackOnly": true,
+      "lanRequestsDenied": true,
+      "nonLoopbackEgressDeniedWithPositiveControl": true
+    },
+    "actualVersion": {
+      "buildTime": "2026-10-26T02:41:57Z",
+      "commit": "fe179de45d9b0e085bb7cd2f00a9704991fa1652",
+      "name": "tdf-hq",
+      "version": "0.1.0.0"
+    },
+    "journey": {
+      "scope": "Real isolated native API/PostgreSQL and rendered optimized web with local synthetic SMTP. No real email/provider/device/production claim.",
+      "checks": {
+        "protectedIntentPreserved": true,
+        "uiSignupAndOriginalIntent": true,
+        "revokedSessionReturnsToLoginWithIntent": true,
+        "nativeLocalizedMailPreservesIntent": true,
+        "tokenRemovedFromVisibleUrl": true,
+        "expiredResetRejectedInUi": true,
+        "resetUiReturnsToOriginalIntent": true,
+        "oldPasswordRejected": true,
+        "newPasswordAuthenticatesSameParty": true,
+        "resetTokenSingleUse": true,
+        "earlierResetStillRejected": true,
+        "oldSessionRejected": true,
+        "activePriorSessionRevokedByReset": true,
+        "singlePersistedCredential": true
+      },
+      "blockedExternal": 10,
+      "blockedMutations": 0,
+      "blockedMutationPaths": [],
+      "pageErrors": 0,
+      "partyId": 4,
+      "status": "PASS"
+    },
+    "finishedAt": "2026-10-26T15:39:58.413352+00:00"
+  },
+  "repositoryQuality": {
+    "status": "PASS_SCOPED_PREFIX_AND_RESUMED_SUFFIX",
+    "originalWholeInvocation": "EXIT1_INTERRUPTED_STALLED_DISPOSABLE_API_FIXTURE",
+    "originalReceipt": "/private/tmp/tdf-account-recovery-main620-repo-stalled-stage-20261026.json",
+    "exactFailedStageResumed": {
+      "tests": 13,
+      "passed": 13,
+      "sourceUnchanged": true,
+      "exitCode": 0
+    },
+    "remainingUnmodifiedCanonicalSuffix": "PASS exit0",
+    "notClaimed": "No single whole-command successful repository-quality invocation."
+  },
+  "logs": {
+    "webQuality": {
+      "path": "/private/tmp/tdf-account-recovery-main620-ui-20261026.log",
+      "sha256": "6c01c813ee094adca9eedf22c43cd443ff7543abe40eefb125c7726282ce06b2"
+    },
+    "repoInitial": {
+      "path": "/private/tmp/tdf-account-recovery-main620-repo-20261026.log",
+      "sha256": "34163e0b854d1c4d007da7774cdc0dd642457110d0e504ec2b3c61944d490090"
+    },
+    "repoResumedStage": {
+      "path": "/private/tmp/tdf-account-recovery-main620-generated-api-resume-20261026.log",
+      "sha256": "110e6a7557a415924ca1c8a0b559b916e3b724d67a682e70c55ccaafe57c65dc"
+    },
+    "repoRemainingSuffix": {
+      "path": "/private/tmp/tdf-account-recovery-main620-quality-resume-remaining-20261026.log",
+      "sha256": "45a07931f443bc137f1ee972ee84a75f61d07939758645b5807c2827d82dd1d5"
+    }
+  },
+  "sourceAdmission": {
+    "base": "3c25a9de56345a8fccea4c1320b0548fed37a334",
+    "head": "dbd4d902933250582ac8d9b4f63e1a02dbd748af",
+    "mobileBase": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "mobileHead": "d832bb3057dd03d44c0f35eea05be9f36320429d",
+    "mappedChangedSurfaces": [
+      "tdf-hq-ui/src/api/auth.test.ts",
+      "tdf-hq-ui/src/api/auth.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+      "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+      "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx",
+      "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
+      "tdf-hq-ui/src/utils/authErrorMessage.ts"
+    ],
+    "scope": "Changed material files, including renames and pinned Mobile additions. Existing unmapped debt and semantic mapping correctness remain separate obligations."
+  },
+  "limitations": [
+    "No production/provider/physicaldevice/human conversion result.",
+    "Actual native binary retains fe179/cfe718 identity, not a new compilation.",
+    "Ordinary session TTL not tested; explicit revocation boundary and expired reset recovery only.",
+    "New finalhead protectedCI/review/admission and deployed verification remain required."
+  ]
+}

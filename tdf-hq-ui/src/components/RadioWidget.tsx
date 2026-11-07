@@ -1,4 +1,6 @@
+import MarkdownText from './MarkdownText';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
+import { ABOVE_GLOBAL_PLAYER, RADIO_BAR_HEIGHT_VAR, useDockedBarHeight } from '../utils/bottomDock';
 import { logger } from '../utils/logger';
 import { useEffect, useMemo, useRef, useState, useCallback, type ChangeEvent } from 'react';
 import { createPortal } from 'react-dom';
@@ -20,7 +22,10 @@ import {
   Switch,
   FormControlLabel,
   MenuItem,
+  Slider,
+  useMediaQuery,
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -40,7 +45,6 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import Slider from '@mui/material/Slider';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
 import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
 import BoltIcon from '@mui/icons-material/Bolt';
@@ -49,10 +53,10 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import StopCircleIcon from '@mui/icons-material/StopCircle';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Catalogs, type CatalogItem } from '../api/catalogs';
 import { toLocalDateInputValue } from '../utils/dateOnly';
-import { shouldHideRadioForRoute } from '../utils/radioRouteVisibility';
 import {
   createTorrentAudioSession,
   isMagnetLink,
@@ -122,9 +126,9 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
       {prompts.map((p, idx) => (
         <Card key={`${p.text}-${idx}`} variant="outlined">
           <CardContent sx={{ py: 1.25, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-            <Typography variant="body2" fontWeight={600}>
+            <MarkdownText variant="body2" fontWeight={600}>
               {p.text}
-            </Typography>
+            </MarkdownText>
             <Typography variant="caption" color="text.secondary">
               {p.author ?? 'Agente Tidal'} {p.createdAt ? `· ${p.createdAt}` : ''}
             </Typography>
@@ -169,11 +173,11 @@ function PromptList({ prompts }: { prompts: Prompt[] }) {
   );
 }
 
+/** CSS custom property carrying the docked radio bar's height (px) while it is shown. */
+
 export default function RadioWidget() {
   const navigate = useNavigate();
   const location = useLocation();
-  const hideRadioForRoute = shouldHideRadioForRoute(location.pathname, location.hash);
-  const radioEnabled = !hideRadioForRoute;
   const LAST_AUDIO_INPUT_KEY = 'radio-last-audio-input';
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 16, y: 16 });
@@ -185,6 +189,11 @@ export default function RadioWidget() {
   });
   const dragMovedRef = useRef(false);
   const miniContainerRef = useRef<HTMLDivElement | null>(null);
+  const dockedBarRef = useRef<HTMLDivElement | null>(null);
+  const muiTheme = useTheme();
+  // Phones (~360px) cannot fit six 44px controls plus the status text, so the
+  // docked bar drops prev/next there; both remain in the expanded panel.
+  const compactMiniBar = useMediaQuery(muiTheme.breakpoints.down('sm'));
 
   const [customStations, setCustomStations] = useState<Station[]>([]);
   const [newStationCountryId, setNewStationCountryId] = useState('');
@@ -341,7 +350,6 @@ export default function RadioWidget() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: false,
-    enabled: radioEnabled,
   });
   const genresQuery = useQuery({
     queryKey: ['catalog', 'genres', 'es', 'radio'],
@@ -349,7 +357,6 @@ export default function RadioWidget() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: false,
-    enabled: radioEnabled,
   });
   const autoStopOptionsQuery = useQuery({
     queryKey: ['radio-auto-stop-options', 'es'],
@@ -357,7 +364,6 @@ export default function RadioWidget() {
     staleTime: 5 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
     retry: false,
-    enabled: radioEnabled,
   });
   const autoStopOptions = useMemo(
     () => autoStopOptionsQuery.data?.options ?? [],
@@ -494,7 +500,6 @@ export default function RadioWidget() {
     staleTime: 60_000,
     gcTime: 5 * 60_000,
     retry: false,
-    enabled: radioEnabled,
   });
   const refetchStreams = radioSearch.refetch;
   const streamsFetching = radioSearch.isFetching;
@@ -766,6 +771,19 @@ export default function RadioWidget() {
     const initial = clampPosition(width - 320, height - 320);
     setPosition(initial);
   }, [clampPosition]);
+
+  // Opening the panel or changing its contents can make a saved position too low.
+  useEffect(() => {
+    if (miniBarVisible || miniBarDismissed || compactMiniBar) return;
+    const keepInBounds = () => setPosition((p) => {
+      const next = clampPosition(p.x, p.y);
+      return next.x === p.x && next.y === p.y ? p : next;
+    });
+    keepInBounds();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(keepInBounds);
+    if (containerRef.current) observer?.observe(containerRef.current);
+    return () => observer?.disconnect();
+  }, [clampPosition, compactMiniBar, expanded, miniBarDismissed, miniBarVisible, panelSize]);
   const resetPosition = useCallback(() => {
     if (typeof window === 'undefined') return;
     const width = window.innerWidth;
@@ -790,25 +808,16 @@ export default function RadioWidget() {
   }, [clampPosition]);
 
   // Drag handlers
-  const isInteractiveTarget = useCallback((target?: HTMLElement | null) => {
-    const tag = target?.tagName?.toLowerCase();
-    return (
-      tag === 'button' ||
-      tag === 'a' ||
-      tag === 'input' ||
-      tag === 'textarea' ||
-      tag === 'select' ||
-      tag === 'option' ||
-      target?.closest('[data-no-drag]')
-    );
-  }, []);
+  const isInteractiveTarget = useCallback((target?: HTMLElement | null) =>
+    Boolean(target?.closest('button, a, input, textarea, select, option, [data-no-drag]')),
+  []);
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       const target = e.target as HTMLElement | null;
       const dragHandle = target?.closest('[data-drag-handle]');
       const isInteractive = isInteractiveTarget(target);
-      // Only start drag on the handle or non-interactive areas.
-      if (!dragHandle && isInteractive) {
+      // Controls inside the handle must keep their native click/touch behavior.
+      if (!dragHandle || isInteractive) {
         return;
       }
       e.preventDefault();
@@ -840,9 +849,11 @@ export default function RadioWidget() {
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
     return () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
     };
   }, [clampPosition, dragging]);
 
@@ -1061,7 +1072,6 @@ export default function RadioWidget() {
 
   // Publish presence so other perfiles can see current stream.
   useEffect(() => {
-    if (!radioEnabled) return undefined;
     if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
       void RadioAPI.clearPresence().catch(() => undefined);
       return undefined;
@@ -1078,7 +1088,7 @@ export default function RadioWidget() {
     return () => {
       clearTimeout(timer);
     };
-  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isActiveTorrent, isPlaying, radioEnabled]);
+  }, [activeStation.id, activeStation.name, activeStation.streamUrl, isActiveTorrent, isPlaying]);
 
   const fetchNowPlaying = useCallback(async () => {
     if (!activeStation.streamUrl || isActiveTorrent) {
@@ -1098,10 +1108,6 @@ export default function RadioWidget() {
   }, [activeStation.streamUrl, isActiveTorrent]);
 
   useEffect(() => {
-    if (!radioEnabled) {
-      setNowPlayingTitle(null);
-      return;
-    }
     if (!isPlaying || !activeStation.streamUrl || isActiveTorrent) {
       setNowPlayingTitle(null);
       return;
@@ -1112,7 +1118,7 @@ export default function RadioWidget() {
       void fetchNowPlaying();
     }, 30000);
     return () => window.clearInterval(interval);
-  }, [activeStation.streamUrl, fetchNowPlaying, isActiveTorrent, isPlaying, radioEnabled]);
+  }, [activeStation.streamUrl, fetchNowPlaying, isActiveTorrent, isPlaying]);
 
   useEffect(() => {
     const handleLoadStream = (event: Event) => {
@@ -1143,8 +1149,8 @@ export default function RadioWidget() {
       setMuted(muteOnLoad);
       setIsPlaying(!muteOnLoad);
     };
-    window.addEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
-    return () => window.removeEventListener('tdf-radio-load-stream', handleLoadStream as EventListener);
+    window.addEventListener('tdf-radio-load-stream', handleLoadStream);
+    return () => window.removeEventListener('tdf-radio-load-stream', handleLoadStream);
   }, [availableStations, muteOnLoad]);
 
   const togglePlay = () => {
@@ -1831,17 +1837,29 @@ export default function RadioWidget() {
   );
 
   const shouldInlineMiniBar = false; // always docked at bottom, even on login
+  const dockedBarVisible = !miniBarDismissed && miniBarVisible && !shouldInlineMiniBar;
+
+  // Publish the docked bar's height (and reserve it on <body>) so the last
+  // form fields and submit buttons can scroll above it instead of under it.
+  useDockedBarHeight(RADIO_BAR_HEIGHT_VAR, dockedBarRef, dockedBarVisible);
+
   const miniBarNode = (
     <Box
+      ref={dockedBarRef}
+      data-testid="radio-docked-bar"
       sx={{
         position: shouldInlineMiniBar ? 'relative' : 'fixed',
         left: 0,
         right: 0,
-        bottom: shouldInlineMiniBar ? 'auto' : 0,
-        zIndex: (theme) => shouldInlineMiniBar ? 'auto' : theme.zIndex.appBar,
+        bottom: shouldInlineMiniBar ? 'auto' : ABOVE_GLOBAL_PLAYER,
+        // Keep playback controls above the sidebar (drawer), while dialogs
+        // retain their modal layer above both.
+        zIndex: (theme) => shouldInlineMiniBar ? 'auto' : theme.zIndex.drawer + 1,
         display: 'flex',
         justifyContent: 'center',
         px: 0,
+        maxWidth: '100vw',
+        boxSizing: 'border-box',
         pb: shouldInlineMiniBar ? 0 : 'env(safe-area-inset-bottom, 0px)',
         pointerEvents: shouldInlineMiniBar ? 'auto' : 'none',
         outline: 'none',
@@ -1859,10 +1877,12 @@ export default function RadioWidget() {
           py: shouldInlineMiniBar ? 1 : { xs: 0.75, sm: 1 },
           display: 'flex',
           alignItems: 'center',
-          gap: shouldInlineMiniBar ? 1 : 1.25,
+          gap: shouldInlineMiniBar ? 1 : { xs: 0.5, sm: 1.25 },
+          boxSizing: 'border-box',
+          minWidth: 0,
+          overflow: 'hidden',
           border: '1px solid',
           borderColor: 'divider',
-          minWidth: shouldInlineMiniBar ? '100%' : undefined,
           width: '100%',
           maxWidth: shouldInlineMiniBar ? 520 : '100%',
           mx: 0,
@@ -1881,32 +1901,36 @@ export default function RadioWidget() {
             {isPlaying ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
-        <Tooltip title="Saltar al anterior">
-          <span>
-            <IconButton
-              sx={{ minWidth: 44, minHeight: 44 }}
-              onClick={jumpToPreviousStation}
-              data-no-drag
-              aria-label="Saltar a la estación anterior"
-              disabled={!canSkipStations}
-            >
-              <SkipPreviousIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-        <Tooltip title="Saltar al siguiente">
-          <span>
-            <IconButton
-              sx={{ minWidth: 44, minHeight: 44 }}
-              onClick={jumpToNextStation}
-              data-no-drag
-              aria-label="Saltar a la siguiente estación"
-              disabled={!canSkipStations}
-            >
-              <SkipNextIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
+        {!compactMiniBar && (
+          <>
+            <Tooltip title="Saltar al anterior">
+              <span>
+                <IconButton
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                  onClick={jumpToPreviousStation}
+                  data-no-drag
+                  aria-label="Saltar a la estación anterior"
+                  disabled={!canSkipStations}
+                >
+                  <SkipPreviousIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Saltar al siguiente">
+              <span>
+                <IconButton
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                  onClick={jumpToNextStation}
+                  data-no-drag
+                  aria-label="Saltar a la siguiente estación"
+                  disabled={!canSkipStations}
+                >
+                  <SkipNextIcon fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          </>
+        )}
         <Tooltip title={muted ? 'Quitar silencio' : 'Silenciar'}>
           <IconButton
             sx={{ minWidth: 44, minHeight: 44 }}
@@ -1917,7 +1941,7 @@ export default function RadioWidget() {
             {muted ? <VolumeOffIcon fontSize="small" /> : <VolumeUpIcon fontSize="small" />}
           </IconButton>
         </Tooltip>
-        <Tooltip title="Ocultar la barra">
+        <Tooltip title="Minimizar radio">
           <IconButton
             sx={{ minWidth: 44, minHeight: 44 }}
             onClick={(e) => {
@@ -1925,9 +1949,9 @@ export default function RadioWidget() {
               setMiniBarDismissed(true);
             }}
             data-no-drag
-            aria-label="Ocultar barra de radio"
+            aria-label="Minimizar radio"
           >
-            <VisibilityOffIcon fontSize="small" />
+            <KeyboardArrowDownIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <Tooltip title="Mostrar radio">
@@ -1943,11 +1967,14 @@ export default function RadioWidget() {
             <OpenInFullIcon fontSize="small" />
           </IconButton>
         </Tooltip>
-        <Box sx={{ minWidth: 0, maxWidth: shouldInlineMiniBar ? '100%' : 220 }}>
-          <Typography variant="caption" fontWeight={700} noWrap>
+        <Box
+          data-testid="radio-docked-status"
+          sx={{ flex: '1 1 auto', minWidth: 0, maxWidth: shouldInlineMiniBar ? '100%' : { xs: 'none', sm: 220 } }}
+        >
+          <Typography variant="caption" fontWeight={700} noWrap component="p" sx={{ display: 'block' }}>
             {nowPlayingStatus}: {nowPlayingLabel}
           </Typography>
-          <Typography variant="caption" color="text.secondary" noWrap>
+          <Typography variant="caption" color="text.secondary" noWrap component="p" sx={{ display: 'block' }}>
             {nowPlayingSubtitle}
           </Typography>
         </Box>
@@ -1957,10 +1984,6 @@ export default function RadioWidget() {
   const miniBarContent =
     shouldInlineMiniBar && loginMiniBarHost ? createPortal(miniBarNode, loginMiniBarHost) : miniBarNode;
 
-  if (hideRadioForRoute) {
-    return null;
-  }
-
   return (
     <>
       {miniBarDismissed && (
@@ -1968,7 +1991,7 @@ export default function RadioWidget() {
           sx={{
             position: 'fixed',
             right: 16,
-            bottom: 16,
+            bottom: `calc(${ABOVE_GLOBAL_PLAYER} + 16px + env(safe-area-inset-bottom, 0px))`,
             zIndex: (theme) => theme.zIndex.appBar,
             bgcolor: 'background.paper',
             border: '1px solid',
@@ -1983,7 +2006,7 @@ export default function RadioWidget() {
           }}
         >
           <Typography variant="caption" color="text.secondary">
-            Radio oculta
+            Radio minimizada
           </Typography>
           <Button
             size="small"
@@ -1999,22 +2022,27 @@ export default function RadioWidget() {
       )}
       {!miniBarDismissed && !miniBarVisible && (
         <Box
+          data-testid="radio-floating-panel"
           sx={{
             position: 'fixed',
-            left: position.x,
-            top: position.y,
+            left: compactMiniBar ? 12 : position.x,
+            right: compactMiniBar ? 12 : 'auto',
+            top: compactMiniBar ? 'auto' : position.y,
+            bottom: compactMiniBar ? `calc(${ABOVE_GLOBAL_PLAYER} + env(safe-area-inset-bottom, 0px) + 12px)` : 'auto',
             zIndex: (theme) => theme.zIndex.appBar,
-            width: expanded ? sizeOptions[panelSize].width : { xs: 220, sm: 260 },
-            cursor: pinned ? 'default' : dragging ? 'grabbing' : 'grab',
-            touchAction: 'none',
-            userSelect: 'none',
-            maxHeight: expanded ? sizeOptions[panelSize].bodyHeight : 'none',
-            overflow: 'visible',
+            width: compactMiniBar ? 'auto' : expanded ? sizeOptions[panelSize].width : 340,
+            maxWidth: 'calc(100vw - 24px)',
           }}
           ref={containerRef}
-          onPointerDown={pinned ? undefined : onPointerDown}
+          onPointerDown={pinned || compactMiniBar ? undefined : onPointerDown}
           tabIndex={0}
           onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setMiniBarVisible(true);
+              return;
+            }
+            if (e.target !== e.currentTarget) return;
             const step = e.shiftKey ? 20 : 10;
             const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
             if (['input', 'textarea'].includes(tag ?? '')) return;
@@ -2054,8 +2082,17 @@ export default function RadioWidget() {
         >
       <Card
         elevation={6}
-        sx={{ borderRadius: 3, overflow: 'hidden', cursor: dragging ? 'grabbing' : 'grab' }}
+        sx={{
+          borderRadius: 3,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: compactMiniBar
+            ? `calc(100dvh - ${ABOVE_GLOBAL_PLAYER} - env(safe-area-inset-bottom, 0px) - 96px)`
+            : `min(${sizeOptions[panelSize].bodyHeight}, calc(100dvh - 24px))`,
+        }}
       >
+        <Box sx={{ flexShrink: 0, bgcolor: 'action.hover', borderBottom: '1px solid', borderColor: 'divider' }}>
         <Box
           data-drag-handle
           sx={{
@@ -2065,20 +2102,32 @@ export default function RadioWidget() {
             px: 1.5,
             py: 0.75,
             bgcolor: dragging ? 'action.selected' : 'action.hover',
-            borderBottom: '1px dashed',
-            borderColor: 'divider',
-            cursor: dragging ? 'grabbing' : 'grab',
+            cursor: pinned || compactMiniBar ? 'default' : dragging ? 'grabbing' : 'grab',
+            touchAction: compactMiniBar ? 'auto' : 'none',
             userSelect: 'none',
           }}
         >
-          <DragIndicatorIcon fontSize="small" color="action" />
-          <Typography variant="caption" color="text.secondary" fontWeight={600}>
-            {pinned ? 'Fijado' : 'Arrastra para mover'}
+          {!compactMiniBar && <DragIndicatorIcon fontSize="small" color="action" />}
+          <Typography variant="caption" color="text.secondary" fontWeight={600} noWrap sx={{ minWidth: 0 }}>
+            {compactMiniBar ? 'Radio' : pinned ? 'Fijado' : 'Arrastra para mover'}
           </Typography>
             <Box sx={{ flex: 1 }} />
             <Button
               size="small"
+              onClick={() => setMiniBarVisible(true)}
+              data-no-drag
+              aria-label="Minimizar radio a la barra"
+              startIcon={<ExpandMoreIcon fontSize="small" />}
+              sx={{ minHeight: 44, flexShrink: 0 }}
+            >
+              Minimizar
+            </Button>
+        </Box>
+        <Stack direction="row" alignItems="center" flexWrap="wrap" useFlexGap sx={{ px: 1.5, pb: 0.75 }}>
+            <Button
+              size="small"
               variant="text"
+              sx={{ flex: { xs: 1, sm: '0 1 auto' }, minWidth: 0 }}
               onClick={() => setShowAdvanced((v) => !v)}
               data-no-drag
               startIcon={showAdvanced ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
@@ -2097,22 +2146,14 @@ export default function RadioWidget() {
               <PushPinIcon fontSize="small" sx={{ transform: pinned ? 'rotate(25deg)' : 'none' }} />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Ocultar radio y mostrar mini barra">
-            <IconButton
-              size="small"
-              onClick={() => setMiniBarVisible(true)}
-              data-no-drag
-              aria-label="Ocultar radio y mostrar mini barra"
-            >
-              <VisibilityOffIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
           <Tooltip title="Volver a la esquina">
             <IconButton size="small" onClick={resetPosition} data-no-drag aria-label="Volver a la esquina">
               <RestartAltIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+        </Stack>
         </Box>
+        <Box data-testid="radio-panel-content" sx={{ overflowY: 'auto', minHeight: 0, overscrollBehavior: 'contain', touchAction: 'pan-y' }}>
         <CardContent
           sx={{ p: 2, cursor: 'pointer' }}
           onClick={(e) => {
@@ -2126,16 +2167,16 @@ export default function RadioWidget() {
             openAndFocusPrompt();
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
             <RadioIcon color="secondary" />
-            <Box flex={1} minWidth={0}>
+            <Box sx={{ flex: '1 1 calc(100% - 40px)', minWidth: 0 }}>
               <Typography variant="subtitle1" fontWeight={800} noWrap>
                 Radio Inteligente
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography component="p" variant="caption" color="text.secondary" noWrap>
                 {nowPlayingStatus}: {nowPlayingLabel}
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
+              <Typography component="p" variant="caption" color="text.secondary" noWrap>
                 {nowPlayingSubtitle}
               </Typography>
               {recentStations.length > 1 && (
@@ -2228,7 +2269,7 @@ export default function RadioWidget() {
                 {muted ? <VolumeOffIcon /> : <GraphicEqIcon />}
               </IconButton>
             </Tooltip>
-            <Box sx={{ minWidth: 140, px: 1 }}>
+            <Box sx={{ flex: '1 1 160px', minWidth: 0, px: 1 }}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <VolumeUpIcon fontSize="small" />
                 <Slider
@@ -2376,9 +2417,9 @@ export default function RadioWidget() {
             </Stack>
           )}
           {playbackWarning && (
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }} data-no-drag>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mt: 1 }} data-no-drag>
               <WarningAmberIcon fontSize="small" color="warning" />
-              <Typography variant="caption" sx={{ color: 'warning.main' }}>
+              <Typography variant="caption" sx={{ color: 'warning.main', flex: '1 1 160px', overflowWrap: 'anywhere' }}>
                 {playbackWarning}
               </Typography>
               {sortedVisibleStations.length > 1 && (
@@ -2394,8 +2435,6 @@ export default function RadioWidget() {
           <CardContent
             sx={{
               p: 2,
-              maxHeight: sizeOptions[panelSize].bodyHeight,
-              overflowY: 'auto',
               pr: 1,
             }}
           >
@@ -3214,6 +3253,7 @@ export default function RadioWidget() {
             </Stack>
           </CardContent>
         </Collapse>
+        </Box>
       </Card>
     </Box>
       )}

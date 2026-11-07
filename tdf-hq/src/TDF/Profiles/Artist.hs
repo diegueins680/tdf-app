@@ -3,6 +3,8 @@
 
 module TDF.Profiles.Artist
   ( activateOwnArtistProfile
+  , deadlineClockAfterLock
+  , lockPendingOnboardingRequests
   , upsertArtistProfileRecord
   , validateArtistProfileUpsert
   , loadArtistProfileDTO
@@ -17,7 +19,7 @@ module TDF.Profiles.Artist
   , resolvePublishedGenreSelections
   ) where
 
-import           Control.Monad             (forM, forM_)
+import           Control.Monad             (forM, forM_, when)
 import           Control.Monad.IO.Class    (MonadIO, liftIO)
 import           Data.Char                 ( GeneralCategory (Format, LineSeparator, ParagraphSeparator)
                                            , generalCategory
@@ -26,6 +28,7 @@ import           Data.Char                 ( GeneralCategory (Format, LineSepara
                                            , isDigit
                                            , isSpace
                                            )
+import           Data.Int                  (Int64)
 import qualified Data.Map.Strict           as Map
 import qualified Data.Set                  as Set
 import           Data.Maybe                (listToMaybe)
@@ -35,7 +38,7 @@ import           Data.Time                 (UTCTime, getCurrentTime)
 import           Data.UUID                 (UUID)
 import qualified Data.UUID                 as UUID
 import           Database.Persist
-import           Database.Persist.Sql      (SqlPersistT, fromSqlKey, rawSql)
+import           Database.Persist.Sql      (Single(..), SqlPersistT, fromSqlKey, rawSql, updateWhereCount)
 
 import           TDF.Catalog.Security (applySecurityRoleAssignmentPolicy, hasCanonicalPartyRole)
 import qualified TDF.Catalog.Models        as Catalog
@@ -51,6 +54,12 @@ import qualified TDF.Trials.Server         as TrialsServer (isValidHttpUrl)
 -- activation on that Party so role, audit and profile creation are idempotent.
 activateOwnArtistProfile :: PartyId -> UTCTime -> SqlPersistT IO (Either Text ArtistProfileDTO)
 activateOwnArtistProfile partyId now = do
+  -- Requests before the Party: a reviewer's decision locks the request and then
+  -- provisions the same role assignment, so taking the Party first would let the
+  -- two wait on each other. The deadline is read once these rows are owned, not
+  -- when the caller sampled `now` (it may have waited for a connection or a lock).
+  lockPendingOnboardingRequests partyId
+  deadline <- deadlineClockAfterLock now
   _ <- rawSql "SELECT ?? FROM party WHERE id = ? FOR UPDATE" [toPersistValue partyId] :: SqlPersistT IO [Entity Party]
   credentials <- count [UserCredentialPartyId ==. partyId, UserCredentialActive ==. True]
   if credentials /= 1
@@ -68,15 +77,27 @@ activateOwnArtistProfile partyId now = do
         Left message -> pure (Left message)
         Right _ -> do
           profile <- loadOrCreateArtistProfileDTO partyId
+          -- A request past its deadline is not completed here: approving it would
+          -- resurrect an expired request. Activation itself still succeeds.
+          -- The Party lock and the role/profile work above can outlast a deadline
+          -- that was still ahead when the requests were locked, so judge it again
+          -- now; the rows are owned, only the clock can have moved.
+          settledDeadline <- deadlineClockAfterLock deadline
           pending <- selectList
-            [ ME.FeatureAccessRequestRequesterPartyId ==. partyId
-            , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
-            , ME.FeatureAccessRequestAction ==. "create"
-            , ME.FeatureAccessRequestStatus ==. "pending"
-            ] []
+            ([ ME.FeatureAccessRequestRequesterPartyId ==. partyId
+             , ME.FeatureAccessRequestFeatureId ==. "artist.onboarding"
+             , ME.FeatureAccessRequestAction ==. "create"
+             , ME.FeatureAccessRequestStatus ==. "pending"
+             ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just settledDeadline])) []
           forM_ pending $ \(Entity key _) -> do
             let note = Just "Perfil de artista activado por su titular, sin aprobación manual."
-            update key
+            -- Recheck status and deadline in the UPDATE itself: a concurrent
+            -- rejection, cancellation or expiry after the SELECT must win, and no
+            -- approval evidence is written unless this row actually changed.
+            changed <- updateWhereCount
+              ([ ME.FeatureAccessRequestId ==. key
+               , ME.FeatureAccessRequestStatus ==. "pending"
+               ] <> ([ME.FeatureAccessRequestExpiresAt ==. Nothing] ||. [ME.FeatureAccessRequestExpiresAt >. Just settledDeadline]))
               [ ME.FeatureAccessRequestStatus =. "approved"
               , ME.FeatureAccessRequestReviewerPartyId =. Nothing
               , ME.FeatureAccessRequestReviewerNotes =. note
@@ -84,24 +105,42 @@ activateOwnArtistProfile partyId now = do
               , ME.FeatureAccessRequestDecidedAt =. Just now
               , ME.FeatureAccessRequestExpiresAt =. Nothing
               ]
-            insert_ ME.FeatureAccessRequestHistory
-              { ME.featureAccessRequestHistoryRequestId = key
-              , ME.featureAccessRequestHistoryActorPartyId = Just partyId
-              , ME.featureAccessRequestHistoryTransition = "automatically_approved"
-              , ME.featureAccessRequestHistoryFromStatus = Just "pending"
-              , ME.featureAccessRequestHistoryToStatus = "approved"
-              , ME.featureAccessRequestHistoryNote = note
-              , ME.featureAccessRequestHistoryCreatedAt = now
-              }
-            insert_ AuditLog
-              { auditLogActorId = Just partyId
-              , auditLogEntity = "feature_access_request"
-              , auditLogEntityId = T.pack (show (fromSqlKey key))
-              , auditLogAction = "access_request_automatically_approved"
-              , auditLogDiff = Just "{\"featureId\":\"artist.onboarding\",\"action\":\"create\",\"status\":\"approved\"}"
-              , auditLogCreatedAt = now
-              }
+            when (changed == 1) $ do
+              insert_ ME.FeatureAccessRequestHistory
+                { ME.featureAccessRequestHistoryRequestId = key
+                , ME.featureAccessRequestHistoryActorPartyId = Just partyId
+                , ME.featureAccessRequestHistoryTransition = "automatically_approved"
+                , ME.featureAccessRequestHistoryFromStatus = Just "pending"
+                , ME.featureAccessRequestHistoryToStatus = "approved"
+                , ME.featureAccessRequestHistoryNote = note
+                , ME.featureAccessRequestHistoryCreatedAt = now
+                }
+              insert_ AuditLog
+                { auditLogActorId = Just partyId
+                , auditLogEntity = "feature_access_request"
+                , auditLogEntityId = T.pack (show (fromSqlKey key))
+                , auditLogAction = "access_request_automatically_approved"
+                , auditLogDiff = Just "{\"featureId\":\"artist.onboarding\",\"action\":\"create\",\"status\":\"approved\"}"
+                , auditLogCreatedAt = now
+                }
           pure (Right profile)
+
+-- | Own the Party's pending artist-onboarding requests for the rest of the
+-- transaction. Every path that decides one takes this lock before any other.
+lockPendingOnboardingRequests :: PartyId -> SqlPersistT IO ()
+lockPendingOnboardingRequests partyId = do
+  _ <- rawSql
+    "SELECT id FROM feature_access_requests WHERE requester_party_id = ? AND feature_id = 'artist.onboarding' AND action = 'create' AND status = 'pending' ORDER BY id FOR UPDATE"
+    [toPersistValue partyId] :: SqlPersistT IO [Single Int64]
+  pure ()
+
+-- | The instant against which a request deadline is judged. Call it only after
+-- the request rows are locked: it reads the database clock at that point and
+-- never returns a time earlier than the caller's own sample.
+deadlineClockAfterLock :: UTCTime -> SqlPersistT IO UTCTime
+deadlineClockAfterLock sampled = do
+  rows <- rawSql "SELECT clock_timestamp()" [] :: SqlPersistT IO [Single UTCTime]
+  pure (foldr (\(Single databaseNow) acc -> max databaseNow acc) sampled rows)
 
 cleanOptionalText :: Maybe Text -> Maybe Text
 cleanOptionalText = (>>= nonBlank)

@@ -1,0 +1,6 @@
+Recorded macOS-only synthetic qualification. Node22.14.0 and local PostgreSQL16 tools required. Use a clean checkout of72de75db2e7464f1be8b8274836a8a522c93f4e1 with npm ci --ignore-scripts.
+The runner intentionally requires the retained native Stack/GHC9.10.3 fe179 executable at its recorded local path and exact cfe718 SHA; this is not a new frontend-head backend compilation. No toolchain or identity bypass is provided.
+python3 reports/account-recovery-evidence-20261026/run.py --source /absolute/clean/checkout --expected-source 72de75db2e7464f1be8b8274836a8a522c93f4e1
+Requires unused ports55589/18859/4295/18860. Creates its own private temporary cluster/database, loopback API/web/SMTP, refuses non-synthetic SMTP recipients, denies backend nonloopback egress, verifies listeners and finally removes its database/stops all owned services. Never target production or copy mail/token contents into artifacts.
+The successful recorded v4 run reuses the same-source successful web build from v3; a replay without --reuse-build-receipt compiles fresh. Original v1/v2/v3 failures remain private in their original directories and are described in the report.
+No physical phone, real SMTP/provider inbox placement, ordinary session TTL or full ST-001 completion claim. Revoked-session boundary and expired-reset challenge are explicit disposable SQL controls.

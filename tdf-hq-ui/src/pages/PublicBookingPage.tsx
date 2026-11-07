@@ -76,7 +76,6 @@ interface FormState {
   resourceLabels: string[];
 }
 
-export type PublicBookingPreset = 'dj-booth';
 
 type BookingWithAliases = BookingDTO & {
   pbStartsAt?: string;
@@ -94,11 +93,42 @@ const toLocalInputValue = (date: Date) => {
 };
 
 const PROFILE_STORAGE_KEY = 'tdf-public-booking-profile';
+// The physical studio's opening hours use Quito time, independently of the
+// visitor's timezone or the application's default display preference.
+const STUDIO_TIME_ZONE = 'America/Guayaquil';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const QUICK_SLOT_STEP_MINUTES = 30;
 const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
+
+// Page column: the booking card and the service reviews stack vertically so a
+// sibling can never squeeze the card into a ~120px column on phones.
+const BOOKING_LAYOUT_SX = {
+  minHeight: '80vh',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 3,
+  py: 4,
+  width: '100%',
+  minWidth: 0,
+} as const;
+const BOOKING_COLUMN_SX = { width: '100%', maxWidth: 880, minWidth: 0 } as const;
+// Informational chip rows: let long labels wrap by words instead of being
+// clipped (MUI chips are single-line) or broken letter by letter.
+const WRAPPING_CHIP_ROW_SX = {
+  minWidth: 0,
+  alignItems: { xs: 'flex-start', sm: 'center' },
+  '& .MuiChip-root': { maxWidth: '100%', height: 'auto', minHeight: 24 },
+  '& .MuiChip-label': {
+    whiteSpace: 'normal',
+    overflowWrap: 'break-word',
+    wordBreak: 'normal',
+    py: 0.25,
+  },
+} as const;
 
 const formatMinorAmount = (currency: string, amountMinor: number): string =>
   `${currency} ${(amountMinor / 100).toLocaleString(undefined, {
@@ -106,45 +136,10 @@ const formatMinorAmount = (currency: string, amountMinor: number): string =>
     maximumFractionDigits: 2,
   })}`;
 
-const PUBLIC_BOOKING_PRESETS: Record<
-  PublicBookingPreset,
-  {
-    path: string;
-    serviceCode: string;
-    eyebrow: string;
-    title: string;
-    description: string;
-    introChips: string[];
-    contactTitle: string;
-    contactDescription: string;
-    calendarNote: string;
-    durationNote: string;
-    notesPlaceholder: string;
-  }
-> = {
-  'dj-booth': {
-    path: '/dj-booth',
-    serviceCode: 'dj-booth-practice',
-    eyebrow: 'DJ Booth',
-    title: 'Reserva práctica en DJ Booth',
-    description:
-      'Agenda horas de práctica o alquiler del DJ Booth. Este enlace usa el servicio Práctica en DJ Booth para asignar el booth automáticamente.',
-    introChips: [
-      '1. Elige horario para DJ Booth',
-      '2. Reservamos por horas',
-      '3. Guarda tu ID para cualquier ajuste',
-    ],
-    contactTitle: 'Datos para reservar tu booth',
-    contactDescription: 'Usa un correo válido para identificar tu reserva de práctica en DJ Booth.',
-    calendarNote: 'Bloque tentativo para el DJ Booth.',
-    durationNote: 'Reserva por horas de práctica (30 min mínimo).',
-    notesPlaceholder: 'Cuéntanos si traes USB/controlador, estilo musical o cualquier requerimiento para practicar.',
-  },
-};
-
-const zoneLabel = (zone: string) => {
+const zoneLabel = (zone: string, localStart?: string) => {
   try {
-    return DateTime.now().setZone(zone).toFormat('ZZZZ');
+    const date = localStart ? DateTime.fromISO(localStart, { zone }) : DateTime.now().setZone(zone);
+    return date.isValid ? date.toFormat('ZZZZ') : zone;
   } catch {
     return zone;
   }
@@ -177,11 +172,6 @@ const resolveServiceFromToken = (raw: string, list: ServiceType[]): ServiceType 
   });
   return partial ?? null;
 };
-
-const resolvePresetService = (
-  presetConfig: (typeof PUBLIC_BOOKING_PRESETS)[PublicBookingPreset],
-  list: ServiceType[],
-): ServiceType | null => list.find((service) => service.code === presetConfig.serviceCode) ?? null;
 
 const serviceResourceLabels = (service: ServiceType | null | undefined): string[] =>
   (service?.defaultResources ?? []).map((resource) => resource.sdrResourceName);
@@ -313,18 +303,13 @@ const toFriendlyBookingError = (error: unknown): string => {
   return message;
 };
 
-interface PublicBookingPageProps {
-  preset?: PublicBookingPreset;
-}
-
-export default function PublicBookingPage({ preset }: PublicBookingPageProps = {}) {
+export default function PublicBookingPage() {
   useMetaTags({
     title: 'Reservar',
     description: 'Reserva una sesión de estudio, clase o servicio en TDF Records.',
   });
 
   const location = useLocation();
-  const presetConfig = preset ? PUBLIC_BOOKING_PRESETS[preset] : null;
   const healthQuery = useQuery({
     queryKey: ['health'],
     queryFn: Meta.health,
@@ -339,10 +324,6 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const baseServices = useMemo<ServiceType[]>(() => {
     return mergeServiceTypes(serviceCatalogQuery.data, { sort: false });
   }, [serviceCatalogQuery.data]);
-  const presetService = useMemo(
-    () => (presetConfig ? resolvePresetService(presetConfig, baseServices) : null),
-    [baseServices, presetConfig],
-  );
   const services = baseServices;
   const bookingReturnPath = `${location.pathname}${location.search}${location.hash}`;
   const loginPath = buildLoginRedirectPath(bookingReturnPath);
@@ -355,12 +336,8 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     if (typeof Intl === 'undefined' || !Intl.DateTimeFormat) return 'UTC';
     return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
   }, []);
-  const studioTimeZone = useMemo(
-    () => env.read('VITE_DEFAULT_TIMEZONE') ?? 'UTC',
-    [],
-  );
+  const studioTimeZone = STUDIO_TIME_ZONE;
   const studioZoneLabel = useMemo(() => zoneLabel(studioTimeZone), [studioTimeZone]);
-  const userZoneLabel = useMemo(() => zoneLabel(userTimeZone), [userTimeZone]);
   const studioCurrency = useMemo(() => services[0]?.currency ?? resolveRuntimeCurrency(), [services]);
   const serviceCatalogUnavailable =
     serviceCatalogQuery.isFetched && (serviceCatalogQuery.isError || (serviceCatalogQuery.data?.length ?? 0) === 0);
@@ -383,29 +360,26 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   const bookingReadinessNote = useMemo(() => {
     if (!requiresManualConfirmation) return null;
     if (serviceCatalogUnavailable) {
-      return 'No pudimos cargar el catálogo de servicios. Reintenta en unos minutos; no enviaremos una reserva sin un servicio canónico.';
+      return 'No pudimos cargar el catálogo de servicios. Reintenta sin salir de esta página; conservaremos tus datos y no enviaremos una reserva sin un servicio disponible.';
     }
     return 'Puedes dejar la solicitud ahora mismo. Guarda el ID de reserva y escríbenos por WhatsApp si necesitas confirmar disponibilidad o recursos.';
   }, [requiresManualConfirmation, serviceCatalogUnavailable]);
-  const pageEyebrow = presetConfig?.eyebrow ?? 'Agenda pública';
-  const pageTitle = presetConfig?.title ?? 'Reserva un servicio con TDF';
+  const pageEyebrow = 'Agenda pública';
+  const pageTitle = 'Reserva un servicio con TDF';
   const pageDescription =
-    presetConfig?.description ??
     'Completa tus datos y agenda el horario que prefieras. Puedes reservar como invitado; crear una cuenta es opcional.';
-  const introChips = presetConfig?.introChips ?? [
-    '1. Agenda sin crear cuenta',
+  const introChips = [
+    '1. Elige tu servicio y agenda sin crear cuenta',
     '2. Recibe un ID de reserva',
     '3. Coordina ajustes por WhatsApp',
   ];
-  const contactTitle = presetConfig?.contactTitle ?? 'Datos de contacto';
-  const contactDescription =
-    presetConfig?.contactDescription ??
-    'Usa un correo válido para identificar la reserva. Crear una cuenta es opcional.';
-  const calendarNote = presetConfig?.calendarNote ?? 'Bloque tentativo en el calendario.';
-  const durationNote = presetConfig?.durationNote ?? 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
-  const notesPlaceholder =
-    presetConfig?.notesPlaceholder ?? 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, etc.)';
+  const contactTitle = 'Datos de contacto';
+  const contactDescription = 'Usa un correo válido para identificar la reserva. Crear una cuenta es opcional.';
+  const calendarNote = 'Bloque tentativo en el calendario.';
+  const durationNote = 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
+  const notesPlaceholder = 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, ensayo, DJ booth, etc.)';
   const [form, setForm] = useState<FormState>(buildInitialForm);
+  const userZoneLabel = useMemo(() => zoneLabel(userTimeZone, form.startsAt), [userTimeZone, form.startsAt]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<BookingDTO | null>(null);
@@ -442,15 +416,6 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
   useEffect(() => {
     if (!services.length) return;
     setForm((prev) => {
-      if (presetService) {
-        if (prev.serviceOfferingId === presetService.id) return prev;
-        return {
-          ...prev,
-          serviceOfferingId: presetService.id,
-          serviceType: presetService.name,
-          resourceLabels: serviceResourceLabels(presetService),
-        };
-      }
       const serviceStillValid = services.some((svc) => svc.id === prev.serviceOfferingId);
       if (serviceStillValid) return prev;
       const nextService = services[0];
@@ -462,7 +427,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         resourceLabels: serviceResourceLabels(nextService),
       };
     });
-  }, [presetService, services]);
+  }, [services]);
 
   useEffect(() => {
     if (appliedStoredProfile.current) return;
@@ -472,10 +437,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       const raw = readSessionPersonalData(PROFILE_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as Partial<FormState>;
-      const nextService =
-        presetService ??
-        services.find((service) => service.id === stored.serviceOfferingId) ??
-        services[0];
+      const nextService = services.find((service) => service.id === stored.serviceOfferingId) ?? services[0];
       setForm((prev) => ({
         ...prev,
         fullName: stored.fullName ?? prev.fullName,
@@ -489,11 +451,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     } catch {
       // ignore parsing issues
     }
-  }, [presetService, services]);
+  }, [services]);
 
   useEffect(() => {
     if (appliedServiceQuery.current) return;
-    if (presetService) return;
     if (!services.length) return;
     const params = new URLSearchParams(location.search);
     const rawToken = params.get('service') ?? params.get('servicio');
@@ -507,7 +468,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       serviceType: match.name,
       resourceLabels: serviceResourceLabels(match),
     }));
-  }, [location.search, presetService, services]);
+  }, [location.search, services]);
 
   useEffect(() => {
     if (!session?.displayName) return;
@@ -597,7 +558,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     setError(null);
     setSubmitting(false);
     setActiveStep(0);
-    const nextService = presetService ?? services[0];
+    const nextService = services[0];
     setForm({
       ...buildInitialForm(),
       serviceOfferingId: nextService?.id ?? '',
@@ -605,7 +566,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       resourceLabels: serviceResourceLabels(nextService),
     });
     setAssignEngineerLater(false);
-  }, [presetService, services]);
+  }, [services]);
 
   useEffect(() => {
     const parsed = DateTime.fromISO(form.startsAt, { zone: userTimeZone });
@@ -632,6 +593,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     if (!startsAtUtc) return () => window.clearTimeout(timeoutId);
     setAvailabilityStatus('checking');
     setAvailabilityNote(null);
+    setAuthoritativeQuote(null);
     setTermsAccepted(false);
     bookingIdempotency.current = null;
     const url = `${API_BASE_URL}/bookings/public/availability?serviceOfferingId=${encodeURIComponent(form.serviceOfferingId)}&startsAt=${encodeURIComponent(startsAtUtc)}&durationMinutes=${duration}`;
@@ -644,6 +606,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
           reason?: string;
           quote?: PublicBookingQuoteDTO | null;
         } | null;
+        if (controller.signal.aborted) return;
         setAuthoritativeQuote(data?.quote ?? null);
         const isAvailable = data?.available ?? data?.isAvailable;
         if (isAvailable === false) {
@@ -658,9 +621,9 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         }
       })
       .catch((err) => {
+        if (controller.signal.aborted && !didTimeout) return;
         setAuthoritativeQuote(null);
         if (controller.signal.aborted) {
-          if (!didTimeout) return;
           setAvailabilityStatus('unknown');
           setAvailabilityNote('La verificación tardó demasiado. Reintenta o coordinamos contigo por WhatsApp.');
           return;
@@ -955,7 +918,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         (form.resourceLabels.length ? form.resourceLabels : suggestedRooms);
       const price = estimatePriceLabel ?? selectedPrice ?? 'Por confirmar';
       const lines = [
-        presetConfig ? `Reserva TDF - ${presetConfig.eyebrow}` : 'Reserva TDF',
+        'Reserva TDF',
         `Servicio: ${booking?.serviceType ?? form.serviceType}`,
         `Inicio: ${startLabel}`,
         `Duración: ${duration} min`,
@@ -969,7 +932,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
       }
       return lines.join('\n');
     },
-    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, presetConfig, selectedPrice, suggestedRooms, userTimeZone],
+    [estimatePriceLabel, form.durationMinutes, form.engineerName, form.resourceLabels, form.serviceType, form.startsAt, formattedStart, selectedPrice, suggestedRooms, userTimeZone],
   );
 
   const copySummary = useCallback(
@@ -1127,7 +1090,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     const duration = normalizeDurationMinutes(form.durationMinutes);
     const nowUser = DateTime.now().setZone(userTimeZone).plus({ minutes: 15 });
     const baseDay = DateTime.fromISO(form.startsAt || '', { zone: userTimeZone });
-    const day = baseDay.isValid ? baseDay.startOf('day') : nowUser.startOf('day');
+    const day = (baseDay.isValid ? baseDay : nowUser).setZone(studioTimeZone).startOf('day');
 
     const openStudio = day
       .setZone(studioTimeZone)
@@ -1403,11 +1366,10 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     const manualPayment = checkoutSuccess?.manualPayment;
 
     return (
-      <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+      <Box data-testid="public-booking-layout" sx={BOOKING_LAYOUT_SX}>
         <Card
           sx={{
-            maxWidth: 880,
-            width: '100%',
+            ...BOOKING_COLUMN_SX,
             borderRadius: 3,
             boxShadow: '0 18px 72px rgba(15,17,24,0.26)',
             border: '1px solid rgba(255,255,255,0.08)',
@@ -1467,7 +1429,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                       <Typography variant="subtitle2" color="text.secondary" gutterBottom>
                         Resumen
                       </Typography>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
                         <Chip label={`Fecha: ${successStartLabel}`} size="small" />
                         <Chip label={`Duración: ${successDuration} min`} size="small" />
                         <Chip label={`Servicio: ${success.serviceType ?? form.serviceType}`} size="small" />
@@ -1738,12 +1700,54 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
     );
   }
 
+  const serviceField = (
+    <Grid item xs={12}>
+      <TextField
+        label="Servicio"
+        select
+        value={form.serviceOfferingId}
+        onChange={(e) => {
+          const nextService = services.find((service) => service.id === e.target.value);
+          if (!nextService || nextService.id === form.serviceOfferingId) return;
+          setAuthoritativeQuote(null);
+          setTermsAccepted(false);
+          setForm((prev) => ({
+            ...prev,
+            serviceOfferingId: nextService.id,
+            serviceType: nextService.name,
+            resourceLabels: serviceResourceLabels(nextService),
+          }));
+        }}
+        fullWidth
+        required
+        disabled={formDisabled}
+        helperText={
+          estimatePriceLabel
+            ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
+            : `Moneda: ${studioCurrency}`
+        }
+      >
+        {services.map((svc) => (
+          <MenuItem key={svc.id} value={svc.id}>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+              <Typography>{svc.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {servicePriceLookup.get(svc.id)}
+              </Typography>
+            </Stack>
+          </MenuItem>
+        ))}
+        {services.length === 0 && <MenuItem value="" disabled>Catálogo no disponible</MenuItem>}
+      </TextField>
+    </Grid>
+  );
+
   return (
-    <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+    <Box data-testid="public-booking-layout" sx={BOOKING_LAYOUT_SX}>
       <Card
+        data-testid="public-booking-card"
         sx={{
-          maxWidth: 880,
-          width: '100%',
+          ...BOOKING_COLUMN_SX,
           borderRadius: 3,
           boxShadow: '0 18px 72px rgba(15,17,24,0.26)',
           border: '1px solid rgba(255,255,255,0.08)',
@@ -1766,7 +1770,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                 {pageDescription}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Horario del estudio: <strong>{studioZoneLabel}</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
+                Horario del estudio: <strong>08:00–22:00, Quito ({studioZoneLabel})</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {authoritativeQuote ? (
@@ -1782,10 +1786,22 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
               )}
               {bookingReadinessNote && (
                 <Alert severity="info" variant="outlined">
-                  {bookingReadinessNote}
+                  <Stack spacing={1} alignItems="flex-start">
+                    <span>{bookingReadinessNote}</span>
+                    {serviceCatalogUnavailable && (
+                      <Button
+                        variant="outlined"
+                        disabled={serviceCatalogQuery.isFetching}
+                        aria-busy={serviceCatalogQuery.isFetching}
+                        onClick={() => void serviceCatalogQuery.refetch()}
+                      >
+                        {serviceCatalogQuery.isFetching ? 'Cargando catálogo…' : 'Reintentar catálogo'}
+                      </Button>
+                    )}
+                  </Stack>
                 </Alert>
               )}
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
                 {introChips.map((label) => (
                   <Chip key={label} label={label} size="small" variant="outlined" />
                 ))}
@@ -1807,13 +1823,13 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     useFlexGap
                     flexWrap="wrap"
                   >
-                    <Stack spacing={0.3}>
+                    <Stack spacing={0.3} sx={{ minWidth: 0, flex: { sm: '1 1 240px' } }}>
                       <Typography variant="subtitle2">¿Ya tienes cuenta?</Typography>
                       <Typography variant="body2" color="text.secondary">
                         Inicia sesión para completar tus datos guardados. Si no tienes cuenta, puedes crearla de forma opcional.
                       </Typography>
                     </Stack>
-                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                    <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ ...WRAPPING_CHIP_ROW_SX, maxWidth: '100%' }}>
                       <Button size="small" variant="outlined" component={RouterLink} to={loginPath}>
                         Iniciar sesión
                       </Button>
@@ -1873,7 +1889,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                   <Stack spacing={2.5}>
                     {isMobile ? (
                       <Stack spacing={1}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
                           <Typography variant="body2" color="text.secondary">
                             Paso {activeStep + 1} de {BOOKING_STEPS.length}
                           </Typography>
@@ -1905,6 +1921,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                     <Grid container spacing={2.5}>
                       {activeStep === 0 && (
                         <>
+                          {serviceField}
                           <Grid item xs={12} sm={6}>
                             <TextField
                               label="Nombre completo"
@@ -1980,49 +1997,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
 
                       {activeStep === 1 && (
                         <>
-                          <Grid item xs={12}>
-                            <TextField
-                              label={presetService ? 'Servicio DJ Booth' : 'Servicio'}
-                              select
-                              value={form.serviceOfferingId}
-                              onChange={(e) => {
-                                const nextService = services.find((service) => service.id === e.target.value);
-                                if (!nextService) return;
-                                setForm((prev) => ({
-                                  ...prev,
-                                  serviceOfferingId: nextService.id,
-                                  serviceType: nextService.name,
-                                  resourceLabels: serviceResourceLabels(nextService),
-                                }));
-                              }}
-                              fullWidth
-                              required
-                              disabled={formDisabled || Boolean(presetService)}
-                              helperText={
-                                presetService
-                                  ? `Servicio preseleccionado para este enlace. ${
-                                      estimatePriceLabel
-                                        ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
-                                        : `Moneda: ${studioCurrency}`
-                                    }`
-                                  : estimatePriceLabel
-                                  ? `Estimado: ${estimatePriceLabel} · Moneda: ${studioCurrency}`
-                                  : `Moneda: ${studioCurrency}`
-                              }
-                            >
-                              {services.map((svc) => (
-                                <MenuItem key={svc.id} value={svc.id}>
-                                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
-                                    <Typography>{svc.name}</Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {servicePriceLookup.get(svc.id)}
-                                    </Typography>
-                                  </Stack>
-                                </MenuItem>
-                              ))}
-                              {services.length === 0 && <MenuItem value="" disabled>Catálogo no disponible</MenuItem>}
-                            </TextField>
-                          </Grid>
+                          {serviceField}
                           <Grid item xs={12} sm={7}>
                             <TextField
                               label="Fecha y hora"
@@ -2164,7 +2139,11 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                 </Typography>
                                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                                   {suggestedSlots.map((slot) => (
-                                    <Tooltip key={slot.value} title={slot.helper}>
+                                    <Tooltip
+                                      key={slot.value}
+                                      title={slot.helper}
+                                      slotProps={{ popper: { popperOptions: { strategy: 'fixed' } } }}
+                                    >
                                       <Chip
                                         label={slot.label}
                                         onClick={() => {
@@ -2339,7 +2318,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
                                   <Typography variant="subtitle2" color="text.secondary">
                                     Resumen rápido
                                   </Typography>
-                                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
                                     <Chip label={form.serviceType || 'Servicio'} size="small" color="primary" variant="outlined" />
                                     {form.resourceLabels.length > 0 && (
                                       <Chip
@@ -2466,7 +2445,7 @@ export default function PublicBookingPage({ preset }: PublicBookingPageProps = {
         </CardContent>
       </Card>
       {form.serviceOfferingId && (
-        <Box sx={{ mt: 3 }}>
+        <Box data-testid="public-booking-reviews" sx={BOOKING_COLUMN_SX}>
           <ExperienceReviews
             targetKind="service_offering"
             targetId={form.serviceOfferingId}

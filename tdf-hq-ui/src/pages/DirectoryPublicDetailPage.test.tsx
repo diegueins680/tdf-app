@@ -11,6 +11,9 @@ const profileMock = jest.fn<(slug: string) => Promise<Record<string, unknown>>>(
 const profileReviewsMock = jest.fn(async () => ({ items: [], nextCursor: null }));
 const reviewEligibilityMock = jest.fn(async () => []);
 const directoryRsvpFeedMock = jest.fn(async () => ({ feedItems: [], feedNextCursor: null }));
+// The public storefront decides whether the event sells through TDF. Unless a
+// test says otherwise it rejects, which the page treats as "not sold here".
+const storefrontMock = jest.fn<(eventId: number) => Promise<Record<string, unknown>>>();
 let sessionMock: {
   username: string;
   displayName: string;
@@ -23,6 +26,7 @@ jest.unstable_mockModule('../api/directory', () => ({
   Directory: {
     profile: profileMock,
     event: profileMock,
+    venue: profileMock,
     profileReviews: profileReviewsMock,
     reviewEligibility: reviewEligibilityMock,
     createReview: jest.fn(),
@@ -50,6 +54,7 @@ jest.unstable_mockModule('../session/SessionContext', () => ({
 }));
 
 jest.unstable_mockModule('../hooks/useMetaTags', () => ({ useMetaTags: jest.fn() }));
+jest.unstable_mockModule('../api/eventTickets', () => ({ EventTickets: { getStorefront: storefrontMock } }));
 // Keep the real feed component while isolating its explicit domain API boundary.
 // Do not invent successful low-level transport methods merely to satisfy imports.
 jest.unstable_mockModule('../api/socialEvents', () => ({
@@ -79,21 +84,27 @@ function LocationProbe() {
   return <output aria-label="Destino protegido">{`${location.pathname}${location.search}`}</output>;
 }
 
-function renderPage(initialEntry: string) {
+const testClients = new Set<QueryClient>();
+afterEach(() => { for (const client of testClients) client.clear(); testClients.clear(); });
+
+function renderPage(initialEntry: string, authenticationFallback?: string) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },
     },
   });
+  testClients.add(queryClient);
   const view = render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
         <Routes>
           <Route path="/directorio/:slug" element={<DirectoryPublicDetailPage kind="profile" />} />
-          <Route path="/eventos/:eventId" element={<DirectoryPublicDetailPage kind="event" />} />
+          <Route path="/eventos/:eventId" element={<DirectoryPublicDetailPage kind="event" authenticationFallback={authenticationFallback} />} />
+          <Route path="/venues/:venueId" element={<DirectoryPublicDetailPage kind="venue" />} />
           <Route path="/social/eventos/:eventId" element={<LocationProbe />} />
           <Route path="/mis-clasificados" element={<LocationProbe />} />
+          <Route path="/login" element={<LocationProbe />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -109,6 +120,7 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     profileReviewsMock.mockReset().mockResolvedValue({ items: [], nextCursor: null });
     reviewEligibilityMock.mockReset().mockResolvedValue([]);
     directoryRsvpFeedMock.mockReset().mockResolvedValue({ feedItems: [], feedNextCursor: null });
+    storefrontMock.mockReset().mockRejectedValue(new Error('storefront unavailable'));
   });
 
   afterEach(() => {
@@ -120,6 +132,22 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     const view = renderPage('/eventos/121?moment=987');
     expect((await screen.findByLabelText('Destino protegido')).textContent).toBe('/social/eventos/121?moment=987');
     expect(profileMock).toHaveBeenCalledWith('121');
+    view.unmount();
+    view.queryClient.clear();
+  });
+
+  it('sends a guest who opens an invitation link to account creation and back to the event', async () => {
+    const view = renderPage('/eventos/211?signup=1');
+    expect((await screen.findByLabelText('Destino protegido')).textContent).toBe('/login?signup=1&intent=events&redirect=%2Feventos%2F211');
+    view.unmount();
+    view.queryClient.clear();
+  });
+
+  it('shows the event to a signed-in visitor who opens an invitation link', async () => {
+    sessionMock = { username: 'ana-fan', displayName: 'Ana Fan', roles: ['fan'], modules: [], partyId: 42 };
+    const view = renderPage('/eventos/211?signup=1');
+    expect(await screen.findByText(profile.name)).toBeTruthy();
+    expect(screen.queryByLabelText('Destino protegido')).toBeNull();
     view.unmount();
     view.queryClient.clear();
   });
@@ -261,5 +289,110 @@ describe('DirectoryPublicDetailPage contact continuity', () => {
     });
     expect(cancel.getAttribute('href')).toBe('/directorio/ana');
     view.queryClient.clear();
+  });
+
+  it('shows the kind placeholder on the detail page when the profile has no media', async () => {
+    const view = renderPage('/directorio/ana');
+    const image = await screen.findByRole('img', { name: 'Imagen de referencia de Ana Sintética' });
+    expect(image.getAttribute('data-preview-source')).toBe('placeholder');
+    expect(image.getAttribute('src')).toContain('/artist-fallback.svg');
+    view.unmount();
+    view.queryClient.clear();
+  });
+
+  it('shows the canonical preview image on the profile detail page', async () => {
+    profileMock.mockResolvedValue({ ...profile, previewImageUrl: 'https://cdn.example.test/ana.jpg' });
+    const view = renderPage('/directorio/ana');
+    const image = await screen.findByRole('img', { name: 'Foto de Ana Sintética' });
+    expect(image.getAttribute('data-preview-source')).toBe('media');
+    expect(image.getAttribute('src')).toBe('https://cdn.example.test/ana.jpg');
+    view.unmount();
+    view.queryClient.clear();
+  });
+
+  it('shows the venue image from the public venue projection', async () => {
+    profileMock.mockResolvedValue({
+      id: 22,
+      name: 'Venue Sintético',
+      capacity: 120,
+      location: { city: 'Quito', countryCode: 'EC', precision: 'city' },
+      imageUrl: 'https://cdn.example.test/venue.jpg',
+      canonicalUrl: '/venues/22',
+    });
+    const view = renderPage('/venues/22');
+    const image = await screen.findByRole('img', { name: 'Foto de Venue Sintético' });
+    expect(image.getAttribute('src')).toBe('https://cdn.example.test/venue.jpg');
+    view.unmount();
+    view.queryClient.clear();
+  });
+});
+
+
+describe('canonical public event authentication fallback', () => {
+  const event = { id: 141, title: 'Synthetic completed event', startTime: '2026-10-24T19:00:00Z', endTime: '2026-10-25T02:00:00Z', timezone: 'America/Guayaquil', isPublic: true, workflowStateCode: 'completed', publicShareEligible: true, rsvpEligible: false };
+  beforeEach(() => {
+    sessionMock = null;
+    profileMock.mockReset();
+    storefrontMock.mockReset().mockRejectedValue(new Error('storefront unavailable'));
+    jest.spyOn(navigator, 'language', 'get').mockReturnValue('es-EC');
+  });
+  afterEach(() => { cleanup(); jest.restoreAllMocks(); });
+
+  it.each([401, 403, 404])('retains the original protected target when public metadata is unavailable (%s)', async status => {
+    profileMock.mockRejectedValueOnce(new ApiError('Unavailable', status));
+    const login = '/login?redirect=%2Fsocial%2Feventos%2F141%3Futm_source%3Dinvitation%23momentos';
+    renderPage('/eventos/141', login);
+    expect((await screen.findByLabelText('Destino protegido')).textContent).toBe(login);
+    expect(screen.queryByText(event.title)).toBeNull();
+  });
+
+  it('offers retry after transient failure instead of classifying it as a private event', async () => {
+    profileMock.mockRejectedValueOnce(new ApiError('Temporary unavailable', 503)).mockResolvedValueOnce(event);
+    renderPage('/eventos/141', '/login?redirect=%2Fsocial%2Feventos%2F141');
+    const retry = await screen.findByRole('button', { name: 'Reintentar' });
+    expect(screen.queryByLabelText('Destino protegido')).toBeNull();
+    fireEvent.click(retry);
+    expect(await screen.findByText(event.title)).toBeTruthy();
+    expect(profileMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves invitation attribution when the guest explicitly chooses to publish', async () => {
+    profileMock.mockResolvedValueOnce(event);
+    renderPage('/eventos/141?utm_source=invitation&memoryInvite=synthetic', '/login?redirect=event');
+    const link = await screen.findByRole('link', { name: 'Compartir mis momentos' });
+    expect(link.getAttribute('href')).toBe('/social/eventos/141?utm_source=invitation&memoryInvite=synthetic&compose=1#momentos');
+  });
+
+  it('sends buyers to the external vendor when TDF has no storefront for the event', async () => {
+    profileMock.mockResolvedValueOnce({
+      ...event,
+      id: 211,
+      description: 'Verde 70 en Miami.\nEntradas y detalles: https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325',
+    });
+    storefrontMock.mockResolvedValueOnce({ eventId: 211, checkoutAvailable: false, tiers: [], policy: null,
+      unavailableReason: 'This event has no approved active ticket price and fee policy' });
+    renderPage('/eventos/211');
+    const buy = await screen.findByRole('link', { name: /Comprar entradas en Eventbrite/ });
+    expect(buy.getAttribute('href')).toBe('https://www.eventbrite.com/e/verde-70-en-miami-tickets-2001152275325');
+    expect(buy.getAttribute('target')).toBe('_blank');
+    expect(screen.queryByRole('link', { name: 'Ver entradas' })).toBeNull();
+    expect(screen.getByText('Las entradas de este evento se venden en Eventbrite.')).toBeTruthy();
+  });
+
+  it('offers the TDF checkout only when the storefront is open', async () => {
+    profileMock.mockResolvedValueOnce(event);
+    storefrontMock.mockResolvedValueOnce({ eventId: 141, checkoutAvailable: true, tiers: [{ tierId: 1 }], policy: {}, unavailableReason: null });
+    renderPage('/eventos/141');
+    const link = await screen.findByRole('link', { name: 'Ver entradas' });
+    expect(link.getAttribute('href')).toBe('/eventos/141/entradas');
+  });
+
+  it('explains a closed storefront in Spanish instead of exposing the raw server reason', async () => {
+    profileMock.mockResolvedValueOnce(event);
+    storefrontMock.mockResolvedValueOnce({ eventId: 141, checkoutAvailable: false, tiers: [], policy: null, unavailableReason: 'Ticket inventory is currently exhausted' });
+    renderPage('/eventos/141');
+    expect(await screen.findByText('Las entradas están agotadas.')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Ver entradas' })).toBeNull();
+    expect(screen.queryByText('Ticket inventory is currently exhausted')).toBeNull();
   });
 });

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "sourceRevision": "43c7adba83ab8c1554c944ea99871b8a9c406c3b",
+  "protectedMain": "917806ff9c8d455a01bfb8a29c80d6ff353e0e0b",
+  "originalDecision": {
+    "id": "b7cc47848f3f9882770f",
+    "classification": "security-system-registry",
+    "disposition": "retain-reviewed-deployment-manifest",
+    "specializedModel": "production migration manifest and applied migration ledger",
+    "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
+    "justification": "The 220-entry deployment execution registry preserves all 219 migration objects and historical SQL bytes from financial parent 59df1dd2a17952b906cf89d1c5502725d51239e1 as its exact ordered prefix, then adds only the ledger relation-lookup guard introduced by ancestor 9bdbbfc1c7d1cd7a235f85aff7eccebcea1b9391. This technical review preserves earlier immutable catalog provenance and authorizes no production execution, provider activation or runtime privilege change. Full-schema controls and independent PR review remain separate obligations.",
+    "reviewed": true,
+    "reviewMethod": "successor-of-reviewed-decisions",
+    "reviewBatch": "ledger-namespace-technical-review-20261025",
+    "sourceReviewReferences": [
+      {
+        "sourceRevision": "4dac175d42616b5b2f4a3e8faebb83692cd2e6b0",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "e2a26264bf7cb836288e36221b378c14885fd6f237d6dce5eab0a83cdd43f039",
+        "sourceEntry": {
+          "id": "3f336173e03f10fc023c"
+        },
+        "sourceEntryCanonicalSha256": "97749e12750374a44787b17c6db4dc82f01f25c5ca1d8f716703a545c809b5a0",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "a44876c73d391c622eebcc2f25b8f98a2c61d2ba",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "a6762e3fd80cc180bc16a658a62ed7d47b7c3d897ddb2d4c7ccf604112066487",
+        "sourceEntry": {
+          "id": "2b073f20afd2f3798b1e"
+        },
+        "sourceEntryCanonicalSha256": "69fe65fa3ed06f7c07e3b07f490664e3819b1c3fd422d81631bbc85760683572",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      },
+      {
+        "sourceRevision": "59df1dd2a17952b906cf89d1c5502725d51239e1",
+        "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+        "sourceFileSha256": "0be4f78cbad1a2c502268bd899a459eb2021d0cdd52f348316eae7bbf1be06ae",
+        "sourceEntry": {
+          "id": "a1eb1e750e7543b88fe1"
+        },
+        "sourceEntryCanonicalSha256": "48712d68a61b4312815351e805809ee2f89cfd52565b0041bd959ddc806473fa",
+        "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+      }
+    ],
+    "evidence": {
+      "file": "scripts/production-migrations.json",
+      "line": 3,
+      "kind": "json-array",
+      "name": "migrations",
+      "valueCount": 220
+    }
+  },
+  "originalDecisionCanonicalSha256": "8679ac1843933f3f9c70ef822396c2ca0661b09eb6c9d30f07d94212039eee28",
+  "originalSourceFileSha256": "a919df552c8ccc44751719466f5642a80033a319199c7db69c87b2bad8c7d4c4",
+  "replacementId": "9ada14767bee1662f97d",
+  "protectedManifestCount": 220,
+  "protectedManifestCanonicalSha256": "c025cf3d2ab92f64bfb92d3656384d7fe0da6919457440d3c24301d7f6b8f232",
+  "currentManifestCount": 221,
+  "newMigration": {
+    "id": "2026-10-25_ledger_posted_header",
+    "path": "tdf-hq/sql/2026-10-25_ledger_posted_header.sql",
+    "introducedBy": "5cc26ad46c958a029ec4539c60cc1ca77fec1d01"
+  },
+  "newSqlSha256": "63e84df8458ee3bf522fc4ce0c8bfa355d9e2b1236ccd2bee31437af23a3ad70",
+  "scope": "One immutable deployment-manifest successor review; all previous active decisions and retirement provenance remain intact. This document is not a stale-ID waiver, runtime catalog authority, independent approval or production authorization."
+}

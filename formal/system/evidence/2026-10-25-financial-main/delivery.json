@@ -1,0 +1,67 @@
+{
+  "recordedScope": "Tracked delivery in this continuation, not all repository PRs",
+  "observedProtectedMain": "b732efd65de23e5b97f3f619a2242397c64965c3",
+  "mergedIntoMain": [
+    {
+      "pr": 609,
+      "sha": "000cf8ad3b9dabbd612695c3c107ddde6896c96a",
+      "reviewedHead": "0b47c2be8d9cf8619df275a8a7ffdd452dd2ab43",
+      "independentApprover": "tdfrecords"
+    }
+  ],
+  "mergedIntoFinancialDraft": [
+    {
+      "pr": 612,
+      "sha": "5b4843c13d108f3274da8a25e260eb50d7a35c48",
+      "reviewedHead": "74a9bdeaca991f58971dd907c47f7b018f4a4d97"
+    },
+    {
+      "pr": 617,
+      "sha": "c780cbc4658d4819a78128b5cecaaa3c282229af",
+      "reviewedHead": "41b7770d569fa5550404d6012ce8af4f27981b5e",
+      "baseBranchRules": [],
+      "reviewAuthor": "chatgpt-codex-connector[bot]",
+      "reviewState": "{\"code_review\":{\"commit_sha\":\"41b7770d569fa5550404d6012ce8af4f27981b5e\",\"has_any_findings\":false,\"has_unresolved_findings\":false,\"status\":\"completed\"},\"security_review\":{\"commit_sha\":null,\"has_any_findings\":null,\"has_unresolved_findings\":null,\"status\":null}}"
+    }
+  ],
+  "created": [
+    617
+  ],
+  "parent": {
+    "pr": 551,
+    "stateAtRecord": "draft; latest-main qualification prepared locally; final-head CI and protected-main review still required"
+  },
+  "history": [
+    {
+      "pr": 548,
+      "title": "Consolidate music publication, asset recovery and DDEX export invariants",
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2026-10-21T04:31:37Z",
+      "merge_commit_sha": "0a37123ea1d9d6b7c6b44d73c9342e18515c06c9",
+      "head_sha": "82a21ec662d0bd16874a6cc6289145d8a3ce82a4",
+      "base": "main"
+    },
+    {
+      "pr": 581,
+      "title": "Consolidate bounded models and independently check scoped proof certificates",
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2026-10-23T19:32:20Z",
+      "merge_commit_sha": "030365aabfb46c14e2962e054cf3b22192cda1a8",
+      "head_sha": "3a39d8c2eca439ca96e41b77051d234f795ac986",
+      "base": "main"
+    },
+    {
+      "pr": 598,
+      "title": "fix(privacy): filter app failure diagnostics before console and analytics",
+      "state": "closed",
+      "merged": true,
+      "merged_at": "2026-10-25T07:53:42Z",
+      "merge_commit_sha": "a1dcb77fafbc66cd786b7f4249a3c8027bb64990",
+      "head_sha": "90a3355d17576f54c3e0089be4ea3bfa9be5100d",
+      "base": "main"
+    }
+  ],
+  "productionOperations": false
+}

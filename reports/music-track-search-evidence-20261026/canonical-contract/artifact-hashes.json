@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "scope": "Canonical-contract supplement only; excludes self-manifest;47prior leaves remain exact.",
+  "files": {
+    "metro-v1-failed-receipt.json": {
+      "bytes": 158368,
+      "sha256": "412d9d4c276a67b24b3aec849cd3a6e6ef85c9647e1364fd5d6020ea975adda0"
+    },
+    "summary.json": {
+      "bytes": 4269,
+      "sha256": "81aedd105a082f55c4b1478180ea242e605a1c51a318b08cfd94c821cfff48da"
+    },
+    "canonical-contract-mobile-evidence.tar.gz": {
+      "bytes": 467109,
+      "sha256": "3234c8df84d4bc812bab72809067aaa1bbc66f8a9bcc84cd0f8f0fd3bb536216"
+    },
+    "archive-member-hashes.json": {
+      "bytes": 5586,
+      "sha256": "7b12fbdee0d913ec1bae0bee5920f9425df9b173959b23f7a8f0d996f01287d5"
+    },
+    "README.md": {
+      "bytes": 2383,
+      "sha256": "94f71d0638974c86951bd51649bee7d6b46431baba9f45802d05f61c1a95d519"
+    },
+    "metro-v2-pass-receipt.json": {
+      "bytes": 158808,
+      "sha256": "b8f593c6f86053bf7fef2db4c2a115595d88590e8a15518c7a2b5f440f50136b"
+    },
+    "mobile-quality-results.json": {
+      "bytes": 1399,
+      "sha256": "69802e83311c8bac973b99ca37f51706fdb6747c2677a77d23c878f4502497e3"
+    },
+    "canonical-generation-receipt.json": {
+      "bytes": 4186,
+      "sha256": "c87f9467a67ef08db7f50f8231acec08269694381f753d6944a628bb99fcfb20"
+    }
+  }
+}

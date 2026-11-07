@@ -17,10 +17,16 @@ executed both tests from São Paulo (AWS) at 2026-10-04 23:58 UTC:
 [Datadog batch](https://app.datadoghq.com/synthetics/explorer/ci?batchResultId=ff538291-8a58-4f01-bf1f-11b04f9328de).
 The logs report two passes and zero critical errors, failures, skips, missing tests or timeouts.
 The API request targets the canonical Hetzner host. The web test still requests
-`tdf-app.pages.dev`; its success does **not** verify `https://www.tdfrecords.net`,
-Google login or authenticated upload. Updating that organization-managed web target
-and checking its assertions remains outstanding; no external test was modified by
-this documentation repair. Older September batches are historical evidence only.
+`tdf-app.pages.dev`, which has answered `301` to `https://www.tdfrecords.net/`
+since the canonical-domain redirect (#508) reached Cloudflare Pages on
+2026-10-12; without following that redirect the test failed on every push and
+pull request. The workflow therefore passes `config_path: datadog-ci.json`, whose
+`defaultTestOverrides.followRedirects: true` makes every selected API test follow
+redirects, so the web test now asserts the canonical www response. It still does
+**not** verify Google login or authenticated upload. Retargeting the
+organization-managed test at `https://www.tdfrecords.net/` directly remains
+outstanding; no external test was modified. Older September batches are
+historical evidence only.
 
 These tests probe the deployed endpoints, not the candidate PR code. They do not
 replace preview/persona, migration, contract or authenticated production checks.

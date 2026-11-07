@@ -7,6 +7,7 @@
 module TDF.API where
 
 import qualified TDF.API.Chat as Chat
+import TDF.VideoCampaigns (VideoCampaignAPI)
 import TDF.API.FanFollowing (FollowArtistAPI, UnfollowArtistAPI)
 import TDF.API.SocialRelationships (FollowersAPI, FollowingAPI, FriendsAPI, SuggestionsAPI, AddFriendAPI, RemoveFriendAPI, VCardAPI)
 import TDF.API.SocialProfiles (ProfileListAPI, ProfileGetAPI)
@@ -56,7 +57,7 @@ import           TDF.DTO
 import           TDF.Meta         (MetaAPI)
 import           TDF.Version      (VersionInfo)
 import qualified TDF.ModelsExtra  as ME
-import           TDF.Routes.Academy (AcademyAPI)
+import           TDF.Routes.Academy (AcademyAPI, AcademyAccountAPI)
 import           TDF.Routes.Courses (CoursesPublicAPI, CoursesAdminAPI, WhatsAppHooksAPI, WhatsAppWebhookAPI)
 import           TDF.Routes.EventTickets (PublicEventTicketsAPI)
 import           TDF.Routes.DomoQuotes (PublicDomoQuotesAPI)
@@ -111,8 +112,6 @@ type InputListPublicAPI =
          :> QueryParam "sessionId" Text
          :> QueryParam "channel" Int
          :> Get '[JSON] [Entity InventoryItem]
-  :<|> "sessions" :> QueryParam "index" Int :> QueryParam "sessionId" Text :> Get '[JSON] [Entity InputListEntry]
-  :<|> "sessions" :> "pdf" :> QueryParam "index" Int :> QueryParam "sessionId" Text :> Get '[OctetStream] (Headers '[Header "Content-Disposition" Text] BL.ByteString)
 
 type InputListSeedAPI =
        "inventory" :> "seed" :> SeedAPI
@@ -122,10 +121,13 @@ type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
 type AdsPublicAPI =
        "ads" :> "inquiry" :> Header "Idempotency-Key" Text :> ReqBody '[JSON] AdsInquiry :> Post '[JSON] AdsInquiryOut
-  :<|> "ads" :> "assist" :> ReqBody '[JSON] AdsAssistRequest :> Post '[JSON] AdsAssistResponse
 
+-- | Staff assistance draws on internal campaign, ad, studio-knowledge and
+-- schedule context, so it is served only to authenticated Social Inbox staff.
 type AdsAdminAPI =
-       "ads" :> "inquiries" :> Get '[JSON] [AdsInquiryDTO]
+       "ads" :> "assist" :> ReqBody '[JSON] AdsAssistRequest :> Post '[JSON] AdsAssistResponse
+
+  :<|> "ads" :> "inquiries" :> Get '[JSON] [AdsInquiryDTO]
   :<|> "ads" :> "campaigns" :> Get '[JSON] [CampaignDTO]
   :<|> "ads" :> "campaigns" :> ReqBody '[JSON] CampaignUpsert :> Post '[JSON] CampaignDTO
   :<|> "ads" :> "campaigns" :> Capture "campaignId" Int64 :> Get '[JSON] CampaignDTO
@@ -260,6 +262,9 @@ type WhatsAppConsentRoutes =
 type WhatsAppConsentAPI =
        "whatsapp" :> WhatsAppConsentRoutes
 
+-- | Public consent is a double opt-in request and never discloses whether a
+-- number has consented. The public status lookup keeps its declared shape for
+-- client compatibility but is retired (410); the lookup is staff-only.
 type WhatsAppConsentPublicAPI =
        "public" :> "whatsapp" :> WhatsAppConsentRoutes
 
@@ -463,6 +468,7 @@ type FanPublicAPI =
          :> QueryParam "pageSize" Int
          :> Get '[JSON] ArtistFansResponse
   :<|> "artists" :> Capture "artistId" Int64 :> "tips"
+         :> Header "Idempotency-Key" Text
          :> ReqBody '[JSON] ArtistTipRequest
          :> Post '[JSON] ArtistTipResponse
   :<|> "clubs" :> Capture "artistId" Int64 :> Get '[JSON] FanClubDTO
@@ -542,6 +548,7 @@ type ArtistSecureAPI =
       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Post '[JSON] ArtistProfileDTO
       :<|> ReqBody '[JSON] ArtistProfileUpsert :> Put '[JSON] ArtistProfileDTO
          )
+  :<|> VideoCampaignAPI
   :<|> "me" :> "photo" :> ReqBody '[JSON] ArtistProfilePhotoUpdate :> Post '[JSON] ArtistProfileDTO
 
 type SeedAPI = Header "X-Seed-Token" Text :> Post '[JSON] NoContent
@@ -571,6 +578,11 @@ type AccessRequestsAPI =
   :<|> Capture "requestId" Int64 :> "cancel"
          :> ReqBody '[JSON] FeatureAccessRequestCancel
          :> Patch '[JSON] FeatureAccessRequestDTO
+
+type ArtistInvitationsAPI =
+       Get '[JSON] [ArtistInvitationLinkDTO]
+  :<|> ReqBody '[JSON] ArtistInvitationLinkCreate :> Post '[JSON] ArtistInvitationLinkIssued
+  :<|> Capture "invitationId" Int64 :> "revoke" :> Post '[JSON] ArtistInvitationLinkDTO
 
 type NavigationPreferencesAPI =
        Get '[JSON] [NavigationPreferenceDTO]
@@ -626,6 +638,7 @@ type ProtectedAPI =
   :<|> InternshipsAPI
   :<|> "feedback" :> "internal" :> InternalFeedbackAPI
   :<|> AdsAdminAPI
+  :<|> AcademyAccountAPI
   :<|> "admin" :> CoursesAdminAPI
   :<|> "label" :> LabelAPI
   :<|> "calendar" :> CalendarAPI
@@ -637,6 +650,7 @@ type ProtectedAPI =
   :<|> "catalog" :> CatalogAPI
   :<|> ServiceStorefrontAdminAPI
   :<|> "access-requests" :> AccessRequestsAPI
+  :<|> "artist-invitations" :> ArtistInvitationsAPI
   :<|> "navigation" :> "preferences" :> NavigationPreferencesAPI
   :<|> DirectoryProtectedAPI
   :<|> MerchProtectedAPI

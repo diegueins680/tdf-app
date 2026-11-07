@@ -49,9 +49,9 @@ state_machines:
       ready_for_handoff: [checked_out, cancellation_requested, no_show]
       checked_out: [return_due, returned_pending_inspection, lost, disputed]
       return_due: [returned_pending_inspection, lost, disputed]
-      returned_pending_inspection: [deposit_refund_due, damage_review]
+      returned_pending_inspection: [deposit_refund_due, damage_review, disputed]
       damage_review: [deposit_refund_due, disputed]
-      deposit_refund_due: [closed]
+      deposit_refund_due: [closed, disputed]
       cancellation_requested: [cancelled]
       no_show: [cancelled]
       lost: [disputed]
@@ -125,16 +125,17 @@ state_machines:
       draft: [sent, cancelled]
       sent: [viewed, accepted, cancelled, expired]
       viewed: [accepted, cancelled, expired]
-      accepted: [deposit_due, cancelled]
+      # Accepted terms can still lapse before the deposit is due (AUTHORITY-047).
+      accepted: [deposit_due, cancelled, expired]
       deposit_due: [deposit_paid, cancelled, expired]
-      deposit_paid: [in_progress, cancelled, refunded, partially_refunded]
+      # Deposit refunds are separate domain operations in the `refund` machine,
+      # not quote states (ADR-0114, AUTHORITY-047).
+      deposit_paid: [in_progress, cancelled]
       in_progress: [balance_due, cancelled]
       balance_due: [completed, cancelled]
       completed: []
       cancelled: []
       expired: []
-      partially_refunded: [refunded]
-      refunded: []
   distribution:
     initial: draft
     transitions:
