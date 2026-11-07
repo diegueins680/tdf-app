@@ -1,0 +1,49 @@
+ACCEPT — scoped independent review of ROOT currency current-parent qualification and report-packaging design. Zero blocking findings.
+
+Source b31ce8e0b7759ffbb035d228952aa9445c768add; old published head b08c92a37a8dcd734c4c890158e3b766ac44c55b; qualified range parent d4c00e935ebbd0d6b958bc2e908d0f4efbe7096c; inherited protected main 234ff6f7faf1aecf347c8e92a374228f4ec07aaa. These are the exact normal merge parents and source identities reviewed. This currency preparation and the qualification/binders were authored by ROOT; my inspection is independent of that authorship.
+
+I read the current qualifier, seal, extracted binder controls, sequential seal-record wrapper and generic child packager, inspected actual raw logs/receipts, and independently compared source/artifact bytes. Actual canonical Stack build used --force-dirty and returned zero. Current targeted output is 29 examples/0 failures/0 pending; full native output is 4074/0/21 inherited pending. Actual Version compilation appears in the build log. The native test binary SHA 170f718dd67eba0a983720c26210d0c536f07cdfa845b8daa08e210976eaced7 and Version.o SHA c8fb581dd711f67cd525638f441b411e72834e712a0f8a26bb078258f8941c84 match current disk and force-dirty receipts; both contain the exact b31 source literal. No serving executable or deployment qualification is claimed.
+
+Independently rehashed all 1430 registered FS/Git/Mobile bindings, all 987 backend input paths independently enumerated from Git, and all 52 assurance artifacts. Provenance, sorted file-table digest, source revision, Mobile pin and clean state agree. Current root quality/admission/catalogue 8 and fresh assurance record actual zero. Assurance ran as the separate serialized phase after native/root-QA cleanup, with stable clean source fingerprint and no aliases remaining. No stale or failed assurance is accepted as passing.
+
+Whole backend remains exact B08. Only the owned handler/test paths differ from the range parent; other runtime/UI/scripts/workflows/dependencies/Mobile equal the parent. All 160 new-parent normative objects and all 159 inherited main objects are preserved exactly, plus unchanged currency requirement for 161. Only main's two authorized checkout-verifier amendments supersede old B08 normative values. Source and owned range/currency Markdown contracts are unchanged; auth/recovery contexts and theorem assumptions are preserved. All historical report/evidence Git bindings from both parents remain exact (1689 old and 1702 parent, overlapping sets). Current strict catalogue 1354/history and canonical metadata checks remain valid.
+
+The hardened native binder requires complete build/targeted/full and root-quality/admission/catalogue phase keys and qualified phase, compares the actual binary and Version object, and validates exact 161 whole/322 implementation-refinement UNPROVEN metrics plus eleven inherited conditional SMT claims. Formal release is BLOCKED with executionAllowed false. Both actual sequential seal subprocesses returned zero. All 13 in-memory evidence corruptions produced intended assertion rejection with valid-before/restored-after and disk artifacts unchanged. These are binder controls, not newly rerun product source mutants or proof of the whole verification system. Original currency baseline 13/8 failures, the later14-case guard-bypass 8 and late-write 1 assertion faults, and earlier range counterexamples retain their historical source identities; they are not relabeled as current executions.
+
+The generic child packager has no new application semantics, preserves explicit browser-precision FAILED_IN_THIS_BRANCH risk on this currency branch, and retains historical counterexamples/assumptions. UI683 and CSV684 remain separate unmerged corrections; this native report does not establish exact browser display or CSV row units. Tests use finite direct typed Handler/owned SQLite fixtures; authenticatedHTTP, production PostgreSQL reachability, global currency decoding/FX, serializable snapshot and provider/production behavior are not established. No complete implementation/refinement proof is claimed.
+
+Packaging and publication have not executed in this review. The reviewed packager requires manual ROOT reading of this receipt, then creates only four new report paths and invokes the committed Git/archive verifier for all four Git/FS blobs and every unique safe manifest-bound archive member. That future verification must succeed. ACCEPT is a manual packaging precondition, not GitHub required approval. Current-head hosted CI, independent exact-head approval, strict parent/main/FIFO/protection checks and any later main movement must be checked afresh before integration; old approvals are not borrowed.
+
+I did not independently rerun tests, compilers, builds, probes, controls, model solvers, browsers, PG/Docker or providers, or modify source, refs, remote/PR/review state. I performed read-only inspection and cryptographic/Git comparisons, and wrote only owned review receipts. SIGTERM/process cleanup is not universally proved. No production record, deployment or complete platform-correctness claim follows.
+
+Companion independent rehash checks: /private/tmp/tdf-event-finance-currency-main643-final-independent-checks-20261030T2302.json
+SHA256: c965b0aeddd32f8a0b5d050e06e9b132fac642e5cba712a0f3d30f06f892a5ee
+
+Exact source and raw receipt/harness SHA256:
+327594ee8ea9be48ddb120cf99f73a7d706bb7e12e97a9a4ba06b16032451936  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/preparation-state.json
+de69b567fbbc98acfcc4f55363c16f1eda1ac87849da6deaf001cc962f9db5f3  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/native-quality.json
+25f139487b36826469180e8bc481a627bbea45e2dacb9261b44b5f83a45aa6de  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/native-qualified-inputs.json
+d1c6e461d4ca334d6ed4871a39040205969c4b045a647a0e725b728db7eef143  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/native-force-dirty-confirmed.json
+b2073b7c8bf231b12532f87681d8e5f24183697ba92e975153032f62b1eabb2e  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/qualified-build.log
+aefee310a615e35b58f762a9b8b37ca71e13c60f8f80b26ffa6cdb5369087db0  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/qualified-targeted.log
+38c4d12b506521b846c16c77680f9f00f0ed399bc5cff967af0eb71f1103eb62  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/qualified-full.log
+8e68f0d37c911d0a11fbed09b6c7d14f1bba7e4b28c73c52b5f223f934114097  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/root-quality-result.json
+ce35a950dd301c18011e43a9dbcc48b12db4b95563125cea416cb7b9c2fc695a  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/assurance-execution.json
+fffa538d165108cedd97bad75ca39c9b7e2ce50dd5a6838124587d47befd4f5e  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/assurance-committed/report.json
+cad4f7c6fd20aba9bda51af185dd34c169d68accee3035fb6bb524c189965430  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/assurance-committed/sources.json
+be77e304847818473d5401af8062647c760c53927d3f443a1f746c4b76811767  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/source-correspondence.json
+f0f3041a7d4f8e610122cff734595ca686b58a5fcd7781ee6408522df904f329  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/seal-binding-controls.json
+daaf03b251869bd9f166b57759ede821b67af2cc216f0dc284fad26064db3881  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/seal-execution.json
+06eaf3f18d6c4ea36e6a04e5efe95b2f5fa10977aa02d7eec49654c464deaa5a  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/seal-execution.log
+0f84fdb894063837345c842bde60553b7c93bf0906f9857a3a386bf277e37fe2  /private/tmp/tdf-event-finance-currency-main643-qualification-20261030T2302/seal-controls-execution.log
+fb18db7b004242df5d7e3f5431375f27e622859b8813b86fb24ba5490c6afc28  /private/tmp/tdf-event-finance-currency-main643-seal-20261030T2302.py
+913f12243617ec6571d69e124af2e8e305fb404a5fd416b22465d9e853786e4e  /private/tmp/tdf-event-finance-currency-main643-seal-controls-20261030T2302.py
+28b5da47429eb5cade99b1a29e57be85b261ef1087e4cfb11cc60412873df12a  /private/tmp/tdf-event-finance-currency-main643-qualify-native-20261030T2302.py
+03d6e0d928f1faa16079349499fc08868cf9340b49f34da916b43978fa02887e  /private/tmp/tdf-event-finance-currency-main643-assurance-20261030T2302.py
+8457f8e2dea3f52c2d25d4217bf3de7281a1207703a64464d4aad3a2d086674c  /private/tmp/tdf-finance-child-main643-package-20261030T2302.py
+6b8519027c4cfd61aa523581a62f57ee43b2fcb490ff47a850f0a7074414df93  /private/tmp/tdf-finance-child-main643-seal-record-20261030T2302.py
+27d9f59e9475295fe59ae9546b5452495279ae20bbd75b1a9338ff8ddb043514  /private/tmp/tdf-verify-report-archive-20261030.py
+69015488aae669c32821e6be4ef88524e10d486e284adb97258c2b8de0490b9f  /private/tmp/tdf-event-finance-currency-main643-20261030T2302/formal/system/event-finance-report-currency.md
+18c05a75e7b16626a21667be234f0a6f191630e8766eb3e9921cb06c2a9548bf  /private/tmp/tdf-event-finance-currency-main643-20261030T2302/formal/system/event-finance-report-range.md
+
+Reviewed at UTC 2026-10-30T23:51:18.860822+00:00
