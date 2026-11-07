@@ -16261,7 +16261,8 @@
         "docs/catalog-persistence/storage-security-successor-20261106.json",
         "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
         "tdf-hq/sql/2026-11-07_content_storage_identity_guards_rollback.sql",
-        "tdf-mobile/src/api/accountStorage.ts"
+        "tdf-mobile/src/api/accountStorage.ts",
+        "tdf-hq-ui/src/utils/env.ts"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
