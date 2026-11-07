@@ -16514,7 +16514,7 @@
       ],
       "authorization": "Current-session/current-role locks cover all management. Self artist or strict administrator is checked first; otherwise the current canonical directory subject, manager actor, active private-view/edit grants and eligible profile state are rechecked under manager/profile shared locks in the same transaction. Featuring additionally requires can_publish, published/allowed profile visibility, saved rights/technical checks and the exact campaign revision.",
       "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration. Both new Party references participate in canonical identity dependency discovery and reject inserts/reassignments to archived identities.",
-      "concurrency": "Compare-and-swap revision guards prevent lost updates; unique campaign/artist and campaign/viewer/kind constraints prevent duplicates.",
+      "concurrency": "Compare-and-swap revision guards prevent lost updates; atomic conflict-tolerant inserts and unique campaign/artist and campaign/viewer/kind constraints recover concurrent identical creation and conversion retries without duplicate rows or transaction-aborting unique violations.",
       "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
       "failure": "Invalid documents, ambiguous scope, stale revisions and unverifiable conversions reject. The editor preserves an unsaved draft after a failed save.",
       "recovery": "Retry an uncertain save with the same UUID, body and expected revision. Reconcile a changed saved version rather than overwrite it.",
@@ -16560,7 +16560,8 @@
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "scripts/__tests__/video-campaign-access.test.mjs",
         "scripts/test-identity-reconciliation.sh",
-        "tdf-hq/test/sql/identity_reconciliation.sql"
+        "tdf-hq/test/sql/identity_reconciliation.sql",
+        "scripts/__tests__/identity-http-runtime.mjs"
       ],
       "formalModels": [
         "scripts/verify-video-campaign-access.mjs"
@@ -16581,7 +16582,7 @@
       "authority": "Approved Liquid Paper Girl launch prompt and repository authorization/storage boundaries.",
       "property": "Artist-scoped drafts are durable and publishing remains explicitly separate from preparation.",
       "contract": "docs/artists/video-campaigns.md",
-      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused. Finite 16,384-case manager predicate and 13 guard-removal controls, source-presence binding and actual PostgreSQL directory-grant examples; not full implementation/interleaving refinement.",
+      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused. Finite 16,384-case manager predicate and 13 guard-removal controls, source-presence binding and actual PostgreSQL directory-grant examples; not full implementation/interleaving refinement. The existing isolated PostgreSQL HTTP runner controls two-request insert barriers for identical/conflicting campaign creation and registration/follow retries; bounded empirical interleavings, not a universal concurrency proof.",
       "evidence": "PR #599, paired Mobile contract PR and current-revision test receipts. Historical media measurements are retained but original and derivative bytes are unavailable in this run."
     },
     {

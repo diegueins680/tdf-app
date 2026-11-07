@@ -16515,7 +16515,7 @@
       ],
       "authorization": "Current-session/current-role locks cover all management. Self artist or strict administrator is checked first; otherwise the current canonical directory subject, manager actor, active private-view/edit grants and eligible profile state are rechecked under manager/profile shared locks in the same transaction. Featuring additionally requires can_publish, published/allowed profile visibility, saved rights/technical checks and the exact campaign revision.",
       "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration. Both new Party references participate in canonical identity dependency discovery and reject inserts/reassignments to archived identities.",
-      "concurrency": "Compare-and-swap revision guards prevent lost updates; unique campaign/artist and campaign/viewer/kind constraints prevent duplicates.",
+      "concurrency": "Compare-and-swap revision guards prevent lost updates; atomic conflict-tolerant inserts and unique campaign/artist and campaign/viewer/kind constraints recover concurrent identical creation and conversion retries without duplicate rows or transaction-aborting unique violations.",
       "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
       "failure": "Invalid documents, ambiguous scope, stale revisions and unverifiable conversions reject. The editor preserves an unsaved draft after a failed save.",
       "recovery": "Retry an uncertain save with the same UUID, body and expected revision. Reconcile a changed saved version rather than overwrite it.",
@@ -16561,7 +16561,8 @@
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "scripts/__tests__/video-campaign-access.test.mjs",
         "scripts/test-identity-reconciliation.sh",
-        "tdf-hq/test/sql/identity_reconciliation.sql"
+        "tdf-hq/test/sql/identity_reconciliation.sql",
+        "scripts/__tests__/identity-http-runtime.mjs"
       ],
       "formalModels": [
         "scripts/verify-video-campaign-access.mjs"
@@ -16582,7 +16583,7 @@
       "authority": "Approved Liquid Paper Girl launch prompt and repository authorization/storage boundaries.",
       "property": "Artist-scoped drafts are durable and publishing remains explicitly separate from preparation.",
       "contract": "docs/artists/video-campaigns.md",
-      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused. Finite 16,384-case manager predicate and 13 guard-removal controls, source-presence binding and actual PostgreSQL directory-grant examples; not full implementation/interleaving refinement.",
+      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused. Finite 16,384-case manager predicate and 13 guard-removal controls, source-presence binding and actual PostgreSQL directory-grant examples; not full implementation/interleaving refinement. The existing isolated PostgreSQL HTTP runner controls two-request insert barriers for identical/conflicting campaign creation and registration/follow retries; bounded empirical interleavings, not a universal concurrency proof.",
       "evidence": "PR #599, paired Mobile contract PR and current-revision test receipts. Historical media measurements are retained but original and derivative bytes are unavailable in this run."
     },
     {
@@ -17315,7 +17316,7 @@
     "scripts/__tests__/hetzner-migration-rehearsal.test.mjs": "8fd637e986cb2ee892a6d07641c1365ed929e1e52b840cfa2ea8f420ac2f9e05",
     "scripts/__tests__/hetzner-preparation.test.mjs": "f5c996dbf9fd298e088531bfbde258202d7b54f30832427b2868f1718d82ad36",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
-    "scripts/__tests__/identity-http-runtime.mjs": "8bacd9e9b60276a5bca43018664b5618cd1ef09918f8b22e0003096523d3ce90",
+    "scripts/__tests__/identity-http-runtime.mjs": "67e453896cfdc6a2fc2a3c7a9e6299bee61dc5a1e7ead3c3720ce729431f2354",
     "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
     "scripts/__tests__/ledger-event-identity.mjs": "65e6578d15bba078f5e48d36a9a8ad2c240d1f34d89b7f015f43a9f9ca23a526",
     "scripts/__tests__/ledger-posting-namespace.py": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
@@ -18434,7 +18435,7 @@
     "tdf-hq/src/TDF/Trials/Models.hs": "5e9660ad98a323ced9ec685376c66d9a4e41756b2d9961da6f88800068432157",
     "tdf-hq/src/TDF/Trials/Server.hs": "3d03e935ad1a83fe73ee42622d55b5eb3d8eb66e7bf858145c3bba74e71042c5",
     "tdf-hq/src/TDF/Version.hs": "900950bcdd8314fdba4f698363494beb0368224cf67f3f8672812312cf811b7f",
-    "tdf-hq/src/TDF/VideoCampaigns.hs": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
+    "tdf-hq/src/TDF/VideoCampaigns.hs": "39e55365c71ec6bbaa77749048141519a192a112220a5ab1494229c427dbb25c",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/tdf-hq.cabal": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
@@ -20590,6 +20591,10 @@
       },
       {
         "requirement": "PAY-CHECKOUT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "tests"
       }
     ],
@@ -35450,7 +35455,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "8bacd9e9b60276a5bca43018664b5618cd1ef09918f8b22e0003096523d3ce90",
+      "sha256": "67e453896cfdc6a2fc2a3c7a9e6299bee61dc5a1e7ead3c3720ce729431f2354",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35479,6 +35484,10 @@
         },
         {
           "requirement": "PAY-CHECKOUT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "tests"
         }
       ]
@@ -59542,7 +59551,7 @@
     {
       "id": "SURFACE-53869c6b64312cae",
       "path": "tdf-hq/src/TDF/VideoCampaigns.hs",
-      "sha256": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
+      "sha256": "39e55365c71ec6bbaa77749048141519a192a112220a5ab1494229c427dbb25c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67911,7 +67920,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4e837d1c809790be184b327867cf67a86969b8affc4d37c29e8ca18c38593e2",
+      "sourceSha256": "79a7922ffca0047124552371b1bd80dcd0f210ba81eb430bc3d9864cbbe12045",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -67939,7 +67948,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4e837d1c809790be184b327867cf67a86969b8affc4d37c29e8ca18c38593e2",
+      "sourceSha256": "79a7922ffca0047124552371b1bd80dcd0f210ba81eb430bc3d9864cbbe12045",
       "definition": {
         "states": [
           "absent",
@@ -67969,7 +67978,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b4e837d1c809790be184b327867cf67a86969b8affc4d37c29e8ca18c38593e2",
+      "sourceSha256": "79a7922ffca0047124552371b1bd80dcd0f210ba81eb430bc3d9864cbbe12045",
       "definition": {
         "export": [
           "queued",
