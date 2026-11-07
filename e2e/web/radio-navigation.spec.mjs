@@ -59,10 +59,8 @@ test('@critical radio keeps native playback and controls across sidebar navigati
   await audio.evaluate((a) => { globalThis.__originalRadioAudio = a; globalThis.__radioEvents = []; });
   const checkpoints = [];
   const check = async (label) => {
-    const transport = page.getByRole('region', { name: 'Reproductor global', exact: true });
-    await expect(transport).toBeVisible();
-    await expect(transport.getByRole('button', { name: 'Pausar', exact: true })).toBeVisible();
-    await expect(page.locator('audio')).toHaveCount(1);
+    await expect(bar).toBeVisible();
+    await expect(bar.getByRole('button', { name: 'Pausar radio', exact: true })).toBeVisible();
     const before = await page.evaluate(() => {
       const a = globalThis.__originalRadioAudio;
       return { connected: a.isConnected, paused: a.paused, volume: a.volume, time: a.currentTime,

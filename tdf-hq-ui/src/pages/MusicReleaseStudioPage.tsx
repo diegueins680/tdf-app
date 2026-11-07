@@ -1,5 +1,4 @@
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
-import MediaHealthPanel from '../player/MediaHealthPanel';
 import MarkdownText from '../components/MarkdownText';
 import { canonicalMusicMinor } from '../utils/musicMoney';
 import AddIcon from '@mui/icons-material/Add';
@@ -248,7 +247,6 @@ function ReleaseIndex() {
   };
 
   return <Stack spacing={3}>
-    <MediaHealthPanel />
     <Stack spacing={0.5}>
       <Typography variant="h4" fontWeight={700}>Estudio de lanzamientos</Typography>
       <Typography color="text.secondary">Catálogo canónico, derechos, assets privados y revisión editorial.</Typography>

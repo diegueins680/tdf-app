@@ -1,3 +1,5 @@
+> Backend delivery stage: this branch implements storage and APIs. The editor and artist-navigation playback behavior described below remain in PR670.
+
 # Artist-owned featured track
 
 The preference is one artist-owned reference to either a canonical recording or

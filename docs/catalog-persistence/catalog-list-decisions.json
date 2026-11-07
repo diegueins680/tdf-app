@@ -3286,6 +3286,42 @@
       "currentDecisionId": "1ee8e6fd1582ef3e33c0",
       "introducedBy": "566dd05c4f630ffdbdb9f0c4a38260cd5274197e",
       "executionAllowed": false
+    },
+    "backendFirstFrontendBoundary20261107": {
+      "runtimeFrontendSource": "ccea8c487c9fcdc73a85a9583ee2d257f6ba41d4",
+      "deferredApiWrapperReview": {
+        "id": "b4afb300f6c7ae1e24dd",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "Typed API-client dispatch adds artist featured-track GET/PUT methods while retaining all inherited methods. These transport function names are implementation mechanics, not editable/selectable domain catalog values.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/musicReleases.ts",
+          "line": 545
+        },
+        "reviewBatch": "artist-featured-track-2026-10-30",
+        "reviewMethod": "manual-source-review",
+        "previousDecision": {
+          "id": "a54bc30988f056e6d713",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+          "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/musicReleases.ts",
+            "line": 518
+          },
+          "reviewBatch": "music-track-search-2026-10-26",
+          "reviewMethod": "manual-source-review"
+        }
+      },
+      "reason": "Backend stage preserves the exact protected frontend runtime; only generated declarations change. The reviewed six-method UI wrapper and controls remain in PR670. This restores the matching protected-main dispatch fingerprint, not a stale-source waiver."
     }
   },
   "decisions": [
@@ -22895,38 +22931,6 @@
       "reviewMethod": "manual-fixture-boundary-review"
     },
     {
-      "id": "b4afb300f6c7ae1e24dd",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Typed API-client dispatch adds artist featured-track GET/PUT methods while retaining all inherited methods. These transport function names are implementation mechanics, not editable/selectable domain catalog values.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/musicReleases.ts",
-        "line": 545
-      },
-      "reviewBatch": "artist-featured-track-2026-10-30",
-      "reviewMethod": "manual-source-review",
-      "previousDecision": {
-        "id": "a54bc30988f056e6d713",
-        "classification": "genuine-technical-constant",
-        "disposition": "retain-in-code",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P3-retain",
-        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-        "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-hq-ui/src/api/musicReleases.ts",
-          "line": 518
-        },
-        "reviewBatch": "music-track-search-2026-10-26",
-        "reviewMethod": "manual-source-review"
-      }
-    },
-    {
       "id": "d2c5cb6faef42827d619",
       "classification": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
@@ -34762,6 +34766,22 @@
           "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
         }
       ]
+    },
+    {
+      "id": "a54bc30988f056e6d713",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 518
+      },
+      "reviewBatch": "music-track-search-2026-10-26",
+      "reviewMethod": "manual-source-review"
     }
   ]
 }

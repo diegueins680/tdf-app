@@ -1,84 +1,15 @@
-# Universal player: state, intent, and source health
+# Music source health: backend delivery stage
 
-One session-owned `PlayerProvider` owns the listening audio element, queue,
-source resolution, position, volume and media-session controls. Routes issue
-commands; they do not own an audio element. This guarantee covers native TDF
-music and radio in one application document. External provider pages, other
-browser tabs and operating-system applications are outside that ownership.
+This candidate delivers server prerequisites for universal playback. Frontend runtime and browser tests match protected mainccea8c4; only generated declarations change. The unified engine and its idle/resolving/ready/playing/paused/recovering/exhausted/error model remain in PR670. This stage does not claim that production has the new player.
 
-Playback intent is separate from media readiness. `explicitPauseRef` is the
-user's pause latch; `autoplayRef` is permission for the current attempt to play.
-Selecting another artist does not clear the pause latch. Play and explicit track
-selection clear it; Next/Previous while paused only change the silent selection.
-The same listener's explicit-pause latch is persisted with the queue; a reload restores it silently. Account changes dispose it.
+The database stores pending, valid, temporary and invalid observations by source kind, identity and version. Ingestion queues new sources; the trusted derivative pipeline records validated output. A resumable worker inserts at most100 missing identities and claims one due source per loop. Claims use90-second leases and current-version fencing; expired workers cannot commit over replacement sources or claims.
 
-| Model state | Engine/UI representation | Exit |
-| --- | --- | --- |
-| idle | No selected track, `idle` | Select a context/track |
-| resolving | `loading`, current source authorization or metadata pending | Current authorization and native metadata, failure or 15s deadline |
-| ready | Prepared media, `paused`, no explicit pause latch | User Play or permitted current autoplay attempt |
-| playing | Current unpaused native `playing` event | Pause, waiting, end, error, newer selection |
-| paused | `paused` plus explicit pause latch | Explicit Play/track selection |
-| recovering | `loading` with bounded retry or source/track advance | Current result, timeout, pause or newer selection |
-| exhausted | `unavailable`, no remaining eligible candidate | Explicit retry or another selection; artist UI offers radio |
-| error | `error` or diagnosed unavailable/offline state | Explicit retry or another selection |
+Checks use public HTTPS, bounded DNS children, pinned validated addresses, rechecked redirects, at most1MiB of bytes and bounded probe/decode commands. Object-store credentials never follow redirects; nested containers cannot open local files or network URLs. Known Drive viewer/login HTML is inconclusive. These checks sample media rather than proving whole-recording decoding or live provider access.
 
-The transport uses a separate playback-request flag so Pause can cancel authorization or buffering before audio starts. A fulfilled `play()` promise alone never establishes playing. Autoplay rejection
-retains the selection, reports paused and requests a Play gesture. Native events
-must match current selection, source URL and generation. The old generation is
-retired synchronously when recovery advances. Actor changes dispose listeners,
-timers, grants, torrent sessions and media resources.
+Two matching permanent failures at least30minutes apart suppress the exact current source. Temporary errors never newly suppress valid content. Successful validation restores eligibility. Legacy featured references obey the same health gate while saved preferences remain available to their owner. Application recovery retains observations and invalidity policy; old SQL is not rewritten.
 
-Each candidate has at most the initial request plus two transient retries with
-1s/2s backoff. Source preparation and stalls have a 15s watchdog; repeated
-waiting or nonadvancing time updates cannot extend it. Requests use cancellable
-API deadlines. An attempt therefore terminates or advances; a finite queue is
-exhausted without repeat/shuffle cycling. Offline errors retain a useful retry
-action and do not condemn catalog media. No timer, background check, prefetch or
-artist navigation may clear explicit pause. Artist exhaustion never commands
-radio; the listener chooses its link and station.
+Canonical assets retain existing publication, territory, preview and download authorization. Legacy source grants recheck current artist visibility and health and return no-store responses. Diagnostic reads and revalidation derive the caller from authentication and check owner/team/admin scope. Revalidation schedules a current identity without clearing invalidity or accepting a caller URL. Diagnostics omit locations and credentials.
 
-Protected sources cannot fall back to an old unsigned URL. Canonical assets and
-legacy release membership are reauthorized at selection. During visible playback,
-a single cancellable check runs every 60s and on foreground return; denial stops
-or advances the source. Browser background throttling can delay this check.
-Previously delivered bytes and a still-live signed grant cannot be revoked by
-the client. The server checks current publication, territory and access rules on
-every new grant. Full downloads keep their separate entitlement gates.
+Diagnostics use stable source-kind/ID cursors, default100 and maximum500 rows per request. Each page rechecks permission; verdict timestamps do not change the ordering. A traversal is not a database snapshot: newly inserted identities before a cursor appear after refresh. Previously delivered bytes or metadata cannot be revoked retroactively.
 
-The server stores health by kind, source ID and SHA256 source version. Ingestion
-of derivatives from the existing decoding pipeline records its result; other
-sources enter a bounded queue. The worker inserts at most 100 missing identities
-and claims one due source per loop, using a 90s lease. Expired claims can be
-reclaimed; an old lease or changed source cannot commit. Repeating the sweep
-resumes existing content without a one-shot migration or unbounded transaction.
-
-Checks use one HTTPS request chain with at most three redirects, at most 1MiB
-of media, a 25s network deadline, bounded DNS children and 5s local probe/decode
-commands. All DNS answers must be public, and TCP uses a checked address while
-TLS still verifies the original hostname. Every redirect is checked again;
-object-store credentials never follow redirects. ffmpeg/ffprobe receive only the checked sample through a pipe; nested media
-cannot open local files or network URLs. Partial/inconclusive containers remain temporary. This is a bounded
-sample check, not a guarantee that every byte of an entire recording decodes.
-
-Only two matching permanent failures, separated by at least 30min, suppress
-public media. Timeouts, server errors, authentication and transport failures do
-not newly suppress valid media. Existing invalid verdicts persist until a
-successful check. Valid observations reenable the exact current source.
-Diagnostics omit raw URLs, queries, keys and credentials. Owner/team/admin
-revalidation coalesces checks without clearing a verdict or granting access.
-Public canonical sources and signatures use the same health policy; public legacy
-reads remove confirmed-invalid links while owner records remain intact.
-
-Assumptions: the database and worker are trusted, the browser implements native
-media events, timers eventually run, and a finite queue is supplied. No guarantee
-of uninterrupted playback is possible when all sources or the network fail.
-Tests exercise concrete races, native media and database behaviors; they are not
-a mathematical proof or a claim that this candidate is deployed. Physical-device,
-provider-account and full catalog provenance qualification remain separate.
-
-Native session-video previews coordinate a handoff: playing a preview pauses the global transport, and a new global play command retires the preview. External provider frames remain outside the native engine guarantee. Legacy browser URL forms retain stable source authorization; relative and HTTP URLs are never fetched by the HTTPS-only server probe.
-
-Owner/team/admin diagnostics use stable source-kind/source-ID cursors, default100 rows and at most500 per request. Each page rechecks current permissions; changing a health verdict does not move its identity across pages. The UI requests more rows only by explicit action and retains earlier diagnoses after a page failure. A traversal is not a snapshot: refresh to see newly inserted identities before an existing cursor. Account changes reset the displayed pages.
-
-The legacy featured-reference predicate uses the same current source-health gate: invalid sources do not become publicly available through a saved preference; successful validation restores eligibility without replacing the saved choice. Known Drive viewer/login HTML remains inconclusive rather than a permanent media verdict.
+Assumptions: a trusted database and worker, protected source integration, supported media tooling and eventual timer/process scheduling. No uninterrupted playback guarantee follows from this stage. Full provider, device, real object-store ingestion and production recovery/rollout qualification remain separate. Executed checks are empirical evidence, not mathematical proof.

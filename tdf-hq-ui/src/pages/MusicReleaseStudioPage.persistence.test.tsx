@@ -20,7 +20,7 @@ const acceptTerms = jest.fn<() => Promise<void>>();
 const validate = jest.fn<() => Promise<{ valid: boolean; errors: [] }>>();
 const transition = jest.fn<() => Promise<void>>();
 const uploadAsset = jest.fn<() => Promise<void>>();
-jest.unstable_mockModule('../session/SessionContext', () => ({ getStoredSessionToken: () => null, useSession: () => ({ session: {
+jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: {
   partyId: 101, displayName: 'Artista sintético', roles: ['Artist'],
 } }) }));
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listPublicItems: async () => ({ items: [] }) } }));

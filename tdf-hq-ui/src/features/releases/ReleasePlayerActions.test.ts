@@ -234,9 +234,3 @@ describe('Drive native delivery URL contract', () => {
     expect(resolveReleasePlaybackAction(release(), { 42: url })).toEqual({ kind: 'native', url });
   });
 });
-
-it.each(['http://media.example/audio.mp3', '/uploads/authorized.mp3', 'media.example/audio.mp3', '//media.example/audio.mp3'])('authorizes the stored legacy source for browser URL %s', (url) => {
-  const dispatchEvent = jest.fn();
-  dispatchReleaseToRadio(release({ arSpotifyUrl: url }), url, { dispatchEvent });
-  expect((dispatchEvent.mock.calls[0]?.[0] as CustomEvent).detail.track.sources[0].legacySourceId).toBe('42:spotify');
-});

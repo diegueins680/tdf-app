@@ -7,7 +7,6 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 let authenticated = true;
 let loading = false;
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  getStoredSessionToken: () => null,
   useSession: () => ({ session: authenticated ? { username: 'listener' } : null, loading }),
 }));
 jest.unstable_mockModule('../api/radio', () => ({ RadioAPI: {
@@ -22,8 +21,6 @@ jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: {
 } }));
 jest.unstable_mockModule('../utils/tidalAgent', () => ({ generateTidalCode: jest.fn() }));
 const { default: RoutedRadioWidget } = await import('./RoutedRadioWidget');
-const { PlayerProvider } = await import('../player/PlayerProvider');
-const { default: GlobalPlayer } = await import('../player/GlobalPlayer');
 
 const destinations = ['/inicio', '/marketplace', '/musica', '/configuracion/inscripciones-curso', '/records', '/fans', '/solicitudes-acceso/revision'];
 let play: jest.SpiedFunction<HTMLMediaElement['play']>;
@@ -35,11 +32,7 @@ beforeEach(() => {
   loading = false;
   window.localStorage.clear();
   window.history.replaceState(null, '', '/solicitudes-acceso/revision');
-  jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockImplementation(function (this: HTMLMediaElement) { return this.src; });
-  jest.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(false);
-  play = jest.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(async function (this: HTMLMediaElement) {
-    this.dispatchEvent(new Event('playing'));
-  });
+  play = jest.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(async () => undefined);
   pause = jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
   load = jest.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => undefined);
 });
@@ -49,10 +42,7 @@ function setup() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const tree = () => <QueryClientProvider client={client}><BrowserRouter>
     <nav>{destinations.map((path) => <Link key={path} to={path}>{path}</Link>)}<Link to="/inicio#radio">Open radio</Link></nav>
-    <PlayerProvider identity={{ ready: !loading, partyId: authenticated ? 42 : null }}>
-      <Suspense fallback={null}><RoutedRadioWidget /></Suspense>
-      <GlobalPlayer />
-    </PlayerProvider>
+    <Suspense fallback={null}><RoutedRadioWidget /></Suspense>
   </BrowserRouter></QueryClientProvider>;
   const result = render(tree());
   return { ...result, refresh: () => result.rerender(tree()), client };
@@ -65,7 +55,7 @@ it('keeps the same audio and controls playing across menu destinations and Back/
     await waitFor(() => expect(screen.getByTestId('radio-docked-status').textContent).toContain('Navigation radio'), { timeout: 10000 });
     const audio = view.container.querySelector('audio')!;
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Reproducir radio' })); });
-    expect(screen.getByRole('button', { name: 'Pausar', exact: true })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Pausar radio' })).toBeTruthy();
     audio.currentTime = 42;
     const pauses = pause.mock.calls.length;
     const loads = load.mock.calls.length;
@@ -74,8 +64,8 @@ it('keeps the same audio and controls playing across menu destinations and Back/
     for (const path of destinations) {
       fireEvent.click(screen.getByRole('link', { name: path, exact: true }));
       expect(window.location.pathname).toBe(path);
-      expect(screen.getByRole('region', { name: 'Reproductor global' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Pausar', exact: true })).toBeTruthy();
+      expect(screen.getByTestId('radio-docked-bar')).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Pausar radio' })).toBeTruthy();
       expect(view.container.querySelector('audio')).toBe(audio);
       expect(audio.src).toBe(source);
       expect(audio.currentTime).toBe(42);
@@ -90,9 +80,9 @@ it('keeps the same audio and controls playing across menu destinations and Back/
     expect(load).toHaveBeenCalledTimes(loads);
     expect(play).toHaveBeenCalledTimes(plays);
     // Pausing is an explicit user action; navigation must not undo it either.
-    fireEvent.click(screen.getByRole('button', { name: 'Pausar', exact: true }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pausar radio' }));
     fireEvent.click(screen.getByRole('link', { name: '/inicio', exact: true }));
-    expect(screen.getByRole('button', { name: 'Reproducir', exact: true })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Reproducir radio' })).toBeTruthy();
     expect(view.container.querySelector('audio')).toBe(audio);
   } finally { view.unmount(); view.client.clear(); }
 });
@@ -101,7 +91,7 @@ it('defers the radio on quiet landing routes, then retains it after explicitly o
   window.history.replaceState(null, '', '/inicio');
   const view = setup();
   try {
-    expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
+    expect(view.container.querySelector('audio')).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: 'Open radio' }));
     await screen.findByTestId('radio-docked-bar');
     const audio = view.container.querySelector('audio');
@@ -115,16 +105,16 @@ it('waits for authentication and removes the player on logout without retaining 
   loading = true;
   const view = setup();
   try {
-    expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
+    expect(view.container.querySelector('audio')).toBeNull();
     loading = false;
     view.refresh();
     await screen.findByTestId('radio-docked-bar');
     authenticated = false;
     view.refresh();
-    expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
+    expect(view.container.querySelector('audio')).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: '/inicio', exact: true }));
     authenticated = true;
     view.refresh();
-    expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
+    expect(view.container.querySelector('audio')).toBeNull();
   } finally { view.unmount(); view.client.clear(); }
 });

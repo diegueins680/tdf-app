@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { Box, Stack, Typography, Button, Chip } from '@mui/material';
 import type { NormalizedStreamingSource, StreamingSource } from '../utils/media';
 import { normalizeStreamingSource } from '../utils/media';
-import { useOptionalPlayer } from '../player/PlayerProvider';
 import { assertNever } from '../utils/assertNever';
 import { PLAYER_LOAD_TRACK_EVENT, type LoadPlayerTrackDetail } from '../player/types';
 
@@ -27,16 +26,55 @@ const renderPrimaryStream = (
   title: string,
   artist?: string,
   posterUrl?: string | null,
-  pauseNative?: () => void,
 ) => {
-  if (source.provider === 'youtube' || source.provider === 'spotify') {
-    return <Button component="a" href={source.url} target="_blank" rel="noopener noreferrer"
-      onClick={pauseNative} aria-label={`${source.label} (abre en nueva pestaña)`}>
-      Escuchar en {source.label}
-    </Button>;
+  if (source.provider === 'youtube') {
+    return (
+      <Box sx={{ position: 'relative', pt: '56.25%', borderRadius: 1.5, overflow: 'hidden' }}>
+        <Box
+          component="iframe"
+          src={source.url}
+          title={source.label}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          loading="lazy"
+          sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none' }}
+        />
+      </Box>
+    );
   }
 
-  if (source.provider === 'audio' || source.provider === 'video') {
+  if (source.provider === 'spotify') {
+    return (
+      <Box
+        component="iframe"
+        src={source.url}
+        title={source.label}
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"
+        sx={{ border: 'none', borderRadius: 1.5, width: '100%', height: 152, bgcolor: 'background.default' }}
+      />
+    );
+  }
+
+  if (source.provider === 'video') {
+    return (
+      <Box
+        component="video"
+        src={source.url}
+        controls
+        preload="metadata"
+        poster={posterUrl ?? undefined}
+        playsInline
+        sx={{ width: '100%', borderRadius: 1.5, bgcolor: 'background.default' }}
+      >
+        {/* Placeholder for future captions — no src until subtitles are available */}
+        <track kind="captions" />
+        Tu navegador no soporta la reproducción de video.
+      </Box>
+    );
+  }
+
+  if (source.provider === 'audio') {
     return (
       <Button
         variant="contained"
@@ -48,7 +86,7 @@ const renderPrimaryStream = (
               title,
               artist: playerArtistName(artist),
               artworkUrl: posterUrl,
-              sources: [{ url: source.url, quality: 'high', mediaType: source.provider === 'video' ? 'video/mp4' : 'audio/mpeg' }],
+              sources: [{ url: source.url, quality: 'high', mediaType: 'audio/mpeg' }],
             },
             autoplay: true,
           };
@@ -85,7 +123,6 @@ export function StreamingPlayer({
   posterUrl,
   variant = 'regular',
 }: StreamingPlayerProps) {
-  const player = useOptionalPlayer();
   const normalizedSources = useMemo(
     () => sources.map((source) => normalizeStreamingSource(source)).filter(Boolean) as NormalizedStreamingSource[],
     [sources],
@@ -125,7 +162,7 @@ export function StreamingPlayer({
         <Chip size="small" color={getBadgeColor(primary.provider)} label={primary.label} />
       </Stack>
 
-      {renderPrimaryStream(primary, title, artist, posterUrl, player?.pause)}
+      {renderPrimaryStream(primary, title, artist, posterUrl)}
 
       {fallbacks.length > 0 && (
         <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
@@ -139,7 +176,6 @@ export function StreamingPlayer({
               variant="text"
               component="a"
               href={source.url}
-              onClick={() => player?.pause()}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${source.label} (abre en nueva pestaña)`}

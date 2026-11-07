@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useOptionalPlayer } from '../player/PlayerProvider';
-import { PLAYER_TAKEOVER_EVENT } from '../player/types';
 import { Alert, Box, Button, Stack, Typography } from '@mui/material';
 import { resolveVideoSource } from '../utils/videoSource';
 import { VideoWatch } from '../utils/videoWatch';
@@ -41,17 +39,11 @@ export default function SessionVideoPreview(props: SessionVideoPreviewProps) {
 }
 
 function Player({ url, title, poster, analyticsContext, trackPublicPlayback = false }: SessionVideoPreviewProps) {
-  const player = useOptionalPlayer();
   const target = sessionVideoTarget(url);
   const source = resolveVideoSource(url) ?? (target?.kind === 'iframe' ? { provider: 'drive', src: target.url, url, vertical: false } : null);
   const [open, setOpen] = useState(false);
   const [failed, setFailed] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    const retirePreview = () => { videoRef.current?.pause(); setOpen(false); };
-    window.addEventListener(PLAYER_TAKEOVER_EVENT, retirePreview);
-    return () => window.removeEventListener(PLAYER_TAKEOVER_EVENT, retirePreview);
-  }, []);
   const watch = useRef(new VideoWatch());
   const lastSent = useRef(0);
   const started = useRef(false);
@@ -79,9 +71,9 @@ function Player({ url, title, poster, analyticsContext, trackPublicPlayback = fa
     <Box sx={{ bgcolor: '#090909', borderRadius: 2, overflow: 'hidden', width: '100%', maxWidth: source.vertical ? 460 : undefined, mx: 'auto' }}>
       {!open ? <Box sx={{ position: 'relative', aspectRatio: source.vertical ? '9/16' : '16/9', minHeight: 210, display: 'grid', placeItems: 'center' }}>
         {poster && <Box component="img" src={poster} alt="" loading="lazy" sx={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'contain', opacity: 0.65 }} />}
-        <Button variant="contained" onClick={() => { player?.pause(); capture('tdf_video_player_opened'); setOpen(true); }} sx={{ zIndex: 1 }}>Ver video aquí</Button>
+        <Button variant="contained" onClick={() => { capture('tdf_video_player_opened'); setOpen(true); }} sx={{ zIndex: 1 }}>Ver video aquí</Button>
       </Box> : source.provider === 'file' ? <Box component="video" ref={videoRef} controls playsInline preload="metadata" poster={poster ?? undefined} aria-label={title} src={source.src}
-        onPlay={() => { player?.pause(); if (trackPublicPlayback) getAnalyticsClient().capture('video_campaign_play_started', { ...videoAttribution(window.location.search), player: 'file' }); }}
+        onPlay={() => { if (trackPublicPlayback) getAnalyticsClient().capture('video_campaign_play_started', { ...videoAttribution(window.location.search), player: 'file' }); }}
         onPlaying={event => { watch.current.start(event.currentTarget.currentTime, performance.now()); if (!started.current) { started.current = true; capture('tdf_video_play_started'); } }}
         onSeeking={() => watch.current.stop()}
         onSeeked={event => { if (!event.currentTarget.paused) watch.current.start(event.currentTarget.currentTime, performance.now()); }}
