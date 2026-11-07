@@ -402,7 +402,16 @@ jobs:
         run: |
           node --test scripts/__tests__/music-test-database.test.mjs
           node --test scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs
-          npm run test:music-worker-runtime
+          run_music_worker_runtime_gate() {
+            local music_worker_baseline_status=0
+            MUSIC_WORKER_STOP_DIAGNOSTICS=false npm run test:music-worker-runtime || music_worker_baseline_status=$?
+            if [ "$music_worker_baseline_status" -ne 0 ]; then
+              printf '%s\n' 'Untraced music-worker runtime failed; collecting optional shutdown diagnostics.' || true
+              MUSIC_WORKER_STOP_DIAGNOSTICS=true npm run test:music-worker-runtime || true
+            fi
+            return "$music_worker_baseline_status"
+          }
+          run_music_worker_runtime_gate
 
       - name: Verify authorized music catalog recording search
         env:

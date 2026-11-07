@@ -84,6 +84,8 @@ const workerEnv = {
   // Synthetic fixture only: preserve fixed-stage timing before failure cleanup.
   // Explicit false remains available; never turn on shell argument tracing.
   MUSIC_WORKER_DIAGNOSTICS: process.env.MUSIC_WORKER_DIAGNOSTICS ?? 'true',
+  // Optional failed-baseline diagnostic pass only; normal qualification is untraced.
+  MUSIC_WORKER_STOP_DIAGNOSTICS: process.env.MUSIC_WORKER_STOP_DIAGNOSTICS ?? 'false',
   // Quotes and psql metacharacters must remain data through -v substitution.
   MUSIC_WORKER_ID: "worker's :quoted \\ identity",
 };
