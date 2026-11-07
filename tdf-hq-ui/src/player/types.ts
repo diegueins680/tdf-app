@@ -21,6 +21,9 @@ export interface PlayerTrack {
   durationMs?: number | null;
   previewEndMs?: number | null;
   loudnessLufs?: number | null;
+  startMs?: number;
+  endMs?: number;
+  chapters?: { id: string; title: string; startMs: number; endMs: number }[];
   sources: PlayerSource[];
 }
 
@@ -32,6 +35,7 @@ export interface LoadPlayerTrackDetail {
   queue?: PlayerTrack[];
   autoplay?: boolean;
   startPositionMs?: number;
+  mediaMode?: 'audio' | 'video';
 }
 
 export const PLAYER_LOAD_TRACK_EVENT = 'tdf-player-load-track';
