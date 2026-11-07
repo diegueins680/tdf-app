@@ -19371,6 +19371,363 @@
       },
       {
         "ordinal": 307,
+        "path": "/artists/video-campaigns",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "artistId",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [],
+              "module": "TDF.VideoCampaigns",
+              "name": "CampaignDTO"
+            }
+          ],
+          "module": "GHC.Types",
+          "name": "List"
+        }
+      },
+      {
+        "ordinal": 308,
+        "path": "/artists/video-campaigns/{campaignKey}",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "artistId",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "campaignKey",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.VideoCampaigns",
+              "name": "CampaignWrite"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "PUT",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "TDF.VideoCampaigns",
+          "name": "CampaignDTO"
+        }
+      },
+      {
+        "ordinal": 309,
+        "path": "/artists/video-campaigns/{campaignKey}/metrics",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "artistId",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "campaignKey",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "TDF.VideoCampaigns",
+          "name": "CampaignMetrics"
+        }
+      },
+      {
+        "ordinal": 310,
+        "path": "/artists/video-campaigns/{campaignKey}/conversion",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "artistId",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "campaignKey",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.VideoCampaigns",
+              "name": "CampaignConversion"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "Servant.API.ContentTypes",
+          "name": "NoContent"
+        }
+      },
+      {
+        "ordinal": 311,
+        "path": "/artists/video-campaigns/{campaignKey}/feature",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "artistId",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          },
+          {
+            "in": "path",
+            "name": "campaignKey",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.VideoCampaigns",
+              "name": "CampaignFeature"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "Servant.API.ContentTypes",
+          "name": "NoContent"
+        }
+      },
+      {
+        "ordinal": 312,
         "path": "/artists/me/photo",
         "parameters": [],
         "bodies": [
@@ -19421,7 +19778,7 @@
         }
       },
       {
-        "ordinal": 308,
+        "ordinal": 313,
         "path": "/assets",
         "parameters": [
           {
@@ -19515,7 +19872,7 @@
         }
       },
       {
-        "ordinal": 309,
+        "ordinal": 314,
         "path": "/assets",
         "parameters": [],
         "bodies": [
@@ -19566,7 +19923,7 @@
         }
       },
       {
-        "ordinal": 310,
+        "ordinal": 315,
         "path": "/assets/upload",
         "parameters": [],
         "bodies": [
@@ -19605,7 +19962,7 @@
         }
       },
       {
-        "ordinal": 311,
+        "ordinal": 316,
         "path": "/assets/{id}",
         "parameters": [
           {
@@ -19640,7 +19997,7 @@
         }
       },
       {
-        "ordinal": 312,
+        "ordinal": 317,
         "path": "/assets/{id}",
         "parameters": [
           {
@@ -19702,7 +20059,7 @@
         }
       },
       {
-        "ordinal": 313,
+        "ordinal": 318,
         "path": "/assets/{id}",
         "parameters": [
           {
@@ -19727,7 +20084,7 @@
         "responseType": null
       },
       {
-        "ordinal": 314,
+        "ordinal": 319,
         "path": "/assets/{id}/checkout",
         "parameters": [
           {
@@ -19789,7 +20146,7 @@
         }
       },
       {
-        "ordinal": 315,
+        "ordinal": 320,
         "path": "/assets/{id}/checkin",
         "parameters": [
           {
@@ -19851,7 +20208,7 @@
         }
       },
       {
-        "ordinal": 316,
+        "ordinal": 321,
         "path": "/assets/{id}/history",
         "parameters": [
           {
@@ -19892,7 +20249,7 @@
         }
       },
       {
-        "ordinal": 317,
+        "ordinal": 322,
         "path": "/assets/{id}/qr",
         "parameters": [
           {
@@ -19927,7 +20284,7 @@
         }
       },
       {
-        "ordinal": 318,
+        "ordinal": 323,
         "path": "/assets/qr/{token}",
         "parameters": [
           {
@@ -19962,7 +20319,7 @@
         }
       },
       {
-        "ordinal": 319,
+        "ordinal": 324,
         "path": "/bands",
         "parameters": [
           {
@@ -20035,7 +20392,7 @@
         }
       },
       {
-        "ordinal": 320,
+        "ordinal": 325,
         "path": "/bands",
         "parameters": [],
         "bodies": [
@@ -20086,7 +20443,7 @@
         }
       },
       {
-        "ordinal": 321,
+        "ordinal": 326,
         "path": "/bands/options",
         "parameters": [],
         "bodies": [],
@@ -20110,7 +20467,7 @@
         }
       },
       {
-        "ordinal": 322,
+        "ordinal": 327,
         "path": "/bands/{id}",
         "parameters": [
           {
@@ -20145,7 +20502,7 @@
         }
       },
       {
-        "ordinal": 323,
+        "ordinal": 328,
         "path": "/sessions",
         "parameters": [
           {
@@ -20218,7 +20575,7 @@
         }
       },
       {
-        "ordinal": 324,
+        "ordinal": 329,
         "path": "/sessions",
         "parameters": [],
         "bodies": [
@@ -20269,7 +20626,7 @@
         }
       },
       {
-        "ordinal": 325,
+        "ordinal": 330,
         "path": "/sessions/options",
         "parameters": [],
         "bodies": [],
@@ -20293,7 +20650,7 @@
         }
       },
       {
-        "ordinal": 326,
+        "ordinal": 331,
         "path": "/sessions/{id}",
         "parameters": [
           {
@@ -20328,7 +20685,7 @@
         }
       },
       {
-        "ordinal": 327,
+        "ordinal": 332,
         "path": "/sessions/{id}",
         "parameters": [
           {
@@ -20390,7 +20747,7 @@
         }
       },
       {
-        "ordinal": 328,
+        "ordinal": 333,
         "path": "/sessions/{id}/input-list",
         "parameters": [
           {
@@ -20431,7 +20788,7 @@
         }
       },
       {
-        "ordinal": 329,
+        "ordinal": 334,
         "path": "/sessions/{id}/input-list.pdf",
         "parameters": [
           {
@@ -20526,7 +20883,7 @@
         }
       },
       {
-        "ordinal": 330,
+        "ordinal": 335,
         "path": "/pipelines/snapshot",
         "parameters": [],
         "bodies": [],
@@ -20550,7 +20907,7 @@
         }
       },
       {
-        "ordinal": 331,
+        "ordinal": 336,
         "path": "/pipelines/definitions",
         "parameters": [],
         "bodies": [],
@@ -20580,7 +20937,7 @@
         }
       },
       {
-        "ordinal": 332,
+        "ordinal": 337,
         "path": "/pipelines/{workflowId}",
         "parameters": [
           {
@@ -20621,7 +20978,7 @@
         }
       },
       {
-        "ordinal": 333,
+        "ordinal": 338,
         "path": "/pipelines/{workflowId}/stages",
         "parameters": [
           {
@@ -20662,7 +21019,7 @@
         }
       },
       {
-        "ordinal": 334,
+        "ordinal": 339,
         "path": "/pipelines/{workflowId}",
         "parameters": [
           {
@@ -20724,7 +21081,7 @@
         }
       },
       {
-        "ordinal": 335,
+        "ordinal": 340,
         "path": "/pipelines/{workflowId}/{cardId}",
         "parameters": [
           {
@@ -20769,7 +21126,7 @@
         }
       },
       {
-        "ordinal": 336,
+        "ordinal": 341,
         "path": "/pipelines/{workflowId}/{cardId}",
         "parameters": [
           {
@@ -20841,7 +21198,7 @@
         }
       },
       {
-        "ordinal": 337,
+        "ordinal": 342,
         "path": "/pipelines/{workflowId}/{cardId}",
         "parameters": [
           {
@@ -20876,7 +21233,7 @@
         "responseType": null
       },
       {
-        "ordinal": 338,
+        "ordinal": 343,
         "path": "/rooms",
         "parameters": [],
         "bodies": [],
@@ -20906,7 +21263,7 @@
         }
       },
       {
-        "ordinal": 339,
+        "ordinal": 344,
         "path": "/rooms",
         "parameters": [],
         "bodies": [
@@ -20957,7 +21314,7 @@
         }
       },
       {
-        "ordinal": 340,
+        "ordinal": 345,
         "path": "/rooms/{id}",
         "parameters": [
           {
@@ -21019,7 +21376,7 @@
         }
       },
       {
-        "ordinal": 341,
+        "ordinal": 346,
         "path": "/live-sessions/intake",
         "parameters": [
           {
@@ -21080,7 +21437,7 @@
         }
       },
       {
-        "ordinal": 342,
+        "ordinal": 347,
         "path": "/marketplace/{listingId}/rental-terms",
         "parameters": [
           {
@@ -21142,7 +21499,7 @@
         }
       },
       {
-        "ordinal": 343,
+        "ordinal": 348,
         "path": "/marketplace/orders",
         "parameters": [
           {
@@ -21236,7 +21593,7 @@
         }
       },
       {
-        "ordinal": 344,
+        "ordinal": 349,
         "path": "/marketplace/orders/{orderId}/commerce",
         "parameters": [
           {
@@ -21271,7 +21628,7 @@
         }
       },
       {
-        "ordinal": 345,
+        "ordinal": 350,
         "path": "/marketplace/orders/{orderId}/manual-payment/review",
         "parameters": [
           {
@@ -21333,7 +21690,7 @@
         }
       },
       {
-        "ordinal": 346,
+        "ordinal": 351,
         "path": "/marketplace/orders/{orderId}",
         "parameters": [
           {
@@ -21395,7 +21752,7 @@
         }
       },
       {
-        "ordinal": 347,
+        "ordinal": 352,
         "path": "/marketplace/orders/{orderId}/fulfillment",
         "parameters": [
           {
@@ -21457,7 +21814,7 @@
         }
       },
       {
-        "ordinal": 348,
+        "ordinal": 353,
         "path": "/marketplace/orders/{orderId}/rental",
         "parameters": [
           {
@@ -21519,7 +21876,7 @@
         }
       },
       {
-        "ordinal": 349,
+        "ordinal": 354,
         "path": "/marketplace/orders/{orderId}/customer-requests",
         "parameters": [
           {
@@ -21560,7 +21917,7 @@
         }
       },
       {
-        "ordinal": 350,
+        "ordinal": 355,
         "path": "/marketplace/orders/{orderId}/customer-requests/{requestId}/review",
         "parameters": [
           {
@@ -21632,7 +21989,7 @@
         }
       },
       {
-        "ordinal": 351,
+        "ordinal": 356,
         "path": "/marketplace/orders/{orderId}/deposit-settlements",
         "parameters": [
           {
@@ -21673,7 +22030,7 @@
         }
       },
       {
-        "ordinal": 352,
+        "ordinal": 357,
         "path": "/marketplace/orders/{orderId}/deposit-settlements",
         "parameters": [
           {
@@ -21756,7 +22113,7 @@
         }
       },
       {
-        "ordinal": 353,
+        "ordinal": 358,
         "path": "/marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review",
         "parameters": [
           {
@@ -21828,7 +22185,7 @@
         }
       },
       {
-        "ordinal": 354,
+        "ordinal": 359,
         "path": "/payments",
         "parameters": [
           {
@@ -21880,7 +22237,7 @@
         }
       },
       {
-        "ordinal": 355,
+        "ordinal": 360,
         "path": "/payments",
         "parameters": [],
         "bodies": [
@@ -21936,7 +22293,7 @@
         }
       },
       {
-        "ordinal": 356,
+        "ordinal": 361,
         "path": "/payments/{paymentId}",
         "parameters": [
           {
@@ -21971,7 +22328,7 @@
         }
       },
       {
-        "ordinal": 357,
+        "ordinal": 362,
         "path": "/instagram/reply",
         "parameters": [],
         "bodies": [
@@ -22022,7 +22379,7 @@
         }
       },
       {
-        "ordinal": 358,
+        "ordinal": 363,
         "path": "/instagram/messages",
         "parameters": [
           {
@@ -22110,7 +22467,7 @@
         }
       },
       {
-        "ordinal": 359,
+        "ordinal": 364,
         "path": "/facebook/reply",
         "parameters": [],
         "bodies": [
@@ -22161,7 +22518,7 @@
         }
       },
       {
-        "ordinal": 360,
+        "ordinal": 365,
         "path": "/facebook/messages",
         "parameters": [
           {
@@ -22249,7 +22606,7 @@
         }
       },
       {
-        "ordinal": 361,
+        "ordinal": 366,
         "path": "/instagram/oauth/exchange",
         "parameters": [],
         "bodies": [
@@ -22300,7 +22657,7 @@
         }
       },
       {
-        "ordinal": 362,
+        "ordinal": 367,
         "path": "/whatsapp/messages",
         "parameters": [
           {
@@ -22388,7 +22745,7 @@
         }
       },
       {
-        "ordinal": 363,
+        "ordinal": 368,
         "path": "/whatsapp/reply",
         "parameters": [],
         "bodies": [
@@ -22439,7 +22796,7 @@
         }
       },
       {
-        "ordinal": 364,
+        "ordinal": 369,
         "path": "/whatsapp/operator-question",
         "parameters": [],
         "bodies": [
@@ -22490,7 +22847,7 @@
         }
       },
       {
-        "ordinal": 365,
+        "ordinal": 370,
         "path": "/whatsapp/consent",
         "parameters": [],
         "bodies": [
@@ -22541,7 +22898,7 @@
         }
       },
       {
-        "ordinal": 366,
+        "ordinal": 371,
         "path": "/whatsapp/opt-out",
         "parameters": [],
         "bodies": [
@@ -22592,7 +22949,7 @@
         }
       },
       {
-        "ordinal": 367,
+        "ordinal": 372,
         "path": "/whatsapp/consent",
         "parameters": [
           {
@@ -22638,7 +22995,7 @@
         }
       },
       {
-        "ordinal": 368,
+        "ordinal": 373,
         "path": "/social/followers",
         "parameters": [],
         "bodies": [],
@@ -22668,7 +23025,7 @@
         }
       },
       {
-        "ordinal": 369,
+        "ordinal": 374,
         "path": "/social/following",
         "parameters": [],
         "bodies": [],
@@ -22698,7 +23055,7 @@
         }
       },
       {
-        "ordinal": 370,
+        "ordinal": 375,
         "path": "/social/vcard-exchange",
         "parameters": [],
         "bodies": [
@@ -22755,7 +23112,7 @@
         }
       },
       {
-        "ordinal": 371,
+        "ordinal": 376,
         "path": "/social/friends",
         "parameters": [],
         "bodies": [],
@@ -22785,7 +23142,7 @@
         }
       },
       {
-        "ordinal": 372,
+        "ordinal": 377,
         "path": "/social/friends/{partyId}",
         "parameters": [
           {
@@ -22826,7 +23183,7 @@
         }
       },
       {
-        "ordinal": 373,
+        "ordinal": 378,
         "path": "/social/friends/{partyId}",
         "parameters": [
           {
@@ -22861,7 +23218,7 @@
         }
       },
       {
-        "ordinal": 374,
+        "ordinal": 379,
         "path": "/social/profiles",
         "parameters": [
           {
@@ -22902,7 +23259,7 @@
         }
       },
       {
-        "ordinal": 375,
+        "ordinal": 380,
         "path": "/social/profiles/{partyId}",
         "parameters": [
           {
@@ -22937,7 +23294,7 @@
         }
       },
       {
-        "ordinal": 376,
+        "ordinal": 381,
         "path": "/social/suggestions",
         "parameters": [],
         "bodies": [],
@@ -22967,7 +23324,7 @@
         }
       },
       {
-        "ordinal": 377,
+        "ordinal": 382,
         "path": "/social/v2/me",
         "parameters": [],
         "bodies": [],
@@ -22991,7 +23348,7 @@
         }
       },
       {
-        "ordinal": 378,
+        "ordinal": 383,
         "path": "/social/v2/relationships/{partyId}",
         "parameters": [
           {
@@ -23026,7 +23383,7 @@
         }
       },
       {
-        "ordinal": 379,
+        "ordinal": 384,
         "path": "/social/v2/relationships/{partyId}",
         "parameters": [
           {
@@ -23088,7 +23445,7 @@
         }
       },
       {
-        "ordinal": 380,
+        "ordinal": 385,
         "path": "/social/v2/preferences",
         "parameters": [],
         "bodies": [
@@ -23139,7 +23496,7 @@
         }
       },
       {
-        "ordinal": 381,
+        "ordinal": 386,
         "path": "/social/v2/following",
         "parameters": [
           {
@@ -23206,7 +23563,7 @@
         }
       },
       {
-        "ordinal": 382,
+        "ordinal": 387,
         "path": "/social/v2/discover",
         "parameters": [
           {
@@ -23252,7 +23609,7 @@
         }
       },
       {
-        "ordinal": 383,
+        "ordinal": 388,
         "path": "/chat/threads",
         "parameters": [],
         "bodies": [],
@@ -23282,7 +23639,7 @@
         }
       },
       {
-        "ordinal": 384,
+        "ordinal": 389,
         "path": "/chat/threads/dm/{otherPartyId}",
         "parameters": [
           {
@@ -23317,7 +23674,7 @@
         }
       },
       {
-        "ordinal": 385,
+        "ordinal": 390,
         "path": "/chat/threads/{threadId}/messages",
         "parameters": [
           {
@@ -23421,7 +23778,7 @@
         }
       },
       {
-        "ordinal": 386,
+        "ordinal": 391,
         "path": "/chat/threads/{threadId}/messages",
         "parameters": [
           {
@@ -23483,7 +23840,7 @@
         }
       },
       {
-        "ordinal": 387,
+        "ordinal": 392,
         "path": "/chatkit/sessions",
         "parameters": [],
         "bodies": [
@@ -23534,7 +23891,7 @@
         }
       },
       {
-        "ordinal": 388,
+        "ordinal": 393,
         "path": "/tidal-agent",
         "parameters": [],
         "bodies": [
@@ -23585,7 +23942,7 @@
         }
       },
       {
-        "ordinal": 389,
+        "ordinal": 394,
         "path": "/social-sync/social-sync/ingest",
         "parameters": [],
         "bodies": [
@@ -23636,7 +23993,7 @@
         }
       },
       {
-        "ordinal": 390,
+        "ordinal": 395,
         "path": "/social-sync/social-sync/posts",
         "parameters": [
           {
@@ -23772,7 +24129,7 @@
         }
       },
       {
-        "ordinal": 391,
+        "ordinal": 396,
         "path": "/social-discovery/posts",
         "parameters": [
           {
@@ -23845,7 +24202,7 @@
         }
       },
       {
-        "ordinal": 392,
+        "ordinal": 397,
         "path": "/social-discovery/posts/{postId}/review",
         "parameters": [
           {
@@ -23907,7 +24264,7 @@
         }
       },
       {
-        "ordinal": 393,
+        "ordinal": 398,
         "path": "/meta/backfill",
         "parameters": [],
         "bodies": [
@@ -23958,7 +24315,7 @@
         }
       },
       {
-        "ordinal": 394,
+        "ordinal": 399,
         "path": "/social-events/events",
         "parameters": [
           {
@@ -24178,7 +24535,7 @@
         }
       },
       {
-        "ordinal": 395,
+        "ordinal": 400,
         "path": "/social-events/events",
         "parameters": [],
         "bodies": [
@@ -24229,7 +24586,7 @@
         }
       },
       {
-        "ordinal": 396,
+        "ordinal": 401,
         "path": "/social-events/events/{id}",
         "parameters": [
           {
@@ -24264,7 +24621,7 @@
         }
       },
       {
-        "ordinal": 397,
+        "ordinal": 402,
         "path": "/social-events/events/{id}",
         "parameters": [
           {
@@ -24326,7 +24683,7 @@
         }
       },
       {
-        "ordinal": 398,
+        "ordinal": 403,
         "path": "/social-events/events/{id}/image",
         "parameters": [
           {
@@ -24376,7 +24733,7 @@
         }
       },
       {
-        "ordinal": 399,
+        "ordinal": 404,
         "path": "/social-events/events/{id}",
         "parameters": [
           {
@@ -24401,7 +24758,7 @@
         "responseType": null
       },
       {
-        "ordinal": 400,
+        "ordinal": 405,
         "path": "/social-events/cities",
         "parameters": [
           {
@@ -24474,7 +24831,7 @@
         }
       },
       {
-        "ordinal": 401,
+        "ordinal": 406,
         "path": "/social-events/me/city-subscriptions",
         "parameters": [],
         "bodies": [],
@@ -24504,7 +24861,7 @@
         }
       },
       {
-        "ordinal": 402,
+        "ordinal": 407,
         "path": "/social-events/me/city-subscriptions",
         "parameters": [],
         "bodies": [
@@ -24561,7 +24918,7 @@
         }
       },
       {
-        "ordinal": 403,
+        "ordinal": 408,
         "path": "/social-events/event-sources",
         "parameters": [],
         "bodies": [],
@@ -24591,7 +24948,7 @@
         }
       },
       {
-        "ordinal": 404,
+        "ordinal": 409,
         "path": "/social-events/event-sources",
         "parameters": [],
         "bodies": [
@@ -24642,7 +24999,7 @@
         }
       },
       {
-        "ordinal": 405,
+        "ordinal": 410,
         "path": "/social-events/event-sources/{id}",
         "parameters": [
           {
@@ -24704,7 +25061,7 @@
         }
       },
       {
-        "ordinal": 406,
+        "ordinal": 411,
         "path": "/social-events/event-research/pilot",
         "parameters": [],
         "bodies": [],
@@ -24728,7 +25085,7 @@
         }
       },
       {
-        "ordinal": 407,
+        "ordinal": 412,
         "path": "/social-events/event-research/pilot/approve",
         "parameters": [],
         "bodies": [
@@ -24779,7 +25136,7 @@
         }
       },
       {
-        "ordinal": 408,
+        "ordinal": 413,
         "path": "/social-events/event-research/runs",
         "parameters": [
           {
@@ -24831,7 +25188,7 @@
         }
       },
       {
-        "ordinal": 409,
+        "ordinal": 414,
         "path": "/social-events/event-research/runs",
         "parameters": [],
         "bodies": [
@@ -24882,7 +25239,7 @@
         }
       },
       {
-        "ordinal": 410,
+        "ordinal": 415,
         "path": "/social-events/event-research/runs/{runId}",
         "parameters": [
           {
@@ -24944,7 +25301,7 @@
         }
       },
       {
-        "ordinal": 411,
+        "ordinal": 416,
         "path": "/social-events/event-research/candidates",
         "parameters": [
           {
@@ -25038,7 +25395,7 @@
         }
       },
       {
-        "ordinal": 412,
+        "ordinal": 417,
         "path": "/social-events/event-research/candidates",
         "parameters": [],
         "bodies": [
@@ -25089,7 +25446,7 @@
         }
       },
       {
-        "ordinal": 413,
+        "ordinal": 418,
         "path": "/social-events/event-research/candidates/{candidateId}/materialize",
         "parameters": [
           {
@@ -25151,7 +25508,7 @@
         }
       },
       {
-        "ordinal": 414,
+        "ordinal": 419,
         "path": "/social-events/event-research/changes",
         "parameters": [
           {
@@ -25224,7 +25581,7 @@
         }
       },
       {
-        "ordinal": 415,
+        "ordinal": 420,
         "path": "/social-events/venues",
         "parameters": [
           {
@@ -25360,7 +25717,7 @@
         }
       },
       {
-        "ordinal": 416,
+        "ordinal": 421,
         "path": "/social-events/venues",
         "parameters": [],
         "bodies": [
@@ -25411,7 +25768,7 @@
         }
       },
       {
-        "ordinal": 417,
+        "ordinal": 422,
         "path": "/social-events/venues/{id}",
         "parameters": [
           {
@@ -25446,7 +25803,7 @@
         }
       },
       {
-        "ordinal": 418,
+        "ordinal": 423,
         "path": "/social-events/venues/{id}",
         "parameters": [
           {
@@ -25508,7 +25865,7 @@
         }
       },
       {
-        "ordinal": 419,
+        "ordinal": 424,
         "path": "/social-events/artists",
         "parameters": [
           {
@@ -25665,7 +26022,7 @@
         }
       },
       {
-        "ordinal": 420,
+        "ordinal": 425,
         "path": "/social-events/artists",
         "parameters": [],
         "bodies": [
@@ -25716,7 +26073,7 @@
         }
       },
       {
-        "ordinal": 421,
+        "ordinal": 426,
         "path": "/social-events/artists/{id}",
         "parameters": [
           {
@@ -25751,7 +26108,7 @@
         }
       },
       {
-        "ordinal": 422,
+        "ordinal": 427,
         "path": "/social-events/artists/{id}",
         "parameters": [
           {
@@ -25813,7 +26170,7 @@
         }
       },
       {
-        "ordinal": 423,
+        "ordinal": 428,
         "path": "/social-events/artists/{artistId}/followers",
         "parameters": [
           {
@@ -25854,7 +26211,7 @@
         }
       },
       {
-        "ordinal": 424,
+        "ordinal": 429,
         "path": "/social-events/artists/{artistId}/follow",
         "parameters": [
           {
@@ -25916,7 +26273,7 @@
         }
       },
       {
-        "ordinal": 425,
+        "ordinal": 430,
         "path": "/social-events/artists/{artistId}/follow",
         "parameters": [
           {
@@ -25962,7 +26319,7 @@
         "responseType": null
       },
       {
-        "ordinal": 426,
+        "ordinal": 431,
         "path": "/social-events/events/{eventId}/rsvp",
         "parameters": [
           {
@@ -26003,7 +26360,7 @@
         }
       },
       {
-        "ordinal": 427,
+        "ordinal": 432,
         "path": "/social-events/events/{eventId}/rsvp",
         "parameters": [
           {
@@ -26065,7 +26422,7 @@
         }
       },
       {
-        "ordinal": 428,
+        "ordinal": 433,
         "path": "/social-events/events/{eventId}/rsvp",
         "parameters": [
           {
@@ -26090,7 +26447,7 @@
         "responseType": null
       },
       {
-        "ordinal": 429,
+        "ordinal": 434,
         "path": "/social-events/events/{eventId}/rsvp-summary",
         "parameters": [
           {
@@ -26125,7 +26482,7 @@
         }
       },
       {
-        "ordinal": 430,
+        "ordinal": 435,
         "path": "/social-events/events/{eventId}/rsvps",
         "parameters": [
           {
@@ -26202,7 +26559,7 @@
         }
       },
       {
-        "ordinal": 431,
+        "ordinal": 436,
         "path": "/social-events/profiles/{partyId}/rsvp-feed",
         "parameters": [
           {
@@ -26279,7 +26636,7 @@
         }
       },
       {
-        "ordinal": 432,
+        "ordinal": 437,
         "path": "/social-events/directory-profiles/{slug}/rsvp-feed",
         "parameters": [
           {
@@ -26356,7 +26713,7 @@
         }
       },
       {
-        "ordinal": 433,
+        "ordinal": 438,
         "path": "/social-events/events/{eventId}/invitations",
         "parameters": [
           {
@@ -26397,7 +26754,7 @@
         }
       },
       {
-        "ordinal": 434,
+        "ordinal": 439,
         "path": "/social-events/events/{eventId}/invitations",
         "parameters": [
           {
@@ -26459,7 +26816,7 @@
         }
       },
       {
-        "ordinal": 435,
+        "ordinal": 440,
         "path": "/social-events/events/{eventId}/invitations/{invitationId}",
         "parameters": [
           {
@@ -26531,7 +26888,7 @@
         }
       },
       {
-        "ordinal": 436,
+        "ordinal": 441,
         "path": "/social-events/events/{eventId}/moments",
         "parameters": [
           {
@@ -26637,7 +26994,7 @@
         }
       },
       {
-        "ordinal": 437,
+        "ordinal": 442,
         "path": "/social-events/events/{eventId}/moments",
         "parameters": [
           {
@@ -26699,7 +27056,7 @@
         }
       },
       {
-        "ordinal": 438,
+        "ordinal": 443,
         "path": "/social-events/events/{eventId}/moments/image",
         "parameters": [
           {
@@ -26749,7 +27106,7 @@
         }
       },
       {
-        "ordinal": 439,
+        "ordinal": 444,
         "path": "/social-events/events/{eventId}/moments/media",
         "parameters": [
           {
@@ -26799,7 +27156,7 @@
         }
       },
       {
-        "ordinal": 440,
+        "ordinal": 445,
         "path": "/social-events/events/{eventId}/moments/{momentId}/reactions",
         "parameters": [
           {
@@ -26871,7 +27228,7 @@
         }
       },
       {
-        "ordinal": 441,
+        "ordinal": 446,
         "path": "/social-events/events/{eventId}/moments/{momentId}/comments",
         "parameters": [
           {
@@ -26943,7 +27300,7 @@
         }
       },
       {
-        "ordinal": 442,
+        "ordinal": 447,
         "path": "/social-events/events/{eventId}/moments/{momentId}",
         "parameters": [
           {
@@ -27015,7 +27372,7 @@
         }
       },
       {
-        "ordinal": 443,
+        "ordinal": 448,
         "path": "/social-events/events/{eventId}/moments/{momentId}",
         "parameters": [
           {
@@ -27050,7 +27407,7 @@
         "responseType": null
       },
       {
-        "ordinal": 444,
+        "ordinal": 449,
         "path": "/social-events/events/{eventId}/live-broadcasts",
         "parameters": [
           {
@@ -27091,7 +27448,7 @@
         }
       },
       {
-        "ordinal": 445,
+        "ordinal": 450,
         "path": "/social-events/events/{eventId}/live-broadcasts",
         "parameters": [
           {
@@ -27153,7 +27510,7 @@
         }
       },
       {
-        "ordinal": 446,
+        "ordinal": 451,
         "path": "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat",
         "parameters": [
           {
@@ -27225,7 +27582,7 @@
         }
       },
       {
-        "ordinal": 447,
+        "ordinal": 452,
         "path": "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/end",
         "parameters": [
           {
@@ -27297,7 +27654,7 @@
         }
       },
       {
-        "ordinal": 448,
+        "ordinal": 453,
         "path": "/social-events/events/{eventId}/ticket-tiers",
         "parameters": [
           {
@@ -27338,7 +27695,7 @@
         }
       },
       {
-        "ordinal": 449,
+        "ordinal": 454,
         "path": "/social-events/events/{eventId}/ticket-tiers",
         "parameters": [
           {
@@ -27400,7 +27757,7 @@
         }
       },
       {
-        "ordinal": 450,
+        "ordinal": 455,
         "path": "/social-events/events/{eventId}/ticket-tiers/{tierId}",
         "parameters": [
           {
@@ -27472,7 +27829,7 @@
         }
       },
       {
-        "ordinal": 451,
+        "ordinal": 456,
         "path": "/social-events/ticket-orders",
         "parameters": [
           {
@@ -27524,7 +27881,7 @@
         }
       },
       {
-        "ordinal": 452,
+        "ordinal": 457,
         "path": "/social-events/events/{eventId}/ticket-orders",
         "parameters": [
           {
@@ -27607,7 +27964,7 @@
         }
       },
       {
-        "ordinal": 453,
+        "ordinal": 458,
         "path": "/social-events/events/{eventId}/ticket-orders",
         "parameters": [
           {
@@ -27669,7 +28026,7 @@
         }
       },
       {
-        "ordinal": 454,
+        "ordinal": 459,
         "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/status",
         "parameters": [
           {
@@ -27741,7 +28098,7 @@
         }
       },
       {
-        "ordinal": 455,
+        "ordinal": 460,
         "path": "/social-events/events/{eventId}/tickets",
         "parameters": [
           {
@@ -27824,7 +28181,7 @@
         }
       },
       {
-        "ordinal": 456,
+        "ordinal": 461,
         "path": "/social-events/events/{eventId}/tickets/check-in",
         "parameters": [
           {
@@ -27886,7 +28243,7 @@
         }
       },
       {
-        "ordinal": 457,
+        "ordinal": 462,
         "path": "/social-events/events/{eventId}/promo-codes",
         "parameters": [
           {
@@ -27927,7 +28284,7 @@
         }
       },
       {
-        "ordinal": 458,
+        "ordinal": 463,
         "path": "/social-events/events/{eventId}/promo-codes",
         "parameters": [
           {
@@ -27989,7 +28346,7 @@
         }
       },
       {
-        "ordinal": 459,
+        "ordinal": 464,
         "path": "/social-events/events/{eventId}/promo-codes/{codeId}",
         "parameters": [
           {
@@ -28061,7 +28418,7 @@
         }
       },
       {
-        "ordinal": 460,
+        "ordinal": 465,
         "path": "/social-events/events/{eventId}/promo-codes/{codeId}/validate",
         "parameters": [
           {
@@ -28148,7 +28505,7 @@
         }
       },
       {
-        "ordinal": 461,
+        "ordinal": 466,
         "path": "/social-events/stripe/create-payment-intent",
         "parameters": [],
         "bodies": [
@@ -28199,7 +28556,7 @@
         }
       },
       {
-        "ordinal": 462,
+        "ordinal": 467,
         "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/refund",
         "parameters": [
           {
@@ -28271,7 +28628,7 @@
         }
       },
       {
-        "ordinal": 463,
+        "ordinal": 468,
         "path": "/social-events/events/{eventId}/refunds",
         "parameters": [
           {
@@ -28312,7 +28669,7 @@
         }
       },
       {
-        "ordinal": 464,
+        "ordinal": 469,
         "path": "/social-events/events/{eventId}/refunds/{refundId}/approve",
         "parameters": [
           {
@@ -28357,7 +28714,7 @@
         }
       },
       {
-        "ordinal": 465,
+        "ordinal": 470,
         "path": "/social-events/events/{eventId}/refunds/{refundId}/reject",
         "parameters": [
           {
@@ -28429,7 +28786,7 @@
         }
       },
       {
-        "ordinal": 466,
+        "ordinal": 471,
         "path": "/social-events/events/{eventId}/manual-payments",
         "parameters": [
           {
@@ -28470,7 +28827,7 @@
         }
       },
       {
-        "ordinal": 467,
+        "ordinal": 472,
         "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/review",
         "parameters": [
           {
@@ -28542,7 +28899,7 @@
         }
       },
       {
-        "ordinal": 468,
+        "ordinal": 473,
         "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/receipt",
         "parameters": [
           {
@@ -28647,7 +29004,7 @@
         }
       },
       {
-        "ordinal": 469,
+        "ordinal": 474,
         "path": "/social-events/events/{eventId}/tax-documents",
         "parameters": [
           {
@@ -28688,7 +29045,7 @@
         }
       },
       {
-        "ordinal": 470,
+        "ordinal": 475,
         "path": "/social-events/events/{eventId}/tax-documents/{documentId}/retry",
         "parameters": [
           {
@@ -28739,7 +29096,7 @@
         }
       },
       {
-        "ordinal": 471,
+        "ordinal": 476,
         "path": "/social-events/events/{eventId}/refunds/{refundId}/bank-transfer-complete",
         "parameters": [
           {
@@ -28811,7 +29168,7 @@
         }
       },
       {
-        "ordinal": 472,
+        "ordinal": 477,
         "path": "/social-events/events/{eventId}/tickets/{ticketId}/transfer",
         "parameters": [
           {
@@ -28883,7 +29240,7 @@
         }
       },
       {
-        "ordinal": 473,
+        "ordinal": 478,
         "path": "/social-events/events/{eventId}/tickets/{ticketId}/transfers",
         "parameters": [
           {
@@ -28934,7 +29291,7 @@
         }
       },
       {
-        "ordinal": 474,
+        "ordinal": 479,
         "path": "/social-events/ticket-transfers/{transferCode}/accept",
         "parameters": [
           {
@@ -28969,7 +29326,7 @@
         }
       },
       {
-        "ordinal": 475,
+        "ordinal": 480,
         "path": "/social-events/ticket-transfers/{transferCode}/cancel",
         "parameters": [
           {
@@ -29004,7 +29361,7 @@
         }
       },
       {
-        "ordinal": 476,
+        "ordinal": 481,
         "path": "/social-events/events/{eventId}/waitlist",
         "parameters": [
           {
@@ -29066,7 +29423,7 @@
         }
       },
       {
-        "ordinal": 477,
+        "ordinal": 482,
         "path": "/social-events/events/{eventId}/waitlist",
         "parameters": [
           {
@@ -29128,7 +29485,7 @@
         }
       },
       {
-        "ordinal": 478,
+        "ordinal": 483,
         "path": "/social-events/events/{eventId}/waitlist/{entryId}/notify",
         "parameters": [
           {
@@ -29173,7 +29530,7 @@
         }
       },
       {
-        "ordinal": 479,
+        "ordinal": 484,
         "path": "/social-events/events/{eventId}/waitlist/{entryId}",
         "parameters": [
           {
@@ -29208,7 +29565,7 @@
         "responseType": null
       },
       {
-        "ordinal": 480,
+        "ordinal": 485,
         "path": "/social-events/events/{eventId}/tickets/{ticketId}/qr",
         "parameters": [
           {
@@ -29253,7 +29610,7 @@
         }
       },
       {
-        "ordinal": 481,
+        "ordinal": 486,
         "path": "/social-events/events/{eventId}/budget-lines",
         "parameters": [
           {
@@ -29294,7 +29651,7 @@
         }
       },
       {
-        "ordinal": 482,
+        "ordinal": 487,
         "path": "/social-events/events/{eventId}/budget-lines",
         "parameters": [
           {
@@ -29356,7 +29713,7 @@
         }
       },
       {
-        "ordinal": 483,
+        "ordinal": 488,
         "path": "/social-events/events/{eventId}/budget-lines/{lineId}",
         "parameters": [
           {
@@ -29428,7 +29785,7 @@
         }
       },
       {
-        "ordinal": 484,
+        "ordinal": 489,
         "path": "/social-events/events/{eventId}/finance-entries",
         "parameters": [
           {
@@ -29532,7 +29889,7 @@
         }
       },
       {
-        "ordinal": 485,
+        "ordinal": 490,
         "path": "/social-events/events/{eventId}/finance-entries",
         "parameters": [
           {
@@ -29594,7 +29951,7 @@
         }
       },
       {
-        "ordinal": 486,
+        "ordinal": 491,
         "path": "/social-events/events/{eventId}/finance-entries/{entryId}",
         "parameters": [
           {
@@ -29666,7 +30023,7 @@
         }
       },
       {
-        "ordinal": 487,
+        "ordinal": 492,
         "path": "/social-events/events/{eventId}/finance-summary",
         "parameters": [
           {
@@ -29701,7 +30058,7 @@
         }
       },
       {
-        "ordinal": 488,
+        "ordinal": 493,
         "path": "/social-events/events/{eventId}/logistics",
         "parameters": [
           {
@@ -29736,7 +30093,7 @@
         }
       },
       {
-        "ordinal": 489,
+        "ordinal": 494,
         "path": "/social-events/events/{eventId}/logistics/settings",
         "parameters": [
           {
@@ -29798,7 +30155,7 @@
         }
       },
       {
-        "ordinal": 490,
+        "ordinal": 495,
         "path": "/social-events/events/{eventId}/logistics/members",
         "parameters": [
           {
@@ -29860,7 +30217,7 @@
         }
       },
       {
-        "ordinal": 491,
+        "ordinal": 496,
         "path": "/social-events/events/{eventId}/logistics/members/{partyId}",
         "parameters": [
           {
@@ -29932,7 +30289,7 @@
         }
       },
       {
-        "ordinal": 492,
+        "ordinal": 497,
         "path": "/social-events/events/{eventId}/logistics/members/{partyId}",
         "parameters": [
           {
@@ -29967,7 +30324,7 @@
         "responseType": null
       },
       {
-        "ordinal": 493,
+        "ordinal": 498,
         "path": "/social-events/events/{eventId}/logistics/places",
         "parameters": [
           {
@@ -30029,7 +30386,7 @@
         }
       },
       {
-        "ordinal": 494,
+        "ordinal": 499,
         "path": "/social-events/events/{eventId}/logistics/places/{placeId}",
         "parameters": [
           {
@@ -30101,7 +30458,7 @@
         }
       },
       {
-        "ordinal": 495,
+        "ordinal": 500,
         "path": "/social-events/events/{eventId}/logistics/places/{placeId}",
         "parameters": [
           {
@@ -30136,7 +30493,7 @@
         "responseType": null
       },
       {
-        "ordinal": 496,
+        "ordinal": 501,
         "path": "/social-events/events/{eventId}/logistics/activities",
         "parameters": [
           {
@@ -30198,7 +30555,7 @@
         }
       },
       {
-        "ordinal": 497,
+        "ordinal": 502,
         "path": "/social-events/events/{eventId}/logistics/activities/{activityId}",
         "parameters": [
           {
@@ -30270,7 +30627,7 @@
         }
       },
       {
-        "ordinal": 498,
+        "ordinal": 503,
         "path": "/social-events/events/{eventId}/logistics/activities/{activityId}",
         "parameters": [
           {
@@ -30305,7 +30662,7 @@
         "responseType": null
       },
       {
-        "ordinal": 499,
+        "ordinal": 504,
         "path": "/social-events/events/{eventId}/logistics/activities/{activityId}/verify-route",
         "parameters": [
           {
@@ -30350,7 +30707,7 @@
         }
       },
       {
-        "ordinal": 500,
+        "ordinal": 505,
         "path": "/social-events/events/{eventId}/logistics/verify-routes",
         "parameters": [
           {
@@ -30391,7 +30748,7 @@
         }
       },
       {
-        "ordinal": 501,
+        "ordinal": 506,
         "path": "/social-events/me/memory-invitations",
         "parameters": [],
         "bodies": [],
@@ -30475,7 +30832,7 @@
         }
       },
       {
-        "ordinal": 502,
+        "ordinal": 507,
         "path": "/social-events/me/memory-invitations",
         "parameters": [],
         "bodies": [
@@ -30586,7 +30943,7 @@
         }
       },
       {
-        "ordinal": 503,
+        "ordinal": 508,
         "path": "/social-events/events/{eventId}/memory-invitations",
         "parameters": [
           {
@@ -30681,7 +31038,7 @@
         }
       },
       {
-        "ordinal": 504,
+        "ordinal": 509,
         "path": "/social-events/events/{eventId}/memory-invitations",
         "parameters": [
           {
@@ -30803,7 +31160,7 @@
         }
       },
       {
-        "ordinal": 505,
+        "ordinal": 510,
         "path": "/social-events/events/{eventId}/memory-invitations/{deliveryId}/open",
         "parameters": [
           {
@@ -30901,685 +31258,6 @@
               "args": [],
               "module": "Data.Aeson.Types.Internal",
               "name": "Value"
-            }
-          ],
-          "module": "Servant.API.ResponseHeaders",
-          "name": "Headers"
-        }
-      },
-      {
-        "ordinal": 506,
-        "path": "/social-events/events/{eventId}/workspace",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "eventId",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "GHC.Num.Integer",
-              "name": "Integer"
-            }
-          }
-        ],
-        "bodies": [],
-        "authCombinators": [
-          "bearer-token"
-        ],
-        "internalInputs": [],
-        "method": "GET",
-        "successStatus": 200,
-        "contentTypes": [
-          {
-            "args": [],
-            "module": "Servant.API.ContentTypes",
-            "name": "JSON"
-          }
-        ],
-        "responseType": {
-          "args": [
-            {
-              "args": [
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [],
-                          "module": "Servant.API.Modifiers",
-                          "name": "Optional"
-                        },
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Strict"
-                            },
-                            {
-                              "args": [],
-                              "module": "GHC.Types",
-                              "name": "'[]"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        }
-                      ],
-                      "module": "GHC.Types",
-                      "name": "':"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.TypeLits",
-                      "name": "\"Cache-Control\""
-                    },
-                    {
-                      "args": [],
-                      "module": "Data.Text.Internal",
-                      "name": "Text"
-                    }
-                  ],
-                  "module": "Servant.API.Header",
-                  "name": "Header'"
-                },
-                {
-                  "args": [],
-                  "module": "GHC.Types",
-                  "name": "'[]"
-                }
-              ],
-              "module": "GHC.Types",
-              "name": "':"
-            },
-            {
-              "args": [],
-              "module": "Data.Aeson.Types.Internal",
-              "name": "Value"
-            }
-          ],
-          "module": "Servant.API.ResponseHeaders",
-          "name": "Headers"
-        }
-      },
-      {
-        "ordinal": 507,
-        "path": "/social-events/events/{eventId}/workspace",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "eventId",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "GHC.Num.Integer",
-              "name": "Integer"
-            }
-          }
-        ],
-        "bodies": [
-          {
-            "modifiers": [
-              {
-                "args": [],
-                "module": "Servant.API.Modifiers",
-                "name": "Required"
-              },
-              {
-                "args": [],
-                "module": "Servant.API.Modifiers",
-                "name": "Strict"
-              }
-            ],
-            "contentTypes": [
-              {
-                "args": [],
-                "module": "Servant.API.ContentTypes",
-                "name": "JSON"
-              }
-            ],
-            "type": {
-              "args": [],
-              "module": "Data.Aeson.Types.Internal",
-              "name": "Value"
-            }
-          }
-        ],
-        "authCombinators": [
-          "bearer-token"
-        ],
-        "internalInputs": [],
-        "method": "POST",
-        "successStatus": 200,
-        "contentTypes": [
-          {
-            "args": [],
-            "module": "Servant.API.ContentTypes",
-            "name": "JSON"
-          }
-        ],
-        "responseType": {
-          "args": [
-            {
-              "args": [
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [],
-                          "module": "Servant.API.Modifiers",
-                          "name": "Optional"
-                        },
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Strict"
-                            },
-                            {
-                              "args": [],
-                              "module": "GHC.Types",
-                              "name": "'[]"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        }
-                      ],
-                      "module": "GHC.Types",
-                      "name": "':"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.TypeLits",
-                      "name": "\"Cache-Control\""
-                    },
-                    {
-                      "args": [],
-                      "module": "Data.Text.Internal",
-                      "name": "Text"
-                    }
-                  ],
-                  "module": "Servant.API.Header",
-                  "name": "Header'"
-                },
-                {
-                  "args": [],
-                  "module": "GHC.Types",
-                  "name": "'[]"
-                }
-              ],
-              "module": "GHC.Types",
-              "name": "':"
-            },
-            {
-              "args": [],
-              "module": "Data.Aeson.Types.Internal",
-              "name": "Value"
-            }
-          ],
-          "module": "Servant.API.ResponseHeaders",
-          "name": "Headers"
-        }
-      },
-      {
-        "ordinal": 508,
-        "path": "/social-events/events/{eventId}/workspace/plan.pdf",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "eventId",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "GHC.Num.Integer",
-              "name": "Integer"
-            }
-          }
-        ],
-        "bodies": [],
-        "authCombinators": [
-          "bearer-token"
-        ],
-        "internalInputs": [],
-        "method": "GET",
-        "successStatus": 200,
-        "contentTypes": [
-          {
-            "args": [],
-            "module": "Servant.API.ContentTypes",
-            "name": "OctetStream"
-          }
-        ],
-        "responseType": {
-          "args": [
-            {
-              "args": [
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [],
-                          "module": "Servant.API.Modifiers",
-                          "name": "Optional"
-                        },
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Strict"
-                            },
-                            {
-                              "args": [],
-                              "module": "GHC.Types",
-                              "name": "'[]"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        }
-                      ],
-                      "module": "GHC.Types",
-                      "name": "':"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.TypeLits",
-                      "name": "\"Cache-Control\""
-                    },
-                    {
-                      "args": [],
-                      "module": "Data.Text.Internal",
-                      "name": "Text"
-                    }
-                  ],
-                  "module": "Servant.API.Header",
-                  "name": "Header'"
-                },
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Optional"
-                            },
-                            {
-                              "args": [
-                                {
-                                  "args": [],
-                                  "module": "Servant.API.Modifiers",
-                                  "name": "Strict"
-                                },
-                                {
-                                  "args": [],
-                                  "module": "GHC.Types",
-                                  "name": "'[]"
-                                }
-                              ],
-                              "module": "GHC.Types",
-                              "name": "':"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        },
-                        {
-                          "args": [],
-                          "module": "GHC.TypeLits",
-                          "name": "\"Content-Disposition\""
-                        },
-                        {
-                          "args": [],
-                          "module": "Data.Text.Internal",
-                          "name": "Text"
-                        }
-                      ],
-                      "module": "Servant.API.Header",
-                      "name": "Header'"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.Types",
-                      "name": "'[]"
-                    }
-                  ],
-                  "module": "GHC.Types",
-                  "name": "':"
-                }
-              ],
-              "module": "GHC.Types",
-              "name": "':"
-            },
-            {
-              "args": [],
-              "module": "Data.ByteString.Lazy.Internal",
-              "name": "ByteString"
-            }
-          ],
-          "module": "Servant.API.ResponseHeaders",
-          "name": "Headers"
-        }
-      },
-      {
-        "ordinal": 509,
-        "path": "/social-events/events/{eventId}/workspace/agreements/{agreementId}/{version}/document.pdf",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "eventId",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "GHC.Num.Integer",
-              "name": "Integer"
-            }
-          },
-          {
-            "in": "path",
-            "name": "agreementId",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "Data.UUID.Types.Internal",
-              "name": "UUID"
-            }
-          },
-          {
-            "in": "path",
-            "name": "version",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "GHC.Types",
-              "name": "Int"
-            }
-          }
-        ],
-        "bodies": [],
-        "authCombinators": [
-          "bearer-token"
-        ],
-        "internalInputs": [],
-        "method": "GET",
-        "successStatus": 200,
-        "contentTypes": [
-          {
-            "args": [],
-            "module": "Servant.API.ContentTypes",
-            "name": "OctetStream"
-          }
-        ],
-        "responseType": {
-          "args": [
-            {
-              "args": [
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [],
-                          "module": "Servant.API.Modifiers",
-                          "name": "Optional"
-                        },
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Strict"
-                            },
-                            {
-                              "args": [],
-                              "module": "GHC.Types",
-                              "name": "'[]"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        }
-                      ],
-                      "module": "GHC.Types",
-                      "name": "':"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.TypeLits",
-                      "name": "\"Cache-Control\""
-                    },
-                    {
-                      "args": [],
-                      "module": "Data.Text.Internal",
-                      "name": "Text"
-                    }
-                  ],
-                  "module": "Servant.API.Header",
-                  "name": "Header'"
-                },
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Optional"
-                            },
-                            {
-                              "args": [
-                                {
-                                  "args": [],
-                                  "module": "Servant.API.Modifiers",
-                                  "name": "Strict"
-                                },
-                                {
-                                  "args": [],
-                                  "module": "GHC.Types",
-                                  "name": "'[]"
-                                }
-                              ],
-                              "module": "GHC.Types",
-                              "name": "':"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        },
-                        {
-                          "args": [],
-                          "module": "GHC.TypeLits",
-                          "name": "\"Content-Disposition\""
-                        },
-                        {
-                          "args": [],
-                          "module": "Data.Text.Internal",
-                          "name": "Text"
-                        }
-                      ],
-                      "module": "Servant.API.Header",
-                      "name": "Header'"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.Types",
-                      "name": "'[]"
-                    }
-                  ],
-                  "module": "GHC.Types",
-                  "name": "':"
-                }
-              ],
-              "module": "GHC.Types",
-              "name": "':"
-            },
-            {
-              "args": [],
-              "module": "Data.ByteString.Lazy.Internal",
-              "name": "ByteString"
-            }
-          ],
-          "module": "Servant.API.ResponseHeaders",
-          "name": "Headers"
-        }
-      },
-      {
-        "ordinal": 510,
-        "path": "/social-events/events/{eventId}/workspace/agreements/{agreementId}/acceptance.pdf",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "eventId",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "GHC.Num.Integer",
-              "name": "Integer"
-            }
-          },
-          {
-            "in": "path",
-            "name": "agreementId",
-            "modifiers": [],
-            "type": {
-              "args": [],
-              "module": "Data.UUID.Types.Internal",
-              "name": "UUID"
-            }
-          }
-        ],
-        "bodies": [],
-        "authCombinators": [
-          "bearer-token"
-        ],
-        "internalInputs": [],
-        "method": "GET",
-        "successStatus": 200,
-        "contentTypes": [
-          {
-            "args": [],
-            "module": "Servant.API.ContentTypes",
-            "name": "OctetStream"
-          }
-        ],
-        "responseType": {
-          "args": [
-            {
-              "args": [
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [],
-                          "module": "Servant.API.Modifiers",
-                          "name": "Optional"
-                        },
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Strict"
-                            },
-                            {
-                              "args": [],
-                              "module": "GHC.Types",
-                              "name": "'[]"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        }
-                      ],
-                      "module": "GHC.Types",
-                      "name": "':"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.TypeLits",
-                      "name": "\"Cache-Control\""
-                    },
-                    {
-                      "args": [],
-                      "module": "Data.Text.Internal",
-                      "name": "Text"
-                    }
-                  ],
-                  "module": "Servant.API.Header",
-                  "name": "Header'"
-                },
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Optional"
-                            },
-                            {
-                              "args": [
-                                {
-                                  "args": [],
-                                  "module": "Servant.API.Modifiers",
-                                  "name": "Strict"
-                                },
-                                {
-                                  "args": [],
-                                  "module": "GHC.Types",
-                                  "name": "'[]"
-                                }
-                              ],
-                              "module": "GHC.Types",
-                              "name": "':"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        },
-                        {
-                          "args": [],
-                          "module": "GHC.TypeLits",
-                          "name": "\"Content-Disposition\""
-                        },
-                        {
-                          "args": [],
-                          "module": "Data.Text.Internal",
-                          "name": "Text"
-                        }
-                      ],
-                      "module": "Servant.API.Header",
-                      "name": "Header'"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.Types",
-                      "name": "'[]"
-                    }
-                  ],
-                  "module": "GHC.Types",
-                  "name": "':"
-                }
-              ],
-              "module": "GHC.Types",
-              "name": "':"
-            },
-            {
-              "args": [],
-              "module": "Data.ByteString.Lazy.Internal",
-              "name": "ByteString"
             }
           ],
           "module": "Servant.API.ResponseHeaders",

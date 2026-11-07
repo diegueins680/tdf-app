@@ -1,0 +1,612 @@
+{
+  "schemaVersion": 3,
+  "observedAt": "2026-10-26T23:07:45.529918+00:00",
+  "purpose": "Source-bound qualification of strengthened independent cart journeys; supersedes v2 only for current c86 test source, preserves old outcomes",
+  "worktree": "/private/tmp/tdf-music-credential-cache-20261026",
+  "source": {
+    "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+    "dirtyTrackedFile": "e2e/web/marketplace-cart.spec.mjs",
+    "sourceSha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+    "rootPrelaunchGuard": {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/source-before.json",
+      "sha256": "33632815bf4dbb4e64a009beb62b005051b09123338ca926d9597e0cc2334276",
+      "sourceSha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+      "boundary": "Root prelaunch exact cart-spec guard; no8file/timestamp claim for this small source-before document"
+    },
+    "during": {
+      "observedAt": "2026-10-26T23:03:13.859214+00:00",
+      "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+      "files": {
+        "e2e/web/marketplace-cart.spec.mjs": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
+        "tdf-hq-ui/src/config/apiBase.ts": "0769e758bad169e3f4f405df9a68f122d6fb0ee71667813347fb4e0c382f06df",
+        "tdf-hq-ui/src/api/client.ts": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
+        "playwright.config.mjs": "016429e964027bd196982efabee711e56df08b51664f51f8e5298e3cdd7b5f93",
+        "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+        "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+        "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d"
+      }
+    },
+    "post": {
+      "observedAt": "2026-10-26T23:07:45.529918+00:00",
+      "head": "d7657f3daf7ee037703a327d840a67e29ac61099",
+      "files": {
+        "e2e/web/marketplace-cart.spec.mjs": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx": "b129902039b0dca4eba1ed7077c2a61d7909da0a02bcb4eca2c35650c07cd102",
+        "tdf-hq-ui/src/config/apiBase.ts": "0769e758bad169e3f4f405df9a68f122d6fb0ee71667813347fb4e0c382f06df",
+        "tdf-hq-ui/src/api/client.ts": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
+        "playwright.config.mjs": "016429e964027bd196982efabee711e56df08b51664f51f8e5298e3cdd7b5f93",
+        "package.json": "17fbe22ad48afeb0f48dd7aac8524f83210240c25d856a742663a5aaaa02bcd2",
+        "package-lock.json": "bc5a759f3c3008828a7a1c381479c72a900c25aecc2cab7add56925923947b41",
+        "tdf-hq-ui/package.json": "55426acbcc38c5e9dc543c7d1c0072ae78f0e962ee05c16d7249e011fabe8c1d"
+      }
+    },
+    "all8InRunToPostHashesMatch": true,
+    "all7OtherSourceHashesMatchPriorV2": true,
+    "observationTiming": "This agent's8file snapshot23:03:13.859214Z is during v3, after some cases. Final snapshot23:07:45.529918Z follows root-confirmed process exit. Root's prelaunch guard independently binds c86 at start.",
+    "originalSourceGitBlob": "440f1f3255fb013e4e1b21385862aaf6f667a15a",
+    "noApplicationOrServerChanges": true
+  },
+  "execution": {
+    "runBy": "Root unrestricted environment",
+    "rootSession": 59763,
+    "actualExitCode": 0,
+    "rootConfirmedAt": "2026-10-26T23:06:33Z",
+    "stats": {
+      "startTime": "2026-10-26T23:02:15.939Z",
+      "duration": 108173.125,
+      "expected": 9,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "retries": 0,
+    "perCaseTimeoutMs": 30000,
+    "workers": 1,
+    "cases": [
+      {
+        "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+        "project": "chromium-desktop",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 3540,
+            "startTime": "2026-10-26T23:02:52.207Z",
+            "error": null
+          }
+        ]
+      },
+      {
+        "title": "Marketplace restores and removes a genuinely added cart after reload on a small phone @mobile-flow",
+        "project": "chromium-desktop",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 3737,
+            "startTime": "2026-10-26T23:02:56.038Z",
+            "error": null
+          }
+        ]
+      },
+      {
+        "title": "Saved cart failure stays recoverable without creating a replacement @mobile-flow",
+        "project": "chromium-desktop",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 10544,
+            "startTime": "2026-10-26T23:02:59.792Z",
+            "error": null
+          }
+        ]
+      },
+      {
+        "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+        "project": "chromium-phone",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 4268,
+            "startTime": "2026-10-26T23:03:11.796Z",
+            "error": null
+          }
+        ]
+      },
+      {
+        "title": "Marketplace restores and removes a genuinely added cart after reload on a small phone @mobile-flow",
+        "project": "chromium-phone",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 4243,
+            "startTime": "2026-10-26T23:03:16.323Z",
+            "error": null
+          }
+        ]
+      },
+      {
+        "title": "Saved cart failure stays recoverable without creating a replacement @mobile-flow",
+        "project": "chromium-phone",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 10843,
+            "startTime": "2026-10-26T23:03:20.584Z",
+            "error": null
+          }
+        ]
+      },
+      {
+        "title": "Marketplace cart stays reachable after adding on a small phone @mobile-flow",
+        "project": "firefox-critical",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 9437,
+            "startTime": "2026-10-26T23:03:33.036Z",
+            "error": null
+          }
+        ]
+      },
+      {
+        "title": "Marketplace restores and removes a genuinely added cart after reload on a small phone @mobile-flow",
+        "project": "firefox-critical",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 6490,
+            "startTime": "2026-10-26T23:03:44.275Z",
+            "error": null
+          }
+        ]
+      },
+      {
+        "title": "Saved cart failure stays recoverable without creating a replacement @mobile-flow",
+        "project": "firefox-critical",
+        "timeoutMs": 30000,
+        "results": [
+          {
+            "status": "passed",
+            "durationMs": 12043,
+            "startTime": "2026-10-26T23:03:50.783Z",
+            "error": null
+          }
+        ]
+      }
+    ],
+    "projects": [
+      "chromium-desktop",
+      "chromium-phone (Pixel7 web emulation)",
+      "firefox-critical"
+    ],
+    "privateConfig": {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/playwright.config.mjs",
+      "sha256": "1b85e5c0569227d7a6d1748445ea098649491dc87c788f4d4293ca2c82ad910d",
+      "cwd": "/private/tmp/tdf-music-credential-cache-20261026",
+      "baseURL": "http://127.0.0.1:4188",
+      "apiBase": "http://127.0.0.1:4188",
+      "reuseExistingServer": false,
+      "localGrepOverride": "Inherited Firefox @critical grep removed only for this file so @mobile-flow scenarios actually run locally; test declarations and CI source policies unchanged."
+    },
+    "log": {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/run.log",
+      "sha256": "97ecfe4f4190abd280c0976403198869b3ef9186731c02721d7f8504c371dd04"
+    },
+    "results": {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/results.json",
+      "sha256": "bab074fbc488f460574c93e49ff1849ce1a4202d3717dc894a20d66331ea2086"
+    },
+    "timingBoundary": "Observed local test durations3.540–12.043s; not an SLO/p95, rendering repair, controlled before/after benchmark, or WebKit result."
+  },
+  "assertionTraceability": {
+    "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/assertion-traceability-v3.json",
+    "sha256": "ad413c6ac93e51b11148b6c55a9e23743234198c99d20ee6893abc0a592ed7f1",
+    "originalAssertionsOrLayoutCallLinesRetained": 44,
+    "deletedOriginalSourceLines": 0,
+    "insertedLines": 29,
+    "mapping": {
+      "originalGitBlob": "440f1f3255fb013e4e1b21385862aaf6f667a15a",
+      "currentSourceSha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+      "insertedLines": 29,
+      "deletedOriginalLines": 0,
+      "all44OriginalAssertionOrLayoutCallLinesRetained": true,
+      "mapping": [
+        {
+          "originalLine": 112,
+          "actualV3Line": 112,
+          "statement": "expect(layout.scrollWidth).toBeLessThanOrEqual(layout.innerWidth);"
+        },
+        {
+          "originalLine": 113,
+          "actualV3Line": 113,
+          "statement": "expect(layout.rootText).toBeGreaterThan(0);"
+        },
+        {
+          "originalLine": 122,
+          "actualV3Line": 122,
+          "statement": "await expect(page.getByText('Micrófono Vintage SM58').first()).toBeVisible();"
+        },
+        {
+          "originalLine": 124,
+          "actualV3Line": 124,
+          "statement": "await expect(cartButton).toBeVisible();"
+        },
+        {
+          "originalLine": 125,
+          "actualV3Line": 125,
+          "statement": "await expect(cartButton).toHaveAccessibleName('Carrito, sin productos');"
+        },
+        {
+          "originalLine": 126,
+          "actualV3Line": 126,
+          "statement": "await expect(cartButton).toBeInViewport();"
+        },
+        {
+          "originalLine": 127,
+          "actualV3Line": 127,
+          "statement": "await expectHealthyLayout(page);"
+        },
+        {
+          "originalLine": 134,
+          "actualV3Line": 134,
+          "statement": "await expect(confirmation).toBeVisible();"
+        },
+        {
+          "originalLine": 135,
+          "actualV3Line": 135,
+          "statement": "await expect(confirmation.getByRole('button', { name: 'Ver carrito' })).toBeVisible();"
+        },
+        {
+          "originalLine": 136,
+          "actualV3Line": 136,
+          "statement": "await expect(page).toHaveURL(/\\/marketplace(?:\\?.*)?$/);"
+        },
+        {
+          "originalLine": 137,
+          "actualV3Line": 137,
+          "statement": "await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');"
+        },
+        {
+          "originalLine": 138,
+          "actualV3Line": 138,
+          "statement": "await expect(header.locator('.MuiBadge-badge')).toHaveText('1');"
+        },
+        {
+          "originalLine": 141,
+          "actualV3Line": 141,
+          "statement": "await expect(cartButton).toBeInViewport();"
+        },
+        {
+          "originalLine": 143,
+          "actualV3Line": 143,
+          "statement": "await expect(page.getByRole('button', { name: /^Ver carrito \\(1\\)/ })).toBeInViewport();"
+        },
+        {
+          "originalLine": 145,
+          "actualV3Line": 145,
+          "statement": "expect(state.upserts).toEqual([{ mciuListingId: 'listing-mic', mciuQuantity: 1 }]);"
+        },
+        {
+          "originalLine": 146,
+          "actualV3Line": 146,
+          "statement": "expect(state.creates).toBe(1);"
+        },
+        {
+          "originalLine": 147,
+          "actualV3Line": 147,
+          "statement": "await expectHealthyLayout(page);"
+        },
+        {
+          "originalLine": 153,
+          "actualV3Line": 153,
+          "statement": "await expect(drawer).toBeVisible();"
+        },
+        {
+          "originalLine": 154,
+          "actualV3Line": 154,
+          "statement": "await expect(drawer.getByText('Micrófono Vintage SM58')).toBeVisible();"
+        },
+        {
+          "originalLine": 155,
+          "actualV3Line": 155,
+          "statement": "await expect(drawer.getByRole('button', { name: 'Ir al checkout' })).toBeVisible();"
+        },
+        {
+          "originalLine": 158,
+          "actualV3Line": 158,
+          "statement": "await expect(drawer).toBeHidden();"
+        },
+        {
+          "originalLine": 162,
+          "actualV3Line": 191,
+          "statement": "await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');"
+        },
+        {
+          "originalLine": 163,
+          "actualV3Line": 192,
+          "statement": "await expect(header.locator('.MuiBadge-badge')).toHaveText('1');"
+        },
+        {
+          "originalLine": 164,
+          "actualV3Line": 193,
+          "statement": "await expectHealthyLayout(page);"
+        },
+        {
+          "originalLine": 168,
+          "actualV3Line": 197,
+          "statement": "await expect(drawer).toBeVisible();"
+        },
+        {
+          "originalLine": 170,
+          "actualV3Line": 199,
+          "statement": "await expect(drawer.getByText('Tu carrito está vacío.')).toBeVisible();"
+        },
+        {
+          "originalLine": 171,
+          "actualV3Line": 200,
+          "statement": "await expect(drawer.getByRole('button', { name: 'Explorar catálogo' })).toBeVisible();"
+        },
+        {
+          "originalLine": 173,
+          "actualV3Line": 202,
+          "statement": "await expect(cartButton).toHaveAccessibleName('Carrito, sin productos');"
+        },
+        {
+          "originalLine": 174,
+          "actualV3Line": 203,
+          "statement": "await expect(header.locator('.MuiBadge-badge.MuiBadge-invisible')).toHaveCount(1);"
+        },
+        {
+          "originalLine": 175,
+          "actualV3Line": 204,
+          "statement": "await expect(cartButton).toBeVisible();"
+        },
+        {
+          "originalLine": 176,
+          "actualV3Line": 205,
+          "statement": "expect(state.upserts.at(-1)).toEqual({ mciuListingId: 'listing-mic', mciuQuantity: 0 });"
+        },
+        {
+          "originalLine": 177,
+          "actualV3Line": 206,
+          "statement": "await expectHealthyLayout(page);"
+        },
+        {
+          "originalLine": 191,
+          "actualV3Line": 220,
+          "statement": "await expect(drawer).toBeVisible();"
+        },
+        {
+          "originalLine": 192,
+          "actualV3Line": 221,
+          "statement": "await expect(drawer.getByText(/No pudimos cargar tu carrito/)).toBeVisible({ timeout: 15_000 });"
+        },
+        {
+          "originalLine": 193,
+          "actualV3Line": 222,
+          "statement": "await expect(drawer.getByText('Tu carrito está vacío.', { exact: true })).toHaveCount(0);"
+        },
+        {
+          "originalLine": 197,
+          "actualV3Line": 226,
+          "statement": "await expect(drawer).not.toBeVisible();"
+        },
+        {
+          "originalLine": 199,
+          "actualV3Line": 228,
+          "statement": "await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');"
+        },
+        {
+          "originalLine": 201,
+          "actualV3Line": 230,
+          "statement": "await expect(drawer.getByText(/No pudimos cargar tu carrito/)).toBeVisible();"
+        },
+        {
+          "originalLine": 202,
+          "actualV3Line": 231,
+          "statement": "expect(state.creates).toBe(0);"
+        },
+        {
+          "originalLine": 206,
+          "actualV3Line": 235,
+          "statement": "await expect(drawer.getByText('Micrófono Vintage SM58', { exact: true })).toBeVisible();"
+        },
+        {
+          "originalLine": 207,
+          "actualV3Line": 236,
+          "statement": "await expect(drawer.getByText(/No pudimos cargar tu carrito/)).toHaveCount(0);"
+        },
+        {
+          "originalLine": 208,
+          "actualV3Line": 237,
+          "statement": "expect(state.creates).toBe(0);"
+        },
+        {
+          "originalLine": 209,
+          "actualV3Line": 238,
+          "statement": "expect(state.upserts).toHaveLength(0);"
+        },
+        {
+          "originalLine": 210,
+          "actualV3Line": 239,
+          "statement": "await expectHealthyLayout(page);"
+        }
+      ],
+      "additionalFirstCaseJourney": "After actual first drawer close+hidden, reload and assert one-item cart name/badge/layout in the same session.",
+      "additionalFirstCaseLines": [
+        {
+          "line": 159,
+          "text": ""
+        },
+        {
+          "line": 160,
+          "text": "  // Keep persistence after an actual drawer cycle in this journey as well."
+        },
+        {
+          "line": 161,
+          "text": "  await page.reload({ waitUntil: 'domcontentloaded' });"
+        },
+        {
+          "line": 162,
+          "text": "  await expect(cartButton).toHaveAccessibleName('Carrito, 1 producto');"
+        },
+        {
+          "line": 163,
+          "text": "  await expect(header.locator('.MuiBadge-badge')).toHaveText('1');"
+        },
+        {
+          "line": 164,
+          "text": "  await expectHealthyLayout(page);"
+        },
+        {
+          "line": 165,
+          "text": "});"
+        },
+        {
+          "line": 166,
+          "text": ""
+        }
+      ],
+      "remainingCompositionBoundary": "The first drawer cycle→reload is now explicitly covered. Add→reload→remove is independently covered by caseB. Entire original drawer-cycle→reload→remove sequence remains decomposed across fresh contexts rather than one long test."
+    }
+  },
+  "v3Strengthening": {
+    "reasonForRepeat": "Root added functional assertions after v2, therefore new source and targeted run were required; not an unchanged-candidate retry.",
+    "caseA": "Genuine UIadd→badge/sticky/layout→actual drawer open/close+hidden→genuine page reload→same1-item accessible cart/badge/layout.",
+    "caseB": "Independent fresh fixture/context→genuine UIadd→await/validate POST200 cart ID/quantity1→reload→restored cart→remove→empty drawer/header/layout.",
+    "caseC": "Original saved-cart outage/recovery test unchanged.",
+    "noSeededPersistence": true,
+    "noForcedClicksOrDisabledActionability": true,
+    "noAssertionOrTimeoutOrRetryWeakening": true,
+    "adjacentTransitionGapClosed": "First drawer cycle→reload persistence is now explicitly tested in caseA.",
+    "remainingCompositionGap": "The full original drawer-cycle→reload→remove sequence is still decomposed across fresh independent cases; caseB does not inherit caseA state. No single-test whole-chain coverage claim."
+  },
+  "preservedHistory": {
+    "v2": {
+      "receipt": "/private/tmp/tdf-cart-budget-qualified-receipt-20261026.json",
+      "sha256": "09b7fc81c6fe5257fdaf540f9326e5cc0bce9e8c6cbbca60fb42623af015ae53",
+      "qualifiedSourceSha256": "99f794a61c3c22f0c0cc8796e9a2e4d1057c88970a3e85cf82c176ed53ad8057",
+      "passed": 9,
+      "boundary": "Historical weaker-source qualification, never relabeled as c86/v3."
+    },
+    "setupFailure": "Initial private-config ENOENT with0browser tests remains in original /private/tmp/tdf-cart-budget-qualified-20261026 plus v2 receipt; private cwd/API-origin setup correction did not change product/tests.",
+    "originalCiFailure": {
+      "receipt": "/private/tmp/tdf-633-d765-persona-failure-evidence-20261026.json",
+      "rootVerifiedArtifactSha256": "75d6a47be209899ba10ce34b28cce4f25d8b2edc2944c8be46458b2bc34e70b9",
+      "cartApiCalls": 4,
+      "rendererRootCause": "UNVERIFIED"
+    }
+  },
+  "webKit": {
+    "status": "UNVERIFIED",
+    "proof": {
+      "path": "/private/tmp/tdf-playwright-webkit-search-install-20261026.log",
+      "sha256": "96c865a312add0cb2872dc43dc91c2d73e3c2dcabceafaf4bce59f2f4ef401a0",
+      "message": "Playwright does not support webkit on mac12"
+    },
+    "noPlatformBypass": true,
+    "newHostedWebKitCiStillRequired": true,
+    "noPhysicalDeviceClaim": true
+  },
+  "limits": [
+    "All APIs are synthetic in-memory fixtures; no real cart/payment/backend cache middleware or production data exercised.",
+    "No new hosted CI, merge, deployment or rendering-fix claim.",
+    "No native/core-music-search source or already-qualified spec changed by this cart work.",
+    "No new normative requirement; existing cart requirement mapping owned by root/metadata agent."
+  ],
+  "artifacts": [
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/source-in-run.json",
+      "bytes": 936,
+      "sha256": "5b8927c355e81eb9bd527b4a0f988ca6c8a75bef9c250b2b6190f332a4cacb84"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/source-before.json",
+      "bytes": 305,
+      "sha256": "33632815bf4dbb4e64a009beb62b005051b09123338ca926d9597e0cc2334276"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/run.log",
+      "bytes": 5035,
+      "sha256": "97ecfe4f4190abd280c0976403198869b3ef9186731c02721d7f8504c371dd04"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/source-after.json",
+      "bytes": 936,
+      "sha256": "8b77a696997f75eba85144503d6dd52fa2e818289cc714d3446adb73f6239f75"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/results.json",
+      "bytes": 14057,
+      "sha256": "bab074fbc488f460574c93e49ff1849ce1a4202d3717dc894a20d66331ea2086"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/assertion-traceability-v3.json",
+      "bytes": 7930,
+      "sha256": "ad413c6ac93e51b11148b6c55a9e23743234198c99d20ee6893abc0a592ed7f1"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/playwright.config.mjs",
+      "bytes": 1073,
+      "sha256": "1b85e5c0569227d7a6d1748445ea098649491dc87c788f4d4293ca2c82ad910d"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/test-results/.last-run.json",
+      "bytes": 45,
+      "sha256": "91d1c43004802cd49950d78eb11c8fa7d05da8ffffe219a8b13b2f561bc00903"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-firefox-critical/marketplace-cart-after-add.png",
+      "bytes": 128466,
+      "sha256": "1ef74b57f7a4dbd23abf3cf035d7e7b8232209c569f12d73c9c5d03e6ecc0a3f"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-firefox-critical/marketplace-cart-drawer.png",
+      "bytes": 119892,
+      "sha256": "f338b5860e667a6fb9a959891979c3a5143f2c6e87fac43c6aa10a787125ba6d"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-chromium-desktop/marketplace-cart-after-add.png",
+      "bytes": 122389,
+      "sha256": "2660d185618ccc1956d5bc98eb7d0e94585c02d23ed6e732fe38f48554f224da"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-chromium-desktop/marketplace-cart-drawer.png",
+      "bytes": 108639,
+      "sha256": "44846b014d038e413306fb4a84940f618f8b045ed41d1050a0db2504cdc621a2"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-chromium-phone/marketplace-cart-after-add.png",
+      "bytes": 176452,
+      "sha256": "7ad9be8a225a9a7bae6910afe261b65ed28554b52843caed9b31424ec24e0d5c"
+    },
+    {
+      "path": "/private/tmp/tdf-cart-budget-qualified-v3-20261026/test-results/marketplace-cart-Marketpla-21985-n-a-small-phone-mobile-flow-chromium-phone/marketplace-cart-drawer.png",
+      "bytes": 165164,
+      "sha256": "38a6f215791c551c1ae3cd787e5b9901d960104126e1c170938f0bfab60924d5"
+    }
+  ],
+  "actionsByThisAgent": {
+    "repoSourceOrTestOrPipelineEdits": 0,
+    "ciReruns": 0,
+    "installs": 0,
+    "reviewRequests": 0,
+    "commits": 0,
+    "pushes": 0,
+    "merges": 0,
+    "productionProbes": 0
+  },
+  "writerState": "QA cart source writers stopped; no further source edits required for this qualified c86 candidate"
+}

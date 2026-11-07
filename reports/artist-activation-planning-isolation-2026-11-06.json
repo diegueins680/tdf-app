@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-06",
+  "pullRequest": 667,
+  "reviewedParent": "5026f8425b055d692e69039af3a3f6d4f258d117",
+  "protectedMain": "7a41f893ee14b4346907e9d53b65c2aa54506cfb",
+  "thread": "PRRT_kwDOQPdUrM60ZjyX",
+  "fix": "Attach plan graphics only to captured new piece IDs at initial version1, unapproved draft state and no external identity. Preserve existing template settings. Never match older campaign pieces by format or name.",
+  "qualification": {
+    "service": {
+      "passed": 121,
+      "failures": 0,
+      "logSha256": "f1bd9ad21e5476d1245c99ff5ee7007ba9e2dd8df2eb66fdbacfe40dbe9a9d64",
+      "scope": "Local HTTP/SQLite/filesystem and mocked media/provider/SMTP boundaries; bounded dispatch model passed."
+    },
+    "negativeControls": {
+      "tests": 2,
+      "bothFailedOnParent": true,
+      "logSha256": "fe5d8a17fbc6f7494ae4f224b47d38f9d7e193d1cc49a6dc00d3998c3bf7e630"
+    },
+    "planningRegressions": [
+      "Pre-existing manual Facebook carousel and matching S01 Story remain byte-for-byte unchanged",
+      "Only new plan-owned piece IDs receive graphics; template flags retained",
+      "A human edit during graphics generation prevents late attachment",
+      "Approval during graphics generation prevents late attachment"
+    ],
+    "web": "Web application and existing browser source unchanged by this Python-only fix. Prior 4,011 web cases/typecheck/build/lint remain earlier scoped evidence.",
+    "repository": "Full quality:repo passed on parent5026f84; new head needs fresh hosted checks.",
+    "specification": "7 inventory and10 conformance controls and strict freshness/client checks run after this fix; see PR current validation."
+  },
+  "sourceSha256": {
+    "services/campaign-platform/planning.py": "473d7a9fadf0b13998072eb30d463e6eff0f0dbfc9663b44f61d650229d6ab87",
+    "services/campaign-platform/tests/test_planning.py": "7cb8abc3d7d9953070a1c78c301e3b539b752ca6eb731558630978f1ef3d0595"
+  },
+  "preservation": "Main credential cache source/evidence, storage contracts, migration history and Mobile14318a7 unchanged. No campaigns, publications, approvals, schedules or user data were written.",
+  "release": "No merge or production deployment. New head requires fresh hosted CI, independent approval and protected admission. No synthetic conversion or actual playback claim."
+}

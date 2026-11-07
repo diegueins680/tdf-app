@@ -75,3 +75,49 @@ describe('resource thumbnails', () => {
     expect(screen.getByRole('img', { name: 'Video no disponible en la fuente' })).toBeTruthy();
   });
 });
+
+const first={providerCode:'youtube',externalCode:'ooPsIHsikYU'};
+describe('bounded fallback scheduling and ownership controls',()=>{
+ it('keeps initial image lazy and only starts its existing next candidate eagerly after failure',()=>{
+  render(<RecordThumbnail resource={first} title="resource"/>);
+  const original=screen.getByRole('img',{name:'resource'});
+  expect(original.getAttribute('loading')).toBe('lazy');
+  expect(original.getAttribute('src')).toBe('https://i.ytimg.com/vi/ooPsIHsikYU/hqdefault.jpg');
+  fireEvent.error(original);
+  const fallback=screen.getByRole('img',{name:'resource'});
+  expect(fallback.getAttribute('loading')).toBe('eager');
+  expect(fallback.getAttribute('src')).toBe('https://i.ytimg.com/vi/ooPsIHsikYU/mqdefault.jpg');
+  expect(document.querySelectorAll('img')).toHaveLength(1);
+ });
+ it('does not restart an exhausted candidate queue after stale detached image events',()=>{
+  const {rerender}=render(<RecordThumbnail resource={first} title="resource"/>);
+  const original=screen.getByRole('img',{name:'resource'});fireEvent.error(original);
+  const fallback=screen.getByRole('img',{name:'resource'});fireEvent.error(fallback);
+  fireEvent.error(original);fireEvent.load(original);fireEvent.error(fallback);fireEvent.load(fallback);
+  rerender(<RecordThumbnail resource={{...first}} title="resource"/>);
+  expect(document.querySelectorAll('img')).toHaveLength(0);
+  expect(screen.getByRole('img',{name:'Miniatura no disponible'})).toBeTruthy();
+ });
+ it('keeps changed resource identity lazy and ignores old resource events and foreign metadata',()=>{
+  const {rerender}=render(<RecordThumbnail resource={first} title="resource"/>);
+  const retired=screen.getByRole('img',{name:'resource'});
+  const next={providerCode:'youtube',externalCode:'Cb7VGZJ6apo',thumbnailUrl:'https://i.ytimg.com/vi/ooPsIHsikYU/hqdefault.jpg',providerMetadata:{id:'ooPsIHsikYU',thumbnails:[{url:'https://i.ytimg.com/vi/ooPsIHsikYU/maxresdefault.jpg'}]}};
+  rerender(<RecordThumbnail resource={next} title="resource"/>);
+  fireEvent.error(retired);fireEvent.load(retired);
+  const current=screen.getByRole('img',{name:'resource'});
+  expect(current.getAttribute('src')).toBe('https://i.ytimg.com/vi/Cb7VGZJ6apo/hqdefault.jpg');
+  expect(current.getAttribute('loading')).toBe('lazy');
+  fireEvent.error(current);
+  expect(screen.getByRole('img',{name:'resource'}).getAttribute('src')).toBe('https://i.ytimg.com/vi/Cb7VGZJ6apo/mqdefault.jpg');
+ });
+ it('retains the existing three-resource queue bound and never eagerly loads a fourth resource',()=>{
+  const other=[1,2,3].map(n=>({providerCode:'vimeo',externalCode:String(n),thumbnailUrl:`https://cdn.example.org/art-${n}.jpg`}));
+  render(<RecordThumbnail resource={first} fallbackResources={other} title="resource"/>);
+  const seen=[];for(let count=0;count<8;count++){
+   const image=screen.queryByRole('img',{name:'resource'});if(!image)break;
+   seen.push(image.getAttribute('src'));expect(image.getAttribute('loading')).toBe(count===0?'lazy':'eager');fireEvent.error(image);
+  }
+  expect(seen).toEqual(['https://i.ytimg.com/vi/ooPsIHsikYU/hqdefault.jpg','https://i.ytimg.com/vi/ooPsIHsikYU/mqdefault.jpg','https://cdn.example.org/art-1.jpg','https://cdn.example.org/art-2.jpg']);
+  expect(document.querySelectorAll('img')).toHaveLength(0);
+ });
+});

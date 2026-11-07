@@ -11,6 +11,7 @@
 
 module TDF.Server where
 
+import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.ContentStorage as ContentStorage
 import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
@@ -220,6 +221,7 @@ import qualified TDF.Commerce.ServiceBookings as ServiceBookings
 import qualified TDF.Server.Directory as DirectoryServer
 import qualified TDF.Server.Merch as MerchServer
 import qualified TDF.Server.MusicRelease as MusicReleaseServer
+import TDF.MusicRelease.CredentialCache (musicCredentialCache)
 import qualified TDF.Server.Reviews as ReviewsServer
 import           TDF.ServerFeedback (feedbackServer, internalFeedbackServer)
 import qualified TDF.Contracts.Server as Contracts
@@ -735,7 +737,7 @@ mkApp env =
       ctx      = authContext env
       trials   = TrialsServer.trialsServer (envPool env)
       apiSrv   = hoistServerWithContext apiProxy ctxProxy (nt env) (server env)
-  in serveWithContext combinedProxy ctx (trials :<|> apiSrv)
+  in musicCredentialCache $ serveWithContext combinedProxy ctx (trials :<|> apiSrv)
 
 nt :: Env -> AppM a -> Handler a
 nt env x = runReaderT x env
@@ -3194,6 +3196,7 @@ artistSecureServer user =
     :<|> artistUpdateOwnProfile user
     :<|> artistUpdateOwnProfile user
        )
+  :<|> VideoCampaigns.campaignServer user
   :<|> artistUpdateOwnPhoto user
 
 socialServer :: AuthedUser -> ServerT SocialAPI AppM

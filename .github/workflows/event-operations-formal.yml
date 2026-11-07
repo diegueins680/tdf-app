@@ -61,6 +61,8 @@ jobs:
           python scripts/specification-conformance.py --check
           python scripts/test-specification-conformance.py
           python scripts/check-public-routes.py
+          python scripts/check-route-requirements.py
+          python scripts/test-route-requirements.py
           python scripts/check-admin-guards.py
           python scripts/check-webhook-signatures.py
           python scripts/test-public-routes.py
@@ -82,6 +84,14 @@ jobs:
         run: python formal/payments/domo_quote_arithmetic.py
       - name: Prove Domo cancellation refund lemmas and negative controls
         run: python formal/payments/domo_cancellation_refund.py
+      - name: Prove merchandise money lemmas and negative controls
+        run: python formal/payments/merch_money_arithmetic.py
+      - name: Prove checkout money narrowing lemmas and negative controls
+        run: python formal/payments/checkout_money_arithmetic.py
+      - name: Prove deposit policy lemmas and negative controls
+        run: python formal/payments/deposit_policy_arithmetic.py
+      - name: Prove provider binding admission and conjunct necessity
+        run: python formal/payments/provider_binding_admission.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15

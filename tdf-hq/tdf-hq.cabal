@@ -88,6 +88,7 @@ library
     TDF.Artists.Promotion
     TDF.Artists.Enrichment
     TDF.Auth
+    TDF.VideoCampaigns
     TDF.Auth.AccountName
     TDF.CampaignAutomation
     TDF.Commerce.Money
@@ -153,6 +154,7 @@ library
     TDF.MusicRelease.Domain
     TDF.MusicRelease.ContentValidation
     TDF.MusicRelease.Money
+    TDF.MusicRelease.CredentialCache
     TDF.MusicRelease.DDEX.ERN432
     TDF.MusicRelease.Storage.S3
     TDF.API.MusicRelease
@@ -320,6 +322,7 @@ library
     , transformers
     , mtl
     , network
+    , network-uri
     , mime-mail
     , unordered-containers
     , uuid-types
@@ -386,6 +389,7 @@ test-suite tdf-hq-test
     TDF.MusicPublicationSpec
     TDF.InteractionWriteBudgetSpec
     TDF.MusicPurchaseSpec
+    TDF.MusicCredentialCacheSpec
     TDF.DriveReplaySpec
     TDF.WhatsAppRedeliverySpec
     TDF.CourseIdentitySpec
@@ -413,6 +417,7 @@ test-suite tdf-hq-test
     TDF.IndexDeclarationSpec
     TDF.InvoiceWorkerSpec
     TDF.APITypesSpec
+    TDF.VideoCampaignsSpec
     TDF.Artists.PromotionSpec
     TDF.Artists.EnrichmentSpec
     TDF.MusicRelease.DDEX.ERN432Spec
