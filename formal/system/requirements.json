@@ -10907,7 +10907,8 @@
         "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
         "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts"
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
+        "e2e/web/public-welcome.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/DiscoveryFallbackPrivacy.tla",
