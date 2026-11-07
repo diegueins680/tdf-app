@@ -49,6 +49,14 @@ class RouteRequirementsTest(unittest.TestCase):
         self.assertEqual(self.entry(ledger, "PUT", "/things/{id}")["basis"], "unspecified")
         self.assertEqual(routes.check(SURFACE, REQUIREMENTS, ledger), [])
 
+    def test_trailing_prose_punctuation_does_not_hide_a_named_route(self):
+        requirements = {"requirements": [
+            {"id": "CANCEL-1", "statement": "POST /quotes/{id}/cancel: strict administrators only."}]}
+        surface = {"operations": [op("POST", "/quotes/{quoteId}/cancel")]}
+        ledger = routes.build(surface, requirements)
+        self.assertEqual(ledger["routes"][0]["requirements"], ["CANCEL-1"])
+        self.assertEqual(ledger["routes"][0]["basis"], "named")
+
     def test_new_mutating_route_must_be_classified(self):
         surface = copy.deepcopy(SURFACE)
         surface["operations"].append(op("PATCH", "/new"))
