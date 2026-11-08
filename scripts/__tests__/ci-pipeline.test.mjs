@@ -332,6 +332,33 @@ test('source Dockerfile introduces changing release metadata after compilation',
   assert.ok(builder.indexOf('build --copy-bins') < builder.indexOf('ARG BUILD_TIME=unknown'));
 });
 
+test('source Docker builder provides embedded event SQL before compilation', async () => {
+  const dockerfile = await source('tdf-hq/Dockerfile');
+  const handler = await source('tdf-hq/src/TDF/Server/SocialEventsHandlers.hs');
+  const embeddedQueries = [...handler.matchAll(/embedFile "(sql\/queries\/[^"\n]+)"/gu)].map(match => match[1]);
+  assert.ok(embeddedQueries.length > 0, 'exercise the actual compile-time SQL dependency');
+  function copiedInputs(recipe) {
+    const stages = recipe.split(/^FROM /mu).slice(1);
+    const builder = stages.find(stage => /^.* AS builder$/mu.test(stage));
+    assert.ok(builder, 'source build stage is present');
+    const compile = builder.indexOf('build --copy-bins');
+    assert.ok(compile > 0, 'binary compilation is present');
+    return [...builder.slice(0, compile).matchAll(/^COPY (tdf-hq\/\S+) (\S+)$/gmu)]
+      .map(([, from, to]) => ({ from, to: to.replace(/^\/app\//u, '') }));
+  }
+  const inputs = copiedInputs(dockerfile);
+  for (const query of embeddedQueries) {
+    const copy = inputs.find(({ to }) => query === to || query.startsWith(`${to}/`));
+    assert.ok(copy, `${query} must be available in the builder, before compilation`);
+    const relative = path.posix.relative(copy.to, query);
+    assert.equal(await source(path.posix.join(copy.from, relative)), await source(`tdf-hq/${query}`));
+    // The previous recipe still has the SQL in migration-bundle. Removing only
+    // the builder copy must reproduce the missing compile-time dependency.
+    const withoutBuilderCopy = dockerfile.replace(`COPY ${copy.from} ${copy.to}\n`, '');
+    assert.ok(!copiedInputs(withoutBuilderCopy).some(({ to }) => query === to || query.startsWith(`${to}/`)));
+  }
+});
+
 test('affected active workflow actions use Node 24 majors', async () => {
   const workflowDirectory = path.join(root, '.github', 'workflows');
   const workflowFiles = (await readdir(workflowDirectory))
