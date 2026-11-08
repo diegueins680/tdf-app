@@ -33,8 +33,11 @@ BEGIN IF condition IS DISTINCT FROM true THEN RAISE EXCEPTION '%',message; END I
 CREATE FUNCTION pg_temp.native_snapshot() RETURNS jsonb LANGUAGE sql AS $$
  SELECT jsonb_build_object(
   'recordings',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM recording t),
+  'sessions',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM recording_session t),
   'resources',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM record_external_resource t),
   'relations',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM recording_external_resource t),
+  'sessionRelations',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM session_external_resource t),
+  'sessionContributors',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM session_contributor t),
   'contributors',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM recording_contributor t),
   'collection',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM collection_recording t),
   'providers',(SELECT jsonb_agg(to_jsonb(t) ORDER BY to_jsonb(t)::text) FROM external_provider t),
@@ -175,5 +178,46 @@ SELECT pg_temp.native_check((SELECT NOT active AND title_es='Corrected but not r
  FROM recording r CROSS JOIN native_before b WHERE r.id={lit(child)}::uuid AND b.label='inactive'),
  'metadata correction never reactivates or changes workflow');
 SELECT 'PASS native import correction preserves explicit inactive/editorial state';
+""")
+
+session_parent = 'bbbbbbbb-1111-4111-8111-111111111111'
+session_child = 'cccccccc-1111-4111-8111-111111111111'
+session = copy.deepcopy(m)
+session['entity'].update(kind='session', id=session_parent, expectedCode='synthetic-session-parent')
+session['native']['chapters'][0].update(id=session_child, title='Session original chapter')
+print(f"""INSERT INTO recording_session(id,catalog_id,code,session_type_id,title_es,title_en,workflow_state_id,published_revision)
+ SELECT {lit(session_parent)}::uuid,c.id,'synthetic-session-parent',t.id,'Canonical session parent','Canonical session parent',s.id,1
+ FROM catalog_definition c JOIN workflow_state s ON s.workflow_id=c.workflow_id AND s.code='published'
+ CROSS JOIN recording_session_type t WHERE c.code='records-sessions' AND t.code='band-recording' AND t.active;""")
+print(native.render_sql(session))
+print(f"INSERT INTO native_before SELECT 'session-child',to_jsonb(r) FROM recording r WHERE id={lit(session_child)}::uuid;")
+session_corrected = copy.deepcopy(session)
+session_corrected['native']['chapters'][0].update(title='Corrected session chapter', startMs=7000, endMs=22000)
+session_corrected['native']['sources'][0]['url'] = 'https://example.invalid/corrected-session-parent.mp4'
+session_corrected['posterUrl'] = 'https://example.invalid/session-parent-poster.jpg'
+print(native.render_sql(session_corrected))
+print(f"""SELECT pg_temp.native_check((SELECT title_es='Corrected session chapter' AND title_en='Corrected session chapter'
+ AND duration_ms=15000 AND version=(b.value->>'version')::bigint+1
+ AND published_revision=(b.value->>'published_revision')::bigint+1
+ FROM recording r CROSS JOIN native_before b WHERE r.id={lit(session_child)}::uuid AND b.label='session-child'),
+ 'session-parent corrected chapter fields and revisions');
+SELECT pg_temp.native_check((SELECT canonical_url='https://example.invalid/corrected-session-parent.mp4'
+ AND duration_ms=15000 AND label_es='Corrected session chapter'
+ AND thumbnail_url='https://example.invalid/session-parent-poster.jpg'
+ AND provider_metadata#>>'{{tdfNative,parentId}}'={lit(session_parent)}
+ AND provider_metadata#>>'{{tdfNative,startMs}}'='7000' AND provider_metadata#>>'{{tdfNative,endMs}}'='22000'
+ FROM record_external_resource WHERE external_code={lit('native:'+session_child)}),
+ 'session-parent corrected resource fields and binding');
+SELECT pg_temp.native_check((SELECT title_es='Canonical session parent' FROM recording_session WHERE id={lit(session_parent)}::uuid),
+ 'session canonical parent presentation preserved');
+SELECT pg_temp.native_check((SELECT count(*)=1 FROM session_external_resource link
+ JOIN record_external_resource resource ON resource.id=link.resource_id
+ WHERE link.session_id={lit(session_parent)}::uuid AND resource.external_code={lit('native:'+session_parent)}),
+ 'actual session parent relation used');
+INSERT INTO native_before VALUES('session-replay',pg_temp.native_snapshot());""")
+print(native.render_sql(session_corrected))
+print("""SELECT pg_temp.native_check(pg_temp.native_snapshot()=(SELECT value FROM native_before WHERE label='session-replay'),
+ 'exact corrected session-parent replay');
+SELECT 'PASS native import session-parent correction and exact replay';
 ROLLBACK;
 """)
