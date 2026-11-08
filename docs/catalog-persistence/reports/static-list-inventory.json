@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T04:38:36.399Z",
+  "generatedAt": "2026-11-08T05:21:07.450Z",
   "repositoryRoot": ".",
   "filesScanned": 2695,
   "candidateCount": 1424,
@@ -79529,7 +79529,7 @@
       "domain": "music-catalog-cms",
       "kind": "object-registry",
       "name": "release",
-      "line": 1031,
+      "line": 1099,
       "values": [
         "arReleaseId",
         "arArtistId",
@@ -79543,7 +79543,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1031
+        1099
       ],
       "consumerCount": 440,
       "backendConsumers": [

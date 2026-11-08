@@ -159,5 +159,34 @@
     "merge": "077a0cc59b3c0eef71c21ebd44ea1f4352e13cba",
     "target": "draft PR670 branch",
     "nativeChangesIncluded": false
+  },
+  "historicalOwnerQualificationInputRevision": "fed5d1fe670082d73663409f2536f026b919c60a",
+  "terminalPermissionDenialFollowUp": {
+    "materialCommit": "c5b83bcadbc150a86dab60b8c85b17f1a3253574",
+    "originalNativeSelectionContract": "33c5835e87f61f18efda0cec9c460b44ac247f59",
+    "scope": "Terminal401/403/404 stops initial/background selection without queued-track substitution. Same-track authorization and non-permission recovery retain their previous paths.",
+    "counterexample": {
+      "runtimeSource": "fed5d1fe670082d73663409f2536f026b919c60a",
+      "sameFinalHarness": true,
+      "selectedTestsFailed": 2,
+      "observed": "Initial one→two and background protected→next before repair."
+    },
+    "focusedVerification": {
+      "playerTestsPassed": 132,
+      "failed": 0,
+      "skipped": 0,
+      "sourceInputSHA256": {
+        "tdf-hq-ui/src/player/PlayerProvider.tsx": "3d5469dcc2c2eb70fe94f7e3f9d3787adf02a6efeb9169393c9861144adfe075",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "b9a1ee86e2f984759bad334434d133ee40fb1042ac43eaf72a8cd5af1d9dbf55"
+      },
+      "scope": "JSDOM/media-event controls, including original Native33 denial case restored verbatim, queued-background denial, late-event/no-further-poll guards and native-pause/new-selection race."
+    },
+    "earlierOwnerResultsAreHistorical": true,
+    "limits": [
+      "The preceding fullUI/browser/backend results and inputSha256 are preserved owner evidence for their original inputs; they are not fresh broad acceptance of this changed runtime.",
+      "No actual native browser/device/provider/deployment execution was performed for the terminal-denial repair.",
+      "Fresh full source hostedCI and independent review remain required; Native706 has not merged to protected Main."
+    ],
+    "productionOperation": false
   }
 }

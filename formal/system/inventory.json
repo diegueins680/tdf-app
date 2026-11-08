@@ -12020,13 +12020,13 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "adddb86b01e71153316218c954e1a9d7afdc7aacc659c87825bd364e22d8eda0",
+      "sha256": "b9a1ee86e2f984759bad334434d133ee40fb1042ac43eaf72a8cd5af1d9dbf55",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "ad1fb0c898bb2cfbb55c1f4df9a3bb94943f3c9ade51f8603fb6085d85a8a985",
+      "sha256": "3d5469dcc2c2eb70fe94f7e3f9d3787adf02a6efeb9169393c9861144adfe075",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23771,7 +23771,7 @@
     },
     {
       "path": "docs/music-releases/universal-player-state.md",
-      "sha256": "9be7ad21743b3823f9d902c70009289c934d012683c667d8d77ece66df717bff",
+      "sha256": "8c647c1d624a69784e2e7aca1475c9468955bea673cddb966e93b48efe538cf9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30645,7 +30645,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "45112c4bd8e514460397e96bf4cfa5103951a92c4dd9a047fcf4c7e3b9219917",
+      "sha256": "0de1198dfc324cc8c652b75eda9a3091fc68ce44d1172b8797a06f2a6320a930",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
