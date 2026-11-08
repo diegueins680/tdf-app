@@ -185,7 +185,9 @@ decideTicketManualPaymentFor provider delegated reviewer eventKey orderKey actio
        , Single (Maybe Text)
        )]
   admissionClocks <- rawSql "SELECT clock_timestamp()" [] :: SqlPersistT IO [Single UTCTime]
-  let admissionTime = case admissionClocks of [Single value] -> value; _ -> now
+  let admissionTime = case admissionClocks of
+        [Single lockedAt] -> max now lockedAt
+        _ -> now
   case rows of
     [] -> pure (Left "No bank transfer evidence exists for this ticket order")
     (_:_:_) -> pure (Left "Bank transfer evidence is ambiguous and requires reconciliation")

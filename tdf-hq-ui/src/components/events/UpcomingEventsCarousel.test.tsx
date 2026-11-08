@@ -43,7 +43,7 @@ async function waitFor(check: () => boolean) {
   }
 }
 
-// Relative to the run date: the carousel drops events that have already started.
+// Relative to the run date: the carousel drops events that have already ended.
 const inTwoWeeks = new Date(Date.now() + 14 * 86_400_000).toISOString();
 const event = (id: string, title: string, overrides: Partial<PublicUpcomingEventDTO> = {}): PublicUpcomingEventDTO => ({
   publicUpcomingEventId: id,
@@ -384,6 +384,45 @@ describe('UpcomingEventsCarousel', () => {
     } finally {
       await view.cleanup();
     }
+  });
+
+  it('retains eight ongoing events from the bounded server page instead of hiding the carousel', async () => {
+    const now = Date.now();
+    listMock.mockResolvedValue(Array.from({ length: 8 }, (_, index) => event(String(index), `En curso ${index}`, {
+      publicUpcomingEventStart: new Date(now - 60_000).toISOString(),
+      publicUpcomingEventEnd: new Date(now + 60_000).toISOString(),
+    })));
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render();
+    try {
+      await waitFor(() => view.container.querySelectorAll('[role="listitem"]').length === 8);
+      expect(view.container.querySelectorAll('[role="listitem"]')).toHaveLength(8);
+    } finally { await view.cleanup(); }
+  });
+
+  it('uses effective end for both artist and general dates and drops expired events', async () => {
+    const now = Date.now();
+    const ongoing = event('ongoing', 'Artist en curso', {
+      publicUpcomingEventStart: new Date(now - 60_000).toISOString(),
+      publicUpcomingEventEnd: new Date(now + 60_000).toISOString(),
+    });
+    artistEventsMock.mockResolvedValue([ongoing]);
+    listMock.mockResolvedValue([
+      ongoing,
+      event('ended', 'Terminado', { publicUpcomingEventStart: new Date(now - 120_000).toISOString(), publicUpcomingEventEnd: new Date(now - 1).toISOString() }),
+      event('unknown', 'Sin fin pasado', { publicUpcomingEventStart: new Date(now - 60_000).toISOString(), publicUpcomingEventEnd: null }),
+      event('future', 'Futuro'),
+    ]);
+    getRsvpMock.mockResolvedValue(null);
+    const view = await render('/a/verde-70');
+    try {
+      await waitFor(() => view.container.querySelectorAll('[role="listitem"]').length === 2);
+      expect(view.container.querySelectorAll('[role="listitem"]')).toHaveLength(2);
+      expect(view.container.textContent).toContain('Artist en curso');
+      expect(view.container.textContent).toContain('Futuro');
+      expect(view.container.textContent).not.toContain('Terminado');
+      expect(view.container.textContent).not.toContain('Sin fin pasado');
+    } finally { await view.cleanup(); }
   });
 
   it('shows the start in the event\'s own timezone', async () => {
