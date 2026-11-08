@@ -4,10 +4,13 @@ TDF loads the official WebTorrent 2.8.5 browser ES module as a Vite URL asset.
 `tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js` is byte-for-byte the published
 `dist/webtorrent.min.js`, SHA256
 `98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae`.
-The production loader still uses the existing service worker at
-`/webtorrent-sw.min.js`, scope `/torrent-stream/`, and the same client API.
+The production loader uses the existing worker URL `/webtorrent-sw.min.js` at
+root scope `/`, with the same library API. The readable MIT worker derivative
+waits for actual page control, routes controlled requests to their initiating
+document and bounds the initial reply wait. Its separate contract is
+`formal/system/torrent-worker-control.md`.
 The npm package's unused Node graph is removed; `@types/webtorrent` remains a
-development-only type dependency. No browser code was rebuilt or rewritten.
+development-only type dependency. The browser library module remains byte-exact; the service worker is a TDF derivative.
 
 `browser.json` binds the artifact, public notices and provenance inventory.
 `bundled-provenance.json` conservatively inventories all 99 original source-map
