@@ -68,7 +68,7 @@ test('log descriptions keep scheme, host and path but never query strings, fragm
   assert.equal(describeForLog('/reset?token=secret-token'), '/reset?[redacted]');
   assert.equal(describeForLog('/eventos/42#top'), '/eventos/42#[redacted]');
   assert.equal(describeForLog('/eventos/42'), '/eventos/42');
-  assert.equal(describeForLog('file:///etc/passwd'), 'file:///etc/passwd');
+  assert.equal(describeForLog('file:///etc/passwd'), '<invalid-url>');
   assert.equal(describeForLog(`https://www.tdfrecords.net/${'a'.repeat(400)}?t=1`).length, 160 + '?[redacted]'.length);
   assert.equal(describeForLog(''), '<empty>');
   assert.equal(describeForLog(42), '<number>');
@@ -89,6 +89,22 @@ test('malformed credential-bearing links log only a generic redacted descriptor 
     'tdf-desktop://SYNTHETIC_USERNAME@[invalid]/open',
     'https://user:SYNTHETIC%5FPASSWORD@bad host/',
     'tdf-desktop://user:SYNTHETIC_PASSWORD@\u0000invalid/open',
+  ]) {
+    assert.equal(parseDeepLink(raw, origin), null);
+    assert.equal(classifyNavigation(raw, origin), 'blocked');
+    assert.equal(describeForLog(raw), '<invalid-url>');
+    assert.doesNotMatch(describeForLog(raw), /SYNTHETIC/);
+  }
+});
+
+
+test('opaque and hostless parsed URLs log no payload while navigation remains blocked', () => {
+  for (const raw of [
+    'tdf-desktop:user:SYNTHETIC_PASSWORD@host/open',
+    'data:text/plain,SYNTHETIC_PASSWORD',
+    'javascript:SYNTHETIC_PASSWORD',
+    'mailto:user:SYNTHETIC_PASSWORD@host',
+    'file:///SYNTHETIC_PASSWORD',
   ]) {
     assert.equal(parseDeepLink(raw, origin), null);
     assert.equal(classifyNavigation(raw, origin), 'blocked');

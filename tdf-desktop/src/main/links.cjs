@@ -77,6 +77,8 @@ function describeForLog(value) {
   let url = null;
   try { url = new URL(trimmed); } catch { /* relative path or opaque text */ }
   if (url) {
+    // Hostless/opaque URLs carry their payload in pathname rather than userinfo.
+    if (!url.host) return '<invalid-url>';
     const slashes = trimmed.slice(url.protocol.length).startsWith('//') ? '//' : '';
     const credentials = url.username || url.password ? '[credentials]@' : '';
     const base = `${url.protocol}${slashes}${credentials}${url.host}${url.pathname}`.slice(0, 160);
