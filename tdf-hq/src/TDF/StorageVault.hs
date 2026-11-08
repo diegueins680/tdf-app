@@ -9,7 +9,6 @@ module TDF.StorageVault
   ) where
 
 import Control.Monad (unless, when)
-import Control.Applicative ((<|>))
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import qualified Control.Exception.Safe as Safe
@@ -44,6 +43,7 @@ import System.Environment (lookupEnv)
 import TDF.API.Types (DriveTokenResponse(..))
 import TDF.Auth (AuthedUser(..), withCurrentAuthSession)
 import TDF.DB (Env(..))
+import qualified TDF.DriveOAuthClient as DriveOAuthClient
 
 type AppM = ReaderT Env Handler
 
@@ -224,10 +224,9 @@ buildDriveRefreshRequest
   :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Text
   -> IO (Either ServerError Request)
 buildDriveRefreshRequest driveClient driveSecret googleClient googleSecret refresh =
-  let client = driveClient <|> googleClient
-      secret = driveSecret <|> googleSecret
-  in case (client, secret) of
-    (Just cid, Just cs) | not (T.null cid || T.null cs) -> do
+  case DriveOAuthClient.resolveDriveClientCreds driveClient driveSecret googleClient googleSecret of
+    Left _ -> pure (Left (failure err503 "storage_vault_unavailable"))
+    Right (cid, cs) -> do
       request <- parseRequest "https://oauth2.googleapis.com/token"
       pure (Right (request
         { method = "POST", redirectCount = 0, responseTimeout = responseTimeoutMicro 30000000
@@ -236,7 +235,6 @@ buildDriveRefreshRequest driveClient driveSecret googleClient googleSecret refre
             [("client_id", TE.encodeUtf8 cid), ("client_secret", TE.encodeUtf8 cs)
             ,("refresh_token", TE.encodeUtf8 refresh), ("grant_type", "refresh_token")])
         }))
-    _ -> pure (Left (failure err503 "storage_vault_unavailable"))
 
 refreshProvider :: Manager -> Credential -> IO (Either ServerError (Credential, Int))
 refreshProvider _ (Credential _ Nothing) = pure (Left (failure err409 "storage_reconnect_required"))

@@ -16267,7 +16267,8 @@
         "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
         "tdf-hq/sql/2026-11-07_content_storage_identity_guards_rollback.sql",
         "tdf-mobile/src/api/accountStorage.ts",
-        "tdf-hq-ui/src/utils/env.ts"
+        "tdf-hq-ui/src/utils/env.ts",
+        "tdf-hq/src/TDF/DriveOAuthClient.hs"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -16303,7 +16304,7 @@
       "formalModels": [
         "scripts/content-storage-model.mjs"
       ],
-      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits.",
+      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits. Refresh-request controls inspect the actual production request builder against the canonical exchange resolver, including whitespace normalization, complete-pair selection, all-four-value validation and generic vault configuration 503. They construct requests without invoking Google or a database.",
       "evidence": "docs/content-storage/rollout.md; scripts/test-content-storage-postgres.mjs; exact-candidate hosted CI logs",
       "status": "specified but missing",
       "critical": true,
@@ -16317,9 +16318,9 @@
       },
       "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
       "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
-      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter.",
+      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter. Exchange and vault refresh share one canonical OAuth client resolver. Every configured value is validated before selecting a complete Drive pair or complete Google fallback; partial pairs never mix and unused fallback values are not ignored.",
       "idempotency": "Managed and explicit personal Drive attempts retain one owner-bound identity and byte fingerprint. Corporate inventory uploads retain their existing server semantics and are not covered by the new deduplication protocol.",
-      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login.",
+      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login. Vault refresh configuration failures retain 503 storage_vault_unavailable; actual provider invalid_client retains503 storage_service_unavailable, and revoked personal grants retain 409 storage_reconnect_required.",
       "recovery": "Same-tab metadata expires after eight hours and is purged by account/session cleanup. Browser reload requires reselecting the original binary; successful matching uploads reconcile the original key. Storage denial warns the user to keep the tab open.",
       "observability": "No tokens or private bodies in diagnostics; compiler observations, synthetic test receipts and production version reads identify their evidence boundary."
     },
