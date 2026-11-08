@@ -1,6 +1,6 @@
 # Artist-owned featured track
 
-This backend stage persists a preference and exposes its APIs. The editor and artist-navigation behavior remain in [PR #670](https://github.com/diegueins680/tdf-app/pull/670). No production deployment or feature activation is claimed.
+This composition retains the backend preference APIs and restores the PR #670 editor and artist navigation behind its disabled-by-default rollout gate. Native-session reconciliation and fresh qualification remain required. No production deployment or feature activation is claimed.
 
 One preference per artist references a canonical recording or an existing legacy release. It does not publish content, grant media access or duplicate catalog records. Canonical eligibility uses the current public asset authorization, including publication and territory. Legacy eligibility requires at least one current source that is not confirmed invalid. Public artist reads also respect the directory visibility policy. Saved unavailable references remain available to their owner.
 

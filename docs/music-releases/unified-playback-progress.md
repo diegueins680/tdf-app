@@ -1,3 +1,9 @@
+# Frontend reconciliation in progress
+
+This isolated, unpublished composition restores the existing PR670 frontend source4b7824841 over the approved backend candidate a5745dbbe. Unrelated current-main changes are retained. Backend PR712 remains in normal FIFO admission; production APIs are not deployed. Native-session PR706 is not yet integrated here, so this is not ready for review, merge or activation. The restored frontend passes type checking, six core suites/153 tests and the complete 368 suites/4,208 tests. These checks do not establish native-session integration or current-head hosted/production acceptance. Source bindings are in reports/universal-player-frontend-compose-20261108.json.
+
+## Preserved backend-stage checkpoint
+
 # Backend-first music player delivery
 
 This stage supplies server prerequisites for the universal player in [PR #670](https://github.com/diegueins680/tdf-app/pull/670). Against protected main `d0b10b60d93cb379ac57b204e1d4137cd22dc5ba`, frontend runtime is unchanged; only generated web declarations and the existing long campaign browser journey budget change. Its action/assertion bounds are retained; the full edit/retry/reload/import/review flow has a 60-second total budget after the failed WebKit trace reached its final visible button at the 30-second default deadline. Mobile [PR #182](https://github.com/diegueins680/TDF-mobile/pull/182) merged through normal protection; its exact `20daa1b` source pin preserves the merged decoder repair. No feature flags or production configuration are activated.

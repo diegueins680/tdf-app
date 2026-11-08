@@ -14,7 +14,7 @@ const feature = jest.fn<(artist: number, id: string, revision: number) => Promis
 const getPublicArtist = jest.fn<(id: string) => Promise<{ apArtistId: number; apDisplayName: string }>>();
 const listArtists = jest.fn<() => Promise<{ apArtistId: number; apDisplayName: string }[]>>();
 jest.unstable_mockModule('../api/videoCampaigns', () => ({ VideoCampaigns: { list, save, feature, metrics: async () => ({ registrations: 0, follows: 0 }) } }));
-jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session, loading: false }), getActiveSession: () => session }));
+jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session, loading: false }), getActiveSession: () => session, getStoredSessionToken: () => null }));
 jest.unstable_mockModule('../api/fans', () => ({ Fans: {
   getMyArtistProfile: async () => ({ apArtistId: 51, apDisplayName: 'Liquid Paper Girl' }),
   getPublicArtist, listArtists,

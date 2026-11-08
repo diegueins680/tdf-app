@@ -125,7 +125,11 @@ it('preserves the current selection and position, pausing only when the provider
   // This is a JSDOM command/state integration test, not decoder evidence.
   jest.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => undefined);
   jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
-  jest.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
+  jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockImplementation(function (this: HTMLMediaElement) { return this.src; });
+  jest.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(false);
+  jest.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(function (this: HTMLMediaElement) {
+    this.dispatchEvent(new Event('playing')); return Promise.resolve();
+  });
   mount(true);
   await act(async () => { player.playTrack({ id: 'already-selected', title: 'Existing authorized track', artist: 'Synthetic artist',
     sources: [{ url: 'https://media.example.invalid/existing', quality: 'high', mediaType: 'audio/mpeg' }] }); });

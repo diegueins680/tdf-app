@@ -30750,6 +30750,27 @@
           }
         }
       ]
+    },
+    "frontendComposeContext20261108": {
+      "reason": "Restore exact reviewed full-player wrapper and synthetic fixture. Preserve the backend-only wrapper decision as historical context; all current candidates still require strict audit.",
+      "preservedBackendDecisions": [
+        {
+          "id": "a54bc30988f056e6d713",
+          "classification": "genuine-technical-constant",
+          "disposition": "retain-in-code",
+          "specializedModel": "technical_constant_allowlist",
+          "priority": "P3-retain",
+          "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+          "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
+          "reviewed": true,
+          "evidence": {
+            "file": "tdf-hq-ui/src/api/musicReleases.ts",
+            "line": 518
+          },
+          "reviewBatch": "music-track-search-2026-10-26",
+          "reviewMethod": "manual-source-review"
+        }
+      ]
     }
   },
   "decisions": [
@@ -74124,22 +74145,6 @@
       }
     },
     {
-      "id": "a54bc30988f056e6d713",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/musicReleases.ts",
-        "line": 518
-      },
-      "reviewBatch": "music-track-search-2026-10-26",
-      "reviewMethod": "manual-source-review"
-    },
-    {
       "id": "280d7c369a6f39bd4a13",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -74154,6 +74159,57 @@
       },
       "reviewBatch": "event-finance-csv-currency-2026-10-30",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "b4afb300f6c7ae1e24dd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Typed API-client dispatch adds artist featured-track GET/PUT methods while retaining all inherited methods. These transport function names are implementation mechanics, not editable/selectable domain catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 545
+      },
+      "reviewBatch": "artist-featured-track-2026-10-30",
+      "reviewMethod": "manual-source-review",
+      "previousDecision": {
+        "id": "a54bc30988f056e6d713",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/musicReleases.ts",
+          "line": 518
+        },
+        "reviewBatch": "music-track-search-2026-10-26",
+        "reviewMethod": "manual-source-review"
+      }
+    },
+    {
+      "id": "dd2eff4609f15778c9c3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing synthetic DTO keys can invalidate the real dispatch/engine regression without representing a persisted business catalog.",
+      "justification": "This eight-field synthetic ArtistReleaseDTO exists only in the controlled old-backend/player regression. It carries fake media.invalid data and expected transport fields, not selectable production values, permissions or rights; runtime source authorization is separately exercised.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-media-rollout-counterexample-20261107",
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "line": 1000,
+        "kind": "object-registry",
+        "name": "release",
+        "valueCount": 8
+      }
     }
   ]
 }
