@@ -18620,7 +18620,7 @@
     "tdf-desktop/scripts/prepare-channel.cjs": "f5eb69f82883963b0b51ce645051975d5f17a266220ac3e6a7c23fae6b1d1320",
     "tdf-desktop/scripts/signing.cjs": "ab8215260ffd749af837d15b09d5f286caf88c1774d5db386bb019f07b4c16ea",
     "tdf-desktop/src/main/config.cjs": "aa9cedb9ed37805b5992e9758c13ececf556a7ef9e0c5ee5a5b4cf32013e342d",
-    "tdf-desktop/src/main/links.cjs": "f44c3330c8fb3e5d7f9837bcf095970bd5e4dc2e22f2afacad36170bf21c76f8",
+    "tdf-desktop/src/main/links.cjs": "2c6cf596e0dcc539794a7127616b0626047cadc171c05b40eb6b071981946532",
     "tdf-desktop/src/main/log.cjs": "7ed5121374f342c6778ee2aaa585bdf8ad911501b784abe0a5c9c8936d26abed",
     "tdf-desktop/src/main/main.cjs": "3d1c69caedcfdd19a7bf5ee0bf1995563d338f6a40b0644daabc1a1a523b68b2",
     "tdf-desktop/src/main/menu.cjs": "8e816cc3b4ea94f4e49fc1b8044008da2610c09a226f7488b1fadb0c681739a3",
@@ -18628,7 +18628,7 @@
     "tdf-desktop/src/main/updater.cjs": "cdeb2f1a565952981931a0e11bd376f8f99a228ff00b49b75fe772432f4abd92",
     "tdf-desktop/src/preload/preload.cjs": "d10a3ead12ed41a32692d1ab423932b48c2b4b8d4e17130663dfb1bded0fdf3f",
     "tdf-desktop/test/config.test.cjs": "5a333c052ec4e0a08edbb1cf6afcc009e24f48ea97fc2086af9e3f9bc1e24a8a",
-    "tdf-desktop/test/links.test.cjs": "5b9953c75ba42d6f8c1fdeac1b24c5300dd1c8c93933adc350ee5ef3065259df",
+    "tdf-desktop/test/links.test.cjs": "cc0509aff2a28ea181772c0a5a6836cbaffda6175e8dd91113e66af19a5f3961",
     "tdf-desktop/test/playbackState.test.cjs": "4642e931cbad941bb137d6d7b0c6903a895c47168b1901e5e99cc3ac45cb5a79",
     "tdf-desktop/test/release-policy.test.cjs": "43a770d79df0950ae28d192ae705505057538c218ec4f8f42881c71c3c975171",
     "tdf-desktop/test/signing.test.cjs": "c41014a2fad42e847525444fb739814efeaadcd7161f837feb872931024cda43",
@@ -43957,7 +43957,7 @@
     {
       "id": "SURFACE-b80e2418f31ebf79",
       "path": "tdf-desktop/src/main/links.cjs",
-      "sha256": "f44c3330c8fb3e5d7f9837bcf095970bd5e4dc2e22f2afacad36170bf21c76f8",
+      "sha256": "2c6cf596e0dcc539794a7127616b0626047cadc171c05b40eb6b071981946532",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44065,7 +44065,7 @@
     {
       "id": "SURFACE-593d47a6bfbd5083",
       "path": "tdf-desktop/test/links.test.cjs",
-      "sha256": "5b9953c75ba42d6f8c1fdeac1b24c5300dd1c8c93933adc350ee5ef3065259df",
+      "sha256": "cc0509aff2a28ea181772c0a5a6836cbaffda6175e8dd91113e66af19a5f3961",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

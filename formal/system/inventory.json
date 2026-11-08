@@ -7557,7 +7557,7 @@
     {
       "id": "SURFACE-b80e2418f31ebf79",
       "path": "tdf-desktop/src/main/links.cjs",
-      "sha256": "f44c3330c8fb3e5d7f9837bcf095970bd5e4dc2e22f2afacad36170bf21c76f8",
+      "sha256": "2c6cf596e0dcc539794a7127616b0626047cadc171c05b40eb6b071981946532",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7605,7 +7605,7 @@
     {
       "id": "SURFACE-593d47a6bfbd5083",
       "path": "tdf-desktop/test/links.test.cjs",
-      "sha256": "5b9953c75ba42d6f8c1fdeac1b24c5300dd1c8c93933adc350ee5ef3065259df",
+      "sha256": "cc0509aff2a28ea181772c0a5a6836cbaffda6175e8dd91113e66af19a5f3961",
       "semanticConformance": "not-established-by-discovery"
     },
     {
