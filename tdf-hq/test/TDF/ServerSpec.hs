@@ -14,6 +14,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
+import qualified Test.QuickCheck as QC
 import Data.Pool (destroyAllResources)
 import qualified Network.HTTP.Client as NotificationHTTP
 import Network.HTTP.Types.Status (statusCode)
@@ -65,6 +66,8 @@ import TDF.API.Types
     )
 import TDF.Auth
     ( AuthedUser (..)
+    , apiTokenWithinValidity
+    , sessionClockEpoch
     , extractTokenFromHeaders
     , hasAiToolingAccess
     , hasOperationsAccess
@@ -5032,6 +5035,72 @@ spec = describe "TDF.Server helpers" $ do
                             <> show value
                         )
 
+    describe "apiTokenWithinValidity" $ do
+        let bounded label issued expires = ApiToken
+                { apiTokenToken = "synthetic-window-token"
+                , apiTokenPartyId = toSqlKey 1
+                , apiTokenLabel = label
+                , apiTokenActive = True
+                , apiTokenIssuedAtEpoch = issued
+                , apiTokenExpiresAtEpoch = expires
+                }
+            interactiveLabels =
+                [ Just "password-login:user@example.com", Just " GOOGLE-LOGIN:user@example.com " ]
+            labels = [Nothing, Just "service:synthetic"] <> interactiveLabels
+            validWindow = do
+                issued <- QC.chooseInteger (0, toInteger (maxBound :: Int64) - 1)
+                expires <- QC.chooseInteger (issued + 1, toInteger (maxBound :: Int64))
+                pure (issued, expires)
+            sample = bounded (Just "password-login:user@example.com") (Just 100) (Just 200)
+        it "rejects a well-formed window before issuance" $
+            apiTokenWithinValidity 99 sample `shouldBe` False
+        it "includes issuance and excludes expiry for each tested label" $
+            forM_ labels $ \label ->
+                forM_ [(100, True), (199, True), (200, False), (201, False)] $
+                    \(clock, admitted) ->
+                        apiTokenWithinValidity clock (bounded label (Just 100) (Just 200))
+                            `shouldBe` admitted
+        it "rejects incomplete and malformed stored windows for each tested label" $
+            forM_ labels $ \label ->
+                forM_ [ (Just 100, Nothing), (Nothing, Just 200), (Just (-1), Just 200)
+                      , (Just 100, Just 100), (Just 200, Just 100)
+                      ] $ \(issued, expires) ->
+                    apiTokenWithinValidity 99 (bounded label issued expires) `shouldBe` False
+        it "preserves unbounded service/custom and denies legacy interactive tokens" $ do
+            forM_ [Nothing, Just "service:synthetic", Just "custom-label"] $ \label ->
+                apiTokenWithinValidity 100 (bounded label Nothing Nothing) `shouldBe` True
+            forM_ interactiveLabels $ \label ->
+                apiTokenWithinValidity 100 (bounded label Nothing Nothing) `shouldBe` False
+        it "handles signed clock and maximum epochs without arithmetic overflow" $ do
+            let lastEpoch = maxBound :: Int64
+                lastWindow = bounded Nothing (Just (lastEpoch - 1)) (Just lastEpoch)
+            apiTokenWithinValidity (minBound :: Int64) (bounded Nothing (Just 0) (Just 1))
+                `shouldBe` False
+            apiTokenWithinValidity 0 (bounded Nothing (Just 0) (Just 1)) `shouldBe` True
+            apiTokenWithinValidity (lastEpoch - 1) lastWindow `shouldBe` True
+            apiTokenWithinValidity lastEpoch lastWindow `shouldBe` False
+        it "admits generated instants inside well-formed Int64 windows" $
+            QC.property $ QC.withMaxSuccess 1000 $ QC.forAll validWindow $ \(issued, expires) ->
+                QC.forAll (QC.chooseInteger (issued, expires - 1)) $ \clock ->
+                    QC.forAll (QC.elements labels) $ \label ->
+                        apiTokenWithinValidity (fromInteger clock)
+                            (bounded label (Just (fromInteger issued)) (Just (fromInteger expires)))
+        it "rejects generated pre-issuance/expired instants across signed clocks" $
+            QC.property $ QC.withMaxSuccess 1000 $ QC.forAll validWindow $ \(issued, expires) ->
+                QC.forAll (QC.chooseInteger (toInteger (minBound :: Int64), issued - 1)) $
+                    \before ->
+                        QC.forAll (QC.chooseInteger (expires, toInteger (maxBound :: Int64))) $
+                            \after ->
+                                QC.forAll (QC.elements labels) $ \label ->
+                                    let token = bounded label
+                                            (Just (fromInteger issued)) (Just (fromInteger expires))
+                                    in QC.conjoin
+                                        [ QC.property $
+                                            not (apiTokenWithinValidity (fromInteger before) token)
+                                        , QC.property $
+                                            not (apiTokenWithinValidity (fromInteger after) token)
+                                        ]
+
     describe "loadAuthedUser" $ do
         it "enforces the server-side validity window and fails closed on legacy interactive sessions" $ do
             results <- runAuthSqlite $ do
@@ -5066,6 +5135,11 @@ spec = describe "TDF.Server helpers" $ do
                 token "legacy-google-token" (Just "google-login:window@example.com") Nothing
                 token "unbounded-service-token" Nothing Nothing
                 token "expired-service-token" (Just "service:synthetic") (Just (0, 1))
+                clock <- sessionClockEpoch
+                token "future-login-token" (Just "password-login:window@example.com")
+                    (Just (clock + 86400, clock + 172800))
+                token "future-service-token" (Just "service:synthetic")
+                    (Just (clock + 86400, clock + 172800))
                 rawExecute
                     "INSERT INTO party_security_role (party_id,role_id,granted_by,approved_by,approval_mode,emergency_reason,source_revision_id,source_policy_id,active,created_at,revoked_at,version) SELECT ?,id,NULL,NULL,'bootstrap',NULL,NULL,NULL,TRUE,CURRENT_TIMESTAMP,NULL,1 FROM security_role WHERE code IN ('fan','customer')"
                     [toPersistValue partyId]
@@ -5075,14 +5149,25 @@ spec = describe "TDF.Server helpers" $ do
                 legacyGoogle <- loadAuthedUser "legacy-google-token"
                 unboundedService <- loadAuthedUser "unbounded-service-token"
                 expiredService <- loadAuthedUser "expired-service-token"
-                pure (partyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService, expiredService)
-            let (expectedPartyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService, expiredService) = results
+                futureLogin <- loadAuthedUser "future-login-token"
+                futureService <- loadAuthedUser "future-service-token"
+                liveUsername <- lookupUsernameFromToken "live-login-token"
+                futureUsername <- lookupUsernameFromToken "future-login-token"
+                pure
+                    ( partyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService
+                    , expiredService, futureLogin, futureService, liveUsername, futureUsername
+                    )
+            let ( expectedPartyId, live, expiredLogin, legacyLogin, legacyGoogle, unboundedService
+                  , expiredService, futureLogin, futureService, liveUsername, futureUsername
+                  ) = results
             fmap auPartyId live `shouldBe` Just expectedPartyId
             fmap auPartyId unboundedService `shouldBe` Just expectedPartyId
             expiredLogin `shouldBe` Nothing
             legacyLogin `shouldBe` Nothing
             legacyGoogle `shouldBe` Nothing
             expiredService `shouldBe` Nothing
+            liveUsername `shouldBe` Just "window@example.com"
+            (futureLogin, futureService, futureUsername) `shouldBe` (Nothing, Nothing, Nothing)
 
         it "rejects active password-reset tokens so reset links cannot authorize API requests" $ do
             authResults <- runAuthSqlite $ do

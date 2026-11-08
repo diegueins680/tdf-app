@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "dateUTC": "2026-10-30",
+  "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+  "previousPublishedHead": "b08c92a37a8dcd734c4c890158e3b766ac44c55b",
+  "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+  "evidenceCommit": "Containing report-only child; exactly four new report paths and all archive members verified from committed Git after packaging.",
+  "scope": "Current-main reconciliation of an existing defect correction; no new application semantics introduced.",
+  "composition": {
+    "normalParents": [
+      "b08c92a37a8dcd734c4c890158e3b766ac44c55b",
+      "d4c00e935ebbd0d6b958bc2e908d0f4efbe7096c"
+    ],
+    "qualifiedParent": "d4c00e935ebbd0d6b958bc2e908d0f4efbe7096c",
+    "all159NewMainNormativeObjectsPreserved": true,
+    "ownedRequirementUnchanged": true,
+    "totalRequirements": 161,
+    "all160QualifiedParentNormativeObjectsPreserved": true,
+    "applicationComponentExactOldHead": true,
+    "protectedMain643VerificationRulesPreserved": true,
+    "allParentEvidencePreserved": true
+  },
+  "problem": {
+    "classification": "Confirmed cross-layer financial reporting defect",
+    "authority": "Explicit owner decision: Refuse totals until contributing amounts match the event currency. Foreign-currency authoring remains intentional.",
+    "counterexample": "A USD event can persist a EUR100 entry and originally report100 asUSD without conversion/rate data. Budget actuals and legacy ticket contributors have analogous unit boundaries.",
+    "productionExposure": "UNKNOWN; actual synthetic typed Handler/SQLite evidence, no production incident assertion."
+  },
+  "correction": "Resolve existing event/default reporting currency; refuse500 when a nonzero contributing amount has a different normalized currency. Preserve explicit foreign entry authoring/listing, existing contributor/status/direction filters, zero/noncontributing exceptions and signed range semantics. Refuse an unreportable budget edit before its first write. No conversion, omission, clamp, schema/provider/production-data change.",
+  "properties": [
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001/UNITS",
+      "requirement": "PAY-EVENT-REPORT-CURRENCY-001",
+      "contract": "formal/system/event-finance-report-currency.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+      "status": "TESTED",
+      "statement": "Each nonzero observed contributor to a successful summary/budget actual matches the resolved event currency; no financial unit relabeling or invented conversion.",
+      "assumptions": [
+        "Existing stored metadata/dimension validation and canonical captured-revenue checks are trusted.",
+        "Finite native typed Handler/SQLite fixtures; production PostgreSQL reachability and all concurrency interleavings not established."
+      ],
+      "method": "Current targeted regression execution on byte-identical application component; exact current methods and limits below. Original counterexamples and fault executions retain historical identities."
+    },
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001/PREWRITE",
+      "requirement": "PAY-EVENT-REPORT-CURRENCY-001",
+      "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+      "status": "TESTED",
+      "statement": "A currency-refused budget edit does not begin its existing write; explicit foreign individual authoring/listing and noncontributing cases retain their semantics.",
+      "assumptions": [
+        "Check concerns observed rows; no new serializable financial snapshot or provider finality guarantee."
+      ],
+      "method": "Current targeted regression execution on byte-identical application component; exact current methods and limits below. Original counterexamples and fault executions retain historical identities."
+    },
+    {
+      "id": "PAY-EVENT-REPORT-RANGE-001",
+      "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+      "status": "TESTED",
+      "statement": "Existing exact Integer aggregation, bounded narrowing and observed prewrite range refusal remain supported by fresh15range cases within29targeted examples.",
+      "contract": "formal/system/event-finance-report-range.md",
+      "method": "Current targeted regression execution on byte-identical application component; exact current methods and limits below. Original counterexamples and fault executions retain historical identities."
+    }
+  ],
+  "historicalEvidence": {
+    "report": "reports/event-finance-report-currency-parent1ffa-2026-10-30.json",
+    "gitBlob": "dd10df26b1c454010cd6c9faff3101b7231b324d",
+    "sha256": "298101fd7b96758f066ebfede894bd07c9df98b6a9d36ca3d7aeca53f1ebfc55",
+    "scope": "Historical baseline failures, source faults, browser/full-suite evidence remain tied to original source identities; not relabeled as fresh executions."
+  },
+  "verification": {
+    "current": {
+      "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+      "phase": "QUALIFIED_TARGETED_AND_FULL",
+      "startedAt": "2026-10-30T23:46:47.926063+00:00",
+      "actualExits": {
+        "build": 0,
+        "targeted": 0,
+        "full": 0
+      },
+      "buildPID": 7379,
+      "binary": "/private/tmp/tdf-event-finance-currency-main643-20261030T2302/tdf-hq/.stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test",
+      "binarySha256": "170f718dd67eba0a983720c26210d0c536f07cdfa845b8daa08e210976eaced7",
+      "forceDirtyIdentity": {
+        "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+        "canonicalForceDirty": true,
+        "command": [
+          "/Users/macpro/.ghcup/bin/stack",
+          "test",
+          "tdf-hq:tdf-hq-test",
+          "--no-run-tests",
+          "--force-dirty"
+        ],
+        "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+        "binarySha256": "170f718dd67eba0a983720c26210d0c536f07cdfa845b8daa08e210976eaced7",
+        "versionObjectSha256": "c8fb581dd711f67cd525638f441b411e72834e712a0f8a26bb078258f8941c84",
+        "scope": "Canonical native test binary only, no serving executable or deployment qualification"
+      },
+      "targetedPID": 8299,
+      "targeted": {
+        "examples": 29,
+        "failures": 0,
+        "pending": 0
+      },
+      "fullPID": 8304,
+      "full": {
+        "examples": 4074,
+        "failures": 0,
+        "pending": 21
+      },
+      "allBackendInputsUnchangedAndGitExact": true,
+      "sourceCleanAfter": true,
+      "finishedAt": "2026-10-30T23:48:04.012052+00:00"
+    },
+    "sourceSeal": {
+      "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+      "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+      "previousPublishedHead": "b08c92a37a8dcd734c4c890158e3b766ac44c55b",
+      "normalMergeParents": [
+        "b08c92a37a8dcd734c4c890158e3b766ac44c55b",
+        "d4c00e935ebbd0d6b958bc2e908d0f4efbe7096c"
+      ],
+      "qualifiedParent": "d4c00e935ebbd0d6b958bc2e908d0f4efbe7096c",
+      "sourceDigest": "17ed68085a4b31c20632360e23a7470b2ed403889f17be51a47617fc7f50b897",
+      "registeredHashesVerified": 1430,
+      "allBackendInputCount": 987,
+      "assuranceArtifactHashesVerified": 52,
+      "ownedHandlerAndTestExactPreviousQualifiedHead": true,
+      "entireBackendTreeExactPreviousQualifiedHead": true,
+      "allNonOwnedBackendExactMain": true,
+      "incomingMainBackendFilesPreserved": [],
+      "workflowUiMobileScriptDependencyTreesExactMain": true,
+      "allMainNormativeRequirementsPreserved": 159,
+      "rangeRequirementExactPrevious": true,
+      "currencyRequirementExactPrevious": true,
+      "all160ParentNormativeRequirementsPreserved": true,
+      "totalRequirements": 161,
+      "historicalEvidenceGitSha256": {
+        "reports/event-finance-report-currency-2026-10-29.json": "96701f069731e9f39d6fec49dcb9f6c55c90453fed554b98ddc004b0f6d22901",
+        "reports/event-finance-report-currency-2026-10-29/evidence.tar.gz": "27e8633f1d76938db34b33d9c7f2fa4f90791c67dcd22fbf62f190c04a22cc12",
+        "reports/event-finance-report-currency-2026-10-29/independent-review.txt": "504e1c715c7356567c91e99428e5aaf5e684ebaffc7e8474f10773061b7b1508",
+        "reports/event-finance-report-currency-2026-10-29/manifest.json": "af593d7874a73da11230f0f7e34a3b5dd8ea1c239c4ee60ea95ae741222b8cf9",
+        "reports/event-finance-report-currency-parent1ffa-2026-10-30.json": "298101fd7b96758f066ebfede894bd07c9df98b6a9d36ca3d7aeca53f1ebfc55",
+        "reports/event-finance-report-currency-parent1ffa-2026-10-30/evidence.tar.gz": "02a18a20fdbebb0e4f64b0d4ac3c951c0524e57e3ba5fe42a7ecf1a6b83e21c1",
+        "reports/event-finance-report-currency-parent1ffa-2026-10-30/independent-review.txt": "747ecfd12570aaf54725ff119303af728bd0c0f269034813d02cf705de0e746a",
+        "reports/event-finance-report-currency-parent1ffa-2026-10-30/manifest.json": "2615186b5d33a7e95fada5887ad54b995a1013db44e5e61be0df8e718fdf973e",
+        "reports/event-finance-report-range-2026-10-29.json": "68e413636c4bc586eaed5bc27a57eb06f9d7436c2b22564bac2e389ca767ebb5",
+        "reports/event-finance-report-range-2026-10-29/evidence.tar.gz": "bf9a40d64572dc995e371ad2df16848f8a80b5adde10b658d379b71f501397c9",
+        "reports/event-finance-report-range-2026-10-29/independent-review.txt": "ec2fbc2f52cb1f7fb714aa8e8a5f29140a08331e7c6a706b58761a7457b16f24",
+        "reports/event-finance-report-range-2026-10-29/manifest.json": "add8ab5a0dce68bad31ed58c95dba3d981b4ffefa83aaf563d654b3c25978e48",
+        "reports/event-finance-report-range-after-639-2026-10-29.json": "b2a373a1c16d389bdb0f674a2d4a878d8a3e3b58072d597d8368fe324176e31a",
+        "reports/event-finance-report-range-after-639-2026-10-29/evidence.tar.gz": "8a0744143ab1f50c5fd733f82198b75e53edfee7eaef999f95358cf857c85cfe",
+        "reports/event-finance-report-range-after-639-2026-10-29/independent-review.txt": "c24753e110cac0552512c6c3e3f2aa7aa2765f28d1f68c9b551b0bb7e7195c98",
+        "reports/event-finance-report-range-after-639-2026-10-29/manifest.json": "fbe3555e22154bba6175233259d733df4607bea8434e27e15c1c1492c08dd37a",
+        "reports/event-finance-report-range-main642-2026-10-30.json": "79c81457fca213f44fa602f2a1f74be18afff4af3ef33f0f1c0392e344dbb93c",
+        "reports/event-finance-report-range-main642-2026-10-30/evidence.tar.gz": "d4d5835a7741cdb95a68d02b0f46ed0c225b4f08f1659b621d5ced6146e0b2aa",
+        "reports/event-finance-report-range-main642-2026-10-30/independent-review.txt": "504f600aea24c0121153843626dfcf1c94128401fab68609c863d467056a53c2",
+        "reports/event-finance-report-range-main642-2026-10-30/manifest.json": "6016a1c89f722c13ca9eab2bf6805014c57de5f7c3007c5f893ed40b318e6d30"
+      },
+      "historicalEvidenceScope": "Original foreign-unit Handler counterexamples andtwo sourcefaults/nine intendedassertions remain historical. Entirebackend exactoldB08; new qualifiedrange parentd4 preserves protectedmain234verification amendments. Fresh29target/4074full sourceidentity re-executed.",
+      "nativeTargeted": {
+        "examples": 29,
+        "failures": 0,
+        "pending": 0
+      },
+      "nativeFull": {
+        "examples": 4074,
+        "failures": 0,
+        "pending": 21
+      },
+      "nativeForceDirtyIdentity": {
+        "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+        "canonicalForceDirty": true,
+        "command": [
+          "/Users/macpro/.ghcup/bin/stack",
+          "test",
+          "tdf-hq:tdf-hq-test",
+          "--no-run-tests",
+          "--force-dirty"
+        ],
+        "qualifiedCommitLiteralInVersionObjectAndTestBinary": true,
+        "binarySha256": "170f718dd67eba0a983720c26210d0c536f07cdfa845b8daa08e210976eaced7",
+        "versionObjectSha256": "c8fb581dd711f67cd525638f441b411e72834e712a0f8a26bb078258f8941c84",
+        "scope": "Canonical native test binary only, no serving executable or deployment qualification"
+      },
+      "assuranceMetrics": {
+        "requirements": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "requirementsWithDeclaredAmbiguityEntries": 145,
+        "obligationsByCategory": {
+          "implementation": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 161,
+            "NOT_APPLICABLE": 0
+          },
+          "refinement": {
+            "PROVEN": 0,
+            "REFUTED": 0,
+            "UNPROVEN": 161,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-authorization-SMT": {
+            "PROVEN": 3,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          },
+          "source-derived-recovery-SMT": {
+            "PROVEN": 4,
+            "REFUTED": 0,
+            "UNPROVEN": 0,
+            "NOT_APPLICABLE": 0
+          }
+        }
+      },
+      "formalRelease": "BLOCKED",
+      "newCompleteProofs": 0,
+      "sourceCleanAfter": true,
+      "recheckedVersionObjectAndAssuranceProvenance": true,
+      "limitations": [
+        "Finite direct typed Handler/owned SQLite fixtures; no authenticatedHTTP, production PostgreSQL extreme reachability, serializable-snapshot or complete currency-normalization guarantee; no serving executable/deployment qualification.",
+        "OPEN/FAILED in this range branch: backend-safe cents can exceed JavaScript safe integer or display exactness. Separate unmerged browser precision683 corrects reads/display/export; CSV684 is not imported.",
+        "No new actual Docker or PostgreSQL runtime; required hosted lanes must execute on published current head.",
+        "Currency673 correction retained; no unmergedUI683/684 or677/679/682 import. Historicalcampaigncontrast andworker failures remainunknowncauses; passing samples are not repairproof.",
+        "Protected current-head review/checks/FIFO and later main advances must be re-evaluated before integration.",
+        "New native driver installs SIGTERM cleanup entry; interrupted-run/process-tree cleanup remains untested and no universal interruption guarantee is claimed. The old3900s outer orchestrator is not reused; native and assurance execute directly in separate owned sessions."
+      ],
+      "createdAtUTC": "2026-10-30T23:48:39.881151+00:00"
+    },
+    "bindingControls": {
+      "sourceCommit": "b31ce8e0b7759ffbb035d228952aa9445c768add",
+      "sealScriptSha256": "fb18db7b004242df5d7e3f5431375f27e622859b8813b86fb24ba5490c6afc28",
+      "method": "AST-extract actual seal binding function; valid actual receipts/artifacts accepted, one in-memory evidence corruption per negative case; do not mutate bound disk artifacts or source.",
+      "validBefore": true,
+      "negativeControls": [
+        {
+          "label": "MissingAllNativeExitCodes",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "MissingNativeFullExit",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "IncompleteNativePhase",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "VersionObjectBytesCorrupted",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceProvenanceDigestMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceProvenanceFileTableMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "AssuranceDirtyFlagMismatch",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedWholeRequirementProofPromotion",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedRefinementProofPromotion",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnsupportedExtraSMTClaim",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "UnexpectedReleasePermission",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "MissingCurrentGitLiteralDespiteConsistentRewrittenObjectHash",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        },
+        {
+          "label": "MissingRootQualityExit",
+          "expectedRejection": true,
+          "actual": "ASSERTION_REJECTED"
+        }
+      ],
+      "intendedAssertionRejections": 13,
+      "restoredValidAfter": true,
+      "diskArtifactsUnchanged": true,
+      "scope": "Temporary evidence seal controls, not production source mutants or complete proof of the verification pipeline",
+      "atUTC": "2026-10-30T23:48:49.788496+00:00"
+    },
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 161,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 145,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 161,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "formalRelease": "BLOCKED",
+    "newCompleteProofs": 0,
+    "independentReview": "reports/event-finance-report-currency-main643-2026-10-30/independent-review.txt"
+  },
+  "regressionProtection": {
+    "automaticExistingSuiteDiscovery": true,
+    "currentTargetedExamples": 29,
+    "evidenceCorruptionsRejected": 13,
+    "dependenciesChanged": false
+  },
+  "limitations": [
+    "Finite direct typed Handler/owned SQLite fixtures; no authenticatedHTTP, production PostgreSQL extreme reachability, serializable-snapshot or complete currency-normalization guarantee; no serving executable/deployment qualification.",
+    "OPEN/FAILED in this range branch: backend-safe cents can exceed JavaScript safe integer or display exactness. Separate unmerged browser precision683 corrects reads/display/export; CSV684 is not imported.",
+    "No new actual Docker or PostgreSQL runtime; required hosted lanes must execute on published current head.",
+    "Currency673 correction retained; no unmergedUI683/684 or677/679/682 import. Historicalcampaigncontrast andworker failures remainunknowncauses; passing samples are not repairproof.",
+    "Protected current-head review/checks/FIFO and later main advances must be re-evaluated before integration.",
+    "New native driver installs SIGTERM cleanup entry; interrupted-run/process-tree cleanup remains untested and no universal interruption guarantee is claimed. The old3900s outer orchestrator is not reused; native and assurance execute directly in separate owned sessions."
+  ],
+  "integration": {
+    "pullRequest": 673,
+    "merged": false,
+    "currentHeadReviewAndCiRequired": true,
+    "approvalOnOldHeadNotReused": true,
+    "autoMergeUnchanged": true,
+    "mainFifoAndProtectionMustBeRechecked": true,
+    "productionWrites": false,
+    "manualDeployment": false
+  },
+  "nextHighestValueTask": "Verify both changed parent/child heads in hosted CI and obtain fresh exact-head approvals; preserve protected main FIFO. Then reassess the legacy payment/refund correctness stack and worker failure diagnostics.",
+  "archive": {
+    "path": "reports/event-finance-report-currency-main643-2026-10-30/evidence.tar.gz",
+    "sha256": "8ed838e3cda82e9c9d187cd015c77e0b3a81439feaa6cbb0ed0451d99fe3c468",
+    "bytes": 1668836,
+    "innerFiles": 109,
+    "manifest": "reports/event-finance-report-currency-main643-2026-10-30/manifest.json"
+  },
+  "createdAtUTC": "2026-10-30T23:51:33.638908+00:00",
+  "openCrossLayerDefect": {
+    "id": "UI-EVENT-FINANCE-PRECISION-001",
+    "status": "FAILED_IN_THIS_BRANCH",
+    "consequence": "Backend Int64 cents may exceed JavaScript safe integers; browser parsing, CSV admission and floating display can lose cents. Separate browser683 repair is unmerged and not imported.",
+    "scope": "Historical actual-source counterexamples retained in parent report; no new probe or production exposure claim."
+  }
+}
