@@ -129,3 +129,9 @@ native `load()` restores the default before its asynchronous `ratechange`
 event. Native rate controls can still update the preference; unsupported global
 speed commands retain the previous selection. This behavior is covered by
 controlled load-reset tests and local synthetic native-media browser cases.
+
+Restarting a completed bounded chapter through the video's native controls uses
+the same owned-source rewind as global Play, before accepting continuation.
+Mid-chapter and unbounded playback keep their position; unsolicited or obsolete
+native events do not rewind the selected source. These paths have controlled
+media-event regressions, not a claim that every browser emits identical events.

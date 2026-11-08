@@ -1344,12 +1344,24 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
           onKeyDown={() => { nativeGestureRef.current = true; }}
           onPlay={() => {
             const video = nativeVideoRef.current;
-            if (!video || !nativeVideo || video.paused
-              || loadedSourceRef.current?.generation !== sourceGenerationRef.current
-              || loadedSourceRef.current?.trackId !== currentTrack?.id
+            const generation = sourceGenerationRef.current;
+            const loadedSource = loadedSourceRef.current;
+            if (!video || !nativeVideo || !currentTrack || video.paused
+              || loadedSource?.generation !== generation
+              || loadedSource.trackId !== currentTrack.id
               || recoveryQueueRef.current.tracks[recoveryQueueRef.current.currentIndex] !== currentTrack
-              || loadedSourceRef.current?.url !== video.currentSrc || pendingPositionRef.current) return;
+              || loadedSource.url !== video.currentSrc || pendingPositionRef.current) return;
             if (!autoplayRef.current && !nativeGestureRef.current) { void pauseForSourceTransition(video); return; }
+            if (currentTrack.endMs != null && video.currentTime * 1000 >= currentTrack.endMs) {
+              // Native controls share global Play's owned-source chapter boundary.
+              const start = (currentTrack.startMs ?? 0) / 1000;
+              video.currentTime = start;
+              if (generation !== sourceGenerationRef.current || loadedSourceRef.current !== loadedSource
+                || audioRef.current !== video) return;
+              positionsRef.current[currentTrack.id] = start;
+              lastContinuousPositionRef.current = start;
+              setCurrentTime(0);
+            }
             if (nativeGestureRef.current) {
               explicitPauseRef.current = false; setPausedByUser(false);
               queueIntentRef.current = true;

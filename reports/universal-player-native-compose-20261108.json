@@ -231,5 +231,28 @@
     "current718NativeBrowserReproduction": "NOT_RUN",
     "featureMergeHold": true,
     "resolution": "Qualify the original706 repair independently, then reconcile it into718/670 while preserving denial and utility fixes. No complete Native acceptance or Main delivery is claimed."
+  },
+  "nativeBoundaryReconciliationFollowUp": {
+    "inputs": {
+      "priorQualified718": "69aa4b6907bd4c9f4bd654e2890bb0c306ea8e1d",
+      "qualified706BoundaryAndUtility": "282ad7c43df5792bc601db38ec71279f146a4dd5",
+      "actualProtectedMain": "9e9c19fc3e55ebe112b99b574df71e543565bc94"
+    },
+    "finding": 4505103013,
+    "repair": "Normal merge preserves all owner/denial guards and uses owned-source chapter rewind in native onPlay.",
+    "actualVerification": {
+      "oldSameFinalHarnessSource69aa": "4 selected FAIL / 4 PASS;132 oldtests filtered by explicitpattern",
+      "combinedPlayer": "140PASS/0FAIL/0SKIP, all132 prior test bytes retained",
+      "fixtureOnlyAdaptation": "New706 controls emit actual play/playing confirmation and pause-drain events required by owner lifecycle; all assertions retained.",
+      "productionSHA256": "5d33f9a98e88a1c0d6827e4caf6ce57730fe1e624a9deb27edc4febe94a23e30",
+      "testSHA256": "05743841cfe10857587aa692921efad9136e42ed608e05afecf194ad75232b44"
+    },
+    "priorHoldDisposition": "Previous inherited706boundary hold remains historical. This qualified combined repair permits Root to evaluate component staging only after applicable gates/review; it does not itself waive gates or deliverNative to Main.",
+    "protectedSequence": "Original706 stays targeted to Main and must genuinely merge before670 protected Main integration.",
+    "limits": [
+      "No fresh real-native/browser/device/all-schedules qualification",
+      "Historical owner broad andPG251 evidence retain old identities; only unchanged-input bridges",
+      "No provider/media/master/deployment/GitHub mutation by this agent"
+    ]
   }
 }
