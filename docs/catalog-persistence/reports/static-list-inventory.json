@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T06:28:37.232Z",
+  "generatedAt": "2026-11-08T07:43:44.907Z",
   "repositoryRoot": ".",
   "filesScanned": 2680,
   "candidateCount": 1416,
@@ -42282,7 +42282,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 203,
+      "consumerCount": 204,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -42362,13 +42362,13 @@
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EstebanMunozReportPage.tsx",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FeedbackCatalogPage.tsx",
         "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
-        "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
-        "tdf-hq-ui/src/pages/InternshipsPage.tsx"
+        "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/createEvent.tsx",
@@ -59692,7 +59692,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "emptyPlan",
-      "line": 18,
+      "line": 19,
       "values": [
         "title",
         "overview",
@@ -59706,7 +59706,7 @@
       "valueCount": 8,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        18
+        19
       ],
       "consumerCount": 171,
       "backendConsumers": [
@@ -59894,7 +59894,7 @@
       "domain": "events-ticketing",
       "kind": "object-registry",
       "name": "states",
-      "line": 20,
+      "line": 21,
       "values": [
         "draft",
         "sent",
@@ -59906,7 +59906,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        20
+        21
       ],
       "consumerCount": 293,
       "backendConsumers": [
@@ -60133,7 +60133,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 96,
+      "line": 112,
       "values": [
         "plan",
         "agreements"
@@ -60141,7 +60141,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        96
+        112
       ],
       "consumerCount": 5,
       "backendConsumers": [
@@ -78157,7 +78157,7 @@
       "lines": [
         43
       ],
-      "consumerCount": 203,
+      "consumerCount": 204,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -78238,12 +78238,12 @@
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EstebanMunozReportPage.tsx",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FeedbackCatalogPage.tsx",
-        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
-        "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx"
+        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/createEvent.tsx",
@@ -84159,7 +84159,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 52,
+      "consumerCount": 53,
       "backendConsumers": [
         "tdf-hq/src/TDF/API/MerchReputation.hs",
         "tdf-hq/src/TDF/App/StartupResponse.hs",
@@ -84178,6 +84178,7 @@
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
@@ -84259,7 +84260,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/src/TDF/App/StartupResponse.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -84276,6 +84277,7 @@
         "tdf-hq-ui/src/api/uploadFailure.ts",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/pages/AdminDiagnosticsPage.test.tsx",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
@@ -85775,7 +85777,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 453,
+      "consumerCount": 454,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -86759,7 +86761,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 357,
+      "consumerCount": 358,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -87080,7 +87082,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 358,
+      "consumerCount": 359,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -175260,7 +175262,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 453,
+      "consumerCount": 454,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
