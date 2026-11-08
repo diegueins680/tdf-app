@@ -21,7 +21,7 @@ function setup(cached = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   if (cached) client.setQueryData(['event-workspace', '216', session?.partyId ?? null, getAuthSessionEpoch()], workspaceFixture());
   const app = () => <QueryClientProvider client={client}><MemoryRouter initialEntries={['/social/eventos/216/acuerdos']}><Routes><Route path="/social/eventos/:eventId/acuerdos" element={<Page />} /></Routes></MemoryRouter></QueryClientProvider>;
-  const view = render(app()); return { ...view, redraw: () => view.rerender(app()) };
+  const view = render(app()); return { ...view, client, redraw: () => view.rerender(app()) };
 }
 beforeEach(() => {
   agreementRollout = 'true';
@@ -115,4 +115,59 @@ it.each([undefined, 'false'])('rollout: disabled direct workspace makes no priva
   expect(command).not.toHaveBeenCalled();
   expect(document).not.toHaveBeenCalled();
   expect(screen.queryByRole('button', { name: 'Aceptar acuerdo', exact: true })).toBeNull();
+});
+
+
+it.each([2, 1])('requires fresh consent after the reviewed proposal changes to version %s or a new hash', async (replacementVersion) => {
+  const { client } = setup();
+  await screen.findByText('Synthetic event plan');
+  fireEvent.click(screen.getByRole('tab', { name: 'Acuerdos (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar aceptación' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Tu nombre legal' }), { target: { value: 'Synthetic Recipient' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }));
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Aceptar acuerdo', exact: true }).disabled).toBe(false);
+  const replacement = workspaceFixture();
+  const proposal = replacement.agreements[0]!;
+  const previous = proposal.versions[0]!;
+  proposal.current_version = replacementVersion;
+  proposal.versions = [{ ...previous, version: replacementVersion, document_hash: 'b'.repeat(64), content: { ...previous.content, body: 'Replacement terms with the same recipient legal name.' } }];
+  await act(async () => {
+    client.setQueryData(['event-workspace', '216', session!.partyId, getAuthSessionEpoch()], replacement);
+  });
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(command).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar aceptación' }));
+  expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Tu nombre legal' }).value).toBe('');
+  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }).checked).toBe(false);
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Aceptar acuerdo', exact: true }).disabled).toBe(true);
+  fireEvent.change(screen.getByRole('textbox', { name: 'Tu nombre legal' }), { target: { value: 'Synthetic Recipient' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Aceptar acuerdo', exact: true }));
+  await waitFor(() => expect(command).toHaveBeenCalledTimes(1));
+  expect(command).toHaveBeenCalledWith('216', expect.objectContaining({ action: 'agreement.accept', agreementId: proposal.id, version: replacementVersion, hash: 'b'.repeat(64), acceptedName: 'Synthetic Recipient', consent: true }));
+});
+
+
+it('retains consent for an identical proposal refresh but clears it after withdrawal and resend', async () => {
+  const { client } = setup();
+  await screen.findByText('Synthetic event plan');
+  fireEvent.click(screen.getByRole('tab', { name: 'Acuerdos (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar aceptación' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Tu nombre legal' }), { target: { value: 'Synthetic Recipient' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }));
+  const key = ['event-workspace', '216', session!.partyId, getAuthSessionEpoch()];
+  await act(async () => { client.setQueryData(key, workspaceFixture()); });
+  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }).checked).toBe(true);
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Aceptar acuerdo', exact: true }).disabled).toBe(false);
+  const withdrawn = workspaceFixture();
+  withdrawn.agreements[0]!.state = 'withdrawn';
+  await act(async () => { client.setQueryData(key, withdrawn); });
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  await act(async () => { client.setQueryData(key, workspaceFixture()); });
+  const reviewAgain = await screen.findByRole('button', { name: 'Revisar aceptación' });
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(command).not.toHaveBeenCalled();
+  fireEvent.click(reviewAgain);
+  expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Tu nombre legal' }).value).toBe('');
+  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }).checked).toBe(false);
 });

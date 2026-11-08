@@ -203,14 +203,20 @@ function AgreementCard({ agreement, owner, busy, command, download, ownerId, eve
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const latest = agreement.versions.find((version) => version.version === selectedVersion) ?? agreement.versions.at(-1);
   const [acceptOpen, setAcceptOpen] = useState(false);
+  const [reviewedProposal, setReviewedProposal] = useState<{ agreementId: string; version: number; hash: string } | null>(null);
   const [name, setName] = useState('');
   const [consent, setConsent] = useState(false);
   const [comment, setComment] = useState('');
+  // Consent belongs to the proposal opened for review, never a replacement from a query refresh.
+  useEffect(() => {
+    setAcceptOpen(false); setReviewedProposal(null); setName(''); setConsent(false);
+  }, [agreement.id, agreement.current_version, agreement.state, latest?.version, latest?.document_hash]);
   if (!latest) return null;
   const current = latest.version === agreement.current_version;
   const issues = agreementReadiness(latest);
   const act = (action: string, extra: Partial<WorkspaceCommand> = {}) => command({ action: `agreement.${action}`, agreementId: agreement.id, version: latest.version, hash: latest.document_hash, ...extra });
   const canAccept = !owner && current && agreement.state === 'sent' && issues.length === 0;
+  const reviewedCurrent = reviewedProposal?.agreementId === agreement.id && reviewedProposal.version === latest.version && reviewedProposal.hash === latest.document_hash;
   return <Card variant="outlined"><CardContent><Stack spacing={1.5}>
     <Stack direction="row" spacing={1} flexWrap="wrap"><Typography component="h3" variant="h6">{latest.content.title}</Typography><Chip label={states[agreement.state]} /></Stack>
     <Typography variant="caption">Propuesta v{latest.version} · {dateLabel(latest.created_at)}{latest.approved_at ? ' · Aprobada por el organizador' : ' · Aprobación del organizador pendiente'}</Typography>
@@ -229,7 +235,7 @@ function AgreementCard({ agreement, owner, busy, command, download, ownerId, eve
     {!owner && current && agreement.state === 'sent' && <>
       <TextField label="Observaciones para el organizador" multiline minRows={2} value={comment} onChange={(e) => setComment(e.target.value)} inputProps={{ maxLength: 4000 }} />
       <Stack direction="row" spacing={1} flexWrap="wrap">
-        <Button variant="contained" disabled={busy || !canAccept} onClick={() => setAcceptOpen(true)}>Revisar aceptación</Button>
+        <Button variant="contained" disabled={busy || !canAccept} onClick={() => { setReviewedProposal({ agreementId: agreement.id, version: latest.version, hash: latest.document_hash }); setName(''); setConsent(false); setAcceptOpen(true); }}>Revisar aceptación</Button>
         <Button disabled={busy || !comment.trim()} onClick={() => { void act('request_changes', { comment }).then(() => setComment('')).catch(() => undefined); }}>Solicitar cambios</Button>
         <Button color="error" disabled={busy} onClick={() => { void act('reject', comment.trim() ? { comment } : {}).then(() => setComment('')).catch(() => undefined); }}>Rechazar propuesta</Button>
       </Stack>
@@ -238,13 +244,16 @@ function AgreementCard({ agreement, owner, busy, command, download, ownerId, eve
     <CommentBox label="Comentario sobre el acuerdo" busy={busy || !current} submit={(text) => act('comment', { comment: text })} />
     {owner && current && ['draft', 'changes_requested', 'rejected', 'withdrawn'].includes(agreement.state) && <Accordion><AccordionSummary>Preparar nueva versión</AccordionSummary><AccordionDetails><AgreementEditor ownerId={ownerId} scope={`${eventId}:${agreement.id}:${latest.version}`} initial={latest.content} busy={busy} create={(content) => act('revise', { content })} /></AccordionDetails></Accordion>}
     {owner && agreement.state === 'accepted' && <AgreementEditor ownerId={ownerId} scope={`${eventId}:${agreement.id}:amendment`} busy={busy} initial={{ ...latest.content, title: `Anexo a ${latest.content.title}` }} create={(content) => command({ action: 'agreement.create', version: 0, parentId: agreement.id, content: { title: content.title, body: content.body, recipientLegalName: content.recipientLegalName, pendingFields: content.pendingFields } })} />}
-    <Dialog open={acceptOpen && canAccept} onClose={() => { if (!busy) setAcceptOpen(false); }} fullWidth aria-labelledby={`accept-${agreement.id}`}>
+    <Dialog open={acceptOpen && canAccept && reviewedCurrent} onClose={() => { if (!busy) setAcceptOpen(false); }} fullWidth aria-labelledby={`accept-${agreement.id}`}>
       <DialogTitle id={`accept-${agreement.id}`}>Aceptar acuerdo v{latest.version}</DialogTitle>
       <DialogContent><Stack spacing={2} sx={{ mt: 1 }}><Typography>Se registrará tu aceptación de esta versión y del plan anexo v{latest.content.plan.revision}. Podrás descargar la constancia y el contenido aceptado.</Typography>
         <TextField label="Tu nombre legal" value={name} onChange={(e) => setName(e.target.value)} helperText={`Destinatario del acuerdo: ${latest.content.recipientLegalName}`} />
         <FormControlLabel control={<Checkbox checked={consent} onChange={(_, checked) => setConsent(checked)} />} label="He leído y acepto el acuerdo y sus anexos de esta versión." />
       </Stack></DialogContent>
-      <DialogActions><Button disabled={busy} onClick={() => setAcceptOpen(false)}>Volver a revisar</Button><Button variant="contained" disabled={busy || !consent || name.trim().toLowerCase() !== latest.content.recipientLegalName.trim().toLowerCase()} onClick={() => { void act('accept', { acceptedName: name.trim(), consent }).then(() => { setAcceptOpen(false); setConsent(false); }).catch(() => undefined); }}>{busy ? <CircularProgress size={20} /> : 'Aceptar acuerdo'}</Button></DialogActions>
+      <DialogActions><Button disabled={busy} onClick={() => setAcceptOpen(false)}>Volver a revisar</Button><Button variant="contained" disabled={busy || !reviewedCurrent || !consent || name.trim().toLowerCase() !== latest.content.recipientLegalName.trim().toLowerCase()} onClick={() => {
+        if (busy || !canAccept || !reviewedCurrent || !reviewedProposal || !consent || name.trim().toLowerCase() !== latest.content.recipientLegalName.trim().toLowerCase()) return;
+        void command({ action: 'agreement.accept', agreementId: reviewedProposal.agreementId, version: reviewedProposal.version, hash: reviewedProposal.hash, acceptedName: name.trim(), consent: true }).then(() => { setAcceptOpen(false); setConsent(false); }).catch(() => undefined);
+      }}>{busy ? <CircularProgress size={20} /> : 'Aceptar acuerdo'}</Button></DialogActions>
     </Dialog>
   </Stack></CardContent></Card>;
 }
