@@ -1,0 +1,774 @@
+{
+  "qualifiedSourceCommit": "8043f887529895bc268672906e3d0cae9f1a91b1",
+  "qualifiedSourceTree": "ea48cfff7392f1988c189a9e2770692326c4fa62",
+  "base": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+  "originalApprovedHead": "d693656ffbfa08ec074a4f2ebfad36f9804d8d27",
+  "composition": "Merge protected main into the existing PR branch. Preserve current-main requirements plus UX-BRAND-ICONS-001 and regenerate inventory/traceability with actual main Mobile pin. All original icon/source/manifest/index/generator bytes unchanged.",
+  "build": {
+    "command": "npm run build --workspace=tdf-hq-ui",
+    "passed": true,
+    "initialJsGzipBytes": 338334
+  },
+  "repositoryQuality": {
+    "command": "npm run quality:repo",
+    "passed": true,
+    "python": "/usr/bin/python3 with Linux fcntl seal constants",
+    "recoveryTools": "checksum-pinned age v1.3.2 via scripts/install-recovery-tools.py",
+    "environmentNotes": [
+      "Initial attempt lacked pinned age tools.",
+      "Bundled runtime Python lacks F_SEAL_WRITE; system Python supports the required Linux sealed executable tests."
+    ]
+  },
+  "sourceAdmission": {
+    "inventory": "PASS",
+    "traceability": "PASS",
+    "changedSourceMapping": "PASS",
+    "base": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+    "mobilePin": "7586be92f447faaf05d1f7d7073af6321ad1496a"
+  },
+  "artifacts": {
+    "at": "2026-10-30T06:32:26.266095+00:00",
+    "candidate": "8043f887529895bc268672906e3d0cae9f1a91b1",
+    "base": "e1cec5b59723c2ff9828ac4fce45abb930d73055",
+    "icons": [
+      {
+        "name": "tdf-app-icon-1024.png",
+        "size": 1024,
+        "sha256": "89a4872a2d51431f2dff9e3c9e836cd180c72b0bba8cd1edf8c8ee7e94380105",
+        "opaque": true,
+        "maxForegroundRadius": 274.38021065667255,
+        "unchangedFromApprovedHead": true,
+        "distMatches": true
+      },
+      {
+        "name": "tdf-app-icon-512.png",
+        "size": 512,
+        "sha256": "96d38ef48b5d386554aa357fdd5c89856fb8e2c19b4de0d20f37d2c11558106d",
+        "opaque": true,
+        "maxForegroundRadius": 137.02007152238681,
+        "unchangedFromApprovedHead": true,
+        "distMatches": true
+      },
+      {
+        "name": "tdf-app-icon-192.png",
+        "size": 192,
+        "sha256": "2ae62d4425a0987915c1cbd05233bd8118e0253278e4f864661a5301d98f9a9a",
+        "opaque": true,
+        "maxForegroundRadius": 51.171281008002914,
+        "unchangedFromApprovedHead": true,
+        "distMatches": true
+      },
+      {
+        "name": "apple-touch-icon.png",
+        "size": 180,
+        "sha256": "386a2016827e9216e488a3a1b2cd8c5e3cd69a1187bc8b3d186648874b74ebca",
+        "opaque": true,
+        "maxForegroundRadius": 47.900939447989956,
+        "unchangedFromApprovedHead": true,
+        "distMatches": true
+      },
+      {
+        "name": "favicon-32.png",
+        "size": 32,
+        "sha256": "4245b8d756d3773cd24cd88146fcd81f4def32a1aa24f6116c7a664cb2e0c3be",
+        "opaque": true,
+        "maxForegroundRadius": 8.276472678623424,
+        "unchangedFromApprovedHead": true,
+        "distMatches": true
+      },
+      {
+        "name": "favicon-16.png",
+        "size": 16,
+        "sha256": "471a909ad2a49ceb6a66020995d791f4af6b6f53e28ea80c735a5a8f623f09c9",
+        "opaque": true,
+        "maxForegroundRadius": 3.8078865529319543,
+        "unchangedFromApprovedHead": true,
+        "distMatches": true
+      }
+    ],
+    "http": [
+      {
+        "label": "preview-html",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/inicio",
+        "status": 200,
+        "type": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": null,
+        "sha256": "4392e67131a037c69961321b43112533287afe6c898d9574c67c61904a4f8c30",
+        "matchesCandidate": null,
+        "officialReferencesPresent": true
+      },
+      {
+        "label": "preview-manifest",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/manifest.json?v=official-logo-1",
+        "status": 200,
+        "type": "application/json",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"5a2a9625ca229c511d684a2e1d91a20a\"",
+        "sha256": "d7b67201a7e31dc945d4fc7febf86e2a66aa00cc5b6ad91bf045772cf2e1b7cc",
+        "matchesCandidate": true,
+        "officialReferencesPresent": true
+      },
+      {
+        "label": "preview-tdf-app-icon-1024.png",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/tdf-app-icon-1024.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"b1966f5110a4fbf120470056f9d9b97d\"",
+        "sha256": "89a4872a2d51431f2dff9e3c9e836cd180c72b0bba8cd1edf8c8ee7e94380105",
+        "matchesCandidate": true,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "preview-tdf-app-icon-512.png",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/tdf-app-icon-512.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"3eb0d76d8d44ff68a76aabf3889201eb\"",
+        "sha256": "96d38ef48b5d386554aa357fdd5c89856fb8e2c19b4de0d20f37d2c11558106d",
+        "matchesCandidate": true,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "preview-tdf-app-icon-192.png",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/tdf-app-icon-192.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"528d62ec7820614e760cb1c23ac474d5\"",
+        "sha256": "2ae62d4425a0987915c1cbd05233bd8118e0253278e4f864661a5301d98f9a9a",
+        "matchesCandidate": true,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "preview-apple-touch-icon.png",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/apple-touch-icon.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"cd5db6ba3043d51c61ec82a46da20e96\"",
+        "sha256": "386a2016827e9216e488a3a1b2cd8c5e3cd69a1187bc8b3d186648874b74ebca",
+        "matchesCandidate": true,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "preview-favicon-32.png",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/favicon-32.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"9213dd627ee1ff2e9ff57b1149977626\"",
+        "sha256": "4245b8d756d3773cd24cd88146fcd81f4def32a1aa24f6116c7a664cb2e0c3be",
+        "matchesCandidate": true,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "preview-favicon-16.png",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/favicon-16.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"83b68b397e7bd7ef7765e20d0ad0ccda\"",
+        "sha256": "471a909ad2a49ceb6a66020995d791f4af6b6f53e28ea80c735a5a8f623f09c9",
+        "matchesCandidate": true,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "preview-favicon.svg",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/favicon.svg?v=official-logo-1",
+        "status": 200,
+        "type": "image/svg+xml",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"f858df5171d76031b4b8cb349c8a3198\"",
+        "sha256": "9298915fd175ce2aec2731b056bdce7d51ac023adb57cec2fbb7732b67119804",
+        "matchesCandidate": true,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "preview-favicon.ico",
+        "url": "https://16e9f6a7.tdf-app.pages.dev/favicon.ico?v=official-logo-1",
+        "status": 200,
+        "type": "image/vnd.microsoft.icon",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"b0c07ee371c5bc91743d1c49852c51c6\"",
+        "sha256": "56a61d42c0333978a57c18c23001a9e8e000c521208df38eea88a5ec639916dd",
+        "matchesCandidate": true,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "public-html",
+        "url": "https://www.tdfrecords.net/inicio",
+        "status": 200,
+        "type": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": null,
+        "sha256": "6fb9f31cb57adcdf2e1249042300fadb4933a7ace2aff7fd61b7338f8823c939",
+        "matchesCandidate": null,
+        "officialReferencesPresent": false
+      },
+      {
+        "label": "public-manifest",
+        "url": "https://www.tdfrecords.net/manifest.json?v=official-logo-1",
+        "status": 200,
+        "type": "application/json",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"9f013757fd2307fe7fd401d40183311d\"",
+        "sha256": "55627bc0699a4af5b4cb240c199041ed73966c346ceca712303e30525fba46c7",
+        "matchesCandidate": false,
+        "officialReferencesPresent": false
+      },
+      {
+        "label": "public-tdf-app-icon-1024.png",
+        "url": "https://www.tdfrecords.net/tdf-app-icon-1024.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"7ad8633e13c8552ba2d72b70eff9d91f\"",
+        "sha256": "9a0ee6a5240174b105afa0f6fd0b628415d2274270400ae6794c7a2de9263843",
+        "matchesCandidate": false,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "public-tdf-app-icon-512.png",
+        "url": "https://www.tdfrecords.net/tdf-app-icon-512.png?v=official-logo-1",
+        "status": 200,
+        "type": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": null,
+        "sha256": "6fb9f31cb57adcdf2e1249042300fadb4933a7ace2aff7fd61b7338f8823c939",
+        "matchesCandidate": false,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "public-tdf-app-icon-192.png",
+        "url": "https://www.tdfrecords.net/tdf-app-icon-192.png?v=official-logo-1",
+        "status": 200,
+        "type": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": null,
+        "sha256": "6fb9f31cb57adcdf2e1249042300fadb4933a7ace2aff7fd61b7338f8823c939",
+        "matchesCandidate": false,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "public-apple-touch-icon.png",
+        "url": "https://www.tdfrecords.net/apple-touch-icon.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"56ba48c8bd31d6d22719b13cb709dccd\"",
+        "sha256": "b5417811ee8dc34e9e4ca4772ec6d07731311b72810fe469a988e5b6c3b81453",
+        "matchesCandidate": false,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "public-favicon-32.png",
+        "url": "https://www.tdfrecords.net/favicon-32.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"bda65d4032d426bd5bf0213d99e6b5f6\"",
+        "sha256": "da62766456e56b3eab7d6a7ab2a4d72211e6d2bd5c71dba43b01134bbf94b7f4",
+        "matchesCandidate": false,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "public-favicon-16.png",
+        "url": "https://www.tdfrecords.net/favicon-16.png?v=official-logo-1",
+        "status": 200,
+        "type": "image/png",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"169fa965d423a520342ff434f08649ef\"",
+        "sha256": "f9ba15f20759584ce71c7dd7821ea4a981611e929bc2b2889538dfd060da8764",
+        "matchesCandidate": false,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "public-favicon.svg",
+        "url": "https://www.tdfrecords.net/favicon.svg?v=official-logo-1",
+        "status": 200,
+        "type": "text/html; charset=utf-8",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": null,
+        "sha256": "6fb9f31cb57adcdf2e1249042300fadb4933a7ace2aff7fd61b7338f8823c939",
+        "matchesCandidate": false,
+        "officialReferencesPresent": null
+      },
+      {
+        "label": "public-favicon.ico",
+        "url": "https://www.tdfrecords.net/favicon.ico?v=official-logo-1",
+        "status": 200,
+        "type": "image/vnd.microsoft.icon",
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "etag": "\"249c859df80c866524a6b44b230e8155\"",
+        "sha256": "49090cca53164c384977b9e691f5dc965e1a8ef6e93bea6568fe184cfeeb747d",
+        "matchesCandidate": false,
+        "officialReferencesPresent": null
+      }
+    ],
+    "sourceSha256": "e4d27318fa89f8798e657cb68fcce26a36837ee88553a98e22327aa6b1c56024",
+    "svgGeometryPreserved": true,
+    "icoPngFallback": true,
+    "manifestValid": true,
+    "mobilePinMatchesMain": true,
+    "cacheReferencesVersioned": true,
+    "scope": "Artifact verification and HTTP observations only. Browser/mobile execution and installed OS cache refresh require separate evidence."
+  },
+  "browser": {
+    "candidate": "8043f887529895bc268672906e3d0cae9f1a91b1",
+    "browserVersion": "153.0.8010.0",
+    "surfaces": [
+      {
+        "name": "desktop",
+        "links": [
+          {
+            "rel": "manifest",
+            "href": "/manifest.json?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon.ico?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon-32.png?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon-16.png?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon.svg?v=official-logo-1"
+          },
+          {
+            "rel": "apple-touch-icon",
+            "href": "/apple-touch-icon.png?v=official-logo-1"
+          }
+        ],
+        "manifest": {
+          "name": "TDF Records",
+          "short_name": "TDF",
+          "description": "Plataforma de gestión para estudios de grabación, sellos discográficos y artistas",
+          "start_url": "/inicio",
+          "display": "standalone",
+          "background_color": "#f8f7f5",
+          "theme_color": "#7c3aed",
+          "orientation": "portrait-primary",
+          "icons": [
+            {
+              "src": "/tdf-app-icon-192.png?v=official-logo-1",
+              "sizes": "192x192",
+              "type": "image/png",
+              "purpose": "any maskable"
+            },
+            {
+              "src": "/tdf-app-icon-512.png?v=official-logo-1",
+              "sizes": "512x512",
+              "type": "image/png",
+              "purpose": "any maskable"
+            }
+          ],
+          "categories": [
+            "business",
+            "music",
+            "productivity"
+          ],
+          "lang": "es"
+        },
+        "assets": [
+          {
+            "url": "/favicon.ico?v=official-logo-1",
+            "status": 200,
+            "sha256": "56a61d42c0333978a57c18c23001a9e8e000c521208df38eea88a5ec639916dd",
+            "width": 64,
+            "height": 64
+          },
+          {
+            "url": "/favicon-32.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "4245b8d756d3773cd24cd88146fcd81f4def32a1aa24f6116c7a664cb2e0c3be",
+            "width": 32,
+            "height": 32
+          },
+          {
+            "url": "/favicon-16.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "471a909ad2a49ceb6a66020995d791f4af6b6f53e28ea80c735a5a8f623f09c9",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "url": "/favicon.svg?v=official-logo-1",
+            "status": 200,
+            "sha256": "9298915fd175ce2aec2731b056bdce7d51ac023adb57cec2fbb7732b67119804",
+            "width": 1024,
+            "height": 1024
+          },
+          {
+            "url": "/apple-touch-icon.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "386a2016827e9216e488a3a1b2cd8c5e3cd69a1187bc8b3d186648874b74ebca",
+            "width": 180,
+            "height": 180
+          },
+          {
+            "url": "/tdf-app-icon-192.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "2ae62d4425a0987915c1cbd05233bd8118e0253278e4f864661a5301d98f9a9a",
+            "width": 192,
+            "height": 192
+          },
+          {
+            "url": "/tdf-app-icon-512.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "96d38ef48b5d386554aa357fdd5c89856fb8e2c19b4de0d20f37d2c11558106d",
+            "width": 512,
+            "height": 512
+          },
+          {
+            "url": "/tdf-app-icon-1024.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "89a4872a2d51431f2dff9e3c9e836cd180c72b0bba8cd1edf8c8ee7e94380105",
+            "width": 1024,
+            "height": 1024
+          }
+        ],
+        "viewport": {
+          "width": 1440,
+          "height": 1000
+        },
+        "manifestErrors": [],
+        "pageErrors": []
+      },
+      {
+        "name": "pixel7",
+        "links": [
+          {
+            "rel": "manifest",
+            "href": "/manifest.json?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon.ico?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon-32.png?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon-16.png?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon.svg?v=official-logo-1"
+          },
+          {
+            "rel": "apple-touch-icon",
+            "href": "/apple-touch-icon.png?v=official-logo-1"
+          }
+        ],
+        "manifest": {
+          "name": "TDF Records",
+          "short_name": "TDF",
+          "description": "Plataforma de gestión para estudios de grabación, sellos discográficos y artistas",
+          "start_url": "/inicio",
+          "display": "standalone",
+          "background_color": "#f8f7f5",
+          "theme_color": "#7c3aed",
+          "orientation": "portrait-primary",
+          "icons": [
+            {
+              "src": "/tdf-app-icon-192.png?v=official-logo-1",
+              "sizes": "192x192",
+              "type": "image/png",
+              "purpose": "any maskable"
+            },
+            {
+              "src": "/tdf-app-icon-512.png?v=official-logo-1",
+              "sizes": "512x512",
+              "type": "image/png",
+              "purpose": "any maskable"
+            }
+          ],
+          "categories": [
+            "business",
+            "music",
+            "productivity"
+          ],
+          "lang": "es"
+        },
+        "assets": [
+          {
+            "url": "/favicon.ico?v=official-logo-1",
+            "status": 200,
+            "sha256": "56a61d42c0333978a57c18c23001a9e8e000c521208df38eea88a5ec639916dd",
+            "width": 64,
+            "height": 64
+          },
+          {
+            "url": "/favicon-32.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "4245b8d756d3773cd24cd88146fcd81f4def32a1aa24f6116c7a664cb2e0c3be",
+            "width": 32,
+            "height": 32
+          },
+          {
+            "url": "/favicon-16.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "471a909ad2a49ceb6a66020995d791f4af6b6f53e28ea80c735a5a8f623f09c9",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "url": "/favicon.svg?v=official-logo-1",
+            "status": 200,
+            "sha256": "9298915fd175ce2aec2731b056bdce7d51ac023adb57cec2fbb7732b67119804",
+            "width": 1024,
+            "height": 1024
+          },
+          {
+            "url": "/apple-touch-icon.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "386a2016827e9216e488a3a1b2cd8c5e3cd69a1187bc8b3d186648874b74ebca",
+            "width": 180,
+            "height": 180
+          },
+          {
+            "url": "/tdf-app-icon-192.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "2ae62d4425a0987915c1cbd05233bd8118e0253278e4f864661a5301d98f9a9a",
+            "width": 192,
+            "height": 192
+          },
+          {
+            "url": "/tdf-app-icon-512.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "96d38ef48b5d386554aa357fdd5c89856fb8e2c19b4de0d20f37d2c11558106d",
+            "width": 512,
+            "height": 512
+          },
+          {
+            "url": "/tdf-app-icon-1024.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "89a4872a2d51431f2dff9e3c9e836cd180c72b0bba8cd1edf8c8ee7e94380105",
+            "width": 1024,
+            "height": 1024
+          }
+        ],
+        "viewport": {
+          "width": 412,
+          "height": 839
+        },
+        "manifestErrors": [],
+        "pageErrors": []
+      },
+      {
+        "name": "iphone13-chromium",
+        "links": [
+          {
+            "rel": "manifest",
+            "href": "/manifest.json?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon.ico?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon-32.png?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon-16.png?v=official-logo-1"
+          },
+          {
+            "rel": "icon",
+            "href": "/favicon.svg?v=official-logo-1"
+          },
+          {
+            "rel": "apple-touch-icon",
+            "href": "/apple-touch-icon.png?v=official-logo-1"
+          }
+        ],
+        "manifest": {
+          "name": "TDF Records",
+          "short_name": "TDF",
+          "description": "Plataforma de gestión para estudios de grabación, sellos discográficos y artistas",
+          "start_url": "/inicio",
+          "display": "standalone",
+          "background_color": "#f8f7f5",
+          "theme_color": "#7c3aed",
+          "orientation": "portrait-primary",
+          "icons": [
+            {
+              "src": "/tdf-app-icon-192.png?v=official-logo-1",
+              "sizes": "192x192",
+              "type": "image/png",
+              "purpose": "any maskable"
+            },
+            {
+              "src": "/tdf-app-icon-512.png?v=official-logo-1",
+              "sizes": "512x512",
+              "type": "image/png",
+              "purpose": "any maskable"
+            }
+          ],
+          "categories": [
+            "business",
+            "music",
+            "productivity"
+          ],
+          "lang": "es"
+        },
+        "assets": [
+          {
+            "url": "/favicon.ico?v=official-logo-1",
+            "status": 200,
+            "sha256": "56a61d42c0333978a57c18c23001a9e8e000c521208df38eea88a5ec639916dd",
+            "width": 64,
+            "height": 64
+          },
+          {
+            "url": "/favicon-32.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "4245b8d756d3773cd24cd88146fcd81f4def32a1aa24f6116c7a664cb2e0c3be",
+            "width": 32,
+            "height": 32
+          },
+          {
+            "url": "/favicon-16.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "471a909ad2a49ceb6a66020995d791f4af6b6f53e28ea80c735a5a8f623f09c9",
+            "width": 16,
+            "height": 16
+          },
+          {
+            "url": "/favicon.svg?v=official-logo-1",
+            "status": 200,
+            "sha256": "9298915fd175ce2aec2731b056bdce7d51ac023adb57cec2fbb7732b67119804",
+            "width": 1024,
+            "height": 1024
+          },
+          {
+            "url": "/apple-touch-icon.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "386a2016827e9216e488a3a1b2cd8c5e3cd69a1187bc8b3d186648874b74ebca",
+            "width": 180,
+            "height": 180
+          },
+          {
+            "url": "/tdf-app-icon-192.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "2ae62d4425a0987915c1cbd05233bd8118e0253278e4f864661a5301d98f9a9a",
+            "width": 192,
+            "height": 192
+          },
+          {
+            "url": "/tdf-app-icon-512.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "96d38ef48b5d386554aa357fdd5c89856fb8e2c19b4de0d20f37d2c11558106d",
+            "width": 512,
+            "height": 512
+          },
+          {
+            "url": "/tdf-app-icon-1024.png?v=official-logo-1",
+            "status": 200,
+            "sha256": "89a4872a2d51431f2dff9e3c9e836cd180c72b0bba8cd1edf8c8ee7e94380105",
+            "width": 1024,
+            "height": 1024
+          }
+        ],
+        "viewport": {
+          "width": 390,
+          "height": 664
+        },
+        "manifestErrors": [],
+        "pageErrors": []
+      }
+    ],
+    "scope": "Actual built composition in Chromium desktop, Pixel 7 and iPhone 13 emulation. Not physical devices, Safari, OS launcher refresh or production deployment.",
+    "cacheProbe": {
+      "passed": true,
+      "oldCachedDigests": {
+        "favicon-32.png": "da62766456e56b3eab7d6a7ab2a4d72211e6d2bd5c71dba43b01134bbf94b7f4",
+        "manifest.json": "55627bc0699a4af5b4cb240c199041ed73966c346ceca712303e30525fba46c7"
+      },
+      "newVersionedDigests": {
+        "favicon-32.png": "4245b8d756d3773cd24cd88146fcd81f4def32a1aa24f6116c7a664cb2e0c3be",
+        "manifest.json": "d7b67201a7e31dc945d4fc7febf86e2a66aa00cc5b6ad91bf045772cf2e1b7cc"
+      },
+      "oldUnversionedResourcesRemainCached": true,
+      "limitation": "HTTP/browser resource cache keys only; this does not prove refresh of OS-installed icons."
+    },
+    "httpPaths": {
+      "/inicio": 4,
+      "/assets/index-CCcIwfMS.js": 4,
+      "/assets/index-DP-27hpP.css": 4,
+      "/assets/react-vendor-s3czTHiP.js": 4,
+      "/assets/router-Dm1aVxm9.js": 4,
+      "/assets/mui-C8fI3J-R.js": 4,
+      "/assets/vendor-CrYrOLcq.js": 4,
+      "/assets/tanstack-CicWzEdY.js": 4,
+      "/assets/posthog-B2o1S0p2.js": 4,
+      "/assets/analytics-rsxb65dS.js": 4,
+      "/assets/AppRoutes-ddLA2k-5.js": 4,
+      "/assets/MusicNote-Dn21LlF0.js": 4,
+      "/assets/Close-CjIo0GAN.js": 4,
+      "/assets/optionalBrowserStorage-1vbZ8PsZ.js": 4,
+      "/assets/GlobalPlayer-CAFyRy0C.js": 4,
+      "/assets/bottomDock-BA506AYw.js": 4,
+      "/assets/DeleteOutline-DiylsPsL.js": 4,
+      "/assets/VolumeUp-CZT-vaKt.js": 4,
+      "/assets/PlayArrow-_xvQs0wE.js": 4,
+      "/assets/QueueMusic-DSAI7EeA.js": 4,
+      "/assets/SkipPrevious-zCIDXPxl.js": 4,
+      "/catalogs/batch?code=locales&code=currencies&locale=es&page=1&pageSize=500": 5,
+      "/catalogs/batch?code=appearance-modes&locale=es&page=1&pageSize=50": 5,
+      "/session": 4,
+      "/assets/tdf-logo-wordmark-RJnJYkZp.svg": 4,
+      "/assets/DirectorySearchPage-CzDZoonz.js": 4,
+      "/assets/useDirectorySearch-WL88EL90.js": 4,
+      "/assets/directory-DRXCFJtY.js": 4,
+      "/assets/Map-BogL_Q2P.js": 4,
+      "/assets/Share-D3WnvBWF.js": 4,
+      "/assets/DirectoryPreviewImage-D-rFT4l3.js": 4,
+      "/assets/directoryPreviewImage-Bve7F6Z9.js": 4,
+      "/assets/eventSharing-BLvsBqV6.js": 4,
+      "/assets/Event-Cgcv7ltT.js": 4,
+      "/assets/onboardingProgress-CodW7efC.js": 4,
+      "/assets/useMetaTags-BGoE4JVw.js": 4,
+      "/assets/musicReleases-C9hEEWbt.js": 4,
+      "/assets/publicMusicTrack-Ba6z9Dj_.js": 4,
+      "/assets/sourceMetadata-DYxUjuuY.js": 4,
+      "/assets/MobilePromoContent-pTEpHehY.js": 4,
+      "/assets/tdf-ui/esteban-munoz.jpg": 4,
+      "/directory/taxonomies?locale=es": 3,
+      "/directory/search?limit=20": 3,
+      "/manifest.json?v=official-logo-1": 4,
+      "/favicon.ico?v=official-logo-1": 3,
+      "/favicon-32.png?v=official-logo-1": 4,
+      "/favicon-16.png?v=official-logo-1": 3,
+      "/favicon.svg?v=official-logo-1": 3,
+      "/apple-touch-icon.png?v=official-logo-1": 3,
+      "/tdf-app-icon-192.png?v=official-logo-1": 3,
+      "/tdf-app-icon-512.png?v=official-logo-1": 3,
+      "/tdf-app-icon-1024.png?v=official-logo-1": 3,
+      "/cache-before.html": 1,
+      "/favicon-32.png": 1,
+      "/manifest.json": 1
+    },
+    "passed": true
+  },
+  "publication": {
+    "merged": false,
+    "productionVerified": false,
+    "publicObservation": "Current public HTML and manifest still reference old icons. Missing 192/512/SVG resources return SPA HTML with HTTP 200; status alone is insufficient.",
+    "queueObservation": "main-integration-admission pending: Waiting for PR #642; base e1cec5b59723c2ff9828ac4fce45abb930d73055",
+    "review": "The approval on the original head is not treated as approval of this reconciled candidate. Fresh independent exact-head review and all protected CI/admission checks remain required."
+  },
+  "cacheScope": "Actual resource-cache rehearsal primes old unversioned favicon and manifest with a long max-age. Repeat reads remain cached, while official-logo-1 URLs load and decode the new bytes. This is not proof of browser/OS refresh for previously installed shortcuts, App Store/Play Store publication, Safari behavior, or physical-device installation."
+}

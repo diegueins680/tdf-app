@@ -213,7 +213,9 @@ for (const immediate of [false, true]) {
       event: 'music_worker_stop', stage, heartbeatPid: pid,
     })));
     assert.equal(events[0].status, 0);
-    assert.equal(events[1].status, 0);
+    // A retained startup stop can finish before the group signal is sent.
+    assert.ok((immediate ? [0, 1] : [0]).includes(events[1].status));
+    if (events[1].status === 1) assert.equal(events[2].status, 0);
     // A startup TERM may precede handler installation. The original stop
     // ignores that child status; diagnostics must expose it without a failure.
     assert.ok((immediate ? [0, 143] : [0]).includes(events[2].status));
@@ -388,3 +390,47 @@ exit "$result"
     assert.deepEqual(captures[0], captures[1]);
   });
 }
+
+test('stop requested before heartbeat initialization survives a missed startup signal', { timeout: 10_000 }, async () => {
+  const f = fixture();
+  const release = join(f.directory, 'startup-released');
+  // Hold the actual heartbeat before its trap/local initialization. Lose the
+  // first TERM deliberately, then let initialization proceed: a stop request
+  // must survive that ordering. This is a controlled race, not an assertion
+  // that the preceding Linux hang had this exact cause.
+  const prelude = f.prelude.replace(/^heartbeat\(\) \{/m, 'initialized_heartbeat() {');
+  const observed = observeTestChild(spawn('bash', ['-c', `${prelude}
+heartbeat() {
+  for ((i=0;i<300;i++)); do [ ! -f ${quote(release)} ] || break; /bin/sleep 0.01; done
+  [ -f ${quote(release)} ] || return 92
+  initialized_heartbeat
+}
+kill() {
+  if [ "$#" = 3 ] && [ "$1" = -TERM ] && [ "$2" = -- ]; then
+    : > ${quote(release)}
+    return 0
+  fi
+  builtin kill "$@"
+}
+heartbeat &
+heartbeat_pid=$!
+printf 'HEARTBEAT_PID=%s\\n' "$heartbeat_pid"
+stop_heartbeat
+printf 'WORKER_DONE\\n'
+`], { detached: true, stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...f.env, TDF_HEARTBEAT_PHASE: 'sleep', MUSIC_WORKER_STOP_DIAGNOSTICS: 'false' } }));
+  try {
+    const outcome = await completedTestChild(observed, { timeoutMs: 1500 });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.match(outcome.stdout, /WORKER_DONE/);
+    assert.equal(existsSync(f.ready), false, 'cancelled startup must not launch a new native heartbeat');
+    assert.equal(observed.snapshot().processState, 'closed');
+  } finally {
+    const heartbeatPid = Number(observed.snapshot().stdout.match(/HEARTBEAT_PID=(\d+)/)?.[1]);
+    if (observed.snapshot().processState !== 'closed') {
+      signalGroup(heartbeatPid, 'SIGKILL'); signalGroup(observed.child.pid, 'SIGKILL');
+      await completedTestChild(observed, { timeoutMs: 1000 });
+    }
+    rmSync(f.directory, { recursive: true, force: true });
+  }
+});

@@ -113,3 +113,7 @@ Owner/team/admin diagnostics use stable source-kind/source-ID cursors, default10
 The legacy featured-reference predicate uses the same current source-health gate: invalid sources do not become publicly available through a saved preference; successful validation restores eligibility without replacing the saved choice. Known Drive viewer/login HTML remains inconclusive rather than a permanent media verdict.
 
 The historical archive-guard250 execution predates the owner source-health250; their normal composition appends the guard as251. Actual combined251 application/replay must be recorded separately, without relabelling those earlier results.
+
+## Backend composition, 8 November 2026
+
+This unshipped frontend composition retains the original guarded artist-recovery rollout, disabled by default. Its backend is source a5745dbbe from PR712, with the forward 251-entry migration policy, public profile-withdrawal gate, stable diagnostics pagination and retained worker stop intent. Production deployment is still blocked. Native-session PR706 must be reconciled before this frontend is ready; its video, audio mode and chapter controls must not be lost.

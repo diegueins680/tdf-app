@@ -656,6 +656,25 @@ await request('/music/me/featured-track',{token:artist.token,method:'PUT',expect
 healthToken=healthClaim('legacy',featuredLegacySource);sql(`SELECT music_media_observe('${healthToken}','valid','decodable')`);
 assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available,true);
 console.log('PASS HTTP featured health: invalid reference hidden, owner preference retained, invalid reselection denied and successful validation restored');
+
+const legacyGrantPath = `/music/legacy/${encodeURIComponent(featuredLegacySource)}/access`;
+assert.equal((await request(legacyGrantPath)).sourceVersion,
+  sql(`SELECT source_version FROM music_media_source WHERE source_kind='legacy' AND source_id='${featuredLegacySource}'`));
+const visibilityProfileId = sql(`INSERT INTO directory_profile(subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status)
+ VALUES (${artist.partyId},'artist','Music visibility fixture','music-visibility-${artist.partyId}','published','public','allowed') RETURNING id`);
+try {
+  assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available, true);
+  sql(`UPDATE directory_profile SET visibility='private' WHERE id='${visibilityProfileId}'`);
+  await request(legacyGrantPath, { expected: 404 });
+  await request(`/music/artists/${artist.partyId}/featured-track`, { expected: 404 });
+  assert.equal((await request('/music/me/featured-track', { token: artist.token })).legacyReleaseId, featuredLegacyId);
+} finally {
+  sql(`UPDATE directory_profile SET visibility='public' WHERE id='${visibilityProfileId}'`);
+}
+assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available, true);
+await request(legacyGrantPath);
+console.log('PASS HTTP artist withdrawal: legacy grant and featured reference denied, owner preference retained, publication restored');
+
 console.log('PASS HTTP media health: session, owner/team/admin isolation, sanitized diagnostics, suppression, queued revalidation and restoration');
 if (realS3) {
   for (const [id, access] of [[coverDisplayAssetId, coverAccess], [streamAssetId, streamAccess]]) {

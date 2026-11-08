@@ -420,6 +420,8 @@ heartbeat_pid=''
 stop_heartbeat() {
   if [ -n "$heartbeat_pid" ]; then
     local heartbeat_term_status=0 heartbeat_wait_status=0
+    # Retain stop intent if startup has not installed its signal handler yet.
+    : > "$working_dir/heartbeat-stop"
     trace_heartbeat_stop start "$heartbeat_pid" 0
     kill -TERM -- "-$heartbeat_pid" 2>/dev/null || heartbeat_term_status=$?
     trace_heartbeat_stop term "$heartbeat_pid" "$heartbeat_term_status"
@@ -463,6 +465,9 @@ heartbeat() {
   local heartbeat_stopping=false heartbeat_child='' heartbeat_supervised=true
   trap - EXIT USR1
   trap request_heartbeat_stop TERM INT
+  # The parent can finish a short job before this function initializes. A
+  # signal alone cannot preserve that earlier intent across initialization.
+  [ ! -f "$working_dir/heartbeat-stop" ] || return 0
   while kill -0 "$$" 2>/dev/null; do
     run_heartbeat_child sleep "$heartbeat_seconds" || {
       [ "$heartbeat_stopping" = true ] && return 0

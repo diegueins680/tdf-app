@@ -202,20 +202,15 @@ do
     < "$TDF_MUSIC_ROOT/tdf-hq/sql/$migration"
 done
 
-# The public catalog/search handler uses the exact shipped normalizer. This
-# selected-migration fixture does not install the unrelated directory schema.
-node --input-type=module - "$TDF_MUSIC_ROOT" <<'JS' | psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE"
-import { readFileSync } from 'node:fs';
-const text=readFileSync(process.argv[2]+'/tdf-hq/sql/2026-08-14_music_directory_core.sql','utf8');
-const match=text.match(/CREATE OR REPLACE FUNCTION directory_normalize_text[\s\S]*?\$\$;/);
-if(!match) throw new Error('Missing actual directory normalizer');
-process.stdout.write(match[0]);
-JS
-
 # Persistent owns the remaining runtime tables and canonical role tables; the
 # normal test seed creates synthetic users after those tables exist.
 start_backend true true
 stop_backend
+
+# The normal seed above installs the catalog foundation used by the actual
+# directory schema. Exercise visibility through its real tables and constraints.
+psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE" \
+  < "$TDF_MUSIC_ROOT/tdf-hq/sql/2026-08-14_music_directory_core.sql"
 
 psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE" <<'SQL'
 WITH source_credential AS (

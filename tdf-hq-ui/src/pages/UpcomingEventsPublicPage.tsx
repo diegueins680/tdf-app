@@ -60,11 +60,9 @@ export default function UpcomingEventsPublicPage() {
   });
 
   const events = useMemo(() => {
-    const needle = cityFilter.toLocaleLowerCase();
     return (eventsQuery.data ?? [])
-      .filter((event) => !needle || (event.publicUpcomingEventCity ?? '').toLocaleLowerCase().includes(needle))
       .sort((a, b) => a.publicUpcomingEventStart.localeCompare(b.publicUpcomingEventStart));
-  }, [cityFilter, eventsQuery.data]);
+  }, [eventsQuery.data]);
 
   return (
     <Box component="main" id="main-content" sx={{ maxWidth: 1100, mx: 'auto', px: { xs: 2, md: 4 }, py: { xs: 4, md: 7 } }}>

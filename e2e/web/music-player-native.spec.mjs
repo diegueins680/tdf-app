@@ -9,8 +9,76 @@ const assetId = (i, q) => `55000000-0000-4000-8000-0000000000${i}${q}`;
 const qualities = ['low', 'high', 'lossless'];
 const previewAssetId = '55000000-0000-4000-8000-000000000099';
 
+// Passive, bounded diagnostics for this synthetic fixture only. Never log
+// credentials, queue contents, media URLs or arbitrary element text.
+function installNativeQualityDiagnostics() {
+  const qualities = new Set(['auto', 'low', 'medium', 'high', 'lossless']);
+  const controlSelector = '[role="combobox"][aria-label="Calidad de audio"], [role="combobox"][aria-labelledby$="-quality"]';
+  const menuSelector = '[role="listbox"][aria-labelledby$="-quality"]';
+  const relevantSelector = `${controlSelector}, ${menuSelector}`;
+  const ids = new WeakMap();
+  let serial = 0;
+  const log = { version: 1, limit: 120, dropped: 0, events: [] };
+  globalThis.__nativeQualityDiagnostics = log;
+  const element = (node) => node instanceof Element ? node : node?.parentElement;
+  const value = (candidate) => qualities.has(candidate) ? candidate : null;
+  const rect = (node) => {
+    if (!node) return null;
+    const r = node.getBoundingClientRect();
+    return [r.x, r.y, r.width, r.height].map((n) => Math.round(n * 100) / 100);
+  };
+  const describe = (node) => {
+    const e = element(node);
+    if (!e) return null;
+    if (!ids.has(e)) ids.set(e, ++serial);
+    return { node: ids.get(e), tag: e.tagName, role: e.getAttribute('role'),
+      quality: value(e.getAttribute('data-value')), connected: e.isConnected, rect: rect(e) };
+  };
+  const snapshot = () => {
+    const menu = document.querySelector(menuSelector);
+    const popup = menu?.parentElement;
+    let savedQuality = null;
+    try { savedQuality = value(JSON.parse(localStorage.getItem('tdf-global-player/v1'))?.quality); } catch { /* diagnostic only */ }
+    return { savedQuality, active: describe(document.activeElement),
+      controls: [...document.querySelectorAll(controlSelector)].slice(0, 2).map((e) => ({
+        ...describe(e), expanded: e.getAttribute('aria-expanded'),
+        selected: value(e.parentElement?.querySelector('input')?.value) })),
+      menu: menu ? { ...describe(menu), selected: value(menu.querySelector('[aria-selected="true"]')?.getAttribute('data-value')),
+        popupRect: rect(popup), transform: getComputedStyle(popup).transform,
+        transition: getComputedStyle(popup).transitionDuration } : null };
+  };
+  globalThis.__nativeQualitySnapshot = snapshot;
+  const record = (entry) => {
+    if (log.events.length >= log.limit) { log.dropped += 1; return; }
+    log.events.push({ at: performance.now(), ...entry, state: snapshot() });
+  };
+  const observeEvent = (phase) => (event) => {
+    const target = element(event.target);
+    if (!document.querySelector(menuSelector) && !target?.closest(relevantSelector)) return;
+    const sample = (stage) => ({ type: event.type, phase: stage, trusted: event.isTrusted,
+      defaultPrevented: event.defaultPrevented, target: describe(target),
+      relatedTarget: describe(event.relatedTarget),
+      point: Number.isFinite(event.clientX) ? [event.clientX, event.clientY] : null,
+      hit: Number.isFinite(event.clientX) ? describe(document.elementFromPoint(event.clientX, event.clientY)) : null,
+      button: event.button ?? null, buttons: event.buttons ?? null });
+    record(sample(phase));
+  };
+  for (const type of ['pointerdown', 'pointerup', 'pointercancel', 'mousedown', 'mouseup', 'click', 'focusin', 'focusout', 'change']) {
+    document.addEventListener(type, observeEvent('capture'), { capture: true, passive: true });
+    document.addEventListener(type, observeEvent('bubble'), { passive: true });
+  }
+  new MutationObserver((changes) => {
+    const relevant = changes.some((change) => element(change.target)?.closest(relevantSelector)
+      || [...change.addedNodes, ...change.removedNodes].some((node) => node instanceof Element
+        && (node.matches(relevantSelector) || node.querySelector(relevantSelector))));
+    if (relevant) record({ type: 'quality-dom-mutation' });
+  }).observe(document, { subtree: true, childList: true, characterData: true,
+    attributes: true, attributeFilter: ['aria-selected', 'aria-expanded', 'data-value'] });
+}
+
 async function prepare(page, { previewFallback = false, holdSameOwnerSession = false, resolvedListenerPartyId = 101, cacheSessionDescriptor = true } = {}) {
   const fixture = JSON.parse(process.env.TDF_NATIVE_MUSIC_FIXTURE);
+  await page.addInitScript(installNativeQualityDiagnostics);
   const events = [], deniedNetwork = [], assetRequests = [];
   const cachedListener = { partyId: 101, username: 'synthetic-native-listener', displayName: 'Synthetic listener', roles: ['customer'] };
   let resolveSession = () => undefined;
@@ -161,6 +229,13 @@ test.afterEach(async ({ page }, testInfo) => {
     })),
   }));
   await testInfo.attach('native-audio-observations.json', { body: JSON.stringify(observations, null, 2), contentType: 'application/json' });
+  if (testInfo.status !== testInfo.expectedStatus) {
+    const diagnostics = await page.evaluate(() => ({
+      log: globalThis.__nativeQualityDiagnostics ?? null,
+      finalState: globalThis.__nativeQualitySnapshot?.() ?? null,
+    }));
+    await testInfo.attach('native-quality-interactions.json', { body: JSON.stringify(diagnostics, null, 2), contentType: 'application/json' });
+  }
 });
 
 test('@critical PW-MUSIC-NATIVE-01 decodes real derivatives and keeps playback across navigation, seeking and quality', async ({ page }) => {
