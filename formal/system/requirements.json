@@ -8821,7 +8821,9 @@
         "tdf-hq-ui/src/api/records.test.ts",
         "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
         "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx"
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx",
+        "scripts/test-native-session-import.sh",
+        "scripts/test-native-session-import-sql.py"
       ],
       "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness. Source-bound regressions cover delayed internal pause delivery, latest-source cancellation, paused-source/unmount controls, imported recording card/deep-link bounds and canonical publication interactions. A local synthetic MP4 fixture exercises actual native video/audio continuation and explicit pause; this is finite browser evidence, not all-event-order or physical-device qualification. Source-bound native-load reset controls and synthetic MP4/M4A browser cases cover chosen and native-control speed across format, quality and chapter replacement; these are finite browser/application tests, not all-platform scheduling or decoder proofs.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
