@@ -73,6 +73,9 @@ export const sameUploadFile = (a: Pick<File, 'name' | 'size' | 'lastModified'>, 
 const isAbortError = (reason: unknown): boolean =>
   reason instanceof DOMException ? reason.name === 'AbortError'
     : reason instanceof Error && reason.name === 'AbortError';
+// Detected by name: the API module is mocked wholesale in several tests.
+const isUnusableUploadSession = (reason: unknown): boolean =>
+  reason instanceof Error && reason.name === 'MusicUploadSessionUnusableError';
 type Raw = Record<string, unknown>;
 
 const asRaw = (value: unknown): Raw => value && typeof value === 'object' ? value as Raw : {};
@@ -562,14 +565,26 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
           inFlight: true,
         } })),
       });
-      const refreshed = await musicReleases.getVersion(releaseId, versionId); applyVersion(refreshed);
-      setUploads((current) => ({ ...current, [key]: { progress: 100, message: 'Carga confirmada; procesamiento en cola.' } }));
+      // The upload is confirmed server-side from here on: a failed refresh must
+      // not offer a retry that would transfer or confirm the asset again.
+      try {
+        const refreshed = await musicReleases.getVersion(releaseId, versionId); applyVersion(refreshed);
+        setUploads((current) => ({ ...current, [key]: { progress: 100, message: 'Carga confirmada; procesamiento en cola.' } }));
+      } catch {
+        setUploads((current) => ({ ...current, [key]: { progress: 100, message: 'Carga confirmada; no se pudo refrescar la versión. Recarga la página para ver el procesamiento.' } }));
+      }
     } catch (reason) {
       if (isAbortError(reason) || controller.signal.aborted) {
         // The cancelled upload session is gone; a retry is a new upload of the same file.
         const cancelled = uploadAttempts.current[key];
         if (cancelled) uploadAttempts.current[key] = { ...cancelled, idempotencyKey: newRef('music-upload') };
         setUploads((current) => ({ ...current, [key]: { progress: 0, message: 'Carga cancelada. Puedes reintentar el mismo archivo.', cancelled: true, retryable: true } }));
+      } else if (isUnusableUploadSession(reason)) {
+        // The replayed session cannot resume (cancelled/failed/expired server-side).
+        const stale = uploadAttempts.current[key];
+        if (stale) uploadAttempts.current[key] = { ...stale, idempotencyKey: newRef('music-upload') };
+        setUploads((current) => ({ ...current, [key]: { progress: 0, message: '', retryable: true,
+          error: reason instanceof Error ? reason.message : 'La sesión de carga anterior ya no es reutilizable.' } }));
       } else {
         setUploads((current) => ({ ...current, [key]: { progress: 0, message: '', retryable: true,
           error: reason instanceof Error ? reason.message : 'Falló la carga.' } }));

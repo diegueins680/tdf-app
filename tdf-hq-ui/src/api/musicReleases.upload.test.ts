@@ -7,7 +7,7 @@ const delMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 jest.unstable_mockModule('./client', () => ({
   post: postMock, get: getMock, put: putMock, del: delMock,
 }));
-const { uploadMusicAsset } = await import('./musicReleases');
+const { uploadMusicAsset, MusicUploadSessionUnusableError } = await import('./musicReleases');
 const originalFetch = globalThis.fetch;
 const fetchMock = jest.fn<typeof fetch>();
 const options = {
@@ -55,5 +55,31 @@ describe('music upload completion gate', () => {
       { etag: '"etag"' }, { signal: undefined });
     expect(fetchMock).toHaveBeenCalledWith('https://storage.test.invalid/complete',
       expect.objectContaining({ credentials: 'omit', method: 'POST' }));
+  });
+});
+
+describe('music upload replayed sessions', () => {
+  beforeEach(() => { jest.clearAllMocks(); globalThis.fetch = fetchMock; });
+  afterEach(() => { globalThis.fetch = originalFetch; });
+
+  it('returns the already-confirmed upload without repeating multipart completion', async () => {
+    postMock.mockResolvedValueOnce({ id: 'session', status: 'completed', providerUploadIdBound: true,
+      partSizeBytes: 5 * 1024 * 1024, parts: [{ partNumber: 1, byteSize: 1 }] });
+    await expect(uploadMusicAsset(options)).resolves.toEqual({ status: 'completed', sessionId: 'session', replayed: true });
+    expect(postMock).toHaveBeenCalledTimes(1);
+    expect(getMock).not.toHaveBeenCalled();
+    expect(putMock).not.toHaveBeenCalled();
+    expect(delMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each(['cancelled', 'failed', 'expired'] as const)('refuses to resume a %s session so the caller allocates a new key', async (status) => {
+    postMock.mockResolvedValueOnce({ id: 'session', status, providerUploadIdBound: true, partSizeBytes: 5 * 1024 * 1024, parts: [] });
+    const outcome = uploadMusicAsset(options);
+    await expect(outcome).rejects.toBeInstanceOf(MusicUploadSessionUnusableError);
+    await expect(outcome).rejects.toMatchObject({ name: 'MusicUploadSessionUnusableError', status, sessionId: 'session' });
+    expect(getMock).not.toHaveBeenCalled();
+    expect(delMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

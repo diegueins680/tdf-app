@@ -139,8 +139,8 @@ jobs:
         shell: bash
         working-directory: tdf-desktop/dist
         run: |
-          if [ "$RUNNER_OS" = "macOS" ]; then shasum -a 256 *.dmg *.zip > SHA256SUMS.txt; else sha256sum *.exe > SHA256SUMS.txt; fi
-          cat SHA256SUMS.txt
+          # Platform-specific names so both lists survive a merged download.
+          if [ "$RUNNER_OS" = "macOS" ]; then shasum -a 256 *.dmg *.zip > SHA256SUMS-mac.txt; cat SHA256SUMS-mac.txt; else sha256sum *.exe > SHA256SUMS-win.txt; cat SHA256SUMS-win.txt; fi
       - name: Installed-binary smoke (macOS)
         if: runner.os == 'macOS'
         shell: bash
@@ -191,7 +191,7 @@ jobs:
             tdf-desktop/dist/*.exe
             tdf-desktop/dist/*.blockmap
             tdf-desktop/dist/latest*.yml
-            tdf-desktop/dist/SHA256SUMS.txt
+            tdf-desktop/dist/SHA256SUMS-*.txt
             tdf-desktop/dist/receipts/*.json
           if-no-files-found: error
           retention-days: 30
@@ -207,15 +207,25 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v7
+      # Only the two installer artifacts; the Electron journey evidence stays a workflow artifact.
       - uses: actions/download-artifact@v8
         with:
-          pattern: desktop-*-${{ github.run_id }}
-          merge-multiple: true
+          name: desktop-macos-${{ github.run_id }}
           path: release
-      - name: Refuse to publish unsigned test packages
+      - uses: actions/download-artifact@v8
+        with:
+          name: desktop-windows-${{ github.run_id }}
+          path: release
+      - name: Select release assets and refuse unsigned test packages
         shell: bash
         run: |
-          if ls release | grep -q 'UNSIGNED-TEST'; then
+          set -euo pipefail
+          # Release assets are files only: installers, update metadata, blockmaps and checksums.
+          # Smoke receipts (receipts/) remain in the workflow artifacts, not on the release.
+          find release -maxdepth 1 -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*.exe' -o -name '*.blockmap' -o -name 'latest*.yml' -o -name 'SHA256SUMS-*.txt' \) | sort > release-assets.txt
+          test -s release-assets.txt
+          cat release-assets.txt
+          if grep -q 'UNSIGNED-TEST' release-assets.txt; then
             echo 'Unsigned test packages are never published to the update feed.' >&2
             exit 1
           fi
@@ -230,8 +240,9 @@ jobs:
           if [ "${GITHUB_REF}" != "refs/tags/${tag}" ]; then
             echo "Tag ${GITHUB_REF} does not match package version ${version}" >&2; exit 1
           fi
+          mapfile -t assets < release-assets.txt
           gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "TDF Records Desktop ${version}" --notes "Instaladores firmados de TDF Records Desktop ${version}. Ver docs/desktop/README.md." --verify-tag
-          gh release upload "$tag" release/* --clobber
+          gh release upload "$tag" "${assets[@]}" --clobber
           # electron-updater reads latest*.yml from this rolling release.
           gh release view desktop-latest >/dev/null 2>&1 || gh release create desktop-latest --title "TDF Records Desktop (canal latest)" --notes "Canal de actualización del shell de escritorio. Los binarios de cada versión viven en desktop-v<version>." --latest=false
-          gh release upload desktop-latest release/* --clobber
+          gh release upload desktop-latest "${assets[@]}" --clobber

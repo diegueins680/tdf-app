@@ -396,6 +396,24 @@ interface CancelInstruction { abortUrl: string | null }
 
 const apiPath = (path: string) => `/music${path}`;
 
+/**
+ * A replayed Idempotency-Key found a session the server will no longer resume
+ * (cancelled, failed or expired). The caller must allocate a new key; the
+ * `name` is stable so callers can detect it without importing the class.
+ */
+export class MusicUploadSessionUnusableError extends Error {
+  constructor(public readonly status: MusicUploadSession['status'], public readonly sessionId: string) {
+    super(`La sesión de carga anterior quedó en estado ${status}. Reintenta para crear una nueva carga del mismo archivo.`);
+    this.name = 'MusicUploadSessionUnusableError';
+  }
+}
+
+export interface MusicUploadReplayedCompletion {
+  status: 'completed';
+  sessionId: string;
+  replayed: true;
+}
+
 const throwIfAborted = (signal?: AbortSignal) => {
   if (signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
 };
@@ -477,6 +495,17 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
     },
     { headers: { 'Idempotency-Key': options.idempotencyKey }, signal },
   );
+
+  // A replayed Idempotency-Key returns the earlier session. One the server has
+  // already confirmed (for example when the confirm response was lost) has
+  // nothing left to transfer; one it will not resume needs a new key.
+  if (session.status === 'completed') {
+    onProgress?.({ phase: 'finalizing', completedBytes: file.size, totalBytes: file.size });
+    return { status: 'completed', sessionId: session.id, replayed: true } satisfies MusicUploadReplayedCompletion;
+  }
+  if (session.status === 'cancelled' || session.status === 'failed' || session.status === 'expired') {
+    throw new MusicUploadSessionUnusableError(session.status, session.id);
+  }
 
   try {
     if (!session.providerUploadIdBound) {

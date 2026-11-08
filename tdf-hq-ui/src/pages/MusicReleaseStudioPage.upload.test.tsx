@@ -148,3 +148,31 @@ it('replays a failed publication transition with the same Idempotency-Key and ro
     await screen.findByText('Estado actualizado: in_review.');
   } finally { close(); }
 });
+
+it('allocates a new key when the server reports the replayed session is no longer usable', async () => {
+  const unusable = Object.assign(new Error('La sesión de carga anterior quedó en estado expired. Reintenta para crear una nueva carga del mismo archivo.'), { name: 'MusicUploadSessionUnusableError' });
+  uploadAsset.mockRejectedValueOnce(unusable);
+  uploadAsset.mockResolvedValueOnce({});
+  const close = openStudio();
+  try {
+    await dropMaster(wav());
+    await screen.findByText(/quedó en estado expired/);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Reintentar pista 1' })); });
+    await waitFor(() => expect(uploadAsset).toHaveBeenCalledTimes(2));
+    expect(uploadAsset.mock.calls[1]?.[0].file).toBe(uploadAsset.mock.calls[0]?.[0].file);
+    expect(uploadAsset.mock.calls[1]?.[0].idempotencyKey).not.toBe(uploadAsset.mock.calls[0]?.[0].idempotencyKey);
+    await screen.findByText('Carga confirmada; procesamiento en cola.');
+  } finally { close(); }
+});
+
+it('keeps a confirmed upload confirmed when the version refresh fails', async () => {
+  uploadAsset.mockResolvedValueOnce({});
+  getVersion.mockRejectedValueOnce(new Error('refresh offline'));
+  const close = openStudio();
+  try {
+    await dropMaster(wav());
+    await screen.findByText(/Carga confirmada; no se pudo refrescar la versión/);
+    expect(screen.queryByRole('button', { name: 'Reintentar pista 1' })).toBeNull();
+    expect(uploadAsset).toHaveBeenCalledTimes(1);
+  } finally { close(); }
+});
