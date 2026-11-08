@@ -38,6 +38,13 @@ class NativeSessionTests(unittest.TestCase):
     def test_missing_master_is_explicit_and_does_not_fabricate_sources(self):
         m=manifest();m['native']['state']='awaiting_master';m['native']['sources']=[]
         self.assertEqual(native.validate(m)['sources'],[])
+    def test_chapter_uuid_cannot_alias_parent_or_repeat_with_another_spelling(self):
+        m=manifest();m['native']['chapters'][0]['id']=m['entity']['id']
+        with self.assertRaisesRegex(ValueError,'chapter identity'):native.validate(m)
+        m=manifest();m['native']['chapters'][0]['id']='aaaaaaaa-1111-4111-8111-111111111111'
+        second=copy.deepcopy(m['native']['chapters'][0]);second.update(id='AAAAAAAA-1111-4111-8111-111111111111',startMs=20000,endMs=25000)
+        m['native']['chapters'].append(second)
+        with self.assertRaisesRegex(ValueError,'chapter identity'):native.validate(m)
     def test_rendered_audit_does_not_invent_owner_or_master_evidence(self):
         m=manifest();m['native']['state']='awaiting_master';m['native']['sources']=[]
         m['localFiles']=[]

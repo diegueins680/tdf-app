@@ -58,6 +58,13 @@ YouTube. Existing YouTube resources remain historical source references.
    The audit resource identity is the actual returned parent resource UUID,
    including when an existing resource is reused; chapter upserts do not replace
    that parent identity. Earlier receipts are not retroactively rewritten.
+   For a corrected, not-yet-applied manifest, retain each chapter UUID. The tool
+   updates its imported titles, descriptions and duration, and the linked resource
+   URL, labels, poster and playback metadata. It increments content revisions;
+   it does not change the canonical parent's presentation, chapter workflow,
+   active state, editorial fields or rights. Existing chapter UUID/code,
+   catalog/type and native parent binding must agree; collisions fail closed.
+   Repeating the exact applied manifest changes no rows, revisions or receipt.
 9. Read back `/records/feed` and test full session/song playback in the actual web
    build with YouTube blocked. Verify desktop/mobile layouts, mode/quality
    switching, navigation continuity, source failures and radio takeover. Public
@@ -135,3 +142,9 @@ the same owned-source rewind as global Play, before accepting continuation.
 Mid-chapter and unbounded playback keep their position; unsolicited or obsolete
 native events do not rewind the selected source. These paths have controlled
 media-event regressions, not a claim that every browser emits identical events.
+
+The existing backend CI lane also runs `sh scripts/test-native-session-import.sh`.
+It creates its own empty test database through the shared PostgreSQL fixture
+helper, applies the current canonical migration manifest, and exercises corrected
+recording/resource presentation, revision invalidation, exact replay and identity
+refusals with synthetic data. It never connects to production or inspects media.

@@ -65,12 +65,12 @@ def validate(manifest):
     require(native['artistPartyIds'] and all(type(i) is int and i > 0 for i in native['artistPartyIds']), 'Artist identities must be explicit')
     require(type(native['durationMs']) is int and native['durationMs'] > 0, 'Expected measured session duration')
     previous = 0
-    ids = set()
+    ids = {uuid.UUID(manifest['entity']['id'])}
     for chapter in native.get('chapters', []):
-        uuid.UUID(chapter['id'])
-        require(chapter['id'] not in ids and chapter['title'].strip(), 'Invalid chapter identity/title')
+        chapter_id = uuid.UUID(chapter['id'])
+        require(chapter_id not in ids and chapter['title'].strip(), 'Invalid chapter identity/title')
         require(0 <= previous <= chapter['startMs'] < chapter['endMs'] <= native['durationMs'], 'Overlapping/out-of-source chapter')
-        previous = chapter['endMs']; ids.add(chapter['id'])
+        previous = chapter['endMs']; ids.add(chapter_id)
     for source in native.get('sources', []):
         url = urlparse(source['url'])
         require(url.scheme == 'https' and url.hostname and not url.username and not url.password, 'Expected HTTPS delivery URL')
@@ -115,13 +115,34 @@ UPDATE {table} SET updated_at=now(),version=version+1,published_revision=publish
         child_resource = stable_id('native:' + chapter['id'])
         child = {**native, 'isTrack': True, 'parentId': parent_id, 'chapters': [], 'startMs': chapter['startMs'], 'endMs': chapter['endMs']}
         child_json = literal(json.dumps({'tdfNative': child}, ensure_ascii=False)) + '::jsonb'
-        sql += f'''INSERT INTO recording(id,catalog_id,code,recording_type_id,title_es,title_en,description_es,description_en,duration_ms,workflow_state_id,sort_order,active,published_revision)
-SELECT {literal(chapter['id'])}::uuid,(SELECT id FROM catalog_definition WHERE code='records-recordings'),{literal(code)},(SELECT id FROM recording_type_reference WHERE code='music-video' AND active),{literal(chapter['title'])},{literal(chapter['title'])},{literal('Interpretación de '+native['artist']+' en '+manifest['title'])},{literal('Performance from '+manifest['title'])},{chapter['endMs']-chapter['startMs']},workflow_state_id,0,true,1 FROM {table} WHERE id={literal(parent_id)}::uuid ON CONFLICT(code) DO NOTHING;
+        sql += f'''IF EXISTS(SELECT 1 FROM recording WHERE id={literal(chapter['id'])}::uuid AND
+ (code IS DISTINCT FROM {literal(code)}
+ OR catalog_id IS DISTINCT FROM (SELECT id FROM catalog_definition WHERE code='records-recordings')
+ OR recording_type_id IS DISTINCT FROM (SELECT id FROM recording_type_reference WHERE code='music-video' AND active)))
+ OR EXISTS(SELECT 1 FROM recording WHERE code={literal(code)} AND id<>{literal(chapter['id'])}::uuid)
+ OR (EXISTS(SELECT 1 FROM recording WHERE id={literal(chapter['id'])}::uuid) AND NOT EXISTS(
+ SELECT 1 FROM recording_external_resource link JOIN record_external_resource resource ON resource.id=link.resource_id
+ JOIN external_provider provider ON provider.id=resource.provider_id
+ WHERE link.recording_id={literal(chapter['id'])}::uuid AND link.relation_kind='native-stream'
+ AND provider.code='tdf' AND resource.resource_kind='video' AND resource.external_code={literal('native:'+chapter['id'])}
+ AND resource.provider_metadata#>>'{{tdfNative,parentId}}'={literal(parent_id)}
+ AND resource.provider_metadata#>>'{{tdfNative,isTrack}}'='true'))
+ THEN RAISE EXCEPTION 'Expected native chapter identity'; END IF;
+INSERT INTO recording(id,catalog_id,code,recording_type_id,title_es,title_en,description_es,description_en,duration_ms,workflow_state_id,sort_order,active,published_revision)
+SELECT {literal(chapter['id'])}::uuid,(SELECT id FROM catalog_definition WHERE code='records-recordings'),{literal(code)},(SELECT id FROM recording_type_reference WHERE code='music-video' AND active),{literal(chapter['title'])},{literal(chapter['title'])},{literal('Interpretación de '+native['artist']+' en '+manifest['title'])},{literal('Performance from '+manifest['title'])},{chapter['endMs']-chapter['startMs']},workflow_state_id,0,true,1 FROM {table} WHERE id={literal(parent_id)}::uuid
+ON CONFLICT(code) DO UPDATE SET title_es=excluded.title_es,title_en=excluded.title_en,
+ description_es=excluded.description_es,description_en=excluded.description_en,duration_ms=excluded.duration_ms,
+ updated_at=now(),version=recording.version+1,published_revision=recording.published_revision+1
+ WHERE recording.id=excluded.id;
 INSERT INTO recording_contributor(recording_id,contributor_id,credit_role,sort_order,primary_credit)
 SELECT {literal(chapter['id'])}::uuid,contributor_id,credit_role,sort_order,primary_credit FROM {'recording_contributor' if kind == 'recording' else 'session_contributor'} WHERE {parent_column}={literal(parent_id)}::uuid ON CONFLICT DO NOTHING;
 INSERT INTO collection_recording(collection_id,recording_id,sort_order) SELECT collection.id,{literal(chapter['id'])}::uuid,(SELECT coalesce(max(sort_order),0)+1 FROM collection_recording WHERE collection_id=collection.id) FROM editorial_collection collection WHERE collection.code='tdf-records-recordings' AND collection.active ON CONFLICT DO NOTHING;
 INSERT INTO record_external_resource(id,provider_id,external_code,resource_kind,canonical_url,label_es,label_en,duration_ms,thumbnail_url,provider_metadata)
-SELECT {literal(child_resource)}::uuid,id,{literal('native:'+chapter['id'])},'video',{literal(source_url)},{literal(chapter['title'])},{literal(chapter['title'])},{chapter['endMs']-chapter['startMs']},{poster},{child_json} FROM external_provider WHERE code='tdf' ON CONFLICT(provider_id,resource_kind,external_code) DO UPDATE SET provider_metadata=excluded.provider_metadata,updated_at=now(),version=record_external_resource.version+1 RETURNING id INTO resource_key;
+SELECT {literal(child_resource)}::uuid,id,{literal('native:'+chapter['id'])},'video',{literal(source_url)},{literal(chapter['title'])},{literal(chapter['title'])},{chapter['endMs']-chapter['startMs']},{poster},{child_json} FROM external_provider WHERE code='tdf'
+ON CONFLICT(provider_id,resource_kind,external_code) DO UPDATE SET canonical_url=excluded.canonical_url,
+ label_es=excluded.label_es,label_en=excluded.label_en,duration_ms=excluded.duration_ms,
+ thumbnail_url=excluded.thumbnail_url,provider_metadata=excluded.provider_metadata,
+ updated_at=now(),version=record_external_resource.version+1 RETURNING id INTO resource_key;
 INSERT INTO recording_external_resource(recording_id,resource_id,relation_kind,primary_resource,sort_order) VALUES({literal(chapter['id'])}::uuid,resource_key,'native-stream',true,0) ON CONFLICT DO NOTHING;
 '''
     sql += f'''INSERT INTO audit_log(actor_id,entity,entity_id,action,diff,created_at) VALUES(NULL,'{table}',{literal(parent_id)},'records_native_session_imported',jsonb_build_object('manifestSha256',{literal(fingerprint)},'entityId',{literal(parent_id)},'resourceId',parent_resource_key,'native',{literal(json.dumps(native,ensure_ascii=False))}::jsonb,'preparation',{preparation}),clock_timestamp());
