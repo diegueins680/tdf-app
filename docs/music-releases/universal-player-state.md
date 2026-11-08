@@ -40,8 +40,12 @@ radio; the listener chooses its link and station.
 
 Protected sources cannot fall back to an old unsigned URL. Canonical assets and
 legacy release membership are reauthorized at selection. During visible playback,
-a single cancellable check runs every 60s and on foreground return; denial stops
-or advances the source. Browser background throttling can delay this check.
+a single cancellable check runs every 60s and on foreground return. Terminal
+permission denial stops the selected track and retires its source; it never
+substitutes another queued track, on initial resolution or a background recheck.
+Initial resolution may still try a freshly authorized rendition of the same
+track. Network, decode and public-source failures keep their bounded recovery.
+Browser background throttling can delay this check.
 Previously delivered bytes and a still-live signed grant cannot be revoked by
 the client. The server checks current publication, territory and access rules on
 every new grant. Full downloads keep their separate entitlement gates.

@@ -382,6 +382,28 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     retryTimerRef.current = null;
   }, []);
 
+  const stopDeniedSelection = useCallback((trackId: string) => {
+    const media = audioRef.current;
+    if (media && loadedSourceRef.current?.trackId === trackId) {
+      positionsRef.current[trackId] = pendingPositionRef.current?.position ?? media.currentTime;
+    }
+    cancelRetry();
+    cancelWatchdogRef.current();
+    const generation = ++sourceGenerationRef.current;
+    playAttemptRef.current += 1;
+    loadedSourceRef.current = null;
+    pendingPositionRef.current = null;
+    nativeGestureRef.current = false;
+    autoplayRef.current = false; setPlaybackRequested(false);
+    failedTracksRef.current.add(trackId);
+    setUnavailableTrackIds([...failedTracksRef.current]);
+    if (media) void pauseForSourceTransition(media).then(() => {
+      // A newer selection/owner must never lose its source to this pause task.
+      if (generation !== sourceGenerationRef.current || audioRef.current !== media) return;
+      media.removeAttribute('src'); media.srcObject = null; media.load();
+    });
+  }, [cancelRetry, pauseForSourceTransition]);
+
   const retireSelection = useCallback(() => {
     const audio = audioRef.current;
     const loaded = loadedSourceRef.current;
@@ -983,7 +1005,9 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         const transient = httpStatus === null || httpStatus === 408 || httpStatus === 429
           || (typeof httpStatus === 'number' && httpStatus >= 500);
         if (transient && scheduleRecovery(currentTrack, positionsRef.current[currentTrack.id] ?? 0, generation)) return;
-        if (skipFailed()) return;
+        const denied = httpStatus === 401 || httpStatus === 403 || httpStatus === 404;
+        if (!denied && skipFailed()) return;
+        if (denied) stopDeniedSelection(currentTrack.id);
         autoplayRef.current = false; setPlaybackRequested(false);
         setStatus('unavailable');
         setError('El servidor no autorizó una fuente vigente para esta pista.');
@@ -1001,7 +1025,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
       audio.removeEventListener('canplay', prepared);
       audio.removeEventListener('pause', prepared);
     };
-  }, [audioRef, pauseForSourceTransition, cancelRetry, candidates, currentTrack, play, quality, scheduleRecovery, skipFailed, source, sourceRefresh]);
+  }, [audioRef, pauseForSourceTransition, cancelRetry, candidates, currentTrack, play, quality, scheduleRecovery, skipFailed, source, sourceRefresh, stopDeniedSelection]);
 
   useEffect(() => {
     const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
@@ -1044,9 +1068,8 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
         if (controller.signal.aborted || loaded.generation !== sourceGenerationRef.current) return;
         const code = reason && typeof reason === 'object' && 'status' in reason ? reason.status : null;
         if (code === 401 || code === 403 || code === 404) {
-          if (skipFailed()) return;
-          autoplayRef.current = false; setPlaybackRequested(false);
-          if (audioRef.current) void pauseForSourceTransition(audioRef.current);
+          controller.abort();
+          stopDeniedSelection(currentTrack.id);
           setStatus('unavailable');
           setError('Esta música ya no está disponible para escuchar. Elige otra pista.');
         }
@@ -1056,7 +1079,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     const interval = window.setInterval(onVisible, 60000);
     document.addEventListener('visibilitychange', onVisible);
     return () => { controller.abort(); window.clearInterval(interval); document.removeEventListener('visibilitychange', onVisible); };
-  }, [currentTrack, pauseForSourceTransition, resolvedQuality, sourceRefresh, skipFailed]);
+  }, [currentTrack, pauseForSourceTransition, resolvedQuality, sourceRefresh, stopDeniedSelection]);
 
   useEffect(() => {
     const audio = audioRef.current;

@@ -395,13 +395,15 @@ it('aborts superseded authorization and rejects its late result without substitu
   expect(player.status).toBe('playing');
 });
 
-it('skips a denied selection without using its stale direct URL', async () => {
+it('never substitutes another queued track when every rendition of the selection is denied', async () => {
   jest.mocked(authorizePlayerAsset).mockRejectedValue({ status: 403 });
   const secured = { ...track('one'), sources: [{ ...track('one').sources[0]!, assetId: 'one-full' }] };
   const view = render(<PlayerProvider><Probe /></PlayerProvider>);
   await act(async () => { player.playTrack(secured, [secured, track('two')]); });
-  expect(player.currentTrack?.id).toBe('two');
-  expect(view.container.querySelector('audio')?.getAttribute('src')).toBe('https://media.invalid/two.m4a');
+  expect(player.currentTrack?.id).toBe('one');
+  expect(player.status).toBe('unavailable');
+  expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
+  expect(HTMLMediaElement.prototype.play).not.toHaveBeenCalled();
   expect(authorizePlayerAsset).toHaveBeenCalledTimes(1);
 });
 
@@ -921,6 +923,72 @@ it('stops a selected asset when a background permission recheck is denied', asyn
     expect(player.status).toBe('unavailable');
     expect(player.unavailableTrackIds).toContain('protected');
     expect(view.container.querySelector('audio')?.pause).toHaveBeenCalled();
+  } finally { view.unmount(); jest.useRealTimers(); }
+});
+
+it('retains the selected track and clears its source when background permission is denied with another queued track', async () => {
+  jest.useFakeTimers();
+  jest.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+  jest.mocked(authorizePlayerAsset).mockResolvedValueOnce({ url: 'https://media.invalid/allowed.m4a', expiresAt: '2099-01-01', mediaType: 'audio/mp4' });
+  const selected = { ...track('protected'), sources: [{ ...track('protected').sources[0]!, assetId: 'asset' }] };
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  try {
+    await act(async () => player.playTrack(selected, [selected, track('next')]));
+    expect(player.status).toBe('playing');
+    const playsBeforeDenial = jest.mocked(HTMLMediaElement.prototype.play).mock.calls.length;
+    jest.mocked(authorizePlayerAsset).mockRejectedValue(Object.assign(new Error('Denied'), { status: 403 }));
+    await act(async () => { jest.advanceTimersByTime(60000); });
+    expect(player.currentTrack?.id).toBe('protected');
+    expect(player.status).toBe('unavailable');
+    expect(player.unavailableTrackIds).toContain('protected');
+    expect(view.container.querySelector('audio')?.getAttribute('src')).toBeNull();
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(playsBeforeDenial);
+    act(() => {
+      const media = view.container.querySelector('audio')!;
+      media.dispatchEvent(new Event('playing'));
+      media.dispatchEvent(new Event('ended'));
+    });
+    await act(async () => { jest.advanceTimersByTime(120000); });
+    expect(player.currentTrack?.id).toBe('protected');
+    expect(player.status).toBe('unavailable');
+    expect(HTMLMediaElement.prototype.play).toHaveBeenCalledTimes(playsBeforeDenial);
+    expect(authorizePlayerAsset).toHaveBeenCalledTimes(2);
+  } finally { view.unmount(); jest.useRealTimers(); }
+});
+
+it('does not clear a newer native selection when a denied source finishes its pending pause', async () => {
+  jest.useFakeTimers();
+  jest.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  const media = view.container.querySelector('video')!;
+  let paused = true;
+  const pauseEvents: (() => void)[] = [];
+  Object.defineProperty(media, 'paused', { configurable: true, get: () => paused });
+  Object.defineProperty(media, 'readyState', { configurable: true, value: 1 });
+  jest.mocked(media.pause).mockImplementation(() => {
+    if (!paused) { paused = true; pauseEvents.push(() => media.dispatchEvent(new Event('pause'))); }
+  });
+  jest.mocked(media.play).mockImplementation(async () => {
+    paused = false; media.dispatchEvent(new Event('play')); media.dispatchEvent(new Event('playing'));
+  });
+  const selected = { ...track('protected-native'), startMs: 0,
+    sources: [{ url: '', assetId: 'native-asset', mediaType: 'video/mp4', quality: 'high' as const }] };
+  jest.mocked(authorizePlayerAsset).mockResolvedValueOnce({ url: 'https://media.invalid/allowed.mp4', expiresAt: '2099-01-01', mediaType: 'video/mp4' });
+  try {
+    await act(async () => { player.playTrack(selected); });
+    expect(player.status).toBe('playing');
+    jest.mocked(authorizePlayerAsset).mockRejectedValue(Object.assign(new Error('Denied'), { status: 403 }));
+    await act(async () => { jest.advanceTimersByTime(60000); });
+    expect(player.currentTrack?.id).toBe('protected-native');
+    expect(player.status).toBe('unavailable');
+    expect(pauseEvents).toHaveLength(1);
+    const replacement = { ...track('replacement-native'), startMs: 0,
+      sources: [{ url: 'https://media.invalid/replacement.mp4', mediaType: 'video/mp4', quality: 'high' as const }] };
+    await act(async () => { player.playTrack(replacement); });
+    await act(async () => { pauseEvents.shift()!(); });
+    expect(player.currentTrack?.id).toBe('replacement-native');
+    expect(media.getAttribute('src')).toBe('https://media.invalid/replacement.mp4');
+    expect(player.status).toBe('playing');
   } finally { view.unmount(); jest.useRealTimers(); }
 });
 
