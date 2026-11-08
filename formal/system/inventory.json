@@ -7042,7 +7042,7 @@
     {
       "id": "SURFACE-fa1f8b855944ecc5",
       "path": "scripts/verify-request-failures.py",
-      "sha256": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
+      "sha256": "148a72cd78517c9ad9b694a12f31cf556560205277037ae146a19bc4c1d26de0",
       "semanticConformance": "not-established-by-discovery"
     },
     {

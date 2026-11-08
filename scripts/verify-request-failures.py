@@ -27,17 +27,21 @@ def verify():
             ('Safe.handleAny failed (next request sendOnce)', 'Unsafe.handle failed (next request sendOnce)'),
         ],
         'respond-twice': [
-            ('if started then throwIO exception else do', 'if False then throwIO exception else do'),
+            ('if started then throwIO exception else', 'if False then throwIO exception else'),
             ('when alreadyStarted (throwIO (userError "Response delivery already started"))', 'pure ()'),
         ],
         'render-private-exception': [
             ('import Data.Text (Text)', 'import Data.Text (Text, pack)'),
             ('logger "[HTTP] Unhandled request failure"', 'logger (pack (show exception))'),
         ],
+        'swallow-server-error': [
+            ('Just serverErr -> sendOnce (serverErrorResponse serverErr)', 'Just _ -> sendOnce internalErrorResponse'),
+        ],
     }
     expected = {'catch-cancellation': 'propagates cancellation',
                 'respond-twice': 'never invokes the response callback again',
-                'render-private-exception': 'never logs the exception payload'}
+                'render-private-exception': 'never logs the exception payload',
+                'swallow-server-error': 'answers a ServerError thrown inside the application'}
     results = []
     for name, mutation in mutations.items():
         with tempfile.TemporaryDirectory(prefix='tdf-request-failure-control-') as directory:
@@ -75,7 +79,7 @@ def verify():
         if (ROOT/name).read_bytes() != data:
             raise RuntimeError(f'Source changed during execution: {name}')
     return {'sourceFingerprints': {p: hashlib.sha256(b).hexdigest() for p, b in sources.items()},
-            'classification': 'finite runtime conformance with three detected implementation mutations',
+            'classification': 'finite runtime conformance with four detected implementation mutations',
             'scope': 'Request/diagnostic response privacy, cancellation and single response; finite runtime controls, no whole-server or production proof',
             'results': results}
 
