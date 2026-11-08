@@ -60,7 +60,7 @@ try {
 
   const scriptFiles = ['process-music-release-audio.sh', 'process-music-release-preview.sh',
     'music-preview-spec.jq', 'process-music-release-artwork.sh', 'build-ddex-ern432-package.sh',
-    'run-music-release-worker-once.sh', 'music-s3-upload.pl', 'run-music-release-worker.sh'];
+    'run-music-release-worker-once.sh', 'music-s3-upload.pl', 'run-music-release-worker.sh', 'music-media-health.py'];
   const hashesName = containerName('hashes');
   const actualHashes = await docker(['run', '--name', hashesName, '--label', label, ...limits,
     metadata.Id, '/bin/sh', '-c', 'sha256sum "$@" && cat /app/renderer-inputs.sha256',
@@ -109,7 +109,7 @@ try {
   assert.equal(state.OOMKilled, false);
   assert.equal(state.ExitCode, 0, 'Supervisor must exit cleanly, not require SIGKILL');
   console.log('PASS Docker TERM traverses tini and interrupts the actual supervisor retry wait');
-  console.log('Music worker Linux image: 8/8 scenarios passed (not a database/S3/CDN or DDEX conformance test).');
+  console.log('Music worker Linux image: 9/9 scenarios passed (not a database/S3/CDN or DDEX conformance test).');
 } finally {
   cleaning = true;
   for (const name of names) {

@@ -3102,7 +3102,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "de3f7565640d3287cc26a77081e556e94316cd2db3935d96e303ac4d5f4214fd",
+      "sha256": "ffe2dd65bcef0d0845dcc3eef82f75da0ef2dad2d97c21b90e85eb46b5959a04",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3798,7 +3798,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "2f4630b4a2e5bcf9011f84bb483577158a6f1162d8e632258f2b470ae8718e5d",
+      "sha256": "91f2cab7cea81f7d4119f6c7e859c21ef71edba0e86dd725a0da549934903953",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4662,7 +4662,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
+      "sha256": "2b3f252c0a76468b8edb5e7a2792f8332da13496899976a930db6fa4dad680a6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5106,7 +5106,7 @@
     {
       "id": "SURFACE-d83b4522aafa372c",
       "path": "scripts/lib/music-worker-image-smoke.sh",
-      "sha256": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
+      "sha256": "ba9be6e7056a6ec5acba31bc4438f2a09f2f521d736b2464ce57edde841b4136",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6558,7 +6558,7 @@
     {
       "id": "SURFACE-de9702047ae5b45f",
       "path": "scripts/test-music-worker-image.mjs",
-      "sha256": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
+      "sha256": "c9d5916e2d46847fa1a8dc945f4949bd9278ea70f342bf9728092c63f752b3d9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12996,7 +12996,7 @@
     {
       "id": "SURFACE-908be427a8962c04",
       "path": "tdf-hq/Dockerfile.music-worker",
-      "sha256": "7599a30245902d38dacfdb7535bbf8649d0e8e3a3d85d91f6712b186bca71814",
+      "sha256": "c6921beae4fddef66fcf4d6135f2fb94b39ccb548e19dc2101dff69735d624a6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23498,7 +23498,7 @@
     },
     {
       "path": "docs/music-releases/linux-worker-image.md",
-      "sha256": "a50d566f6360d8d44f3f249ea92840be051d3b9c26777c93e969a2728a5f7384",
+      "sha256": "51ce05ffee942a7c04219d6e54959e0f2d719d9af6e1c6be66e7822db2e5ebe2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23512,7 +23512,7 @@
     },
     {
       "path": "docs/music-releases/listener-disposal-2026-10-27.md",
-      "sha256": "75410195417b54b345b6ebea8a0ad548d0a5467340d3d7995198983b6d6c418a",
+      "sha256": "617aa060e5dde63d6fcade23b5f2943729ec776374901090af291c2f96f189bd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30498,7 +30498,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d32812eadb425e7d5315240841fb812e7c08bd2c8f7b5d6575004837385a6832",
+      "sha256": "748a533e460f22304e1c56c3ad2c8cf1cee1fbeda48bdd9edc518860b7d337ac",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
