@@ -47560,6 +47560,26 @@
         "name": "StorageDestination",
         "valueCount": 2
       }
+    },
+    {
+      "id": "b3eadb9d52a262f5371f",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Mistaking synthetic case labels for selectable currency authority would hide the boundary under test. These labels drive only finite negative assertions; no event or tier is imported.",
+      "justification": "The twelve object keys name deliberately missing, malformed, non-string and noncanonical currency test cases in the Node fixture. Each value is passed only to the offline validator and must be rejected even when all tiers match it. They are not ISO reference data, runtime currency options or a production business registry. The real validator checks three uppercase ASCII letters without claiming ISO membership; schema-two CLI imports remain forbidden and fixture fetch is blocked.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-technical-review",
+      "reviewBatch": "pr709-offline-currency-fixture-20261107",
+      "evidence": {
+        "file": "scripts/__tests__/event-draft-plan.test.mjs",
+        "line": 93,
+        "kind": "object-registry",
+        "name": "invalidReviewCurrencies",
+        "valueCount": 12,
+        "consumerCount": 86
+      }
     }
   ]
 }
