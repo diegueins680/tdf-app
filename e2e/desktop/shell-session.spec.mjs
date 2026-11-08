@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { launchShell } from './helpers/shell.mjs';
+import { clickMenuItem, launchShell } from './helpers/shell.mjs';
 import { CUSTOMER_ACCOUNT, STAFF_ACCOUNT, createApiFixture } from './helpers/api-fixture.mjs';
 
 // Desktop shell: sign-in with TDF credentials, session persistence across a
@@ -169,4 +169,42 @@ test('opens external links in the system browser and blocks foreign schemes', as
     expect(await shell.window.evaluate(() => window.tdfDesktop.links.openExternal('file:///etc/passwd'))).toBe(false);
     expect(await shell.window.evaluate(() => window.tdfDesktop.links.openExternal('https://example.com/ok'))).toBe(true);
   } finally { await shell.close(); }
+});
+
+test('a menu action or deep link after the last window was closed reopens the window on the requested route', async ({ baseURL }) => {
+  const api = createApiFixture({ account: STAFF_ACCOUNT });
+  const shell = await launchShell({ appOrigin: baseURL });
+  const windowCount = () => shell.app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length);
+  const closeAllWindows = async () => {
+    await shell.app.evaluate(({ BrowserWindow }) => { for (const win of BrowserWindow.getAllWindows()) win.close(); });
+    await expect.poll(windowCount).toBe(0);
+  };
+  const originPattern = baseURL.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  try {
+    await api.install(shell.app.context(), baseURL);
+    await shell.openLogin();
+    // Linux quits when the last window closes; keep the process alive the way
+    // macOS does so the navigation-after-close path can be exercised.
+    await shell.app.evaluate(({ app }) => { app.on('before-quit', (event) => { event.preventDefault(); }); });
+
+    await closeAllWindows();
+    const [reopened] = await Promise.all([
+      shell.app.waitForEvent('window', { timeout: 30_000 }),
+      clickMenuItem(shell.app, 'Archivo', 'Ir al inicio'),
+    ]);
+    await expect.poll(() => reopened.url(), { timeout: 30_000 }).toMatch(new RegExp(`^${originPattern}/inicio`));
+    expect(await windowCount()).toBe(1);
+
+    await closeAllWindows();
+    const [fromLink] = await Promise.all([
+      shell.app.waitForEvent('window', { timeout: 30_000 }),
+      shell.app.evaluate(({ app }) => { app.emit('open-url', { preventDefault() {} }, 'tdf-desktop://open?path=/social/eventos'); }),
+    ]);
+    await expect.poll(() => fromLink.url(), { timeout: 30_000 }).toMatch(/\/login\?redirect=%2Fsocial%2Feventos|\/social\/eventos/);
+    expect(await windowCount()).toBe(1);
+  } finally {
+    // Let the shell quit normally again before Playwright closes it.
+    await shell.app.evaluate(({ app }) => { app.removeAllListeners('before-quit'); }).catch(() => undefined);
+    await shell.close();
+  }
 });

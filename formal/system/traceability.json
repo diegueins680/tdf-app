@@ -17815,7 +17815,7 @@
     "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
     "e2e/desktop/operations.spec.mjs": "2da328457d5d35bd1b889ad7888747cebfce0db948bf32abbe9c30b2bac5e725",
     "e2e/desktop/playback.spec.mjs": "6d5b9689e14f381045c8116a16a5949c3a2d00f29ecd631413ed44a22917327d",
-    "e2e/desktop/shell-session.spec.mjs": "4573bbedb2df1d8e91e2699d75068f2bb4c14be44172c657766c8a97254bcf50",
+    "e2e/desktop/shell-session.spec.mjs": "622d3a0f5c7e1195ad74cafef13199e599126d79a158aa9a530ddc9c962139fe",
     "e2e/desktop/uploads.spec.mjs": "2174ad43cdb1cc6e318da1e9bb86a6dd438fef893f8f370a4c232fba1549ee95",
     "e2e/torrent-audio/fixture-server.mjs": "c97be99807b4ac3839329a7fe3d59c8444283f56875d294c6e22156fa572d201",
     "e2e/torrent-audio/setup.mjs": "1e98a7c10e5e77d267cf8baa303675c0a240812e53adb3ad079e2fc1ef1d1875",
@@ -18622,7 +18622,7 @@
     "tdf-desktop/src/main/config.cjs": "aa9cedb9ed37805b5992e9758c13ececf556a7ef9e0c5ee5a5b4cf32013e342d",
     "tdf-desktop/src/main/links.cjs": "2c6cf596e0dcc539794a7127616b0626047cadc171c05b40eb6b071981946532",
     "tdf-desktop/src/main/log.cjs": "7ed5121374f342c6778ee2aaa585bdf8ad911501b784abe0a5c9c8936d26abed",
-    "tdf-desktop/src/main/main.cjs": "3d1c69caedcfdd19a7bf5ee0bf1995563d338f6a40b0644daabc1a1a523b68b2",
+    "tdf-desktop/src/main/main.cjs": "0ecaf198fa01e0736d90b6ae09a4a0037e3b2926e8c7239ce08fb22575a92984",
     "tdf-desktop/src/main/menu.cjs": "8e816cc3b4ea94f4e49fc1b8044008da2610c09a226f7488b1fadb0c681739a3",
     "tdf-desktop/src/main/playbackState.cjs": "988a1451f782cd69f647bffbe278376133bc6dcf719eda05179db93f6704c5f3",
     "tdf-desktop/src/main/updater.cjs": "cdeb2f1a565952981931a0e11bd376f8f99a228ff00b49b75fe772432f4abd92",
@@ -35392,7 +35392,7 @@
     {
       "id": "SURFACE-cc2ad01c6769392e",
       "path": "e2e/desktop/shell-session.spec.mjs",
-      "sha256": "4573bbedb2df1d8e91e2699d75068f2bb4c14be44172c657766c8a97254bcf50",
+      "sha256": "622d3a0f5c7e1195ad74cafef13199e599126d79a158aa9a530ddc9c962139fe",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43981,7 +43981,7 @@
     {
       "id": "SURFACE-2233b8c59333ca18",
       "path": "tdf-desktop/src/main/main.cjs",
-      "sha256": "3d1c69caedcfdd19a7bf5ee0bf1995563d338f6a40b0644daabc1a1a523b68b2",
+      "sha256": "0ecaf198fa01e0736d90b6ae09a4a0037e3b2926e8c7239ce08fb22575a92984",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

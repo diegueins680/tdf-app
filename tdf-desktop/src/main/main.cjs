@@ -137,7 +137,16 @@ async function loadApp(contents, appPath) {
 function navigateTo(appPath) {
   const safePath = sanitizeAppPath(appPath);
   if (!safePath) return false;
-  if (!mainWindow || mainWindow.isDestroyed()) { pendingDeepLinkPath = safePath; return true; }
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    pendingDeepLinkPath = safePath;
+    // Before readiness (macOS can deliver open-url early) the startup window
+    // consumes the queued route. Afterwards the last window may have been
+    // closed with the application still running (macOS): a menu action or a
+    // deep link has to reopen the window itself, because only Dock activation
+    // fires `activate`.
+    if (app.isReady() && channel) createMainWindow();
+    return true;
+  }
   clearRetry();
   void loadApp(mainWindow.webContents, safePath);
   if (mainWindow.isMinimized()) mainWindow.restore();
