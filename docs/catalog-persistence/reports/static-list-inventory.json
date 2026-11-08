@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T02:28:27.499Z",
+  "generatedAt": "2026-11-08T02:57:22.318Z",
   "repositoryRoot": ".",
   "filesScanned": 2666,
   "candidateCount": 1419,
@@ -11248,7 +11248,7 @@
       "lines": [
         26
       ],
-      "consumerCount": 34,
+      "consumerCount": 35,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-09-01_contextual_reputation.sql",
@@ -11273,7 +11273,8 @@
         "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
         "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-        "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx"
+        "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts"
