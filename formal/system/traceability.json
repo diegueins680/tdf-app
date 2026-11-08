@@ -17727,6 +17727,83 @@
         "reports/weekly-platform-metrics-main-qualification-2026-11-05.json"
       ],
       "historicalStatus": "New bounded measurement tooling, not a production observation."
+    },
+    {
+      "id": "EVT-DRAFT-REVIEW-001",
+      "title": "Schema-two event plans are validated offline with explicit currency and tier boundaries",
+      "domain": "EVT",
+      "statement": "Schema-two review-only plans require private events without public asset or ticket URLs, ordered event times, positive safe integer capacity, unique normalized tier codes, inactive zero-sale tiers, safe integer prices and quantities, equal event/tier currency containing exactly three uppercase ASCII letters, bounded total allocation and an event price equal to the lowest tier price. The CLI validates schema two offline only and refuses import before the legacy flyer, token or API path.",
+      "authority": "Existing PR #709 offline multi-tier review intent and the verified equality-only currency counterexample; bounded repair reviewed on 2026-11-07.",
+      "source": "formal/system/event-draft-review.md",
+      "contract": "formal/system/event-draft-review.md",
+      "property": "Validation rejects the named malformed currency domain even when every tier matches the same malformed value. Accepted review inputs are not rewritten. Schema-two --validate-only emits valid/offline/schemaVersion/mutations=0; schema-two import without the flag throws before flyer loading, credential lookup or API work. Schema-one behavior is unchanged.",
+      "actors": [
+        "Event planner preparing a local review",
+        "Maintainer",
+        "CI reviewer"
+      ],
+      "preconditions": [
+        "Supported Node runtime",
+        "A local JSON review plan passed to the existing CLI or validator",
+        "This contract does not authorize the separate schema-one import path"
+      ],
+      "inputs": [
+        "schemaVersion and review-only approval marker",
+        "Private event, times, capacity, declared price and currency",
+        "Tier identifiers, inactive state, sold quantities, safe integer prices and quantities, currencies and sale windows",
+        "--validate-only CLI mode"
+      ],
+      "state": {
+        "initial": "Untrusted local plan; no event or ticket mutation",
+        "terminal": [
+          "Validation rejected",
+          "Offline validation reported with zero mutations",
+          "Schema-two import rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Check the private review shape and currency syntax",
+        "Validate tier boundaries and aggregate capacity without changing the plan",
+        "Return an offline validation result or throw an error"
+      ],
+      "forbiddenTransitions": [
+        "Accept a malformed event currency merely because tier values match",
+        "Normalize malformed currency input into an accepted value silently",
+        "Import schema-two plans or read their flyer/token before refusing import",
+        "Treat offline validation as production approval, a legal agreement, provider readiness or actual ticket inventory"
+      ],
+      "effects": [
+        "Schema-two path is local validation only; no API requests, media publication, payments, notifications or import report writes"
+      ],
+      "authorization": "No credentials are required for offline validation. Existing schema-one administrator import behavior is preserved and is outside this new offline contract.",
+      "privacy": "Synthetic fixtures and local plan fields only; no token or private payload logging is introduced.",
+      "concurrency": "Each invocation validates its own input synchronously; no shared database or asynchronous ticket inventory claim.",
+      "idempotency": "Validation of the same supported input yields the same acceptance or rejection and does not rewrite the input.",
+      "failure": "Invalid review data or attempted schema-two import throws; the CLI exits unsuccessfully instead of importing.",
+      "recovery": "Correct the local review fields and validate again. Resolve organizer, venue, artists and inventory separately before any separately authorized import.",
+      "observability": "Offline success reports valid=true, mode=offline, schemaVersion and mutations=0; failures preserve the existing CLI error path.",
+      "implementation": [
+        "scripts/prepare-event-draft.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/event-draft-plan.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Twenty finite Node tests: four original tests unchanged; twelve same-value malformed/missing currency cases; matching canonical strings without mutation; legacy schema-one behavior; offline CLI success and unconditional schema-two import refusal with network blocked. The exact new tests fail twelve currency assertions on original09fa and all pass after the scoped guard.",
+      "evidence": "formal/system/event-draft-review.md; source-bound old-RED/new-GREEN execution receipts retained in the consolidation ledger.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Finite regression and source boundary evidence; no universal implementation/refinement proof.",
+      "ambiguity": [
+        "Three uppercase ASCII letters checks currency syntax, not ISO catalog membership or provider support.",
+        "Existing Date.parse and sale-window behavior is retained; complete timezone and operational capacity semantics are not established.",
+        "The separate schema-one import, current account authorization and actual backend/provider state are not qualified by these offline tests.",
+        "No production event, contract acceptance, sale, refund, notification or media publication was performed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The named offline validation and no-import boundaries are covered by finite controls; no whole contract, ticketing, money or server authorization proof is claimed."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -17746,7 +17823,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "bb1942fa0e2c8ed16172750f88e3fab45ea5dafa36ff80293a6860562aced688",
+    "docs/catalog-persistence/catalog-list-decisions.json": "46f932310790c0965bbcb733f26cba232692b7cf608aed0236eb2c642672cab5",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -18179,6 +18256,7 @@
     "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
+    "scripts/__tests__/event-draft-plan.test.mjs": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-planning-ux-model.test.mjs": "cabef2dc377be8160232951cdfb2c4eaa1b16f99ed104c409dd2649859ec01af",
@@ -18320,6 +18398,7 @@
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
     "scripts/music-media-health.py": "96c251959f321a8cfb9ef486e9cfbb36e91d47beb2f606ef6e84798f05a31644",
     "scripts/prepare-content-storage-reconciliation.mjs": "8032784954c085896cee00ab69bea66037443e6ff522941aa55ea244706dad57",
+    "scripts/prepare-event-draft.mjs": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/process-music-release-artwork.sh": "7f6ff16365627e3a06bc8f629dfc27aee7f5c46d6ff706e3954538554ae4992e",
@@ -34877,6 +34956,18 @@
         "requirement": "ANALYTICS-WEEKLY-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/prepare-event-draft.mjs": [
+      {
+        "requirement": "EVT-DRAFT-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/event-draft-plan.test.mjs": [
+      {
+        "requirement": "EVT-DRAFT-REVIEW-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -36716,9 +36807,14 @@
     {
       "id": "SURFACE-9344bbc594468ec5",
       "path": "scripts/__tests__/event-draft-plan.test.mjs",
-      "sha256": "e142a1d72ea77718de3999f3e8a3377ad52d56ef30af8f4138f4eeb53820d54f",
+      "sha256": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DRAFT-REVIEW-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-1b7bb866d486da44",
@@ -39374,9 +39470,14 @@
     {
       "id": "SURFACE-676b7216bda83497",
       "path": "scripts/prepare-event-draft.mjs",
-      "sha256": "ecb45725bfe81c59823cef0cb06afe63ab8136ee3c09651ea8019becd366c3c6",
+      "sha256": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DRAFT-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1bcf4ba116082f91",
@@ -67605,7 +67706,6 @@
     "SURFACE-039bc8d278e3dafc",
     "SURFACE-d96822f506e6f794",
     "SURFACE-2a6db69bcc12b984",
-    "SURFACE-9344bbc594468ec5",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
     "SURFACE-97975ba39673dd5b",
@@ -67703,7 +67803,6 @@
     "SURFACE-21491b1a76536f4c",
     "SURFACE-7184e9c3142d1144",
     "SURFACE-5f10ad76a6cd46da",
-    "SURFACE-676b7216bda83497",
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-bac1f41447e33768",
@@ -70278,7 +70377,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "54c27501bdb64f94f96c95f58115b9b396bc162e4ed3a470939dbb3898a27452",
+      "sourceSha256": "eca7685111244f63ff59026e4083cc526cb21eb3ee5b33ea31c2cde71e10d092",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70306,7 +70405,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "54c27501bdb64f94f96c95f58115b9b396bc162e4ed3a470939dbb3898a27452",
+      "sourceSha256": "eca7685111244f63ff59026e4083cc526cb21eb3ee5b33ea31c2cde71e10d092",
       "definition": {
         "states": [
           "absent",
@@ -70336,7 +70435,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "54c27501bdb64f94f96c95f58115b9b396bc162e4ed3a470939dbb3898a27452",
+      "sourceSha256": "eca7685111244f63ff59026e4083cc526cb21eb3ee5b33ea31c2cde71e10d092",
       "definition": {
         "export": [
           "queued",
@@ -93382,7 +93481,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 207,
+    "PARTIAL": 208,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
