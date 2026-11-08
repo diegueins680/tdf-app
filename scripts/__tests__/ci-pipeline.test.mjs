@@ -152,10 +152,22 @@ test('persona browser journeys are artifacted and gate aggregate quality', async
   assert.ok(commands.includes('npx playwright test e2e/web/account-deletion-rollout.spec.mjs'));
   assert.ok(commands.includes('node node_modules/@playwright/test/cli.js test --config=playwright.discovery.config.mjs'));
   assert.match(workflow, /run: npm run test:e2e:web/);
+  const torrentCommand = 'node node_modules/@playwright/test/cli.js test --config=playwright.torrent-audio.config.mjs';
+  const torrentStep = job.steps.find(step => step.run === torrentCommand);
+  assert.ok(torrentStep);
+  assert.equal(torrentStep.if, undefined);
+  assert.equal(torrentStep['continue-on-error'] ?? false, false);
+  assert.equal(job['continue-on-error'] ?? false, false);
+  const { default: torrentConfig } = await import(pathToFileURL(path.join(root, 'playwright.torrent-audio.config.mjs')));
+  assert.deepEqual(torrentConfig.projects.map(project => project.name), ['chromium', 'firefox', 'webkit']);
+  assert.equal(torrentConfig.retries, 0);
   const evidence = job.steps.find(step => step.name === 'Upload sanitized browser evidence');
   assert.equal(evidence.if, 'always()');
   assert.ok(evidence.with.path.split('\n').includes('artifacts/persona-playwright'));
   assert.ok(evidence.with.path.split('\n').includes('artifacts/storage-upload'));
+  assert.equal(evidence.uses, 'actions/upload-artifact@v7');
+  assert.equal(evidence.with['retention-days'], 14);
+  assert.deepEqual(evidence.with.path.trim().split(/\r?\n/), ['artifacts/persona-playwright', 'artifacts/storage-upload', 'artifacts/torrent-audio-browser']);
   assert.ok(commands.indexOf('node node_modules/@playwright/test/cli.js test --config=playwright.storage-upload.config.mjs') < commands.indexOf('npm run test:e2e:web'));
   assert.match(workflow, /retention-days: 14/);
   assert.match(workflow, /quality:[\s\S]*?needs:[\s\S]*?- persona-web-e2e/);
@@ -318,6 +330,33 @@ test('source Dockerfile introduces changing release metadata after compilation',
   const builder = dockerfile.slice(0, dockerfile.indexOf('FROM debian:bookworm-slim'));
   assert.ok(builder.indexOf('build --copy-bins') < builder.indexOf('ARG SOURCE_COMMIT=dev'));
   assert.ok(builder.indexOf('build --copy-bins') < builder.indexOf('ARG BUILD_TIME=unknown'));
+});
+
+test('source Docker builder provides embedded event SQL before compilation', async () => {
+  const dockerfile = await source('tdf-hq/Dockerfile');
+  const handler = await source('tdf-hq/src/TDF/Server/SocialEventsHandlers.hs');
+  const embeddedQueries = [...handler.matchAll(/embedFile "(sql\/queries\/[^"\n]+)"/gu)].map(match => match[1]);
+  assert.ok(embeddedQueries.length > 0, 'exercise the actual compile-time SQL dependency');
+  function copiedInputs(recipe) {
+    const stages = recipe.split(/^FROM /mu).slice(1);
+    const builder = stages.find(stage => /^.* AS builder$/mu.test(stage));
+    assert.ok(builder, 'source build stage is present');
+    const compile = builder.indexOf('build --copy-bins');
+    assert.ok(compile > 0, 'binary compilation is present');
+    return [...builder.slice(0, compile).matchAll(/^COPY (tdf-hq\/\S+) (\S+)$/gmu)]
+      .map(([, from, to]) => ({ from, to: to.replace(/^\/app\//u, '') }));
+  }
+  const inputs = copiedInputs(dockerfile);
+  for (const query of embeddedQueries) {
+    const copy = inputs.find(({ to }) => query === to || query.startsWith(`${to}/`));
+    assert.ok(copy, `${query} must be available in the builder, before compilation`);
+    const relative = path.posix.relative(copy.to, query);
+    assert.equal(await source(path.posix.join(copy.from, relative)), await source(`tdf-hq/${query}`));
+    // The previous recipe still has the SQL in migration-bundle. Removing only
+    // the builder copy must reproduce the missing compile-time dependency.
+    const withoutBuilderCopy = dockerfile.replace(`COPY ${copy.from} ${copy.to}\n`, '');
+    assert.ok(!copiedInputs(withoutBuilderCopy).some(({ to }) => query === to || query.startsWith(`${to}/`)));
+  }
 });
 
 test('affected active workflow actions use Node 24 majors', async () => {
