@@ -16268,7 +16268,8 @@
         "tdf-hq/sql/2026-11-07_content_storage_identity_guards.sql",
         "tdf-hq/sql/2026-11-07_content_storage_identity_guards_rollback.sql",
         "tdf-mobile/src/api/accountStorage.ts",
-        "tdf-hq-ui/src/utils/env.ts"
+        "tdf-hq-ui/src/utils/env.ts",
+        "tdf-hq/src/TDF/DriveOAuthClient.hs"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -16304,7 +16305,7 @@
       "formalModels": [
         "scripts/content-storage-model.mjs"
       ],
-      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits.",
+      "verification": "Finite policy model with negative controls; PostgreSQL concurrency and migration tests; owner/reload/transport client tests; canonical hosted backend and synthetic browser receipts, each with its stated limits. Refresh-request controls inspect the actual production request builder against the canonical exchange resolver, including whitespace normalization, complete-pair selection, all-four-value validation and generic vault configuration 503. They construct requests without invoking Google or a database.",
       "evidence": "docs/content-storage/rollout.md; scripts/test-content-storage-postgres.mjs; exact-candidate hosted CI logs",
       "status": "specified but missing",
       "critical": true,
@@ -16318,9 +16319,9 @@
       },
       "authorization": "Existing server origin, session, role, ownership and provider checks remain authoritative. Cookie inclusion grants no role.",
       "privacy": "Do not extract or log HttpOnly cookies or provider tokens.",
-      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter.",
+      "concurrency": "Managed reservation uses account locking and lease identity. A browser-wide queue bounds active transfers to three; queued cancellation removes its waiter. Exchange and vault refresh share one canonical OAuth client resolver. Every configured value is validated before selecting a complete Drive pair or complete Google fallback; partial pairs never mix and unused fallback values are not ignored.",
       "idempotency": "Managed and explicit personal Drive attempts retain one owner-bound identity and byte fingerprint. Corporate inventory uploads retain their existing server semantics and are not covered by the new deduplication protocol.",
-      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login.",
+      "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login. Vault refresh configuration failures retain 503 storage_vault_unavailable; actual provider invalid_client retains503 storage_service_unavailable, and revoked personal grants retain 409 storage_reconnect_required.",
       "recovery": "Same-tab metadata expires after eight hours and is purged by account/session cleanup. Browser reload requires reselecting the original binary; successful matching uploads reconcile the original key. Storage denial warns the user to keep the tab open.",
       "observability": "No tokens or private bodies in diagnostics; compiler observations, synthetic test receipts and production version reads identify their evidence boundary."
     },
@@ -17479,6 +17480,83 @@
       "evidence": "scripts/test-event-discovery-postgres.mjs; tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx; tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx; tdf-hq/test/Spec.hs"
     },
     {
+      "id": "EVT-DRAFT-REVIEW-001",
+      "title": "Schema-two event plans are validated offline with explicit currency and tier boundaries",
+      "domain": "EVT",
+      "statement": "Schema-two review-only plans require private events without public asset or ticket URLs, ordered event times, positive safe integer capacity, unique normalized tier codes, inactive zero-sale tiers, safe integer prices and quantities, equal event/tier currency containing exactly three uppercase ASCII letters, bounded total allocation and an event price equal to the lowest tier price. The CLI validates schema two offline only and refuses import before the legacy flyer, token or API path.",
+      "authority": "Existing PR #709 offline multi-tier review intent and the verified equality-only currency counterexample; bounded repair reviewed on 2026-11-07.",
+      "source": "formal/system/event-draft-review.md",
+      "contract": "formal/system/event-draft-review.md",
+      "property": "Validation rejects the named malformed currency domain even when every tier matches the same malformed value. Accepted review inputs are not rewritten. Schema-two --validate-only emits valid/offline/schemaVersion/mutations=0; schema-two import without the flag throws before flyer loading, credential lookup or API work. Schema-one behavior is unchanged.",
+      "actors": [
+        "Event planner preparing a local review",
+        "Maintainer",
+        "CI reviewer"
+      ],
+      "preconditions": [
+        "Supported Node runtime",
+        "A local JSON review plan passed to the existing CLI or validator",
+        "This contract does not authorize the separate schema-one import path"
+      ],
+      "inputs": [
+        "schemaVersion and review-only approval marker",
+        "Private event, times, capacity, declared price and currency",
+        "Tier identifiers, inactive state, sold quantities, safe integer prices and quantities, currencies and sale windows",
+        "--validate-only CLI mode"
+      ],
+      "state": {
+        "initial": "Untrusted local plan; no event or ticket mutation",
+        "terminal": [
+          "Validation rejected",
+          "Offline validation reported with zero mutations",
+          "Schema-two import rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Check the private review shape and currency syntax",
+        "Validate tier boundaries and aggregate capacity without changing the plan",
+        "Return an offline validation result or throw an error"
+      ],
+      "forbiddenTransitions": [
+        "Accept a malformed event currency merely because tier values match",
+        "Normalize malformed currency input into an accepted value silently",
+        "Import schema-two plans or read their flyer/token before refusing import",
+        "Treat offline validation as production approval, a legal agreement, provider readiness or actual ticket inventory"
+      ],
+      "effects": [
+        "Schema-two path is local validation only; no API requests, media publication, payments, notifications or import report writes"
+      ],
+      "authorization": "No credentials are required for offline validation. Existing schema-one administrator import behavior is preserved and is outside this new offline contract.",
+      "privacy": "Synthetic fixtures and local plan fields only; no token or private payload logging is introduced.",
+      "concurrency": "Each invocation validates its own input synchronously; no shared database or asynchronous ticket inventory claim.",
+      "idempotency": "Validation of the same supported input yields the same acceptance or rejection and does not rewrite the input.",
+      "failure": "Invalid review data or attempted schema-two import throws; the CLI exits unsuccessfully instead of importing.",
+      "recovery": "Correct the local review fields and validate again. Resolve organizer, venue, artists and inventory separately before any separately authorized import.",
+      "observability": "Offline success reports valid=true, mode=offline, schemaVersion and mutations=0; failures preserve the existing CLI error path.",
+      "implementation": [
+        "scripts/prepare-event-draft.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/event-draft-plan.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Twenty finite Node tests: four original tests unchanged; twelve same-value malformed/missing currency cases; matching canonical strings without mutation; legacy schema-one behavior; offline CLI success and unconditional schema-two import refusal with network blocked. The exact new tests fail twelve currency assertions on original09fa and all pass after the scoped guard.",
+      "evidence": "formal/system/event-draft-review.md; source-bound old-RED/new-GREEN execution receipts retained in the consolidation ledger.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Finite regression and source boundary evidence; no universal implementation/refinement proof.",
+      "ambiguity": [
+        "Three uppercase ASCII letters checks currency syntax, not ISO catalog membership or provider support.",
+        "Existing Date.parse and sale-window behavior is retained; complete timezone and operational capacity semantics are not established.",
+        "The separate schema-one import, current account authorization and actual backend/provider state are not qualified by these offline tests.",
+        "No production event, contract acceptance, sale, refund, notification or media publication was performed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The named offline validation and no-import boundaries are covered by finite controls; no whole contract, ticketing, money or server authorization proof is claimed."
+      }
+    },
+    {
       "id": "ANALYTICS-WEEKLY-001",
       "title": "Bounded aggregate weekly platform measurement",
       "statement": "Prepare a read-only, repeatable-read aggregate query and summarize supplied current/previous seven-day windows without treating profile imports, telemetry milestones or missing data as verified human growth or campaign causality.",
@@ -17564,7 +17642,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "8206109f4280b29f80e58fa2c684a21940eaa8f934b7d6b2a867f554c3d2194b",
+    "docs/catalog-persistence/catalog-list-decisions.json": "e54c4acd23c07ff6bae3a5a8371f9eade13bdde6a80dc65fdde87a10b8d94677",
     "docs/catalog-persistence/storage-security-successor-20261106.json": "b194badc3170719988b4f1e4939b87050cc8425247842fb1a20a26a7d9c4b461",
     "docs/content-storage/mobile-companion.patch": "93d2f99dc9a52468c112de851624412016591432c7e9a2393506a237e15edb31",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
@@ -17936,7 +18014,7 @@
     "formal/system/public-routes.json": "6c3951102c06d0cbc7ba8c4fd4edc65ef57624c0bdf1671981fb39fc2eb0785d",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "758e0cefec96776598e97093bc8a9d802138a3b8ae911b46a8ec16429684afd4",
+    "formal/system/recovery-expiry-arithmetic.json": "fed7b0eff3d268938c676a29f23bc91dbac7c57a2aa601f608b50f6395384996",
     "formal/system/route-requirements.json": "64c165ab907b366e8e97d99537cacfc96c2bbb3a0aa507708da60b02732d0838",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -17998,6 +18076,7 @@
     "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
+    "scripts/__tests__/event-draft-plan.test.mjs": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-planning-ux-model.test.mjs": "cabef2dc377be8160232951cdfb2c4eaa1b16f99ed104c409dd2649859ec01af",
@@ -18138,6 +18217,7 @@
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
     "scripts/prepare-content-storage-reconciliation.mjs": "8032784954c085896cee00ab69bea66037443e6ff522941aa55ea244706dad57",
+    "scripts/prepare-event-draft.mjs": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/process-music-release-artwork.sh": "7f6ff16365627e3a06bc8f629dfc27aee7f5c46d6ff706e3954538554ae4992e",
@@ -19093,6 +19173,7 @@
     "tdf-hq/src/TDF/DTO.hs": "90b7f5a64a919d401338ab13c0763fa383095edd67531888ce97075ae888844b",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
     "tdf-hq/src/TDF/Directory/Policy.hs": "d8b30f2fb422f4bc8c0a378400340025dfef1be1b0e05a9643f37e443ce9ce2c",
+    "tdf-hq/src/TDF/DriveOAuthClient.hs": "aa7fb3b23f9c580adae908f6bf36bba95a67032b49e0cc2fdf17d71f3b3ea882",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
@@ -19128,7 +19209,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "545cc46a190fcea05ab03415a3202c9218dbfdef6aebd8a49a5b56fd7123e685",
+    "tdf-hq/src/TDF/Server.hs": "1012da272767f0032cc45f858fc44fcfc5865e7575b759560eace7daa63cb775",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
@@ -19168,7 +19249,7 @@
     "tdf-hq/src/TDF/Social/AccountOwnershipStore.hs": "9cb6b2f5d808ce531655c3aa7fdff67fc64026c2a419067313e7805c6317df2f",
     "tdf-hq/src/TDF/Social/Chat.hs": "d31e269ddaf05f048fbd56eb8ee3995e0c8f299c66cc1d138a48bcc04553b0cd",
     "tdf-hq/src/TDF/Social/Session.hs": "36711a91d1e41879b8fc3f45521d1745398ddecf638db7ab4b5aab4bc10273b1",
-    "tdf-hq/src/TDF/StorageVault.hs": "3ce008482c18636c33ce6db9920b667b3333b7e2a093f27ec31b5ae656279e3f",
+    "tdf-hq/src/TDF/StorageVault.hs": "7f5d13cfc664291e3d23044322859c95f359b1e4bb00fbc82a87794e5da1849b",
     "tdf-hq/src/TDF/Ticketing/Admission.hs": "5529e99b58e7323c321f8c20adfdf7528c228384d2074fde9582c3bdb66321e6",
     "tdf-hq/src/TDF/Ticketing/Confirmation.hs": "5b3345a4fb48d85bdbbcca06a6965eb66349c1fe5bf73c3461e27edc7fbbba90",
     "tdf-hq/src/TDF/Ticketing/Inventory.hs": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
@@ -19181,7 +19262,7 @@
     "tdf-hq/src/TDF/VideoCampaigns.hs": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "47a476da7d05d17f1890711060a821a34dd2854a191b13be3c50f0696b2d07fa",
+    "tdf-hq/tdf-hq.cabal": "84b38e9bb52d76785ae44b37016e512797c097ad055412bcb1a8a5f1528f52bd",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
     "tdf-hq/test/MusicDdexCreditsFixtureMain.hs": "e3ec1261b3ce9349ba3ce0610c1b06080bac39060a87f4435a16ea552471d0dd",
@@ -19251,7 +19332,7 @@
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "cf44ce65b86c21a325c39ed22b6959ee646f68c5a0d72f1c68ba6eb9427961ec",
-    "tdf-hq/test/TDF/StorageSecuritySpec.hs": "067f1685db524ae70294b30ea0720903b92fcef4336b41d101868e32ec318f67",
+    "tdf-hq/test/TDF/StorageSecuritySpec.hs": "5d779455d7d6d023616ebc55bc1a82817bbb154cf9fc3b1fe2646fef1d66c7ad",
     "tdf-hq/test/TDF/Test/DisposablePostgres.hs": "dcca242fa644e9b6a4a3422e7107a1364659affbcbb86b8e9741ec125c6c14cd",
     "tdf-hq/test/TDF/TicketConfirmationSpec.hs": "dd3ee36be93acbc2931f92a24afa91b6c0bd1bb2a8612825d1ceb2b510d87693",
     "tdf-hq/test/TDF/TicketManualReviewSpec.hs": "787b4aca5216a0e5ee10906523087f49791ef9b86a2a59eb9d487478e97440e2",
@@ -33661,6 +33742,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/DriveOAuthClient.hs": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/content-storage-model.test.mjs": [
       {
         "requirement": "MEDIA-STORAGE-001",
@@ -34606,6 +34693,18 @@
     "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx": [
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/prepare-event-draft.mjs": [
+      {
+        "requirement": "EVT-DRAFT-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/event-draft-plan.test.mjs": [
+      {
+        "requirement": "EVT-DRAFT-REVIEW-001",
         "relationship": "tests"
       }
     ],
@@ -36447,9 +36546,14 @@
     {
       "id": "SURFACE-9344bbc594468ec5",
       "path": "scripts/__tests__/event-draft-plan.test.mjs",
-      "sha256": "e142a1d72ea77718de3999f3e8a3377ad52d56ef30af8f4138f4eeb53820d54f",
+      "sha256": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DRAFT-REVIEW-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-1b7bb866d486da44",
@@ -39073,9 +39177,14 @@
     {
       "id": "SURFACE-676b7216bda83497",
       "path": "scripts/prepare-event-draft.mjs",
-      "sha256": "ecb45725bfe81c59823cef0cb06afe63ab8136ee3c09651ea8019becd366c3c6",
+      "sha256": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DRAFT-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1bcf4ba116082f91",
@@ -59539,6 +59648,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-e2f92ea378a434f8",
+      "path": "tdf-hq/src/TDF/DriveOAuthClient.hs",
+      "sha256": "aa7fb3b23f9c580adae908f6bf36bba95a67032b49e0cc2fdf17d71f3b3ea882",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-STORAGE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
       "sha256": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
@@ -60199,7 +60320,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "545cc46a190fcea05ab03415a3202c9218dbfdef6aebd8a49a5b56fd7123e685",
+      "sha256": "1012da272767f0032cc45f858fc44fcfc5865e7575b759560eace7daa63cb775",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61260,7 +61381,7 @@
     {
       "id": "SURFACE-094697e0ab92272f",
       "path": "tdf-hq/src/TDF/StorageVault.hs",
-      "sha256": "3ce008482c18636c33ce6db9920b667b3333b7e2a093f27ec31b5ae656279e3f",
+      "sha256": "7f5d13cfc664291e3d23044322859c95f359b1e4bb00fbc82a87794e5da1849b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61484,7 +61605,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "47a476da7d05d17f1890711060a821a34dd2854a191b13be3c50f0696b2d07fa",
+      "sha256": "84b38e9bb52d76785ae44b37016e512797c097ad055412bcb1a8a5f1528f52bd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62881,7 +63002,7 @@
     {
       "id": "SURFACE-acc5e4157c112418",
       "path": "tdf-hq/test/TDF/StorageSecuritySpec.hs",
-      "sha256": "067f1685db524ae70294b30ea0720903b92fcef4336b41d101868e32ec318f67",
+      "sha256": "5d779455d7d6d023616ebc55bc1a82817bbb154cf9fc3b1fe2646fef1d66c7ad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67276,7 +67397,6 @@
     "SURFACE-039bc8d278e3dafc",
     "SURFACE-d96822f506e6f794",
     "SURFACE-2a6db69bcc12b984",
-    "SURFACE-9344bbc594468ec5",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
     "SURFACE-97975ba39673dd5b",
@@ -67374,7 +67494,6 @@
     "SURFACE-21491b1a76536f4c",
     "SURFACE-7184e9c3142d1144",
     "SURFACE-5f10ad76a6cd46da",
-    "SURFACE-676b7216bda83497",
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-bac1f41447e33768",
@@ -69947,7 +70066,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7e30058243554af1f1f670455cdb5c3ae68d9df91949085cb822f8fca6c0ace9",
+      "sourceSha256": "9bc88b9a46dfa91370d75481e162d1be8f96bd3d7bcc982031ddec514f1affe6",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -69975,7 +70094,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7e30058243554af1f1f670455cdb5c3ae68d9df91949085cb822f8fca6c0ace9",
+      "sourceSha256": "9bc88b9a46dfa91370d75481e162d1be8f96bd3d7bcc982031ddec514f1affe6",
       "definition": {
         "states": [
           "absent",
@@ -70005,7 +70124,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7e30058243554af1f1f670455cdb5c3ae68d9df91949085cb822f8fca6c0ace9",
+      "sourceSha256": "9bc88b9a46dfa91370d75481e162d1be8f96bd3d7bcc982031ddec514f1affe6",
       "definition": {
         "export": [
           "queued",
@@ -92973,7 +93092,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 205,
+    "PARTIAL": 206,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

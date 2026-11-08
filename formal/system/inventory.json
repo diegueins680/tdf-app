@@ -2330,6 +2330,7 @@
       "tdf-hq/src/TDF/DTO/SocialSyncDTO.hs",
       "tdf-hq/src/TDF/Directory/Policy.hs",
       "tdf-hq/src/TDF/Distribution/StateMachine.hs",
+      "tdf-hq/src/TDF/DriveOAuthClient.hs",
       "tdf-hq/src/TDF/Email.hs",
       "tdf-hq/src/TDF/Email/Headers.hs",
       "tdf-hq/src/TDF/Email/Service.hs",
@@ -3866,7 +3867,7 @@
     {
       "id": "SURFACE-9344bbc594468ec5",
       "path": "scripts/__tests__/event-draft-plan.test.mjs",
-      "sha256": "e142a1d72ea77718de3999f3e8a3377ad52d56ef30af8f4138f4eeb53820d54f",
+      "sha256": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5294,7 +5295,7 @@
     {
       "id": "SURFACE-676b7216bda83497",
       "path": "scripts/prepare-event-draft.mjs",
-      "sha256": "ecb45725bfe81c59823cef0cb06afe63ab8136ee3c09651ea8019becd366c3c6",
+      "sha256": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16872,6 +16873,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e2f92ea378a434f8",
+      "path": "tdf-hq/src/TDF/DriveOAuthClient.hs",
+      "sha256": "aa7fb3b23f9c580adae908f6bf36bba95a67032b49e0cc2fdf17d71f3b3ea882",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d333d9e42e7c8cfc",
       "path": "tdf-hq/src/TDF/Email.hs",
       "sha256": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
@@ -17168,7 +17175,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "545cc46a190fcea05ab03415a3202c9218dbfdef6aebd8a49a5b56fd7123e685",
+      "sha256": "1012da272767f0032cc45f858fc44fcfc5865e7575b759560eace7daa63cb775",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17546,7 +17553,7 @@
     {
       "id": "SURFACE-094697e0ab92272f",
       "path": "tdf-hq/src/TDF/StorageVault.hs",
-      "sha256": "3ce008482c18636c33ce6db9920b667b3333b7e2a093f27ec31b5ae656279e3f",
+      "sha256": "7f5d13cfc664291e3d23044322859c95f359b1e4bb00fbc82a87794e5da1849b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17672,7 +17679,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "47a476da7d05d17f1890711060a821a34dd2854a191b13be3c50f0696b2d07fa",
+      "sha256": "84b38e9bb52d76785ae44b37016e512797c097ad055412bcb1a8a5f1528f52bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18254,7 +18261,7 @@
     {
       "id": "SURFACE-acc5e4157c112418",
       "path": "tdf-hq/test/TDF/StorageSecuritySpec.hs",
-      "sha256": "067f1685db524ae70294b30ea0720903b92fcef4336b41d101868e32ec318f67",
+      "sha256": "5d779455d7d6d023616ebc55bc1a82817bbb154cf9fc3b1fe2646fef1d66c7ad",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29839,6 +29846,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-draft-review.md",
+      "sha256": "4c5a72407b69ea7ff08c9567d40423396ba9bd12f497e8667718c70cfad24525",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-finance-browser-precision.md",
       "sha256": "1fb729d2150589ce5074884f77f9747b5b79ca6ad717ba7e6c72c733e24a65c5",
       "authority": "inferred",
@@ -30491,7 +30505,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7e30058243554af1f1f670455cdb5c3ae68d9df91949085cb822f8fca6c0ace9",
+      "sha256": "9bc88b9a46dfa91370d75481e162d1be8f96bd3d7bcc982031ddec514f1affe6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
