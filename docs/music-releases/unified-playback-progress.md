@@ -17,3 +17,26 @@ Current candidate qualification supersedes the earlier execution scope where exp
 The retained native-playback artifact from hosted run 42400968363 has 74 expected results, zero unexpected/flaky/skipped: 14 each for Chromium desktop/phone/tablet, Firefox critical and WebKit critical, plus two each for Android-small and WebKit iPhone. This exercises the stage's main-equivalent frontend, not PR #670's dependent artist-recovery UI. The adjusted campaign flow separately passed all eight Chromium desktop/phone cases locally. Physical devices and real providers remain unverified.
 
 Protected main advanced again through session-window, finance CSV and torrent-worker repairs. This stage normally incorporates `d0b10b60d`; the authentication change means historical whole-backend executions are not current-candidate qualification. Music-specific HTTP/SQL/backend inputs retain their earlier evidence scope, while fresh combined-head hosted backend qualification is required. The persistent-stop worker change passed all 23 untraced local scenarios.
+
+
+## Configured storage health boundary (2026-11-08)
+
+Untrusted legacy locations remain limited to public HTTPS on port 443, with DNS
+validation repeated after redirects and the checked TCP address pinned. Signed
+asset probes use only the literal operator `MUSIC_S3_ENDPOINT` HTTPS authority,
+its configured port/base path, and `MUSIC_S3_DERIVATIVE_BUCKET`. The health source
+view selects stream/preview derivatives; the probe cannot borrow credentials for
+another origin or bucket, escape the namespace through decoded traversal, or
+follow a signed redirect. Private DNS/loopback are trusted only through that
+exact operator configuration. The original hostname and port are retained for
+Host/SNI while the resolved TCP peer is pinned; default certificate and hostname
+verification remain enabled. An operator must supply valid TLS trust through
+normal system/Python configuration; no verification bypass is introduced.
+
+The final fake-connection/resolver harness rejects the original implementation
+for a configured private endpoint on port 9000 and passes the bounded repair.
+All 22 checks include the 13 original legacy/response/native-sample controls.
+They do not demonstrate a real private object-store TLS handshake, deployed
+worker identity, provider acceptance or complete legacy provenance. Existing
+byte/deadline caps, source-version leases, publication/territory gates and
+production activation requirements remain separate.

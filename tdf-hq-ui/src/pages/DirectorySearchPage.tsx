@@ -195,7 +195,7 @@ export default function DirectorySearchPage() {
   const previousQuery = useRef(query);
   useEffect(() => {
     if (previousQuery.current !== query) { previousQuery.current = query; return; }
-    if (debouncedQuery !== query && debouncedQuery === draftQuery.trim().replace(/\s+/gu, ' ')) updateSearch({ q: debouncedQuery }, 'replace');
+    if (debouncedQuery !== query && debouncedQuery === draftQuery.trim().replace(/\s+/gu, ' ')) updateSearch({ q: debouncedQuery });
   }, [debouncedQuery, draftQuery, query]); // eslint-disable-line react-hooks/exhaustive-deps
   const canonicalSearch = buildSearchUrl({ ...urlState, cityId }, Boolean(coordinates));
   useEffect(() => {
