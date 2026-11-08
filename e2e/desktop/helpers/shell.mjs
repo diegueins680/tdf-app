@@ -1,4 +1,4 @@
-import { _electron as electron } from '@playwright/test';
+import { _electron as electron, expect } from '@playwright/test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
@@ -37,6 +37,15 @@ export async function launchShell({ appOrigin, args = [], env = {} } = {}) {
     timeout: 60_000,
   });
   const window = await app.firstWindow({ timeout: 60_000 });
+  // The main process issues its own loadURL(startPath) when the window is
+  // created and, after a failed load, shows the offline page and retries it
+  // five seconds later. Wait for that startup document to settle on the hosted
+  // origin before a journey installs routes or navigates anywhere else;
+  // otherwise page.goto races the shell's own startup or retry navigation
+  // ("Navigation to /login is interrupted by another navigation to /inicio").
+  const originPattern = new RegExp(`^${appOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/`);
+  await expect.poll(() => window.url(), { timeout: 60_000 }).toMatch(originPattern);
+  await window.waitForLoadState('domcontentloaded');
   // The shell starts on the public welcome route; journeys that need the
   // sign-in form go there explicitly, as a user would from the welcome page.
   const openLogin = async () => {
