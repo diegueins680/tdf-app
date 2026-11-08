@@ -31,7 +31,7 @@ jest.unstable_mockModule('../api/musicReleases', () => ({ musicReleases: {
   acceptTerms: async () => undefined, validate: async () => ({ valid: true, errors: [] }), transition,
   uploadAsset,
 } }));
-const { default: Studio, acceptsUploadFile, sameUploadFile } = await import('./MusicReleaseStudioPage');
+const { default: Studio, acceptsUploadFile, musicTransitionScope, sameUploadFile } = await import('./MusicReleaseStudioPage');
 
 const wav = (name = 'master.wav') => new File([new Uint8Array([82, 73, 70, 70])], name, { type: 'audio/wav', lastModified: 1_700_000_000_000 });
 
@@ -175,4 +175,13 @@ it('keeps a confirmed upload confirmed when the version refresh fails', async ()
     expect(screen.queryByRole('button', { name: 'Reintentar pista 1' })).toBeNull();
     expect(uploadAsset).toHaveBeenCalledTimes(1);
   } finally { close(); }
+});
+
+it('binds the transition retry scope to the whole payload, not only the target state', () => {
+  const first = musicTransitionScope('version', { targetState: 'scheduled', reason: null, releaseAtUtc: '2026-12-01T05:00:00Z', releaseTimezone: 'America/Guayaquil' });
+  const reordered = musicTransitionScope('version', { releaseTimezone: 'America/Guayaquil', releaseAtUtc: '2026-12-01T05:00:00Z', reason: null, targetState: 'scheduled' });
+  const otherDate = musicTransitionScope('version', { targetState: 'scheduled', reason: null, releaseAtUtc: '2026-12-02T05:00:00Z', releaseTimezone: 'America/Guayaquil' });
+  expect(reordered).toBe(first);
+  expect(otherDate).not.toBe(first);
+  expect(musicTransitionScope('other-version', { targetState: 'scheduled', reason: null })).not.toBe(musicTransitionScope('version', { targetState: 'scheduled', reason: null }));
 });

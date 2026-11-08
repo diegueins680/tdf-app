@@ -66,6 +66,19 @@ export const acceptsUploadFile = (role: UploadRole, file: Pick<File, 'name' | 't
   return ACCEPT_EXTENSIONS[role].some((extension) => name.endsWith(extension));
 };
 
+/**
+ * One Idempotency-Key scope per intended lifecycle request: the version plus a
+ * stable serialization of the whole payload (target state, dates, timezone,
+ * reason). Identical retries replay; any changed parameter is a new request.
+ */
+export const musicTransitionScope = (versionId: string, input: Record<string, unknown>): string => {
+  const stable = (value: unknown): unknown => Array.isArray(value) ? value.map(stable)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, stable(v)]))
+      : value;
+  return `${versionId}:${JSON.stringify(stable(input))}`;
+};
+
 /** The same file selected again keeps its request identity so a retry resumes instead of duplicating. */
 export const sameUploadFile = (a: Pick<File, 'name' | 'size' | 'lastModified'>, b: Pick<File, 'name' | 'size' | 'lastModified'>): boolean =>
   a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
@@ -623,10 +636,11 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
     operationPending.current = true; setActionPending(true);
     try {
       if (!await persistDraft()) return;
-      const transitionKey = `${versionId}:${targetState}`;
+      const input = { targetState, reason: null, ...extra };
+      const transitionKey = musicTransitionScope(versionId, input);
       const idempotencyKey = transitionKeys.current[transitionKey] ?? newRef('music-transition');
       transitionKeys.current[transitionKey] = idempotencyKey;
-      await musicReleases.transition(releaseId, versionId, { targetState, reason: null, ...extra }, idempotencyKey);
+      await musicReleases.transition(releaseId, versionId, input, idempotencyKey);
       delete transitionKeys.current[transitionKey];
       const next = await musicReleases.getVersion(releaseId, versionId);
       applyVersion(next); setStatus(`Estado actualizado: ${next.state}.`); setError(null);

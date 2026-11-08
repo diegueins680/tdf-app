@@ -7,7 +7,7 @@ const delMock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 jest.unstable_mockModule('./client', () => ({
   post: postMock, get: getMock, put: putMock, del: delMock,
 }));
-const { uploadMusicAsset, MusicUploadSessionUnusableError } = await import('./musicReleases');
+const { uploadMusicAsset, MusicUploadSessionUnusableError, resetMusicUploadEvidenceForTests } = await import('./musicReleases');
 const originalFetch = globalThis.fetch;
 const fetchMock = jest.fn<typeof fetch>();
 const options = {
@@ -113,5 +113,38 @@ describe('music upload expired sessions', () => {
     getMock.mockRejectedValueOnce(Object.assign(new Error('Service unavailable'), { status: 503 }));
     await expect(uploadMusicAsset(options)).rejects.toMatchObject({ message: 'Service unavailable' });
     expect(delMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('music upload confirmation evidence', () => {
+  const resumable = () => ({ id: 'session', status: 'uploading', expiresAt: '2999-01-01T00:00:00Z',
+    providerUploadIdBound: true, partSizeBytes: 5 * 1024 * 1024, parts: [{ partNumber: 1, byteSize: 1 }] });
+  const completion = () => ({ url: 'https://storage.test.invalid/complete', method: 'POST', contentType: 'application/xml', body: '<CompleteMultipartUpload/>' });
+  beforeEach(() => { jest.clearAllMocks(); resetMusicUploadEvidenceForTests(); globalThis.fetch = fetchMock; });
+  afterEach(() => { globalThis.fetch = originalFetch; resetMusicUploadEvidenceForTests(); });
+
+  it('retries confirmation with the retained final ETag instead of completing the multipart upload again', async () => {
+    postMock.mockResolvedValueOnce(resumable());
+    getMock.mockResolvedValueOnce(completion());
+    fetchMock.mockResolvedValueOnce(response('<CompleteMultipartUploadResult><ETag>"final"</ETag></CompleteMultipartUploadResult>', null));
+    postMock.mockRejectedValueOnce(new Error('No se pudo conectar con el servicio.'));
+    await expect(uploadMusicAsset(options)).rejects.toThrow('No se pudo conectar');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    postMock.mockResolvedValueOnce(resumable());
+    postMock.mockResolvedValueOnce({ status: 'completed' });
+    await expect(uploadMusicAsset(options)).resolves.toEqual({ status: 'completed' });
+    expect(getMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(postMock).toHaveBeenLastCalledWith('/music/uploads/session/confirm', { etag: '"final"' }, { signal: undefined });
+  });
+
+  it('treats a consumed multipart upload without local evidence as unusable so a new session is created', async () => {
+    postMock.mockResolvedValueOnce(resumable());
+    getMock.mockResolvedValueOnce(completion());
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 404, text: async () => '<Error><Code>NoSuchUpload</Code></Error>', headers: { get: () => null } } as unknown as Response);
+    await expect(uploadMusicAsset(options)).rejects.toMatchObject({ name: 'MusicUploadSessionUnusableError', status: 'failed', sessionId: 'session' });
+    expect(delMock).not.toHaveBeenCalled();
+    expect(postMock).toHaveBeenCalledTimes(1);
   });
 });
