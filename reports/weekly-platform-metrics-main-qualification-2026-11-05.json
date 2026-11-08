@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "existingPR": 681,
+  "qualifiedSource": "5bcd872dbebe917972f18151eb8ab01e2186ba09",
+  "incomingMain": "41c2f474b9c72df3b2c0bdda85bf10ba727bbed4",
+  "originalPRSource": "167a41da75bf2dc8b03ca421c820a7ab9510821e",
+  "normalComposition": "2f025e67b180645a89b27b99ac8d9920b70dddee",
+  "scope": "Read-only SQL generation and aggregate validation. No production collection, runtime endpoint, provider or deployment change.",
+  "verification": {
+    "offlineTests": "4 PASS",
+    "repositoryQuality": "PASS on qualifiedSource with existing installed dependencies, PyYAML6.0.3 and genuinejq1.8.2. No fresh locked install claimed.",
+    "inventoryConformance": "PASS",
+    "committedSourceAdmission": "PASS against incomingMain; two mapped scripts",
+    "postgres": {
+      "status": "PASS",
+      "sourceCommit": "5bcd872dbebe917972f18151eb8ab01e2186ba09",
+      "postgresVersion": "postgres (PostgreSQL) 16.13 (Homebrew)",
+      "querySHA256": "183d45def79eb97a49dd497755575c802505bc717e5ba032d2994a52fe53d630",
+      "expectedPeriods": {
+        "current": {
+          "recorded_signups": 3,
+          "recorded_first_values": 3,
+          "artist_profiles_all_origins": 2
+        },
+        "previous": {
+          "recorded_signups": 2,
+          "recorded_first_values": 2,
+          "artist_profiles_all_origins": 2
+        }
+      },
+      "actual": {
+        "source": "postgresql-read-only-aggregate",
+        "periods": {
+          "current": {
+            "recorded_signups": 3,
+            "recorded_first_values": 3,
+            "artist_profiles_all_origins": 2
+          },
+          "previous": {
+            "recorded_signups": 2,
+            "recorded_first_values": 2,
+            "artist_profiles_all_origins": 2
+          }
+        },
+        "cutoff_utc": "2026-11-01T00:00:00+00:00",
+        "collected_at": "2026-11-05T01:21:46.036328-05:00",
+        "schema_version": 1
+      },
+      "summary": {
+        "schema_version": 1,
+        "timezone": "America/Guayaquil",
+        "start": "2026-10-24T19:00:00-05:00",
+        "cutoff": "2026-10-31T19:00:00-05:00",
+        "interval": "[start, cutoff)",
+        "evidence": "supplied aggregate export; not independently verified",
+        "source": "postgresql-read-only-aggregate",
+        "collected_at": "2026-11-05T01:21:46.036328-05:00",
+        "metrics": {
+          "recorded_signups": {
+            "current": 3,
+            "previous": 2,
+            "delta": 1,
+            "percent_change": 50.0
+          },
+          "recorded_first_values": {
+            "current": 3,
+            "previous": 2,
+            "delta": 1,
+            "percent_change": 50.0
+          },
+          "artist_profiles_all_origins": {
+            "current": 2,
+            "previous": 2,
+            "delta": 0,
+            "percent_change": 0.0
+          }
+        },
+        "unavailable": {
+          "verified_human_signups": null,
+          "professional_profiles": null,
+          "imported_or_unclaimed_profiles": null,
+          "weekly_active_users": null,
+          "campaign_attributed_conversions": null
+        },
+        "limitations": [
+          "Recorded signup timestamps are not proof of unique human users; synthetic accounts are not excluded.",
+          "Deleted records and signup paths without onboarding timestamps are not recoverable from this snapshot.",
+          "First values are stored milestones across all signup cohorts, not a same-week conversion rate.",
+          "Artist profile creation includes every origin; edits and fan profile saves are not creations.",
+          "No campaign causality, consented telemetry coverage or production environment is inferred."
+        ]
+      },
+      "scope": "Actual PostgreSQL16 parsing/aggregation, half-open boundaries, equivalent offsets, all-cohort milestone and unknown coverage, generated transaction settings, SELECT-only least privilege on extracted exact actual table DDL. Synthetic local rows only; not full canonical migration replay or production data/grants.",
+      "productionDatabaseContacted": false,
+      "productionPermissionsChanged": false,
+      "sources": {
+        "scripts/weekly-platform-metrics.py": "eb4989f17ff699f65c9a382b94afac31cd9599ff0b7cda517ce073dd69b1ba83",
+        "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
+        "tdf-hq/sql/2026-09-06_user_onboarding_progress.sql": "2c84193c29966646de029c27b0ff1a29d231ebafa9db77e56d42b6d4c753ad57"
+      },
+      "clusterStopped": true
+    }
+  },
+  "preservation": {
+    "incomingRequirementObjectsUnchanged": 188,
+    "additionalWeeklyRequirement": 1,
+    "mobile": "f4c7aba45dc153db8809dbe194bc826ff615ef88",
+    "applicationRuntimeSqlAndWorkflowChanges": false,
+    "generatorAndOfflineTestsByteIdenticalToOriginalPR": true
+  },
+  "failedSetupAttempts": [
+    "Sandbox local HTTP fixture bind EPERM; reran unchanged suite with allowed local-loopback access.",
+    "Whole quality reached importer fixtures but lacked jq; reran unchanged source with existing genuine jq1.8.2.",
+    "First PostgreSQL cluster failed to start because its Unix socket path exceeded macOS103-byte limit. New owned cluster with short socket path passed. These are setup failures, not product counterexamples."
+  ],
+  "qualificationLimits": [
+    "Synthetic local PostgreSQL16 fixture uses extracted exact party/artist-profileDDL and the complete existing onboarding migration. This is not full canonical migration replay.",
+    "Production read-only role grants, production snapshot, identities, telemetry coverage and actual human/campaign growth remain unverified.",
+    "All observations are bound to qualifiedSource and the unchanged query implementation. Follow-up documentation/evidence metadata does not claim a new application runtime execution.",
+    "Required current-head hosted CI, independent review and normal protected-main admission remain required."
+  ],
+  "evidence": {
+    "archive": "reports/weekly-platform-metrics-main-qualification-2026-11-05/evidence.tar.gz",
+    "sha256": "788f39a6762d98c89ecfcf531a91f4a73cc217d599f96c708fcdde193f6c15fb",
+    "manifest": "reports/weekly-platform-metrics-main-qualification-2026-11-05/manifest.json",
+    "entries": 41
+  },
+  "productionDatabaseContacted": false,
+  "productionPermissionsChanged": false,
+  "productionDeployment": false,
+  "ownedPostgresClusterStopped": true
+}
