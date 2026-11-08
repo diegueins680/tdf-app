@@ -202,6 +202,18 @@ test('a menu action or deep link after the last window was closed reopens the wi
     ]);
     await expect.poll(() => fromLink.url(), { timeout: 30_000 }).toMatch(/\/login\?redirect=%2Fsocial%2Feventos|\/social\/eventos/);
     expect(await windowCount()).toBe(1);
+
+    // "Cerrar sesión y borrar datos locales…" with no window: the confirmation
+    // has no parent window and the promised login screen must still open.
+    await closeAllWindows();
+    await shell.app.evaluate(({ dialog }) => { dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false }); });
+    const [afterClear] = await Promise.all([
+      shell.app.waitForEvent('window', { timeout: 30_000 }),
+      clickMenuItem(shell.app, 'Archivo', 'Cerrar sesión y borrar datos locales…'),
+    ]);
+    await expect.poll(() => afterClear.url(), { timeout: 30_000 }).toMatch(new RegExp(`^${originPattern}/login`));
+    expect(await windowCount()).toBe(1);
+    await expect.poll(() => shell.readLog()).toMatch(/local data cleared by the user/);
   } finally {
     // Let the shell quit normally again before Playwright closes it.
     await shell.app.evaluate(({ app }) => { app.removeAllListeners('before-quit'); }).catch(() => undefined);

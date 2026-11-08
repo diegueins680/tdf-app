@@ -3213,7 +3213,7 @@
     {
       "id": "SURFACE-cc2ad01c6769392e",
       "path": "e2e/desktop/shell-session.spec.mjs",
-      "sha256": "622d3a0f5c7e1195ad74cafef13199e599126d79a158aa9a530ddc9c962139fe",
+      "sha256": "d9ba24c8a6ab259a3bb3c323aa88b7a45fca513a569fc678ca3650ad258014e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7569,7 +7569,7 @@
     {
       "id": "SURFACE-2233b8c59333ca18",
       "path": "tdf-desktop/src/main/main.cjs",
-      "sha256": "0ecaf198fa01e0736d90b6ae09a4a0037e3b2926e8c7239ce08fb22575a92984",
+      "sha256": "90a793774e147ea6c52d6822e3ff8b658d5ddc45a1324c29d41a9d2676512fab",
       "semanticConformance": "not-established-by-discovery"
     },
     {

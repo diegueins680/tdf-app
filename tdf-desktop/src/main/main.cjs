@@ -369,16 +369,21 @@ async function showAbout() {
 }
 
 async function clearLocalData() {
-  const { response } = await dialog.showMessageBox(mainWindow, { type: 'warning', title: PRODUCT_NAME,
+  // The menu stays available on macOS after the last window closed, so the
+  // dialog may have no parent and the final navigation must be able to reopen
+  // the window (navigateTo does both).
+  const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : null;
+  const options = { type: 'warning', title: PRODUCT_NAME,
     message: '¿Borrar los datos locales de TDF Records en este equipo?',
     detail: 'Se eliminarán las cookies de sesión, la caché y los datos guardados por la aplicación en este dispositivo. Los datos del servidor no cambian; para cerrar la sesión en el servidor usa "Cerrar sesión" dentro de la aplicación.',
-    buttons: ['Borrar y volver al inicio de sesión', 'Cancelar'], defaultId: 1, cancelId: 1 });
+    buttons: ['Borrar y volver al inicio de sesión', 'Cancelar'], defaultId: 1, cancelId: 1 };
+  const { response } = parent ? await dialog.showMessageBox(parent, options) : await dialog.showMessageBox(options);
   if (response !== 0) return;
   await session.defaultSession.clearStorageData();
   await session.defaultSession.clearCache();
   playback.reset();
   log.info('local data cleared by the user');
-  void loadApp(mainWindow.webContents, '/login');
+  navigateTo('/login');
 }
 
 function rebuildMenu() {
