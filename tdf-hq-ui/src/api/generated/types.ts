@@ -6645,6 +6645,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/directory/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMyApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/applications/{applicationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getClassifiedApplication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/applications/{applicationId}/counter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["counterClassifiedApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/applications/{applicationId}/status": {
         parameters: {
             query?: never;
@@ -15983,6 +16031,8 @@ export interface components {
             effectiveAt?: string | null;
             /** Format: date-time */
             expiresAt?: string | null;
+            /** @description Present on classifieds (ADR 0132) */
+            intent?: components["schemas"]["ClassifiedIntent"] | null;
             /** @description Present on listings derived automatically from a public artist profile; links back to that canonical profile. */
             sourceProfile?: {
                 /** Format: uuid */
@@ -16214,6 +16264,14 @@ export interface components {
             startsAt?: string | null;
             /** Format: date-time */
             endsAt?: string | null;
+            intent?: components["schemas"]["ClassifiedIntent"];
+            priceMode?: components["schemas"]["PriceMode"];
+            slots?: number;
+            slotsRemaining?: number;
+            /** Format: date-time */
+            offerDeadlineAt?: string | null;
+            terms?: components["schemas"]["OfferTerms"];
+            offerStats?: components["schemas"]["OfferStats"];
             /**
              * Format: date-time
              * @description Null for listings derived from artist profiles, which follow the profile lifecycle instead of expiring
@@ -16450,6 +16508,15 @@ export interface components {
             expiresAt?: string | null;
             /** Format: int64 */
             version: number;
+            intent: components["schemas"]["ClassifiedIntent"];
+            slots: number;
+            slotsRemaining: number;
+            priceMode: components["schemas"]["PriceMode"];
+            /** Format: date-time */
+            offerDeadlineAt?: string | null;
+            budget?: components["schemas"]["OfferBudget"];
+            offerCount: number;
+            openOfferCount: number;
         };
         ClassifiedCreate: {
             /** Format: uuid */
@@ -16488,11 +16555,20 @@ export interface components {
             serviceAdId?: number;
             /** Format: date-time */
             expiresAt?: string;
+            /**
+             * @description ADR 0132: how many offers may be accepted
+             * @default 1
+             */
+            slots: number;
+            priceMode?: components["schemas"]["PriceMode"];
+            /**
+             * Format: date-time
+             * @description Last moment to submit offers; defaults to expiresAt
+             */
+            offerDeadlineAt?: string;
+            terms?: components["schemas"]["OfferTerms"];
         };
-        /** @description Private to participants and authorized admins */
-        ClassifiedApplication: {
-            [key: string]: unknown;
-        };
+        /** @description An offer on a classified. amountMinor is the offered price (proposedAmountMinor is its legacy alias and still accepted). */
         ApplicationCreate: {
             /** Format: uuid */
             applicantProfileId: string;
@@ -16502,9 +16578,168 @@ export interface components {
             }[];
             availability?: string;
             /** Format: int64 */
+            amountMinor?: number;
+            /**
+             * Format: int64
+             * @deprecated
+             */
             proposedAmountMinor?: number;
             /** Format: uuid */
             currencyId?: string;
+            terms?: components["schemas"]["OfferTerms"];
+            /**
+             * Format: date-time
+             * @description Offer validity; defaults to 7 days, capped by the classified offer deadline
+             */
+            expiresAt?: string;
+        };
+        /**
+         * @description seeking = busco (demand); offering = ofrezco (supply)
+         * @enum {string}
+         */
+        ClassifiedIntent: "seeking" | "offering";
+        /**
+         * @description open: offers only; suggested: reference price, counters allowed; fixed: offers must accept the exact price
+         * @enum {string}
+         */
+        PriceMode: "open" | "suggested" | "fixed";
+        /** @description Structured terms proposed or agreed; free-form keys allowed, these are the known ones. */
+        OfferTerms: {
+            durationMinutes?: number;
+            capacity?: number;
+            equipmentProvided?: string;
+            equipmentRequired?: string;
+            /** @description Textual place (never an exact private address) */
+            placeLabel?: string;
+            timezone?: string;
+            paymentNotes?: string;
+            recurrence?: string;
+            [key: string]: unknown;
+        };
+        OfferBudget: {
+            /** Format: int64 */
+            minMinor?: number | null;
+            /** Format: int64 */
+            maxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            negotiable?: boolean;
+        } | null;
+        /** @description Anonymous aggregate visible to everyone; the range appears only with at least three offers (I20). */
+        OfferStats: {
+            count: number;
+            /** Format: int64 */
+            minMinor?: number | null;
+            /** Format: int64 */
+            maxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+        };
+        OfferRound: {
+            roundNumber: number;
+            /** @enum {string} */
+            actorRole: "applicant" | "author";
+            /** @enum {string} */
+            kind: "initial" | "counter" | "accept";
+            /** Format: int64 */
+            amountMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            terms?: components["schemas"]["OfferTerms"];
+            message?: string | null;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        OfferCounterRequest: {
+            /** Format: int64 */
+            amountMinor: number;
+            /** Format: uuid */
+            currencyId: string;
+            terms?: components["schemas"]["OfferTerms"];
+            message?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+        };
+        OfferReputation: {
+            ratingAvg?: number | null;
+            ratingCount?: number;
+            completedCount?: number;
+        } | null;
+        /** @description Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on the detail endpoint. */
+        ClassifiedApplication: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            classifiedId: string;
+            classified?: {
+                /** Format: uuid */
+                id?: string;
+                /** Format: uuid */
+                authorProfileId?: string;
+                title?: string;
+                slug?: string;
+                status?: string;
+                priceMode?: components["schemas"]["PriceMode"];
+                slots?: number;
+                slotsRemaining?: number;
+                /** Format: date-time */
+                offerDeadlineAt?: string | null;
+                budget?: components["schemas"]["OfferBudget"];
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            applicantProfileId: string;
+            applicantProfile: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                slug: string;
+                kind?: string;
+            };
+            message: string;
+            portfolio?: {
+                [key: string]: unknown;
+            }[];
+            availability?: string | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            /**
+             * Format: int64
+             * @description Initial offered amount
+             */
+            proposedAmountMinor?: number | null;
+            /**
+             * Format: int64
+             * @description Amount of the latest round
+             */
+            currentAmountMinor?: number | null;
+            /** Format: int64 */
+            acceptedAmountMinor?: number | null;
+            currentRound: number;
+            /** @enum {string} */
+            lastActorRole: "applicant" | "author";
+            terms?: components["schemas"]["OfferTerms"];
+            /** Format: date-time */
+            offerExpiresAt?: string | null;
+            /** @enum {string} */
+            status: "submitted" | "viewed" | "shortlisted" | "countered_by_author" | "countered_by_applicant" | "accepted" | "rejected" | "withdrawn" | "expired" | "conversation_open" | "converted";
+            /** @enum {string|null} */
+            rejectionReason?: "author_decision" | "slots_filled" | "classified_closed" | null;
+            /** @enum {string} */
+            participantRole: "author" | "applicant" | "admin";
+            reputation?: components["schemas"]["OfferReputation"];
+            rounds?: components["schemas"]["OfferRound"][];
+            /** Format: date-time */
+            submittedAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: date-time */
+            acceptedAt?: string | null;
+            /** Format: int64 */
+            version: number;
+            [key: string]: unknown;
         };
         DirectoryClassifiedReference: {
             /** Format: uuid */
@@ -32909,6 +33144,8 @@ export interface operations {
                 q?: components["parameters"]["SearchQuery"];
                 entityType?: "profile" | "artist" | "classified" | "event" | "venue";
                 profileKind?: "person" | "artist" | "band" | "project";
+                /** @description ADR 0132: restricts results to classifieds whose category intent is seeking (busco) or offering (ofrezco) */
+                intent?: components["schemas"]["ClassifiedIntent"];
                 cityId?: string;
                 /** @description Consented ephemeral search latitude */
                 latitude?: number;
@@ -33330,7 +33567,9 @@ export interface operations {
     };
     listClassifiedApplications: {
         parameters: {
-            query?: never;
+            query?: {
+                sort?: "recent" | "price_asc" | "price_desc" | "reputation";
+            };
             header?: never;
             path: {
                 classifiedId: components["parameters"]["ClassifiedId"];
@@ -33339,7 +33578,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Private participant-scoped applications */
+            /** @description Private participant-scoped offers with their negotiation state and the offerer's reputation */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -33367,7 +33606,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Idempotent application */
+            /** @description Idempotent offer */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -33375,6 +33614,99 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ClassifiedApplication"];
                 };
+            };
+            /** @description No slot left, offer deadline passed, fixed price not matched, derived listing, or an active offer already exists for this profile */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyApplications: {
+        parameters: {
+            query?: {
+                status?: "open" | "accepted" | "closed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Offers where the caller is the offerer, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"][];
+                };
+            };
+        };
+    };
+    getClassifiedApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Offer detail with rounds */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"];
+                };
+            };
+            /** @description Not a participant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    counterClassifiedApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path: {
+                applicationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferCounterRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated offer with the new round */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"];
+                };
+            };
+            /** @description Not this participant's turn, offer closed or expired, fixed-price classified, or round limit reached */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
