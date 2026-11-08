@@ -17458,6 +17458,83 @@
       "evidence": "scripts/test-event-discovery-postgres.mjs; tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx; tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx; tdf-hq/test/Spec.hs"
     },
     {
+      "id": "EVT-DRAFT-REVIEW-001",
+      "title": "Schema-two event plans are validated offline with explicit currency and tier boundaries",
+      "domain": "EVT",
+      "statement": "Schema-two review-only plans require private events without public asset or ticket URLs, ordered event times, positive safe integer capacity, unique normalized tier codes, inactive zero-sale tiers, safe integer prices and quantities, equal event/tier currency containing exactly three uppercase ASCII letters, bounded total allocation and an event price equal to the lowest tier price. The CLI validates schema two offline only and refuses import before the legacy flyer, token or API path.",
+      "authority": "Existing PR #709 offline multi-tier review intent and the verified equality-only currency counterexample; bounded repair reviewed on 2026-11-07.",
+      "source": "formal/system/event-draft-review.md",
+      "contract": "formal/system/event-draft-review.md",
+      "property": "Validation rejects the named malformed currency domain even when every tier matches the same malformed value. Accepted review inputs are not rewritten. Schema-two --validate-only emits valid/offline/schemaVersion/mutations=0; schema-two import without the flag throws before flyer loading, credential lookup or API work. Schema-one behavior is unchanged.",
+      "actors": [
+        "Event planner preparing a local review",
+        "Maintainer",
+        "CI reviewer"
+      ],
+      "preconditions": [
+        "Supported Node runtime",
+        "A local JSON review plan passed to the existing CLI or validator",
+        "This contract does not authorize the separate schema-one import path"
+      ],
+      "inputs": [
+        "schemaVersion and review-only approval marker",
+        "Private event, times, capacity, declared price and currency",
+        "Tier identifiers, inactive state, sold quantities, safe integer prices and quantities, currencies and sale windows",
+        "--validate-only CLI mode"
+      ],
+      "state": {
+        "initial": "Untrusted local plan; no event or ticket mutation",
+        "terminal": [
+          "Validation rejected",
+          "Offline validation reported with zero mutations",
+          "Schema-two import rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Check the private review shape and currency syntax",
+        "Validate tier boundaries and aggregate capacity without changing the plan",
+        "Return an offline validation result or throw an error"
+      ],
+      "forbiddenTransitions": [
+        "Accept a malformed event currency merely because tier values match",
+        "Normalize malformed currency input into an accepted value silently",
+        "Import schema-two plans or read their flyer/token before refusing import",
+        "Treat offline validation as production approval, a legal agreement, provider readiness or actual ticket inventory"
+      ],
+      "effects": [
+        "Schema-two path is local validation only; no API requests, media publication, payments, notifications or import report writes"
+      ],
+      "authorization": "No credentials are required for offline validation. Existing schema-one administrator import behavior is preserved and is outside this new offline contract.",
+      "privacy": "Synthetic fixtures and local plan fields only; no token or private payload logging is introduced.",
+      "concurrency": "Each invocation validates its own input synchronously; no shared database or asynchronous ticket inventory claim.",
+      "idempotency": "Validation of the same supported input yields the same acceptance or rejection and does not rewrite the input.",
+      "failure": "Invalid review data or attempted schema-two import throws; the CLI exits unsuccessfully instead of importing.",
+      "recovery": "Correct the local review fields and validate again. Resolve organizer, venue, artists and inventory separately before any separately authorized import.",
+      "observability": "Offline success reports valid=true, mode=offline, schemaVersion and mutations=0; failures preserve the existing CLI error path.",
+      "implementation": [
+        "scripts/prepare-event-draft.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/event-draft-plan.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Twenty finite Node tests: four original tests unchanged; twelve same-value malformed/missing currency cases; matching canonical strings without mutation; legacy schema-one behavior; offline CLI success and unconditional schema-two import refusal with network blocked. The exact new tests fail twelve currency assertions on original09fa and all pass after the scoped guard.",
+      "evidence": "formal/system/event-draft-review.md; source-bound old-RED/new-GREEN execution receipts retained in the consolidation ledger.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Finite regression and source boundary evidence; no universal implementation/refinement proof.",
+      "ambiguity": [
+        "Three uppercase ASCII letters checks currency syntax, not ISO catalog membership or provider support.",
+        "Existing Date.parse and sale-window behavior is retained; complete timezone and operational capacity semantics are not established.",
+        "The separate schema-one import, current account authorization and actual backend/provider state are not qualified by these offline tests.",
+        "No production event, contract acceptance, sale, refund, notification or media publication was performed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The named offline validation and no-import boundaries are covered by finite controls; no whole contract, ticketing, money or server authorization proof is claimed."
+      }
+    },
+    {
       "id": "ANALYTICS-WEEKLY-001",
       "title": "Bounded aggregate weekly platform measurement",
       "statement": "Prepare a read-only, repeatable-read aggregate query and summarize supplied current/previous seven-day windows without treating profile imports, telemetry milestones or missing data as verified human growth or campaign causality.",
