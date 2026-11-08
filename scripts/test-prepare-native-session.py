@@ -45,6 +45,33 @@ class NativeSessionTests(unittest.TestCase):
         second=copy.deepcopy(m['native']['chapters'][0]);second.update(id='AAAAAAAA-1111-4111-8111-111111111111',startMs=20000,endMs=25000)
         m['native']['chapters'].append(second)
         with self.assertRaisesRegex(ValueError,'chapter identity'):native.validate(m)
+    def test_pg_fixture_cleanup_on_tempfile_failure_and_failed_creation(self):
+        for case,fail_at,create_status in [('first-temp',1,0),('second-temp',2,0),('failed-create',1,23)]:
+            with self.subTest(case=case),tempfile.TemporaryDirectory() as directory:
+                root=pathlib.Path(directory);bin_path=root/'bin';bin_path.mkdir()
+                trace=root/'trace';counter=root/'counter';counter.write_text('0'+chr(10))
+                output=root/'owned.sql'
+                commands={
+                    'createdb':['echo "createdb:$*" >> "$NATIVE_TRACE"','exit "$NATIVE_CREATE_STATUS"'],
+                    'dropdb':['echo "dropdb:$*" >> "$NATIVE_TRACE"'],
+                    'psql':['echo "psql:$*" >> "$NATIVE_TRACE"','echo 1'],
+                    'mktemp':['read count < "$NATIVE_COUNTER"','count=$((count+1))','echo "$count" > "$NATIVE_COUNTER"',
+                        'if test "$count" = "$NATIVE_FAIL_AT"; then exit 17; fi',': > "$NATIVE_OUTPUT"','echo "$NATIVE_OUTPUT"'],
+                }
+                for name,lines in commands.items():
+                    command=bin_path/name;command.write_text(chr(10).join(['#!/bin/sh','set -eu',*lines])+chr(10));command.chmod(0o755)
+                env={'PATH':str(bin_path)+':/usr/bin:/bin','TDF_TEST_NATIVE_POSTGRES':'1',
+                    'TDF_TEST_NATIVE_POSTGRES_USER':'native_fixture','TDF_TEST_NATIVE_POSTGRES_PORT':'55432',
+                    'NATIVE_TRACE':str(trace),'NATIVE_COUNTER':str(counter),'NATIVE_OUTPUT':str(output),
+                    'NATIVE_FAIL_AT':str(fail_at),'NATIVE_CREATE_STATUS':str(create_status)}
+                result=subprocess.run(['sh',str(p.with_name('test-native-session-import.sh'))],env=env,capture_output=True,text=True)
+                self.assertEqual(result.returncode,create_status or 17,result.stderr+(trace.read_text() if trace.exists() else 'no fixture trace'))
+                lines=trace.read_text().splitlines()
+                drops=[line for line in lines if line.startswith('dropdb:')]
+                self.assertEqual(len(drops),0 if create_status else 1)
+                if drops:self.assertTrue(drops[0].endswith(' tdf_native_session_import_test'))
+                self.assertFalse(any('-f ' in line for line in lines),'Failure must occur before any schema SQL')
+                self.assertFalse(output.exists(),'Owned first temporary file must be removed after second creation fails')
     def test_rendered_audit_does_not_invent_owner_or_master_evidence(self):
         m=manifest();m['native']['state']='awaiting_master';m['native']['sources']=[]
         m['localFiles']=[]
