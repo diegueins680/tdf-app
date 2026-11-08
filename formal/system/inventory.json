@@ -3425,7 +3425,7 @@
     {
       "id": "SURFACE-9561c312584f3d24",
       "path": "e2e/web/video-campaigns.spec.mjs",
-      "sha256": "4028aeb82bc7d91c568672124ce308acf27ed2626bf36167546bcca46e12a2cf",
+      "sha256": "33bf8365ded5ecdc9329bf260e36486d458f7bedf16bb45f25d04149d7de445c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4163,7 +4163,7 @@
     {
       "id": "SURFACE-d6545235ef8b425c",
       "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
-      "sha256": "f062c74466f16174217984005a9eaca71e00dd31d3613bfb46eca6682c3a39ed",
+      "sha256": "be95aed241cf38a783ddcf80301f4033549cc6de5d0a97fb1bb4a9f37b3e6630",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5393,7 +5393,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "d4d7017b8d9ccc69e696acb8b80e3a44fe8b8c8f3a1224afbf30c12c46dbcc2f",
+      "sha256": "acfe84a5c3058eef96752b02daa72b4e2a11b21aa51763ed7c184786a97be82c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23421,7 +23421,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "a11ca4912bd5804a352eadfaa2b3a42e7e462eabba6d44ac64c7006a2c99423f",
+      "sha256": "e7f4fe48ca2a6e70d08c421f63b39c762d0d06d82096b0fcdc9b4558673efbe7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23449,7 +23449,7 @@
     },
     {
       "path": "docs/music-releases/universal-player-state.md",
-      "sha256": "4016c0d99f00f21d015e17df6fbf60f55284d3cede38079963bf0227aa20ee72",
+      "sha256": "fe20e6d12190e3563046714ecd50670d8aa20ac7e97a4da7aa0b68878c9c5264",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30295,7 +30295,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "867336abfa8d87a1c46c828d3d63ebf918f9bb578b2575e64753a74c381d2575",
+      "sha256": "255747adfb8e098f1f97ccfe11225f04506fdd5827c01fde93f2740ea339beeb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

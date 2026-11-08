@@ -2,6 +2,7 @@
   "baseMain": "47e270802a782631dd858ad8f45e8474c05e5a74",
   "qualifiedFullPlayerSource": "0dad14c4300bb618908e491c3e15a921389f1e84",
   "frontendAndBrowserChanges": [
+    "e2e/web/video-campaigns.spec.mjs",
     "tdf-hq-ui/src/api/generated/types.ts"
   ],
   "runtimeFrontendChanged": false,
@@ -14,5 +15,39 @@
   "reconciledPlayerSource": "4b7824841fcbf2f3bcb7e95adb5ceb93f60ec22d",
   "migrationCount": 251,
   "mobileMergeSource": "d238ca8e90abcf9e325ca5ea19bb5b014014439d",
-  "privacyCounterexample": "With actual directory schema, legacy grant returned 404 after artist visibility became private; pre-fix featured read returned 200 with saved reference. Setup failures retained separately."
+  "privacyCounterexample": "With actual directory schema, legacy grant returned 404 after artist visibility became private; pre-fix featured read returned 200 with saved reference. Setup failures retained separately.",
+  "browserBudgetChange": "Existing long campaign journey: 60s total; existing action/assertion bounds retained. Failed WebKit trace reached final review/button before exhausting 30s aggregate budget.",
+  "heartbeatCounterexample": "Hosted untraced worker waited >30s with heartbeat bash/sleep alive. Controlled pre-initialization lost-signal test failed at 1.5s before persistent stop marker and passes after. Exact original Linux cause remains unproven; fresh untraced hosted execution required.",
+  "qualificationSource": "e13eb06b98f153454cdaf86722657dbb0b80a926",
+  "qualifiedBackend": {
+    "examples": 4301,
+    "failures": 0,
+    "pending": 23,
+    "migrationCount": 251,
+    "httpWorkflow": "passed including actual profile withdrawal/owner retention/restoration",
+    "generatedClients": 2,
+    "localWorkerScenarios": 23,
+    "safeProbeTests": 13
+  },
+  "hostedNative": {
+    "run": 42400968363,
+    "source": "e13eb06b98f153454cdaf86722657dbb0b80a926",
+    "expected": 74,
+    "unexpected": 0,
+    "flaky": 0,
+    "skipped": 0,
+    "scope": "Main-equivalent frontend; dependent PR670 artist recovery UI not qualified by this artifact."
+  },
+  "startupChangeControls": {
+    "passed": 43,
+    "controlledOldSource": "failed at 1.5s",
+    "freshHostedLinuxRequired": true
+  },
+  "campaignLocal": {
+    "passed": 8,
+    "projects": [
+      "chromium-desktop",
+      "chromium-phone"
+    ]
+  }
 }

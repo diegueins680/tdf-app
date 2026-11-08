@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T18:13:22.208Z",
+  "generatedAt": "2026-11-08T00:40:30.856Z",
   "repositoryRoot": ".",
   "filesScanned": 2654,
   "candidateCount": 1409,
@@ -6502,7 +6502,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "stage",
-      "line": 231,
+      "line": 233,
       "values": [
         "start",
         "term",
@@ -6511,7 +6511,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        231
+        233
       ],
       "consumerCount": 135,
       "backendConsumers": [
