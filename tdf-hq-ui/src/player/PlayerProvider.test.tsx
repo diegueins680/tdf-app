@@ -600,6 +600,25 @@ it('uses one native engine, seeks within chapter bounds and switches to audio wi
   act(() => { player.setPlaybackRate(1.5); });
   expect(video.playbackRate).toBe(1.5);
 });
+it('keeps the chosen playback speed across a replacement source load', async () => {
+  // Real media elements reset playbackRate to defaultPlaybackRate on load().
+  jest.mocked(HTMLMediaElement.prototype.load).mockImplementation(function (this: HTMLMediaElement) {
+    this.playbackRate = this.defaultPlaybackRate;
+    this.dispatchEvent(new Event('ratechange'));
+  });
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(nativeTrack()); });
+  const video = view.container.querySelector('video')!;
+  Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  act(() => { player.setPlaybackRate(1.5); });
+  expect(video.playbackRate).toBe(1.5);
+  await act(async () => { player.setMediaMode('audio'); });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  expect(video.src).toBe('https://media.invalid/session.m4a');
+  expect(video.playbackRate).toBe(1.5);
+  expect(player.playbackRate).toBe(1.5);
+});
 it('continues native playback across page content changes and yields to radio', async () => {
   const view = render(<PlayerProvider><Probe /><div>First page</div></PlayerProvider>);
   await act(async () => { player.playTrack({ ...nativeTrack(), startMs: 0 }); });
