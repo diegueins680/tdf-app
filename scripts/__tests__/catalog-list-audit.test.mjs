@@ -818,10 +818,18 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
   const priorApple = await reviewedParent('bc16d557c7b246361c83d78191314087ca2dd3d9');
   const currentMain = await reviewedParent('321f4fe6c8e803ab1c32724a8ce5b7814418b79c');
+  const offlineMain = await reviewedParent('5c69dc30318d110d9daba042571b8e54f5bf140d');
+  const offlineFixture = offlineMain.find(row => row.id === 'b3eadb9d52a262f5371f');
+  assert.ok(offlineFixture, 'the offline currency fixture needs its exact protected-main review');
+  assert.deepEqual(active.find(row => row.id === offlineFixture.id), offlineFixture);
+  const historicalAppleView = active.filter(row => row.id !== offlineFixture.id);
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);
-  assert.equal(active.length, 1411);
+  assert.equal(historicalAppleView.length, 1411);
+  assert.deepEqual(historicalAppleView,
+    await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
+  assert.equal(active.length, 1412);
   const history = new Map();
   const visit = row => {
     if (!row) return;
@@ -830,7 +838,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     for (const branch of row.concurrentReviewHistory ?? []) visit(branch);
   };
   for (const row of active) visit(row);
-  for (const row of [...old, ...priorApple, ...currentMain]) {
+  for (const row of [...old, ...priorApple, ...currentMain, ...offlineMain]) {
     assert.deepEqual(history.get(row.id), row);
   }
   const pointer = successors.find(row => row.name === 'migrations');
