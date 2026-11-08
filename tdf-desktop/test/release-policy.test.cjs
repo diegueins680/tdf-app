@@ -6,7 +6,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
-const workflow = fs.readFileSync(path.join(__dirname, '../..', '.github/workflows/desktop.yml'), 'utf8');
+// Windows checkouts carry CRLF endings; the gate is extracted from LF-normalized text.
+const workflow = fs.readFileSync(path.join(__dirname, '../..', '.github/workflows/desktop.yml'), 'utf8').replace(/\r\n/g, '\n');
 const gate = workflow.split('      - name: Select release assets and refuse unsigned test packages\n')[1]
   .split('      - name: Create the versioned release')[0]
   .split('        run: |\n')[1].split('\n').map((line) => line.replace(/^          /, '')).join('\n');
@@ -17,7 +18,8 @@ function checkFeed({ notarizationConfigured, unsigned = false }) {
     fs.mkdirSync(path.join(cwd, 'release'));
     fs.writeFileSync(path.join(cwd, 'release', `TDF-Records-0.1.0-mac-arm64${unsigned ? '-UNSIGNED-TEST' : ''}.zip`), 'fixture');
     return spawnSync('bash', ['-c', gate], {
-      cwd, encoding: 'utf8', env: { PATH: process.env.PATH, MAC_NOTARIZATION_CONFIGURED: notarizationConfigured },
+      // The full environment keeps bash usable on Windows runners (SystemRoot, TEMP); only the gate input is overridden.
+      cwd, encoding: 'utf8', env: { ...process.env, MAC_NOTARIZATION_CONFIGURED: notarizationConfigured },
     });
   } finally {
     fs.rmSync(cwd, { recursive: true, force: true });
