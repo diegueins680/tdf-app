@@ -11,6 +11,7 @@ paths:
         - { $ref: '#/components/parameters/SearchQuery' }
         - { name: entityType, in: query, schema: { type: string, enum: [profile, artist, classified, event, venue] } }
         - { name: profileKind, in: query, schema: { type: string, enum: [person, artist, band, project] } }
+        - { name: intent, in: query, description: 'ADR 0132: restricts results to classifieds whose category intent is seeking (busco) or offering (ofrezco)', schema: { $ref: '#/components/schemas/ClassifiedIntent' } }
         - { name: cityId, in: query, schema: { type: string, format: uuid } }
         - { name: latitude, in: query, description: Consented ephemeral search latitude, schema: { type: number, minimum: -90, maximum: 90 } }
         - { name: longitude, in: query, description: Consented ephemeral search longitude, schema: { type: number, minimum: -180, maximum: 180 } }
@@ -166,16 +167,50 @@ paths:
     get:
       tags: [Music classifieds]
       operationId: listClassifiedApplications
+      summary: Offers received on a classified (author only), sortable for comparison
       security: [{ bearerAuth: [] }]
-      parameters: [{ $ref: '#/components/parameters/ClassifiedId' }]
-      responses: { '200': { description: Private participant-scoped applications, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ClassifiedApplication' } } } } } }
+      parameters:
+        - { $ref: '#/components/parameters/ClassifiedId' }
+        - { name: sort, in: query, schema: { type: string, enum: [recent, price_asc, price_desc, reputation] } }
+      responses: { '200': { description: Private participant-scoped offers with their negotiation state and the offerer's reputation, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ClassifiedApplication' } } } } } }
     post:
       tags: [Music classifieds]
       operationId: createClassifiedApplication
+      summary: Submit an offer (initial negotiation round) on a classified
       security: [{ bearerAuth: [] }]
       parameters: [{ $ref: '#/components/parameters/ClassifiedId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ApplicationCreate' } } } }
-      responses: { '201': { description: Idempotent application, content: { application/json: { schema: { $ref: '#/components/schemas/ClassifiedApplication' } } } } }
+      responses:
+        '201': { description: Idempotent offer, content: { application/json: { schema: { $ref: '#/components/schemas/ClassifiedApplication' } } } }
+        '409': { description: No slot left, offer deadline passed, fixed price not matched, derived listing, or an active offer already exists for this profile }
+  /directory/applications:
+    get:
+      tags: [Music classifieds]
+      operationId: listMyApplications
+      summary: Offers made through profiles the caller manages (ADR 0132)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [open, accepted, closed] } }
+      responses: { '200': { description: Offers where the caller is the offerer, newest first, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ClassifiedApplication' } } } } } }
+  /directory/applications/{applicationId}:
+    get:
+      tags: [Music classifieds]
+      operationId: getClassifiedApplication
+      summary: One offer with its full negotiation chain (participants and admins)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: applicationId, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: Offer detail with rounds, content: { application/json: { schema: { $ref: '#/components/schemas/ClassifiedApplication' } } } }, '404': { description: Not a participant } }
+  /directory/applications/{applicationId}/counter:
+    post:
+      tags: [Music classifieds]
+      operationId: counterClassifiedApplication
+      summary: Record a counter-offer round from the author or the offerer (ADR 0132)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: applicationId, in: path, required: true, schema: { type: string, format: uuid } }, { $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OfferCounterRequest' } } } }
+      responses:
+        '201': { description: Updated offer with the new round, content: { application/json: { schema: { $ref: '#/components/schemas/ClassifiedApplication' } } } }
+        '409': { description: Not this participant's turn, offer closed or expired, fixed-price classified, or round limit reached }
   /directory/applications/{applicationId}/status:
     patch:
       tags: [Music classifieds]
@@ -445,6 +480,7 @@ components:
         sponsorDisclosure: { type: string, nullable: true }
         effectiveAt: { type: string, format: date-time, nullable: true }
         expiresAt: { type: string, format: date-time, nullable: true }
+        intent: { allOf: [{ $ref: '#/components/schemas/ClassifiedIntent' }], nullable: true, description: Present on classifieds (ADR 0132) }
         sourceProfile:
           type: object
           nullable: true
@@ -543,6 +579,13 @@ components:
         compensation: { type: object, nullable: true, additionalProperties: false, properties: { typeId: { type: string, format: uuid }, minMinor: { type: integer, format: int64, nullable: true }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true }, negotiable: { type: boolean } } }
         startsAt: { type: string, format: date-time, nullable: true }
         endsAt: { type: string, format: date-time, nullable: true }
+        intent: { $ref: '#/components/schemas/ClassifiedIntent' }
+        priceMode: { $ref: '#/components/schemas/PriceMode' }
+        slots: { type: integer, minimum: 1, maximum: 100 }
+        slotsRemaining: { type: integer, minimum: 0, maximum: 100 }
+        offerDeadlineAt: { type: string, format: date-time, nullable: true }
+        terms: { $ref: '#/components/schemas/OfferTerms' }
+        offerStats: { $ref: '#/components/schemas/OfferStats' }
         expiresAt: { type: string, format: date-time, nullable: true, description: 'Null for listings derived from artist profiles, which follow the profile lifecycle instead of expiring' }
         imageUrl: { type: string, nullable: true }
         sourceProfile:
@@ -749,9 +792,102 @@ components:
         serviceOfferingId: { type: string, format: uuid }
         serviceAdId: { type: integer, format: int64 }
         expiresAt: { type: string, format: date-time }
-    ManagedClassified: { type: object, additionalProperties: false, required: [id, authorProfileId, title, slug, status, moderationStatus, version], properties: { id: { type: string, format: uuid }, authorProfileId: { type: string, format: uuid }, sourceProfileId: { type: string, format: uuid, nullable: true, description: Set on listings derived from an artist profile; their content and status follow that profile }, title: { type: string }, slug: { type: string }, status: { type: string }, moderationStatus: { type: string }, expiresAt: { type: string, format: date-time, nullable: true }, version: { type: integer, format: int64 } } }
-    ApplicationCreate: { type: object, required: [applicantProfileId, message, portfolio], properties: { applicantProfileId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 }, portfolio: { type: array, items: { type: object, additionalProperties: true } }, availability: { type: string }, proposedAmountMinor: { type: integer, format: int64, minimum: 0 }, currencyId: { type: string, format: uuid } } }
-    ClassifiedApplication: { type: object, description: Private to participants and authorized admins, additionalProperties: true }
+        slots: { type: integer, minimum: 1, maximum: 100, default: 1, description: 'ADR 0132: how many offers may be accepted' }
+        priceMode: { $ref: '#/components/schemas/PriceMode' }
+        offerDeadlineAt: { type: string, format: date-time, description: Last moment to submit offers; defaults to expiresAt }
+        terms: { $ref: '#/components/schemas/OfferTerms' }
+    ManagedClassified: { type: object, additionalProperties: false, required: [id, authorProfileId, title, slug, status, moderationStatus, version, intent, slots, slotsRemaining, priceMode, offerCount, openOfferCount], properties: { id: { type: string, format: uuid }, authorProfileId: { type: string, format: uuid }, sourceProfileId: { type: string, format: uuid, nullable: true, description: Set on listings derived from an artist profile; their content and status follow that profile }, title: { type: string }, slug: { type: string }, status: { type: string }, moderationStatus: { type: string }, expiresAt: { type: string, format: date-time, nullable: true }, version: { type: integer, format: int64 }, intent: { $ref: '#/components/schemas/ClassifiedIntent' }, slots: { type: integer }, slotsRemaining: { type: integer }, priceMode: { $ref: '#/components/schemas/PriceMode' }, offerDeadlineAt: { type: string, format: date-time, nullable: true }, budget: { $ref: '#/components/schemas/OfferBudget' }, offerCount: { type: integer }, openOfferCount: { type: integer } } }
+    ApplicationCreate:
+      type: object
+      description: An offer on a classified. amountMinor is the offered price (proposedAmountMinor is its legacy alias and still accepted).
+      required: [applicantProfileId, message, portfolio]
+      properties:
+        applicantProfileId: { type: string, format: uuid }
+        message: { type: string, minLength: 10, maxLength: 5000 }
+        portfolio: { type: array, items: { type: object, additionalProperties: true } }
+        availability: { type: string }
+        amountMinor: { type: integer, format: int64, minimum: 0 }
+        proposedAmountMinor: { type: integer, format: int64, minimum: 0, deprecated: true }
+        currencyId: { type: string, format: uuid }
+        terms: { $ref: '#/components/schemas/OfferTerms' }
+        expiresAt: { type: string, format: date-time, description: Offer validity; defaults to 7 days, capped by the classified offer deadline }
+    ClassifiedIntent: { type: string, enum: [seeking, offering], description: 'seeking = busco (demand); offering = ofrezco (supply)' }
+    PriceMode: { type: string, enum: [open, suggested, fixed], description: 'open: offers only; suggested: reference price, counters allowed; fixed: offers must accept the exact price' }
+    OfferTerms:
+      type: object
+      description: Structured terms proposed or agreed; free-form keys allowed, these are the known ones.
+      additionalProperties: true
+      properties:
+        durationMinutes: { type: integer, minimum: 0 }
+        capacity: { type: integer, minimum: 0 }
+        equipmentProvided: { type: string }
+        equipmentRequired: { type: string }
+        placeLabel: { type: string, description: Textual place (never an exact private address) }
+        timezone: { type: string }
+        paymentNotes: { type: string }
+        recurrence: { type: string }
+    OfferBudget: { type: object, nullable: true, additionalProperties: false, properties: { minMinor: { type: integer, format: int64, nullable: true }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true }, negotiable: { type: boolean } } }
+    OfferStats:
+      type: object
+      description: Anonymous aggregate visible to everyone; the range appears only with at least three offers (I20).
+      additionalProperties: false
+      required: [count]
+      properties: { count: { type: integer }, minMinor: { type: integer, format: int64, nullable: true }, maxMinor: { type: integer, format: int64, nullable: true }, currencyId: { type: string, format: uuid, nullable: true } }
+    OfferRound:
+      type: object
+      additionalProperties: false
+      required: [roundNumber, actorRole, kind, createdAt]
+      properties:
+        roundNumber: { type: integer, minimum: 1, maximum: 10 }
+        actorRole: { type: string, enum: [applicant, author] }
+        kind: { type: string, enum: [initial, counter, accept] }
+        amountMinor: { type: integer, format: int64, nullable: true }
+        currencyId: { type: string, format: uuid, nullable: true }
+        terms: { $ref: '#/components/schemas/OfferTerms' }
+        message: { type: string, nullable: true }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+    OfferCounterRequest:
+      type: object
+      required: [amountMinor, currencyId]
+      properties:
+        amountMinor: { type: integer, format: int64, minimum: 0 }
+        currencyId: { type: string, format: uuid }
+        terms: { $ref: '#/components/schemas/OfferTerms' }
+        message: { type: string, minLength: 1, maxLength: 5000 }
+        expiresAt: { type: string, format: date-time }
+    OfferReputation: { type: object, nullable: true, additionalProperties: false, properties: { ratingAvg: { type: number, nullable: true }, ratingCount: { type: integer }, completedCount: { type: integer } } }
+    ClassifiedApplication:
+      type: object
+      description: Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on the detail endpoint.
+      additionalProperties: true
+      required: [id, classifiedId, applicantProfileId, applicantProfile, message, status, currentRound, lastActorRole, participantRole, submittedAt, version]
+      properties:
+        id: { type: string, format: uuid }
+        classifiedId: { type: string, format: uuid }
+        classified: { type: object, additionalProperties: true, properties: { id: { type: string, format: uuid }, authorProfileId: { type: string, format: uuid }, title: { type: string }, slug: { type: string }, status: { type: string }, priceMode: { $ref: '#/components/schemas/PriceMode' }, slots: { type: integer }, slotsRemaining: { type: integer }, offerDeadlineAt: { type: string, format: date-time, nullable: true }, budget: { $ref: '#/components/schemas/OfferBudget' } } }
+        applicantProfileId: { type: string, format: uuid }
+        applicantProfile: { type: object, required: [id, name, slug], properties: { id: { type: string, format: uuid }, name: { type: string }, slug: { type: string }, kind: { type: string } } }
+        message: { type: string }
+        portfolio: { type: array, items: { type: object, additionalProperties: true } }
+        availability: { type: string, nullable: true }
+        currencyId: { type: string, format: uuid, nullable: true }
+        proposedAmountMinor: { type: integer, format: int64, nullable: true, description: Initial offered amount }
+        currentAmountMinor: { type: integer, format: int64, nullable: true, description: Amount of the latest round }
+        acceptedAmountMinor: { type: integer, format: int64, nullable: true }
+        currentRound: { type: integer, minimum: 1, maximum: 10 }
+        lastActorRole: { type: string, enum: [applicant, author] }
+        terms: { $ref: '#/components/schemas/OfferTerms' }
+        offerExpiresAt: { type: string, format: date-time, nullable: true }
+        status: { type: string, enum: [submitted, viewed, shortlisted, countered_by_author, countered_by_applicant, accepted, rejected, withdrawn, expired, conversation_open, converted] }
+        rejectionReason: { type: string, nullable: true, enum: [author_decision, slots_filled, classified_closed, null] }
+        participantRole: { type: string, enum: [author, applicant, admin] }
+        reputation: { $ref: '#/components/schemas/OfferReputation' }
+        rounds: { type: array, items: { $ref: '#/components/schemas/OfferRound' } }
+        submittedAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        acceptedAt: { type: string, format: date-time, nullable: true }
+        version: { type: integer, format: int64 }
     InvitationCreate: { type: object, required: [senderProfileId, targetProfileId, message], properties: { senderProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, classifiedId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 } } }
     DirectoryProfileReference: { type: object, additionalProperties: false, required: [id, name, slug], properties: { id: { type: string, format: uuid }, name: { type: string }, slug: { type: string } } }
     DirectoryClassifiedReference: { type: object, additionalProperties: false, required: [id, title, slug, status], properties: { id: { type: string, format: uuid }, title: { type: string }, slug: { type: string }, status: { type: string } } }

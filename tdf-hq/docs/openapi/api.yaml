@@ -8588,6 +8588,9 @@ paths:
   /directory/classifieds: { $ref: './directory.yaml#/paths/~1directory~1classifieds' }
   /directory/classifieds/{classifiedId}/status: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{classifiedId}~1status' }
   /directory/classifieds/{classifiedId}/applications: { $ref: './directory.yaml#/paths/~1directory~1classifieds~1{classifiedId}~1applications' }
+  /directory/applications: { $ref: './directory.yaml#/paths/~1directory~1applications' }
+  /directory/applications/{applicationId}: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}' }
+  /directory/applications/{applicationId}/counter: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}~1counter' }
   /directory/applications/{applicationId}/status: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}~1status' }
   /directory/invitations: { $ref: './directory.yaml#/paths/~1directory~1invitations' }
   /directory/invitations/{invitationId}/status: { $ref: './directory.yaml#/paths/~1directory~1invitations~1{invitationId}~1status' }
