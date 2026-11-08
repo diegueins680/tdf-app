@@ -23661,7 +23661,7 @@
     },
     {
       "path": "docs/music-releases/listener-disposal-2026-10-27.md",
-      "sha256": "75410195417b54b345b6ebea8a0ad548d0a5467340d3d7995198983b6d6c418a",
+      "sha256": "617aa060e5dde63d6fcade23b5f2943729ec776374901090af291c2f96f189bd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

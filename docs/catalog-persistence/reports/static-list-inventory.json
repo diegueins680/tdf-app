@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T04:44:03.321Z",
+  "generatedAt": "2026-11-08T06:17:15.337Z",
   "repositoryRoot": ".",
   "filesScanned": 2667,
   "candidateCount": 1418,
@@ -95008,7 +95008,7 @@
       "lines": [
         15938
       ],
-      "consumerCount": 270,
+      "consumerCount": 269,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -95127,7 +95127,6 @@
       ],
       "automationConsumers": [
         ".github/workflows/ci.yml",
-        ".github/workflows/desktop.yml",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/compiled-api-surface.test.mjs",
         "scripts/__tests__/directory-event-search-http.mjs",
@@ -95175,7 +95174,8 @@
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-music-release-worker-runtime.mjs",
         "scripts/test-music-source-projection.mjs",
-        "scripts/test-music-track-search.mjs"
+        "scripts/test-music-track-search.mjs",
+        "scripts/test-player-session-model.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -97361,7 +97361,7 @@
       "lines": [
         18463
       ],
-      "consumerCount": 346,
+      "consumerCount": 347,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/interactions.yaml",
@@ -97493,6 +97493,7 @@
       ],
       "automationConsumers": [
         ".github/workflows/catalog-list-audit.yml",
+        ".github/workflows/desktop.yml",
         ".github/workflows/event-operations-formal.yml",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
@@ -97540,8 +97541,7 @@
         "scripts/test-event-memories-http.py",
         "scripts/test-event-memory-source-browser.mjs",
         "scripts/test-event-memory-source-permissions.py",
-        "scripts/test-event-operations-api-migration.sh",
-        "scripts/test-event-task-completion-migration.sh"
+        "scripts/test-event-operations-api-migration.sh"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
