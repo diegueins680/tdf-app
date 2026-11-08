@@ -26157,21 +26157,21 @@
       "reviewMethod": "manual-boundary-review"
     },
     {
-      "id": "806180f5957fc4a7520f",
+      "id": "bc0b6dfa26a2f69536d7",
       "classification": "security-system-registry",
       "disposition": "retain-reviewed-deployment-manifest",
       "specializedModel": "production migration manifest and applied migration ledger",
       "risk": "Reordering prerequisites, altering applied SQL or dropping parent review history can corrupt financial or music deployment history.",
-      "justification": "Preserve the entire 245-entry manifest and its complete review graph unchanged; append only the forward video campaign Party-reference registry and archive guards introduced at09fd7babb92e45c1da1b9e5017de53b6378b4f7c. Preserve the original draft-video SQL byte for byte. No seed, identity merge, campaign activation, deployment or release waiver.",
+      "justification": "Preserve every existing migration and its review history; append only the studio gallery CMS registration and initial owner-selected thirteen-photo revision introduced by70c847f33b602ba279cab96c96d970d6bb4e36ef. The new seed is rerun-safe and cannot overwrite subsequent editorial revisions. Source review and isolated PostgreSQL rehearsal do not constitute production release or independent PR approval.",
       "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decisions",
-      "reviewBatch": "video-campaign-identity-forward-20261106",
+      "reviewMethod": "scoped-source-review-with-preserved-parent-reviews",
+      "reviewBatch": "studio-gallery-management-20261107",
       "evidence": {
         "file": "scripts/production-migrations.json",
         "line": 3,
         "kind": "json-array",
         "name": "migrations",
-        "valueCount": 246
+        "valueCount": 247
       },
       "previousDecision": {
         "id": "969410f2f45854cc54fc",
@@ -31630,6 +31630,17 @@
           "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
+        },
+        {
+          "sourceRevision": "70c847f33b602ba279cab96c96d970d6bb4e36ef",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "408311e383735623225ec1917606112253423fc4cf0ed15420e4a3312dae6d78",
+          "sourceEntry": {
+            "id": "806180f5957fc4a7520f"
+          },
+          "sourceEntryCanonicalSha256": "3cac1756d5703059ce08c0f061a96e955684c142d540a34c57a641b23b544505",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Entire preceding migration manifest review retained. This scoped source review is not independent PR approval."
         }
       ],
       "concurrentReviewHistory": [
