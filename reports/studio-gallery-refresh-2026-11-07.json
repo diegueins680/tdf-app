@@ -170,6 +170,30 @@
       "staleDecisions": 0,
       "mobileCandidates": 101,
       "csv": "Rendered from the audited JSON using unchanged repository csvCell/asCsv functions; exact baseline CSV replay verified."
+    },
+    "mainIntegration": {
+      "baseCommit": "321f4fe6c8e803ab1c32724a8ce5b7814418b79c",
+      "method": "Normal merge of current main preserving published feature history",
+      "gallerySourceAndAssetsUnchanged": true,
+      "tests": {
+        "result": "PASS",
+        "count": 6
+      },
+      "fullTypecheckAndProductionBuild": {
+        "result": "PASS",
+        "initialGzipJavaScriptBytes": 389750
+      },
+      "specificationInventory": "PASS",
+      "specificationTraceability": "PASS",
+      "catalog": {
+        "result": "PASS",
+        "candidates": 1409,
+        "unreviewed": 0,
+        "staleDecisions": 0,
+        "csvBaselineReplay": "PASS"
+      },
+      "mainRequirementsAndUnrelatedCatalogDecisions": "Preserved exactly except authorized gallery requirement and photo-manifest extension",
+      "deployed": false
     }
   }
 }
