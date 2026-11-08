@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 516,
-    "named": 14,
+    "total": 517,
+    "named": 15,
     "path-named": 1,
     "reviewed": 0,
     "unspecified": 501,
-    "covered": 15
+    "covered": 16
   },
   "routes": [
     {
@@ -1457,6 +1457,14 @@
       "path": "/login",
       "basis": "unspecified",
       "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/login/apple",
+      "basis": "named",
+      "requirements": [
+        "AUTH-APPLE-SIGNIN-001"
+      ]
     },
     {
       "method": "POST",
