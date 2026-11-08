@@ -176,6 +176,16 @@ jobs:
           sudo install -d -m 700 /opt/tdf/backups
           sudo env TDF_PHYSICAL_TEST_IMAGE="$tdf_physical_image" PYTHONDONTWRITEBYTECODE=1 python3 scripts/test-physical-postgres-docker.py
 
+      - name: Build and verify the music worker runtime image without publication
+        if: needs.changes.outputs.backend == 'true'
+        timeout-minutes: 30
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: |
+          tdf_worker_test_image="tdf-music-worker:ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build --file tdf-hq/Dockerfile.music-worker --tag "$tdf_worker_test_image" .
+          node scripts/test-music-worker-image.mjs "$tdf_worker_test_image"
+
   ui-quality:
     needs: changes
     if: needs.changes.outputs.ui == 'true'

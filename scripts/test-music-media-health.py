@@ -110,6 +110,42 @@ class Checks(unittest.TestCase):
         with patch.object(health,'fetch_prefix',return_value=(b'not audio',True)):
             self.assertEqual(health.probe('https://media.example/a'),('permanent','unsupported'))
 
+    def test_premature_200_eof_is_transport_not_a_permanent_media_verdict(self):
+        actual_fetch = health.fetch_prefix
+        Connection.responses, Connection.instances = [Response(headers={'Content-Length': '100000'}, body=b'not audio')], []
+        def fetch(*args, **kwargs):
+            return actual_fetch(*args, resolver=lambda host: ['1.1.1.1'], connection=Connection, **kwargs)
+        failed_probe = type('Result', (), {'returncode': 1, 'stdout': b'{}'})()
+        with patch.object(health.socket, 'create_connection', return_value=None), \
+                patch.object(health, 'fetch_prefix', side_effect=fetch), \
+                patch.object(health.subprocess, 'run', return_value=failed_probe) as process:
+            self.assertEqual(health.probe('https://media.example/a'), ('temporary', 'transport'))
+            process.assert_not_called()
+
+    def test_premature_partial_eof_is_transport_not_a_media_verdict(self):
+        response = Response(206, {'Content-Length': '100000', 'Content-Range': 'bytes 0-99999/100000'}, b'not audio')
+        with self.assertRaises(health.ProbeFailure) as error:
+            self.fetch([response])
+        self.assertEqual((error.exception.reason, error.exception.permanent), ('transport', False))
+
+    def test_exact_and_close_delimited_responses_remain_complete(self):
+        for headers in [{'Content-Length': '9'}, {'Content-Length': ' 9\t'}, {}]:
+            with self.subTest(headers=headers):
+                self.assertEqual(self.fetch([Response(headers=headers, body=b'not audio')]), (b'not audio', True))
+
+    def test_large_declared_body_keeps_the_existing_prefix_budget(self):
+        body = b'x' * (health.MAX_BYTES + 100)
+        data, complete = self.fetch([Response(headers={'Content-Length': str(len(body))}, body=body)])
+        self.assertEqual(len(data), health.MAX_BYTES)
+        self.assertFalse(complete)
+
+    def test_invalid_content_length_is_transient_transport(self):
+        for length in ['-1', '9, 100', 'NaN', '', '９']:
+            with self.subTest(length=length):
+                with self.assertRaises(health.ProbeFailure) as error:
+                    self.fetch([Response(headers={'Content-Length': length}, body=b'not audio')])
+                self.assertEqual((error.exception.reason, error.exception.permanent), ('transport', False))
+
 class ConfiguredStorageChecks(unittest.TestCase):
     def environment(self, endpoint='https://music-storage:9000/storage'):
         return {'MUSIC_S3_ENDPOINT': endpoint, 'MUSIC_S3_DERIVATIVE_BUCKET': 'music-derivatives',

@@ -16499,7 +16499,9 @@
         "tdf-hq-ui/src/player/MediaHealthPanel.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/assetAccess.ts",
-        "tdf-hq-ui/src/components/SessionVideoPreview.tsx"
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
       ],
       "tests": [
         "scripts/test-music-media-health.mjs",
@@ -16513,7 +16515,10 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-        "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx"
+        "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx",
+        "scripts/test-music-worker-image.mjs",
+        "scripts/lib/music-worker-image-smoke.sh",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16528,7 +16533,7 @@
         "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required. Frontend restoration is an unshipped composition; native-session integration and current-head verification remain required."
       },
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
-      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance.",
+      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance. The final worker image must import the actual health module as its non-root user without networking, with the full Python standard library. Required repository CI builds the image without publication and executes the immutable-image verifier, which also binds the health-script digest. Earlier backend Python controls alone do not establish final-image dependency availability. A premature EOF that contradicts declared HTTP Content-Length, or invalid length framing, is temporary transport failure and cannot establish a complete invalid media object. Exact/close-delimited completion and the existing bounded-prefix behavior remain; fake-transport controls keep native decoding separate.",
       "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
     },
     {
