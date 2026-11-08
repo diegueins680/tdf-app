@@ -1,5 +1,5 @@
 {
-  "baseMain": "47e270802a782631dd858ad8f45e8474c05e5a74",
+  "baseMain": "d0b10b60d93cb379ac57b204e1d4137cd22dc5ba",
   "qualifiedFullPlayerSource": "0dad14c4300bb618908e491c3e15a921389f1e84",
   "frontendAndBrowserChanges": [
     "e2e/web/video-campaigns.spec.mjs",
