@@ -9,6 +9,18 @@ servers:
     description: Development server
 
 paths:
+  /event-crm/events/{eventId}:
+    $ref: './event-crm.yaml#/paths/~1event-crm~1events~1{eventId}'
+  /event-crm/events/{eventId}/commands:
+    $ref: './event-crm.yaml#/paths/~1event-crm~1events~1{eventId}~1commands'
+  /event-crm/events/{eventId}/export:
+    $ref: './event-crm.yaml#/paths/~1event-crm~1events~1{eventId}~1export'
+  /event-crm/invitations:
+    $ref: './event-crm.yaml#/paths/~1event-crm~1invitations'
+  /event-crm/email/request:
+    $ref: './event-crm.yaml#/paths/~1event-crm~1email~1request'
+  /event-crm/email/confirm:
+    $ref: './event-crm.yaml#/paths/~1event-crm~1email~1confirm'
   /artists/video-campaigns:
     get:
       operationId: listVideoCampaigns

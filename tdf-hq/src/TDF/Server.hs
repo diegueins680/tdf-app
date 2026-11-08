@@ -144,6 +144,7 @@ import           TDF.DB
 import qualified TDF.CampaignAutomation as CampaignAutomation
 import qualified TDF.Operations.Server as OperationsServer
 import qualified TDF.EventOperations.Server as EventOperationsServer
+import qualified TDF.EventOperations.CrmServer as EventCrmServer
 import qualified TDF.Invoice.SRI as Sri
 import qualified TDF.Invoice.SessionIssue as SessionIssue
 import           TDF.Invoice.Receipt (validateReceiptSnapshot)
@@ -4023,6 +4024,7 @@ protectedServer user =
   :<|> MerchServer.merchProtectedServer user
   :<|> OperationsServer.operationsServer user
   :<|> EventOperationsServer.eventOperationsServer user
+  :<|> EventCrmServer.eventCrmServer user
   :<|> CommerceOperationsServer.commerceOperationsServer user
   :<|> ReviewsServer.reviewsProtectedServer user
   :<|> MusicReleaseServer.musicReleaseProtectedServer user

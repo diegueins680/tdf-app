@@ -75,6 +75,18 @@ describe('analytics/posthog (web)', () => {
     loggerErrorMock.mockReset();
   });
 
+  it.each(['/event-team/accept#synthetic-private-link', '/social/eventos/7002/crm'])('suppresses all analytics on private event page %s', route => {
+    const original = window.location.pathname + window.location.search + window.location.hash;
+    window.history.replaceState({}, '', route);
+    try {
+      testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
+      getAnalyticsClient();
+      const options = initMock.mock.calls[0]?.[1] as { before_send: (event: { properties: Record<string, unknown> }) => unknown };
+      expect(options.before_send({ properties: { token: 'phc_unit_test', $current_url: window.location.href, recipientEmail: 'synthetic@example.invalid' } })).toBeNull();
+    } finally { window.history.replaceState({}, '', original); }
+  });
+
+
   afterAll(() => {
     delete testWindow.__ENV__;
     __resetAnalyticsForTests();

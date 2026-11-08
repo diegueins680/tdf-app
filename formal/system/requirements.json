@@ -16848,6 +16848,123 @@
           "tdf-mobile/__tests__/ArtistPublicUrl.test.ts"
         ]
       }
+    },
+    {
+      "id": "EVT-CRM-001",
+      "title": "Private event invitations, CRM and canonical payment reconciliation",
+      "domain": "EVT",
+      "statement": "Implement seven-day single-use account-bound event invitations, current event-scoped roles, deduplicated CRM/imports and canonical sales evidence while transport combinations remain disabled pending joint checkout verification.",
+      "authority": "Explicit Diego implementation instruction, private main session 2026-11-07; no authorization for merge, deployment, publication, activation or real invitation.",
+      "source": "docs/events/event-crm.md",
+      "contract": "docs/events/event-crm.md",
+      "actors": [
+        "Canonical event organizer",
+        "Invited coordinator",
+        "Assigned salesperson",
+        "Explicitly delegated payment verifier",
+        "Authenticated invitation recipient"
+      ],
+      "preconditions": [
+        "Existing canonical event and organizer verified before real use",
+        "Private CRM explicitly enabled for the event",
+        "Current authenticated session",
+        "Synthetic local validation until authorized review"
+      ],
+      "inputs": [
+        "Event ID, canonical Party identity or privately confirmed recipient email",
+        "Seven-day invitation token; no raw token persisted",
+        "Versioned CRM commands and idempotency UUID",
+        "Reviewed CSV rows, canonical order and manual payment evidence"
+      ],
+      "state": {
+        "invitation": "pending, accepted or revoked; expires exactly seven days after issue",
+        "membership": "active event-only role or withdrawn",
+        "lead": "one canonical contact/event, assigned owner, workflow stage and follow-up",
+        "payment": "existing checkout/payment/evidence/tickets; no spreadsheet capture",
+        "transport": "known schedule, unknown capacity until confirmed; combination checkout disabled"
+      },
+      "allowedTransitions": [
+        "Current organizer issues coordinator or explicitly designated verifier; coordinator may invite sales only",
+        "Correct account or current verified email previews permissions and accepts atomically once",
+        "Authorized event role updates assigned contacts and canonical logistics",
+        "Import preview resolves ambiguous contacts; repeat confirmation reuses contacts and links",
+        "Independent organizer/delegate verifies existing manual evidence and finalizes canonical order atomically",
+        "Existing refund and cancellation controls release stock and reduce net sales"
+      ],
+      "forbiddenTransitions": [
+        "Use wrong, expired, revoked or already consumed invitation",
+        "Use stale event membership after withdrawal or access another event",
+        "Coordinator/sales changes prices, publication, refunds or higher roles",
+        "Count imported interest or unverified paid claim as a sale",
+        "Allocate transport orders before verified joint ticket/outbound/return inventory",
+        "Persist raw invitation tokens or publish recipient email in shared evidence"
+      ],
+      "effects": [
+        "Additive default-off CRM schema and immutable audit",
+        "Reuse canonical identity, orders, payment evidence, tickets, logistics and waitlist",
+        "No production write or real recipient invitation in validation"
+      ],
+      "authorization": "Exact canonical organizer retains administration; coordinator/sales/verifier scoped to event. Server rechecks current session and membership on every operation and replay. Existing financial independence is retained.",
+      "privacy": "Raw tokens returned only on first issue, fragment-only URL, hashed token/email binding, SMTP proof; no analytics on CRM/invitation screens. Public fixtures are synthetic; actual pilot inventory and screenshots are private.",
+      "concurrency": "Event/control row fence serializes current authority; membership changes advance version to abort stale repeatable-read waiters. Acceptance consumes and grants within one transaction. Canonical checkout locks own stock/payment state.",
+      "idempotency": "Actor/event/UUID command receipts; stable import/contact keys and event/contact uniqueness; canonical payment/refund receipts prevent double capture/release.",
+      "failure": "Invalid identity, session, event, version, evidence, transport or email delivery fails closed. Unknown capacities and absent joint checkout keep combination sales disabled.",
+      "recovery": "Revoke pending invitation or withdraw active membership separately; populated rollback refuses data loss. Existing canonical refunds/cancellation remain authoritative.",
+      "observability": "Synthetic PostgreSQL lock-barrier, HTTP actual-session/checkout, mobile browser, CSV and analytics tests; bounded policy model with eight unsafe variants. No production qualification claim.",
+      "implementation": [
+        ".github/workflows/event-crm.yml",
+        "scripts/production-migrations.json",
+        "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/api/eventCrm.test.ts",
+        "tdf-hq-ui/src/api/eventCrm.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/pages/EventCrmPage.tsx",
+        "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx",
+        "tdf-hq-ui/src/pages/EventTeamInvitationPage.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/utils/videoSource.ts",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/event-crm.yaml",
+        "tdf-hq/sql/2026-11-07_event_crm.sql",
+        "tdf-hq/sql/2026-11-07_event_crm_rollback.sql",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/EventOperations/CrmAPI.hs",
+        "tdf-hq/src/TDF/EventOperations/CrmPayments.hs",
+        "tdf-hq/src/TDF/EventOperations/CrmServer.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "tests": [
+        "scripts/__tests__/event-crm-browser.mjs",
+        "scripts/__tests__/event-crm-http.mjs",
+        "scripts/__tests__/event-crm-model.test.mjs",
+        "scripts/test-event-crm-http.py",
+        "scripts/test-event-crm.py",
+        "tdf-hq/test/EventCrmHttpMain.hs",
+        "tdf-hq/test/integration/event_crm_fixture.sql",
+        "tdf-hq/test/integration/event_crm_http_fixture.sql"
+      ],
+      "formalModels": [
+        "formal/event-operations/event-crm-model.mjs"
+      ],
+      "status": "specified and implemented",
+      "confidence": "Scoped local implementation and executable finite tests; independent review and authorized environment remain pending.",
+      "ambiguity": [
+        "Real organizer/event ID, start time, transport capacities and authorized environment pending private confirmation."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local source/tests only. Joint transport checkout intentionally disabled; real event/account qualification and authorized release remain pending."
+      },
+      "property": "No unauthorized or duplicated role grant, canonical contact link, sale or stock allocation; withdrawing event access fences later reads, writes, exports and retries.",
+      "verification": "Executable bounded policy plus PostgreSQL concurrent acceptance and withdrawal, actual-session HTTP financial lifecycle and real mobile browser.",
+      "evidence": "Private pilot package and sanitized local counts; CI receipts remain separate."
     }
   ]
 }

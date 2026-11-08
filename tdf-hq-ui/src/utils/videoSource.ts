@@ -9,7 +9,7 @@ export function videoSourceKey(value: string): string | null {
     return id ? `file:${id}` : null;
   }
   const parts = new URL(source.src).pathname.split('/').filter(Boolean);
-  return `${source.provider}:${source.provider === 'instagram' ? parts[1] : parts.at(-1)}`;
+  return `${source.provider}:${source.provider === 'instagram' ? parts[1] : parts[parts.length - 1]}`;
 }
 
 /** Parse known public URLs; never render supplied HTML, follow shorteners or fetch oEmbed on the server. */

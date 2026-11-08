@@ -345,6 +345,7 @@ export default function SocialEventDetailPage() {
             Compartir entradas
           </Button>
         )}
+        {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/crm`}>Equipo y CRM</Button>}
         {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
       </Stack>}
     >

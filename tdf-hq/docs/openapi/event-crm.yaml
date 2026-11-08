@@ -1,0 +1,255 @@
+paths:
+  /event-crm/events/{eventId}:
+    parameters:
+    - &id001
+      name: eventId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+        maximum: 9007199254740991
+    get:
+      operationId: getEventCrm
+      tags:
+      - Event CRM
+      summary: Read the current event-scoped CRM
+      security: &id002
+      - bearerAuth: []
+      responses:
+        '200': &id003
+          description: Private authorized result. Shape depends on the selected command;
+            see docs/events/event-crm.md and the runtime-validated web projection.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                enum:
+                - private, no-store
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Invalid request or unavailable invitation
+        '401':
+          description: Authentication required
+        '403':
+          description: Current role forbids this operation
+        '404':
+          description: Event or authorized resource unavailable
+        '409':
+          description: Stale version, conflict or expired canonical order
+        '429':
+          description: Email verification rate limited
+        '503':
+          description: Required database or email delivery unavailable
+      parameters:
+      - name: stage
+        in: query
+        schema:
+          type: string
+          enum:
+          - interested
+          - contacted
+          - reserved
+          - paid
+          - closed_lost
+      - name: responsibleId
+        in: query
+        schema:
+          type: integer
+          format: int64
+      - name: overdue
+        in: query
+        schema:
+          type: boolean
+  /event-crm/events/{eventId}/commands:
+    parameters:
+    - *id001
+    post:
+      operationId: commandEventCrm
+      tags:
+      - Event CRM
+      summary: Execute an idempotent event-authorized command
+      security: *id002
+      responses:
+        '200': *id003
+        '400':
+          description: Invalid request or unavailable invitation
+        '401':
+          description: Authentication required
+        '403':
+          description: Current role forbids this operation
+        '404':
+          description: Event or authorized resource unavailable
+        '409':
+          description: Stale version, conflict or expired canonical order
+        '429':
+          description: Email verification rate limited
+        '503':
+          description: Required database or email delivery unavailable
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        schema:
+          type: string
+          format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - operation
+              properties:
+                operation:
+                  type: string
+                  enum:
+                  - recipient.lookup
+                  - invitation.create
+                  - invitation.revoke
+                  - membership.revoke
+                  - lead.create
+                  - lead.update
+                  - import.preview
+                  - import.confirm
+                  - task.save
+                  - task.assign
+                  - transport.confirm
+                  - waitlist.join
+                  - manual.submit
+                  - manual.review
+              additionalProperties: true
+              description: Discriminated command payload. Field validation, current
+                event authority and canonical payment evidence are enforced on the
+                server. At most 1 MiB; imports at most 500 rows. A replay never returns
+                a fresh invitation token.
+  /event-crm/events/{eventId}/export:
+    parameters:
+    - *id001
+    get:
+      operationId: exportEventCrm
+      tags:
+      - Event CRM
+      summary: Export only currently authorized event data
+      security: *id002
+      responses:
+        '200': *id003
+        '400':
+          description: Invalid request or unavailable invitation
+        '401':
+          description: Authentication required
+        '403':
+          description: Current role forbids this operation
+        '404':
+          description: Event or authorized resource unavailable
+        '409':
+          description: Stale version, conflict or expired canonical order
+        '429':
+          description: Email verification rate limited
+        '503':
+          description: Required database or email delivery unavailable
+  /event-crm/invitations:
+    post:
+      operationId: actionEventCrmInvitation
+      tags:
+      - Event CRM
+      summary: Preview or atomically accept an account-bound one-use invitation
+      security: *id002
+      responses:
+        '200': *id003
+        '400':
+          description: Invalid request or unavailable invitation
+        '401':
+          description: Authentication required
+        '403':
+          description: Current role forbids this operation
+        '404':
+          description: Event or authorized resource unavailable
+        '409':
+          description: Stale version, conflict or expired canonical order
+        '429':
+          description: Email verification rate limited
+        '503':
+          description: Required database or email delivery unavailable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token: &id004
+                  type: string
+                  minLength: 43
+                  maxLength: 43
+                  pattern: ^[A-Za-z0-9_-]{43}$
+                  writeOnly: true
+                accept:
+                  type: boolean
+              required:
+              - token
+              - accept
+  /event-crm/email/request:
+    post:
+      operationId: requestEventCrmEmailProof
+      tags:
+      - Event CRM
+      summary: Send a thirty-minute proof to the authenticated account email
+      security: *id002
+      responses:
+        '200': *id003
+        '400':
+          description: Invalid request or unavailable invitation
+        '401':
+          description: Authentication required
+        '403':
+          description: Current role forbids this operation
+        '404':
+          description: Event or authorized resource unavailable
+        '409':
+          description: Stale version, conflict or expired canonical order
+        '429':
+          description: Email verification rate limited
+        '503':
+          description: Required database or email delivery unavailable
+  /event-crm/email/confirm:
+    post:
+      operationId: confirmEventCrmEmailProof
+      tags:
+      - Event CRM
+      summary: Verify the current account email with a single-use proof
+      security: *id002
+      responses:
+        '200': *id003
+        '400':
+          description: Invalid request or unavailable invitation
+        '401':
+          description: Authentication required
+        '403':
+          description: Current role forbids this operation
+        '404':
+          description: Event or authorized resource unavailable
+        '409':
+          description: Stale version, conflict or expired canonical order
+        '429':
+          description: Email verification rate limited
+        '503':
+          description: Required database or email delivery unavailable
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                token: *id004
+              required:
+              - token

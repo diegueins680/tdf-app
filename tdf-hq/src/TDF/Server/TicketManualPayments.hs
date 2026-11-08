@@ -11,6 +11,7 @@ module TDF.Server.TicketManualPayments
   , validateManualReviewNotes
   , listTicketManualPayments
   , reviewTicketManualPayment
+  , reviewCrmTicketManualPayment
   , validateBankRefundReference
   , completeBankTransferTicketRefund
   ) where
@@ -131,7 +132,31 @@ decideTicketManualPayment
   -> Text
   -> UTCTime
   -> SqlPersistT IO (Either Text Bool)
-decideTicketManualPayment reviewer eventKey orderKey action notes now = do
+decideTicketManualPayment = decideTicketManualPaymentFor Checkout.ProviderBankTransfer False
+
+-- Only the scoped CRM entry point can designate a non-organizer verifier.
+-- Recheck under the event fence; never represent the delegate as a global admin.
+reviewCrmTicketManualPayment
+  :: Checkout.PaymentProvider -> ManualReviewer -> SM.SocialEventId
+  -> SM.EventTicketOrderId -> ManualReviewAction -> Text -> UTCTime
+  -> SqlPersistT IO () -> SqlPersistT IO (Either Text Bool)
+reviewCrmTicketManualPayment provider reviewer eventKey orderKey action notes now issue = do
+  roles <- rawSql "SELECT event_crm_role(?,?)" [toPersistValue eventKey, PersistInt64 (mrPartyId reviewer)]
+    :: SqlPersistT IO [Single (Maybe Text)]
+  case roles of
+    [Single (Just role)] | role `elem` ["owner", "payment_verifier"]
+      && provider `elem` [Checkout.ProviderBankTransfer,Checkout.ProviderCash] -> do
+        result <- decideTicketManualPaymentFor provider (role == "payment_verifier")
+          reviewer eventKey orderKey action notes now
+        when (result == Right True) issue
+        pure result
+    _ -> pure (Left "Event payment verifier required")
+
+decideTicketManualPaymentFor
+  :: Checkout.PaymentProvider -> Bool -> ManualReviewer -> SM.SocialEventId
+  -> SM.EventTicketOrderId -> ManualReviewAction -> Text -> UTCTime
+  -> SqlPersistT IO (Either Text Bool)
+decideTicketManualPaymentFor provider delegated reviewer eventKey orderKey action notes now = do
   rows <- rawSql
     "SELECT checkout.id::text, checkout.status, checkout.environment,\
     \ GREATEST(runtime.hold_expires_at, runtime.manual_hold_expires_at),\
@@ -150,15 +175,17 @@ decideTicketManualPayment reviewer eventKey orderKey action notes now = do
     \ WHERE runtime.order_id = ? AND runtime.event_id = ?\
     \ AND checkout.domain_type = 'event_ticket_order'\
     \ AND checkout.domain_order_id = runtime.order_id::text\
-    \ AND attempt.provider = 'bank_transfer' AND attempt.operation = 'manual_verify'\
+    \ AND attempt.provider = ? AND attempt.operation = 'manual_verify'\
     \ FOR UPDATE OF checkout, attempt, evidence"
-    [PersistInt64 reviewerId, toPersistValue orderKey, toPersistValue eventKey]
+    [PersistInt64 reviewerId, toPersistValue orderKey, toPersistValue eventKey, PersistText (Checkout.paymentProviderText provider)]
     :: SqlPersistT IO
       [( Single Text, Single Text, Single Text, Single UTCTime, Single Text, Single Text
        , Single Text, Single Text, Single Text, Single (Maybe Int64), Single (Maybe Int64)
        , Single Int64, Single Text, Single (Maybe Text), Single (Maybe Text)
        , Single (Maybe Text)
        )]
+  admissionClocks <- rawSql "SELECT clock_timestamp()" [] :: SqlPersistT IO [Single UTCTime]
+  let admissionTime = case admissionClocks of [Single value] -> value; _ -> now
   case rows of
     [] -> pure (Left "No bank transfer evidence exists for this ticket order")
     (_:_:_) -> pure (Left "Bank transfer evidence is ambiguous and requires reconciliation")
@@ -168,7 +195,7 @@ decideTicketManualPayment reviewer eventKey orderKey action notes now = do
      , Single currency, Single mBuyerEmail, Single mOrganizer, Single mReviewerEmail
      )] -> case Checkout.resolveCheckoutEnvironment (Just (T.unpack environmentText)) of
       Left problem -> pure (Left problem)
-      Right environment -> decide Decision
+      Right environment -> decide admissionTime Decision
         { dCheckout = Checkout.CheckoutReference checkoutId
         , dCheckoutStatus = checkoutStatus
         , dEnvironment = environment
@@ -192,9 +219,9 @@ decideTicketManualPayment reviewer eventKey orderKey action notes now = do
     correlation = "event-ticket:" <> orderReference <> ":bank_transfer:manual-review"
     sameEmail a b = T.toCaseFold (T.strip a) == T.toCaseFold (T.strip b)
 
-    decide :: Decision -> SqlPersistT IO (Either Text Bool)
-    decide d
-      | not (mrStrictAdmin reviewer || dOrganizer d == Just (T.pack (show reviewerId))) =
+    decide :: UTCTime -> Decision -> SqlPersistT IO (Either Text Bool)
+    decide admissionTime d
+      | not (delegated || mrStrictAdmin reviewer || dOrganizer d == Just (T.pack (show reviewerId))) =
           pure (Left "Only the event organizer or an administrator may review this payment")
       | dSubmittedBy d == Nothing =
           pure (Left "Bank transfer evidence has no recorded submitter")
@@ -216,7 +243,7 @@ decideTicketManualPayment reviewer eventKey orderKey action notes now = do
       | dCheckoutStatus d == "paid" = do
           exception d "manual_evidence_after_other_payment"
           pure (Left "This ticket order is already paid by another payment attempt")
-      | action == ManualApprove && dHoldExpiresAt d <= now = do
+      | action == ManualApprove && dHoldExpiresAt d <= admissionTime = do
           exception d "manual_payment_after_ticket_hold_expiry"
           pure (Left "The seat hold expired; the transfer requires reconciliation or refund and no ticket was issued")
       | action == ManualApprove
@@ -241,7 +268,7 @@ decideTicketManualPayment reviewer eventKey orderKey action notes now = do
                 [PersistUTCTime now, PersistText notes, PersistText (dEvidence d)]
               Checkout.recordPaymentFailure (dCheckout d)
                 (Checkout.PaymentAttemptReference (dAttempt d))
-                Checkout.ProviderBankTransfer "manual_evidence_rejected" correlation now
+                provider "manual_evidence_rejected" correlation now
               audit d "manual_payment_rejected"
               keepDecision
               pure (Right False)
@@ -254,7 +281,7 @@ decideTicketManualPayment reviewer eventKey orderKey action notes now = do
               binding <- Checkout.bindProviderResource Checkout.ProviderBindingCreation
                 { Checkout.pbcAttempt = Checkout.PaymentAttemptReference (dAttempt d)
                 , Checkout.pbcCheckout = dCheckout d
-                , Checkout.pbcProvider = Checkout.ProviderBankTransfer
+                , Checkout.pbcProvider = provider
                 , Checkout.pbcEnvironment = dEnvironment d
                 , Checkout.pbcMerchantRef = dMerchantRef d
                 , Checkout.pbcResourceType = "manual_evidence"
@@ -273,7 +300,7 @@ decideTicketManualPayment reviewer eventKey orderKey action notes now = do
                   verified <- Checkout.recordApprovedManualPayment Checkout.VerifiedPayment
                     { Checkout.vpAttempt = Checkout.PaymentAttemptReference (dAttempt d)
                     , Checkout.vpCheckout = dCheckout d
-                    , Checkout.vpProvider = Checkout.ProviderBankTransfer
+                    , Checkout.vpProvider = provider
                     , Checkout.vpEnvironment = dEnvironment d
                     , Checkout.vpMerchantRef = dMerchantRef d
                     , Checkout.vpResourceType = "manual_evidence"
@@ -302,7 +329,7 @@ decideTicketManualPayment reviewer eventKey orderKey action notes now = do
 
     exception :: Decision -> Text -> SqlPersistT IO ()
     exception d code = Checkout.recordReconciliationException
-      Checkout.ProviderBankTransfer (dEnvironment d) (dMerchantRef d) code
+      provider (dEnvironment d) (dMerchantRef d) code
       orderReference (dEvidence d) (dAmountMinor d) (Just (dAmountMinor d)) (dCurrency d) now
 
     audit :: Decision -> Text -> SqlPersistT IO ()
