@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TDF Marketplace — mockups Fase 1</title>
+<style>
+  :root { --ink:#141414; --muted:#6b6b6b; --line:#e3e1dc; --paper:#fbfaf7; --card:#fff; --accent:#c8102e; --accent-soft:#fbe9ec; --seek:#5b2a86; --seek-soft:#efe6f7; --offer:#0b6e6e; --offer-soft:#e3f3f3; --ok:#1e7f4f; --ok-soft:#e6f4ec; --warn:#b26a00; --warn-soft:#fff3df; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color:var(--ink); background:#efede8; }
+  header.page { padding:28px 32px 8px; }
+  header.page h1 { margin:0 0 4px; font-size:28px; letter-spacing:-.02em; }
+  header.page p { margin:0; color:var(--muted); max-width:70ch; }
+  .board { display:grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap:28px; padding:24px 32px 48px; align-items:start; }
+  .screen { background:var(--paper); border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.06); }
+  .screen > .label { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); padding:10px 14px; border-bottom:1px dashed var(--line); background:#f3f1ec; }
+  .screen .body { padding:16px; }
+  .screen.mobile { max-width:390px; justify-self:center; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--line); background:#111; color:#fff; font-weight:700; }
+  .topbar small { font-weight:400; opacity:.7; }
+  h2 { font-size:20px; margin:0 0 6px; letter-spacing:-.01em; }
+  h3 { font-size:15px; margin:14px 0 8px; }
+  p.sub { margin:0 0 12px; color:var(--muted); font-size:13px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .chip { font-size:11.5px; padding:3px 9px; border-radius:999px; border:1px solid var(--line); background:#fff; white-space:nowrap; }
+  .chip.seek { background:var(--seek-soft); border-color:transparent; color:var(--seek); font-weight:700; }
+  .chip.offer { background:var(--offer-soft); border-color:transparent; color:var(--offer); font-weight:700; }
+  .chip.ok { background:var(--ok-soft); color:var(--ok); border-color:transparent; }
+  .chip.warn { background:var(--warn-soft); color:var(--warn); border-color:transparent; }
+  .chip.price { background:var(--accent-soft); color:var(--accent); border-color:transparent; font-weight:700; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:8px 0; }
+  .card.turn { border-color:var(--accent); box-shadow:inset 3px 0 0 var(--accent); }
+  .row { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+  .name { font-weight:700; }
+  .meta { font-size:12px; color:var(--muted); }
+  .amount { font-size:18px; font-weight:800; letter-spacing:-.01em; }
+  .amount small { font-size:11px; color:var(--muted); font-weight:500; display:block; }
+  .stars { color:#d99a00; font-size:12px; letter-spacing:1px; }
+  .actions { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .btn { font-size:12.5px; padding:7px 12px; border-radius:8px; border:1px solid var(--line); background:#fff; font-weight:600; }
+  .btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .btn.ghost { background:transparent; }
+  .btn.danger { color:var(--accent); }
+  .field { border:1px solid var(--line); border-radius:8px; padding:9px 10px; background:#fff; font-size:13px; color:var(--muted); margin:6px 0; }
+  .field b { color:var(--ink); font-weight:600; display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:2px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .seg { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; font-size:12px; }
+  .seg span { padding:6px 10px; background:#fff; }
+  .seg span.on { background:var(--ink); color:#fff; }
+  .timeline { margin:8px 0 0; padding:0; list-style:none; font-size:12.5px; }
+  .timeline li { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-top:1px dashed var(--line); }
+  .timeline li:first-child { border-top:0; }
+  .timeline .who { color:var(--muted); }
+  .tabs { display:flex; gap:14px; font-size:13px; border-bottom:1px solid var(--line); margin-bottom:10px; }
+  .tabs span { padding:8px 2px; color:var(--muted); }
+  .tabs span.on { color:var(--ink); font-weight:700; border-bottom:2px solid var(--accent); }
+  .stat { font-size:12px; color:var(--muted); }
+  .hero { background:linear-gradient(135deg,#1b1b1b,#3b1f2a); color:#fff; padding:16px; border-radius:12px; margin-bottom:12px; }
+  .hero h2 { color:#fff; font-size:22px; }
+  .hero .meta { color:#ddd; }
+  .notice { font-size:12.5px; padding:10px 12px; border-radius:8px; background:var(--warn-soft); color:var(--warn); margin-top:10px; }
+  .notice.ok { background:var(--ok-soft); color:var(--ok); }
+  footer.note { padding:0 32px 40px; color:var(--muted); font-size:13px; max-width:90ch; }
+  footer.note code { background:#fff; border:1px solid var(--line); padding:1px 5px; border-radius:4px; }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>TDF Marketplace de demanda y oferta — mockups Fase 1</h1>
+  <p>Seis pantallas sobre el directorio existente (<code>/buscar</code>, <code>/clasificados/:slug</code>, <code>/mis-clasificados</code>). Los componentes son MUI; aquí se muestran como wireframes de media fidelidad para revisar flujo, jerarquía y textos. Versión web y móvil de las pantallas críticas.</p>
+</header>
+
+<section class="board">
+
+  <!-- 1. Búsqueda con intención -->
+  <article class="screen">
+    <div class="label">1 · Web · /buscar — filtro de intención y badges</div>
+    <div class="body">
+      <h2>Encuentra a la gente y las oportunidades que hacen música</h2>
+      <div class="chips"><span class="chip">Todos (128)</span><span class="chip">Artistas (41)</span><span class="chip" style="font-weight:700;border-color:#111">Clasificados (37)</span><span class="chip">Eventos</span><span class="chip">Venues</span></div>
+      <div class="seg"><span>Todos</span><span class="on">Busca</span><span>Ofrece</span></div>
+      <div class="card">
+        <div class="row"><div><div class="chips" style="margin:0 0 4px"><span class="chip">Clasificado</span><span class="chip seek">Busca</span><span class="chip">Busco banda o proyecto</span></div><div class="name">Banda para boda en Cumbayá · 14 feb</div><div class="meta">Wedding planner · Quito, EC · 4 h · sonido provisto</div></div><div class="amount">Ref. $ 1.200<small>precio sugerido · 3 ofertas</small></div></div>
+        <div class="actions"><span class="btn primary">Enviar oferta</span><span class="btn ghost">Guardar</span></div>
+      </div>
+      <div class="card">
+        <div class="row"><div><div class="chips" style="margin:0 0 4px"><span class="chip">Clasificado</span><span class="chip seek">Busca</span><span class="chip">Busco venue</span></div><div class="name">Venue para 500 personas · sábado 7 mar</div><div class="meta">Organizador · Guayaquil, EC · aforo 500</div></div><div class="amount">Abierto<small>sin precio · 1 oferta</small></div></div>
+        <div class="actions"><span class="btn primary">Enviar oferta</span><span class="btn ghost">Guardar</span></div>
+      </div>
+      <div class="card">
+        <div class="row"><div><div class="chips" style="margin:0 0 4px"><span class="chip">Clasificado</span><span class="chip offer">Ofrece</span><span class="chip">Ofrezco servicios</span></div><div class="name">Bajista de sesión · funk, soul, latin</div><div class="meta">Músico · Quito, EC · remoto y presencial</div></div><div class="amount">$ 80/h<small>tarifa base · negociable</small></div></div>
+        <div class="actions"><span class="btn">Contactar</span><span class="btn ghost">Invitar a un anuncio</span></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 2. Publicar búsqueda -->
+  <article class="screen">
+    <div class="label">2 · Web · /mis-clasificados → Publicar anuncio (busca)</div>
+    <div class="body">
+      <h2>Nuevo anuncio</h2>
+      <p class="sub">Los campos obligatorios dependen de la categoría. La intención (busca / ofrece) la define la categoría.</p>
+      <div class="grid2"><div class="field"><b>Perfil que publica</b>Eventos Luna · organización</div><div class="field"><b>Categoría</b>Busco banda o proyecto <span class="chip seek" style="margin-left:6px">Busca</span></div></div>
+      <div class="field"><b>Título</b>Banda para boda en Cumbayá · 14 de febrero</div>
+      <div class="field"><b>Descripción</b>Boda de 180 invitados, ceremonia al aire libre y fiesta en salón. Buscamos banda versátil (pop, rock en español, salsa)…</div>
+      <div class="grid2"><div class="field"><b>Géneros</b>Pop · Rock en español · Salsa</div><div class="field"><b>Ciudad</b>Quito (Cumbayá) · radio 30 km</div></div>
+      <div class="grid2"><div class="field"><b>Inicio</b>14 feb 2027 · 20:00</div><div class="field"><b>Fin</b>15 feb 2027 · 00:00</div></div>
+      <h3>Cómo recibirás ofertas</h3>
+      <div class="grid2"><div class="field"><b>Cupos</b>1 oferta aceptada</div><div class="field"><b>Modo de precio</b>Sugerido: $ 1.200 USD (negociable)</div></div>
+      <div class="grid2"><div class="field"><b>Fecha límite para ofertar</b>31 ene 2027</div><div class="field"><b>Duración estimada</b>240 min</div></div>
+      <div class="field"><b>Equipo provisto o requerido</b>Sonido y luces provistos por el salón; la banda trae backline.</div>
+      <div class="actions"><span class="btn">Cancelar</span><span class="btn primary">Guardar borrador</span></div>
+      <div class="notice ok">Al publicar: vence en 30 días, quienes respondan verán el precio sugerido y podrán ofertar o contraofertar. Tú comparas y eliges.</div>
+    </div>
+  </article>
+
+  <!-- 3. Detalle público + ofertar (móvil) -->
+  <article class="screen mobile">
+    <div class="label">3 · Móvil · /clasificados/banda-para-boda-cumbaya</div>
+    <div class="topbar"><span>TDF</span><small>← Volver a buscar</small></div>
+    <div class="body">
+      <div class="hero">
+        <div class="chips"><span class="chip seek">Busca</span><span class="chip" style="background:#fff2">Busco banda o proyecto</span></div>
+        <h2>Banda para boda en Cumbayá · 14 feb</h2>
+        <div class="meta">Publicado por Eventos Luna · Quito · 20:00–00:00</div>
+      </div>
+      <div class="chips"><span class="chip price">Precio sugerido $ 1.200</span><span class="chip ok">1 de 1 cupo disponible</span><span class="chip">3 ofertas · $ 1.100 – $ 1.300</span><span class="chip warn">Ofertas hasta 31 ene</span></div>
+      <p class="sub">Boda de 180 invitados… sonido y luces provistos; la banda trae backline. Duración 4 h.</p>
+      <h3>¿Puedes cubrir lo que busca? Envía tu oferta</h3>
+      <div class="field"><b>Actuar como perfil</b>Los Sintéticos · banda</div>
+      <div class="grid2"><div class="field"><b>Moneda</b>USD · $</div><div class="field"><b>Monto</b>1.300,00</div></div>
+      <div class="stat">Precio de referencia del anuncio; puedes proponer otro.</div>
+      <div class="field"><b>Mensaje</b>Tocamos 4 h con backline incluido, repertorio pop/rock/salsa, dos vocalistas…</div>
+      <div class="grid2"><div class="field"><b>Disponibilidad</b>Libre el 14 feb</div><div class="field"><b>Duración (min)</b>240</div></div>
+      <div class="actions"><span class="btn primary" style="width:100%;text-align:center">Enviar oferta</span></div>
+      <div class="stat" style="margin-top:8px">TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos. La negociación del precio se hace por rondas, no por chat.</div>
+    </div>
+  </article>
+
+  <!-- 4. Tablero de comparación (autor) -->
+  <article class="screen">
+    <div class="label">4 · Web · /mis-clasificados → Anuncios → Ofertas (autor)</div>
+    <div class="body">
+      <div class="row"><div><h2>Banda para boda en Cumbayá · 14 feb</h2><p class="sub">3 ofertas · <span class="chip ok">1 de 1 cupo</span> <span class="chip">Rango $ 1.100 – $ 1.300</span> <span class="chip">Precio sugerido $ 1.200 (negociable)</span></p></div><div class="seg"><span>Recientes</span><span class="on">Menor precio</span><span>Mayor precio</span><span>Reputación</span></div></div>
+      <div class="card">
+        <div class="row"><div><div class="name">Orquesta Prueba</div><div class="stars">★★★★☆ <span class="meta">4.1 (3 reseñas · 2 trabajos)</span></div><div class="meta">Repertorio tropical, tres sets. Disponibilidad: libre.</div></div><div class="amount">$ 1.100<small>Enviada · te toca responder</small></div></div>
+        <div class="actions"><span class="btn">Marcar vista</span><span class="btn">Preseleccionar</span><span class="btn primary">Aceptar $ 1.100</span><span class="btn">Contraofertar</span><span class="btn danger">Rechazar</span></div>
+      </div>
+      <div class="card turn">
+        <div class="row"><div><div class="name">Los Sintéticos</div><div class="stars">★★★★★ <span class="meta">4.8 (6 reseñas · 9 trabajos)</span></div><div class="meta">Tocamos 4 h con backline incluido…</div></div><div class="amount">$ 1.250<small>Contraoferta del oferente · te toca responder</small></div></div>
+        <ul class="timeline">
+          <li><span>Ronda 1 · oferta inicial de <span class="who">quien oferta</span></span><b>$ 1.300</b></li>
+          <li><span>Ronda 2 · contraoferta de <span class="who">quien publica</span> — "Podemos llegar a 1.200 si incluyen backline"</span><b>$ 1.200</b></li>
+          <li><span>Ronda 3 · contraoferta de <span class="who">quien oferta</span> — "1.250 con backline y transporte"</span><b>$ 1.250</b></li>
+        </ul>
+        <div class="actions"><span class="btn primary">Aceptar $ 1.250</span><span class="btn">Contraofertar</span><span class="btn danger">Rechazar</span></div>
+      </div>
+      <div class="card">
+        <div class="row"><div><div class="name">Trío Andino Eléctrico</div><div class="stars"><span class="meta">Sin reseñas todavía</span></div><div class="meta">Formato trío, 3 h…</div></div><div class="amount">$ 1.300<small>Preseleccionada · esperando a la otra parte</small></div></div>
+        <div class="actions"><span class="btn ghost">Ver negociación (2 rondas)</span><span class="btn danger">Rechazar</span></div>
+      </div>
+      <div class="notice">Al aceptar una oferta se consume el único cupo: el anuncio pasa a <b>cubierto</b> y las otras ofertas se rechazan automáticamente con el motivo "cupos cubiertos".</div>
+    </div>
+  </article>
+
+  <!-- 5. Mis ofertas (oferente, móvil) -->
+  <article class="screen mobile">
+    <div class="label">5 · Móvil · /mis-clasificados → Mis ofertas (oferente)</div>
+    <div class="topbar"><span>Mis ofertas</span><small>Los Sintéticos</small></div>
+    <div class="body">
+      <div class="tabs"><span class="on">Abiertas (2)</span><span>Aceptadas (1)</span><span>Cerradas (4)</span></div>
+      <div class="card turn">
+        <div class="chips" style="margin:0 0 6px"><span class="chip seek">Busca</span><span class="chip warn">Te toca responder</span></div>
+        <div class="name">Banda para boda en Cumbayá · 14 feb</div>
+        <div class="meta">Eventos Luna · contraoferta del autor · vence el 20 ene</div>
+        <div class="amount" style="margin-top:6px">$ 1.200 <small>tu última propuesta: $ 1.300</small></div>
+        <ul class="timeline"><li><span>Ronda 1 · tu oferta inicial</span><b>$ 1.300</b></li><li><span>Ronda 2 · contraoferta de quien publica</span><b>$ 1.200</b></li></ul>
+        <div class="actions"><span class="btn primary">Aceptar $ 1.200</span><span class="btn">Contraofertar</span><span class="btn danger">Declinar</span></div>
+      </div>
+      <div class="card">
+        <div class="chips" style="margin:0 0 6px"><span class="chip seek">Busca</span><span class="chip">Esperando a la otra parte</span></div>
+        <div class="name">Festival barrial · 3 bandas · 7 mar</div>
+        <div class="meta">Casa Cultural Norte · 2 de 3 cupos disponibles · enviada hace 2 días</div>
+        <div class="amount" style="margin-top:6px">$ 600</div>
+        <div class="actions"><span class="btn ghost">Ver negociación</span><span class="btn danger">Retirar</span></div>
+      </div>
+    </div>
+  </article>
+
+  <!-- 6. Aceptación y pago (Fase 2, orientativo) -->
+  <article class="screen">
+    <div class="label">6 · Web · Acuerdo y pago (Fase 2 — orientativo, detrás de gate)</div>
+    <div class="body">
+      <div class="chips"><span class="chip ok">Oferta aceptada</span><span class="chip">Acuerdo #A-2027-0142</span><span class="chip warn">Depósito pendiente · vence en 48 h</span></div>
+      <h2>Los Sintéticos → Eventos Luna · 14 feb 2027</h2>
+      <p class="sub">Banda para boda en Cumbayá · 4 h · backline y transporte incluidos · sonido y luces del salón.</p>
+      <div class="grid2">
+        <div class="field"><b>Monto acordado</b><span class="amount" style="color:var(--ink)">$ 1.250,00 USD</span></div>
+        <div class="field"><b>Depósito ahora (30 %)</b><span class="amount" style="color:var(--ink)">$ 375,00</span><span class="stat">Saldo $ 875,00 hasta el 13 feb</span></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><b>Comisión TDF (10 %)</b>$ 125,00 · se descuenta al proveedor en la liquidación</div>
+        <div class="field"><b>Cancelación</b>Reembolso total hasta 14 días antes; 50 % hasta 7 días; sin reembolso después.</div>
+      </div>
+      <div class="actions"><span class="btn primary">Pagar depósito con tarjeta (Stripe)</span><span class="btn">PayPal</span><span class="btn ghost">Pago manual verificado</span></div>
+      <ul class="timeline" style="margin-top:14px"><li><span>Depósito pendiente</span><b>ahora</b></li><li><span>Confirmado</span><b>al acreditarse</b></li><li><span>Saldo por pagar</span><b>13 feb</b></li><li><span>En curso → Completado</span><b>14–17 feb</b></li><li><span>Reseñas verificadas (ambas partes)</span><b>hasta 19 mar</b></li></ul>
+      <div class="notice">No se usa la palabra "escrow": TDF cobra depósito y saldo, retiene la comisión y liquida al proveedor según la capacidad del medio de pago y el país.</div>
+    </div>
+  </article>
+
+</section>
+
+<footer class="note">
+  Estas pantallas corresponden a <code>docs/marketplace/02-especificacion-funcional.md</code> (casos 1, 2 y 5) y al ADR 0132. Los componentes implementados en la Fase 1 son <code>OfferForm</code>, <code>OffersBoard</code>, <code>OfferCard</code> y <code>MyOffersPanel</code> en <code>tdf-hq-ui/src/features/marketplace/</code>; la pantalla 6 es la referencia de diseño para la Fase 2 (acuerdo, depósito y comisión) y no está implementada.
+</footer>
+</body>
+</html>
