@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 516,
+    "total": 517,
     "named": 14,
     "path-named": 1,
     "reviewed": 0,
-    "unspecified": 501,
+    "unspecified": 502,
     "covered": 15
   },
   "routes": [
@@ -2845,6 +2845,12 @@
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/waitlist/{entryId}/notify",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/{eventId}/workspace",
       "basis": "unspecified",
       "requirements": []
     },
