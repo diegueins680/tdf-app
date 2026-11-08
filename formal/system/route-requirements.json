@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 516,
+    "total": 518,
     "named": 14,
     "path-named": 1,
     "reviewed": 0,
-    "unspecified": 501,
+    "unspecified": 503,
     "covered": 15
   },
   "routes": [
@@ -1249,6 +1249,18 @@
     {
       "method": "POST",
       "path": "/instagram/webhook",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "PUT",
+      "path": "/integrations/event-watch/import",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/integrations/event-watch/token",
       "basis": "unspecified",
       "requirements": []
     },
