@@ -17504,10 +17504,10 @@
       ],
       "authorization": "Creation grants only the Customer role through the account.apple.customer automatic policy; linking requires existing credentials.",
       "privacy": "Apple verified relay/contact email is stored as the private primary email; both Google and Apple use canonical initialAccountName when a provider name is absent, never an email as the public display-name fallback. Tokens and raw nonces are never logged.",
-      "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses single-flight through a cancellation-safe lock. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
+      "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses and stale known keys single-flight through a cancellation-safe lock. A usable successful key set is cached for strictly less than 900 seconds; a matching kid does not extend that lifetime. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
       "idempotency": "Repeated login for a bound subject reuses the credential.",
       "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
-      "recovery": "After key retrieval failure or cancellation, fail closed during the attempt cooldown; retry key retrieval after the cooldown. Existing cached tokens still require an unexpired valid signature/claims, or the user can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
+      "recovery": "After key retrieval failure, unusable responses or cancellation, stale known keys fail closed during the attempt cooldown; retry retrieval after the cooldown. Failed attempts never renew successful-cache lifetime. Fresh known keys remain usable while every token signature and claim is rechecked. A backward clock cannot make a future cache timestamp fresh. Users can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
       "observability": "login_apple auth activity and rejected-token warnings without token content.",
       "source": "App Store Connect rejection notice relayed by the product owner",
       "implementation": [
@@ -17567,7 +17567,7 @@
       "confidence": "Source-bound compiled verifier/request/session-window/DTO/configuration cases, owned PostgreSQL lifecycle/issuer controls, and compatible Mobile710unit/89focused/type/lint/release/Metro plus12signing tests. Production provider configuration and physical-device/capability checks remain unverified release validation; no whole-system proof.",
       "ambiguity": [
         "Services ID audiences for web are configurable but not exercised.",
-        "Inherited known-kid cache entries have no residence TTL; signature and token expiry are rechecked, but this repair does not prove prompt provider key-revocation freshness."
+        "Successful key-set residence is bounded by the local 900 second cache policy, not instant provider revocation. Provider publication latency, fresh cached keys within that interval and already issued application sessions remain outside an immediate key-removal guarantee."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -17575,7 +17575,7 @@
       },
       "critical": true,
       "property": "NoSessionWithoutVerifiedAppleToken and ExplicitConsentBeforeCreation",
-      "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests.",
+      "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests. Injected-clock/fetch cache controls cover the 899/900 second boundary, withdrawn keys with fresh claims, stale failure/empty/cancel cooldown, concurrent refresh and clock rollback; these finite cases are not a universal revocation proof.",
       "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
       "contract": "tdf-hq/docs/openapi/api.yaml"
     },
@@ -19139,7 +19139,7 @@
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
-    "tdf-hq/src/TDF/AppleSignIn.hs": "90bb68184f3e4cf8221f5413e12641093683e2a6fa5760c777e9202623bef0f1",
+    "tdf-hq/src/TDF/AppleSignIn.hs": "76eba8d3f0377c7a130ec60ac5b8f16cd8c75a53d69c7fe2f52e0c77aa578dea",
     "tdf-hq/src/TDF/Artists/Enrichment.hs": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
     "tdf-hq/src/TDF/Auth.hs": "cbf9a2642b4e43acf65afc04812816703020981198d6e9cf8f090dac7e69b4fb",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
@@ -19285,7 +19285,7 @@
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
     "tdf-hq/test/Spec.hs": "a4fc919ead2cbbe2cb869cda67da4c840736b4d0766ecdcc2dd05b9dace6e2c2",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
-    "tdf-hq/test/TDF/AppleSignInSpec.hs": "93effe5b6eac1954ac39e892541af141c2b320d1dced4c7172b7c885c0c02e10",
+    "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
     "tdf-hq/test/TDF/Auth/AccountNameSpec.hs": "c31e3ceadc49c83dda8906422fc5b9f45eed3b6d68ea2606c505246718f83990",
     "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs": "0a774e734dc49a6c62ba216a2df207121bdf821109f7a3db35e19450d55cdedc",
@@ -58730,7 +58730,7 @@
     {
       "id": "SURFACE-07df79cce83b3287",
       "path": "tdf-hq/src/TDF/AppleSignIn.hs",
-      "sha256": "90bb68184f3e4cf8221f5413e12641093683e2a6fa5760c777e9202623bef0f1",
+      "sha256": "76eba8d3f0377c7a130ec60ac5b8f16cd8c75a53d69c7fe2f52e0c77aa578dea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62016,7 +62016,7 @@
     {
       "id": "SURFACE-d4fe92382114526f",
       "path": "tdf-hq/test/TDF/AppleSignInSpec.hs",
-      "sha256": "93effe5b6eac1954ac39e892541af141c2b320d1dced4c7172b7c885c0c02e10",
+      "sha256": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70223,7 +70223,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ea3ad0a849e3ae957aa1fc6ce2695561758a1671b88af2065998f421e4295417",
+      "sourceSha256": "d9395991f4cc661d667282bd7bee52bb71804855c68d5873b4122394ee449f13",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70251,7 +70251,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ea3ad0a849e3ae957aa1fc6ce2695561758a1671b88af2065998f421e4295417",
+      "sourceSha256": "d9395991f4cc661d667282bd7bee52bb71804855c68d5873b4122394ee449f13",
       "definition": {
         "states": [
           "absent",
@@ -70281,7 +70281,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ea3ad0a849e3ae957aa1fc6ce2695561758a1671b88af2065998f421e4295417",
+      "sourceSha256": "d9395991f4cc661d667282bd7bee52bb71804855c68d5873b4122394ee449f13",
       "definition": {
         "export": [
           "queued",

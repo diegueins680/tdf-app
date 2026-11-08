@@ -16341,7 +16341,7 @@
     {
       "id": "SURFACE-07df79cce83b3287",
       "path": "tdf-hq/src/TDF/AppleSignIn.hs",
-      "sha256": "90bb68184f3e4cf8221f5413e12641093683e2a6fa5760c777e9202623bef0f1",
+      "sha256": "76eba8d3f0377c7a130ec60ac5b8f16cd8c75a53d69c7fe2f52e0c77aa578dea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17733,7 +17733,7 @@
     {
       "id": "SURFACE-d4fe92382114526f",
       "path": "tdf-hq/test/TDF/AppleSignInSpec.hs",
-      "sha256": "93effe5b6eac1954ac39e892541af141c2b320d1dced4c7172b7c885c0c02e10",
+      "sha256": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30456,7 +30456,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ea3ad0a849e3ae957aa1fc6ce2695561758a1671b88af2065998f421e4295417",
+      "sha256": "d9395991f4cc661d667282bd7bee52bb71804855c68d5873b4122394ee449f13",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
