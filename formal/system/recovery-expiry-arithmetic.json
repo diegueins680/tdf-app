@@ -5,8 +5,8 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "7a789fa08b3a500760ff7fe56418eb1cc255b2f9c5bb1fe19634ea485d726e01",
-    "formal/system/identity-lifecycle.md": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440"
+    "tdf-hq/tdf-hq.cabal": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
+    "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
     {
@@ -567,6 +567,30 @@
       "change": "Compose protected main Cabal (unchanged since 6033b84e) with the event-discovery extra-source-files entry for sql/queries/social-event-city-match.sql.",
       "semanticReview": "Removing exactly the single extra-source-files line reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match protected main, including the re-pinned Auth.hs. Both context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "321f4fe6c8e803ab1c32724a8ce5b7814418b79c",
+      "retainedSource": "bc16d557c7b246361c83d78191314087ca2dd3d9",
+      "material": "c09fb24e5",
+      "sourceChanges": {
+        "tdf-hq/tdf-hq.cabal": {
+          "previousSha256": "7a789fa08b3a500760ff7fe56418eb1cc255b2f9c5bb1fe19634ea485d726e01",
+          "currentSha256": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582"
+        },
+        "formal/system/identity-lifecycle.md": {
+          "previousSha256": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440",
+          "currentSha256": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
+        }
+      },
+      "change": "Normal current-main composition retains entire Main validity-window predicate and city-query asset declaration, adds only original Apple label classification/revocation/username handling and two Apple module registrations; ServerAuth is whole-body exact prior qualified source and identity lifecycle document whole-body exact current Main.",
+      "semanticReview": "Root independently reversed exactly the three Apple-label sites/comment to recover whole Main Auth and exactly two Apple registrations to recover whole Main Cabal; reviewed current hashes against both parents. All original conditional obligations, claims, assumptions, limitations and every parent context-history object remain unchanged.",
+      "independentTechnicalReview": {
+        "receipt": "pr573-main321f/root-context-review.json",
+        "sha256": "49a453671c52e3400a3a99821cc4433d2f27bc58f37d61fc14255418923750f9",
+        "status": "PASS_ROOT_INDEPENDENT_BOUNDED_APPLE_CURRENT_MAIN_CONTEXT_REVIEW",
+        "notGitHubApproval": true
+      },
+      "qualification": "Fresh source-bound3authorization+4recovery obligations, SMT replay and16verifier controls required. No full Apple/JWKS/provider/nonce/Google/privacy or whole-handler refinement proof; inherited known-key freshness limitation remains. Current combined whole runtime/HTTP/PG/paired-Mobile-main integration still needs fresh mandatory hosted qualification."
     }
   ]
 }
