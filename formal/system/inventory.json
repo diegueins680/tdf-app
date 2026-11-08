@@ -10787,13 +10787,13 @@
     {
       "id": "SURFACE-fac74da10964b761",
       "path": "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
-      "sha256": "d63671e11ae8ddb43980ffe4ae95871b295ae970e10208796bcb8079f755c62f",
+      "sha256": "5994c6342842cddf9e708ce856a6ae916d542c62d6043d741bc3b221724e0c4c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0e855839df1ec21d",
       "path": "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
-      "sha256": "f3a276d8bb46e8489757b7bcfca0136fb598f034e3ed5732fc66949ee28668eb",
+      "sha256": "589c1867e87703614df4b4565e04cd1a71487d6bff3bc466517fbd6260101a9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
