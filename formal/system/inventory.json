@@ -12020,13 +12020,13 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "b9a1ee86e2f984759bad334434d133ee40fb1042ac43eaf72a8cd5af1d9dbf55",
+      "sha256": "05743841cfe10857587aa692921efad9136e42ed608e05afecf194ad75232b44",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "3d5469dcc2c2eb70fe94f7e3f9d3787adf02a6efeb9169393c9861144adfe075",
+      "sha256": "5d33f9a98e88a1c0d6827e4caf6ce57730fe1e624a9deb27edc4febe94a23e30",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23806,7 +23806,7 @@
     },
     {
       "path": "docs/native-tdf-sessions.md",
-      "sha256": "4c05dbc349586cc4a208457f93170416792f75a5f44b0fa36afc28b642c170fd",
+      "sha256": "f1959cdbf5e072db76f7648d2719c81922adbcb46465a3120ba94eff1c44afa2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
