@@ -69,3 +69,5 @@ TDF_EVENT_CRM_TEST_PORT=5486 python3 scripts/test-event-crm-http.py
 ```
 
 Los ejecutores crean y eliminan únicamente sus propias bases desechables. La segunda prueba requiere la biblioteca compilada con Stack y las dependencias web y Chromium instaladas. Usa PostgreSQL aislado, sin credenciales de producción. La evidencia privada contiene el inventario y la lista de pendientes del piloto; la PR no autoriza merge, despliegue, publicación, ventas ni emisión del enlace real.
+
+El contrato compartido actualiza únicamente los tipos generados de Mobile en la [PR vinculada #184](https://github.com/diegueins680/TDF-mobile/pull/184). La validación de este flujo es web móvil; no introduce pantallas nativas ni constituye una nueva release de la app.
