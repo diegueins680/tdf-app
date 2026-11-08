@@ -129,4 +129,3 @@ validateOptionalDriveClientCredential envName rawCredential =
       | otherwise -> Right (Just credential)
       where
         credential = T.strip raw
-
