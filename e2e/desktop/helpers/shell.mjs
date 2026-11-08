@@ -62,6 +62,17 @@ export async function playbackMenu(app) {
   });
 }
 
+/** Clicks any native menu entry by top-level menu label and item label. */
+export async function clickMenuItem(app, menuLabel, itemLabel) {
+  return app.evaluate(({ Menu }, [wantedMenu, wantedItem]) => {
+    const submenu = Menu.getApplicationMenu()?.items.find((item) => item.label === wantedMenu)?.submenu;
+    const item = submenu?.items.find((entry) => entry.label === wantedItem);
+    if (!item || !item.enabled) return false;
+    item.click();
+    return true;
+  }, [menuLabel, itemLabel]);
+}
+
 /** Clicks a native playback menu entry by label, as a user would from the menu bar. */
 export async function clickPlaybackMenu(app, label) {
   return app.evaluate(({ Menu }, wanted) => {

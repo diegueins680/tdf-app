@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { launchShell } from './helpers/shell.mjs';
+import { clickMenuItem, launchShell } from './helpers/shell.mjs';
 import { STAFF_ACCOUNT, createApiFixture } from './helpers/api-fixture.mjs';
 
 // Flows 3 and 4: authorized staff consult studio bookings and clients, and
@@ -46,10 +46,22 @@ test('staff reach studio bookings, clients, events, campaigns and sales with the
     await expect.poll(() => api.requestsTo('/payments').length, { timeout: 30_000 }).toBeGreaterThan(0);
     await expect(window.getByText('REC-0001').first()).toBeVisible({ timeout: 30_000 });
 
-    // Every data read of the four operational areas carried the TDF session credential.
+    // Every data read of the four operational areas carried the TDF session
+    // credential issued at sign-in (the in-memory Bearer; the cookie takes over
+    // after a full reload, which the synthetic API models as server-side state).
     const dataPaths = ['/bookings', '/rooms', '/parties', '/social-events/events', '/payments'];
     const dataRequests = api.state.requests.filter((entry) => dataPaths.includes(entry.path));
     expect(dataRequests.length).toBeGreaterThanOrEqual(dataPaths.length);
     expect(dataRequests.every((entry) => entry.headers.authorization === 'Bearer synthetic-desktop-token')).toBe(true);
+
+    // Native "Ver → Recargar" reloads the route reached through the History API,
+    // not the last full-document route, and the server session survives it.
+    const paymentReads = api.requestsTo('/payments').length;
+    const sessionReads = api.requestsTo('/session').length;
+    expect(await clickMenuItem(shell.app, 'Ver', 'Recargar')).toBe(true);
+    await expect.poll(() => api.requestsTo('/payments').length, { timeout: 30_000 }).toBeGreaterThan(paymentReads);
+    await expect(window).toHaveURL(/\/finanzas\/pagos$/);
+    await expect(window.getByText('REC-0001').first()).toBeVisible({ timeout: 30_000 });
+    expect(api.requestsTo('/session').length).toBeGreaterThan(sessionReads);
   } finally { await shell.close(); }
 });

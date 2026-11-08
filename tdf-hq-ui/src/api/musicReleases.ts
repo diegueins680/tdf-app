@@ -414,6 +414,16 @@ export interface MusicUploadReplayedCompletion {
   replayed: true;
 }
 
+/** The server answers 410 Gone for operations on a session past its lifetime. */
+const isGoneResponse = (error: unknown): boolean =>
+  typeof error === 'object' && error !== null && 'status' in error && (error as { status?: unknown }).status === 410;
+
+const isSessionExpired = (session: MusicUploadSession, now = Date.now()): boolean => {
+  if (typeof session.expiresAt !== 'string') return false;
+  const expiresAt = Date.parse(session.expiresAt);
+  return Number.isFinite(expiresAt) && expiresAt <= now;
+};
+
 const throwIfAborted = (signal?: AbortSignal) => {
   if (signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
 };
@@ -506,6 +516,9 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
   if (session.status === 'cancelled' || session.status === 'failed' || session.status === 'expired') {
     throw new MusicUploadSessionUnusableError(session.status, session.id);
   }
+  // The stored status is not rewritten when the lifetime ends; the server
+  // rejects further operations with 410 instead.
+  if (isSessionExpired(session)) throw new MusicUploadSessionUnusableError('expired', session.id);
 
   try {
     if (!session.providerUploadIdBound) {
@@ -558,7 +571,9 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
       } catch {
         // The server-side cleanup worker remains responsible for abandoned multipart uploads.
       }
+      throw error;
     }
+    if (isGoneResponse(error)) throw new MusicUploadSessionUnusableError('expired', session.id);
     throw error;
   }
 };

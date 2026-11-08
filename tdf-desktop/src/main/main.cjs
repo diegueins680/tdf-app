@@ -182,6 +182,13 @@ function attachNavigationPolicy(contents) {
   };
   contents.on('will-navigate', decide);
   contents.on('will-redirect', decide);
+  // The hosted application routes with the History API; those changes never
+  // reach will-navigate, so track them here to keep recovery on the live route.
+  contents.on('did-navigate-in-page', (_event, url, isMainFrame) => {
+    if (!isMainFrame || classifyNavigation(url, channel.appOrigin) !== 'app') return;
+    const parsed = new URL(url);
+    lastAppPath = sanitizeAppPath(`${parsed.pathname}${parsed.search}${parsed.hash}`) ?? lastAppPath;
+  });
   contents.setWindowOpenHandler(({ url }) => {
     const kind = classifyNavigation(url, channel.appOrigin);
     if (kind === 'external') {
@@ -372,7 +379,17 @@ function rebuildMenu() {
         void shell.openExternal(current && classifyNavigation(current, channel.appOrigin) === 'app' ? current : appUrl(lastAppPath));
       },
       clearLocalData: () => { void clearLocalData(); },
-      reload: () => { if (mainWindow) void loadApp(mainWindow.webContents, lastAppPath); },
+      reload: () => {
+        if (!mainWindow) return;
+        // Reload what the user is looking at; lastAppPath is for offline recovery.
+        const current = mainWindow.webContents.getURL();
+        if (classifyNavigation(current, channel.appOrigin) === 'app') {
+          const parsed = new URL(current);
+          void loadApp(mainWindow.webContents, `${parsed.pathname}${parsed.search}${parsed.hash}`);
+        } else {
+          void loadApp(mainWindow.webContents, lastAppPath);
+        }
+      },
       playback: (command) => sendPlaybackCommand(command),
       showAbout: () => { void showAbout(); },
       onUpdateAction: () => { void onUpdateAction(); },
