@@ -1,0 +1,5 @@
+node_modules/
+dist/
+generated/
+build/icon.png
+*.log

@@ -1,0 +1,12 @@
+{
+  "name": "local",
+  "appOrigin": "http://localhost:5173",
+  "apiOrigin": "http://localhost:8080",
+  "startPath": "/inicio",
+  "updates": {
+    "enabled": false,
+    "provider": "generic",
+    "url": "",
+    "channel": "latest"
+  }
+}

@@ -1,0 +1,237 @@
+name: Desktop app
+
+# TDF Records desktop shell (tdf-desktop): unit tests and Electron journeys on
+# Linux, installers for macOS and Windows built on their own runners, an
+# installed-binary smoke on each platform, and an optional publication of the
+# shell update feed. Signing/notarization run only when the secrets exist;
+# otherwise every artifact carries the UNSIGNED-TEST marker.
+
+on:
+  pull_request:
+    paths:
+      - 'tdf-desktop/**'
+      - 'e2e/desktop/**'
+      - 'playwright.desktop.config.mjs'
+      - 'tdf-hq-ui/src/desktop/**'
+      - 'tdf-hq-ui/src/player/**'
+      - '.github/workflows/desktop.yml'
+  push:
+    tags:
+      - 'desktop-v*'
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Channel configuration to embed (channels/<name>.json).
+        type: choice
+        options: [production]
+        default: production
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  TDF_DESKTOP_CHANNEL: ${{ inputs.channel || 'production' }}
+
+jobs:
+  shell-tests:
+    name: Shell unit tests and Electron journeys (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            tdf-desktop/package-lock.json
+      - name: Install root dependencies (web build, Playwright)
+        run: npm ci
+      - name: Install desktop dependencies
+        run: npm ci --prefix tdf-desktop
+      - name: Shell unit tests
+        run: npm test --prefix tdf-desktop
+      - name: Shell syntax and configuration checks
+        run: |
+          npm run lint --prefix tdf-desktop
+          node -e "require('./tdf-desktop/electron-builder.config.cjs')"
+          TDF_DESKTOP_UNSIGNED=1 node tdf-desktop/scripts/prepare-channel.cjs
+          test -s tdf-desktop/generated/channel.json
+      - name: Install Playwright Chromium dependencies, Xvfb and PulseAudio for Electron
+        run: |
+          npx playwright install-deps chromium
+          sudo apt-get install -y --no-install-recommends xvfb
+      - name: Electron journeys against the production web build and a synthetic API
+        env:
+          CI: 'true'
+          PLAYWRIGHT_ARTIFACT_DIR: artifacts/desktop-playwright
+        run: xvfb-run -a --server-args="-screen 0 1440x900x24" node node_modules/@playwright/test/cli.js test --config=playwright.desktop.config.mjs
+      - name: Upload Electron journey evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-electron-journeys-${{ github.run_id }}
+          path: artifacts/desktop-playwright
+          retention-days: 14
+
+  build:
+    name: Installers (${{ matrix.label }})
+    needs: shell-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            label: macOS x64+arm64
+            script: dist:mac
+            artifact: desktop-macos
+          - os: windows-2025
+            label: Windows x64+arm64
+            script: dist:win
+            artifact: desktop-windows
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      # electron-builder standard signing inputs; empty when the secret is absent.
+      CSC_LINK: ${{ secrets.DESKTOP_MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.DESKTOP_MAC_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.DESKTOP_APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.DESKTOP_APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.DESKTOP_APPLE_TEAM_ID }}
+      WIN_CSC_LINK: ${{ secrets.DESKTOP_WIN_CSC_LINK }}
+      WIN_CSC_KEY_PASSWORD: ${{ secrets.DESKTOP_WIN_CSC_KEY_PASSWORD }}
+      SOURCE_COMMIT: ${{ github.sha }}
+      # Builds always run; publishing needs the release job and a tag.
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tdf-desktop/package-lock.json
+      - name: Resolve signing availability
+        id: signing
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            if [ -n "$CSC_LINK" ]; then echo "unsigned=0" >> "$GITHUB_OUTPUT"; else echo "unsigned=1" >> "$GITHUB_OUTPUT"; fi
+          else
+            if [ -n "$WIN_CSC_LINK" ]; then echo "unsigned=0" >> "$GITHUB_OUTPUT"; else echo "unsigned=1" >> "$GITHUB_OUTPUT"; fi
+          fi
+      - name: Install desktop dependencies
+        run: npm ci --prefix tdf-desktop
+      - name: Shell unit tests on the target platform
+        run: npm test --prefix tdf-desktop
+      - name: Build installers
+        shell: bash
+        env:
+          TDF_DESKTOP_UNSIGNED: ${{ steps.signing.outputs.unsigned }}
+        run: |
+          npm run ${{ matrix.script }} --prefix tdf-desktop -- --publish never
+          ls -la tdf-desktop/dist
+      - name: Checksums
+        shell: bash
+        working-directory: tdf-desktop/dist
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then shasum -a 256 *.dmg *.zip > SHA256SUMS.txt; else sha256sum *.exe > SHA256SUMS.txt; fi
+          cat SHA256SUMS.txt
+      - name: Installed-binary smoke (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$(ls tdf-desktop/dist/*-mac-arm64*.dmg | head -n1)"
+          mount="$(hdiutil attach "$dmg" -nobrowse -readonly | awk -F'\t' '/\/Volumes\// {print $NF}' | tail -n1)"
+          mkdir -p "$RUNNER_TEMP/installed"
+          cp -R "$mount"/*.app "$RUNNER_TEMP/installed/"
+          hdiutil detach "$mount"
+          app="$(ls -d "$RUNNER_TEMP"/installed/*.app | head -n1)"
+          "$app/Contents/MacOS/TDF Records" --version
+          "$app/Contents/MacOS/TDF Records" --smoke "--smoke-receipt=$RUNNER_TEMP/smoke-macos.json" || true
+          cat "$RUNNER_TEMP/smoke-macos.json"
+          python3 -c "import json,sys; r=json.load(open(sys.argv[1])); sys.exit(0 if r['ok'] and r['packaged'] else 1)" "$RUNNER_TEMP/smoke-macos.json"
+          rm -rf "$RUNNER_TEMP/installed"
+          mkdir -p tdf-desktop/dist/receipts && cp "$RUNNER_TEMP/smoke-macos.json" tdf-desktop/dist/receipts/
+      - name: Installed-binary smoke (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installer = Get-ChildItem tdf-desktop/dist/*-win-x64*.exe | Select-Object -First 1
+          $target = Join-Path $env:RUNNER_TEMP 'tdf-installed'
+          $proc = Start-Process -FilePath $installer.FullName -ArgumentList "/S", "/D=$target" -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "Installer exited with $($proc.ExitCode)" }
+          $exe = Join-Path $target 'TDF Records.exe'
+          if (-not (Test-Path $exe)) { throw "Installed executable missing at $exe" }
+          $receipt = Join-Path $env:RUNNER_TEMP 'smoke-windows.json'
+          # GUI-subsystem executable: wait for it explicitly and read its JSON receipt.
+          $smoke = Start-Process -FilePath $exe -ArgumentList '--smoke', "--smoke-receipt=$receipt" -Wait -PassThru
+          if (-not (Test-Path $receipt)) { throw "Smoke receipt missing (exit $($smoke.ExitCode))" }
+          Get-Content $receipt
+          $data = Get-Content $receipt | ConvertFrom-Json
+          if (-not ($data.ok -and $data.packaged)) { throw "Installed smoke failed (exit $($smoke.ExitCode))" }
+          $uninstall = Join-Path $target 'Uninstall TDF Records.exe'
+          $un = Start-Process -FilePath $uninstall -ArgumentList '/S' -Wait -PassThru
+          if ($un.ExitCode -ne 0) { throw "Uninstaller exited with $($un.ExitCode)" }
+          New-Item -ItemType Directory -Force tdf-desktop/dist/receipts | Out-Null
+          Copy-Item $receipt tdf-desktop/dist/receipts/
+      - name: Upload installers, update feed and receipts
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}-${{ github.run_id }}
+          path: |
+            tdf-desktop/dist/*.dmg
+            tdf-desktop/dist/*.zip
+            tdf-desktop/dist/*.exe
+            tdf-desktop/dist/*.blockmap
+            tdf-desktop/dist/latest*.yml
+            tdf-desktop/dist/SHA256SUMS.txt
+            tdf-desktop/dist/receipts/*.json
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish update feed
+    needs: build
+    # Only a pushed desktop-v<version> tag publishes; dispatch runs build artifacts for review.
+    if: startsWith(github.ref, 'refs/tags/desktop-v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: desktop-*-${{ github.run_id }}
+          merge-multiple: true
+          path: release
+      - name: Refuse to publish unsigned test packages
+        shell: bash
+        run: |
+          if ls release | grep -q 'UNSIGNED-TEST'; then
+            echo 'Unsigned test packages are never published to the update feed.' >&2
+            exit 1
+          fi
+      - name: Create the versioned release and refresh the rolling update feed
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./tdf-desktop/package.json').version")"
+          tag="desktop-v${version}"
+          if [ "${GITHUB_REF}" != "refs/tags/${tag}" ]; then
+            echo "Tag ${GITHUB_REF} does not match package version ${version}" >&2; exit 1
+          fi
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "TDF Records Desktop ${version}" --notes "Instaladores firmados de TDF Records Desktop ${version}. Ver docs/desktop/README.md." --verify-tag
+          gh release upload "$tag" release/* --clobber
+          # electron-updater reads latest*.yml from this rolling release.
+          gh release view desktop-latest >/dev/null 2>&1 || gh release create desktop-latest --title "TDF Records Desktop (canal latest)" --notes "Canal de actualización del shell de escritorio. Los binarios de cada versión viven en desktop-v<version>." --latest=false
+          gh release upload desktop-latest release/* --clobber
