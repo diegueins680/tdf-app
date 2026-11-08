@@ -11397,13 +11397,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "4aa48c983379b1aaabad90543eea2fd8510bf28a99aa0722c3b97d8282567fe7",
+      "sha256": "7e285d998e1c9683e82627ac0b237f1a17516ad231dd5757cf646616dceb9b4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "3417cb970648efc1d1634a24792e9b69aeb441d9d1eb76ea7de7e7b135ef6985",
+      "sha256": "cbe5010b5c935d3ef8723a644216db1fcc0c4afe8cdd5e5ed3e1c4ce25e71e87",
       "semanticConformance": "not-established-by-discovery"
     },
     {

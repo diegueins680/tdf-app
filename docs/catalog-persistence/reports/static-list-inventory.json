@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T17:00:03.358Z",
+  "generatedAt": "2026-11-08T00:41:25.072Z",
   "repositoryRoot": ".",
   "filesScanned": 2640,
   "candidateCount": 1405,
@@ -72066,7 +72066,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "eventArtists",
-      "line": 146,
+      "line": 187,
       "values": [
         "{artistId=999, artistPartyId=55, artistName=Synthetic Artist}",
         "{artistId=1000, artistName=Unlinked Artist}"
@@ -72074,7 +72074,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        146
+        187
       ],
       "consumerCount": 27,
       "backendConsumers": [
@@ -72136,7 +72136,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 258,
+      "line": 265,
       "values": [
         "media",
         "audio",
@@ -72145,7 +72145,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        258
+        265
       ],
       "consumerCount": 35,
       "backendConsumers": [
