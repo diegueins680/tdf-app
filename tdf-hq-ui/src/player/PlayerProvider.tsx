@@ -978,9 +978,21 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
           onKeyDown={() => { nativeIntentRef.current = true; }}
           onPlay={() => {
             const video = nativeVideoRef.current;
-            if (!video || !nativeVideo || loadedSourceRef.current?.trackId !== currentTrack?.id
-              || loadedSourceRef.current?.url !== video.currentSrc) return;
+            const generation = sourceGenerationRef.current;
+            const loadedSource = loadedSourceRef.current;
+            if (!video || !nativeVideo || !currentTrack || loadedSource?.generation !== generation
+              || loadedSource.trackId !== currentTrack.id || loadedSource.url !== video.currentSrc) return;
             if (!autoplayRef.current && !nativeIntentRef.current) { video.pause(); return; }
+            if (currentTrack.endMs != null && video.currentTime * 1000 >= currentTrack.endMs) {
+              // Native controls bypass global play(), but share its owned-source boundary.
+              const start = (currentTrack.startMs ?? 0) / 1000;
+              video.currentTime = start;
+              if (generation !== sourceGenerationRef.current || loadedSourceRef.current !== loadedSource
+                || audioRef.current !== video) return;
+              positionsRef.current[currentTrack.id] = start;
+              lastContinuousPositionRef.current = start;
+              setCurrentTime(0);
+            }
             nativeIntentRef.current = false;
             autoplayRef.current = true;
             window.dispatchEvent(new CustomEvent(PLAYER_TAKEOVER_EVENT));

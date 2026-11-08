@@ -682,6 +682,87 @@ it.each([
   expect(playedPositions.at(-1)).toBe(position);
   expect(media.currentTime).toBe(position);
 });
+it.each([
+  ['single', 20], ['single', 20.1], ['final', 20], ['final', 20.1],
+] as const)('rewinds a completed %s chapter at %s before native Play continues it', async (queueKind, endpoint) => {
+  const selected = nativeTrack();
+  const tracks = queueKind === 'final' ? [track('preceding'), selected] : [selected];
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(selected, tracks); });
+  const video = view.container.querySelector('video')!;
+  let paused = true;
+  Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
+  Object.defineProperty(video, 'paused', { configurable: true, get: () => paused });
+  jest.mocked(video.pause).mockImplementation(() => { paused = true; });
+  jest.mocked(video.play).mockImplementation(async () => { paused = false; });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  await waitFor(() => expect(player.status).toBe('playing'));
+  video.currentTime = endpoint;
+  await act(async () => { video.dispatchEvent(new Event('timeupdate')); });
+  expect(player.status).toBe('paused');
+  expect(player.currentTrack?.id).toBe(selected.id);
+  const calls = jest.mocked(video.play).mock.calls.length;
+  // A native control starts the element itself; it does not call global play().
+  await act(async () => {
+    video.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    paused = false;
+    video.dispatchEvent(new Event('play', { bubbles: true }));
+    video.dispatchEvent(new Event('playing'));
+  });
+  expect(video.currentTime).toBe(10);
+  expect(player.currentTime).toBe(0);
+  expect(jest.mocked(video.play).mock.calls.length).toBe(calls);
+  expect(player.currentTrack?.id).toBe(selected.id);
+  video.currentTime = 10.25;
+  await act(async () => { video.dispatchEvent(new Event('timeupdate')); });
+  expect(player.status).toBe('playing');
+  expect(player.currentTime).toBe(0.25);
+});
+it.each([
+  ['midchapter', 20000, 15], ['unbounded', undefined, 24],
+] as const)('preserves a paused %s native position instead of restarting it', async (_name, endMs, position) => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack({ ...nativeTrack(), endMs }); });
+  const video = view.container.querySelector('video')!;
+  Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  video.currentTime = position;
+  act(() => { player.pause(); });
+  await act(async () => {
+    video.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    video.dispatchEvent(new Event('play', { bubbles: true }));
+  });
+  expect(video.currentTime).toBe(position);
+});
+it('does not rewind a completed native source without a play gesture', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(nativeTrack()); });
+  const video = view.container.querySelector('video')!;
+  Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  video.currentTime = 20.1;
+  act(() => { player.pause(); });
+  const pauses = jest.mocked(video.pause).mock.calls.length;
+  await act(async () => { video.dispatchEvent(new Event('play', { bubbles: true })); });
+  expect(video.currentTime).toBe(20.1);
+  expect(jest.mocked(video.pause).mock.calls.length).toBe(pauses + 1);
+});
+it('does not rewind a completed native event belonging to another source', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  await act(async () => { player.playTrack(nativeTrack()); });
+  const video = view.container.querySelector('video')!;
+  Object.defineProperty(video, 'readyState', { configurable: true, value: 1 });
+  await act(async () => { video.dispatchEvent(new Event('loadedmetadata')); });
+  video.currentTime = 20.1;
+  act(() => { player.pause(); });
+  jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockReturnValue('https://media.invalid/obsolete-source.mp4');
+  await act(async () => {
+    video.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    video.dispatchEvent(new Event('play', { bubbles: true }));
+  });
+  expect(video.currentTime).toBe(20.1);
+  expect(player.status).toBe('paused');
+});
 it('refuses to rewind or play an unowned source when replaying a completed chapter', async () => {
   const view = render(<PlayerProvider><Probe /></PlayerProvider>);
   await act(async () => { player.playTrack(nativeTrack()); });
