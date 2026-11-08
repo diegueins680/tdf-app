@@ -3848,7 +3848,7 @@
     {
       "id": "SURFACE-9344bbc594468ec5",
       "path": "scripts/__tests__/event-draft-plan.test.mjs",
-      "sha256": "e142a1d72ea77718de3999f3e8a3377ad52d56ef30af8f4138f4eeb53820d54f",
+      "sha256": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5276,7 +5276,7 @@
     {
       "id": "SURFACE-676b7216bda83497",
       "path": "scripts/prepare-event-draft.mjs",
-      "sha256": "ecb45725bfe81c59823cef0cb06afe63ab8136ee3c09651ea8019becd366c3c6",
+      "sha256": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29706,6 +29706,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-draft-review.md",
+      "sha256": "4c5a72407b69ea7ff08c9567d40423396ba9bd12f497e8667718c70cfad24525",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-finance-browser-precision.md",
       "sha256": "1fb729d2150589ce5074884f77f9747b5b79ca6ad717ba7e6c72c733e24a65c5",
       "authority": "inferred",
@@ -30358,7 +30365,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "34630586e92671403395d59f91740224824b1014172bfdad4a2ee7f4e0a3c42e",
+      "sha256": "f931836dfaf483a2b2b15b6d9a5ee8b92b07fbe581ef05b00870e75e3f19138d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
