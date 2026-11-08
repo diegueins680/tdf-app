@@ -813,8 +813,15 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     { cwd: workspaceRoot });
   const old = JSON.parse(await fromGit('docs/catalog-persistence/catalog-list-decisions.json')).decisions;
   const { active, successors, integration } = await readReconciliation();
+  const reviewedParent = async revision => JSON.parse((await execFileAsync('git',
+    ['show', `${revision}:docs/catalog-persistence/catalog-list-decisions.json`],
+    { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions;
+  const priorApple = await reviewedParent('bc16d557c7b246361c83d78191314087ca2dd3d9');
+  const currentMain = await reviewedParent('321f4fe6c8e803ab1c32724a8ce5b7814418b79c');
   assert.equal(old.length, 1405);
-  assert.equal(active.length, 1407);
+  assert.equal(priorApple.length, 1407);
+  assert.equal(currentMain.length, 1409);
+  assert.equal(active.length, 1411);
   const history = new Map();
   const visit = row => {
     if (!row) return;
@@ -823,7 +830,9 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     for (const branch of row.concurrentReviewHistory ?? []) visit(branch);
   };
   for (const row of active) visit(row);
-  for (const row of old) assert.deepEqual(history.get(row.id), row);
+  for (const row of [...old, ...priorApple, ...currentMain]) {
+    assert.deepEqual(history.get(row.id), row);
+  }
   const pointer = successors.find(row => row.name === 'migrations');
   const tip = active.find(row => row.id === pointer.currentId);
   assert.equal(tip.evidence.valueCount, 248);
