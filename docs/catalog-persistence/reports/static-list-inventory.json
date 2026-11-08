@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T04:33:08.860Z",
+  "generatedAt": "2026-11-08T04:38:02.803Z",
   "repositoryRoot": ".",
   "filesScanned": 2667,
   "candidateCount": 1418,
@@ -22558,7 +22558,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 129,
+      "consumerCount": 130,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -22618,6 +22618,7 @@
         "tdf-hq-ui/src/api/commerceOperations.ts",
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
@@ -22675,6 +22676,7 @@
         "tdf-hq-ui/src/api/commerceOperations.ts",
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/test/sql/music_ddex_operations.sql",
@@ -22703,7 +22705,7 @@
       "domain": "music-catalog-cms",
       "kind": "object-registry",
       "name": "musicReleases",
-      "line": 572,
+      "line": 587,
       "values": [
         "searchTracks",
         "listMine",
@@ -22751,7 +22753,7 @@
       "valueCount": 42,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        572
+        587
       ],
       "consumerCount": 28,
       "backendConsumers": [],
@@ -144736,7 +144738,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 130,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -144797,6 +144799,7 @@
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
@@ -144856,6 +144859,7 @@
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/test/sql/music_ddex_operations.sql",
@@ -154931,7 +154935,7 @@
       "lines": [
         21
       ],
-      "consumerCount": 20,
+      "consumerCount": 21,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
         "tdf-hq/sql/2026-09-15_music_preview_ranges.sql",
@@ -154948,6 +154952,7 @@
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
       ],
@@ -154964,6 +154969,7 @@
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
@@ -161546,7 +161552,7 @@
       "lines": [
         926
       ],
-      "consumerCount": 129,
+      "consumerCount": 130,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -161607,6 +161613,7 @@
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
@@ -161665,6 +161672,7 @@
         "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/test/sql/music_ddex_operations.sql",

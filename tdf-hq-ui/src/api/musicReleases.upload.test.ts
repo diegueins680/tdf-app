@@ -83,3 +83,35 @@ describe('music upload replayed sessions', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe('music upload expired sessions', () => {
+  beforeEach(() => { jest.clearAllMocks(); globalThis.fetch = fetchMock; });
+  afterEach(() => { globalThis.fetch = originalFetch; });
+
+  it('treats a replayed session past its expiresAt as unusable before touching storage', async () => {
+    postMock.mockResolvedValueOnce({ id: 'session', status: 'uploading', expiresAt: '2000-01-01T00:00:00Z',
+      providerUploadIdBound: true, partSizeBytes: 5 * 1024 * 1024, parts: [] });
+    await expect(uploadMusicAsset(options)).rejects.toMatchObject({ name: 'MusicUploadSessionUnusableError', status: 'expired', sessionId: 'session' });
+    expect(getMock).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(delMock).not.toHaveBeenCalled();
+  });
+
+  it('translates HTTP 410 from a resume operation into the unusable-session error', async () => {
+    postMock.mockResolvedValueOnce({ id: 'session', status: 'uploading', expiresAt: '2999-01-01T00:00:00Z',
+      providerUploadIdBound: true, partSizeBytes: 5 * 1024 * 1024, parts: [] });
+    getMock.mockRejectedValueOnce(Object.assign(new Error('Gone'), { status: 410 }));
+    await expect(uploadMusicAsset(options)).rejects.toMatchObject({ name: 'MusicUploadSessionUnusableError', status: 'expired', sessionId: 'session' });
+    expect(getMock).toHaveBeenCalledWith('/music/uploads/session/parts/1', { signal: undefined });
+    expect(delMock).not.toHaveBeenCalled();
+    expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps other resume failures retryable with the same session', async () => {
+    postMock.mockResolvedValueOnce({ id: 'session', status: 'uploading', expiresAt: '2999-01-01T00:00:00Z',
+      providerUploadIdBound: true, partSizeBytes: 5 * 1024 * 1024, parts: [] });
+    getMock.mockRejectedValueOnce(Object.assign(new Error('Service unavailable'), { status: 503 }));
+    await expect(uploadMusicAsset(options)).rejects.toMatchObject({ message: 'Service unavailable' });
+    expect(delMock).not.toHaveBeenCalled();
+  });
+});

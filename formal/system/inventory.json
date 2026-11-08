@@ -3193,13 +3193,13 @@
     {
       "id": "SURFACE-0a67c30fc4273850",
       "path": "e2e/desktop/helpers/shell.mjs",
-      "sha256": "3dba9f6d74b24d117c803bb752a4bd1074fd816f58f17504742f4a0927b8da05",
+      "sha256": "d4b22c14fc492b1e8fa17406a43f7e4c4195b173e343ee538714386a1ec16147",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7c5cb17cbae6fad9",
       "path": "e2e/desktop/operations.spec.mjs",
-      "sha256": "589763a686b9f0ffdf9c0a4bb466a016ebc7f9f02a5b78db485cd5aacf292dd5",
+      "sha256": "2da328457d5d35bd1b889ad7888747cebfce0db948bf32abbe9c30b2bac5e725",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7561,7 +7561,7 @@
     {
       "id": "SURFACE-2233b8c59333ca18",
       "path": "tdf-desktop/src/main/main.cjs",
-      "sha256": "c3f687e4233b140a06357494970e5fa3df5950c42a6c8cdd479fa7d0ff7226f3",
+      "sha256": "cddf9c91cd9c9f915ef11cab96b0bcaa96329103b61f2b928b05c399bfc8c505",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8467,13 +8467,13 @@
     {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "ac0b395527218de1f0a61dc79e54875b2178de3921505dc039ac392f30b9791a",
+      "sha256": "33df67f5e1a72dfbcaa3b4ae3ba5f928b506aaea79b8119537e703de448f16a8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a705d4292ecffee3",
       "path": "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
-      "sha256": "42fb90f9fc344c0248920a82ac6a803ea072b5108d32631bae448dc50b060df8",
+      "sha256": "4f2a49622632ac288339b871ed04614d6f8970f1e8c6255b240cd7ec020a6424",
       "semanticConformance": "not-established-by-discovery"
     },
     {
