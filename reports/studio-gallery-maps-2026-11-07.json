@@ -1,0 +1,82 @@
+{
+  "source": "User-selected TDF Records Google Maps photo gallery",
+  "observedDateLabel": "Foto - jun 2024",
+  "photographs": [
+    {
+      "photoId": "CIHM0ogKEICAgICz_9WLGg",
+      "credit": "Daniel Escudero",
+      "capturedAt": "2024-06",
+      "sourceUrl": "https://www.google.com/maps/place/TDF+Records/@-0.1578688,-78.4918266,3a,75y,90t/data=!3m4!1e2!3m2!1sCIHM0ogKEICAgICz_9WLGg!2e10",
+      "originalSha256": "f2838bc73b489db4ede099b9a4819dc255815d379b99689682381d6720dbaa73",
+      "derivatives": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/maps-preamps-640.webp",
+          "bytes": 58236,
+          "sha256": "83d60bfb58e67884a858ecff49ab9cad4697613aa5554ee01b1c6b33a73f4c04"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/maps-preamps-1280.webp",
+          "bytes": 127690,
+          "sha256": "a7002363336d91e97fd0de9a9da7098b6c68b25ad36faef2e922cdb357cb0274"
+        }
+      ]
+    },
+    {
+      "photoId": "CIHM0ogKEICAgICz_7WYugE",
+      "credit": "Daniel Escudero",
+      "capturedAt": "2024-06",
+      "sourceUrl": "https://www.google.com/maps/place/TDF+Records/@-0.1578688,-78.4918266,3a,75y,90t/data=!3m4!1e2!3m2!1sCIHM0ogKEICAgICz_7WYugE!2e10",
+      "originalSha256": "a9d9b0bce5cae3493b231237e1165f7ccbd708d90b57db443d3a188d960bd6ee",
+      "derivatives": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/maps-control-room-640.webp",
+          "bytes": 32222,
+          "sha256": "3157928bb2c00e5654105f017f35521fb3b0aef545801e712ff11f494b2cccf7"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/maps-control-room-1280.webp",
+          "bytes": 93460,
+          "sha256": "0883c0f6dc83ba32d83b14c82ca979bdb0cc5dc830b66d649bc83662d442865c"
+        }
+      ]
+    },
+    {
+      "photoId": "CIHM0ogKEICAgICz_-XHZg",
+      "credit": "Daniel Escudero",
+      "capturedAt": "2024-06",
+      "sourceUrl": "https://www.google.com/maps/place/TDF+Records/@-0.1578688,-78.4918266,3a,75y,90t/data=!3m4!1e2!3m2!1sCIHM0ogKEICAgICz_-XHZg!2e10",
+      "originalSha256": "2c2218dd9b59abd45a2ba40ce3030868fe6bad52a20dd42f970dad3d8ef66de0",
+      "derivatives": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/maps-dj-room-640.webp",
+          "bytes": 15670,
+          "sha256": "489391ccd335316ddd3cf28fefc588ff2fae95fcdccda47007c334c1aac9e724"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/maps-dj-room-1280.webp",
+          "bytes": 37712,
+          "sha256": "074cb44abe00c7b57210064cd27cd7abf0519dc1b582e74a1e7bace66e2917f1"
+        }
+      ]
+    },
+    {
+      "photoId": "CIHM0ogKEICAgICz_9WPbw",
+      "credit": "Daniel Escudero",
+      "capturedAt": "2024-06",
+      "sourceUrl": "https://www.google.com/maps/place/TDF+Records/@-0.1578688,-78.4918266,3a,75y,90t/data=!3m4!1e2!3m2!1sCIHM0ogKEICAgICz_9WPbw!2e10",
+      "originalSha256": "c8bc5b0740d87d2b3a287ce864c9a2ad1201b289ec9e2624010895cf6a45934f",
+      "derivatives": [
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/maps-analog-rack-640.webp",
+          "bytes": 69988,
+          "sha256": "802337a5fc0cb7419f281675d463b3d84e8ce52295dbe7287c3bf9d935f236a2"
+        },
+        {
+          "path": "tdf-hq-ui/public/assets/tdf-studio/maps-analog-rack-1280.webp",
+          "bytes": 158582,
+          "sha256": "b31223bca16aa2764f6aa5fef48d966d4a22449583533cac7e309a1d75824b16"
+        }
+      ]
+    }
+  ]
+}

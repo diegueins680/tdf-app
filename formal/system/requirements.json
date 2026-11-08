@@ -12297,15 +12297,17 @@
     {
       "id": "UX-WELCOME-001",
       "title": "Public discovery shows value before personal profiling",
-      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails. The studio section retains six owner-approved archive photographs and adds three explicitly dated session stills from the original master. The gallery shows six images per page with numbered, previous and next controls and an announced visible range; capture dates remain distinct from publication dates. Local lazy-loaded thumbnails and a keyboard-accessible complete-photo dialog preserve truthful failure and retry states.",
-      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments. Owner supplied three approved Drive folders on 2026-10-26 and instructed selection of photos. Owner requested a gallery refresh across Maps, Drive, disk, Instagram and Synology plus pagination on 2026-11-07, and authorized publishing the branch for review.",
+      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails. The studio gallery is maintained in the versioned CMS. Its initial revision contains six owner-approved archive photographs, three explicitly dated session stills from the original master and four user-selected Maps photographs credited to Daniel Escudero, June 2024. Admins and webmasters can upload public photographs, edit descriptions, credits, dates and source links, reorder, hide and remove entries through a visual editor, save drafts and use the existing distinct-reviewer publication workflow. Published order and visibility are authoritative, including an empty list; an API failure must not restore deleted seed images. The gallery shows six images per page with numbered, previous and next controls and an announced visible range; capture dates remain distinct from publication dates. Lazy-loaded thumbnails and a keyboard-accessible complete-photo dialog preserve truthful failure and retry states.",
+      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments. Owner supplied three approved Drive folders on 2026-10-26 and instructed selection of photos. Owner requested a gallery refresh across Maps, Drive, disk, Instagram and Synology plus pagination on 2026-11-07, and authorized publishing the branch for review. Owner subsequently selected the exact Maps photo gallery and requested admin maintenance and organization of the pictures.",
       "domain": "UX",
       "source": "docs/engineering/welcome-first-discovery-2026-10-25.md",
       "contract": "docs/engineering/welcome-first-discovery-2026-10-25.md",
       "actors": [
         "Anonymous visitor",
         "Returning visitor",
-        "Authenticated user"
+        "Authenticated user",
+        "Admin",
+        "Webmaster"
       ],
       "preconditions": [
         "Existing public route and session bootstrap contracts"
@@ -12340,11 +12342,11 @@
         "Navigate to existing public destinations",
         "Emit optional fixed-destination exploration click events"
       ],
-      "authorization": "Existing backend and session authorization unchanged. Signed-in root destination remains Comunidad.",
+      "authorization": "Existing backend and session authorization unchanged. Signed-in root destination remains Comunidad. Gallery draft, publication and history use existing Admin/Webmaster CMS authorization and the prohibition on authors publishing their own drafts; uploads use existing public-storage authorization and quotas.",
       "privacy": "New welcome CTA events contain only fixed route and destination labels; no search query, identity, coordinates or user-entered data. Existing consent controls remain authoritative.",
       "concurrency": "Welcome is independent of asynchronous directory data; existing account-scoped search cache and mutation guards are unchanged.",
       "idempotency": "Exploration is read-only navigation; existing directory write contracts unchanged.",
-      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation. Individual photograph failure leaves other photographs and public navigation available.",
+      "failure": "Directory failures preserve the welcome and independent exploration links. Analytics failure must not interrupt welcome navigation. Individual photograph failure leaves other photographs and public navigation available. A failed CMS read offers retry; invalid published gallery data is not rendered.",
       "recovery": "Existing directory retry and URL-backed search remain available. Full-photo retry makes a new local asset request; closing restores focus to the originating thumbnail.",
       "observability": "public_discovery_cta_clicked is exploratory intent, never successful activation. No measured conversion uplift is claimed.",
       "property": "WelcomeBeforeProfiling; DirectSearchPreserved; PublicExplorationWithoutSignup",
@@ -12355,7 +12357,11 @@
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/components/StudioGallery.tsx",
-        "tdf-hq-ui/src/pages/NotFoundPage.tsx"
+        "tdf-hq-ui/src/pages/NotFoundPage.tsx",
+        "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
+        "tdf-hq-ui/src/utils/studioGallery.ts",
+        "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
+        "tdf-hq/sql/2026-11-07_studio_gallery.sql"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12367,7 +12373,11 @@
         "e2e/web/directory-language.spec.mjs",
         "e2e/web/public-welcome.spec.mjs",
         "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx"
+        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
+        "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
+        "scripts/test-studio-gallery-migration.sh",
+        "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts",
+        "tdf-hq-ui/src/utils/studioGallery.test.ts"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",

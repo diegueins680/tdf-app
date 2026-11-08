@@ -1093,6 +1093,13 @@ jobs:
           psql "$PGURL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_public_ticket_checkout_test'
           npm run test:public-ticket-checkout-migration
 
+      - name: Verify studio gallery seed and editorial changes survive migration retries
+        env:
+          TDF_GALLERY_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/tdf_studio_gallery_test
+        run: |
+          psql "$PGURL" -v ON_ERROR_STOP=1 -c 'CREATE DATABASE tdf_studio_gallery_test'
+          bash scripts/test-studio-gallery-migration.sh
+
       - name: Create production baseline fixture
         run: |
           psql "$PGURL" -v ON_ERROR_STOP=1 -f scripts/__tests__/fixtures/production-schema-20260814.sql

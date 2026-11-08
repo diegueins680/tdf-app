@@ -646,6 +646,7 @@
       "scripts/test-specification-inventory.py",
       "scripts/test-state-machines.py",
       "scripts/test-stripe-integration.sh",
+      "scripts/test-studio-gallery-migration.sh",
       "scripts/test-studio-internship-audit-api-e2e.mjs",
       "scripts/test-studio-internship-audit-api-e2e.sh",
       "scripts/test-studio-internship-audit-migration.sh",
@@ -792,6 +793,7 @@
       "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx",
       "tdf-hq-ui/src/__tests__/analytics.test.ts",
       "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
+      "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts",
       "tdf-hq-ui/src/__tests__/publicBookingRooms.test.ts",
       "tdf-hq-ui/src/analytics/errorReporting.test.ts",
       "tdf-hq-ui/src/analytics/errorReporting.ts",
@@ -1037,6 +1039,8 @@
       "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
       "tdf-hq-ui/src/components/StudioGallery.test.tsx",
       "tdf-hq-ui/src/components/StudioGallery.tsx",
+      "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
+      "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
       "tdf-hq-ui/src/components/TicketCredentialQR.tsx",
       "tdf-hq-ui/src/components/TicketQRDisplay.tsx",
       "tdf-hq-ui/src/components/TicketTransferDialog.tsx",
@@ -1654,6 +1658,8 @@
       "tdf-hq-ui/src/utils/socialEventRoutes.ts",
       "tdf-hq-ui/src/utils/stringValues.test.ts",
       "tdf-hq-ui/src/utils/stringValues.ts",
+      "tdf-hq-ui/src/utils/studioGallery.test.ts",
+      "tdf-hq-ui/src/utils/studioGallery.ts",
       "tdf-hq-ui/src/utils/tidalAgent.test.ts",
       "tdf-hq-ui/src/utils/tidalAgent.ts",
       "tdf-hq-ui/src/utils/torrentAudio.test.ts",
@@ -2179,6 +2185,7 @@
       "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql",
       "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
       "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+      "tdf-hq/sql/2026-11-07_studio_gallery.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -3086,7 +3093,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
+      "sha256": "8c2b033290f3a737c2411957ccf4ce77c24154588a2f22d9f58445f394dd5222",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6798,6 +6805,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-078dea30964c514e",
+      "path": "scripts/test-studio-gallery-migration.sh",
+      "sha256": "bf3f33e6d3f2efd57e604f561917c635cc12f23a24035197c668c5836a291f92",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-df93425ce321f1fb",
       "path": "scripts/test-studio-internship-audit-api-e2e.mjs",
       "sha256": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
@@ -7635,6 +7648,12 @@
       "id": "SURFACE-077e9bba1bd34cd9",
       "path": "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
       "sha256": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-543b08fe0d319163",
+      "path": "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts",
+      "sha256": "59977921a01388d1031141a24337a1d3313c21d42305ac757aa9e6b8c12fc162",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9098,13 +9117,25 @@
     {
       "id": "SURFACE-428957fe77018d21",
       "path": "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-      "sha256": "62ad664ab50686581c13cfac5553af21dbb5d9418b0cf9477a8856c3444fdf9a",
+      "sha256": "17beff96219419b67cda66b71fe8a954044aaf91f53989d7a30e4461a44db622",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cf86306debf08604",
       "path": "tdf-hq-ui/src/components/StudioGallery.tsx",
-      "sha256": "af2d98d676b7dcfcb34e79b72c6694d43a9e9c33c69f218407c11f480dc0ae4e",
+      "sha256": "6a67dce4329be0d37c8952762758527a41a47afd60d7662962b57f8616cbd960",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b9a81b0af6c907f7",
+      "path": "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
+      "sha256": "50764aefe36112256a7168eb4a5277f3d57d65ded18a865234ec2e3d95b42918",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3f41bba71c906727",
+      "path": "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
+      "sha256": "62fb9058ae4c6f9e0fe8764397ccc085c11474dc2c05240c8ff123e38133d054",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10484,7 +10515,7 @@
     {
       "id": "SURFACE-9ec3af8f42eacde2",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-      "sha256": "bef2c4c9f0eda00c82706ee017e1c3936bbb9b2f584f5fcd9cbb18df26ce3328",
+      "sha256": "0f056adf48a5498728b33e8b33824494ebdec69b929824574bf0696b385e1013",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12807,6 +12838,18 @@
       "id": "SURFACE-131656bc7b0c9088",
       "path": "tdf-hq-ui/src/utils/stringValues.ts",
       "sha256": "bb37dcd6a7ab5824a49761f9cee589aa43be29ca95a3bcef9b9aa356e69b5858",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-3d0c6eff29dbf059",
+      "path": "tdf-hq-ui/src/utils/studioGallery.test.ts",
+      "sha256": "4b492b76fe97f010442afe6cd492f3e051feb6c67a61f109ca17e8eb61e63264",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2bcac04e555d45b3",
+      "path": "tdf-hq-ui/src/utils/studioGallery.ts",
+      "sha256": "bb811f20ee26490604c6db8c11e88a220d07e4b5d334e1d2e31e901acdee13b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15945,6 +15988,12 @@
       "id": "SURFACE-90d083a2052615df",
       "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
       "sha256": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d4ecbdf088675af2",
+      "path": "tdf-hq/sql/2026-11-07_studio_gallery.sql",
+      "sha256": "7da04908fd0947a2fa420932eeaf9fa8a224d88b0a238913d652173654571cab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22021,7 +22070,7 @@
     },
     {
       "path": "docs/engineering/welcome-first-discovery-2026-10-25.md",
-      "sha256": "a6012ca9bec050efc544f959a5929685f7dbf75dc98070ffc5e0d8881fec6bb0",
+      "sha256": "c6ada7c2aee8a0b2c8917c4fc9a20cb41d99bf36533d19f47be0fd74b405d075",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30358,7 +30407,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c8200b9442ad2cb2687bf6067de534c7ad2e2fbf2a17091d29dd22c3f0bb5afa",
+      "sha256": "163531d7b038507e1d0c07663c515eb2a1e92742bc307e6d9fb768c1edc803e5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
