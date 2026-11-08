@@ -248,6 +248,7 @@
       "scripts/__tests__/ux-review-real-browser.mjs",
       "scripts/__tests__/verification-evidence.test.mjs",
       "scripts/__tests__/video-campaign-access.test.mjs",
+      "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
       "scripts/ai-workflow-doctor.mjs",
       "scripts/archive/backfill-meta-inbox.sh",
       "scripts/archive/change-venue-to-domo.py",
@@ -660,6 +661,7 @@
       "scripts/test-verification-report.py",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
+      "scripts/test-video-campaign-postgres.sh",
       "scripts/test-whatsapp-consent.sh",
       "scripts/test-whatsapp-redelivery.sh",
       "scripts/test_mail_deliverability_monitor.py",
@@ -3074,7 +3076,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "f9efcc0c2de4730d7341efdaf3e9d3de3c2b8e4893ce46b316ed8a4719f65ea7",
+      "sha256": "9594556d204f908e388adbd8cc000d75a4bcda83293fb6e0f2b83de7cf81a453",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4395,6 +4397,12 @@
       "id": "SURFACE-767f37f563e0a8fa",
       "path": "scripts/__tests__/video-campaign-access.test.mjs",
       "sha256": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d854c1b43b7f1af6",
+      "path": "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
+      "sha256": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6867,6 +6875,12 @@
       "id": "SURFACE-773458db4c86e811",
       "path": "scripts/test-versioned-revenue-products-migration.sh",
       "sha256": "b848c1dbfbf90a97fd2cef8c5bf26b61a43cd95609b33ea017abbc78b0f19489",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-546136dfed4fd297",
+      "path": "scripts/test-video-campaign-postgres.sh",
+      "sha256": "0e6c93dc5d5784fcdd874459d282c32c3b9634f21cbf114b206af6cda08c948a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16214,7 +16228,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "sha256": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18026,7 +18040,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "52ec1c55e972f115f2a59b3d53ac6e16fa24934b729eddd72da0a478bfbdf60c",
+      "sha256": "911ee4acfb48e29b2684f996555cdfe4bc887ac60e76b216217d7938a2c9a1c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18122,7 +18136,7 @@
     {
       "id": "SURFACE-7881cee644a10784",
       "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
-      "sha256": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
+      "sha256": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24569,7 +24583,7 @@
     },
     {
       "path": "formal/auth/README.md",
-      "sha256": "c371c5f49065c86d2d87266885308ab09b994d3ae935faebfbc53ba671249a48",
+      "sha256": "c8f5c10cc80177a9eddc1e9cc419b72cd313b5c01f28ee1d2a51709aefa7f7fa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29714,7 +29728,7 @@
     },
     {
       "path": "formal/system/identity-lifecycle.md",
-      "sha256": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440",
+      "sha256": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30267,7 +30281,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a40a67dc9b74b2399aaf251ce976d43e6127a2c8b95ab6261addf559d2c8f37d",
+      "sha256": "761f65465118e60420600e583b04bbb8dd069abd1ac7297a21c54bf8fb2faaf0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
