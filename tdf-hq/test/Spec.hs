@@ -536,6 +536,7 @@ import TDF.Server.SocialEventsHandlers (
     validateInvitationStatusInput,
     validateInvitationStatusUpdateInput,
     validateEventArtistIds,
+    validateEventArtistFilter,
     validateArtistName,
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
@@ -12531,6 +12532,24 @@ main = hspec $ do
                                 ("Expected invalid artist name to be rejected, got " <> show value)
             assertInvalid "   " "artist name is required"
             assertInvalid "Los\nMentores" "artist name must not contain control characters"
+
+    describe "event discovery artist filter" $ do
+        it "preserves single IDs and deduplicates the OR set" $ do
+            fmap (map fromSqlKey) (validateEventArtistFilter (Just "42, 7,0042"))
+                `shouldBe` Right [7, 42]
+            fmap (map fromSqlKey) (validateEventArtistFilter (Just "42"))
+                `shouldBe` Right [42]
+            validateEventArtistFilter Nothing `shouldBe` Right []
+        it "rejects malformed, empty, negative and overflowing members" $
+            forM_ ["1,", "1,,2", "0", "-1", "1 OR 1=1", "9223372036854775808"] $ \raw ->
+                validateEventArtistFilter (Just raw) `shouldSatisfy` isLeft
+        it "bounds the submitted list before deduplication" $
+            validateEventArtistFilter (Just (Data.Text.intercalate "," (replicate 51 "1")))
+                `shouldSatisfy` isLeft
+        it "roundtrips a canonical singleton" $ QC.property $ \(QC.Positive value) ->
+            let key = (value :: Int64)
+            in fmap (map fromSqlKey) (validateEventArtistFilter (Just (Data.Text.pack (show key))))
+                == Right [key]
 
     describe "validateEventArtistIds" $ do
         let mkArtist rawArtistId =

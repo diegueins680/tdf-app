@@ -1,0 +1,40 @@
+Final independent ROOT qualification and evidence review, 2026-10-30
+
+Source: 437564ced1b2ea38b590e6b2d2043e85e17aabb9.
+Normal parent: ec7b43b9cf4c34144e5a7176e454a56f20ee73bb.
+Main baseline: 0bd8409f0b0bbeffdbee5cb6a0abdd09c07dafe5.
+
+Conclusion: zero blocking findings in the scoped ROOT-authored qualification, binder, control receipts and preservation review. My authorship of the CSV product change, original regressions and contract is distinct from this peer review of ROOT's independently authored qualification/evidence harness. ROOT separately reviewed the product/specification in root-independent-preparation-review.json. This is not independent GitHub approval.
+
+I independently read the qualifier, seal, eleven binder controls and finite AST/VM probe, then inspected the actual completed receipts and raw Jest/build/root-quality logs. The baseline's one failure is the intended EUR expected versus USD actual currency cell with amount100/statusvoid unchanged, not a compile/setup error: six cases, one assertion failure, five compatibility passes. The corrected CSV log has six passing cases. Current source's four targeted suites have 78 passing tests; typecheck, lint, production build, root quality, admission and eight catalog unit tests record actual exit zero. Initial partial-event fixture receipts remain historical and were not used to inflate the final counts.
+
+The independent ROOT AST probe varies three report currencies, three entry currencies and three finite stored amounts (27 inputs), executes extracted actual CSV/safe-money source, checks raw amount/status and 24-column compatibility, and observes 18 old-binding unit mismatches plus nine compatible inputs before restored 27-pass execution. Raw emitted current/faulty JavaScript is retained and hashed. This is finite source-function evidence with synthetic stored DTO records, not backend authoring acceptance of amount zero, an HTTP/browser download, an external spreadsheet consumer, or a production exposure proof. No default currency fallback is called.
+
+I independently rehashed all 1434 registered FS/Git/Mobile sources, independently enumerated and rehashed all 911 current UI input files from Git, and rehashed all 52 assurance evidence artifacts. Source digest 7a7cd4febe0a2b35762f161ce7ba5c019356c1ba1319b8064bf84d10b93ece5c and provenance agree. The committed normal parent, Mobile checkout pin, clean tracked source and removed owned dependency aliases were verified. The sole production UI delta is the finance_entry unit cell; the parent test bytes remain an exact prefix with two appended cases. All other UI is exact parent. Backend, workflows, scripts, operations, Mobile and dependency trees are exact main. The entire parent reports tree and four report/archive/review/manifest blobs remain exact.
+
+All 160 parent normative requirement objects remain exact, with the new CSV unit requirement bringing the total to161. The original1355 catalog decisions are preserved by value and one reviewed synthetic fixture is appended. Current committed JSON/CSV strict inventories match the generated artifact bytes and contain1356 candidates. The root review and original baseline source hashes agree with the committed one-cell change.
+
+Assurance is working-tree execution PASS while release remains BLOCKED with executionAllowed false. All161 whole requirements and322 implementation/refinement obligations remain UNPROVEN. Eleven inherited source-derived SMT obligations are conditional and unrelated to proving this CSV implementation; no new complete proof is claimed.
+
+The actual seal and eleven extracted-binder controls each returned zero. All eleven in-memory corruptions produced their intended assertion rejection, with valid evidence accepted before and after and no checkout/evidence mutation. They cover failed lint promotion, reduced test counts, borrowed parent full-suite status, wrong source, provenance mismatch, unsupported proof/release claims, omitted UI input, missed old-binding mismatches, unexpected fallback and wrong CSV source fingerprint. These are evidence-binder controls, not eleven product defects or a whole-pipeline theorem.
+
+Important scope: no local full UI suite was run for437564. The3811 tests/327 suites belong only to parent functional source83533b3d980432aea6bab30361453311da4f3905 and remain explicitly historical. Current-head mandatory selected hosted UI quality is still required before integration. The new per-row amount-unit meaning is explicit but no prior external consumer contract was found; external expectations remain unknown. DTO currency validation, authorization, numeric admission and existing CSV escaping remain separately trusted. No FX, fallback, record mutation or multi-query snapshot guarantee is introduced. Interrupted process cleanup is not fault-tested; assert-based harness checks were run under normal Python, not certified for -O.
+
+I performed read-only source/artifact inspections and hash comparisons, not an independent rerun of Jest, AST probes, builds, browsers, database/Docker/provider actions or hosted checks. No serving/deployment/integration claim is made. All exact raw receipt, source, script and log hashes are listed in the companion independent-checks JSON below.
+
+Companion independent checks: /private/tmp/tdf-event-finance-csv-currency-final-independent-checks-20261030.json
+SHA256: b4cda6bef4ea9f9f2d80f3c0931bc635fed0658f1d83b0586d3a7e706030fc17
+
+Key receipt and script SHA256:
+6cbbe1d47f49e941c2bcb4c1549cd94aee1172ee9d12beb8e101c54f431cd966  /private/tmp/tdf-event-finance-csv-currency-qualification-20261030/ui-quality.json
+dd623c4ace622fdd4f4c816c5b0d9ca865c6aeead87ba51ffee1dfb299614f9f  /private/tmp/tdf-event-finance-csv-currency-qualification-20261030/source-correspondence.json
+b7b8ec877fa6d400eab1e9e53bbf6e78a3cb1054f4080d1472cb7eee942fcdc2  /private/tmp/tdf-event-finance-csv-currency-qualification-20261030/seal-binding-controls.json
+f5c937614ca4df2196764fec5e7dfcf931e102295691f13cf55dc1ebb0e8dfac  /private/tmp/tdf-event-finance-csv-currency-qualification-20261030/seal-execution.json
+46ff9113d513732f01f39f6e6ddb94eb70ea91de583ced6ac8589e5011eb7c78  /private/tmp/tdf-event-finance-csv-currency-qualification-20261030/baseline.log
+037068aa64cf2e16975c5e9ded7896fc3f81ee372e6ab94abc1770bd7bfe2085  /private/tmp/tdf-event-finance-csv-currency-qualification-20261030/corrected.log
+72784d46f37c826a8d1d77513fc89f8c95d1dc820e23c192de9302c980fd6f36  /private/tmp/tdf-event-finance-csv-currency-qualification-20261030/final-targeted.log
+3fa4ff7229e7500b3b9cf39fe8cf689681ef60260482039a9d4481e89df32e42  /private/tmp/tdf-event-finance-csv-currency-qualification-20261030/alternative-verification.json
+5bdf7a1f7881b5554a32ce21271266923c311140037f62ebadb96f289bd8edd5  /private/tmp/tdf-event-finance-csv-currency-seal-20261030.py
+c8fdf2c4d4cf01964dd1b2246b621a91cefd22362d095323b63bdb165b7e0f35  /private/tmp/tdf-event-finance-csv-currency-seal-controls-20261030.py
+
+Reviewed at UTC 2026-10-30T20:41:20.713104+00:00

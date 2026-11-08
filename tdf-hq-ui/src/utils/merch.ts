@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../api/client';
+import { serializeCsvCell } from './csv';
 
 export const formatMerchMoney = (minor: number, currency = 'USD', locale = 'es-EC') =>
   new Intl.NumberFormat(locale, { style: 'currency', currency }).format(minor / 100);
@@ -65,14 +66,6 @@ export interface MerchOrderExportRow {
   sellerNetMinor?: number;
 }
 
-const safeCsvCell = (value: string | number | undefined) => {
-  let text = value === undefined ? '' : String(value);
-  // Spreadsheet applications may execute cells beginning with these characters.
-  // Prefixing an apostrophe keeps exported, user-influenced identifiers as text.
-  if (/^\s*[=+\-@]/.test(text)) text = `'${text}`;
-  return `"${text.replace(/"/g, '""')}"`;
-};
-
 export const buildMerchOrdersCsv = (
   orders: MerchOrderExportRow[],
   language: 'es' | 'en',
@@ -103,9 +96,9 @@ export const buildMerchOrdersCsv = (
       order.totalMinor,
     ];
     const finance = includesFinance ? [order.tdfCommissionMinor, order.sellerNetMinor] : [];
-    return [...common, ...finance].map(safeCsvCell).join(',');
+    return [...common, ...finance].map(serializeCsvCell).join(',');
   });
 
   // The BOM makes UTF-8 Spanish headers open reliably in common spreadsheet tools.
-  return `\uFEFF${[...commonHeaders, ...(includesFinance ? financeHeaders : [])].map(safeCsvCell).join(',')}\r\n${rows.join('\r\n')}\r\n`;
+  return `\uFEFF${[...commonHeaders, ...(includesFinance ? financeHeaders : [])].map(serializeCsvCell).join(',')}\r\n${rows.join('\r\n')}\r\n`;
 };
