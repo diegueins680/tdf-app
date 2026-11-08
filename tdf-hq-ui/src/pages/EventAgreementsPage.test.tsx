@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { EventWorkspace, WorkspaceCommand } from '../api/eventWorkspace';
@@ -15,6 +15,7 @@ const document = jest.fn<(id: string, path: string) => Promise<Blob>>();
 jest.unstable_mockModule('../api/eventWorkspace', () => ({ EventWorkspaceAPI: { read, command, document } }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session }), getStoredSessionToken: () => null }));
 jest.unstable_mockModule('../components/party-selector/PartySelector', () => ({ UserSelector: () => null }));
+const { ApiError } = await import('../api/client');
 const { default: Page } = await import('./EventAgreementsPage');
 
 function setup(cached = false) {
@@ -170,4 +171,156 @@ it('retains consent for an identical proposal refresh but clears it after withdr
   fireEvent.click(reviewAgain);
   expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Tu nombre legal' }).value).toBe('');
   expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }).checked).toBe(false);
+});
+
+
+it('keeps every plan, proposal and comment draft node through a temporary503 and successful retry', async () => {
+  session = { partyId: 1 }; read.mockResolvedValue(workspaceFixture(true));
+  const { client } = setup();
+  await screen.findByText('Synthetic event plan');
+  fireEvent.click(screen.getByRole('button', { name: 'Editar plan y cotización', exact: true }));
+  let planFields = within(screen.getByRole('tabpanel', { name: 'Plan del evento' }));
+  const planTitle = planFields.getByRole<HTMLInputElement>('textbox', { name: 'Título del plan' });
+  const planComment = planFields.getByRole<HTMLTextAreaElement>('textbox', { name: 'Comentario sobre el plan' });
+  fireEvent.change(planTitle, { target: { value: 'Unsaved plan title' } });
+  fireEvent.change(planComment, { target: { value: 'Unsaved plan comment' } });
+  fireEvent.click(screen.getByRole('tab', { name: 'Acuerdos (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Preparar nuevo acuerdo', exact: true }));
+  let agreementFields = within(screen.getByRole('tabpanel', { name: 'Acuerdos del evento' }));
+  const proposalTitle = agreementFields.getByRole<HTMLInputElement>('textbox', { name: 'Título del acuerdo' });
+  const proposalBody = agreementFields.getByRole<HTMLTextAreaElement>('textbox', { name: 'Texto íntegro del acuerdo' });
+  const agreementComment = agreementFields.getByRole<HTMLTextAreaElement>('textbox', { name: 'Comentario sobre el acuerdo' });
+  fireEvent.change(proposalTitle, { target: { value: 'Unsaved proposal title' } });
+  fireEvent.change(proposalBody, { target: { value: 'Unsaved proposal terms' } });
+  fireEvent.change(agreementFields.getByRole('textbox', { name: 'Nombre legal del destinatario' }), { target: { value: 'Synthetic Recipient' } });
+  fireEvent.change(agreementComment, { target: { value: 'Unsaved agreement comment' } });
+  const error = new ApiError('Temporary workspace read failure', 503);
+  read.mockRejectedValueOnce(error);
+  await act(async () => { await client.refetchQueries({ queryKey: ['event-workspace', '216', 1, getAuthSessionEpoch()] }); });
+  await screen.findByText('Temporary workspace read failure');
+  agreementFields = within(screen.getByRole('tabpanel', { name: 'Acuerdos del evento' }));
+  expect(client.getQueryData(['event-workspace', '216', 1, getAuthSessionEpoch()])).toBeTruthy();
+  expect(agreementFields.getByRole('textbox', { name: 'Título del acuerdo' })).toBe(proposalTitle);
+  expect(proposalTitle.value).toBe('Unsaved proposal title');
+  expect(agreementFields.getByRole('textbox', { name: 'Texto íntegro del acuerdo' })).toBe(proposalBody);
+  expect(proposalBody.value).toBe('Unsaved proposal terms');
+  expect(agreementFields.getByRole('textbox', { name: 'Comentario sobre el acuerdo' })).toBe(agreementComment);
+  expect(agreementComment.value).toBe('Unsaved agreement comment');
+  expect(agreementFields.getByRole<HTMLButtonElement>('button', { name: 'Guardar borrador de propuesta' }).disabled).toBe(true);
+  fireEvent.click(screen.getByRole('tab', { name: 'Plan del evento', exact: true }));
+  planFields = within(screen.getByRole('tabpanel', { name: 'Plan del evento' }));
+  expect(planFields.getByRole('textbox', { name: 'Título del plan' })).toBe(planTitle);
+  expect(planTitle.value).toBe('Unsaved plan title');
+  expect(planFields.getByRole('textbox', { name: 'Comentario sobre el plan' })).toBe(planComment);
+  expect(planComment.value).toBe('Unsaved plan comment');
+  expect(planFields.getByRole<HTMLButtonElement>('button', { name: 'Guardar nueva versión del plan' }).disabled).toBe(true);
+  expect(command).not.toHaveBeenCalled(); expect(document).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar', exact: true }));
+  await waitFor(() => expect(screen.queryByText('Temporary workspace read failure')).toBeNull());
+  planFields = within(screen.getByRole('tabpanel', { name: 'Plan del evento' }));
+  expect(planFields.getByRole('textbox', { name: 'Título del plan' })).toBe(planTitle);
+  expect(planTitle.value).toBe('Unsaved plan title');
+  expect(planComment.value).toBe('Unsaved plan comment');
+  fireEvent.click(screen.getByRole('tab', { name: 'Acuerdos (1)' }));
+  agreementFields = within(screen.getByRole('tabpanel', { name: 'Acuerdos del evento' }));
+  expect(agreementFields.getByRole('textbox', { name: 'Título del acuerdo' })).toBe(proposalTitle);
+  expect(proposalTitle.value).toBe('Unsaved proposal title');
+  expect(proposalBody.value).toBe('Unsaved proposal terms');
+  expect(agreementComment.value).toBe('Unsaved agreement comment');
+  expect(command).not.toHaveBeenCalled(); expect(document).not.toHaveBeenCalled();
+});
+
+it.each([408, 429, 'network'])('preserves the same comment node and blocks a queued write during transient read failure (%s)', async (failure) => {
+  const { client } = setup(); await screen.findByText('Synthetic event plan');
+  const comment = screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Comentario sobre el plan' });
+  const send = screen.getByRole<HTMLButtonElement>('button', { name: 'Enviar comentario', exact: true });
+  fireEvent.change(comment, { target: { value: 'Unsaved transient transport comment' } });
+  const error = typeof failure === 'number' ? new ApiError('Temporary comment read failure', failure)
+    : Object.assign(new Error('Temporary comment read failure'), { cause: new TypeError('Synthetic offline transport') });
+  read.mockRejectedValueOnce(error);
+  await act(async () => {
+    await client.refetchQueries({ queryKey: ['event-workspace', '216', 2, getAuthSessionEpoch()] });
+    fireEvent.click(send);
+  });
+  expect(command).not.toHaveBeenCalled();
+  await screen.findByText('Temporary comment read failure');
+  expect(client.getQueryData(['event-workspace', '216', 2, getAuthSessionEpoch()])).toBeTruthy();
+  expect(screen.getByRole('textbox', { name: 'Comentario sobre el plan' })).toBe(comment);
+  expect(comment.value).toBe('Unsaved transient transport comment');
+  expect(send.disabled).toBe(true);
+  expect(document).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar', exact: true }));
+  await waitFor(() => expect(screen.queryByText('Temporary comment read failure')).toBeNull());
+  expect(screen.getByRole('textbox', { name: 'Comentario sobre el plan' })).toBe(comment);
+  expect(comment.value).toBe('Unsaved transient transport comment');
+  expect(send.disabled).toBe(false);
+  expect(command).not.toHaveBeenCalled(); expect(document).not.toHaveBeenCalled();
+});
+
+it.each([401, 403, 404, 'malformed'])('hides cached private documents and drafts after denial or an unconfirmed response (%s)', async (failure) => {
+  session = { partyId: 1 }; read.mockResolvedValue(workspaceFixture(true));
+  const { client } = setup(); await screen.findByText('Synthetic event plan');
+  fireEvent.click(screen.getByRole('button', { name: 'Editar plan y cotización', exact: true }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Título del plan' }), { target: { value: 'Private unsaved draft' } });
+  read.mockRejectedValueOnce(typeof failure === 'number' ? new ApiError('Workspace access not confirmed', failure) : new Error('Workspace access not confirmed'));
+  await act(async () => { await client.refetchQueries({ queryKey: ['event-workspace', '216', 1, getAuthSessionEpoch()] }); });
+  await screen.findByText('Workspace access not confirmed');
+  expect(client.getQueryData(['event-workspace', '216', 1, getAuthSessionEpoch()])).toBeTruthy();
+  expect(screen.queryByText('Synthetic event plan')).toBeNull();
+  expect(screen.queryByRole('textbox', { name: 'Título del plan' })).toBeNull();
+  expect(screen.queryByDisplayValue('Private unsaved draft')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Descargar plan PDF' })).toBeNull();
+  expect(command).not.toHaveBeenCalled(); expect(document).not.toHaveBeenCalled();
+});
+
+it('refuses acceptance queued against a failed read and still invalidates consent for the recovered replacement', async () => {
+  const { client } = setup(); await screen.findByText('Synthetic event plan');
+  fireEvent.click(screen.getByRole('tab', { name: 'Acuerdos (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar aceptación' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Tu nombre legal' }), { target: { value: 'Synthetic Recipient' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }));
+  const accept = screen.getByRole<HTMLButtonElement>('button', { name: 'Aceptar acuerdo', exact: true });
+  read.mockRejectedValueOnce(new ApiError('Temporary acceptance read failure', 503));
+  await act(async () => {
+    await client.refetchQueries({ queryKey: ['event-workspace', '216', 2, getAuthSessionEpoch()] });
+    // Deliver the already-queued click before the observer paints its disabled state.
+    fireEvent.click(accept);
+  });
+  expect(command).not.toHaveBeenCalled();
+  await screen.findByText('Temporary acceptance read failure');
+  // A failed read closes acceptance so its modal cannot trap the workspace retry.
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(command).not.toHaveBeenCalled();
+  const replacement = workspaceFixture();
+  replacement.agreements[0]!.current_version = 2;
+  replacement.agreements[0]!.versions = [{ ...replacement.agreements[0]!.versions[0]!, version: 2, document_hash: 'b'.repeat(64) }];
+  read.mockResolvedValueOnce(replacement);
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar', exact: true }));
+  await waitFor(() => expect(screen.queryByText('Temporary acceptance read failure')).toBeNull());
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(command).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar aceptación' }));
+  expect(screen.getByRole<HTMLInputElement>('textbox', { name: 'Tu nombre legal' }).value).toBe('');
+  expect(screen.getByRole<HTMLInputElement>('checkbox', { name: 'He leído y acepto el acuerdo y sus anexos de esta versión.' }).checked).toBe(false);
+});
+
+it('does not publish a private PDF that resolves after a workspace read failure', async () => {
+  const previous = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
+  const createUrl = jest.fn(() => { throw new Error('Synthetic private bytes must not be exposed'); });
+  Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createUrl });
+  let resolveDocument!: (value: Blob) => void;
+  document.mockImplementationOnce(() => new Promise(resolve => { resolveDocument = resolve; }));
+  try {
+    const { client } = setup(); await screen.findByText('Synthetic event plan');
+    fireEvent.click(screen.getByRole('button', { name: 'Descargar plan PDF' }));
+    await waitFor(() => expect(document).toHaveBeenCalledTimes(1));
+    read.mockRejectedValueOnce(new ApiError('Temporary document read failure', 503));
+    await act(async () => { await client.refetchQueries({ queryKey: ['event-workspace', '216', 2, getAuthSessionEpoch()] }); });
+    await screen.findByText('Temporary document read failure');
+    await act(async () => { resolveDocument(new Blob(['%PDF-synthetic'])); });
+    expect(createUrl).not.toHaveBeenCalled();
+  } finally {
+    if (previous) Object.defineProperty(URL, 'createObjectURL', previous);
+    else Reflect.deleteProperty(URL, 'createObjectURL');
+  }
 });

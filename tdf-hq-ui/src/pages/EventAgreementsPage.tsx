@@ -6,6 +6,7 @@ import PageShell from '../components/PageShell';
 import MarkdownText from '../components/MarkdownText';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
+import { ApiError, HTTP_STATUS_REQUEST_TIMEOUT } from '../api/client';
 import { EventWorkspaceAPI, type AgreementContent, type AgreementVersion, type EventAgreement, type EventPlanContent, type EventWorkspace, type WorkspaceCommand } from '../api/eventWorkspace';
 import { useSession } from '../session/SessionContext';
 import { isEventAgreementsEnabled } from '../config/eventAgreementsRollout';
@@ -21,6 +22,14 @@ const states = { draft: 'Borrador', sent: 'Pendiente de tu decisión', changes_r
 const lines = (text: string) => text.split('\n').map((value) => value.trim()).filter(Boolean);
 const dateLabel = (value: string) => new Date(value).toLocaleString('es-EC', { timeZone: 'America/Guayaquil', dateStyle: 'medium', timeStyle: 'short' });
 const money = (cents: number | null, currency: string) => cents === null ? 'Por cotizar' : formatCurrency(cents / 100, currency, 'es-EC');
+
+function temporaryWorkspaceReadError(error: unknown): boolean {
+  if (error instanceof ApiError) return error.status === HTTP_STATUS_REQUEST_TIMEOUT || error.status === 429
+    || (error.status >= 500 && error.status < 600);
+  // The canonical client marks fetch/body transport failures with an own cause.
+  // Parser, identity and unknown errors have no such marker and remain fail-closed.
+  return error instanceof Error && Object.prototype.hasOwnProperty.call(error, 'cause');
+}
 
 export function agreementReadiness(version: AgreementVersion): string[] {
   const plan = version.content.plan.content;
@@ -44,7 +53,11 @@ function Workspace({ eventId, ownerId }: { eventId: string; ownerId: number | nu
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const isCurrent = () => mounted.current && guard.isCurrentOwner();
-  const query = useQuery({ queryKey: ['event-workspace', eventId, ownerId, getAuthSessionEpoch()], queryFn: () => EventWorkspaceAPI.read(eventId), enabled: ownerId !== null, retry: false });
+  const workspaceQueryKey = ['event-workspace', eventId, ownerId, getAuthSessionEpoch()];
+  const query = useQuery({ queryKey: workspaceQueryKey, queryFn: () => EventWorkspaceAPI.read(eventId), enabled: ownerId !== null, retry: false });
+  // Read the cache synchronously so a queued action cannot race the error repaint.
+  const readFailed = () => client.getQueryState(workspaceQueryKey)?.status === 'error';
+  const readFailureMessage = 'Actualiza el espacio del evento antes de continuar.';
   const [feedback, setFeedback] = useState('');
   const [tab, setTab] = useState<'plan' | 'agreements'>(() => search.has('agreement') ? 'agreements' : 'plan');
   const [documentError, setDocumentError] = useState('');
@@ -53,6 +66,7 @@ function Workspace({ eventId, ownerId }: { eventId: string; ownerId: number | nu
   const mutation = useMutation({
     mutationFn: async (command: WorkspaceCommand) => {
       if (!isCurrent()) throw new Error('Tu sesión cambió. Abre de nuevo el evento.');
+      if (readFailed()) throw new Error(readFailureMessage);
       const value = await EventWorkspaceAPI.command(eventId, command);
       if (!isCurrent()) throw new Error('Tu sesión cambió. Abre de nuevo el evento.');
       return value;
@@ -66,6 +80,7 @@ function Workspace({ eventId, ownerId }: { eventId: string; ownerId: number | nu
     },
   });
   const command = async (payload: Omit<WorkspaceCommand, 'requestId'>) => {
+    if (readFailed()) throw new Error(readFailureMessage);
     const previous = retry.current;
     const sameIntent = previous && JSON.stringify({ ...previous, requestId: undefined }) === JSON.stringify(payload);
     const request = sameIntent ? previous : { ...payload, requestId: crypto.randomUUID() };
@@ -73,17 +88,18 @@ function Workspace({ eventId, ownerId }: { eventId: string; ownerId: number | nu
     await mutation.mutateAsync(request);
   };
   const download = async (path: string, name: string) => {
+    if (readFailed()) { setDocumentError(readFailureMessage); return; }
     setDocumentError(''); setDownloading(true);
     try {
       const pdf = await EventWorkspaceAPI.document(eventId, path);
-      if (!isCurrent()) return;
+      if (!isCurrent() || readFailed()) return;
       const url = URL.createObjectURL(pdf); const link = document.createElement('a');
       link.href = url; link.download = name; link.click(); URL.revokeObjectURL(url);
     } catch (error) { if (isCurrent()) setDocumentError(error instanceof Error ? error.message : 'Reintenta la descarga.'); }
     finally { if (isCurrent()) setDownloading(false); }
   };
-  const state = query.isError ? undefined : query.data;
-  const busy = mutation.isPending || downloading;
+  const state = query.isError && !temporaryWorkspaceReadError(query.error) ? undefined : query.data;
+  const busy = mutation.isPending || downloading || query.isError;
   return <PageShell title="Acuerdos y plan del evento" subtitle="Documentos privados · fechas en hora de Quito" actions={<Button component={RouterLink} to={`/social/eventos/${eventId}`}>Volver al evento</Button>} loading={query.isLoading}>
     <Stack spacing={2.5}>
       {ownerId === null && <Alert severity="info">Inicia sesión con la cuenta destinataria o la del organizador para consultar este espacio.</Alert>}
@@ -108,7 +124,7 @@ function Workspace({ eventId, ownerId }: { eventId: string; ownerId: number | nu
         <Box hidden={tab !== 'agreements'} role="tabpanel" aria-label="Acuerdos del evento"><Stack spacing={2}>
         <Typography component="h2" variant="h5">Acuerdos</Typography>
         {!state.agreements.length && <Typography color="text.secondary">Todavía no hay propuestas disponibles.</Typography>}
-        {state.agreements.map((agreement) => <AgreementCard key={agreement.id} agreement={agreement} owner={state.owner} busy={busy} command={command} download={download} ownerId={ownerId} eventId={eventId} />)}
+        {state.agreements.map((agreement) => <AgreementCard key={agreement.id} agreement={agreement} owner={state.owner} busy={busy} readUnavailable={query.isError} command={command} download={download} ownerId={ownerId} eventId={eventId} />)}
         {state.owner && state.plan && <Accordion defaultExpanded={!state.agreements.length}><AccordionSummary>Preparar nuevo acuerdo</AccordionSummary><AccordionDetails><AgreementEditor key="new-agreement" ownerId={ownerId} scope={`${eventId}:new`} busy={busy} create={(content) => command({ action: 'agreement.create', version: 0, content })} /></AccordionDetails></Accordion>}
         </Stack></Box>
       </>}
@@ -199,7 +215,7 @@ function AgreementEditor({ ownerId, scope, busy, initial = emptyAgreement, creat
   </Stack></CardContent></Card>;
 }
 
-function AgreementCard({ agreement, owner, busy, command, download, ownerId, eventId }: { agreement: EventAgreement; owner: boolean; busy: boolean; command: (command: Omit<WorkspaceCommand, 'requestId'>) => Promise<unknown>; download: (path: string, name: string) => Promise<void>; ownerId: number | null; eventId: string }) {
+function AgreementCard({ agreement, owner, busy, readUnavailable, command, download, ownerId, eventId }: { agreement: EventAgreement; owner: boolean; busy: boolean; readUnavailable: boolean; command: (command: Omit<WorkspaceCommand, 'requestId'>) => Promise<unknown>; download: (path: string, name: string) => Promise<void>; ownerId: number | null; eventId: string }) {
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
   const latest = agreement.versions.find((version) => version.version === selectedVersion) ?? agreement.versions.at(-1);
   const [acceptOpen, setAcceptOpen] = useState(false);
@@ -210,7 +226,7 @@ function AgreementCard({ agreement, owner, busy, command, download, ownerId, eve
   // Consent belongs to the proposal opened for review, never a replacement from a query refresh.
   useEffect(() => {
     setAcceptOpen(false); setReviewedProposal(null); setName(''); setConsent(false);
-  }, [agreement.id, agreement.current_version, agreement.state, latest?.version, latest?.document_hash]);
+  }, [agreement.id, agreement.current_version, agreement.state, latest?.version, latest?.document_hash, readUnavailable]);
   if (!latest) return null;
   const current = latest.version === agreement.current_version;
   const issues = agreementReadiness(latest);
@@ -244,7 +260,7 @@ function AgreementCard({ agreement, owner, busy, command, download, ownerId, eve
     <CommentBox label="Comentario sobre el acuerdo" busy={busy || !current} submit={(text) => act('comment', { comment: text })} />
     {owner && current && ['draft', 'changes_requested', 'rejected', 'withdrawn'].includes(agreement.state) && <Accordion><AccordionSummary>Preparar nueva versión</AccordionSummary><AccordionDetails><AgreementEditor ownerId={ownerId} scope={`${eventId}:${agreement.id}:${latest.version}`} initial={latest.content} busy={busy} create={(content) => act('revise', { content })} /></AccordionDetails></Accordion>}
     {owner && agreement.state === 'accepted' && <AgreementEditor ownerId={ownerId} scope={`${eventId}:${agreement.id}:amendment`} busy={busy} initial={{ ...latest.content, title: `Anexo a ${latest.content.title}` }} create={(content) => command({ action: 'agreement.create', version: 0, parentId: agreement.id, content: { title: content.title, body: content.body, recipientLegalName: content.recipientLegalName, pendingFields: content.pendingFields } })} />}
-    <Dialog open={acceptOpen && canAccept && reviewedCurrent} onClose={() => { if (!busy) setAcceptOpen(false); }} fullWidth aria-labelledby={`accept-${agreement.id}`}>
+    <Dialog open={acceptOpen && canAccept && reviewedCurrent && !readUnavailable} onClose={() => { if (!busy) setAcceptOpen(false); }} fullWidth aria-labelledby={`accept-${agreement.id}`}>
       <DialogTitle id={`accept-${agreement.id}`}>Aceptar acuerdo v{latest.version}</DialogTitle>
       <DialogContent><Stack spacing={2} sx={{ mt: 1 }}><Typography>Se registrará tu aceptación de esta versión y del plan anexo v{latest.content.plan.revision}. Podrás descargar la constancia y el contenido aceptado.</Typography>
         <TextField label="Tu nombre legal" value={name} onChange={(e) => setName(e.target.value)} helperText={`Destinatario del acuerdo: ${latest.content.recipientLegalName}`} />
