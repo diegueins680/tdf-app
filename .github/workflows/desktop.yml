@@ -218,8 +218,16 @@ jobs:
           path: release
       - name: Select release assets and refuse unsigned test packages
         shell: bash
+        env:
+          # A signing certificate alone does not enable macOS notarization.
+          # The successful macOS build must also have been configured to notarize.
+          MAC_NOTARIZATION_CONFIGURED: ${{ secrets.DESKTOP_MAC_CSC_LINK != '' && secrets.DESKTOP_APPLE_ID != '' && secrets.DESKTOP_APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.DESKTOP_APPLE_TEAM_ID != '' }}
         run: |
           set -euo pipefail
+          if [ "$MAC_NOTARIZATION_CONFIGURED" != 'true' ]; then
+            echo 'Official update feeds require the signed, notarization-configured macOS build.' >&2
+            exit 1
+          fi
           # Release assets are files only: installers, update metadata, blockmaps and checksums.
           # Smoke receipts (receipts/) remain in the workflow artifacts, not on the release.
           find release -maxdepth 1 -type f \( -name '*.dmg' -o -name '*.zip' -o -name '*.exe' -o -name '*.blockmap' -o -name 'latest*.yml' -o -name 'SHA256SUMS-*.txt' \) | sort > release-assets.txt

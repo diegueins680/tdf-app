@@ -17765,7 +17765,8 @@
       "tests": [
         "tdf-desktop/test/updater.test.cjs",
         "tdf-desktop/test/config.test.cjs",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-desktop/test/release-policy.test.cjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",

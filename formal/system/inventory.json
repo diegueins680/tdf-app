@@ -781,6 +781,7 @@
       "tdf-desktop/test/config.test.cjs",
       "tdf-desktop/test/links.test.cjs",
       "tdf-desktop/test/playbackState.test.cjs",
+      "tdf-desktop/test/release-policy.test.cjs",
       "tdf-desktop/test/updater.test.cjs"
     ],
     "tdf-hq-ui": [
@@ -3132,7 +3133,7 @@
     {
       "id": "SURFACE-cc0ad60f02c62cee",
       "path": ".github/workflows/desktop.yml",
-      "sha256": "c481f24133d36fcfa7be984d752d0753a7be6cbd6149a0bc9f2de3ba22d9ef45",
+      "sha256": "ec0a6ab959a91804e3eb2e9ea6c315493538b4f9543dd46306bcde3adfe11b42",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7603,6 +7604,12 @@
       "id": "SURFACE-f188e96dfeb44fd0",
       "path": "tdf-desktop/test/playbackState.test.cjs",
       "sha256": "4642e931cbad941bb137d6d7b0c6903a895c47168b1901e5e99cc3ac45cb5a79",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e0c8fe00799cba13",
+      "path": "tdf-desktop/test/release-policy.test.cjs",
+      "sha256": "23dbc21bf4040e53051ad8db68be1336bd0bf304978e8f0086a655ba68dbe3c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30619,7 +30626,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "cd0bbef58c020101102f2112d53a56863d867ec2e6811b3446c73f33654e7705",
+      "sha256": "b27072a3d01a273e3ef6b9027440d436efc7d7f445b0c6a28887e226565b919d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

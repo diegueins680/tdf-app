@@ -17766,7 +17766,8 @@
       "tests": [
         "tdf-desktop/test/updater.test.cjs",
         "tdf-desktop/test/config.test.cjs",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-desktop/test/release-policy.test.cjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -17795,7 +17796,7 @@
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
     ".github/workflows/ci.yml": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/desktop.yml": "c481f24133d36fcfa7be984d752d0753a7be6cbd6149a0bc9f2de3ba22d9ef45",
+    ".github/workflows/desktop.yml": "ec0a6ab959a91804e3eb2e9ea6c315493538b4f9543dd46306bcde3adfe11b42",
     ".github/workflows/event-operations-formal.yml": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
@@ -18626,6 +18627,7 @@
     "tdf-desktop/test/config.test.cjs": "5a333c052ec4e0a08edbb1cf6afcc009e24f48ea97fc2086af9e3f9bc1e24a8a",
     "tdf-desktop/test/links.test.cjs": "fae09e6155274164e05602a08231091cf968cf04e1356b36cf7d8928b94adc42",
     "tdf-desktop/test/playbackState.test.cjs": "4642e931cbad941bb137d6d7b0c6903a895c47168b1901e5e99cc3ac45cb5a79",
+    "tdf-desktop/test/release-policy.test.cjs": "23dbc21bf4040e53051ad8db68be1336bd0bf304978e8f0086a655ba68dbe3c0",
     "tdf-desktop/test/updater.test.cjs": "3095f2683586b420caa56ebd0263e17bc732b0f305321ea30bbf5dcd384a9f1c",
     "tdf-hq-ui/browser-test/torrent-audio.html": "71327a943be3e23e4895beaceaa2ccfe1c8aff9cf89cb40da7dcd2b89ba6aca0",
     "tdf-hq-ui/e2e/storage-upload.html": "ae82c9fb53db6a8fbb03f1e883d374efcad8740009eb1fe9ee3b3b440d05c051",
@@ -34993,6 +34995,12 @@
         "requirement": "SYS-DESKTOP-003",
         "relationship": "tests"
       }
+    ],
+    "tdf-desktop/test/release-policy.test.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -35195,7 +35203,7 @@
     {
       "id": "SURFACE-cc0ad60f02c62cee",
       "path": ".github/workflows/desktop.yml",
-      "sha256": "c481f24133d36fcfa7be984d752d0753a7be6cbd6149a0bc9f2de3ba22d9ef45",
+      "sha256": "ec0a6ab959a91804e3eb2e9ea6c315493538b4f9543dd46306bcde3adfe11b42",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44046,6 +44054,18 @@
       "requirements": [
         {
           "requirement": "SYS-DESKTOP-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e0c8fe00799cba13",
+      "path": "tdf-desktop/test/release-policy.test.cjs",
+      "sha256": "23dbc21bf4040e53051ad8db68be1336bd0bf304978e8f0086a655ba68dbe3c0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
           "relationship": "tests"
         }
       ]
@@ -70529,7 +70549,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cd0bbef58c020101102f2112d53a56863d867ec2e6811b3446c73f33654e7705",
+      "sourceSha256": "b27072a3d01a273e3ef6b9027440d436efc7d7f445b0c6a28887e226565b919d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70557,7 +70577,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cd0bbef58c020101102f2112d53a56863d867ec2e6811b3446c73f33654e7705",
+      "sourceSha256": "b27072a3d01a273e3ef6b9027440d436efc7d7f445b0c6a28887e226565b919d",
       "definition": {
         "states": [
           "absent",
@@ -70587,7 +70607,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cd0bbef58c020101102f2112d53a56863d867ec2e6811b3446c73f33654e7705",
+      "sourceSha256": "b27072a3d01a273e3ef6b9027440d436efc7d7f445b0c6a28887e226565b919d",
       "definition": {
         "export": [
           "queued",
