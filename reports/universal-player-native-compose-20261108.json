@@ -223,5 +223,13 @@
       "Earlier incorrect operator receipts are not automatically rewritten.",
       "Fresh whole-source 718 CI and independent review remain required; direct 706 Main integration sequencing is unchanged."
     ]
+  },
+  "knownInheritedNativeBoundaryReview": {
+    "originalReview": 4505103013,
+    "originalPullRequest": 706,
+    "finding": "Native video onPlay lacks the owned-source completed-chapter rewind used by global Play.",
+    "current718NativeBrowserReproduction": "NOT_RUN",
+    "featureMergeHold": true,
+    "resolution": "Qualify the original706 repair independently, then reconcile it into718/670 while preserving denial and utility fixes. No complete Native acceptance or Main delivery is claimed."
   }
 }
