@@ -222,3 +222,9 @@ estados de entrega: `reports/studio-gallery-2026-10-26.json`. La galería
 responde al comentario 16:42:25; videos didácticos e identificación del
 anfitrión continúan pendientes. No constituye un resultado humano de
 usabilidad ni una mejora de activación medida.
+
+### Actualización solicitada el 7 de noviembre de 2026
+
+El propietario solicitó nuevas imágenes y paginación, indicando Maps, Drive, disco local, Instagram y Synology como fuentes posibles. La selección añade tres fotogramas del máster original de Roj(o), con fecha de grabación visible del 24 de febrero de 2025 y enlace a la publicación y créditos del 31 de octubre de 2026. No se presentan como fotografías tomadas en 2026. Se conservan las seis fotografías anteriores.
+
+La galería muestra seis imágenes por página, con controles numerados, anterior/siguiente, límites deshabilitados y rango anunciado; nueve imágenes ocupan dos páginas. El diálogo conserva imagen completa, reintento y retorno del foco a la miniatura de la página activa. Fuentes, derivados y verificación: `reports/studio-gallery-refresh-2026-11-07.json`. Publicación para revisión autorizada; no implica despliegue ni disponibilidad actual de equipos.

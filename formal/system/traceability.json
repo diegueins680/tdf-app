@@ -12297,8 +12297,8 @@
     {
       "id": "UX-WELCOME-001",
       "title": "Public discovery shows value before personal profiling",
-      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails. The studio section includes six owner-approved archive photographs, local lazy-loaded thumbnails and a keyboard-accessible complete-photo dialog with truthful failure and retry states.",
-      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments. Owner supplied three approved Drive folders on 2026-10-26 and instructed selection of photos.",
+      "statement": "The public start page /inicio explains TDF and offers anonymous exploration before the existing directory form. /buscar keeps direct URL-backed search; search controls describe the requested result rather than visitor identity. /tdf exposes studio, services and published work before contextual signup. Exploration does not require registration, geolocation or role selection and remains usable when directory data fails. The studio section retains six owner-approved archive photographs and adds three explicitly dated session stills from the original master. The gallery shows six images per page with numbered, previous and next controls and an announced visible range; capture dates remain distinct from publication dates. Local lazy-loaded thumbnails and a keyboard-accessible complete-photo dialog preserve truthful failure and retry states.",
+      "authority": "Explicit product owner execution request 2026-10-25 incorporating eight supplied visitor voice comments. Owner supplied three approved Drive folders on 2026-10-26 and instructed selection of photos. Owner requested a gallery refresh across Maps, Drive, disk, Instagram and Synology plus pagination on 2026-11-07, and authorized publishing the branch for review.",
       "domain": "UX",
       "source": "docs/engineering/welcome-first-discovery-2026-10-25.md",
       "contract": "docs/engineering/welcome-first-discovery-2026-10-25.md",
@@ -17379,7 +17379,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "fb5cdd0152261caa3289bb80885c0f5e813e9d477e80465d27bb7838cb951a60",
+    "docs/catalog-persistence/catalog-list-decisions.json": "3f6b774e4f1b6ada0e5e1278d3ce1663c07cdbfb353a138139c598235a6fff1f",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -18318,8 +18318,8 @@
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": "ea482eb2a183b37795bef0c861b6c7be12d989df32f7a472345ab2c6576883b1",
-    "tdf-hq-ui/src/components/StudioGallery.test.tsx": "4f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48",
-    "tdf-hq-ui/src/components/StudioGallery.tsx": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6",
+    "tdf-hq-ui/src/components/StudioGallery.test.tsx": "62ad664ab50686581c13cfac5553af21dbb5d9418b0cf9477a8856c3444fdf9a",
+    "tdf-hq-ui/src/components/StudioGallery.tsx": "af2d98d676b7dcfcb34e79b72c6694d43a9e9c33c69f218407c11f480dc0ae4e",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/TopBar.tsx": "3103c4693585b90c462206149c79af0e45107a8ff9203afecaf70ebe7fee1fb5",
     "tdf-hq-ui/src/components/UserProfileLink.test.tsx": "ba04e4f640c835620550e32ae875a32fcf18234f14792ff89551a1a260f633d6",
@@ -45803,7 +45803,7 @@
     {
       "id": "SURFACE-428957fe77018d21",
       "path": "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-      "sha256": "4f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48",
+      "sha256": "62ad664ab50686581c13cfac5553af21dbb5d9418b0cf9477a8856c3444fdf9a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45815,7 +45815,7 @@
     {
       "id": "SURFACE-cf86306debf08604",
       "path": "tdf-hq-ui/src/components/StudioGallery.tsx",
-      "sha256": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6",
+      "sha256": "af2d98d676b7dcfcb34e79b72c6694d43a9e9c33c69f218407c11f480dc0ae4e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69076,7 +69076,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "761f65465118e60420600e583b04bbb8dd069abd1ac7297a21c54bf8fb2faaf0",
+      "sourceSha256": "d6773833043f1031299e04074f8413cb2b52350f044a18d3ec2cd313ed349a96",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -69104,7 +69104,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "761f65465118e60420600e583b04bbb8dd069abd1ac7297a21c54bf8fb2faaf0",
+      "sourceSha256": "d6773833043f1031299e04074f8413cb2b52350f044a18d3ec2cd313ed349a96",
       "definition": {
         "states": [
           "absent",
@@ -69134,7 +69134,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "761f65465118e60420600e583b04bbb8dd069abd1ac7297a21c54bf8fb2faaf0",
+      "sourceSha256": "d6773833043f1031299e04074f8413cb2b52350f044a18d3ec2cd313ed349a96",
       "definition": {
         "export": [
           "queued",

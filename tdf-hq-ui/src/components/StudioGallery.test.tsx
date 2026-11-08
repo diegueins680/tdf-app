@@ -9,10 +9,53 @@ const leavingScreen = createTheme().transitions.duration.leavingScreen;
 describe('StudioGallery', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => { jest.clearAllTimers(); jest.useRealTimers(); });
+  it('shows recent additions first and paginates without duplicating or dropping archive photos', () => {
+    render(<StudioGallery />);
+    const photos = () => screen.getAllByRole('button', { name: /^Ampliar foto:/ });
+    const firstPage = photos().map(button => button.getAttribute('aria-label'));
+    expect(firstPage).toHaveLength(6);
+    expect(firstPage[0]).toBe('Ampliar foto: Roj(o) en vivo en TDF');
+    expect(screen.getByRole('status')).toHaveTextContent('Fotos 1–6 de 9');
+    expect(screen.getByRole('button', { name: 'Página anterior de fotos' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Página siguiente de fotos' }));
+    const lastPage = photos().map(button => button.getAttribute('aria-label'));
+    expect(lastPage).toHaveLength(3);
+    expect(new Set([...firstPage, ...lastPage]).size).toBe(9);
+    expect(screen.getByRole('status')).toHaveTextContent('Fotos 7–9 de 9');
+    expect(screen.getByRole('button', { name: 'Página siguiente de fotos' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Página actual 2 de fotos' })).toHaveAttribute('aria-current', 'page');
+    fireEvent.click(screen.getByRole('button', { name: 'Ir a la página 1 de fotos' }));
+    expect(photos().map(button => button.getAttribute('aria-label'))).toEqual(firstPage);
+  });
+
+  it('opens the correct image from the last page and restores focus there after closing', async () => {
+    render(<StudioGallery />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ir a la página 2 de fotos' }));
+    const trigger = screen.getByRole('button', { name: 'Ampliar foto: La música nos reúne' });
+    act(() => trigger.focus());
+    fireEvent.click(trigger);
+    const dialog = screen.getByRole('dialog', { name: 'La música nos reúne' });
+    expect(within(dialog).getByRole('img')).toHaveAttribute('src', '/assets/tdf-studio/studio-community-1280.webp');
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    await act(async () => { await jest.advanceTimersByTimeAsync(leavingScreen); });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+    expect(screen.getByRole('status')).toHaveTextContent('Fotos 7–9 de 9');
+  });
+
+  it('labels new session stills with their capture date and credits', () => {
+    render(<StudioGallery />);
+    fireEvent.click(screen.getByRole('button', { name: 'Ampliar foto: Roj(o) en vivo en TDF' }));
+    const dialog = screen.getByRole('dialog', { name: 'Roj(o) en vivo en TDF' });
+    expect(within(dialog).getByText(/24 feb 2025/)).toHaveTextContent('Fotograma de la sesión');
+    expect(within(dialog).getByRole('link', { name: 'Ver publicación y créditos' })).toHaveAttribute('href', 'https://www.instagram.com/p/DfLV5lMCnfX/');
+    expect(within(dialog).getByRole('img')).toHaveAttribute('src', '/assets/tdf-studio/rojo-live-room-1280.webp');
+  });
+
   it('opens a complete local photo and restores keyboard focus after Escape', async () => {
     render(<StudioGallery />);
     const gallery = screen.getByRole('group', { name: 'Fotos del estudio TDF' });
-    expect(within(gallery).getAllByRole('button')).toHaveLength(6);
+    expect(within(gallery).getAllByRole('button', { name: /^Ampliar foto:/ })).toHaveLength(6);
     const trigger = within(gallery).getByRole('button', { name: 'Ampliar foto: Sala de control' });
     act(() => trigger.focus());
     fireEvent.click(trigger);

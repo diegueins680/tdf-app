@@ -9076,13 +9076,13 @@
     {
       "id": "SURFACE-428957fe77018d21",
       "path": "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-      "sha256": "4f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48",
+      "sha256": "62ad664ab50686581c13cfac5553af21dbb5d9418b0cf9477a8856c3444fdf9a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cf86306debf08604",
       "path": "tdf-hq-ui/src/components/StudioGallery.tsx",
-      "sha256": "20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6",
+      "sha256": "af2d98d676b7dcfcb34e79b72c6694d43a9e9c33c69f218407c11f480dc0ae4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21951,7 +21951,7 @@
     },
     {
       "path": "docs/engineering/welcome-first-discovery-2026-10-25.md",
-      "sha256": "6949566c6119bc37c0bff69f0c06d3b7db2d5748743823d6f4e1d69fa3267576",
+      "sha256": "a6012ca9bec050efc544f959a5929685f7dbf75dc98070ffc5e0d8881fec6bb0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30281,7 +30281,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "761f65465118e60420600e583b04bbb8dd069abd1ac7297a21c54bf8fb2faaf0",
+      "sha256": "d6773833043f1031299e04074f8413cb2b52350f044a18d3ec2cd313ed349a96",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

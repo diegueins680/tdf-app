@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-07T23:20:19.861Z",
+  "generatedAt": "2026-11-08T02:28:01.991Z",
   "repositoryRoot": ".",
   "filesScanned": 2650,
   "candidateCount": 1406,
@@ -5505,7 +5505,7 @@
       "lines": [
         82
       ],
-      "consumerCount": 147,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5574,6 +5574,8 @@
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/StudioGallery.test.tsx",
+        "tdf-hq-ui/src/components/StudioGallery.tsx",
         "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
         "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
         "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
@@ -5606,9 +5608,7 @@
         "tdf-hq-ui/src/routes/publicRoutes.tsx",
         "tdf-hq-ui/src/services/instagramAuth.test.ts",
         "tdf-hq-ui/src/services/instagramAuth.ts",
-        "tdf-hq-ui/src/utils/accessControl.test.ts",
-        "tdf-hq-ui/src/utils/artistFollowIntent.ts",
-        "tdf-hq-ui/src/utils/externalTicketing.test.ts"
+        "tdf-hq-ui/src/utils/accessControl.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/more.tsx",
@@ -7395,7 +7395,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 718,
+      "consumerCount": 719,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -19120,7 +19120,7 @@
       "lines": [
         649
       ],
-      "consumerCount": 744,
+      "consumerCount": 745,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -27562,7 +27562,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 776,
+      "consumerCount": 777,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32123,7 +32123,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 750,
+      "consumerCount": 751,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -35386,15 +35386,18 @@
       "similarCandidateIds": []
     },
     {
-      "id": "5a14eed55bff18836c73",
+      "id": "c02e2071a8c1b67b42be",
       "file": "tdf-hq-ui/src/components/StudioGallery.tsx",
       "sourceKind": "production",
       "surface": "web",
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "PHOTOS",
-      "line": 6,
+      "line": 7,
       "values": [
+        "{id=rojo-live-room, title=Roj(o) en vivo en TDF, alt=La banda Roj(o) tocando en la sala de grabación, iluminada en rojo, con batería, bajo y guitarra., caption=Roj(o) · 24 feb 2025 · Fotograma de la sesión}",
+        "{id=rojo-vocal-session, title=Voz y guitarra en sesión, alt=Vocalista de Roj(o) con audífonos cantando frente al micrófono y tocando la guitarra., caption=Roj(o) · 24 feb 2025 · Fotograma de la sesión}",
+        "{id=rojo-drum-recording, title=Batería en vivo, alt=Baterista de Roj(o) tocando en la sala con micrófonos alrededor de los platillos y tambores., caption=Roj(o) · 24 feb 2025 · Fotograma de la sesión}",
         "{id=control-room, title=Sala de control, alt=Consola de mezcla frente a dos pantallas y monitores de estudio.}",
         "{id=recording-room, title=Sala de grabación, alt=Sala con batería, guitarras, amplificadores y micrófonos.}",
         "{id=instruments, title=Instrumentos y sonido, alt=Sintetizadores, micrófono y equipos junto a la consola de mezcla.}",
@@ -35402,10 +35405,10 @@
         "{id=drum-session, title=Una sesión de batería, alt=Músico tocando una batería rodeada de micrófonos en el estudio.}",
         "{id=studio-community, title=La música nos reúne, alt=Grupo de músicos reunidos junto a la consola en el estudio.}"
       ],
-      "valueCount": 6,
+      "valueCount": 9,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        6
+        7
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -35418,7 +35421,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Publishing unapproved photos or attributing people/equipment availability from archive content.",
-      "justification": "This six-entry manifest identifies immutable bundled photo files and their accessible descriptions for one owner-approved studio gallery. Each ID resolves to a versioned local WebP with source/hash provenance; labels describe observed scenes rather than selectable rooms, services, inventory, identities or permissions. Persisted booking/service catalogs remain authoritative. Changes require a source change, renewed asset review and normal protected delivery; this does not grant editorial-CMS or provider authority.",
+      "justification": "This nine-entry manifest identifies immutable bundled photo files and their accessible descriptions for one owner-approved studio gallery. Three dated February 2025 session stills were added after reviewing the owner-supplied sources on November 7, 2026; provenance is recorded in reports/studio-gallery-refresh-2026-11-07.json. Each ID resolves to a versioned local WebP with source/hash provenance; labels describe observed scenes rather than selectable rooms, services, inventory, identities or permissions. Persisted booking/service catalogs remain authoritative. Changes require a source change, renewed asset review and normal protected delivery; this does not grant editorial-CMS or provider authority.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -35442,7 +35445,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 750,
+      "consumerCount": 751,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -40041,7 +40044,7 @@
       "lines": [
         118
       ],
-      "consumerCount": 727,
+      "consumerCount": 728,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -59410,7 +59413,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 788,
+      "consumerCount": 789,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -75492,7 +75495,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 795,
+      "consumerCount": 796,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -77171,7 +77174,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 750,
+      "consumerCount": 751,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",

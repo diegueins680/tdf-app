@@ -25274,22 +25274,22 @@
       }
     },
     {
-      "id": "5a14eed55bff18836c73",
+      "id": "c02e2071a8c1b67b42be",
       "classification": "genuine-technical-constant",
       "disposition": "retain-versioned-editorial-asset-manifest",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P3-retain",
       "risk": "Publishing unapproved photos or attributing people/equipment availability from archive content.",
-      "justification": "This six-entry manifest identifies immutable bundled photo files and their accessible descriptions for one owner-approved studio gallery. Each ID resolves to a versioned local WebP with source/hash provenance; labels describe observed scenes rather than selectable rooms, services, inventory, identities or permissions. Persisted booking/service catalogs remain authoritative. Changes require a source change, renewed asset review and normal protected delivery; this does not grant editorial-CMS or provider authority.",
+      "justification": "This nine-entry manifest identifies immutable bundled photo files and their accessible descriptions for one owner-approved studio gallery. Three dated February 2025 session stills were added after reviewing the owner-supplied sources on November 7, 2026; provenance is recorded in reports/studio-gallery-refresh-2026-11-07.json. Each ID resolves to a versioned local WebP with source/hash provenance; labels describe observed scenes rather than selectable rooms, services, inventory, identities or permissions. Persisted booking/service catalogs remain authoritative. Changes require a source change, renewed asset review and normal protected delivery; this does not grant editorial-CMS or provider authority.",
       "reviewed": true,
       "reviewMethod": "source-specific-editorial-asset-review",
-      "reviewBatch": "studio-gallery-owner-approved-2026-10-26",
+      "reviewBatch": "studio-gallery-owner-requested-refresh-2026-11-07",
       "evidence": {
         "file": "tdf-hq-ui/src/components/StudioGallery.tsx",
-        "line": 6,
+        "line": 7,
         "kind": "array",
         "name": "PHOTOS",
-        "valueCount": 6,
+        "valueCount": 9,
         "consumerCount": 0,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
