@@ -3189,7 +3189,7 @@
     {
       "id": "SURFACE-2c54a02e428c0eca",
       "path": "e2e/desktop/helpers/api-fixture.mjs",
-      "sha256": "fb9bf0054caacc5bf46f99a080cf1a7a9fbb5569dacd3a525ecc050b314a7739",
+      "sha256": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3219,7 +3219,7 @@
     {
       "id": "SURFACE-4de935e9babfab27",
       "path": "e2e/desktop/uploads.spec.mjs",
-      "sha256": "002cfdf016921752bb5c97d2ca2933720ed110b4c116e035e2be22ae8730cd5c",
+      "sha256": "2174ad43cdb1cc6e318da1e9bb86a6dd438fef893f8f370a4c232fba1549ee95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11445,13 +11445,13 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "ae65b3d5e0040db754f2d70e3b70ddb2fa4dbe5affc7dccd17e5424144a9eb35",
+      "sha256": "170361034fe56bbcae7deb08123fd3ed3cf3957bbbd27fdc0663023b40dd1c1c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6dc3d41d6d23778b",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
-      "sha256": "1495501c2218328632396e45b1bd140f7558eb2b9ef766e22af7248b734d749c",
+      "sha256": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
       "semanticConformance": "not-established-by-discovery"
     },
     {

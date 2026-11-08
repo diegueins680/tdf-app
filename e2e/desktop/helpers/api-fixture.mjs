@@ -109,8 +109,15 @@ export function createApiFixture({ account = STAFF_ACCOUNT } = {}) {
       eventImageUrl: null, eventIsPublic: true, eventArtists: [] }],
   };
 
-  /** Fails the next request matching `test` once: mode 'network' aborts, a number answers that status. */
+  /**
+   * Fails the next request matching `test` once: mode 'network' aborts, a number
+   * answers that status, and 'stall' holds the request open until
+   * `releaseStalled()` runs (it is then aborted), so a journey can act while
+   * a transfer is still in flight.
+   */
   const failNext = (test, mode = 'network') => { state.failures.push({ test, mode }); };
+  const stalled = [];
+  const releaseStalled = () => { for (const resolve of stalled.splice(0)) resolve(); };
 
   const sessionJson = () => ({ ...state.account });
   const unauthenticated = (route) => route.fulfill({ status: 401, json: { error: 'missing or invalid auth token' } });
@@ -123,6 +130,11 @@ export function createApiFixture({ account = STAFF_ACCOUNT } = {}) {
     if (failure) {
       state.failures.splice(state.failures.indexOf(failure), 1);
       if (failure.mode === 'network') return route.abort('internetdisconnected');
+      if (failure.mode === 'stall') {
+        await new Promise((resolve) => { stalled.push(resolve); });
+        // The page usually aborted the request while it was held; the route is gone then.
+        try { return await route.abort('internetdisconnected'); } catch { return undefined; }
+      }
       return route.fulfill({ status: failure.mode, json: { error: `synthetic failure ${failure.mode}` } });
     }
     if (path === '/health') return route.fulfill({ json: { status: 'ok', db: 'ok' } });
@@ -291,5 +303,5 @@ export function createApiFixture({ account = STAFF_ACCOUNT } = {}) {
     });
   }
 
-  return { state, install, failNext, requestsTo: (path) => state.requests.filter((entry) => entry.path === path), writesTo: (path) => state.writes.filter((entry) => entry.path === path) };
+  return { state, install, failNext, releaseStalled, requestsTo: (path) => state.requests.filter((entry) => entry.path === path), writesTo: (path) => state.writes.filter((entry) => entry.path === path) };
 }

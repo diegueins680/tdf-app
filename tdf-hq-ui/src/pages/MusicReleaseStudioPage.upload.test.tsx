@@ -102,6 +102,14 @@ it('cancels an in-flight upload through its signal and retries the same file as 
   try {
     await dropMaster(wav());
     const cancel = await screen.findByRole('button', { name: 'Cancelar carga pista 1' });
+    // Browsers disable every button inside a disabled fieldset, and fireEvent
+    // does not model that: assert the DOM state the user actually gets. The
+    // cancel control must stay enabled while the editing fields remain locked.
+    expect((cancel as HTMLButtonElement).disabled).toBe(false);
+    expect(cancel.closest('fieldset')?.disabled ?? false).toBe(false);
+    const titleFields = screen.getAllByRole('textbox', { name: /^Título/ });
+    expect(titleFields.length).toBeGreaterThan(0);
+    for (const field of titleFields) expect((field as HTMLInputElement).disabled).toBe(true);
     await act(async () => { fireEvent.click(cancel); });
     await screen.findByText('Carga cancelada. Puedes reintentar el mismo archivo.');
     expect(uploadAsset.mock.calls[0]?.[0].signal?.aborted).toBe(true);
