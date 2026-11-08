@@ -17426,13 +17426,10 @@
       "implementation": [
         ".github/workflows/event-crm.yml",
         "scripts/production-migrations.json",
-        "tdf-hq-ui/src/__tests__/analytics.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
-        "tdf-hq-ui/src/api/eventCrm.test.ts",
         "tdf-hq-ui/src/api/eventCrm.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/pages/EventCrmPage.tsx",
-        "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx",
         "tdf-hq-ui/src/pages/EventTeamInvitationPage.tsx",
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
@@ -17459,6 +17456,9 @@
         "scripts/__tests__/event-crm-model.test.mjs",
         "scripts/test-event-crm-http.py",
         "scripts/test-event-crm.py",
+        "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/api/eventCrm.test.ts",
+        "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx",
         "tdf-hq/test/EventCrmHttpMain.hs",
         "tdf-hq/test/integration/event_crm_fixture.sql",
         "tdf-hq/test/integration/event_crm_http_fixture.sql"
@@ -25224,7 +25224,7 @@
       },
       {
         "requirement": "EVT-CRM-001",
-        "relationship": "implementation"
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": [
@@ -34367,12 +34367,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/api/eventCrm.test.ts": [
-      {
-        "requirement": "EVT-CRM-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq-ui/src/api/eventCrm.ts": [
       {
         "requirement": "EVT-CRM-001",
@@ -34380,12 +34374,6 @@
       }
     ],
     "tdf-hq-ui/src/pages/EventCrmPage.tsx": [
-      {
-        "requirement": "EVT-CRM-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx": [
       {
         "requirement": "EVT-CRM-001",
         "relationship": "implementation"
@@ -34458,6 +34446,18 @@
       }
     ],
     "scripts/test-event-crm.py": [
+      {
+        "requirement": "EVT-CRM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventCrm.test.ts": [
+      {
+        "requirement": "EVT-CRM-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx": [
       {
         "requirement": "EVT-CRM-001",
         "relationship": "tests"
@@ -43673,7 +43673,7 @@
         },
         {
           "requirement": "EVT-CRM-001",
-          "relationship": "implementation"
+          "relationship": "tests"
         }
       ]
     },
@@ -44312,7 +44312,7 @@
       "requirements": [
         {
           "requirement": "EVT-CRM-001",
-          "relationship": "implementation"
+          "relationship": "tests"
         }
       ]
     },
@@ -49221,7 +49221,7 @@
       "requirements": [
         {
           "requirement": "EVT-CRM-001",
-          "relationship": "implementation"
+          "relationship": "tests"
         }
       ]
     },
@@ -69709,7 +69709,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "40660952f26001dd0bde83a72fdb3551e40ad7559cadd47fc7c660de1753bcd0",
+      "sourceSha256": "490eb92de30e2bb1097f3630c43e743d95c2991d20ee76228aaf22c41013225c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -69737,7 +69737,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "40660952f26001dd0bde83a72fdb3551e40ad7559cadd47fc7c660de1753bcd0",
+      "sourceSha256": "490eb92de30e2bb1097f3630c43e743d95c2991d20ee76228aaf22c41013225c",
       "definition": {
         "states": [
           "absent",
@@ -69767,7 +69767,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "40660952f26001dd0bde83a72fdb3551e40ad7559cadd47fc7c660de1753bcd0",
+      "sourceSha256": "490eb92de30e2bb1097f3630c43e743d95c2991d20ee76228aaf22c41013225c",
       "definition": {
         "export": [
           "queued",

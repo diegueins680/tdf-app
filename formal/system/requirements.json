@@ -17425,13 +17425,10 @@
       "implementation": [
         ".github/workflows/event-crm.yml",
         "scripts/production-migrations.json",
-        "tdf-hq-ui/src/__tests__/analytics.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
-        "tdf-hq-ui/src/api/eventCrm.test.ts",
         "tdf-hq-ui/src/api/eventCrm.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/pages/EventCrmPage.tsx",
-        "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx",
         "tdf-hq-ui/src/pages/EventTeamInvitationPage.tsx",
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
@@ -17458,6 +17455,9 @@
         "scripts/__tests__/event-crm-model.test.mjs",
         "scripts/test-event-crm-http.py",
         "scripts/test-event-crm.py",
+        "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/api/eventCrm.test.ts",
+        "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx",
         "tdf-hq/test/EventCrmHttpMain.hs",
         "tdf-hq/test/integration/event_crm_fixture.sql",
         "tdf-hq/test/integration/event_crm_http_fixture.sql"
