@@ -60,6 +60,7 @@ const nextRepeatMode: Record<RepeatMode, RepeatMode> = {
 
 export default function GlobalPlayer() {
   const player = usePlayer();
+  const [videoActionError, setVideoActionError] = useState<string | null>(null);
   const [queueOpen, setQueueOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const optionsId = useId();
@@ -72,7 +73,8 @@ export default function GlobalPlayer() {
   useDockedBarHeight(GLOBAL_PLAYER_HEIGHT_VAR, barRef, Boolean(track));
   if (!track) return null;
 
-  const statusMessage = player.error
+  const hasVideo = track.sources.some(source => source.mediaType?.startsWith('video/'));
+  const statusMessage = videoActionError ?? player.error
     ?? (player.status === 'buffering' ? 'Almacenando en búfer…'
       : player.status === 'loading' ? 'Cargando…'
         : player.status === 'unavailable' ? 'Contenido no disponible'
@@ -101,6 +103,13 @@ export default function GlobalPlayer() {
           '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
         }}
       >
+        {hasVideo && <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center', mb: 0.5 }}>
+          <Button size="small" onClick={() => player.setMediaMode(player.mediaMode === 'video' ? 'audio' : 'video')}>
+            {player.mediaMode === 'video' ? 'Solo audio' : 'Ver video'}
+          </Button>
+          <Button size="small" onClick={() => { setVideoActionError(null); void player.requestFullscreen().catch(() => setVideoActionError('Pantalla completa no disponible en este navegador.')); }} disabled={player.mediaMode !== 'video'}>Pantalla completa</Button>
+          <Button size="small" onClick={() => { setVideoActionError(null); void player.requestPictureInPicture().catch(() => setVideoActionError('Ventana flotante no disponible en este navegador.')); }} disabled={player.mediaMode !== 'video' || !document.pictureInPictureEnabled}>Ventana flotante</Button>
+        </Stack>}
         <Stack
           direction="row"
           spacing={0}
@@ -268,10 +277,23 @@ export default function GlobalPlayer() {
           <CloseIcon />
         </IconButton>
         <DialogContent dividers>
+          <Stack direction="row" spacing={1} sx={{ my: 1 }}>
+            <Button onClick={() => player.seek(player.currentTime - 10)}>−10 segundos</Button>
+            <Button onClick={() => player.seek(player.currentTime + 10)}>+10 segundos</Button>
+          </Stack>
+          <FormControl fullWidth size="small" sx={{ my: 1 }}>
+            <InputLabel id={`${optionsId}-speed`}>Velocidad</InputLabel>
+            <Select labelId={`${optionsId}-speed`} label="Velocidad" value={player.playbackRate} onChange={event => player.setPlaybackRate(Number(event.target.value))}>
+              {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map(rate => <MenuItem key={rate} value={rate}>{rate}×</MenuItem>)}
+            </Select>
+          </FormControl>
+          {track.chapters && <Stack aria-label="Capítulos" sx={{ mb: 2 }}>
+            {track.chapters.map(chapter => <Button key={chapter.id} onClick={() => player.seek(chapter.startMs / 1000)}>{formatTime(chapter.startMs / 1000)} · {chapter.title}</Button>)}
+          </Stack>}
           <Stack spacing={3} sx={{ pt: 1 }}>
             <FormControl fullWidth>
-              <InputLabel id={`${optionsId}-quality`}>Calidad de audio</InputLabel>
-              <Select labelId={`${optionsId}-quality`} label="Calidad de audio" value={player.quality}
+              <InputLabel id={`${optionsId}-quality`}>{hasVideo && player.mediaMode === 'video' ? 'Calidad de video' : 'Calidad de audio'}</InputLabel>
+              <Select labelId={`${optionsId}-quality`} label={hasVideo && player.mediaMode === 'video' ? 'Calidad de video' : 'Calidad de audio'} value={player.quality}
                 onChange={(event) => player.setQuality(event.target.value as PlayerQuality | 'auto')}>
                 <MenuItem value="auto">Auto{player.resolvedQuality ? ` · ${player.resolvedQuality}` : ''}</MenuItem>
                 <MenuItem value="low">Baja</MenuItem>

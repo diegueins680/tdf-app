@@ -1,8 +1,11 @@
+import { ApiError } from './client';
+import { Records, type RecordsFeedDTO } from './records';
+import { nativeSessionsFromFeed, type NativeSession } from '../features/sessions/nativeSessions';
 import { Fans } from './fans';
 import { musicReleases, type MusicPublicReleaseSummary } from './musicReleases';
 import type { ArtistReleaseDTO } from './types';
 
-export type CatalogSource = 'canonical' | 'legacy';
+export type CatalogSource = 'canonical' | 'legacy' | 'records';
 export type ArtistCatalogEntry =
   | { key: string; source: 'canonical'; release: MusicPublicReleaseSummary }
   | { key: string; source: 'legacy'; release: ArtistReleaseDTO };
@@ -10,6 +13,8 @@ export interface ArtistCatalog {
   artistId: number;
   entries: ArtistCatalogEntry[];
   unavailableSources: CatalogSource[];
+  disabledSources?: CatalogSource[];
+  nativeSessions?: NativeSession[];
 }
 
 const requireArtist = (artistId: number) => {
@@ -42,19 +47,30 @@ export async function listCanonicalArtistReleases(artistId: number, signal?: Abo
  * and never become published masters, streaming grants or canonical releases.
  * Only exact source identities are deduplicated; matching titles are insufficient.
  */
-export async function loadArtistCatalog(artistId: number, signal?: AbortSignal): Promise<ArtistCatalog> {
+export async function loadArtistCatalog(artistId: number, signal?: AbortSignal, recordsFeed?: Promise<RecordsFeedDTO>): Promise<ArtistCatalog> {
   requireArtist(artistId);
   checkCancellation(signal);
   const results = await Promise.allSettled([
     listCanonicalArtistReleases(artistId, signal),
     Fans.getReleases(artistId, signal),
+    recordsFeed ?? Records.getFeed('es', signal),
   ]);
   checkCancellation(signal);
   const entries: ArtistCatalogEntry[] = [];
   const unavailableSources: CatalogSource[] = [];
-  const [canonical, legacy] = results;
+  const disabledSources: CatalogSource[] = [];
+  const [canonical, legacy, records] = results;
+  let nativeSessions: NativeSession[] = [];
+  if (records.status === 'fulfilled') {
+    try { nativeSessions = nativeSessionsFromFeed(records.value, artistId); }
+    catch { unavailableSources.push('records'); }
+  } else unavailableSources.push('records');
   if (canonical.status === 'fulfilled') {
     entries.push(...canonical.value.map((release): ArtistCatalogEntry => ({ key: `canonical:${release.id}`, source: 'canonical', release })));
+  } else if (canonical.reason instanceof ApiError && canonical.reason.status === 404) {
+    // The collection endpoint deliberately returns 404 when public Music is disabled.
+    // This is an unavailable feature, not a failed page of an enabled catalog.
+    disabledSources.push('canonical');
   } else unavailableSources.push('canonical');
   if (legacy.status === 'fulfilled' && Array.isArray(legacy.value)
     && legacy.value.every((release) => release?.arArtistId === artistId
@@ -62,8 +78,8 @@ export async function loadArtistCatalog(artistId: number, signal?: AbortSignal):
     const unique = new Map(legacy.value.map((release) => [release.arReleaseId, release]));
     entries.push(...[...unique.values()].map((release): ArtistCatalogEntry => ({ key: `legacy:${release.arReleaseId}`, source: 'legacy', release })));
   } else unavailableSources.push('legacy');
-  if (unavailableSources.length === 2) throw new Error('Artist release catalog is unavailable');
-  return { artistId, entries, unavailableSources };
+  if (unavailableSources.includes('legacy') && (unavailableSources.includes('canonical') || disabledSources.includes('canonical')) && nativeSessions.length === 0) throw new Error('Artist release catalog is unavailable');
+  return { artistId, entries, unavailableSources, disabledSources, nativeSessions };
 }
 
 /** Bound artist-level fan-out as well as per-artist pagination. */
@@ -71,12 +87,15 @@ export async function loadArtistCatalogs(artistIds: number[], signal?: AbortSign
   checkCancellation(signal);
   const ids = [...new Set(artistIds)];
   ids.forEach(requireArtist);
+  const recordsFeed = ids.length ? Records.getFeed('es', signal) : undefined;
+  // A shared failed feed is still observed by every bounded per-artist read.
+  void recordsFeed?.catch(() => undefined);
   const result = new Array<ArtistCatalog>(ids.length);
   let next = 0;
   await Promise.all(Array.from({ length: Math.min(4, ids.length) }, async () => {
     while (next < ids.length) {
       const index = next++;
-      try { result[index] = await loadArtistCatalog(ids[index]!, signal); }
+      try { result[index] = await loadArtistCatalog(ids[index]!, signal, recordsFeed); }
       catch {
         checkCancellation(signal);
         result[index] = { artistId: ids[index]!, entries: [], unavailableSources: ['canonical', 'legacy'] };

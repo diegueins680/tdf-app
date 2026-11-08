@@ -1,8 +1,8 @@
 # Universal player: state, intent, and source health
 
-One session-owned `PlayerProvider` owns the listening audio element, queue,
+One session-owned `PlayerProvider` owns the active native media element, queue,
 source resolution, position, volume and media-session controls. Routes issue
-commands; they do not own an audio element. This guarantee covers native TDF
+commands; they do not own a competing playback engine. Ordinary tracks use the persistent audio element; native sessions use a persistent video element for video and independent audio renditions. Only the selected renderer receives a source, and selection retires the previous one synchronously. This guarantee covers native TDF
 music and radio in one application document. External provider pages, other
 browser tabs and operating-system applications are outside that ownership.
 
@@ -40,8 +40,12 @@ radio; the listener chooses its link and station.
 
 Protected sources cannot fall back to an old unsigned URL. Canonical assets and
 legacy release membership are reauthorized at selection. During visible playback,
-a single cancellable check runs every 60s and on foreground return; denial stops
-or advances the source. Browser background throttling can delay this check.
+a single cancellable check runs every 60s and on foreground return. Terminal
+permission denial stops the selected track and retires its source; it never
+substitutes another queued track, on initial resolution or a background recheck.
+Initial resolution may still try a freshly authorized rendition of the same
+track. Network, decode and public-source failures keep their bounded recovery.
+Browser background throttling can delay this check.
 Previously delivered bytes and a still-live signed grant cannot be revoked by
 the client. The server checks current publication, territory and access rules on
 every new grant. Full downloads keep their separate entitlement gates.
@@ -88,8 +92,7 @@ legacy-bound release events are selected only by exact
 release-card URL-only event and does not replace a queue on artist navigation.
 This is initiation control, not authorization. An already-declared protected
 identity, even malformed or restored with rollout off, cannot become a raw URL
-fallback. The actual production session composition and single audio engine are
-unchanged. Embedded video keeps current explicit user intent, permissions,
+fallback. The rollout flag does not change renderer ownership or authorize a source. Embedded video keeps current explicit user intent, permissions,
 watch/attribution behavior and source-navigation cleanup.
 
 The featured preference's raw Party FK receives the canonical archive guard in
@@ -116,4 +119,31 @@ The historical archive-guard250 execution predates the owner source-health250; t
 
 ## Backend composition, 8 November 2026
 
-This unshipped frontend composition retains the original guarded artist-recovery rollout, disabled by default. Its backend is source a5745dbbe from PR712, with the forward 251-entry migration policy, public profile-withdrawal gate, stable diagnostics pagination and retained worker stop intent. Production deployment is still blocked. Native-session PR706 must be reconciled before this frontend is ready; its video, audio mode and chapter controls must not be lost.
+This unshipped frontend composition retains the original guarded artist-recovery rollout, disabled by default. Its backend is source883e12ee3 from PR712, including the earlier qualified a5745dbbe stage, with the forward 251-entry migration policy, public profile-withdrawal gate, stable diagnostics pagination and retained worker stop intent. Production deployment is still blocked. The held frontend now reconciles PR706 native video, independent audio and chapter controls with shared intent and recovery. Current-head hosted checks, protected integration and deployment remain separate obligations.
+
+
+## Native transport composition
+
+An internal video pause is attributed to its exact native event and drained
+before replacing its source. Generation fences discard earlier continuations;
+changing renderer or unmounting cancels its wait. A genuine native-control pause
+sets the same persisted pause latch as the global control. A native play gesture
+on the currently owned source clears it; old play events and mere play-promise
+fulfillment cannot establish playback. The 15s preparation bound is rearmed on
+explicit resume; unrelated native events cannot cancel it.
+
+Video recovery tries another video rendition, then independent audio for the
+same track before advancing. An explicitly chosen audio mode never falls back
+to downloading video. Ready Records entries with explicit matching Party IDs
+join the artist queue after canonical Music and public legacy entries, deduped
+by recording identity. Existing featured writes retain Music/legacy identities;
+Records publication UUIDs are a separate identity namespace and are not offered
+as unsupported featured writes.
+
+The persisted health registry currently covers Music assets and legacy release
+sources. Native Records metadata remains outside that registry and its source
+identity/grant revalidation protocol; full native provenance and permission-change
+qualification is still required. Neither local transport tests nor a published
+Records feed establish that missing server correspondence.
+
+Native transport delivery is PR718, a follow-up to the earlier restored-UI checkpoint merged by PR716 into draft PR670. The native changes are not claimed merged or deployed by PR716.

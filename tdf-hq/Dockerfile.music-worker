@@ -26,7 +26,7 @@ WORKDIR /app
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install -y --no-install-recommends \
-      bash ca-certificates curl ffmpeg jq libpq5 libxml2-utils perl postgresql-client python3-minimal tini unzip zip && \
+      bash ca-certificates curl ffmpeg jq libpq5 libxml2-utils perl postgresql-client python3 tini unzip zip && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder /out/tdf-ddex-render /app/tdf-ddex-render
 COPY --from=builder /out/renderer-inputs.sha256 /app/renderer-inputs.sha256
@@ -42,6 +42,8 @@ COPY scripts/music-media-health.py /app/scripts/music-media-health.py
 RUN chmod 0755 /app/tdf-ddex-render /app/scripts/*.sh && \
     useradd -m -u 1000 worker && chown -R worker:worker /app
 USER worker
+# Validate final-stage Python imports without running probes or contacting storage.
+RUN --network=none python3 -I -B -c "import runpy; runpy.run_path('/app/scripts/music-media-health.py', run_name='tdf_music_health_import_check')"
 ENV LANG=C.UTF-8
 ENV MUSIC_DDEX_RENDER_BIN=/app/tdf-ddex-render
 ENV MUSIC_AUDIO_PIPELINE=/app/scripts/process-music-release-audio.sh

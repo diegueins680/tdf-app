@@ -8705,9 +8705,9 @@
       "title": "Single persistent web player and public music pages",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion.",
+      "statement": "One PlayerProvider owns persistent release playback above all navigation: ordinary audio and native session video/audio elements are mutually exclusive, with one active source. Native Records sessions use explicit persisted artist identities, independent audio/video renditions and bounded chapter offsets; changing format or quality preserves position and the selected playback speed, and chapter playback cannot enter an adjacent song or credits. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion. Imported native individual recording publications retain their stored source start/end offsets. Internally requested chapter/source pauses preserve continuation intent; an explicit user pause cancels it.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694)",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694); user native TDF sessions directive 2026-11-05; docs/native-tdf-sessions.md",
       "contract": "formal/system/player-session.md",
       "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
       "actors": [
@@ -8744,7 +8744,7 @@
         "Persisted bounded queue and preferences",
         "Playback analytics events"
       ],
-      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing.",
+      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing. Protected identity is checked across every source of a track before audio/video filtering; format selection cannot downgrade denied or malformed identity to an unbound URL. Terminal permission denial during initial source resolution or a background recheck stops and retires the selected source without substituting another queued track; same-track freshly authorized rendition attempts and bounded non-permission recovery remain available.",
       "privacy": "Analytics identity rotates with the session; favorites/history are per account.",
       "concurrency": "Selection and retry races resolved in favor of the latest request (native-player-verification.md).",
       "idempotency": "Analytics ingestion deduplicates by playback identity.",
@@ -8782,7 +8782,13 @@
         ".github/workflows/ci.yml",
         "scripts/run-native-audio-tests.sh",
         "tdf-hq-ui/src/session/SessionProviders.tsx",
-        "playwright.config.mjs"
+        "playwright.config.mjs",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+        "tdf-hq-ui/src/api/artistCatalog.ts",
+        "tdf-hq-ui/src/api/records.ts",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
+        "scripts/prepare-native-session.py"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8809,9 +8815,18 @@
         "e2e/web/fixtures/native-music-setup.mjs",
         "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
         "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
-        "e2e/web/radio-navigation.spec.mjs"
+        "e2e/web/radio-navigation.spec.mjs",
+        "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+        "tdf-hq-ui/src/api/artistCatalog.test.ts",
+        "scripts/test-prepare-native-session.py",
+        "tdf-hq-ui/src/api/records.test.ts",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx",
+        "scripts/test-native-session-import.sh",
+        "scripts/test-native-session-import-sql.py"
       ],
-      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness. Source-bound regressions cover delayed internal pause delivery, latest-source cancellation, paused-source/unmount controls, imported recording card/deep-link bounds and canonical publication interactions. A local synthetic MP4 fixture exercises actual native video/audio continuation and explicit pause; this is finite browser evidence, not all-event-order or physical-device qualification. Source-bound native-load reset controls and synthetic MP4/M4A browser cases cover chosen and native-control speed across format, quality and chapter replacement; these are finite browser/application tests, not all-platform scheduling or decoder proofs.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
@@ -16485,7 +16500,9 @@
         "tdf-hq-ui/src/player/MediaHealthPanel.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/assetAccess.ts",
-        "tdf-hq-ui/src/components/SessionVideoPreview.tsx"
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        ".github/workflows/ci.yml",
+        "scripts/ci-change-scope.mjs"
       ],
       "tests": [
         "scripts/test-music-media-health.mjs",
@@ -16499,7 +16516,10 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-        "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx"
+        "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx",
+        "scripts/test-music-worker-image.mjs",
+        "scripts/lib/music-worker-image-smoke.sh",
+        "scripts/__tests__/ci-pipeline.test.mjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -16514,7 +16534,7 @@
         "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required. Frontend restoration is an unshipped composition; native-session integration and current-head verification remain required."
       },
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
-      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance.",
+      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance. The final worker image must import the actual health module as its non-root user without networking, with the full Python standard library. Required repository CI builds the image without publication and executes the immutable-image verifier, which also binds the health-script digest. Earlier backend Python controls alone do not establish final-image dependency availability. A premature EOF that contradicts declared HTTP Content-Length, or invalid length framing, is temporary transport failure and cannot establish a complete invalid media object. Exact/close-delimited completion and the existing bounded-prefix behavior remain; fake-transport controls keep native decoding separate.",
       "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
     },
     {
@@ -17576,6 +17596,126 @@
       "evidence": "Candidate-commit qualification reports and raw execution receipts published separately; no universal proof."
     },
     {
+      "id": "MEDIA-ARTIST-PLAYBACK-001",
+      "title": "Shared artist and radio playback with bounded source recovery",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Artist profiles and the radio catalogue command the same PlayerProvider and active native media element. Artist navigation replaces the listening context, preserving explicit pause. Public artist queues preserve Party/source identity, use canonical tracks then direct public legacy media, and offer radio rather than automatically switching when exhausted. Native terminal failures try remaining eligible renditions, then move forward through the queue without repeat cycles. Persisted featured preferences and source health use the separately specified server gates; client transport events cannot establish a global invalid verdict.",
+      "authority": "User authorization to implement, test and publish artist autoplay, resilient playable-source selection and unification of the global player with the radio widget.",
+      "source": "docs/music-releases/unified-playback-progress.md",
+      "contract": "docs/music-releases/universal-player-state.md",
+      "actors": [
+        "Public listener",
+        "Artist",
+        "Radio listener"
+      ],
+      "preconditions": [
+        "Existing public catalogue and asset authorization gates remain authoritative.",
+        "PlayerProvider is mounted around both artist pages and RadioWidget."
+      ],
+      "inputs": [
+        "Profile route and linked Party ID",
+        "Canonical and legacy public catalogue results",
+        "Explicit play, pause and station selection",
+        "Native playing/error/waiting events",
+        "Asset authorization results and timeout"
+      ],
+      "state": {
+        "playback": [
+          "idle",
+          "loading",
+          "playing",
+          "paused",
+          "buffering",
+          "error",
+          "unavailable"
+        ],
+        "recovery": [
+          "bounded rendition retries",
+          "next rendition",
+          "next track",
+          "exhausted"
+        ],
+        "artistIntent": [
+          "automatic entry",
+          "explicit pause"
+        ]
+      },
+      "allowedTransitions": [
+        "Profile entry -> stop previous context -> public artist queue; explicit pause remains silent.",
+        "Terminal rendition failure -> untried eligible rendition -> later unfailed queue track -> unavailable.",
+        "Autoplay denial -> paused selected source -> explicit user play.",
+        "Empty artist queue -> show availability message and explicit radio link.",
+        "Explicit silent radio selection -> prepared global track without invoking play."
+      ],
+      "forbiddenTransitions": [
+        "Radio rerender reclaims a newer artist context.",
+        "Known provider page is loaded as native legacy audio.",
+        "A late aborted artist request overwrites a newer context.",
+        "Repeat or shuffle loops across terminally failed tracks during recovery.",
+        "Client decoding/network failure writes globally authoritative invalidity.",
+        "Unresolved play promise alone establishes visible playing state.",
+        "Artist exhaustion starts radio without user selection."
+      ],
+      "effects": [
+        "Replace the global listening queue and resolve asset grants through existing authorization.",
+        "Dispose the previous torrent session when its selected source changes.",
+        "Hide session-failed radio entries; replace the redundant radio dock with a catalogue launcher when a global track is selected."
+      ],
+      "authorization": "Public API membership and the existing asset-access endpoint are authoritative. Protected tracks only fall back to freshly authorized assets. Direct legacy references come only from public releases for the exact Party; provider pages are not extracted. Protected identity is checked across every source of a track before audio/video filtering; format selection cannot downgrade denied or malformed identity to an unbound URL.",
+      "privacy": "Listening state remains listener-scoped. Server diagnostics expose only source identity/version, status, fixed reason and timestamps to authorized owners, team members or administrators; raw URLs, object keys and credentials are omitted.",
+      "concurrency": "Latest profile/source generation and play-attempt fences discard obsolete asynchronous results. Metadata position restoration from main remains fenced to the matching track, URL and generation.",
+      "idempotency": "A profile key cannot repeatedly replace its completed queue; failed rendition objects and track IDs are bounded to the current selection context.",
+      "failure": "Two automatic network retries per rendition and a 15-second load/stall watchdog bound client recovery. Offline and browser-policy failures do not condemn media globally. An exhausted artist catalogue remains visible as unavailable.",
+      "recovery": "Try other eligible renditions, then advance forward without repeat/shuffle. Explicit selection/retry permits another attempt; radio fallback requires user action.",
+      "observability": "Existing playback events and executable component/engine regressions. Radio presence requires native playing. Local quarantine is not a persistent media-health verdict.",
+      "implementation": [
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/player/types.ts",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/utils/availableRadioStations.ts",
+        "tdf-hq-ui/src/config/artistMediaRecoveryRollout.ts",
+        "tdf-hq-ui/src/vite-env.d.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "e2e/web/music-player.spec.mjs",
+        "e2e/web/music-player-native.spec.mjs",
+        "tdf-hq-ui/src/utils/availableRadioStations.test.ts",
+        "tdf-hq-ui/src/config/artistMediaRecoveryRollout.test.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped local client execution; current-head hosted/native checks and deployment are separate obligations.",
+      "ambiguity": [
+        "Provider pages are external listening destinations; no unauthorized extraction or claim of control over another tab.",
+        "Catalogues beyond the shared 10,000-row bound and physical provenance reconciliation require further qualification.",
+        "Native playback, hosted checks, deployment and physical-device coverage retain distinct status."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Shared native transport, explicit-pause fences and bounded recovery are implemented with finite regressions. Native-session composition and fresh browser/hosted checks are in progress. Persistent health is specified separately; complete catalog provenance and production acceptance remain required."
+      },
+      "property": "One active audible native media element; latest context owns selection; explicit pause prevents automatic artist playback; bounded recovery never cycles over failed sources or tracks; no client failure establishes authoritative global invalidity.",
+      "verification": "Jest engine and rendered-component regressions, TypeScript, production build, changed-source lint, catalogue authority and immutable source admission. Native Playwright cases require current-head hosted execution; no implementation refinement proof is claimed. Staged initiation selects new backend-bound artist/media flows only for an exact-true public setting; disabled old-backend playback and both fresh/persisted explicit-identity denial are exercised with controlled component/engine fixtures. The setting is not authorization and never enables raw-URL fallback after protected-source denial.",
+      "evidence": "docs/music-releases/unified-playback-progress.md; PR #670 final candidate checks. Historical native results retain their earlier revision."
+    },
+    {
       "id": "EVT-DISCOVERY-FILTER-001",
       "title": "City and canonical performing-artist event filtering",
       "statement": "Apply existing event visibility and city, performing artist, type, state and effective end/start time restrictions before pagination. Selected artist IDs form an OR set; independent categories use AND. Expose multi-artist autocomplete, explicit past inclusion and coherent page/calendar results in the signed-in events workspace.",
@@ -17672,6 +17812,83 @@
       "evidence": "scripts/test-event-discovery-postgres.mjs; tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx; tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx; tdf-hq/test/Spec.hs"
     },
     {
+      "id": "EVT-DRAFT-REVIEW-001",
+      "title": "Schema-two event plans are validated offline with explicit currency and tier boundaries",
+      "domain": "EVT",
+      "statement": "Schema-two review-only plans require private events without public asset or ticket URLs, ordered event times, positive safe integer capacity, unique normalized tier codes, inactive zero-sale tiers, safe integer prices and quantities, equal event/tier currency containing exactly three uppercase ASCII letters, bounded total allocation and an event price equal to the lowest tier price. The CLI validates schema two offline only and refuses import before the legacy flyer, token or API path.",
+      "authority": "Existing PR #709 offline multi-tier review intent and the verified equality-only currency counterexample; bounded repair reviewed on 2026-11-07.",
+      "source": "formal/system/event-draft-review.md",
+      "contract": "formal/system/event-draft-review.md",
+      "property": "Validation rejects the named malformed currency domain even when every tier matches the same malformed value. Accepted review inputs are not rewritten. Schema-two --validate-only emits valid/offline/schemaVersion/mutations=0; schema-two import without the flag throws before flyer loading, credential lookup or API work. Schema-one behavior is unchanged.",
+      "actors": [
+        "Event planner preparing a local review",
+        "Maintainer",
+        "CI reviewer"
+      ],
+      "preconditions": [
+        "Supported Node runtime",
+        "A local JSON review plan passed to the existing CLI or validator",
+        "This contract does not authorize the separate schema-one import path"
+      ],
+      "inputs": [
+        "schemaVersion and review-only approval marker",
+        "Private event, times, capacity, declared price and currency",
+        "Tier identifiers, inactive state, sold quantities, safe integer prices and quantities, currencies and sale windows",
+        "--validate-only CLI mode"
+      ],
+      "state": {
+        "initial": "Untrusted local plan; no event or ticket mutation",
+        "terminal": [
+          "Validation rejected",
+          "Offline validation reported with zero mutations",
+          "Schema-two import rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "Check the private review shape and currency syntax",
+        "Validate tier boundaries and aggregate capacity without changing the plan",
+        "Return an offline validation result or throw an error"
+      ],
+      "forbiddenTransitions": [
+        "Accept a malformed event currency merely because tier values match",
+        "Normalize malformed currency input into an accepted value silently",
+        "Import schema-two plans or read their flyer/token before refusing import",
+        "Treat offline validation as production approval, a legal agreement, provider readiness or actual ticket inventory"
+      ],
+      "effects": [
+        "Schema-two path is local validation only; no API requests, media publication, payments, notifications or import report writes"
+      ],
+      "authorization": "No credentials are required for offline validation. Existing schema-one administrator import behavior is preserved and is outside this new offline contract.",
+      "privacy": "Synthetic fixtures and local plan fields only; no token or private payload logging is introduced.",
+      "concurrency": "Each invocation validates its own input synchronously; no shared database or asynchronous ticket inventory claim.",
+      "idempotency": "Validation of the same supported input yields the same acceptance or rejection and does not rewrite the input.",
+      "failure": "Invalid review data or attempted schema-two import throws; the CLI exits unsuccessfully instead of importing.",
+      "recovery": "Correct the local review fields and validate again. Resolve organizer, venue, artists and inventory separately before any separately authorized import.",
+      "observability": "Offline success reports valid=true, mode=offline, schemaVersion and mutations=0; failures preserve the existing CLI error path.",
+      "implementation": [
+        "scripts/prepare-event-draft.mjs"
+      ],
+      "tests": [
+        "scripts/__tests__/event-draft-plan.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Twenty finite Node tests: four original tests unchanged; twelve same-value malformed/missing currency cases; matching canonical strings without mutation; legacy schema-one behavior; offline CLI success and unconditional schema-two import refusal with network blocked. The exact new tests fail twelve currency assertions on original09fa and all pass after the scoped guard.",
+      "evidence": "formal/system/event-draft-review.md; source-bound old-RED/new-GREEN execution receipts retained in the consolidation ledger.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Finite regression and source boundary evidence; no universal implementation/refinement proof.",
+      "ambiguity": [
+        "Three uppercase ASCII letters checks currency syntax, not ISO catalog membership or provider support.",
+        "Existing Date.parse and sale-window behavior is retained; complete timezone and operational capacity semantics are not established.",
+        "The separate schema-one import, current account authorization and actual backend/provider state are not qualified by these offline tests.",
+        "No production event, contract acceptance, sale, refund, notification or media publication was performed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The named offline validation and no-import boundaries are covered by finite controls; no whole contract, ticketing, money or server authorization proof is claimed."
+      }
+    },
+    {
       "id": "ANALYTICS-WEEKLY-001",
       "title": "Bounded aggregate weekly platform measurement",
       "statement": "Prepare a read-only, repeatable-read aggregate query and summarize supplied current/previous seven-day windows without treating profile imports, telemetry milestones or missing data as verified human growth or campaign causality.",
@@ -17738,125 +17955,6 @@
         "reports/weekly-platform-metrics-main-qualification-2026-11-05.json"
       ],
       "historicalStatus": "New bounded measurement tooling, not a production observation."
-    },
-    {
-      "id": "MEDIA-ARTIST-PLAYBACK-001",
-      "title": "Shared artist and radio playback with bounded source recovery",
-      "domain": "MEDIA",
-      "critical": true,
-      "statement": "Artist profiles and the radio catalogue command the same PlayerProvider and HTMLAudioElement. Artist navigation replaces the listening context, preserving explicit pause. Public artist queues preserve Party/source identity, use canonical tracks then direct public legacy media, and offer radio rather than automatically switching when exhausted. Native terminal failures try remaining eligible renditions, then move forward through the queue without repeat cycles. This client implementation does not establish authoritative media health or persisted artist featured-track selection.",
-      "authority": "User authorization to implement, test and publish artist autoplay, resilient playable-source selection and unification of the global player with the radio widget.",
-      "source": "docs/music-releases/unified-playback-progress.md",
-      "contract": "docs/music-releases/universal-player-state.md",
-      "actors": [
-        "Public listener",
-        "Artist",
-        "Radio listener"
-      ],
-      "preconditions": [
-        "Existing public catalogue and asset authorization gates remain authoritative.",
-        "PlayerProvider is mounted around both artist pages and RadioWidget."
-      ],
-      "inputs": [
-        "Profile route and linked Party ID",
-        "Canonical and legacy public catalogue results",
-        "Explicit play, pause and station selection",
-        "Native playing/error/waiting events",
-        "Asset authorization results and timeout"
-      ],
-      "state": {
-        "playback": [
-          "idle",
-          "loading",
-          "playing",
-          "paused",
-          "buffering",
-          "error",
-          "unavailable"
-        ],
-        "recovery": [
-          "bounded rendition retries",
-          "next rendition",
-          "next track",
-          "exhausted"
-        ],
-        "artistIntent": [
-          "automatic entry",
-          "explicit pause"
-        ]
-      },
-      "allowedTransitions": [
-        "Profile entry -> stop previous context -> public artist queue; explicit pause remains silent.",
-        "Terminal rendition failure -> untried eligible rendition -> later unfailed queue track -> unavailable.",
-        "Autoplay denial -> paused selected source -> explicit user play.",
-        "Empty artist queue -> show availability message and explicit radio link.",
-        "Explicit silent radio selection -> prepared global track without invoking play."
-      ],
-      "forbiddenTransitions": [
-        "Radio rerender reclaims a newer artist context.",
-        "Known provider page is loaded as native legacy audio.",
-        "A late aborted artist request overwrites a newer context.",
-        "Repeat or shuffle loops across terminally failed tracks during recovery.",
-        "Client decoding/network failure writes globally authoritative invalidity.",
-        "Unresolved play promise alone establishes visible playing state.",
-        "Artist exhaustion starts radio without user selection."
-      ],
-      "effects": [
-        "Replace the global listening queue and resolve asset grants through existing authorization.",
-        "Dispose the previous torrent session when its selected source changes.",
-        "Hide session-failed radio entries; replace the redundant radio dock with a catalogue launcher when a global track is selected."
-      ],
-      "authorization": "Public API membership and the existing asset-access endpoint are authoritative. Protected tracks only fall back to freshly authorized assets. Direct legacy references come only from public releases for the exact Party; provider pages are not extracted.",
-      "privacy": "Listening state remains listener-scoped. Server diagnostics expose only source identity/version, status, fixed reason and timestamps to authorized owners, team members or administrators; raw URLs, object keys and credentials are omitted.",
-      "concurrency": "Latest profile/source generation and play-attempt fences discard obsolete asynchronous results. Metadata position restoration from main remains fenced to the matching track, URL and generation.",
-      "idempotency": "A profile key cannot repeatedly replace its completed queue; failed rendition objects and track IDs are bounded to the current selection context.",
-      "failure": "Two automatic network retries per rendition and a 15-second load/stall watchdog bound client recovery. Offline and browser-policy failures do not condemn media globally. An exhausted artist catalogue remains visible as unavailable.",
-      "recovery": "Try other eligible renditions, then advance forward without repeat/shuffle. Explicit selection/retry permits another attempt; radio fallback requires user action.",
-      "observability": "Existing playback events and executable component/engine regressions. Radio presence requires native playing. Local quarantine is not a persistent media-health verdict.",
-      "implementation": [
-        "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
-        "tdf-hq-ui/src/player/PlayerProvider.tsx",
-        "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/player/publicMusicTrack.ts",
-        "tdf-hq-ui/src/api/musicReleases.ts",
-        "tdf-hq-ui/src/components/RadioWidget.tsx",
-        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-        "tdf-hq-ui/src/components/StreamingPlayer.tsx",
-        "tdf-hq-ui/src/utils/availableRadioStations.ts",
-        "tdf-hq-ui/src/config/artistMediaRecoveryRollout.ts",
-        "tdf-hq-ui/src/vite-env.d.ts"
-      ],
-      "tests": [
-        "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
-        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
-        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
-        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "e2e/web/music-player.spec.mjs",
-        "e2e/web/music-player-native.spec.mjs",
-        "tdf-hq-ui/src/utils/availableRadioStations.test.ts",
-        "tdf-hq-ui/src/config/artistMediaRecoveryRollout.test.ts",
-        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
-        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-        "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx"
-      ],
-      "formalModels": [],
-      "status": "specified and implemented",
-      "confidence": "Scoped local client execution; current-head hosted/native checks and deployment are separate obligations.",
-      "ambiguity": [
-        "Provider pages are external listening destinations; no unauthorized extraction or claim of control over another tab.",
-        "Catalogues beyond the shared 10,000-row bound and physical provenance reconciliation require further qualification.",
-        "Native playback, hosted checks, deployment and physical-device coverage retain distinct status."
-      ],
-      "conformance": {
-        "classification": "PARTIAL",
-        "reason": "Shared native engine, explicit-pause fences and bounded recovery implemented and exercised locally. Persistent health is specified separately; complete browser/provider/device and production acceptance remains required."
-      },
-      "property": "One listening HTMLAudioElement; latest context owns selection; explicit pause prevents automatic artist playback; bounded recovery never cycles over failed sources or tracks; no client failure establishes authoritative global invalidity.",
-      "verification": "Jest engine and rendered-component regressions, TypeScript, production build, changed-source lint, catalogue authority and immutable source admission. Native Playwright cases require current-head hosted execution; no implementation refinement proof is claimed. Staged initiation selects new backend-bound artist/media flows only for an exact-true public setting; disabled old-backend playback and both fresh/persisted explicit-identity denial are exercised with controlled component/engine fixtures. The setting is not authorization and never enables raw-URL fallback after protected-source denial.",
-      "evidence": "docs/music-releases/unified-playback-progress.md; PR #670 final candidate checks. Historical native results retain their earlier revision."
     }
   ],
   "sourceFingerprints": {
@@ -17867,7 +17965,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "de3f7565640d3287cc26a77081e556e94316cd2db3935d96e303ac4d5f4214fd",
+    ".github/workflows/ci.yml": "c36b99c24a9e051a0d548475924143186a6d7dc644461abcb9f3c0c629feef90",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -17876,7 +17974,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "59eb5b18bc2f800f3a694fa001429cc990fd230b6fec1babeeaf007d59c3cc78",
+    "docs/catalog-persistence/catalog-list-decisions.json": "58260abde277fd1e2aad731b1e89d15fcb0fbe0eb17a77e71b448e25ebb16aaf",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -17903,16 +18001,16 @@
     "e2e/web/event-discovery-filters.spec.mjs": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
     "e2e/web/event-memories.spec.mjs": "197d325765bbd6268167b65c1da217c9b960568b39d99bc92fd356871812e9d0",
     "e2e/web/event-rsvp-sharing.spec.mjs": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
-    "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+    "e2e/web/fixtures/native-music-setup.mjs": "e48160585d5865e34916cab3f70c98bc3c6dbf88893beb2215c54f4871b9cbf1",
     "e2e/web/helpers/campaign-accessibility.mjs": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
     "e2e/web/helpers/thumbnail-failure-diagnostics.mjs": "d40191d4771616880144a3c0ebd629b16f25dac26cc82552187c277fdb53d755",
     "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
     "e2e/web/marketplace-cart.spec.mjs": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
     "e2e/web/mobile-layout-regressions.spec.mjs": "0be1916b95d3bff15572a7237bcb427295142aa1d31322df1257b0406e50ec9c",
-    "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
+    "e2e/web/mobile-program.spec.mjs": "89dc39448746b727a502515410dc214ce86875711e0308959ae2daf1ca699d4b",
     "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
-    "e2e/web/music-player-native.spec.mjs": "53504448ca9570e121782d941fed558b29c18188a5ddec36a0624236c7c59a66",
+    "e2e/web/music-player-native.spec.mjs": "0cd6940daa11d9b53a7f932cd78e20ec0e6084f864d8e0c3de7200c6de67278e",
     "e2e/web/music-player.spec.mjs": "7527391173e85e99e1e8f51323184209239738012ec6ad4d67cec0859dec71af",
     "e2e/web/music-search-native.spec.mjs": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
@@ -18297,9 +18395,9 @@
     "scripts/__tests__/catalog-list-audit.test.mjs": "8eea6bb0b32f1291ff5b56b8dc2a073e3dd2fa9a3672948bcca42c108d33b35f",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
-    "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
+    "scripts/__tests__/ci-change-scope.test.mjs": "35ae51da10d7535429d1546472c3e7806570d325d7b07f44089cbc641d5bc01f",
     "scripts/__tests__/ci-job-admission.test.mjs": "21f9fcbd2e4137eec6442862ce49639423eba49712e28987bf99b562de85df6f",
-    "scripts/__tests__/ci-pipeline.test.mjs": "2f4630b4a2e5bcf9011f84bb483577158a6f1162d8e632258f2b470ae8718e5d",
+    "scripts/__tests__/ci-pipeline.test.mjs": "91f2cab7cea81f7d4119f6c7e859c21ef71edba0e86dd725a0da549934903953",
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
@@ -18309,6 +18407,7 @@
     "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
+    "scripts/__tests__/event-draft-plan.test.mjs": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
     "scripts/__tests__/event-planning-ux-model.test.mjs": "cabef2dc377be8160232951cdfb2c4eaa1b16f99ed104c409dd2649859ec01af",
@@ -18396,7 +18495,7 @@
     "scripts/check-route-requirements.py": "8ff8f425dffcdda7e12d938ed019d638fca5efdb1649cda8e27d535784026730",
     "scripts/check-state-machines.py": "78fcbff78a82fa615aa64fd5b343fba1a3b8af675759d4653fde1a8a26bd1897",
     "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
-    "scripts/ci-change-scope.mjs": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
+    "scripts/ci-change-scope.mjs": "8f69c4f4e83f6b51919db57c907f697a7c65c2d015fb26bfea369145a8f13f9f",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/content-storage-model.mjs": "9334e46e43c6b6e8dde89381f7fffd024af979e073dd659176f73add943892c8",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
@@ -18430,7 +18529,7 @@
     "scripts/lib/music-playback-identity-probe.mjs": "8e4cb3c3d1de1746ec692bfeb7da4cc20921ec77c492bfa26bff6c033c07ee43",
     "scripts/lib/music-s3-test-xml.mjs": "5f144e4e5da3a6e325a0a5413ca0f9c087b48ab0f03edce8955e2313b6941df5",
     "scripts/lib/music-test-database.mjs": "b63039bc86ab6dd58a17cd7448bf26ad439e27e23a0c7ab7b67b3eca94d7ebaf",
-    "scripts/lib/music-worker-image-smoke.sh": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
+    "scripts/lib/music-worker-image-smoke.sh": "ba9be6e7056a6ec5acba31bc4438f2a09f2f521d736b2464ce57edde841b4136",
     "scripts/lib/music-worker-s3-probe.mjs": "6a4f6a5483d4542be7fffa325a0a6c2fcffa2d15171d09213927e2b31517d958",
     "scripts/lib/music_money_conformance.py": "10061003159fb347c163524b3a9450c64f9553877316ece564971ba36f4a47cd",
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
@@ -18448,9 +18547,11 @@
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
-    "scripts/music-media-health.py": "a9b98debadbf1a1ccaec0f42b2a24ca03d0742dd3b32dfd94ccc0d517c9bf84d",
+    "scripts/music-media-health.py": "96c251959f321a8cfb9ef486e9cfbb36e91d47beb2f606ef6e84798f05a31644",
     "scripts/prepare-content-storage-reconciliation.mjs": "8032784954c085896cee00ab69bea66037443e6ff522941aa55ea244706dad57",
+    "scripts/prepare-event-draft.mjs": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
+    "scripts/prepare-native-session.py": "8c607924a0329a315a24ba2925b65d678f8b65462772ceae83acd058fef85511",
     "scripts/privacy-request-ledger.py": "9274444f82bef45844d492c296b6a5ca9410e6000867331adb6d624ddc5af960",
     "scripts/process-music-release-artwork.sh": "7f6ff16365627e3a06bc8f629dfc27aee7f5c46d6ff706e3954538554ae4992e",
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
@@ -18461,7 +18562,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "cdab4c82a8de6969fb2e08fc1aff75c479b5d93a696d3e0272acc675716987e9",
+    "scripts/quality-repo.sh": "e5b94bea6a1dfba862b638fcbaa60a15ee309cff0eb5a455f6ceedb03f1feeb7",
     "scripts/quality-ui.sh": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -18539,7 +18640,7 @@
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
     "scripts/test-music-media-health.mjs": "383825c93a9090858d72ae401cbcad93358cf4e540949c45ed0097b7d90b4efe",
-    "scripts/test-music-media-health.py": "1139af6e4926516612974422bd09d3f488fec18ea275553699af8c8bde7fcce8",
+    "scripts/test-music-media-health.py": "b70f9d104e634a6d6137600b03a3b9716dcc8c9a2641a124d17fc97431b5a195",
     "scripts/test-music-money-wire-verifier.py": "bc1c7cce17011641bbf01ff4ac5382c4d101526bbd3e913fa0c0ae436e915eb5",
     "scripts/test-music-payment-outcomes.sh": "f529c92e471a8118013eab1c229abc7c0cc9ec64b8ac925a8ef677e9f57c02ac",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
@@ -18555,7 +18656,9 @@
     "scripts/test-music-s3-local.mjs": "882173441c83b1eaa823bcdad88f54a37573de2fdae3375302523b7f2dc43d61",
     "scripts/test-music-source-projection.mjs": "1efdc0a81e8ae85e78f56814057d2636ebc20c2470c7621a24876696982b6416",
     "scripts/test-music-track-search.mjs": "dfdbe15b58975255caa4d60b6d653c0e8414cfd5657968be776053c8c254e64e",
-    "scripts/test-music-worker-image.mjs": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
+    "scripts/test-music-worker-image.mjs": "c9d5916e2d46847fa1a8dc945f4949bd9278ea70f342bf9728092c63f752b3d9",
+    "scripts/test-native-session-import-sql.py": "204d34d094a32337faf5db2ac183622a56b4e9e2ccbb1e318f389a9480cd5040",
+    "scripts/test-native-session-import.sh": "55d6b8e58240b071dff9cf087bec5a71fcfe9a6d36b99f571fb929652d81aae2",
     "scripts/test-new-specification-surfaces.py": "c8cda1a106f44996a8724dff839b76ddc76175c5bc260eeddf94d8eec626db22",
     "scripts/test-operations-inbound-capture.sh": "e0a761477525c8c8422e98ad9931c3b7ab7ef7cdf7f0f64fe1c349d62c707e89",
     "scripts/test-payment-arithmetic-verifier.py": "2fe82782ea7667eca90e4b7178e4bd95def247a120ad92aece333e4c75f96b68",
@@ -18564,6 +18667,7 @@
     "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
     "scripts/test-physical-postgres-recovery.py": "b0013e23a737f719749ababda8b05859b67b5ccad0ff35be6951395aebbbcf90",
     "scripts/test-player-session-model.mjs": "cc1ae78132c81735e2c5562829b3b5a4a5660175dbcea9ae831f3a450eceed2d",
+    "scripts/test-prepare-native-session.py": "b656d86860773ae65c1cd234e32e7dcce0be8e299cbe27c02ee1e8f20826b8b8",
     "scripts/test-privacy-request-ledger.py": "6feb9b5a5f8c3877a21b8f89da778a18c36b5b7ec8398072e0ae4356549d1ba5",
     "scripts/test-proof-certificates.py": "daa8f208847358dab9daaa38b917c6a06a83415bda9104d5ee23ef627fa7f24d",
     "scripts/test-provider-domain-binding.py": "dde27908fb2bebe25c14c022cc2bf7cc123e03b4236d94e43971699272c9ba77",
@@ -18719,8 +18823,8 @@
     "tdf-hq-ui/src/analytics/useTicketFunnel.ts": "d71e28707630aabb3681977a3faf2ea23393dd80586f07dda7d338ef0347fd32",
     "tdf-hq-ui/src/api/accountDeletion.test.ts": "5a039f2ef3658b1aabee56a51f1f1e4a23c2e895ed22d863879fd245e95a4785",
     "tdf-hq-ui/src/api/accountDeletion.ts": "7d9983a96e95229e1ecf8a2470712214ad62ce525a206a0cb0a8c5ff3a3805ff",
-    "tdf-hq-ui/src/api/artistCatalog.test.ts": "1ac8ee9be045c1bd56511e8bdedbf19c560ad4629bf84953297246d96eac0155",
-    "tdf-hq-ui/src/api/artistCatalog.ts": "013a487fccc8b72de36e74ab2be912343b8afc350553ef9c378f7fcbd6c965cb",
+    "tdf-hq-ui/src/api/artistCatalog.test.ts": "043c8cfcd398d22039d171a6c125d9c96fe60b78e79e7adeb45e30375896e0af",
+    "tdf-hq-ui/src/api/artistCatalog.ts": "746f1024c03b4e0da2e5bddf14e75998569e188c58b9b03b568774508c2f802e",
     "tdf-hq-ui/src/api/artistInvitations.ts": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
     "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts": "26f48bfd4ea10067fe35c87a72553091e51349ca55d3638e315acfe492f9c36d",
     "tdf-hq-ui/src/api/artistUpcomingEvents.ts": "39f404af0080d8948d28fbe9e5b55ffa15ba2569343e9228639afd8f5968a3cf",
@@ -18763,6 +18867,8 @@
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
     "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
+    "tdf-hq-ui/src/api/records.test.ts": "ac9df36a14e53a23056ad247e175d433ac74f7a9dcc18aa0c0ef4393afe40c77",
+    "tdf-hq-ui/src/api/records.ts": "808dd38791b019e186d12bf28de0635b475a299772ddfa5abd2c5d82e3202ee9",
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
     "tdf-hq-ui/src/api/reviews.test.ts": "8837534fbfd77370f757db7a66df90d5b023b584592eda5433602d2504c1f7f2",
     "tdf-hq-ui/src/api/reviews.ts": "8fc0a3b74789b159185572e537899ad62139fd8b784a32ec8639d3c6da792dcb",
@@ -18914,6 +19020,10 @@
     "tdf-hq-ui/src/features/releases/catalogQueries.test.ts": "0abd74326e5225fed06e81cf01921d6247cb41b23b0c1f33932c43b8a513a2d2",
     "tdf-hq-ui/src/features/releases/catalogQueries.ts": "ab1ac999aeac0c22d337184124e83e5d4f3817d4ba6a242445a877b68ee0113d",
     "tdf-hq-ui/src/features/releases/useReleaseFeed.ts": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
+    "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx": "7239d5ce0451329a04d2d56014f3ad06f00b67da9974f59b086e62dfb5e54890",
+    "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx": "3ce4bc961c3be9896f91b5901501d7b2989daef2e549d893e22c4bbb2193ac37",
+    "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts": "2596ee40090695de8cf4d8bc952daeacf621b2c1f09d2f60b97d78b97e0d7367",
+    "tdf-hq-ui/src/features/sessions/nativeSessions.ts": "4a1d0353025943fa582ea735e6726edb83495487f812da543ea119405503cdec",
     "tdf-hq-ui/src/features/social/SocialWorkspace.tsx": "82492087c813de1f062dd59680c17fd9320142073e3dc96e8737fade9b0660a6",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx": "74e0e9bbd074c245150edef4b0561ad2c700064a9300024201611188b3e28e86",
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.ts": "96b4122312d56f09d7c3a1e0b84796547020c2adf32b3bf7e8cff77449ac5d03",
@@ -18949,7 +19059,7 @@
     "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx": "041214548bf3ebf562aae5c17fa5d90008469e1c13dc8fd88c0e3d1ee609bfd5",
     "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "ee61fb92343adea6c07783c4301fdc17b3b917d9444fc3bd6ce359a04b62d905",
     "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts": "60afc03d528b10685cde5973a8a66d4e1b81d296663c6dc4360ab3280a269786",
-    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "19eb01b82d3f7302551735e6447603272d2b1ea19c7f737530102d7dee1b0726",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4e6891375e7a4d14cf4966032d068f31abb2180e88a58b72dd1859e8485adf65",
     "tdf-hq-ui/src/pages/BrainAdminPage.tsx": "f24310153284767120713e59c948cac1fc37b7e32c994906523ff3fdad515feb",
     "tdf-hq-ui/src/pages/CalendarSyncPage.tsx": "ba4bd9df779670c1cbb0079297a84f7a3b1b87dc501d32d2946563b9bc057c56",
     "tdf-hq-ui/src/pages/CampaignAutomationsPage.tsx": "436a6542811cca0cef5c33ef4979487907e967ef8ac74756fc05c0fa7fb42226",
@@ -19038,7 +19148,8 @@
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentSuccessPage.tsx": "26ac03557d2504fbb10a1d5f0f5a76f1a85a57fd18eebe271b5d05459ed9681a",
     "tdf-hq-ui/src/pages/RecentlyDiscoveredEventsPage.tsx": "6475325a20efd77e1fcd5687f1db29dd0a3d2b54a6ca94d17828fdf5fd6539b3",
-    "tdf-hq-ui/src/pages/RecordsPublicPage.tsx": "5bffd54fb89d208c192a607c5e921f7c7c862555c7d922dad018d43088a3b85a",
+    "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx": "81dc0f510e119cc1658f467c2c24916ba9ab1526f5c6dedf6a5108f7bf1cd454",
+    "tdf-hq-ui/src/pages/RecordsPublicPage.tsx": "d98b02b415a9c01b40959a3801af5919f3e3d810ab20c86e978a1085e52dfd24",
     "tdf-hq-ui/src/pages/ResetPasswordPage.test.tsx": "23fac48ff6208ec8ca79f31118dfc63eb54d8184aedb0f8ad7f8fbe98a4b663a",
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
@@ -19065,15 +19176,16 @@
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
     "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.test.tsx": "ddff7a7f59172f937d4435b76b22c9771ca8e1a2cf7fdd974d98bdd12758faa2",
     "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.tsx": "31e207f772c7cc8745d11f66983c9d04a4ffacd63f16c1fa7fc28e8d57413dc9",
-    "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx": "8b593ffde9d471f5508261d691744415347d20a4f8485aa8cb37db49c90585d8",
+    "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx": "ffc663df2c1d0e3ff0701b7cbc42ceaaeaf09a41e7a7da6fc6d8b4c203c1a1fb",
     "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts": "e4b80a9b0159492de946ff5457b65c3ef209c6b1d58a2c0fbef18267928fd20b",
-    "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx": "90df9dbc10c011be220d11806c7ea5a3e03b1f57a78ea9c679d416032470442b",
-    "tdf-hq-ui/src/player/GlobalPlayer.tsx": "4a40354532076663a34b44552e613ad2caaa540e1a62a570ea4541c962dd9366",
+    "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx": "9dd1f8e7489478cdc0bb64753fe038cf7c38a90859a8e2582f31f1834c1cf632",
+    "tdf-hq-ui/src/player/GlobalPlayer.tsx": "26b21df7e84725b24465fe74ed62b7b889f77497808669b1e1e6f50810db4445",
     "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx": "3147970615b60f9760b4a6f285dea369c76785e6748e30ce479dff9e4cb51b14",
     "tdf-hq-ui/src/player/MediaHealthPanel.tsx": "89b5dcdfb064f1a96720bb0324be6ada544837614f968d3010a95160f51ac0d3",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
-    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "465010c758d895d56d841e6c926183d38f4fd75c10fd99404c5d9e4cd431f540",
-    "tdf-hq-ui/src/player/PlayerProvider.tsx": "93c9165f1fb27d56076981c10268b352a76bd074f9f4d9b5cccfcd328e26978d",
+    "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx": "3868432fbb203c9a47aff844c5140c26569787a2dc91d0dcd4d320ea8c2c4405",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "05743841cfe10857587aa692921efad9136e42ed608e05afecf194ad75232b44",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "5d33f9a98e88a1c0d6827e4caf6ce57730fe1e624a9deb27edc4febe94a23e30",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
     "tdf-hq-ui/src/player/analytics.ts": "004329c88a0e171892b21295bf6464d3922bb379ab9c09239f1566ce6356b169",
@@ -19084,7 +19196,7 @@
     "tdf-hq-ui/src/player/queue.ts": "5c55aa09fdd0dbf24c32aea638fb1bcf38b620d761d6ca98c3b12c44c6ef375f",
     "tdf-hq-ui/src/player/sourceMetadata.test.ts": "9f9e0396d6b5aca8ea3ec585c0c9babaf607e1066c9fa6033f45f951f74f33de",
     "tdf-hq-ui/src/player/sourceMetadata.ts": "2d2f6271f7718eb899b75b8afd5c1e1b73d77bf5db665438e42c5d3eea3dd55a",
-    "tdf-hq-ui/src/player/types.ts": "f242127e49b288f6e1f6d8baec219a16687d6c2499f19a524637b6b78d1f3ddb",
+    "tdf-hq-ui/src/player/types.ts": "d041e505b24d1205ec151f702f28b7dc817e903b0556ba4f5f62bd7f621aad7a",
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": "35baba4fecaee526716c5a6cf97e24dd48c38528c3616a6ae47d4aa8c894cf87",
     "tdf-hq-ui/src/routes/AppShell.test.tsx": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
     "tdf-hq-ui/src/routes/AppShell.tsx": "44a60a3805ce0af4a4c5a1254482b9bcc140e2b247a120bb5b98abc5b9ad8bc2",
@@ -19187,7 +19299,7 @@
     "tdf-hq-ui/src/vite-env.d.ts": "774e4d6418a7f3b87c68fc1c018f99acd65d74771582e402ca1d490f5a489b86",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
     "tdf-hq/Dockerfile": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
-    "tdf-hq/Dockerfile.music-worker": "7599a30245902d38dacfdb7535bbf8649d0e8e3a3d85d91f6712b186bca71814",
+    "tdf-hq/Dockerfile.music-worker": "c6921beae4fddef66fcf4d6135f2fb94b39ccb548e19dc2101dff69735d624a6",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
@@ -20343,6 +20455,10 @@
       {
         "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-SOURCE-HEALTH-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/integration/ledger_posting_balance.sql": [
@@ -20961,6 +21077,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MEDIA-SOURCE-HEALTH-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "MUSIC-TORRENT-CONTROL-001",
         "relationship": "implementation"
       },
@@ -21082,6 +21202,10 @@
       },
       {
         "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-SOURCE-HEALTH-001",
         "relationship": "tests"
       },
       {
@@ -28351,6 +28475,10 @@
       {
         "requirement": "MEDIA-MUSIC-ASSET-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-SOURCE-HEALTH-001",
+        "relationship": "tests"
       }
     ],
     "scripts/test-music-release-worker-runtime.mjs": [
@@ -28446,6 +28574,10 @@
     "scripts/lib/music-worker-image-smoke.sh": [
       {
         "requirement": "MEDIA-MUSIC-ASSET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-SOURCE-HEALTH-001",
         "relationship": "tests"
       }
     ],
@@ -29135,6 +29267,54 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/features/sessions/nativeSessions.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/artistCatalog.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-ARTIST-CATALOG-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/records.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/RecordsPublicPage.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-VIDEO-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/prepare-native-session.py": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
@@ -29350,6 +29530,68 @@
       },
       {
         "requirement": "SYS-WEB-LAYOUT-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/artistCatalog.test.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-ARTIST-CATALOG-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-prepare-native-session.py": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/records.test.ts": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-native-session-import.sh": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-native-session-import-sql.py": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
         "relationship": "tests"
       }
     ],
@@ -33271,16 +33513,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/pages/RecordsPublicPage.tsx": [
-      {
-        "requirement": "WEB-CONTENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ART-VIDEO-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq-ui/src/pages/SocialInboxPage.tsx": [
       {
         "requirement": "WEB-CONTENT-001",
@@ -33359,12 +33591,6 @@
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/api/artistCatalog.ts": [
-      {
-        "requirement": "MEDIA-ARTIST-CATALOG-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq-ui/src/api/fans.ts": [
       {
         "requirement": "MEDIA-ARTIST-CATALOG-001",
@@ -33399,12 +33625,6 @@
       {
         "requirement": "MEDIA-ARTIST-CATALOG-001",
         "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/api/artistCatalog.test.ts": [
-      {
-        "requirement": "MEDIA-ARTIST-CATALOG-001",
-        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/features/fans/artistAudience.test.ts": [
@@ -35083,6 +35303,42 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/utils/availableRadioStations.ts": [
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/config/artistMediaRecoveryRollout.ts": [
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx": [
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/availableRadioStations.test.ts": [
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/config/artistMediaRecoveryRollout.test.ts": [
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx": [
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/sql/queries/social-event-city-match.sql": [
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
@@ -35143,6 +35399,18 @@
         "relationship": "tests"
       }
     ],
+    "scripts/prepare-event-draft.mjs": [
+      {
+        "requirement": "EVT-DRAFT-REVIEW-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/event-draft-plan.test.mjs": [
+      {
+        "requirement": "EVT-DRAFT-REVIEW-001",
+        "relationship": "tests"
+      }
+    ],
     "scripts/weekly-platform-metrics.py": [
       {
         "requirement": "ANALYTICS-WEEKLY-001",
@@ -35152,42 +35420,6 @@
     "scripts/test-weekly-platform-metrics.py": [
       {
         "requirement": "ANALYTICS-WEEKLY-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/utils/availableRadioStations.ts": [
-      {
-        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/config/artistMediaRecoveryRollout.ts": [
-      {
-        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx": [
-      {
-        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/utils/availableRadioStations.test.ts": [
-      {
-        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/config/artistMediaRecoveryRollout.test.ts": [
-      {
-        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
-        "relationship": "tests"
-      }
-    ],
-    "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx": [
-      {
-        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
         "relationship": "tests"
       }
     ]
@@ -35284,7 +35516,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "de3f7565640d3287cc26a77081e556e94316cd2db3935d96e303ac4d5f4214fd",
+      "sha256": "c36b99c24a9e051a0d548475924143186a6d7dc644461abcb9f3c0c629feef90",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35369,6 +35601,10 @@
         },
         {
           "requirement": "MEDIA-ARTIST-FEATURED-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-SOURCE-HEALTH-001",
           "relationship": "implementation"
         },
         {
@@ -35839,7 +36075,7 @@
     {
       "id": "SURFACE-b6f1ea0e72275bfa",
       "path": "e2e/web/fixtures/native-music-setup.mjs",
-      "sha256": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
+      "sha256": "e48160585d5865e34916cab3f70c98bc3c6dbf88893beb2215c54f4871b9cbf1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35925,7 +36161,7 @@
     {
       "id": "SURFACE-8b406122e72d741c",
       "path": "e2e/web/mobile-program.spec.mjs",
-      "sha256": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
+      "sha256": "89dc39448746b727a502515410dc214ce86875711e0308959ae2daf1ca699d4b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35961,7 +36197,7 @@
     {
       "id": "SURFACE-056631e61150574f",
       "path": "e2e/web/music-player-native.spec.mjs",
-      "sha256": "53504448ca9570e121782d941fed558b29c18188a5ddec36a0624236c7c59a66",
+      "sha256": "0cd6940daa11d9b53a7f932cd78e20ec0e6084f864d8e0c3de7200c6de67278e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36802,7 +37038,7 @@
     {
       "id": "SURFACE-629dfd4c3b16f916",
       "path": "scripts/__tests__/ci-change-scope.test.mjs",
-      "sha256": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
+      "sha256": "35ae51da10d7535429d1546472c3e7806570d325d7b07f44089cbc641d5bc01f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36850,7 +37086,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "2f4630b4a2e5bcf9011f84bb483577158a6f1162d8e632258f2b470ae8718e5d",
+      "sha256": "91f2cab7cea81f7d4119f6c7e859c21ef71edba0e86dd725a0da549934903953",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36887,6 +37123,10 @@
         },
         {
           "requirement": "MEDIA-STORAGE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-SOURCE-HEALTH-001",
           "relationship": "tests"
         },
         {
@@ -37029,9 +37269,14 @@
     {
       "id": "SURFACE-9344bbc594468ec5",
       "path": "scripts/__tests__/event-draft-plan.test.mjs",
-      "sha256": "e142a1d72ea77718de3999f3e8a3377ad52d56ef30af8f4138f4eeb53820d54f",
+      "sha256": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DRAFT-REVIEW-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-1b7bb866d486da44",
@@ -38527,7 +38772,7 @@
     {
       "id": "SURFACE-c47f067ed4b8e26e",
       "path": "scripts/ci-change-scope.mjs",
-      "sha256": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
+      "sha256": "8f69c4f4e83f6b51919db57c907f697a7c65c2d015fb26bfea369145a8f13f9f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -38552,6 +38797,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MEDIA-SOURCE-HEALTH-001",
           "relationship": "implementation"
         }
       ]
@@ -39263,11 +39512,15 @@
     {
       "id": "SURFACE-d83b4522aafa372c",
       "path": "scripts/lib/music-worker-image-smoke.sh",
-      "sha256": "bb0863c945b3303ea7b5236fd3b6d36fc47fa413f2f3665dd0fc5817914563b5",
+      "sha256": "ba9be6e7056a6ec5acba31bc4438f2a09f2f521d736b2464ce57edde841b4136",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-SOURCE-HEALTH-001",
           "relationship": "tests"
         }
       ]
@@ -39627,7 +39880,7 @@
     {
       "id": "SURFACE-065b757f096cfd7c",
       "path": "scripts/music-media-health.py",
-      "sha256": "a9b98debadbf1a1ccaec0f42b2a24ca03d0742dd3b32dfd94ccc0d517c9bf84d",
+      "sha256": "96c251959f321a8cfb9ef486e9cfbb36e91d47beb2f606ef6e84798f05a31644",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -39679,9 +39932,14 @@
     {
       "id": "SURFACE-676b7216bda83497",
       "path": "scripts/prepare-event-draft.mjs",
-      "sha256": "ecb45725bfe81c59823cef0cb06afe63ab8136ee3c09651ea8019becd366c3c6",
+      "sha256": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-DRAFT-REVIEW-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-1bcf4ba116082f91",
@@ -39691,6 +39949,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-MIGRATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1be7907fa26b54e6",
+      "path": "scripts/prepare-native-session.py",
+      "sha256": "8c607924a0329a315a24ba2925b65d678f8b65462772ceae83acd058fef85511",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
           "relationship": "implementation"
         }
       ]
@@ -39939,7 +40209,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "cdab4c82a8de6969fb2e08fc1aff75c479b5d93a696d3e0272acc675716987e9",
+      "sha256": "e5b94bea6a1dfba862b638fcbaa60a15ee309cff0eb5a455f6ceedb03f1feeb7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41898,7 +42168,7 @@
     {
       "id": "SURFACE-f4fdf752dc07e153",
       "path": "scripts/test-music-media-health.py",
-      "sha256": "1139af6e4926516612974422bd09d3f488fec18ea275553699af8c8bde7fcce8",
+      "sha256": "b70f9d104e634a6d6137600b03a3b9716dcc8c9a2641a124d17fc97431b5a195",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42126,11 +42396,39 @@
     {
       "id": "SURFACE-de9702047ae5b45f",
       "path": "scripts/test-music-worker-image.mjs",
-      "sha256": "77621bf3782591ee259de08068c291ecefd88f939d5db4667b082093041707e3",
+      "sha256": "c9d5916e2d46847fa1a8dc945f4949bd9278ea70f342bf9728092c63f752b3d9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-ASSET-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-SOURCE-HEALTH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-766734a94d91d75d",
+      "path": "scripts/test-native-session-import-sql.py",
+      "sha256": "204d34d094a32337faf5db2ac183622a56b4e9e2ccbb1e318f389a9480cd5040",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b05e6f64d779c444",
+      "path": "scripts/test-native-session-import.sh",
+      "sha256": "55d6b8e58240b071dff9cf087bec5a71fcfe9a6d36b99f571fb929652d81aae2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
           "relationship": "tests"
         }
       ]
@@ -42264,6 +42562,18 @@
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
           "relationship": "formalModels"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d3a3a07ff681cb25",
+      "path": "scripts/test-prepare-native-session.py",
+      "sha256": "b656d86860773ae65c1cd234e32e7dcce0be8e299cbe27c02ee1e8f20826b8b8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -44690,9 +45000,13 @@
     {
       "id": "SURFACE-ff974a25a3a04aab",
       "path": "tdf-hq-ui/src/api/artistCatalog.test.ts",
-      "sha256": "1ac8ee9be045c1bd56511e8bdedbf19c560ad4629bf84953297246d96eac0155",
+      "sha256": "043c8cfcd398d22039d171a6c125d9c96fe60b78e79e7adeb45e30375896e0af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
           "relationship": "tests"
@@ -44702,9 +45016,13 @@
     {
       "id": "SURFACE-128a32e4c523fd40",
       "path": "tdf-hq-ui/src/api/artistCatalog.ts",
-      "sha256": "013a487fccc8b72de36e74ab2be912343b8afc350553ef9c378f7fcbd6c965cb",
+      "sha256": "746f1024c03b4e0da2e5bddf14e75998569e188c58b9b03b568774508c2f802e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
           "relationship": "implementation"
@@ -45764,16 +46082,26 @@
     {
       "id": "SURFACE-9fc748d33d6ec423",
       "path": "tdf-hq-ui/src/api/records.test.ts",
-      "sha256": "ce3af8f69a15897f6bef6ddc2e269bed4c6ef259965c9adc0f1e242e78d4f75b",
+      "sha256": "ac9df36a14e53a23056ad247e175d433ac74f7a9dcc18aa0c0ef4393afe40c77",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b38100408189d548",
       "path": "tdf-hq-ui/src/api/records.ts",
-      "sha256": "894aa347435a50e7270c9790dae0d3db9f637db343fff22f090de70a48ddb90b",
+      "sha256": "808dd38791b019e186d12bf28de0635b475a299772ddfa5abd2c5d82e3202ee9",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2df58bc03840f152",
@@ -48692,6 +49020,54 @@
       ]
     },
     {
+      "id": "SURFACE-f1b97cf7cc5b4eaf",
+      "path": "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
+      "sha256": "7239d5ce0451329a04d2d56014f3ad06f00b67da9974f59b086e62dfb5e54890",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-8c59c9acbb5b29a1",
+      "path": "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+      "sha256": "3ce4bc961c3be9896f91b5901501d7b2989daef2e549d893e22c4bbb2193ac37",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-48bc61fb013dcaf0",
+      "path": "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
+      "sha256": "2596ee40090695de8cf4d8bc952daeacf621b2c1f09d2f60b97d78b97e0d7367",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e26b7365f9aa6c9c",
+      "path": "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
+      "sha256": "4a1d0353025943fa582ea735e6726edb83495487f812da543ea119405503cdec",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-becf808f14372711",
       "path": "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
       "sha256": "d6419557dc90a2248dc8560cfc5a8260e0297fc3354e7b652fd6f11098bc67e5",
@@ -49476,7 +49852,7 @@
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "19eb01b82d3f7302551735e6447603272d2b1ea19c7f737530102d7dee1b0726",
+      "sha256": "4e6891375e7a4d14cf4966032d068f31abb2180e88a58b72dd1859e8485adf65",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51465,11 +51841,27 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-56568ee47192d217",
-      "path": "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-      "sha256": "5bffd54fb89d208c192a607c5e921f7c7c862555c7d922dad018d43088a3b85a",
+      "id": "SURFACE-1393190e617db1b3",
+      "path": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+      "sha256": "81dc0f510e119cc1658f467c2c24916ba9ab1526f5c6dedf6a5108f7bf1cd454",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-56568ee47192d217",
+      "path": "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
+      "sha256": "d98b02b415a9c01b40959a3801af5919f3e3d810ab20c86e978a1085e52dfd24",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "WEB-CONTENT-001",
           "relationship": "implementation"
@@ -52210,7 +52602,7 @@
     {
       "id": "SURFACE-7b92c5483aeaae74",
       "path": "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
-      "sha256": "8b593ffde9d471f5508261d691744415347d20a4f8485aa8cb37db49c90585d8",
+      "sha256": "ffc663df2c1d0e3ff0701b7cbc42ceaaeaf09a41e7a7da6fc6d8b4c203c1a1fb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52242,7 +52634,7 @@
     {
       "id": "SURFACE-16a0f1bec2658d22",
       "path": "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
-      "sha256": "90df9dbc10c011be220d11806c7ea5a3e03b1f57a78ea9c679d416032470442b",
+      "sha256": "9dd1f8e7489478cdc0bb64753fe038cf7c38a90859a8e2582f31f1834c1cf632",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52258,7 +52650,7 @@
     {
       "id": "SURFACE-818df6bbb0d7fdd5",
       "path": "tdf-hq-ui/src/player/GlobalPlayer.tsx",
-      "sha256": "4a40354532076663a34b44552e613ad2caaa540e1a62a570ea4541c962dd9366",
+      "sha256": "26b21df7e84725b24465fe74ed62b7b889f77497808669b1e1e6f50810db4445",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52308,9 +52700,25 @@
       ]
     },
     {
+      "id": "SURFACE-f5f3dd94755c50bc",
+      "path": "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx",
+      "sha256": "3868432fbb203c9a47aff844c5140c26569787a2dc91d0dcd4d320ea8c2c4405",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "465010c758d895d56d841e6c926183d38f4fd75c10fd99404c5d9e4cd431f540",
+      "sha256": "05743841cfe10857587aa692921efad9136e42ed608e05afecf194ad75232b44",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52334,7 +52742,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "93c9165f1fb27d56076981c10268b352a76bd074f9f4d9b5cccfcd328e26978d",
+      "sha256": "5d33f9a98e88a1c0d6827e4caf6ce57730fe1e624a9deb27edc4febe94a23e30",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52494,7 +52902,7 @@
     {
       "id": "SURFACE-696ad66d25c26381",
       "path": "tdf-hq-ui/src/player/types.ts",
-      "sha256": "f242127e49b288f6e1f6d8baec219a16687d6c2499f19a524637b6b78d1f3ddb",
+      "sha256": "d041e505b24d1205ec151f702f28b7dc817e903b0556ba4f5f62bd7f621aad7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54357,7 +54765,7 @@
     {
       "id": "SURFACE-908be427a8962c04",
       "path": "tdf-hq/Dockerfile.music-worker",
-      "sha256": "7599a30245902d38dacfdb7535bbf8649d0e8e3a3d85d91f6712b186bca71814",
+      "sha256": "c6921beae4fddef66fcf4d6135f2fb94b39ccb548e19dc2101dff69735d624a6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68159,7 +68567,6 @@
     "SURFACE-039bc8d278e3dafc",
     "SURFACE-d96822f506e6f794",
     "SURFACE-2a6db69bcc12b984",
-    "SURFACE-9344bbc594468ec5",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
     "SURFACE-97975ba39673dd5b",
@@ -68257,7 +68664,6 @@
     "SURFACE-21491b1a76536f4c",
     "SURFACE-7184e9c3142d1144",
     "SURFACE-5f10ad76a6cd46da",
-    "SURFACE-676b7216bda83497",
     "SURFACE-1ef043656b0c0dd7",
     "SURFACE-6f6080552d114453",
     "SURFACE-bac1f41447e33768",
@@ -68476,8 +68882,6 @@
     "SURFACE-322b94aa1844c92d",
     "SURFACE-cdf54a14bb564ff8",
     "SURFACE-c9774767b7d89167",
-    "SURFACE-9fc748d33d6ec423",
-    "SURFACE-b38100408189d548",
     "SURFACE-2df58bc03840f152",
     "SURFACE-7accc7ad1a31e5c3",
     "SURFACE-35fb74a3b967a1f6",
@@ -70832,7 +71236,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "70cf90d341de6eb5f5d8fbfe7e91d3ed69904cb6faa3d40c957c6ae7fdd328cb",
+      "sourceSha256": "af702428dc3ccfcd4c260ed13efb443f8f9e2b00fb995f156d7f0cf66defcd95",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70860,7 +71264,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "70cf90d341de6eb5f5d8fbfe7e91d3ed69904cb6faa3d40c957c6ae7fdd328cb",
+      "sourceSha256": "af702428dc3ccfcd4c260ed13efb443f8f9e2b00fb995f156d7f0cf66defcd95",
       "definition": {
         "states": [
           "absent",
@@ -70890,7 +71294,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "70cf90d341de6eb5f5d8fbfe7e91d3ed69904cb6faa3d40c957c6ae7fdd328cb",
+      "sourceSha256": "af702428dc3ccfcd4c260ed13efb443f8f9e2b00fb995f156d7f0cf66defcd95",
       "definition": {
         "export": [
           "queued",
@@ -93936,7 +94340,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 208,
+    "PARTIAL": 209,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

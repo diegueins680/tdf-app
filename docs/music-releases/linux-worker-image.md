@@ -156,3 +156,35 @@ imagen, no a la intermedia. Persisten advertencias de dependencias de terceros
 y la advertencia esperada de rutas `../app`/`../src`: este manifiesto sirve para
 construir dentro del checkout/imagen, no para publicar un paquete `sdist`
 independiente en Hackage. No se ocultaron warnings ni se omitió el compilador.
+
+
+### Final image media-health dependency check — 2026-11-08
+
+The media-health probe requires the full Python 3 standard library, including
+`http.client`, `ssl`, and `json`. The final Debian image installs `python3`;
+`python3-minimal` alone does not provide the required modules. Its build imports
+the actual health script as the `worker` user with BuildKit networking disabled.
+The import does not invoke the script's CLI or access storage or a database.
+
+For backend or bundled-worker input changes, required repository CI builds a
+local image and runs the existing isolated image verifier. The verifier binds the
+health-script SHA-256 as well as all previous bundled inputs, and imports the
+script inside the immutable image with no network and a read-only root. This is
+the ninth image scenario; earlier dated 8/8 results above retain their original
+execution scope. Image verification does not publish an image or establish real
+storage/provider availability. Local Docker is unavailable in the current repair
+session; the new hosted image execution remains required before merging.
+
+
+### Health transfer framing — 2026-11-08
+
+A short read is not conclusive media evidence when the HTTP response promises
+more bytes. The bounded health probe rejects premature EOF against a declared
+Content-Length, and invalid length framing, as temporary transport failure before
+media inspection. Exact-length and close-delimited responses remain eligible for
+complete-file inspection; larger objects retain the existing 1 MiB prefix budget.
+The same final synthetic transport harness exposes seven failing assertions on
+the old implementation and passes all 27 test methods on the repair, including
+all 22 original methods without changes or skips. No real provider was contacted.
+The earlier final-image 9/9 execution remains bound to source2c93 and its old
+health-script hash; new-source mandatory hosted image verification remains due.

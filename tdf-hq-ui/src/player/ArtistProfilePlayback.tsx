@@ -7,8 +7,10 @@ import ArtistFeaturedTrackEditor from './ArtistFeaturedTrackEditor';
 import type { ArtistReleaseDTO } from '../api/types';
 import { resolveReleasePlaybackAction } from '../features/releases/ReleasePlayerActions';
 import type { PlayerTrack } from './types';
+import { sessionPlayerTrack, type NativeSession } from '../features/sessions/nativeSessions';
 
 const EMPTY_LEGACY_RELEASES: ArtistReleaseDTO[] = [];
+const EMPTY_NATIVE_SESSIONS: NativeSession[] = [];
 
 /** Public detail responses supply membership; asset access is reauthorized by the engine. */
 export function artistTracks(releases: MusicPublicRelease[], artistId: number): PlayerTrack[] {
@@ -37,6 +39,13 @@ export function legacyArtistTracks(releases: ArtistReleaseDTO[], artistId: numbe
   });
 }
 
+/** Only ready public Records entries explicitly linked to this Party participate. */
+export function nativeArtistTracks(sessions: NativeSession[], artistId: number): PlayerTrack[] {
+  return sessions.filter((session) => session.state === 'ready' && session.artistPartyIds.includes(artistId))
+    .flatMap((session) => session.chapters.length
+      ? session.chapters.map((chapter) => sessionPlayerTrack(session, chapter)) : [sessionPlayerTrack(session)]);
+}
+
 export function prioritizeFeaturedTrack(tracks: PlayerTrack[], artistId: number, featured: ArtistFeaturedTrack | null): PlayerTrack[] {
   if (!featured?.available || featured.artistPartyId !== artistId) return tracks;
   const index = tracks.findIndex((track) => featured.recordingId
@@ -45,9 +54,9 @@ export function prioritizeFeaturedTrack(tracks: PlayerTrack[], artistId: number,
   return [tracks[index]!, ...tracks.slice(0, index), ...tracks.slice(index + 1)];
 }
 
-export default function ArtistProfilePlayback({ profileKey, artistId, artistName, releases, legacyReleases = EMPTY_LEGACY_RELEASES, loading, failed, retryCatalog, canManage = false }: {
+export default function ArtistProfilePlayback({ profileKey, artistId, artistName, releases, legacyReleases = EMPTY_LEGACY_RELEASES, nativeSessions = EMPTY_NATIVE_SESSIONS, loading, failed, retryCatalog, canManage = false }: {
   profileKey: string; artistId: number | null; artistName: string; canManage?: boolean;
-  releases: MusicPublicReleaseSummary[] | undefined; legacyReleases?: ArtistReleaseDTO[]; loading: boolean; failed: boolean; retryCatalog?: () => void;
+  releases: MusicPublicReleaseSummary[] | undefined; legacyReleases?: ArtistReleaseDTO[]; nativeSessions?: NativeSession[]; loading: boolean; failed: boolean; retryCatalog?: () => void;
 }) {
   const player = useOptionalPlayer();
   const beginArtist = player?.beginArtist;
@@ -66,7 +75,8 @@ export default function ArtistProfilePlayback({ profileKey, artistId, artistName
   useEffect(() => {
     if (!loadArtist || !artistId || loading || loadedKey.current === profileKey) return;
     const fallbackTracks = legacyArtistTracks(legacyReleases, artistId, artistName);
-    if (failed && !fallbackTracks.length) { setState('error'); return; }
+    const nativeTracks = nativeArtistTracks(nativeSessions, artistId);
+    if (failed && !fallbackTracks.length && !nativeTracks.length) { setState('error'); return; }
     if (!releases && !failed) return;
     const controller = new AbortController();
     const preference = new AbortController();
@@ -89,16 +99,24 @@ export default function ArtistProfilePlayback({ profileKey, artistId, artistName
           catch { errors = true; }
         }
         if (controller.signal.aborted) { setState('error'); return; }
-        const tracks = prioritizeFeaturedTrack([...artistTracks(details, artistId), ...fallbackTracks], artistId, await featured);
+        const managedTracks = [...artistTracks(details, artistId), ...fallbackTracks];
+        const seen = new Set<string>();
+        const tracks = prioritizeFeaturedTrack([...managedTracks, ...nativeTracks].filter((track) => {
+          const identity = track.recordingId ? `recording:${track.recordingId}` : track.id;
+          if (seen.has(identity)) return false;
+          seen.add(identity); return true;
+        }), artistId, await featured);
         if (controller.signal.aborted) return;
-        setCatalogTracks(tracks);
+        // Featured writes accept Music recording/legacy release identities.
+        // Records publication UUIDs retain their separate canonical namespace.
+        setCatalogTracks(managedTracks);
         loadArtist(profileKey, tracks);
         loadedKey.current = profileKey;
         setState(tracks.length ? 'loaded' : errors ? 'error' : 'empty');
       } finally { window.clearTimeout(timer); }
     })();
     return () => { window.clearTimeout(timer); window.clearTimeout(preferenceTimer); controller.abort(); preference.abort(); };
-  }, [artistId, artistName, attempt, failed, legacyReleases, loadArtist, loading, profileKey, releases]);
+  }, [artistId, artistName, attempt, failed, legacyReleases, loadArtist, loading, nativeSessions, profileKey, releases]);
 
   if (!player) return null;
   const exhausted = state === 'empty' || (state === 'loaded' && player.status === 'unavailable');
