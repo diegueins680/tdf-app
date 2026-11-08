@@ -1,6 +1,37 @@
 # Frontend reconciliation in progress
 
-This isolated, unpublished composition restores the existing PR670 frontend source4b7824841 over the approved backend candidate a5745dbbe. Unrelated current-main changes are retained. Backend PR712 remains in normal FIFO admission; production APIs are not deployed. Native-session PR706 is not yet integrated here, so this is not ready for review, merge or activation. The restored frontend passes type checking, six core suites/153 tests and the complete 368 suites/4,208 tests. These checks do not establish native-session integration or current-head hosted/production acceptance. Source bindings are in reports/universal-player-frontend-compose-20261108.json.
+Draft companion [PR716](https://github.com/diegueins680/tdf-app/pull/716) reuses
+[PR670](https://github.com/diegueins680/tdf-app/pull/670), retaining backend source
+a5745dbbe from [PR712](https://github.com/diegueins680/tdf-app/pull/712) and the
+native session controls from [PR706](https://github.com/diegueins680/tdf-app/pull/706).
+Native video/audio now share explicit pause, current-source event fences, bounded
+recovery and artist navigation with ordinary tracks. Delayed internal pause,
+native pause/resume intent, resumed metadata timeout, stale playing timeout and
+same-session video-to-audio fallback counterexamples were reproduced before the
+fixes. Audio mode never falls back to downloading video. Ready native artist
+recordings now participate in the profile queue with exact Party filtering.
+
+The latest held composition passed type checking, two transport/artist suites
+with132 tests and three artist suites with41 tests. The earlier restored source
+64eeb8e64 passed368 suites/4208 tests; that whole-suite result predates native
+composition. Fresh full UI/browser and hosted checks remain pending. Local
+browser attempts stopped before test execution on sandbox loopback permission
+and then missing jq PATH; both are retained as harness failures.
+
+Backend a5745dbbe passed canonical Stack4308 examples (zero failures,23 pending),
+actual HTTP publication/permissions/health/featured withdrawal/restoration and
+stable diagnostic pagination, complete251-migration apply/replay/startup,
+repository quality and compiled API inspection933 operations/snapshot match.
+Hosted run42432110542 passed35 checks, with3 expected skips; the untraced Linux
+worker passed23 scenarios. Genuine approval and normal MERGE auto-merge exist,
+but protected main has advanced and ordinary FIFO/conflict reconciliation is
+still required. Backend implementation/testing/approval is not merge/deployment.
+
+Native Records health/grant identity/provenance correspondence, full catalog
+reconciliation, real provider/storage acceptance and physical devices remain
+open. Featured editing only offers supported Music/legacy identities. Production
+is unchanged: guarded runtime receipt and release/recovery controls remain
+unqualified. No rollout flag is activated or deployment protection bypassed.
 
 ## Preserved backend-stage checkpoint
 

@@ -34,9 +34,15 @@ export default async function setup() {
       assert.equal(manifest.derivatives.find((item) => item.path === name)?.sha256, sha256);
       files[quality] = { path, sha256, byteSize: statSync(path).size, mediaType };
     }
+    const videoPath = join(runtime, 'session.mp4');
+    run('ffmpeg', ['-nostdin', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=blue:s=320x180:r=15:d=24',
+      '-i', join(runtime, 'audio/stream-high.m4a'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p',
+      '-c:a', 'copy', '-movflags', '+faststart', '-shortest', videoPath]);
+    files.video = { path: videoPath, sha256: createHash('sha256').update(readFileSync(videoPath)).digest('hex'),
+      byteSize: statSync(videoPath).size, mediaType: 'video/mp4' };
     server = createServer((req, res) => {
       const url = new URL(req.url, 'http://127.0.0.1');
-      const match = url.pathname.match(/^\/media\/(first|second)\/(low|high|lossless)$/);
+      const match = url.pathname.match(/^\/media\/(first|second)\/(low|high|lossless|video)$/);
       const file = match && files[match[2]];
       if (!file || !['GET', 'HEAD'].includes(req.method)) { res.writeHead(404).end(); return; }
       const headers = { 'Content-Type': file.mediaType, 'Accept-Ranges': 'bytes', 'Cache-Control': 'no-store',
@@ -64,7 +70,7 @@ export default async function setup() {
       files: Object.fromEntries(Object.entries(files).map(([quality, { path: _path, ...file }]) => [quality, file])),
       masterSha256: manifest.source.sha256,
     });
-    console.log('Native audio fixture ready: verified AAC/FLAC from the real pipeline; loopback HTTP only.');
+    console.log('Native audio fixture ready: verified AAC/FLAC from the real pipeline plus generated H.264/AAC video; loopback HTTP only.');
     return close;
   } catch (error) { await close(); throw error; }
 }

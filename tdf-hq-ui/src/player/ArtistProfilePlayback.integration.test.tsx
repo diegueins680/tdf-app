@@ -3,6 +3,7 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import type { ArtistReleaseDTO } from '../api/types';
 import type { ArtistFeaturedTrack, MusicPublicRelease, MusicPublicReleaseSummary } from '../api/musicReleases';
 import type { PlayerTrack } from './types';
+import type { NativeSession } from '../features/sessions/nativeSessions';
 
 const beginArtist = jest.fn<(key: string) => void>();
 const loadArtist = jest.fn<(key: string, tracks: PlayerTrack[]) => void>();
@@ -73,4 +74,19 @@ it('bounds an unavailable preference request without preventing the catalogue fr
     await act(async () => { jest.advanceTimersByTime(2000); });
     expect(loadArtist.mock.calls[0]?.[1].map((track) => track.id)).toEqual(['legacy-release-1']);
   } finally { jest.useRealTimers(); }
+});
+
+it('loads native artist recordings when canonical discovery is unavailable, excluding other artists and unready media', async () => {
+  const session = { id: 'native-owned', title: 'Native owned', artist: 'Artist', artistPartyIds: [17],
+    publication: { kind: 'recording', entityKey: 'native-owned' }, durationMs: 10000,
+    startMs: 10000, endMs: 20000, state: 'ready', chapters: [], credits: [], sources: [
+      { url: 'https://media.invalid/native.mp4', quality: 'high', mediaType: 'video/mp4' },
+      { url: 'https://media.invalid/native.m4a', quality: 'high', mediaType: 'audio/mp4' },
+    ] } as NativeSession;
+  render(<ArtistProfilePlayback profileKey="artist-17" artistId={17} artistName="Artist" releases={[]}
+    nativeSessions={[session, { ...session, id: 'unready', state: 'processing' }, { ...session, id: 'other', artistPartyIds: [18] }]}
+    loading={false} failed />);
+  await waitFor(() => expect(loadArtist).toHaveBeenCalledTimes(1));
+  expect(loadArtist.mock.calls[0]?.[1]).toEqual([expect.objectContaining({ recordingId: 'native-owned', startMs: 10000, endMs: 20000 })]);
+  expect(screen.getByRole('button', { name: 'Escuchar a Artist' })).toBeTruthy();
 });

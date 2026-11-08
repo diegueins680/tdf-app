@@ -166,7 +166,7 @@ async function prepare(page, { previewFallback = false, holdSameOwnerSession = f
     });
     for (const type of ['playing', 'pause', 'timeupdate', 'seeking', 'seeked', 'ended', 'error', 'loadedmetadata']) {
       document.addEventListener(type, (event) => {
-        if (!(event.target instanceof HTMLAudioElement)) return;
+        if (!(event.target instanceof HTMLMediaElement)) return;
         globalThis.__nativeMediaEvents.push({
           type, trusted: event.isTrusted, time: event.target.currentTime,
           source: event.target.currentSrc, error: event.target.error?.code ?? null,
@@ -223,7 +223,7 @@ test.afterEach(async ({ page }, testInfo) => {
     // Browser-monotonic event samples, not a p95 or healthy-broadband SLO.
     // Ordinal does not establish CDN/browser cache residency.
     selectionTimings: globalThis.__nativeSelectionTimings ?? [],
-    audio: [...document.querySelectorAll('audio')].map((a) => ({
+    audio: [...document.querySelectorAll('audio, video')].map((a) => ({
       src: a.currentSrc, time: a.currentTime, duration: a.duration, paused: a.paused,
       error: a.error?.code, readyState: a.readyState, aac: a.canPlayType('audio/mp4'), flac: a.canPlayType('audio/flac'),
     })),
@@ -597,4 +597,42 @@ test('@critical PW-MUSIC-NATIVE-07 exhausts expired renditions with bounded retr
   expect(authorizations).toEqual(terminalAuthorizations);
   await expect(player.getByText('Pista nativa 2', { exact: true })).toBeVisible();
   expect(await audio.evaluate((a) => a === globalThis.__originalNativeAudio && !a.paused)).toBe(true);
+});
+
+test('@critical PW-MUSIC-NATIVE-10 native video shares intent, survives navigation and switches to independent audio', async ({ page }, testInfo) => {
+  const { player, audio, fixture } = await prepare(page);
+  const downloads = [];
+  page.on('request', request => {
+    if (request.url().startsWith(`${fixture.endpoint}/media/`)) downloads.push(request.url());
+  });
+  await page.evaluate(({ endpoint }) => {
+    const track = { id: 'synthetic-native-session', title: 'Sesión nativa sintética', artist: 'Fixture TDF',
+      startMs: 2000, endMs: 22000, sources: [
+        { url: `${endpoint}/media/first/video`, quality: 'high', mediaType: 'video/mp4' },
+        { url: `${endpoint}/media/first/high`, quality: 'high', mediaType: 'audio/mp4' },
+      ] };
+    window.dispatchEvent(new CustomEvent('tdf-player-load-track', { detail: { track, queue: [track], mediaMode: 'video', autoplay: true } }));
+  }, fixture);
+  const video = page.locator('video[aria-label="Video: Sesión nativa sintética"]');
+  await expect.poll(() => video.evaluate(v => !v.paused && v.currentTime > 2.25 && v.videoWidth === 320 && !v.error)).toBe(true);
+  expect(await audio.evaluate(a => a.paused && !a.hasAttribute('src'))).toBe(true);
+  await video.evaluate(v => { globalThis.__sessionVideo = v; });
+  await page.goBack();
+  expect(await video.evaluate(v => v === globalThis.__sessionVideo)).toBe(true);
+  // Exercise native pause() and its trusted event, then use the shared Play control.
+  // Physical native-control chrome remains browser/device-specific coverage.
+  await video.evaluate(v => v.pause());
+  await expect(player.getByRole('button', { name: 'Reproducir', exact: true })).toBeVisible();
+  await player.getByRole('button', { name: 'Reproducir', exact: true }).click();
+  await expect.poll(() => video.evaluate(v => !v.paused)).toBe(true);
+  await player.getByRole('button', { name: 'Solo audio', exact: true }).click();
+  await expect.poll(() => video.evaluate(v => v.currentSrc)).toMatch(/\/high$/);
+  await expect.poll(() => video.evaluate(v => !v.paused && v.currentTime >= 2 && !v.error)).toBe(true);
+  expect(await audio.evaluate(a => a.paused && !a.hasAttribute('src'))).toBe(true);
+  expect(downloads.some(url => url.includes('/video'))).toBe(true);
+  expect(downloads.some(url => url.endsWith('/high'))).toBe(true);
+  const simultaneous = await page.evaluate(() => [...document.querySelectorAll('audio, video')].filter(v => !v.paused && !v.ended && v.currentSrc).length);
+  expect(simultaneous).toBe(1);
+  await testInfo.attach('native-session-requests.json', { body: JSON.stringify({ downloads,
+    limitation: 'Generated H.264/AAC and real native clocks with synthetic catalog metadata on loopback; no production storage or physical device qualification.' }), contentType: 'application/json' });
 });

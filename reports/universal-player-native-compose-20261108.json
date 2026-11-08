@@ -1,0 +1,101 @@
+{
+  "backendBase": "a5745dbbe1b7fe68a49b2595c5499896fd96a6bf",
+  "preservedFullPlayerSource": "4b7824841fcbf2f3bcb7e95adb5ceb93f60ec22d",
+  "nativeSessionSource": "eeca9fe3d265c0a2a5be9d6574fe6a529ef11729",
+  "nativeSpeedRepairSource": "b2216b7afcc140a0c9a461419cc9c6fea688d32d",
+  "nativeSessionRuntimeIntegrated": true,
+  "productionChanged": false,
+  "qualification": {
+    "typecheck": "passed",
+    "changedSourceLint": "passed",
+    "transportAndArtistIntegration": {
+      "suites": 2,
+      "tests": 132,
+      "result": "passed"
+    },
+    "artistPageQualification": {
+      "suites": 3,
+      "tests": 41,
+      "result": "passed"
+    },
+    "catalog": {
+      "candidates": 1424,
+      "unreviewed": 0,
+      "stale": 0,
+      "result": "passed"
+    },
+    "realNativeSessionBrowser": {
+      "project": "chromium-desktop",
+      "tests": 1,
+      "result": "passed",
+      "scope": "Generated H.264/AAC video and independently generated audio; actual native clocks/events, synthetic API/catalog; no production storage."
+    },
+    "fullUI": "running",
+    "threeBrowserNativeSuite": "running"
+  },
+  "counterexamples": [
+    "Native pause did not set explicit pause latch across artist navigation",
+    "Native explicit resume did not restore shared requested intent",
+    "Retiring src before draining internal pause misattributed later native pause",
+    "Resuming pending metadata did not rearm deadline",
+    "Stale playing event disarmed next authorization deadline",
+    "Failed video skipped working independent audio for same session",
+    "Native-only artist catalog never entered profile queue"
+  ],
+  "limitations": [
+    "Draft companion716 is not main, deployed, approved or a current-head hosted attestation.",
+    "Native Records persistent health, server source identity/grant correspondence and full catalog provenance remain open.",
+    "Records native UUIDs are not offered as unsupported Music featured writes.",
+    "Physical devices, real provider accounts, local Docker/S3 unavailable; guarded production release/receipt unqualified."
+  ],
+  "inputSha256": {
+    "e2e/web/fixtures/native-music-setup.mjs": "e48160585d5865e34916cab3f70c98bc3c6dbf88893beb2215c54f4871b9cbf1",
+    "e2e/web/music-player-native.spec.mjs": "0cd6940daa11d9b53a7f932cd78e20ec0e6084f864d8e0c3de7200c6de67278e",
+    "e2e/web/music-player.spec.mjs": "7527391173e85e99e1e8f51323184209239738012ec6ad4d67cec0859dec71af",
+    "e2e/web/radio-navigation.spec.mjs": "eef173599c0b32ff83749e92278f51b5aa04e6d1cb04dfbb0fc0e79849c13198",
+    "tdf-hq-ui/src/api/artistCatalog.test.ts": "043c8cfcd398d22039d171a6c125d9c96fe60b78e79e7adeb45e30375896e0af",
+    "tdf-hq-ui/src/api/artistCatalog.ts": "746f1024c03b4e0da2e5bddf14e75998569e188c58b9b03b568774508c2f802e",
+    "tdf-hq-ui/src/api/musicReleases.ts": "030f09133bdf008b4a7ac20b37368ecb856c30805ce8d5195e91920b766c4c49",
+    "tdf-hq-ui/src/api/records.test.ts": "ac9df36a14e53a23056ad247e175d433ac74f7a9dcc18aa0c0ef4393afe40c77",
+    "tdf-hq-ui/src/api/records.ts": "808dd38791b019e186d12bf28de0635b475a299772ddfa5abd2c5d82e3202ee9",
+    "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "7780e0a0a3338b7e786d1e0dd37c7bd3a6f368a66c124ddbd5cca70c531b4d44",
+    "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx": "8c777a3db79c4c3185afd93df48a8ed42df8373a568252360ea5fb64ccf88727",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "06a40e87f3239483b934eea031b22a441a49dcf6f72397cd455aa99ed2293171",
+    "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": "e451f805d3cf81ef7e4509fcbb1fdfd0af384745b51ef2eb4ac7695d40682754",
+    "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx": "9889792e70da6481fbbd237fffafe0cd5323c7ac4e958678a7d657f68f2a2285",
+    "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx": "235b3736f18e7096d605bea6e9b6314fae618961648873a06dc8341c206cf0b1",
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "4487eb699ad2c2d992373c5854e55fd508bbe5e034567f35e241c93bacbaacd8",
+    "tdf-hq-ui/src/components/StreamingPlayer.tsx": "5652966ea8bbe4eb33287a438ee46f8622dec7dd02a4cdde8c21ee58a4fab33e",
+    "tdf-hq-ui/src/config/artistMediaRecoveryRollout.test.ts": "393aef9bddead5150b4faec6531ecdbeb77fbf41c99acde58586726e29694bb9",
+    "tdf-hq-ui/src/config/artistMediaRecoveryRollout.ts": "87b85091fdf9d2a27d48cb8eb8c1a34485aa86f73cabc4f7f9553dfb1fec1a9d",
+    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "82f10252d063f3dcebe07c4ae250267078de0d4d6d14d674e25a7fc6dc404252",
+    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "249e356bd64235804d938213ce99e909350ac3dafc06bc984558c1a1a7d19b63",
+    "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx": "7239d5ce0451329a04d2d56014f3ad06f00b67da9974f59b086e62dfb5e54890",
+    "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx": "3ce4bc961c3be9896f91b5901501d7b2989daef2e549d893e22c4bbb2193ac37",
+    "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts": "2596ee40090695de8cf4d8bc952daeacf621b2c1f09d2f60b97d78b97e0d7367",
+    "tdf-hq-ui/src/features/sessions/nativeSessions.ts": "4a1d0353025943fa582ea735e6726edb83495487f812da543ea119405503cdec",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "ee61fb92343adea6c07783c4301fdc17b3b917d9444fc3bd6ce359a04b62d905",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4e6891375e7a4d14cf4966032d068f31abb2180e88a58b72dd1859e8485adf65",
+    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "7ece79b993a2ca3bd0f8be586d02c7b44d7718259964fe0ded9988f2693a2e57",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "6758412b20817f8227f1ffc634d91cbeb6999b5aebfdfe0c1c4ac9248ed23049",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "48c8e9f0da9164e0f04dd43431a01ab48f7f167ac28be776c3719d79b2070004",
+    "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx": "81dc0f510e119cc1658f467c2c24916ba9ab1526f5c6dedf6a5108f7bf1cd454",
+    "tdf-hq-ui/src/pages/RecordsPublicPage.tsx": "d98b02b415a9c01b40959a3801af5919f3e3d810ab20c86e978a1085e52dfd24",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "a55ae0e79f4b4abd4a2bbb7f3c7a1e514e3757d532300d64318f68dfd8f51d43",
+    "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.test.tsx": "ddff7a7f59172f937d4435b76b22c9771ca8e1a2cf7fdd974d98bdd12758faa2",
+    "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.tsx": "31e207f772c7cc8745d11f66983c9d04a4ffacd63f16c1fa7fc28e8d57413dc9",
+    "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx": "ffc663df2c1d0e3ff0701b7cbc42ceaaeaf09a41e7a7da6fc6d8b4c203c1a1fb",
+    "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts": "e4b80a9b0159492de946ff5457b65c3ef209c6b1d58a2c0fbef18267928fd20b",
+    "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx": "9dd1f8e7489478cdc0bb64753fe038cf7c38a90859a8e2582f31f1834c1cf632",
+    "tdf-hq-ui/src/player/GlobalPlayer.tsx": "26b21df7e84725b24465fe74ed62b7b889f77497808669b1e1e6f50810db4445",
+    "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx": "3147970615b60f9760b4a6f285dea369c76785e6748e30ce479dff9e4cb51b14",
+    "tdf-hq-ui/src/player/MediaHealthPanel.tsx": "89b5dcdfb064f1a96720bb0324be6ada544837614f968d3010a95160f51ac0d3",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "0f41ef12fd5936d5c74687051eb3315aa5062e3a8e86b36fea5823b27f54fc5e",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "8b9a41d30bf50439679135581bbd0e7923da6f1a0cf2679877559a8ba8081cbc",
+    "tdf-hq-ui/src/player/assetAccess.ts": "2a294c24902571c0e5ba0c8728f2e331c2122abce9fedc5735f1107de0daf358",
+    "tdf-hq-ui/src/player/types.ts": "d041e505b24d1205ec151f702f28b7dc817e903b0556ba4f5f62bd7f621aad7a",
+    "tdf-hq-ui/src/utils/availableRadioStations.test.ts": "fb403dac0b0d3e81b4ff5651a231039a033f17520a3fbb0532cfcb14acb0cac8",
+    "tdf-hq-ui/src/utils/availableRadioStations.ts": "d3a756e5ee95d3cf375dfaa5535a43e0dd6469aa45eec7e7403ac19d32427eeb",
+    "tdf-hq-ui/src/vite-env.d.ts": "774e4d6418a7f3b87c68fc1c018f99acd65d74771582e402ca1d490f5a489b86"
+  }
+}

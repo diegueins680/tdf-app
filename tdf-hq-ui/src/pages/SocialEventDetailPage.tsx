@@ -28,6 +28,7 @@ import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { formatInEventTimeZone } from '../utils/dateTime';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import EventPreparationPanel from '../components/events/EventPreparationPanel';
+import EventLineupEditor from '../components/events/EventLineupEditor';
 import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicketPricing';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
@@ -388,6 +389,7 @@ export default function SocialEventDetailPage() {
         )}
 
         {event && isOrganizer && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} />}
+        {event && isOrganizer && session?.partyId && <EventLineupEditor key={`lineup:${editorScope}`} event={event} ownerId={session.partyId} />}
         {eventEnded && memories}
         {event && <Card variant="outlined">
           <CardContent>

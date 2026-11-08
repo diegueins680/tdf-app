@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import path from 'node:path';
+// Test-only PostgreSQL 17 WASM engine, installed outside application dependencies.
+// CI pins @electric-sql/pglite@0.3.14. No network or production database is used.
+if (!process.env.TDF_PGLITE_MODULE) throw new Error('Set TDF_PGLITE_MODULE to the pinned test engine dist/index.js');
+const { PGlite } = await import(pathToFileURL(path.resolve(process.env.TDF_PGLITE_MODULE)).href);
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const db = new PGlite();
+const core = readFileSync(root+'/tdf-hq/sql/2026-08-14_music_directory_core.sql','utf8');
+const normalizer=core.slice(core.indexOf('CREATE OR REPLACE FUNCTION directory_normalize_text'),core.indexOf('CREATE OR REPLACE FUNCTION directory_stable_uuid'));
+await db.exec(normalizer);
+await db.exec(`CREATE TABLE city_reference (id text, name_es text, name_en text);
+CREATE TABLE catalog_definition (id text, code text);
+CREATE TABLE catalog_search_alias (catalog_id text, entity_id text, term text);
+CREATE TABLE venue (id int, city text, city_id text);
+CREATE TABLE social_event (id int, venue_id int);
+CREATE TABLE external_event_ref (event_id int, city text, source_status text);
+INSERT INTO city_reference VALUES ('ny','Nueva York','New York'),('quito','Quito','Quito');
+INSERT INTO catalog_definition VALUES ('cities','cities'),('genres','genres');
+INSERT INTO catalog_search_alias VALUES ('cities','ny','NYC'),('genres','quito','NYC');
+INSERT INTO venue SELECT n,'Other',NULL FROM generate_series(1,6000) n;
+INSERT INTO venue VALUES (6001,'New York City','ny'),(6002,'New   York',NULL),(6003,NULL,NULL),(6004,'Quito','quito');
+INSERT INTO social_event VALUES (1,6001),(2,6002),(3,6003),(4,6004),(5,NULL);
+INSERT INTO external_event_ref VALUES (3,'New York','active'),(4,'New York','active'),(5,'New York','suppressed');`);
+const predicate=readFileSync(root+'/tdf-hq/sql/queries/social-event-city-match.sql','utf8').replace('?', '$1');
+const ids=async q => (await db.query(`SELECT id FROM social_event WHERE (${predicate}) ORDER BY id`,[q])).rows.map(r=>r.id);
+for(const q of ['New York','  NEW   YORK ','Néw York','Ne\u0301w York','new yo']) assert.deepEqual(await ids(q),[1,2,3],q);
+for(const q of ['Nueva York','NYC']) assert.deepEqual(await ids(q),[1],q);
+assert.deepEqual(await ids('Quito'),[4]);
+assert.deepEqual(await ids("New York' OR 1=1 --"),[]);
+assert.deepEqual(await ids('%'),[]);
+assert.deepEqual(await ids(''),[]);
+const page=await db.query(`SELECT id FROM social_event WHERE (${predicate}) ORDER BY id LIMIT 1 OFFSET 1`,['New York']);
+assert.deepEqual(page.rows.map(r=>r.id),[2]);
+// Regression control: the former 5000-venue prefilter loses all these matches.
+const old = await db.query("SELECT id FROM social_event WHERE venue_id IN (SELECT id FROM (SELECT * FROM venue LIMIT 5000) limited WHERE lower(city) LIKE '%new york%')");
+assert.deepEqual(old.rows, []);
+console.log('13 city-search PostgreSQL assertions passed against the shipped predicate and normalizer, including the previous-limit regression control');
+await db.close();
