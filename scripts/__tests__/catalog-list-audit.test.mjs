@@ -817,8 +817,71 @@ test('Domo refund247 preserves exact Main246, original SQL/rollback and both rev
   assert.deepEqual(tip.previousDecision, mainReviews.decisions.find(row => row.evidence?.file === file));
   assert.deepEqual(tip.concurrentReviewHistory, [sourceReviews.decisions.find(row => row.evidence?.file === file)]);
   for (const priorReview of mainReviews.decisions) {
-    if (priorReview.evidence?.file !== file) assert.deepEqual(active.find(row => row.id === priorReview.id), priorReview);
+    if (priorReview.evidence?.file === file) continue;
+    let retained = active.find(row => row.id === priorReview.id);
+    if (priorReview.id === '34210b76e81fd04cffae') {
+      // This assertion refers to dated Main f615's 75-method transport, not
+      // current Main's reviewed 78-method successor. Preserve the WHOLE old
+      // review in that actual successor chain; it must not be active again.
+      retained = active.find(row => row.id === '2511cbba2fc7279bc28a');
+      while (retained && retained.id !== priorReview.id) retained = retained.previousDecision;
+    }
+    assert.deepEqual(retained, priorReview);
   }
   assert.deepEqual(JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/domo-source-review-history-20261107.json'), 'utf8')), sourceReviews);
+});
+
+test('current Main transport fingerprint is active while its exact 75-method predecessor cannot authorize it', async () => {
+  const main = '321f4fe6c8e803ab1c32724a8ce5b7814418b79c';
+  const file = 'tdf-hq-ui/src/api/socialEvents.ts';
+  const decisionsFile = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const readAt = async name => (await execFileAsync('git', ['show', `${main}:${name}`],
+    { cwd: workspaceRoot, maxBuffer: 32 * 1024 * 1024 })).stdout;
+  const mainReviews = JSON.parse(await readAt(decisionsFile));
+  const currentReviews = JSON.parse(await fs.readFile(path.join(workspaceRoot, decisionsFile), 'utf8'));
+  const current = currentReviews.decisions.find(row => row.id === '2511cbba2fc7279bc28a');
+  assert.deepEqual(current, mainReviews.decisions.find(row => row.id === current.id));
+  assert.equal(current.evidence.valueCount, 78);
+  const implementation = await fs.readFile(path.join(workspaceRoot, file), 'utf8');
+  assert.equal(implementation, await readAt(file), 'Current transport must preserve complete canonical Main source');
+  let predecessor = current;
+  while (predecessor && predecessor.id !== '34210b76e81fd04cffae') predecessor = predecessor.previousDecision;
+  assert.ok(predecessor, 'Keep the exact dated review in the actual successor chain');
+  assert.equal(predecessor.evidence.valueCount, 75);
+  assert.ok(!currentReviews.decisions.some(row => row.id === predecessor.id), 'Historical approval must stay inactive');
+
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), 'catalog-current-transport-'));
+  const repo = path.join(temporary, 'repo');
+  const decisions = path.join(temporary, 'decisions.json');
+  const reportPath = path.join(temporary, 'report.json');
+  try {
+    await fs.mkdir(repo);
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repo });
+    await writeFile(repo, file, implementation);
+    await execFileAsync('git', ['add', '--', file], { cwd: repo });
+    const mainInventory = JSON.parse(await readAt('docs/catalog-persistence/reports/static-list-inventory.json'));
+    const ids = new Set(mainInventory.candidates.filter(row => row.file === file).map(row => row.id));
+    const selected = mainReviews.decisions.filter(row => ids.has(row.id));
+    assert.equal(selected.length, ids.size, 'Keep every canonical review for this complete source file');
+    await fs.writeFile(decisions, JSON.stringify(selected));
+    const args = [auditScriptPath, '--root', repo, '--decisions', decisions, '--output', reportPath];
+    await execFileAsync(process.execPath, [...args, '--fail-on-unreviewed'], { cwd: repo });
+    const report = JSON.parse(await fs.readFile(reportPath, 'utf8'));
+    const candidate = report.candidates.find(row => row.id === current.id);
+    assert.ok(candidate, 'Actual source fingerprint must identify the active review');
+    assert.equal(candidate.file, file);
+    assert.equal(candidate.values.length, 78);
+    assert.equal(candidate.decision, current.classification);
+
+    // An intact historical review is still insufficient for the changed source.
+    await fs.writeFile(decisions, JSON.stringify(selected.map(row => row.id === current.id ? predecessor : row)));
+    await assert.rejects(execFileAsync(process.execPath, [...args, '--fail-on-unreviewed'], { cwd: repo }),
+      error => error.code === 1 && error.stderr.includes('1 unreviewed candidate(s), 1 stale decision(s)'));
+    const rejected = JSON.parse(await fs.readFile(reportPath, 'utf8'));
+    assert.equal(rejected.candidates.find(row => row.id === current.id)?.decision, 'unreviewed');
+    assert.ok(!rejected.candidates.some(row => row.id === predecessor.id));
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true });
+  }
 });
