@@ -10910,7 +10910,8 @@
         "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
         "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts"
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
+        "e2e/web/public-welcome.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/DiscoveryFallbackPrivacy.tla",
@@ -26241,6 +26242,102 @@
       "property": "Server construction follows exact activated root control; controlled nonempty-client-ID requests reach only their initiating document; unrelated URLs pass through and owned resource waits are bounded.",
       "verification": "Jest API-transition controls, Node actual worker VM/MessageChannel and real HTTP lifecycle controls; actual compiled helper in Chromium/Firefox locally and three browser projects enforced in pinned CI, with explicit unsupported-capability evidence and deliberate semantic faults.",
       "evidence": "Candidate-commit qualification reports and raw execution receipts published separately; no universal proof."
+    },
+    {
+      "id": "EVT-DISCOVERY-FILTER-001",
+      "title": "City and canonical performing-artist event filtering",
+      "statement": "Apply existing event visibility and city, performing artist, type, state and effective end/start time restrictions before pagination. Selected artist IDs form an OR set; independent categories use AND. Expose multi-artist autocomplete, explicit past inclusion and coherent page/calendar results in the signed-in events workspace.",
+      "domain": "EVT",
+      "critical": false,
+      "actors": [
+        "Event viewer",
+        "Event organizer"
+      ],
+      "preconditions": [
+        "Existing canonical event, venue, city, artist and publication models remain authoritative.",
+        "Production has the reviewed directory normalizer and city catalog schema."
+      ],
+      "inputs": [
+        "City text",
+        "At most 50 canonical social Artist IDs",
+        "Event type and lifecycle state",
+        "Current instant or explicit past inclusion",
+        "Page offset"
+      ],
+      "state": {
+        "boundary": "formal/system/event-discovery-filtering.md"
+      },
+      "allowedTransitions": [
+        "Unfiltered to intersected city/type/state/time and artist-union search",
+        "Upcoming to explicit past inclusion",
+        "Organizer maintains canonical lineup through existing authorized write"
+      ],
+      "forbiddenTransitions": [
+        "Discard matches by searching a bounded venue prefix",
+        "Conflate Artist and Party identities",
+        "Infer lineup from attendees or text names",
+        "Replace current results with a stale city response",
+        "Continue a lineup write after session change or unmount"
+      ],
+      "effects": [
+        "Parameterized discovery predicates before LIMIT/OFFSET",
+        "URL-preserved filters, page counts and matching calendar dates",
+        "Canonical lineup maintenance for old and new events",
+        "Resolve distinct displayed-event venue IDs directly with account-scoped caching and cancellation; never depend on a bounded venue list."
+      ],
+      "authorization": "Existing server event-read and organizer-write checks remain authoritative; no new anonymous management surface.",
+      "privacy": "No visibility expansion; city and performer matching only narrow the already authorized result set.",
+      "concurrency": "Query identities and cancellation isolate searches; lineup continuation guards session and unmount. Existing full-event PUT does not prevent concurrent field races.",
+      "idempotency": "Canonical selected IDs are deduplicated; no automatic production backfill or event creation.",
+      "failure": "Invalid artist members fail with 400. Request errors remain distinct from no matches. Missing historical links are not invented.",
+      "recovery": "Clear filters, include past events, retry failed reads or update a canonical lineup as organizer.",
+      "observability": "Visible active controls, page-qualified counts, explicit date and request-error states.",
+      "source": "User approved city New York, multi-artist ANY autocomplete, upcoming default with visible past inclusion, and execution of the resulting prompt on 2026-11-04.",
+      "contract": "formal/system/event-discovery-filtering.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/queries/social-event-city-match.sql",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
+        ".github/workflows/ci.yml",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq/Dockerfile"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
+        "e2e/web/event-discovery-filters.spec.mjs",
+        "scripts/test-event-discovery-postgres.mjs",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Executed city SQL and React regressions cover finite fixtures; compiled handler, hosted browser and production verification remain separate.",
+      "ambiguity": [
+        "The exact production New York event was not identified; runtime reproduction is unverified.",
+        "Anonymous agenda retains upcoming-only public behavior; authenticated filters target the reported workspace.",
+        "Concurrent full-event edits remain outside the existing API guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local React/API and isolated PostgreSQL regressions are available; pinned Stack, current-head hosted browser/CI and production reproduction still require verification."
+      },
+      "authority": "approved by user",
+      "property": "Visibility AND city AND artist-union AND type AND state AND effective-time, then pagination; canonical identity and no stale asynchronous continuation.",
+      "verification": "React/API regressions, actual embedded PostgreSQL predicate with the previous-limit negative control, Hspec parser property and mobile browser fixture.",
+      "evidence": "scripts/test-event-discovery-postgres.mjs; tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx; tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx; tdf-hq/test/Spec.hs"
     }
   ]
 }
