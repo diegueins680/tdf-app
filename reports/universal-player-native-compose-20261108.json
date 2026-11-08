@@ -1,7 +1,7 @@
 {
   "backendBase": "883e12ee394aa374dfecd89b10000e5efd76a773",
   "preservedFullPlayerSource": "4b7824841fcbf2f3bcb7e95adb5ceb93f60ec22d",
-  "nativeSessionSource": "eeca9fe3d265c0a2a5be9d6574fe6a529ef11729",
+  "nativeSessionSource": "33c5835e87f61f18efda0cec9c460b44ac247f59",
   "nativeSpeedRepairSource": "b2216b7afcc140a0c9a461419cc9c6fea688d32d",
   "nativeSessionRuntimeIntegrated": true,
   "productionChanged": false,
@@ -10,7 +10,7 @@
     "changedSourceLint": "passed",
     "transportAndArtistIntegration": {
       "suites": 3,
-      "tests": 136,
+      "tests": 140,
       "result": "passed"
     },
     "artistPageQualification": {
@@ -53,7 +53,26 @@
       "source": "883e12ee394aa374dfecd89b10000e5efd76a773",
       "scope": "Synthetic configured namespace, DNS/TLS-parameter and redirect controls; no real storage/TLS acceptance."
     },
-    "uiRuntimeInputEquality": "git diff ef68fbf58 -- tdf-hq-ui produced zero bytes after concurrent backend/main merge; completed UI/browser executions retain those exact web inputs."
+    "uiRuntimeInputEquality": "After native33 and concurrent backend883e merges, git diff ef68fbf58 -- tdf-hq-ui lists only PlayerProvider.test.tsx. Production web inputs remain exact to the completed 376-suite/4315-test and45-browser-case executions; four newly added speed cases pass separately.",
+    "additionalNativeSpeedControls": {
+      "tests": 4,
+      "result": "passed",
+      "scope": "Added after full UI run; only test source changed. Existing suite assertions retained, with real native play/playing events modelled for the authoritative engine state."
+    },
+    "repositoryGate": {
+      "result": "passed",
+      "initialFailure": "Gate was started before merge-generated traceability JSON was regenerated; original parse failure retained. No passing gate inferred.",
+      "scope": "Complete normal repository gate exited0 after generated JSON regeneration; initial failed parse retained separately."
+    },
+    "backendLogicOnCurrentMain": {
+      "stackExamples": 4312,
+      "failures": 0,
+      "pending": 23,
+      "httpIntegration": "passed",
+      "sourceTree": "883e12ee394aa374dfecd89b10000e5efd76a773",
+      "localMirror": "cb3d781f492b4243f2d7e24d99bc27818f8220a5",
+      "scope": "Local mirror tree equals published backend883e. Stack began on identical Haskell/Cabal inputs during main reconciliation; generated build/version metadata and this execution do not attest a production image or runtime identity."
+    }
   },
   "counterexamples": [
     "Native pause did not set explicit pause latch across artist navigation",
@@ -114,7 +133,7 @@
     "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx": "3147970615b60f9760b4a6f285dea369c76785e6748e30ce479dff9e4cb51b14",
     "tdf-hq-ui/src/player/MediaHealthPanel.tsx": "89b5dcdfb064f1a96720bb0324be6ada544837614f968d3010a95160f51ac0d3",
     "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx": "3868432fbb203c9a47aff844c5140c26569787a2dc91d0dcd4d320ea8c2c4405",
-    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "0f41ef12fd5936d5c74687051eb3315aa5062e3a8e86b36fea5823b27f54fc5e",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "adddb86b01e71153316218c954e1a9d7afdc7aacc659c87825bd364e22d8eda0",
     "tdf-hq-ui/src/player/PlayerProvider.tsx": "ad1fb0c898bb2cfbb55c1f4df9a3bb94943f3c9ade51f8603fb6085d85a8a985",
     "tdf-hq-ui/src/player/assetAccess.ts": "2a294c24902571c0e5ba0c8728f2e331c2122abce9fedc5735f1107de0daf358",
     "tdf-hq-ui/src/player/types.ts": "d041e505b24d1205ec151f702f28b7dc817e903b0556ba4f5f62bd7f621aad7a",

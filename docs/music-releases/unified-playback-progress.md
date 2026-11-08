@@ -79,3 +79,7 @@ byte/deadline caps, source-version leases, publication/territory gates and
 production activation requirements remain separate.
 
 The concurrent companion update ba709f94f is preserved by normal merge, including backend883e12ee3 configured-storage repair and current-main9df3922fc. The web runtime is byte-identical to completed ef68fbf58 UI/browser inputs; all22 configured-storage probe controls pass locally. Real storage/TLS and current whole-source hosted acceptance are separate.
+
+Current native source33c5835e8 is incorporated with both speed regression suites preserved. The four newer controls pass, bringing the targeted core suite to140 tests. Type checking passes. Only PlayerProvider.test.tsx changes relative to the fully executed web inputs; no second whole-suite result is invented for this test-only addition.
+
+The final normal repository gate exits 0 after regenerating merge-generated JSON. An earlier run read an unresolved traceability JSON file; its failed parse log is retained separately. The backend verification mirror has a tree exactly matching published source 883e12ee3: canonical Stack passes 4,312 examples (zero failures, 23 pending), and the actual compiled HTTP fixture passes on disposable PostgreSQL. This is logic/source correspondence, not a production image or runtime receipt.

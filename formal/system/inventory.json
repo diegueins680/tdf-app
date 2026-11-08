@@ -12020,7 +12020,7 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "0f41ef12fd5936d5c74687051eb3315aa5062e3a8e86b36fea5823b27f54fc5e",
+      "sha256": "adddb86b01e71153316218c954e1a9d7afdc7aacc659c87825bd364e22d8eda0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23743,7 +23743,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "1d090dcfbe5aea563708693fbbdc8e97ac3230de1d91ea9fdb6855f8609ee615",
+      "sha256": "4b687e5bd0f3d6f40e3d04c6dd80337b5b919872e66270be73ab791c398d7592",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23806,7 +23806,7 @@
     },
     {
       "path": "docs/native-tdf-sessions.md",
-      "sha256": "a5c054ecd60e4761a8ae6429a1f87a18518bc72ca45620f21b7c646fbb270527",
+      "sha256": "58a1126f692e431084fe1f796f3733d8c25c66f7ea6f4593cf812ad8523564f0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30645,7 +30645,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "dd05b181fc53b828bb4d1135b85e6e0cf8aed45974697d0d346f3bdd1df0c833",
+      "sha256": "45112c4bd8e514460397e96bf4cfa5103951a92c4dd9a047fcf4c7e3b9219917",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

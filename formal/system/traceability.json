@@ -8705,7 +8705,7 @@
       "title": "Single persistent web player and public music pages",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "One PlayerProvider owns persistent release playback above all navigation: ordinary audio and native session video/audio elements are mutually exclusive, with one active source. Native Records sessions use explicit persisted artist identities, independent audio/video renditions and bounded chapter offsets; changing format or quality preserves position, and chapter playback cannot enter an adjacent song or credits. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion. Imported native individual recording publications retain their stored source start/end offsets. Internally requested chapter/source pauses preserve continuation intent; an explicit user pause cancels it.",
+      "statement": "One PlayerProvider owns persistent release playback above all navigation: ordinary audio and native session video/audio elements are mutually exclusive, with one active source. Native Records sessions use explicit persisted artist identities, independent audio/video renditions and bounded chapter offsets; changing format or quality preserves position and the selected playback speed, and chapter playback cannot enter an adjacent song or credits. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion. Imported native individual recording publications retain their stored source start/end offsets. Internally requested chapter/source pauses preserve continuation intent; an explicit user pause cancels it.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
       "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694); user native TDF sessions directive 2026-11-05; docs/native-tdf-sessions.md",
       "contract": "formal/system/player-session.md",
@@ -8824,7 +8824,7 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx"
       ],
-      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness. Source-bound regressions cover delayed internal pause delivery, latest-source cancellation, paused-source/unmount controls, imported recording card/deep-link bounds and canonical publication interactions. A local synthetic MP4 fixture exercises actual native video/audio continuation and explicit pause; this is finite browser evidence, not all-event-order or physical-device qualification.",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness. Source-bound regressions cover delayed internal pause delivery, latest-source cancellation, paused-source/unmount controls, imported recording card/deep-link bounds and canonical publication interactions. A local synthetic MP4 fixture exercises actual native video/audio continuation and explicit pause; this is finite browser evidence, not all-event-order or physical-device qualification. Source-bound native-load reset controls and synthetic MP4/M4A browser cases cover chosen and native-control speed across format, quality and chapter replacement; these are finite browser/application tests, not all-platform scheduling or decoder proofs.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
@@ -19096,7 +19096,7 @@
     "tdf-hq-ui/src/player/MediaHealthPanel.tsx": "89b5dcdfb064f1a96720bb0324be6ada544837614f968d3010a95160f51ac0d3",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
     "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx": "3868432fbb203c9a47aff844c5140c26569787a2dc91d0dcd4d320ea8c2c4405",
-    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "0f41ef12fd5936d5c74687051eb3315aa5062e3a8e86b36fea5823b27f54fc5e",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "adddb86b01e71153316218c954e1a9d7afdc7aacc659c87825bd364e22d8eda0",
     "tdf-hq-ui/src/player/PlayerProvider.tsx": "ad1fb0c898bb2cfbb55c1f4df9a3bb94943f3c9ade51f8603fb6085d85a8a985",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
@@ -52532,7 +52532,7 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "0f41ef12fd5936d5c74687051eb3315aa5062e3a8e86b36fea5823b27f54fc5e",
+      "sha256": "adddb86b01e71153316218c954e1a9d7afdc7aacc659c87825bd364e22d8eda0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71052,7 +71052,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dd05b181fc53b828bb4d1135b85e6e0cf8aed45974697d0d346f3bdd1df0c833",
+      "sourceSha256": "45112c4bd8e514460397e96bf4cfa5103951a92c4dd9a047fcf4c7e3b9219917",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -71080,7 +71080,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dd05b181fc53b828bb4d1135b85e6e0cf8aed45974697d0d346f3bdd1df0c833",
+      "sourceSha256": "45112c4bd8e514460397e96bf4cfa5103951a92c4dd9a047fcf4c7e3b9219917",
       "definition": {
         "states": [
           "absent",
@@ -71110,7 +71110,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dd05b181fc53b828bb4d1135b85e6e0cf8aed45974697d0d346f3bdd1df0c833",
+      "sourceSha256": "45112c4bd8e514460397e96bf4cfa5103951a92c4dd9a047fcf4c7e3b9219917",
       "definition": {
         "export": [
           "queued",

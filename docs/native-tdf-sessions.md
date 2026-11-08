@@ -110,3 +110,11 @@ removes its pending listener. Explicit user pause cancels intent synchronously.
 These are covered by controlled asynchronous media-event tests and an owned
 synthetic native MP4 browser fixture, not an all-schedules proof or authorization
 to fetch, publish or operate external media.
+
+
+Playback speed follows the selected player preference across format, quality and
+chapter changes. The element's default and current playback rates stay in sync:
+native `load()` restores the default before its asynchronous `ratechange`
+event. Native rate controls can still update the preference; unsupported global
+speed commands retain the previous selection. This behavior is covered by
+controlled load-reset tests and local synthetic native-media browser cases.
