@@ -902,7 +902,14 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
     if (audioRef.current && currentTrack) positionsRef.current[currentTrack.id] = audioRef.current.currentTime;
     updateMediaMode(mode);
   }, [audioRef, currentTrack]);
-  useEffect(() => { if (audioRef.current) audioRef.current.playbackRate = playbackRate; }, [audioRef, playbackRate, candidates]);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    // Native load() restores this default before emitting ratechange. Keep
+    // both values in sync so replacing a source preserves the user's choice.
+    audio.defaultPlaybackRate = playbackRate;
+    audio.playbackRate = playbackRate;
+  }, [audioRef, playbackRate, candidates]);
 
   const contextValue = useMemo<PlayerContextValue>(() => ({
     queue,

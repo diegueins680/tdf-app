@@ -870,3 +870,78 @@ it('cancels a discarded pause wait when switching engines so returning to native
   expect(player.currentTrack?.id).toBe('return-native');
   expect(player.status).toBe('playing');
 });
+
+async function mountNativeRateResetFixture() {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  const media = view.container.querySelector('video')!;
+  let paused = true;
+  let readiness = 0;
+  let rate = 1;
+  let defaultRate = 1;
+  const changedRate = () => queueMicrotask(() => media.dispatchEvent(new Event('ratechange')));
+  Object.defineProperty(media, 'paused', { configurable: true, get: () => paused });
+  Object.defineProperty(media, 'readyState', { configurable: true, get: () => readiness });
+  Object.defineProperty(media, 'playbackRate', { configurable: true, get: () => rate, set: (value: number) => {
+    if (rate !== value) { rate = value; changedRate(); }
+  } });
+  Object.defineProperty(media, 'defaultPlaybackRate', { configurable: true, get: () => defaultRate, set: (value: number) => {
+    if (defaultRate !== value) { defaultRate = value; changedRate(); }
+  } });
+  jest.mocked(media.pause).mockImplementation(() => {
+    if (!paused) { paused = true; queueMicrotask(() => media.dispatchEvent(new Event('pause'))); }
+  });
+  jest.mocked(media.play).mockImplementation(async () => { paused = false; });
+  jest.mocked(media.load).mockImplementation(() => {
+    readiness = 0;
+    media.currentTime = 0;
+    // Native load restores defaultPlaybackRate and queues ratechange when it
+    // changes the effective rate. Do not model load as a no-op for this test.
+    media.playbackRate = media.defaultPlaybackRate;
+  });
+  const sources = [...nativeTrack().sources, ...nativeTrack().sources.map(source => ({
+    ...source, quality: 'low' as const, url: source.url.replace('session.', 'session-low.'),
+  }))];
+  const first = { ...nativeTrack(), id: 'rate-first', sources };
+  const second = { ...first, id: 'rate-second', startMs: 20000, endMs: 30000 };
+  const ready = async () => {
+    readiness = 1;
+    await act(async () => { media.dispatchEvent(new Event('loadedmetadata')); });
+  };
+  await act(async () => { player.playTrack(first, [first, second]); });
+  await ready();
+  expect(player.status).toBe('playing');
+  return { media, ready };
+}
+
+it.each(['mode', 'quality', 'chapter'] as const)('preserves the chosen playback speed after native load during a %s transition', async transition => {
+  const { media, ready } = await mountNativeRateResetFixture();
+  await act(async () => { player.setPlaybackRate(1.5); });
+  expect(media.playbackRate).toBe(1.5);
+  expect(player.playbackRate).toBe(1.5);
+  await act(async () => {
+    if (transition === 'mode') player.setMediaMode('audio');
+    else if (transition === 'quality') player.setQuality('low');
+    else player.next();
+  });
+  await ready();
+  expect(media.playbackRate).toBe(1.5);
+  expect(player.playbackRate).toBe(1.5);
+  expect(player.status).toBe('playing');
+  if (transition === 'chapter') expect(player.currentTrack?.id).toBe('rate-second');
+  if (transition === 'mode') expect(media.src).toBe('https://media.invalid/session.m4a');
+  if (transition === 'quality') expect(media.src).toBe('https://media.invalid/session-low.mp4');
+});
+
+it('preserves a native-user speed selection through a replacement while keeping zero-speed commands invalid', async () => {
+  const { media, ready } = await mountNativeRateResetFixture();
+  await act(async () => { media.playbackRate = 0.75; });
+  expect(player.playbackRate).toBe(0.75);
+  act(() => { player.setPlaybackRate(0); });
+  expect(player.playbackRate).toBe(0.75);
+  expect(media.playbackRate).toBe(0.75);
+  await act(async () => { player.setMediaMode('audio'); });
+  await ready();
+  expect(media.playbackRate).toBe(0.75);
+  expect(player.playbackRate).toBe(0.75);
+  expect(player.status).toBe('playing');
+});
