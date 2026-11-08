@@ -8743,7 +8743,7 @@
         "Persisted bounded queue and preferences",
         "Playback analytics events"
       ],
-      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing.",
+      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing. Protected identity is checked across every source of a track before audio/video filtering; format selection cannot downgrade denied or malformed identity to an unbound URL.",
       "privacy": "Analytics identity rotates with the session; favorites/history are per account.",
       "concurrency": "Selection and retry races resolved in favor of the latest request (native-player-verification.md).",
       "idempotency": "Analytics ingestion deduplicates by playback identity.",
@@ -8820,7 +8820,8 @@
         "scripts/test-prepare-native-session.py",
         "tdf-hq-ui/src/api/records.test.ts",
         "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
-        "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx"
+        "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx"
       ],
       "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness. Source-bound regressions cover delayed internal pause delivery, latest-source cancellation, paused-source/unmount controls, imported recording card/deep-link bounds and canonical publication interactions. A local synthetic MP4 fixture exercises actual native video/audio continuation and explicit pause; this is finite browser evidence, not all-event-order or physical-device qualification.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
@@ -17653,7 +17654,7 @@
         "Dispose the previous torrent session when its selected source changes.",
         "Hide session-failed radio entries; replace the redundant radio dock with a catalogue launcher when a global track is selected."
       ],
-      "authorization": "Public API membership and the existing asset-access endpoint are authoritative. Protected tracks only fall back to freshly authorized assets. Direct legacy references come only from public releases for the exact Party; provider pages are not extracted.",
+      "authorization": "Public API membership and the existing asset-access endpoint are authoritative. Protected tracks only fall back to freshly authorized assets. Direct legacy references come only from public releases for the exact Party; provider pages are not extracted. Protected identity is checked across every source of a track before audio/video filtering; format selection cannot downgrade denied or malformed identity to an unbound URL.",
       "privacy": "Listening state remains listener-scoped. Server diagnostics expose only source identity/version, status, fixed reason and timestamps to authorized owners, team members or administrators; raw URLs, object keys and credentials are omitted.",
       "concurrency": "Latest profile/source generation and play-attempt fences discard obsolete asynchronous results. Metadata position restoration from main remains fenced to the matching track, URL and generation.",
       "idempotency": "A profile key cannot repeatedly replace its completed queue; failed rendition objects and track IDs are bounded to the current selection context.",
@@ -17687,7 +17688,8 @@
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-        "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx"
+        "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

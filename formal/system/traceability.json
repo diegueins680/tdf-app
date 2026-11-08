@@ -8744,7 +8744,7 @@
         "Persisted bounded queue and preferences",
         "Playback analytics events"
       ],
-      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing.",
+      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing. Protected identity is checked across every source of a track before audio/video filtering; format selection cannot downgrade denied or malformed identity to an unbound URL.",
       "privacy": "Analytics identity rotates with the session; favorites/history are per account.",
       "concurrency": "Selection and retry races resolved in favor of the latest request (native-player-verification.md).",
       "idempotency": "Analytics ingestion deduplicates by playback identity.",
@@ -8821,7 +8821,8 @@
         "scripts/test-prepare-native-session.py",
         "tdf-hq-ui/src/api/records.test.ts",
         "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
-        "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx"
+        "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx"
       ],
       "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness. Source-bound regressions cover delayed internal pause delivery, latest-source cancellation, paused-source/unmount controls, imported recording card/deep-link bounds and canonical publication interactions. A local synthetic MP4 fixture exercises actual native video/audio continuation and explicit pause; this is finite browser evidence, not all-event-order or physical-device qualification.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
@@ -17654,7 +17655,7 @@
         "Dispose the previous torrent session when its selected source changes.",
         "Hide session-failed radio entries; replace the redundant radio dock with a catalogue launcher when a global track is selected."
       ],
-      "authorization": "Public API membership and the existing asset-access endpoint are authoritative. Protected tracks only fall back to freshly authorized assets. Direct legacy references come only from public releases for the exact Party; provider pages are not extracted.",
+      "authorization": "Public API membership and the existing asset-access endpoint are authoritative. Protected tracks only fall back to freshly authorized assets. Direct legacy references come only from public releases for the exact Party; provider pages are not extracted. Protected identity is checked across every source of a track before audio/video filtering; format selection cannot downgrade denied or malformed identity to an unbound URL.",
       "privacy": "Listening state remains listener-scoped. Server diagnostics expose only source identity/version, status, fixed reason and timestamps to authorized owners, team members or administrators; raw URLs, object keys and credentials are omitted.",
       "concurrency": "Latest profile/source generation and play-attempt fences discard obsolete asynchronous results. Metadata position restoration from main remains fenced to the matching track, URL and generation.",
       "idempotency": "A profile key cannot repeatedly replace its completed queue; failed rendition objects and track IDs are bounded to the current selection context.",
@@ -17688,7 +17689,8 @@
         "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-        "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx"
+        "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -19023,8 +19025,9 @@
     "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx": "3147970615b60f9760b4a6f285dea369c76785e6748e30ce479dff9e4cb51b14",
     "tdf-hq-ui/src/player/MediaHealthPanel.tsx": "89b5dcdfb064f1a96720bb0324be6ada544837614f968d3010a95160f51ac0d3",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
+    "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx": "3868432fbb203c9a47aff844c5140c26569787a2dc91d0dcd4d320ea8c2c4405",
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "0f41ef12fd5936d5c74687051eb3315aa5062e3a8e86b36fea5823b27f54fc5e",
-    "tdf-hq-ui/src/player/PlayerProvider.tsx": "8b9a41d30bf50439679135581bbd0e7923da6f1a0cf2679877559a8ba8081cbc",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "ad1fb0c898bb2cfbb55c1f4df9a3bb94943f3c9ade51f8603fb6085d85a8a985",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
     "tdf-hq-ui/src/player/analytics.ts": "004329c88a0e171892b21295bf6464d3922bb379ab9c09239f1566ce6356b169",
@@ -29389,6 +29392,16 @@
     "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-ARTIST-PLAYBACK-001",
         "relationship": "tests"
       }
     ],
@@ -52395,6 +52408,22 @@
       ]
     },
     {
+      "id": "SURFACE-f5f3dd94755c50bc",
+      "path": "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx",
+      "sha256": "3868432fbb203c9a47aff844c5140c26569787a2dc91d0dcd4d320ea8c2c4405",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MEDIA-ARTIST-PLAYBACK-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "sha256": "0f41ef12fd5936d5c74687051eb3315aa5062e3a8e86b36fea5823b27f54fc5e",
@@ -52421,7 +52450,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "8b9a41d30bf50439679135581bbd0e7923da6f1a0cf2679877559a8ba8081cbc",
+      "sha256": "ad1fb0c898bb2cfbb55c1f4df9a3bb94943f3c9ade51f8603fb6085d85a8a985",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70917,7 +70946,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "71401d1525680b5a6c9ea4aefa16fab4b42df93cf895282a286f8c2bed652887",
+      "sourceSha256": "24b28396c2ad7ceb9946b38a3d491c26acea698f1b5c8df2855e696732fbfcf8",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70945,7 +70974,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "71401d1525680b5a6c9ea4aefa16fab4b42df93cf895282a286f8c2bed652887",
+      "sourceSha256": "24b28396c2ad7ceb9946b38a3d491c26acea698f1b5c8df2855e696732fbfcf8",
       "definition": {
         "states": [
           "absent",
@@ -70975,7 +71004,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "71401d1525680b5a6c9ea4aefa16fab4b42df93cf895282a286f8c2bed652887",
+      "sourceSha256": "24b28396c2ad7ceb9946b38a3d491c26acea698f1b5c8df2855e696732fbfcf8",
       "definition": {
         "export": [
           "queued",

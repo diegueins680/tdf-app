@@ -12,9 +12,9 @@ fixes. Audio mode never falls back to downloading video. Ready native artist
 recordings now participate in the profile queue with exact Party filtering.
 
 The latest held composition passed type checking, two transport/artist suites
-with132 tests and three artist suites with41 tests. The earlier restored source
+with132 tests and three artist suites with41 tests. The track-wide authorization repair then passed three core suites/136 tests, including four controls that failed when format filtering downgraded protected identity. The earlier restored source
 64eeb8e64 passed368 suites/4208 tests; that whole-suite result predates native
-composition. Fresh full UI/browser and hosted checks remain pending. Local
+composition. The native composition subsequently completed375 suites/4311 tests and45 native browser cases across Chromium desktop/phone and Firefox. Those runs predate the track-wide identity repair; fresh full UI/browser runs for the corrected source and hosted checks remain pending. Local
 browser attempts stopped before test execution on sandbox loopback permission
 and then missing jq PATH; both are retained as harness failures.
 

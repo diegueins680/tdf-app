@@ -1513,6 +1513,7 @@
       "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx",
       "tdf-hq-ui/src/player/MediaHealthPanel.tsx",
       "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+      "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.tsx",
       "tdf-hq-ui/src/player/PlayerShell.tsx",
@@ -11997,6 +11998,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f5f3dd94755c50bc",
+      "path": "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx",
+      "sha256": "3868432fbb203c9a47aff844c5140c26569787a2dc91d0dcd4d320ea8c2c4405",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "sha256": "0f41ef12fd5936d5c74687051eb3315aa5062e3a8e86b36fea5823b27f54fc5e",
@@ -12005,7 +12012,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "8b9a41d30bf50439679135581bbd0e7923da6f1a0cf2679877559a8ba8081cbc",
+      "sha256": "ad1fb0c898bb2cfbb55c1f4df9a3bb94943f3c9ade51f8603fb6085d85a8a985",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23715,7 +23722,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "6e9b8f3cee7a2244aba4a7b99a9899ecfe184344a430f8fb3e6458cc79f7db89",
+      "sha256": "1e704a6a50ad5e790f1c9810377f2ccc6e9fb98643b4c5aad8b1d9b0f57ce6c0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30617,7 +30624,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "71401d1525680b5a6c9ea4aefa16fab4b42df93cf895282a286f8c2bed652887",
+      "sha256": "24b28396c2ad7ceb9946b38a3d491c26acea698f1b5c8df2855e696732fbfcf8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -354,8 +354,10 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
   useLayoutEffect(() => { audioRef.current = nativeVideo ? nativeVideoRef.current : legacyAudioRef.current; }, [nativeVideo]);
   const candidates = useMemo(() => {
     if (!currentTrack || !nativeVideo) return orderedSources(currentTrack, quality);
-    const forMode = (mode: 'audio' | 'video') => orderedSources({ ...currentTrack,
-      sources: currentTrack.sources.filter(candidate => candidate.mediaType?.startsWith(`${mode}/`)) }, quality);
+    // Apply the complete track's protected-identity boundary before filtering
+    // formats; a denied video grant cannot authorize an unbound audio URL.
+    const eligible = orderedSources(currentTrack, quality);
+    const forMode = (mode: 'audio' | 'video') => eligible.filter(candidate => candidate.mediaType?.startsWith(`${mode}/`));
     // Video may degrade to the independent audio rendition. An explicit audio
     // choice must never spend bandwidth downloading video as a fallback.
     return mediaMode === 'video' ? [...forMode('video'), ...forMode('audio')] : forMode('audio');
@@ -1332,6 +1334,7 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
             }
             nativeGestureRef.current = false;
             autoplayRef.current = true; setPlaybackRequested(true);
+            armWatchdogRef.current();
             window.dispatchEvent(new CustomEvent(PLAYER_TAKEOVER_EVENT));
           }}
           style={{ display: 'block', width: '100%', maxHeight: '45vh' }} />
