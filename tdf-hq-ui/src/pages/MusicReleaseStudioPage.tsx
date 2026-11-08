@@ -412,6 +412,11 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
   const updatedAt = useRef('');
   const canEdit = version.data ? ['draft','uploading','processing','validation_failed','changes_requested'].includes(version.data.state) : false;
   const editable = canEdit && !isSaving && !actionPending;
+  // While a file is being transferred the editor stays locked through
+  // `editable`, but the fieldset-level lock below is lifted: a disabled
+  // fieldset disables every descendant button, including the per-file
+  // "Cancelar carga" control, which must keep receiving clicks.
+  const uploading = Object.values(uploads).some((state) => state.inFlight === true);
   const isAdmin = session?.roles.some((role) => ['admin','superadmin','owner'].includes(role.toLowerCase())) ?? false;
   const analytics = useQuery({
     queryKey: ['music-release-analytics', releaseId, analyticsFrom, analyticsTo],
@@ -763,7 +768,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
         : undefined
     }>Esta versión es inmutable. Las correcciones crean un nuevo grafo editable y conservan esta versión intacta.</Alert>}
 
-    <Box component="fieldset" disabled={isSaving || actionPending} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
+    <Box component="fieldset" disabled={isSaving || (actionPending && !uploading)} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
     <Stack spacing={3}>
     <Card><CardContent><Stack spacing={2}>
       <Typography variant="h6">1. Metadatos del release</Typography>
@@ -930,15 +935,15 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
           <Button color="warning" disabled={actionPending || currentVersion.state !== 'in_review' || !reviewBody.trim()} onClick={() => void requestChanges()}>Solicitar cambios</Button>
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <Button disabled={currentVersion.state !== 'ready_for_review'} onClick={() => void transition('in_review')}>Iniciar revisión</Button>
-          <Button disabled={currentVersion.state !== 'in_review'} onClick={() => void transition('approved')}>Aprobar versión inmutable</Button>
+          <Button disabled={actionPending || currentVersion.state !== 'ready_for_review'} onClick={() => void transition('in_review')}>Iniciar revisión</Button>
+          <Button disabled={actionPending || currentVersion.state !== 'in_review'} onClick={() => void transition('approved')}>Aprobar versión inmutable</Button>
           <TextField type="datetime-local" label="Publicar" InputLabelProps={{ shrink: true }} value={scheduleLocal} onChange={(event) => setScheduleLocal(event.target.value)} />
-          <Button variant="contained" disabled={!scheduleLocal || currentVersion.state !== 'approved'} onClick={() => void transition('scheduled', { releaseAtUtc: new Date(scheduleLocal).toISOString(), releaseTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone, embargoUntilUtc: new Date(scheduleLocal).toISOString() })}>Programar</Button>
+          <Button variant="contained" disabled={actionPending || !scheduleLocal || currentVersion.state !== 'approved'} onClick={() => void transition('scheduled', { releaseAtUtc: new Date(scheduleLocal).toISOString(), releaseTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone, embargoUntilUtc: new Date(scheduleLocal).toISOString() })}>Programar</Button>
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <Button color="error" disabled={!['in_review','approved','scheduled','published'].includes(currentVersion.state)} onClick={() => void transition('suspended', { reason: 'Suspensión editorial desde Studio' })}>Suspender</Button>
+          <Button color="error" disabled={actionPending || !['in_review','approved','scheduled','published'].includes(currentVersion.state)} onClick={() => void transition('suspended', { reason: 'Suspensión editorial desde Studio' })}>Suspender</Button>
           <TextField type="datetime-local" label="Retirar" InputLabelProps={{ shrink: true }} value={takedownLocal} onChange={(event) => setTakedownLocal(event.target.value)} />
-          <Button color="error" disabled={!takedownLocal || !['published','suspended','replacement_pending'].includes(currentVersion.state)} onClick={() => void transition('takedown_scheduled', { reason: 'Retiro programado desde Studio', takedownAtUtc: new Date(takedownLocal).toISOString(), takedownTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone })}>Programar retiro</Button>
+          <Button color="error" disabled={actionPending || !takedownLocal || !['published','suspended','replacement_pending'].includes(currentVersion.state)} onClick={() => void transition('takedown_scheduled', { reason: 'Retiro programado desde Studio', takedownAtUtc: new Date(takedownLocal).toISOString(), takedownTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone })}>Programar retiro</Button>
           <Button color="error" disabled={!editable} onClick={() => void transition('cancelled', { reason: 'Cancelación editorial desde Studio' })}>Cancelar borrador</Button>
         </Stack></>}
     </Stack></CardContent></Card>
