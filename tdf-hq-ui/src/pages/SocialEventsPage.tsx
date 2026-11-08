@@ -1,5 +1,6 @@
 import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
 import { buildEventFinanceCsvRows } from '../utils/eventFinanceCsv';
+import { serializeCsvCell, type CsvCell } from '../utils/csv';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
@@ -19,6 +20,8 @@ import {
   DialogTitle,
   Divider,
   Grid,
+  FormControlLabel,
+  Switch,
   MenuItem,
   Stack,
   TextField,
@@ -37,7 +40,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { DateTime } from 'luxon';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import {
   SocialEventsAPI,
   type SocialEventDTO,
@@ -69,6 +72,8 @@ import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
 import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel';
 import { RefundManagementPanel } from '../components/RefundManagementPanel';
+import EventArtistSelector from '../components/events/EventArtistSelector';
+import { EVENT_PAGE_SIZE, eventArtistIds, eventPage, isPastEvent } from './eventDiscoveryFilters';
 
 interface InvitationState {
   party: PartySelectorOption | null;
@@ -242,11 +247,8 @@ const parseOptionalUnsignedInt = (value: string): number | null => {
 
 const dateKeyFromIso = (iso: string) => DateTime.fromISO(iso).toISODate() ?? '';
 
-const csvEscape = (value: string | number | boolean | null | undefined) =>
-  `"${String(value ?? '').replace(/"/g, '""')}"`;
-
-const downloadCsvFile = (filename: string, rows: (string | number | boolean | null | undefined)[][]) => {
-  const csv = rows.map((row) => row.map(csvEscape).join(',')).join('\n');
+const downloadCsvFile = (filename: string, rows: CsvCell[][]) => {
+  const csv = rows.map((row) => row.map(serializeCsvCell).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -264,9 +266,29 @@ export default function SocialEventsPage() {
   const { session } = useSession();
   const { locale } = useLocalePreferences();
   const preferredCurrency = resolveRuntimeCurrency();
-  const [city, setCity] = useState('');
-  const [eventTypeFilter, setEventTypeFilter] = useState('');
-  const [eventWorkflowStateFilter, setEventWorkflowStateFilter] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const city = searchParams.get('city') ?? '';
+  const eventTypeFilter = searchParams.get('type') ?? '';
+  const eventWorkflowStateFilter = searchParams.get('state') ?? '';
+  const artistIds = eventArtistIds(searchParams.get('artists'));
+  const includePast = searchParams.get('past') === '1';
+  const page = eventPage(searchParams.get('page'));
+  const [cityFilter, setCityFilter] = useState(city.trim());
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setCityFilter(city.trim()), 350);
+    return () => window.clearTimeout(timeout);
+  }, [city]);
+  const updateFilter = (key: string, value: string) => setSearchParams(previous => {
+    const next = new URLSearchParams(previous);
+    if (value) next.set(key, value); else next.delete(key);
+    if (key !== 'page') next.delete('page');
+    return next;
+  }, { replace: key === 'city' });
+  const clearFilters = () => setSearchParams(previous => {
+    const next = new URLSearchParams(previous);
+    ['city', 'type', 'state', 'artists', 'past', 'page'].forEach(key => next.delete(key));
+    return next;
+  });
   const [feedback, setFeedback] = useState<{ kind: 'success' | 'error'; message: string } | null>(null);
   const [invites, setInvites] = useState<Record<string, InvitationState>>({});
   const [ticketPurchases, setTicketPurchases] = useState<Record<string, TicketPurchaseState>>({});
@@ -279,21 +301,25 @@ export default function SocialEventsPage() {
   const [eventPosterFiles, setEventPosterFiles] = useState<Record<string, File | null>>({});
   const [pendingEventDeletion, setPendingEventDeletion] = useState<PendingEventDeletion | null>(null);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(() => DateTime.local().toISODate() ?? '');
-  const startAfter = useMemo(() => new Date().toISOString(), []);
   const sessionPartyId = session?.partyId != null ? String(session.partyId) : null;
   const hasSession = Boolean(sessionPartyId);
   const hasAdminAccess = hasStrictAdminAccess(session?.roles, session?.modules);
-  const eventsQueryKey = ['social-events', city, eventTypeFilter, eventWorkflowStateFilter, startAfter] as const;
+  const eventsQueryKey = ['social-events', sessionPartyId, cityFilter, eventTypeFilter, eventWorkflowStateFilter, artistIds.join(','), includePast, page] as const;
 
   const eventsQuery = useQuery({
     queryKey: eventsQueryKey,
-    queryFn: () =>
+    queryFn: ({ signal }) =>
       SocialEventsAPI.listEvents({
-        city: city.trim() || undefined,
+        city: cityFilter || undefined,
         eventTypeId: eventTypeFilter || undefined,
         workflowStateId: eventWorkflowStateFilter || undefined,
-        startAfter,
+        artistIds,
+        startAfter: includePast ? undefined : new Date().toISOString(),
+        limit: EVENT_PAGE_SIZE + 1,
+        offset: (page - 1) * EVENT_PAGE_SIZE,
+        signal,
       }),
+    enabled: city.trim() === cityFilter,
     // This page already exposes an explicit refresh action. Retrying a failed
     // request with the app-wide defaults (up to three additional 30s requests)
     // leaves the page looking stuck for well over a minute when the API is
@@ -301,11 +327,6 @@ export default function SocialEventsPage() {
     retry: false,
   });
 
-  const venuesQuery = useQuery({
-    queryKey: ['social-venues', city],
-    queryFn: () => SocialEventsAPI.listVenues({ city: city.trim() || undefined }),
-    retry: false,
-  });
   const eventTypesQuery = useQuery({
     queryKey: ['catalog', 'event-types', 'social-events', locale],
     queryFn: () => Catalogs.listItems('event-types', {
@@ -332,16 +353,31 @@ export default function SocialEventsPage() {
     [eventTypesQuery.data?.items],
   );
 
-  const venueById = useMemo(() => {
-    const map = new Map<string, string>();
-    (venuesQuery.data ?? []).forEach((v) => {
-      if (v.venueId) map.set(v.venueId, v.venueName);
-    });
-    return map;
-  }, [venuesQuery.data]);
+  const events = useMemo(() => (eventsQuery.data ?? []).slice(0, EVENT_PAGE_SIZE), [eventsQuery.data]);
 
-  const events = useMemo(() => eventsQuery.data ?? [], [eventsQuery.data]);
-  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '';
+  // Resolve only the displayed page, deduplicating shared venues. Catalog
+  // ordering, city and list pagination must never affect event venue names.
+  const venueIds = useMemo(
+    () => Array.from(new Set(events.flatMap((event) => event.eventVenueId ? [event.eventVenueId] : []))),
+    [events],
+  );
+  const venueQueries = useQueries({
+    queries: venueIds.map((venueId) => ({
+      queryKey: ['social-venue', sessionPartyId, venueId],
+      queryFn: ({ signal }: { signal: AbortSignal }) => SocialEventsAPI.getVenue(venueId, signal),
+      retry: false,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const venueLabelById = new Map(venueIds.map((venueId, index) => [
+    venueId,
+    venueQueries[index]?.data?.venueName
+      ?? (venueQueries[index]?.isError ? 'No se pudo cargar la sede' : 'Cargando sede…'),
+  ]));
+  const hasVenueError = venueQueries.some((query) => query.isError);
+
+  const hasNextPage = (eventsQuery.data?.length ?? 0) > EVENT_PAGE_SIZE;
+  const eventFiltersActive = city.trim().length > 0 || eventTypeFilter !== '' || eventWorkflowStateFilter !== '' || artistIds.length > 0 || includePast || page > 1;
   const eventOverviewUiState = getSocialEventsOverviewUiState({
     canCreateEvent: hasSession,
     eventCount: events.length,
@@ -353,7 +389,7 @@ export default function SocialEventsPage() {
     filtersActive: eventFiltersActive,
     listLoadSucceeded: eventsQuery.isSuccess,
   });
-  const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || venuesQuery.isError;
+  const showRefreshAction = eventOverviewUiState.showRefreshAction || eventsQuery.isError || hasVenueError;
 
   const deleteEventMutation = useMutation({
     mutationFn: ({ eventId }: PendingEventDeletion) => SocialEventsAPI.deleteEvent(eventId),
@@ -404,14 +440,15 @@ export default function SocialEventsPage() {
     return parsed.setLocale('es').toFormat('cccc d LLL yyyy');
   }, [selectedCalendarDate]);
 
+  // Re-anchor the calendar only when the loaded results change (new filters,
+  // page or refetch). A date the person picks explicitly is kept even when it
+  // has no events, so the empty-date explanation and its shortcut stay usable.
   useEffect(() => {
-    if (selectedCalendarDate) return;
-    if (calendarDateOptions.length > 0) {
-      setSelectedCalendarDate(calendarDateOptions[0] ?? '');
-      return;
-    }
-    setSelectedCalendarDate(DateTime.local().toISODate() ?? '');
-  }, [calendarDateOptions, selectedCalendarDate]);
+    setSelectedCalendarDate((current) => {
+      if (calendarDateOptions.includes(current)) return current;
+      return calendarDateOptions[0] ?? DateTime.local().toISODate() ?? '';
+    });
+  }, [calendarDateOptions]);
 
   const invitationQueries = useQueries({
     queries:
@@ -942,22 +979,25 @@ export default function SocialEventsPage() {
         <Typography color="text.secondary">
           Descubre eventos, confirma asistencia y gestiona operación completa: tickets, presupuesto y contabilidad por evento.
         </Typography>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ xs: 'stretch', sm: 'center' }}>
-          {eventOverviewUiState.showFilters && (
+        <Stack direction={{ xs: 'column', md: 'row' }} useFlexGap flexWrap="wrap" spacing={1} alignItems={{ xs: 'stretch', md: 'flex-start' }}>
+          {(
             <>
               <TextField
-                label="Filtrar por ciudad"
+                label="Ciudad"
                 size="small"
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
-                sx={{ minWidth: 220 }}
+                onChange={(e) => updateFilter('city', e.target.value)}
+                sx={{ minWidth: 0, width: { xs: '100%', md: 220 } }}
               />
+              <Box sx={{ width: { xs: '100%', md: 330 }, minWidth: 0 }}>
+                <EventArtistSelector artistIds={artistIds} onChange={ids => updateFilter('artists', ids.join(','))} />
+              </Box>
               <TextField
                 select
                 label="Tipo"
                 size="small"
                 value={eventTypeFilter}
-                onChange={(e) => setEventTypeFilter(e.target.value)}
+                onChange={(e) => updateFilter('type', e.target.value)}
                 sx={{ minWidth: 150 }}
               >
                 <MenuItem value="">Todos</MenuItem>
@@ -970,7 +1010,7 @@ export default function SocialEventsPage() {
                 label="Estado"
                 size="small"
                 value={eventWorkflowStateFilter}
-                onChange={(e) => setEventWorkflowStateFilter(e.target.value)}
+                onChange={(e) => updateFilter('state', e.target.value)}
                 sx={{ minWidth: 150 }}
               >
                 <MenuItem value="">Todos</MenuItem>
@@ -980,13 +1020,17 @@ export default function SocialEventsPage() {
               </TextField>
             </>
           )}
+          <FormControlLabel label="Incluir eventos pasados" control={
+            <Switch checked={includePast} onChange={(_event, checked) => updateFilter('past', checked ? '1' : '')} />
+          } />
+          {eventFiltersActive && <Button onClick={clearFilters}>Limpiar filtros</Button>}
           {showRefreshAction && (
             <Button
               variant="outlined"
               startIcon={<RefreshIcon />}
               onClick={() => {
                 void eventsQuery.refetch();
-                void venuesQuery.refetch();
+                venueQueries.forEach((query) => { void query.refetch(); });
               }}
               disabled={eventsQuery.isFetching}
             >
@@ -1003,7 +1047,7 @@ export default function SocialEventsPage() {
               Nuevo evento
             </Button>
           )}
-          {!hasSession && eventOverviewUiState.showFilters && (
+          {!hasSession && (
             <Alert severity="info" sx={{ m: 0, py: 0.5 }}>
               Inicia sesión para RSVP, invitaciones, tickets y gestión financiera.
             </Alert>
@@ -1055,12 +1099,17 @@ export default function SocialEventsPage() {
             <Stack spacing={1.5}>
               <Stack direction="row" alignItems="center" spacing={1} justifyContent="space-between">
                 <Typography variant="h6" fontWeight={700}>Calendario de eventos</Typography>
-                <Chip size="small" label={`${events.length} evento${events.length === 1 ? '' : 's'}`} />
+                <Chip size="small" label={`${events.length} evento${events.length === 1 ? '' : 's'} en esta página`} />
               </Stack>
               <Grid container spacing={2}>
                 <Grid item xs={12} md={5}>
-                  <LocalizationProvider dateAdapter={AdapterLuxon}>
+                  <LocalizationProvider dateAdapter={AdapterLuxon} adapterLocale="es">
                     <DateCalendar
+                      sx={{ width: '100%', maxWidth: 320, '& .MuiDayCalendar-header, & .MuiDayCalendar-weekContainer': { justifyContent: 'space-around' }, '& .MuiPickersDay-root': { width: 30, height: 30, mx: 0 } }}
+                      slotProps={{ day: owner => {
+                        const count = eventsByDate.get(owner.day.toISODate() ?? '')?.length ?? 0;
+                        return count ? { title: `${count} eventos`, sx: { fontWeight: 800, textDecoration: 'underline', textUnderlineOffset: '4px' } } : {};
+                      } }}
                       value={selectedCalendarValue}
                       onChange={(value: DateTime | null) => {
                         const nextDate = value?.toISODate();
@@ -1077,7 +1126,7 @@ export default function SocialEventsPage() {
                     </Typography>
                     {selectedCalendarEvents.length === 0 ? (
                       <Typography variant="body2" color="text.secondary">
-                        Sin eventos programados para esta fecha.
+                        Sin eventos programados para esta fecha. La lista inferior muestra todos los resultados de esta página.
                       </Typography>
                     ) : (
                       <Stack spacing={1}>
@@ -1100,13 +1149,14 @@ export default function SocialEventsPage() {
                             </Typography>
                             {event.eventVenueId && (
                               <Typography variant="caption" color="text.secondary" display="block">
-                                {venueById.get(event.eventVenueId) ?? 'Venue por definir'}
+                                {venueLabelById.get(event.eventVenueId)}
                               </Typography>
                             )}
                           </Box>
                         ))}
                       </Stack>
                     )}
+                    {selectedCalendarEvents.length === 0 && calendarDateOptions.length > 0 && <Button onClick={() => setSelectedCalendarDate(calendarDateOptions[0] ?? '')}>Ver una fecha con eventos</Button>}
                     {calendarDateOptions.length === 0 && (
                       <Typography variant="caption" color="text.secondary">
                         Aún no hay eventos para mostrar en el calendario.
@@ -1128,13 +1178,16 @@ export default function SocialEventsPage() {
 
       {eventsQuery.error ? (
         <Alert severity="error">No pudimos cargar los eventos. Intenta de nuevo.</Alert>
-      ) : eventsQuery.isLoading ? (
+      ) : eventsQuery.isLoading || city.trim() !== cityFilter ? (
         <Stack direction="row" spacing={1.5} alignItems="center">
           <CircularProgress size={18} />
           <Typography>Cargando eventos...</Typography>
         </Stack>
       ) : events.length === 0 ? (
-        <Alert severity="info">{eventOverviewUiState.emptyEventsMessage}</Alert>
+        <Alert severity="info" action={!includePast ? <Button onClick={() => updateFilter('past', '1')}>Incluir pasados</Button> : undefined}>
+          No hay eventos que coincidan con los filtros de esta página. Ajusta ciudad, artistas, tipo o estado.
+          {page > 1 && <Button onClick={() => updateFilter('page', '')}>Volver a la primera página</Button>}
+        </Alert>
       ) : (
         <Grid container spacing={2}>
           {events.map((ev, index) => {
@@ -1227,6 +1280,7 @@ export default function SocialEventsPage() {
                         </Typography>
                       </Stack>
                       <Stack direction="row" spacing={1} flexWrap="wrap">
+                        {isPastEvent(ev, Date.now()) && <Chip label="Evento pasado" size="small" />}
                         {ev.eventCapacity ? <Chip label={`Cupo: ${ev.eventCapacity}`} size="small" /> : null}
                         {ev.eventTypeId ? (
                           <Chip
@@ -1271,7 +1325,7 @@ export default function SocialEventsPage() {
                     )}
                     {ev.eventVenueId && (
                       <Typography variant="body2" color="text.secondary">
-                        {venueById.get(ev.eventVenueId) ?? 'Venue por definir'}
+                        {venueLabelById.get(ev.eventVenueId)}
                       </Typography>
                     )}
                     {ev.eventArtists?.length ? (
@@ -2129,6 +2183,12 @@ export default function SocialEventsPage() {
           })}
         </Grid>
       )}
+      {(page > 1 || hasNextPage) && <Stack direction="row" spacing={1} alignItems="center" justifyContent="center" sx={{ my: 2 }}>
+        <Button disabled={page === 1 || eventsQuery.isFetching} onClick={() => updateFilter('page', String(page - 1))}>Anterior</Button>
+        <Typography>Página {page}</Typography>
+        <Button disabled={!hasNextPage || page === 501 || eventsQuery.isFetching} onClick={() => updateFilter('page', String(page + 1))}>Siguiente</Button>
+      </Stack>}
+      {page === 501 && hasNextPage && <Alert severity="info">Hay más resultados. Refina los filtros para consultar otros eventos.</Alert>}
       <Dialog
         open={pendingEventDeletion !== null}
         onClose={() => {

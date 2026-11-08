@@ -1,0 +1,100 @@
+ACCEPT — frozen final-source composition and control-evidence review
+
+Source b94c353569c6219e9ef70b0feeddd7d32abe223c, parent609776108e346fabb59ea0073d19e2f0bf9b9222, protected-main baseline234ff6f7faf1aecf347c8e92a374228f4ec07aaa. This accepts the reviewed source composition and completed control evidence, not running/future full-UI/root-quality gates or final report/archive/integration. No source/driver/ref was changed and no new test/runtime was executed in this review task.
+
+Git source and scope
+I verified clean source and normal ancestry609→c9b2c63→4ae1660→b94. The separate gallery test commit adopts exactly the MINIMAL candidate SHA2564f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48. The optional strict captured-reference experiment is not adopted and is excluded from combined control counts. Gallery production bytes remain exact parent. Relative to c9, the only UI-tree change is that test; torrent browser-runtime/config/fixture components retain their qualified c9 identities.
+
+All159 earlier requirement objects compare exact by value. Owned160 SYS-WEBTORRENT-BROWSER-001 differs only in statement, and new161 MUSIC-TORRENT-CONTROL-001 includes the actual CI pipeline test mapping. Backend/Mobile trees, manifests/locks, audit policy, reviewed vendor checker, official browser module, provenance manifest/inventory, public notices and catalog-decision file are exact parent609. Historical report/evidence paths are unchanged. Derived inventory/traceability regeneration does not grant additional runtime assurance.
+
+Parsed CI fixture correction
+The final static test reads actual YAML and requires the actual torrent command, unconditional step, no job/step continue-on-error, exact Chromium/Firefox/WebKit projects, zero retries, both artifact paths, upload-artifactv7, always() and14-day retention. This repairs the obsolete singleton path regex while preserving and strengthening the artifact/gate requirements. No workflow/runtime behavior was changed by this test-only repair relative to c9.
+
+I independently rehashed all five CI control input bindings against Git b94 and all11 control logs. Nine deliberate CI faults each have actualexit1 and exactly one ERR_ASSERTION failure; valid-before/after are0. Faults remove each artifact path or torrent command, change upload condition, ignore job/step errors, disable the step, drop WebKit or enable retries. No import/tool/syntax error substitutes for assertion detection. These are copied static CI controls, not hosted workflow executions.
+
+Combined control evidence
+The nine worker/resource variants retain exact b94 input hashes and13 failed assertions. The nine CI variants contribute9. The adopted minimal gallery clock experiment contributes2 variants/3 failed assertions: close omission fails both removal cases, and disabled focus restoration fails the focus case; its original/restored production source passes3/0. Raw clean experiment logs and candidate/production hashes bind directly to final Git. Therefore the supported combined count is20 semantic variants/25 failed assertions, excluding optional strict-gallery experiments and intentionally unselected helper cases. A finite195ms actual-MUI clock models that isolated test's configured transition; it does not prove the precise scheduling cause of the original full-suite failure. That c9 failure remains historical FAILED/UNKNOWN cause.
+
+Assurance and pending gates
+The fresh assurance report is source b94 with execution passed, clean source provenance,161 whole requirements/322 implementation-refinement obligations UNPROVEN and retained11 conditional SMT results under their existing assumptions. I rehashed all52 referenced assurance artifacts. Formal release remains BLOCKED and executionAllowed=false; no new complete proof follows.
+
+Fresh full UI and root quality were still running/pending in the requested review state. I do not promote them to passed; final raw logs/exits and source hashes must be reviewed when complete. Dedicated14-case browser evidence remains labeled c9 component execution with actual runtime parity, while new whole-UI execution must be labeled b94. Final seal/report/archive/current-head hosted CI and required GitHub review also remain future here.
+
+Draft seal assessment
+The updated code correctly distinguishes current full UI from prior exact runtime browser evidence, binds the adopted minimal gallery controls and rejects alternate candidate hashes, parses actual CI/worker fault counts, retains source/proof limits and expects20 variants. It is reviewed as code only until actual seal outputs/negative controls exist. No further confirmed blocking source-composition defect was found.
+
+Retained product limits
+Normal browser scope/URL identity is trusted; this is not installed-byte attestation or atomic exclusion of arbitrary concurrent same-origin registration. Empty-client-ID/direct-navigation requests retain legacy broadcast behavior. Multiple independent servers in one document, arbitrary peers, universal stream completion and WebKit/physical-device playback remain outside local claims. The15s bound covers the first reply, not every stream-body read. No production incident, provider/financial operation, deployment or GitHub approval is asserted.
+
+Qualification artifact SHA256
+source-state.json: 03a68c9cb69d96d051de32e224e9a3d931478b6cb43be9e0f5847d2ae90b3df5
+ci-mutation-controls.json: afe12b3a9c4b189441ccf60b638c0e6cf3e8713dc687fe63d0ac4da4ec70d096
+mutation-controls.json: 7c995a53bfa43afe184f6cdfcc9d905d5c8e0a4f8bb4e164c9498cd3e6d6f284
+gallery-clock/clean-clock-controls.json: 80792279346c2ffd98a27d3fce86402c79d55b4f6497f90c46fb1079d5d21984
+assurance-committed/report.json: c94d28985e7706d56c16fd158cdf94be6ea522210067c8349055c0c7aaa18537
+assurance-committed/sources.json: 5621e0b0be81cb423d38daa4630745a42b3b719f646261b3215c316b2b498235
+independent-final-source-review.json: 17560a302959c45cc955ba0494517f8fe71a6dfc341632788fd9ac84a5c726a0
+
+Key final source SHA256
+scripts/__tests__/ci-pipeline.test.mjs: e7cc178daa1f553d6f71672f67ed29687bc49606024924f4ea53f58123349dcc
+formal/system/requirements.json: c05c9ccb77bf158b1c9bcd8cd375335e37da8987005f41e595b99b7f593b1001
+formal/system/torrent-worker-control.md: 0ddba79a62ef9f2c47df490c2931abcbaa2bfa0676a5e2e52737f85d92b42c12
+formal/system/webtorrent-browser.md: f7a82405326a5a53dfb429a9530ccc2153a37886be8ef18b6d441706b0ee649f
+tdf-hq-ui/src/components/StudioGallery.test.tsx: 4f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48
+tdf-hq-ui/src/components/StudioGallery.tsx: 20cea2f374e690a0f3b65115628b2e76cfc080e31a96ac93cc5dfb2ab3e630b6
+.github/workflows/ci.yml: 7eb38dd84125ac0757fc24d2d0e2af5972628ec4d5e09d6d37667433ac3fcd20
+tdf-hq-ui/src/utils/torrentWorker.ts: 191d976579abb09a50a49859d9531babc82ff845eff3ba24c200ae2ab79053bd
+tdf-hq-ui/public/webtorrent-sw.min.js: 3ec29705ef26b6011113f31ca60d1b0726d2b58de1385277634345b70edeb024
+
+Reviewed draft seal SHA256: 840ad67803c21ddc5d22e4d8bc1ef5dee1510968cfc2bd2788072744f4756724
+
+
+ACCEPT — final local qualification and evidence-binding review
+
+Source b94c353569c6219e9ef70b0feeddd7d32abe223c; parent609776108e346fabb59ea0073d19e2f0bf9b9222; main baseline234ff6f7faf1aecf347c8e92a374228f4ec07aaa. Source is clean. The earlier final-source review is preserved unchanged with its then-pending execution state; this receipt updates only the completed qualification assessment. No new runtime/control/test execution or source/driver modification was performed in this final review. Earlier independently executed Node14 and private actual-MUI controls retain their separate recorded scope.
+
+Independent binding checks
+I rehashed all1455 registered Git/worktree/Mobile source files and52 assurance artifacts, verified source fingerprint/provenance identity and all changed source hashes, and decoded actual raw Playwright lifecycle/media attachments. Earlier verified preservation remains:159 prior norms exact, owned160 statement-only amendment, new161 mapping; backend/Mobile/locks/vendor module/provenance/notices/catalog/historical reports exact parent. The adopted gallery test is minimal4f8ca422..., not optional strict.
+
+Completed current qualification
+Fresh canonical quality-ui actually exited0 at b94, with lint, app-typecheck,325suites/3779tests passed and no skipped/failing cases, followed by successful production build. Current root quality actually exited0 and retains its inherited platform/tool skip scope rather than qualifying all platforms. Fresh assurance executes0 at b94 with161 whole requirements/322 implementation-refinement UNPROVEN and11 inherited conditional SMT results under their original assumptions. Formal release remains BLOCKED with executionAllowed=false.
+
+The current built component probe has2 actual passed Chromium/Firefox results, retry0, no skip/flaky/error. Both independently decoded attachments show native/library WebRTC agreement, activated root worker, browser server creation, zero torrents and destroyed client. The14 real production-helper browser cases remain source c9b2c63, with final runtime/config/fixture input parity; only the independent gallery unit test changed in the UI tree before b94. I checked7 passed retry0 cases per engine,12 full16044/range44byte attachments, controller handoff and two-document evidence. Do not label that payload suite a newly executed whole-b94/browser-WebKit run.
+
+Fault detection
+The completed control set is20 semantic variants/25 actual failed assertions:9worker/resource variants→13,9CI variants→9,2adopted minimal-gallery variants→3. All input/log hashes and selected-case/valid-before-after scopes are bound; optional strict experiments are excluded. No missing-module/compiler/setup error or test/process timeout is counted as detection. The c9 full UI failure, initial singleton-YAML root-quality failure and their explicit test-only repairs remain retained and are not passed off as successful initial runs. The exact c9 Gallery wall-clock failure cause remains UNKNOWN.
+
+Fourteen seal-evidence controls
+I read the copied-evidence driver and all14 actual failure logs plus both successful valid-before/restored-after logs. Every corruption exited1 by AssertionError, without a missing-tool/file/parser substitute, and the actual unaltered copies passed before and after. The controls exercise wrong/failed execution source, reduced/skipped/hidden-failure UI summary, source/proof fingerprint/status corruption, unexpected browser status, wrong audio byte count, failed client cleanup, modified semantic log, false CI control pass and unbound independent-review input. Original source/receipts are not mutated. This is finite empirical verifier detection, not universal transcript authentication or exhaustive evidence-corruption proof.
+
+Corrected parser assessment
+The initial sealer falsely rejected a legitimate Jest toHaveBeenCalledWith diff-style assertion because its generic predicate required another formatter shape. The current exception is restricted to the named disable-own-claim mutant, its exact Jest matcher and expected/received type diff, while source/log hashes, actualexit1 and exact selected failed/skipped totals remain mandatory. No product/test result was altered. I found no scope expansion into accepting generic errors; qualified-repairs records the initial rejection honestly. The final parser hash matches the14-control receipt.
+
+Disposition and limits
+No remaining confirmed blocker was found for the reviewed local source/qualification/evidence. The worker contract still requires normal trusted browser identity, nonempty client IDs and one server per document; empty-ID direct-navigation broadcast keeps its known limitation. The15s bound is first reply only. No external peer/provider/production playback, local WebKit/physical-device, serving/backend/Mobile recompilation, latest-installed-worker-byte attestation, complete supply-chain/legal/vulnerability proof or whole-program refinement is claimed. Parent-cache/native optional binding provenance remains qualified; this was not a new clean-install guarantee.
+
+Packaging, committed archive/member verification, current-head hosted CI/review, protected integration and deployment remain future gates. This local ACCEPT is neither required GitHub approval nor permission to bypass them.
+
+Final hashes
+seal driver: 651f3acd65086dd1a00e3287ada3541e832ed3764f36873e045bc8b6e4bbd595
+seal binding controls: 39746062cf82dc86852af69ce014e17a25d747468ce1bf5ce9e19ce0c997a6c9
+source-correspondence.json: cb3d2f6b051f61f8b2977562430a41be139f089de53f3019c334cd78bce0c3f1
+independent-final-qualification-bindings.json: f34a53aa0eb9aa6a79832d6751c91389c12c0de391418b79aaf6a8a24aca8d48
+
+Raw receipt SHA256
+source-correspondence.json: cb3d2f6b051f61f8b2977562430a41be139f089de53f3019c334cd78bce0c3f1
+source-state.json: 03a68c9cb69d96d051de32e224e9a3d931478b6cb43be9e0f5847d2ae90b3df5
+qualification-repairs.json: d8fd321b8a7f76d0d4911c2d8699b55768a57c66b77a654512804f2d260ebe29
+ui-quality-execution.json: dc04e19195df471422acf57171390a09f3e1838800ca702a1cb21fe78a84d9a0
+ui-quality.log: 78b7c9c7403d56f711772eba82d0330f308c6f91311b6804538d43b5c35ec29b
+root-quality-execution.json: 0961f80ebd984a602c8bbc0f232b4852a7bc7808540a46e0124c0199e0f8c59e
+root-quality.log: bcf23003cd87407f577b3d7a325c01d76749fa8e35135afd94675abad85b9b59
+assurance-execution.json: e9aff12172b141d2373418d7902021c2215cf06fa6a4ad4cb4bed744431f3a9d
+component-browser-execution.json: e14a9ea24d9ab9698a0b1cc14dfff7e426e42f5632278446d63b76ff322b93be
+component-browser-results.json: 7392459b19b74f8c071017a585e350aabd18b7df9122ab77efaceecbe9d83f03
+browser-current/results.json: d2266460130099b3a19ae106a2e764e8a10d8fe3a9d6687f2a925d374f7cf7fa
+mutation-controls.json: 7c995a53bfa43afe184f6cdfcc9d905d5c8e0a4f8bb4e164c9498cd3e6d6f284
+ci-mutation-controls.json: afe12b3a9c4b189441ccf60b638c0e6cf3e8713dc687fe63d0ac4da4ec70d096
+gallery-clock/clean-clock-controls.json: 80792279346c2ffd98a27d3fce86402c79d55b4f6497f90c46fb1079d5d21984
+seal-binding-controls.json: 39746062cf82dc86852af69ce014e17a25d747468ce1bf5ce9e19ce0c997a6c9
+independent-final-source-review.txt: c7b18dc0aff331de4afc78479ad22c37830e4995b8dda1a462bea86a271a4411

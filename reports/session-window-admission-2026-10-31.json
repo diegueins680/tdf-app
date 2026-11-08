@@ -1,0 +1,282 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-31T19:20:45.497444+00:00",
+  "status": "LOCAL_CORRECTION_VERIFIED_AWAITING_PROTECTED_INTEGRATION",
+  "title": "Enforce issuance and complete validity windows before session admission",
+  "source": {
+    "baselineMain": "234ff6f7faf1aecf347c8e92a374228f4ec07aaa",
+    "parent": "46cf174bacb5b65c3243433d3e73eca2659f6219",
+    "qualifiedSource": "642b065a05c8fef7cd45738cb17b5eac25ddd496",
+    "qualifiedTree": "5cd0793bc3c12240948dd1fa097babd56dbafd50",
+    "mobilePin": "7586be92f447faaf05d1f7d7073af6321ad1496a",
+    "changedFiles": {
+      "docs/catalog-persistence/reports/list-consumer-matrix.csv": "361fedfc9abc27624c242c5f7c5244ce683f67c799bee66ef7a74d237394dd6f",
+      "docs/catalog-persistence/reports/static-list-inventory.json": "010b2a9a981e2e71716d04026d5edaaa688949e66c46e11f046c996345a97732",
+      "formal/system/auth-predicates.json": "dada0b04935ae7dfdae27905a71efc0f02d452784a0229a0de42a526560874ce",
+      "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1",
+      "formal/system/inventory.json": "cbbec6aa1c3f33fa9d698a9bba9c381d5af22a229875101c17bd7e750f6ef192",
+      "formal/system/recovery-expiry-arithmetic.json": "17f4d91df3c82e883f92306e2ce8aa71e3bd6bb8088ddb1bd248b703e54bf35b",
+      "formal/system/requirements.json": "ddf545c5c9b8fb3019f6b11ffdd984c3f5af96a8bc955350740260efed595c1f",
+      "formal/system/traceability.json": "be58ccbc9e939a69c145248ebb2471f5ad866d196348d297afb4701e73c2ed9c",
+      "tdf-hq/src/TDF/Auth.hs": "451b71331aeeb7cf27ac85fe05c6f8b829835e8ca5eae0db2438a451ac137878",
+      "tdf-hq/test/TDF/ServerSpec.hs": "08b4f7fde8678663fe9dea36647d08a081ea21f5aa403d7e51dff92865590dec"
+    },
+    "allChangedFilesMatchCommittedBytes": true,
+    "dirty": false
+  },
+  "classification": {
+    "type": "implementation defect in unmerged PR686 candidate",
+    "priority": "P2 clock/state reliability",
+    "notEstablished": "No ordinary remote ability to mint future tokens or production incident is established."
+  },
+  "requirement": {
+    "id": "ID-SESSION-004",
+    "authority": [
+      "formal/system/identity-lifecycle.md",
+      "formal/system/requirements.json",
+      "tdf-hq/sql/2026-10-31_api_token_session_expiry.sql"
+    ],
+    "boundedTemporalAdmission": "Both endpoints present and 0 <= issuedAt <= databaseNow < expiresAt.",
+    "malformedPolicy": "Reject one missing endpoint, negative issuance, empty or reversed interval for every label.",
+    "unboundedPolicy": "Both NULL retains temporal eligibility for service/custom labels; normalized password-login:/google-login: labels are refused. Other identity, label, active-token and grant checks remain necessary.",
+    "assurance": "TESTED for shared predicate and SQLite lookups; overall requirement PARTIAL."
+  },
+  "counterexamples": [
+    {
+      "id": "ID-SESSION-004/pre-issuance",
+      "oldIssuedAt": 100,
+      "oldExpiresAt": 200,
+      "databaseNow": 99,
+      "oldResult": true,
+      "requiredResult": false,
+      "evidence": "runs/counterexample-build-and-test.log",
+      "actual": "7 examples, 4 assertion failures; generated pre-issuance witness also falsified."
+    },
+    {
+      "id": "ID-SESSION-004/lookup",
+      "state": "Canonical valid stored windows one day after sampled SQLite database time; valid credentials and role grants.",
+      "oldResult": "Future login and service token authenticated; future login username returned. Live credential positive assertion passed first.",
+      "requiredResult": "All three future lookups refuse admission.",
+      "evidence": "runs/counterexample-sqlite.log",
+      "actual": "1 example, 1 assertion failure."
+    }
+  ],
+  "repair": {
+    "rootCause": "The shared predicate compared only expiry and ignored the stored issuance endpoint.",
+    "implementation": "tdf-hq/src/TDF/Auth.hs:apiTokenWithinValidity",
+    "effect": "All four existing authentication/credential/locked session callers inherit the paired-window check. No caller, token minting, TTL, schema, dependency or lock protocol is changed.",
+    "unchangedRequirements": 159,
+    "newTests": "Seven deterministic/generative predicate examples plus expanded actual SQLite authentication and username lookup with positive control.",
+    "formattingAfterRed": "Layout and two equivalent property applications changed; assertions and oracles preserved."
+  },
+  "verification": {
+    "runtime": {
+      "qualifiedSource": "642b065a05c8fef7cd45738cb17b5eac25ddd496",
+      "buildLaunchHead": "46cf174bacb5b65c3243433d3e73eca2659f6219",
+      "buildLaunchState": "Auth and test correction already applied; formal metadata and Git source commits frozen during build. Runtime and test source bytes remained unchanged throughout. Version splice may identify launch HEAD; this is not whole-binary Git identity attestation.",
+      "runtimeInputHashes": {
+        "tdf-hq/src/TDF/Auth.hs": "451b71331aeeb7cf27ac85fe05c6f8b829835e8ca5eae0db2438a451ac137878",
+        "tdf-hq/test/TDF/ServerSpec.hs": "08b4f7fde8678663fe9dea36647d08a081ea21f5aa403d7e51dff92865590dec",
+        "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
+        "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
+        "tdf-hq/tdf-hq.cabal": "ce670990ab2b43addb5ee2410d70a71529f443b82b321d5a78380387ab5b9917"
+      },
+      "fullSuite": {
+        "examples": 4054,
+        "failures": 0,
+        "pending": 21,
+        "executedNonPending": 4033,
+        "pendingIsNotExternalIntegrationPass": true
+      },
+      "testBinarySha256": "a604c9522f19a6c9f64f06141b6370471416c7fa174d9bba27aeacee07e6d76f",
+      "sourceFilesEqualQualifiedCommit": true
+    },
+    "targetedPredicate": {
+      "examples": 7,
+      "failures": 0,
+      "generatedCases": 2000,
+      "assurance": "TESTED",
+      "seed": 549682814
+    },
+    "sqliteLookup": {
+      "examples": 1,
+      "failures": 0,
+      "assurance": "TESTED"
+    },
+    "repositoryQuality": {
+      "exitCode": 0,
+      "recordedSourceHead": "46cf174bacb5b65c3243433d3e73eca2659f6219",
+      "scope": "Passed on fixed runtime/test/requirement bytes before final metadata freeze; not a fresh clean-642b repository-quality rerun. Final frozen metadata/admission and assurance were qualified separately at642b065a05c8fef7cd45738cb17b5eac25ddd496."
+    },
+    "catalog": {
+      "strict": true,
+      "candidates": 1354,
+      "unreviewed": 0
+    },
+    "traceabilityAndChangedSourceAdmission": "Passed at immutable qualified source; existing backend CI invokes ServerSpec.spec in its aggregate test entrypoint.",
+    "regressionDetection": "Actual unfixed implementation failed four predicate examples and the real lookup example before repair; exact red test patch and seed archived. No compiler/tool failure is credited as defect detection.",
+    "assuranceMetrics": {
+      "requirements": {
+        "PROVEN": 0,
+        "REFUTED": 0,
+        "UNPROVEN": 160,
+        "NOT_APPLICABLE": 0
+      },
+      "requirementsWithDeclaredAmbiguityEntries": 144,
+      "obligationsByCategory": {
+        "implementation": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "refinement": {
+          "PROVEN": 0,
+          "REFUTED": 0,
+          "UNPROVEN": 160,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-authorization-SMT": {
+          "PROVEN": 3,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        },
+        "source-derived-recovery-SMT": {
+          "PROVEN": 4,
+          "REFUTED": 0,
+          "UNPROVEN": 0,
+          "NOT_APPLICABLE": 0
+        }
+      }
+    },
+    "newFormalSessionProofs": 0,
+    "sourceBindings": {
+      "files": 1439,
+      "digest": "b96f0eb494d1117fa524cf75daff5bb32167002b5048207704fd828b2927e652",
+      "independentAssuranceArtifacts": 52
+    },
+    "controls": {
+      "authVerifier": "Passed",
+      "assuranceVerifier": "27 tests passed on stable source after reviewed stale document pin correction."
+    },
+    "initialFailuresRetained": [
+      "Traceability command initially selected Python without PyYAML; corrected to existing verification venv.",
+      "Initial assurance controls: 27 tests, 7 failures, 7 errors; stale recovery document pin plus changing HEAD. Recovery contract/terms unchanged; reviewed pin refresh and stable-source rerun passed."
+    ],
+    "levels": "Finite Hspec/QuickCheck/SQLite tests are TESTED. Eleven inherited arithmetic/authorization/recovery SMT obligations are conditional PROVEN within existing assumptions. All 160 whole requirements and 320 implementation/refinement obligations remain UNPROVEN; release BLOCKED."
+  },
+  "independentReviews": [
+    {
+      "name": "tdf-session-window-admission-applied-review-20261031T1810.txt",
+      "sha256": "c396166c62ea6312e1c170b9f976a49736596914ce39fa6c21296a31fd2bf5f0",
+      "archivePath": "reviews/tdf-session-window-admission-applied-review-20261031T1810.txt"
+    },
+    {
+      "name": "tdf-session-window-admission-design-review-20261031T1810.txt",
+      "sha256": "e28deaa9648966a900a18825713a6fd7b12c97bd8df372557fdaa809a1439263",
+      "archivePath": "reviews/tdf-session-window-admission-design-review-20261031T1810.txt"
+    },
+    {
+      "name": "tdf-session-window-admission-final-runtime-review-20261031T1810.txt",
+      "sha256": "49fe180a061b21087e195249fc74e6e70ff6f24cfe4e212779123606609aea1e",
+      "archivePath": "reviews/tdf-session-window-admission-final-runtime-review-20261031T1810.txt"
+    },
+    {
+      "name": "tdf-session-window-admission-frozen-assurance-review-20261031T1810.txt",
+      "sha256": "76833646d5f0fcbb2a0a8a777e853559e9bf285c99794e9271658116622cab2d",
+      "archivePath": "reviews/tdf-session-window-admission-frozen-assurance-review-20261031T1810.txt"
+    },
+    {
+      "name": "tdf-session-window-admission-frozen-context-review-20261031T1810.txt",
+      "sha256": "f58ef5921811f2f74b848fe00270b78f6b3456c0dec1116803f42279e6afdf1e",
+      "archivePath": "reviews/tdf-session-window-admission-frozen-context-review-20261031T1810.txt"
+    },
+    {
+      "name": "tdf-session-window-admission-targeted-runtime-review-20261031T1810.txt",
+      "sha256": "3e922380ffa043caf0c0ff1014841949ee618d8bd98f79416ea0ec0e9f14c39b",
+      "archivePath": "reviews/tdf-session-window-admission-targeted-runtime-review-20261031T1810.txt"
+    },
+    {
+      "name": "tdf-session-window-admission-test-spec-review-20261031T1810.txt",
+      "sha256": "4a674c71b6a1c3b18bf106ada98071095f8527300756033d92d56823e0ecf741",
+      "archivePath": "reviews/tdf-session-window-admission-test-spec-review-20261031T1810.txt"
+    }
+  ],
+  "evidence": {
+    "path": "reports/session-window-admission-2026-10-31-evidence.tar.gz",
+    "sha256": "beb315a20ce5a26050c208afe042cc34bfe30cff64ad3a5a3815b9a0d7cad022",
+    "bytes": 446294,
+    "regularUniqueMembers": 143,
+    "manifest": "MANIFEST.json",
+    "manifestSha256": "46d8643047897c531862bff894c8b41a213bd87d025902a8ef29de977719b0c6",
+    "locallyValidated": true
+  },
+  "limitations": [
+    "21 full-suite cases are pending external runners and are not integration passes.",
+    "No new PostgreSQL locked-session/future-window HTTP test or installed migration verification was executed locally.",
+    "Runtime/test bytes match qualified source; canonical full build began before Git source freeze, so Version splice may name launch HEAD. Targeted tests ran against frozen source. No clean-source whole-binary attestation claimed.",
+    "No monotonic or fresh database clock, validity throughout later domain effects, compiler refinement or whole-platform guarantee.",
+    "UI/Mobile and financial implementation unchanged; no new UI/Mobile or production verification claimed."
+  ],
+  "integration": {
+    "basePullRequest": 686,
+    "baseBranch": "feat/session-token-expiry-20261031",
+    "baseHead": "46cf174bacb5b65c3243433d3e73eca2659f6219",
+    "targetBranch": "fix/session-window-admission-20261031T1810",
+    "status": "Prepared locally for focused child PR; exact-head CI and required GitHub review still required.",
+    "merged": false,
+    "deployed": false,
+    "parentAuditBlocker": {
+      "run": 41205263958,
+      "job": 124548933005,
+      "step": "npm audit",
+      "advisory": "GHSA-2p57-rm9w-gvfp",
+      "unchangedPath": "webtorrent > torrent-discovery > bittorrent-tracker > ip",
+      "evidence": "runs/parent-audit-excerpt.txt",
+      "action": "Existing PR685 addresses dependency graph; do not renew expired waiver or bypass audit. Child hosted result not yet observed."
+    },
+    "protection": "20 required contexts, strict checks, one approval, stale dismissal, admin enforcement and conversation resolution; no force push.",
+    "independentReviewIsGitHubApproval": false
+  },
+  "scorecard": {
+    "confirmedDefectsInThisCycle": 1,
+    "correctedLocally": 1,
+    "integrated": 0,
+    "criticalInvariantScope": "ID-SESSION-004 shared temporal predicate and lookup subproperties TESTED; broader requirement PARTIAL.",
+    "crossLayerInconsistenciesEliminatedLocally": 1,
+    "regressionProtection": "Existing backend CI aggregate executes added examples.",
+    "wholeRequirementsUnproven": 160,
+    "implementationRefinementUnproven": 320,
+    "inheritedConditionalProofs": 11
+  },
+  "backlog": [
+    {
+      "priority": "P0 integration blocker",
+      "task": "Integrate reviewed PR685 dependency correction through protected FIFO, then reconcile impacted session branches and revalidate fresh source; no audit waiver."
+    },
+    {
+      "priority": "P2 ready correction",
+      "task": "Submit this focused child, obtain exact-head review and hosted checks, integrate only after controls permit."
+    },
+    {
+      "priority": "P1 assurance gap",
+      "task": "Qualify locked PostgreSQL session boundaries under explicit clock/fault assumptions; maintain separate whole-refinement gaps."
+    }
+  ],
+  "nextHighestValueTask": "Resolve protected dependency integration and qualify this session correction on its final reconciled source; preserve other queued financial/security repairs.",
+  "independentArchiveReview": {
+    "path": "reports/session-window-admission-2026-10-31-independent-review.txt",
+    "sha256": "340690100ba0b06ca04df0b9486c4bbe652e52beea85eb77cc1b8280a212304e",
+    "reviewedReportSha256": "440b6d89045069fe5aba908c56458a90bd59cac6351af31173fc7289447034c7",
+    "archiveSha256": "beb315a20ce5a26050c208afe042cc34bfe30cff64ad3a5a3815b9a0d7cad022",
+    "decision": "ACCEPT within disclosed local scope; no GitHub approval or integration authority.",
+    "postReviewEnvelopeChange": "Only this receipt-link field was added to the independently reviewed report; the receipt was copied byte-for-byte."
+  }
+}

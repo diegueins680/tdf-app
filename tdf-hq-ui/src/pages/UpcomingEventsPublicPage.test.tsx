@@ -115,4 +115,16 @@ describe('UpcomingEventsPublicPage', () => {
     const fallback = screen.getByRole('img', { name: 'Imagen de referencia para Evento sin afiche' });
     expect(fallback.getAttribute('src')).toBe('http://localhost/event-fallback.svg');
   });
+
+  it('retains a server-resolved city alias even when the display city uses another language', async () => {
+    listPublicUpcomingEventsMock.mockImplementation(async options => options?.city === 'New York' ? [{
+      publicUpcomingEventId: '88', publicUpcomingEventTitle: 'Sesión en Nueva York',
+      publicUpcomingEventStart: '2099-01-01T20:00:00Z', publicUpcomingEventCity: 'Nueva York',
+      publicUpcomingEventWorkflowStateCode: 'announced',
+    }] : []);
+    const view = renderPage();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Filtrar próximos eventos por ciudad' }), { target: { value: 'New York' } });
+    await screen.findByText('Sesión en Nueva York');
+    view.unmount();
+  });
 });
