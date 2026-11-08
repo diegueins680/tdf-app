@@ -188,5 +188,40 @@
       "Fresh full source hostedCI and independent review remain required; Native706 has not merged to protected Main."
     ],
     "productionOperation": false
+  },
+  "nativePreparationUtilityFollowUp": {
+    "materialCommit": "d769b11632fa4bdfd5dedeb6f12fe615b21be486",
+    "changes": [
+      "Audit records only the tool and declared state; it makes no unverified owner or master claim.",
+      "Capture the actual returned parent resource UUID separately from chapter upserts.",
+      "Write SQL atomically with mode 0600; refuse input path, symlink and hardlink aliases."
+    ],
+    "pureVerification": {
+      "tests": 11,
+      "passed": 11,
+      "sameFinalOldUtilityFailureAssertions": 7,
+      "note": "Three alias variants are unittest subcases; all six original validation method bodies are preserved."
+    },
+    "isolatedPostgresVerification": {
+      "version": "16.13",
+      "canonicalMigrationRows": 251,
+      "scenarios": 5,
+      "scope": "Canonical SQL only, no startup: old wrong receipt rolled back; fixed existing parent and child UUIDs; idempotent replay; pending/no local files truthful audit; wrong-source atomic refusal.",
+      "ownedDatabaseDroppedAndServerStopped": true
+    },
+    "fastControlsWiredInto": "scripts/quality-repo.sh",
+    "priorPlayer132InputsUnchanged": true,
+    "priorPlayer132NotRerun": true,
+    "sourceInputSHA256": {
+      "scripts/prepare-native-session.py": "0e72ec4cfc39169daaf38aa6e54726e4f4c0eb0049367ef6f481d03e6334949b",
+      "scripts/test-prepare-native-session.py": "def72194129b0e2e7a2e0bacd42e4a681dbf4e242cb94a321873d9515858f040",
+      "scripts/quality-repo.sh": "e5b94bea6a1dfba862b638fcbaa60a15ee309cff0eb5a455f6ceedb03f1feeb7",
+      "docs/native-tdf-sessions.md": "4c05dbc349586cc4a208457f93170416792f75a5f44b0fa36afc28b642c170fd"
+    },
+    "limits": [
+      "Synthetic owned fixtures only; no actual masters, media requests, provider, production SQL or publication.",
+      "Earlier incorrect operator receipts are not automatically rewritten.",
+      "Fresh whole-source 718 CI and independent review remain required; direct 706 Main integration sequencing is unchanged."
+    ]
   }
 }

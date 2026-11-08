@@ -5330,7 +5330,7 @@
     {
       "id": "SURFACE-1be7907fa26b54e6",
       "path": "scripts/prepare-native-session.py",
-      "sha256": "a4f3a668b63c11b6c7878bc6f7dafe0853ad2cc9e9e7db8ad6c691c43f680479",
+      "sha256": "0e72ec4cfc39169daaf38aa6e54726e4f4c0eb0049367ef6f481d03e6334949b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5414,7 +5414,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "cdab4c82a8de6969fb2e08fc1aff75c479b5d93a696d3e0272acc675716987e9",
+      "sha256": "e5b94bea6a1dfba862b638fcbaa60a15ee309cff0eb5a455f6ceedb03f1feeb7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6662,7 +6662,7 @@
     {
       "id": "SURFACE-d3a3a07ff681cb25",
       "path": "scripts/test-prepare-native-session.py",
-      "sha256": "81a90e3ce053c6583ce3b49881aa33828699692e65c2bde5a8e340193a65b249",
+      "sha256": "def72194129b0e2e7a2e0bacd42e4a681dbf4e242cb94a321873d9515858f040",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23806,7 +23806,7 @@
     },
     {
       "path": "docs/native-tdf-sessions.md",
-      "sha256": "58a1126f692e431084fe1f796f3733d8c25c66f7ea6f4593cf812ad8523564f0",
+      "sha256": "4c05dbc349586cc4a208457f93170416792f75a5f44b0fa36afc28b642c170fd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
