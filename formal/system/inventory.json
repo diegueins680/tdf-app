@@ -3195,7 +3195,7 @@
     {
       "id": "SURFACE-0a67c30fc4273850",
       "path": "e2e/desktop/helpers/shell.mjs",
-      "sha256": "d4b22c14fc492b1e8fa17406a43f7e4c4195b173e343ee538714386a1ec16147",
+      "sha256": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7617,7 +7617,7 @@
     {
       "id": "SURFACE-e0c8fe00799cba13",
       "path": "tdf-desktop/test/release-policy.test.cjs",
-      "sha256": "23dbc21bf4040e53051ad8db68be1336bd0bf304978e8f0086a655ba68dbe3c0",
+      "sha256": "43a770d79df0950ae28d192ae705505057538c218ec4f8f42881c71c3c975171",
       "semanticConformance": "not-established-by-discovery"
     },
     {

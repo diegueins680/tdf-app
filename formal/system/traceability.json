@@ -17812,7 +17812,7 @@
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "fb9bf0054caacc5bf46f99a080cf1a7a9fbb5569dacd3a525ecc050b314a7739",
-    "e2e/desktop/helpers/shell.mjs": "d4b22c14fc492b1e8fa17406a43f7e4c4195b173e343ee538714386a1ec16147",
+    "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
     "e2e/desktop/operations.spec.mjs": "2da328457d5d35bd1b889ad7888747cebfce0db948bf32abbe9c30b2bac5e725",
     "e2e/desktop/playback.spec.mjs": "6d5b9689e14f381045c8116a16a5949c3a2d00f29ecd631413ed44a22917327d",
     "e2e/desktop/shell-session.spec.mjs": "4573bbedb2df1d8e91e2699d75068f2bb4c14be44172c657766c8a97254bcf50",
@@ -18630,7 +18630,7 @@
     "tdf-desktop/test/config.test.cjs": "5a333c052ec4e0a08edbb1cf6afcc009e24f48ea97fc2086af9e3f9bc1e24a8a",
     "tdf-desktop/test/links.test.cjs": "5b9953c75ba42d6f8c1fdeac1b24c5300dd1c8c93933adc350ee5ef3065259df",
     "tdf-desktop/test/playbackState.test.cjs": "4642e931cbad941bb137d6d7b0c6903a895c47168b1901e5e99cc3ac45cb5a79",
-    "tdf-desktop/test/release-policy.test.cjs": "23dbc21bf4040e53051ad8db68be1336bd0bf304978e8f0086a655ba68dbe3c0",
+    "tdf-desktop/test/release-policy.test.cjs": "43a770d79df0950ae28d192ae705505057538c218ec4f8f42881c71c3c975171",
     "tdf-desktop/test/signing.test.cjs": "c41014a2fad42e847525444fb739814efeaadcd7161f837feb872931024cda43",
     "tdf-desktop/test/updater.test.cjs": "3095f2683586b420caa56ebd0263e17bc732b0f305321ea30bbf5dcd384a9f1c",
     "tdf-hq-ui/browser-test/torrent-audio.html": "71327a943be3e23e4895beaceaa2ccfe1c8aff9cf89cb40da7dcd2b89ba6aca0",
@@ -35356,7 +35356,7 @@
     {
       "id": "SURFACE-0a67c30fc4273850",
       "path": "e2e/desktop/helpers/shell.mjs",
-      "sha256": "d4b22c14fc492b1e8fa17406a43f7e4c4195b173e343ee538714386a1ec16147",
+      "sha256": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44089,7 +44089,7 @@
     {
       "id": "SURFACE-e0c8fe00799cba13",
       "path": "tdf-desktop/test/release-policy.test.cjs",
-      "sha256": "23dbc21bf4040e53051ad8db68be1336bd0bf304978e8f0086a655ba68dbe3c0",
+      "sha256": "43a770d79df0950ae28d192ae705505057538c218ec4f8f42881c71c3c975171",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
