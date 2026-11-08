@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 516,
+    "total": 520,
     "named": 14,
     "path-named": 1,
     "reviewed": 0,
-    "unspecified": 501,
+    "unspecified": 505,
     "covered": 15
   },
   "routes": [
@@ -951,6 +951,30 @@
     {
       "method": "POST",
       "path": "/drive/upload",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/event-crm/email/confirm",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/event-crm/email/request",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/event-crm/events/{eventId}/commands",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/event-crm/invitations",
       "basis": "unspecified",
       "requirements": []
     },
