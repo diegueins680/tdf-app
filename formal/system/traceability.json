@@ -26444,7 +26444,7 @@
     "e2e/web/booking-catalog-recovery.spec.mjs": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
     "e2e/web/booking-timezone.spec.mjs": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
     "e2e/web/campaign-accessibility.spec.mjs": "4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d",
-    "e2e/web/chat-mobile-follow.spec.mjs": "bbfd13846523d055ec4abf7df54fb0f53c231b19c74b71e97c923c2708d8a16a",
+    "e2e/web/chat-mobile-follow.spec.mjs": "f5ea13a3ebd693cb1fd5e71d58e977429b511f42f2a890bd2affb7efa72ad916",
     "e2e/web/chat-notification-navigation.spec.mjs": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "5330e8d056e9ef1407f7a3e711bd7b88fde84795896409db2b43164c69efc161",
@@ -45671,7 +45671,7 @@
     {
       "id": "SURFACE-36d988b722d46f36",
       "path": "e2e/web/chat-mobile-follow.spec.mjs",
-      "sha256": "bbfd13846523d055ec4abf7df54fb0f53c231b19c74b71e97c923c2708d8a16a",
+      "sha256": "f5ea13a3ebd693cb1fd5e71d58e977429b511f42f2a890bd2affb7efa72ad916",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
