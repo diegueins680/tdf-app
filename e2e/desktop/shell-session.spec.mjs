@@ -103,13 +103,20 @@ test('validates deep links before navigating and keeps unsafe ones out', async (
     const openUrl = (url) => shell.app.evaluate(({ app }, link) => { app.emit('open-url', { preventDefault() {} }, link); }, url);
     await openUrl('tdf-desktop://open?path=/social/eventos');
     await expect(shell.window).toHaveURL(/\/login\?redirect=%2Fsocial%2Feventos|\/social\/eventos/);
+    // A token-bearing route reaches the application, but the token never reaches the log.
+    await openUrl('tdf-desktop://open?path=%2Fsocial%2Feventos%3Finvite%3Dsecret-invite-token');
+    await expect(shell.window).toHaveURL(/invite(=|%3D)secret-invite-token/);
     const before = shell.window.url();
-    for (const bad of ['tdf-desktop://open?path=//evil.example/phish', 'tdf-desktop://open?path=/../../etc/passwd', 'https://evil.example/eventos/1', 'file:///etc/passwd']) {
+    for (const bad of ['tdf-desktop://open?path=//evil.example/phish?token=secret-rejected-token', 'tdf-desktop://open?path=/../../etc/passwd', 'https://evil.example/eventos/1', 'file:///etc/passwd']) {
       await openUrl(bad);
     }
     await shell.window.waitForTimeout(500);
     expect(shell.window.url()).toBe(before);
     await expect.poll(() => (shell.readLog().match(/rejected deep link/g) ?? []).length).toBe(4);
+    const log = shell.readLog();
+    expect(log).toMatch(/deep link -> \/social\/eventos\?\[redacted\]/);
+    expect(log).toMatch(/rejected deep link tdf-desktop:\/\/open\?\[redacted\]/);
+    expect(log).not.toMatch(/secret-invite-token|secret-rejected-token/);
   } finally { await shell.close(); }
 });
 

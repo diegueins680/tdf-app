@@ -19,8 +19,9 @@ classified before they happen: `app` (same origin) proceeds, `internal`
 opens in the system browser and is cancelled in the shell, everything else is
 blocked and logged. Deep links `tdf-desktop://open` resolve to an in-app path
 only through `sanitizeAppPath` (absolute, single slash, no `.`/`..` segments,
-no encoded separators, no control characters); rejected links are logged and
-never navigate. Channel files are validated (`https` origins only; loopback
+no encoded separators, no control characters); rejected links are logged
+without query strings, fragments or credentials, like every URL the shell
+logs, and never navigate. Channel files are validated (`https` origins only; loopback
 `http` only for local/unpackaged runs; development overrides ignored when
 packaged). Permissions granted to the hosted origin are limited to media,
 notifications, fullscreen, clipboard and speaker selection; device access is
@@ -72,16 +73,22 @@ commit; `scripts/prepare-channel.cjs` embeds the validated channel, source
 commit, build time and unsigned flag, and copies the official TDF icon. Signing
 and notarization run only when the standard electron-builder credentials are
 present; otherwise `identity: null` disables signing explicitly and artifacts
-carry `UNSIGNED-TEST`. `electron-updater` reads a generic feed
+carry `UNSIGNED-TEST`. The artifact marker, the signing options and the
+unsigned flag embedded in `channel.json` come from one decision over the same
+environment (`scripts/signing.cjs`), and packaging refuses a channel whose
+flag disagrees with it. `electron-updater` reads a generic feed
 (`desktop-latest` release); downloads require a user decision, are verified
 before installation, and a failed check or download leaves the installed
 version in charge. Unsigned or unpackaged builds disable updates and say so.
 The workflow publishes to the feed only from a `desktop-v<version>` tag whose
-version matches `tdf-desktop/package.json` and refuses unsigned files.
+version matches `tdf-desktop/package.json`, requires the macOS certificate
+and the complete Apple notarization configuration, and refuses unsigned files.
 
 Evidence. `tdf-desktop/test/updater.test.cjs` covers disabled reasons and
 the check/available/download/downloaded/install path plus failure handling;
-`config.test.cjs` covers packaged versus development channel loading.
+`config.test.cjs` covers packaged versus development channel loading;
+`signing.test.cjs` covers the shared signing decision and the channel/package
+consistency guard; `release-policy.test.cjs` covers the feed publication gate.
 `.github/workflows/desktop.yml` builds on `macos-15` and `windows-2025`, runs
 the installed binary's `--smoke` receipt (macOS from the mounted DMG, Windows
 after a silent NSIS install, followed by silent uninstall) and uploads

@@ -64,4 +64,28 @@ function classifyNavigation(rawUrl, appOrigin) {
   return 'external';
 }
 
-module.exports = { MAX_URL_LENGTH, classifyNavigation, deepLinkFromArgv, isSafeExternalUrl, parseDeepLink };
+/**
+ * Describes a URL or an in-app path for the diagnostics log. Query strings and
+ * fragments are replaced by a marker and embedded credentials are dropped:
+ * deep links and routes may carry invitation or password-reset tokens, and a
+ * persistent log file must never keep them.
+ */
+function describeForLog(value) {
+  if (typeof value !== 'string') return `<${value === null ? 'null' : typeof value}>`;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return '<empty>';
+  let url = null;
+  try { url = new URL(trimmed); } catch { /* relative path or opaque text */ }
+  if (url) {
+    const slashes = trimmed.slice(url.protocol.length).startsWith('//') ? '//' : '';
+    const credentials = url.username || url.password ? '[credentials]@' : '';
+    const base = `${url.protocol}${slashes}${credentials}${url.host}${url.pathname}`.slice(0, 160);
+    return `${base}${url.search ? '?[redacted]' : ''}${url.hash ? '#[redacted]' : ''}`;
+  }
+  const cut = trimmed.search(/[?#]/);
+  const head = (cut === -1 ? trimmed : trimmed.slice(0, cut)).slice(0, 160);
+  if (cut === -1) return head;
+  return `${head}${trimmed[cut] === '?' ? '?[redacted]' : '#[redacted]'}`;
+}
+
+module.exports = { MAX_URL_LENGTH, classifyNavigation, deepLinkFromArgv, describeForLog, isSafeExternalUrl, parseDeepLink };

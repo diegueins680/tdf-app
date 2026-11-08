@@ -1,7 +1,8 @@
 'use strict';
 // electron-builder configuration. Signing and notarization are driven by the
-// standard electron-builder environment variables; when they are absent the
-// build is explicitly unsigned and its artifacts carry the UNSIGNED-TEST
+// standard electron-builder environment variables (resolved once in
+// scripts/signing.cjs, shared with prepare-channel.cjs); when they are absent
+// the build is explicitly unsigned and its artifacts carry the UNSIGNED-TEST
 // marker so a test package is never mistaken for a distributable one.
 //
 //   macOS:   CSC_LINK + CSC_KEY_PASSWORD (Developer ID Application .p12)
@@ -9,16 +10,19 @@
 //   Windows: WIN_CSC_LINK + WIN_CSC_KEY_PASSWORD (Authenticode .pfx)
 //            or AZURE_TENANT_ID + AZURE_CLIENT_ID + AZURE_CLIENT_SECRET + TDF_WIN_SIGN_ENDPOINT
 //            + TDF_WIN_SIGN_ACCOUNT + TDF_WIN_SIGN_PROFILE (Azure Trusted Signing)
-const hasMacCertificate = Boolean(process.env.CSC_LINK || process.env.CSC_NAME);
-const hasNotarization = Boolean(process.env.APPLE_ID && process.env.APPLE_APP_SPECIFIC_PASSWORD && process.env.APPLE_TEAM_ID);
-const hasWinCertificate = Boolean(process.env.WIN_CSC_LINK);
-const hasAzureSigning = Boolean(process.env.AZURE_TENANT_ID && process.env.AZURE_CLIENT_ID && process.env.AZURE_CLIENT_SECRET
-  && process.env.TDF_WIN_SIGN_ENDPOINT && process.env.TDF_WIN_SIGN_ACCOUNT && process.env.TDF_WIN_SIGN_PROFILE);
-const explicitUnsigned = process.env.TDF_DESKTOP_UNSIGNED === '1';
-const macSigned = hasMacCertificate && !explicitUnsigned;
-const winSigned = (hasWinCertificate || hasAzureSigning) && !explicitUnsigned;
-const platformSigned = process.platform === 'darwin' ? macSigned : process.platform === 'win32' ? winSigned : false;
-const marker = platformSigned ? '' : '-UNSIGNED-TEST';
+const fs = require('node:fs');
+const path = require('node:path');
+const { assertChannelMatchesSigning, resolveSigning } = require('./scripts/signing.cjs');
+
+// One decision for the artifact marker, the signing options and the unsigned
+// flag that scripts/prepare-channel.cjs embeds in channel.json.
+const signing = resolveSigning();
+const { explicitUnsigned, hasAzureSigning, hasNotarization, macSigned, marker, winSigned } = signing;
+
+// npm run dist* prepares the channel first; a channel.json produced in another
+// environment (a different unsigned decision) is refused instead of shipped.
+const channelFile = path.join(__dirname, 'generated', 'channel.json');
+if (fs.existsSync(channelFile)) assertChannelMatchesSigning(JSON.parse(fs.readFileSync(channelFile, 'utf8')), signing);
 
 /** @type {import('electron-builder').Configuration} */
 module.exports = {

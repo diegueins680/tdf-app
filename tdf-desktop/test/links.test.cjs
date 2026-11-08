@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { classifyNavigation, deepLinkFromArgv, isSafeExternalUrl, parseDeepLink } = require('../src/main/links.cjs');
+const { classifyNavigation, deepLinkFromArgv, describeForLog, isSafeExternalUrl, parseDeepLink } = require('../src/main/links.cjs');
 
 const origin = 'https://www.tdfrecords.net';
 
@@ -58,4 +58,26 @@ test('only http(s) without credentials may open in the system browser', () => {
   assert.equal(isSafeExternalUrl('file:///etc/hosts'), false);
   assert.equal(isSafeExternalUrl('smb://share/x'), false);
   assert.equal(isSafeExternalUrl(''), false);
+});
+
+test('log descriptions keep scheme, host and path but never query strings, fragments or credentials', () => {
+  assert.equal(describeForLog('tdf-desktop://open?path=%2Freset%3Ftoken%3Dsecret-token'), 'tdf-desktop://open?[redacted]');
+  assert.equal(describeForLog('tdf-desktop://open/reset?token=secret-token#x'), 'tdf-desktop://open/reset?[redacted]#[redacted]');
+  assert.equal(describeForLog('https://www.tdfrecords.net/reset?token=secret-token'), 'https://www.tdfrecords.net/reset?[redacted]');
+  assert.equal(describeForLog('https://user:secret-token@www.tdfrecords.net/eventos'), 'https://[credentials]@www.tdfrecords.net/eventos');
+  assert.equal(describeForLog('/reset?token=secret-token'), '/reset?[redacted]');
+  assert.equal(describeForLog('/eventos/42#top'), '/eventos/42#[redacted]');
+  assert.equal(describeForLog('/eventos/42'), '/eventos/42');
+  assert.equal(describeForLog('file:///etc/passwd'), 'file:///etc/passwd');
+  assert.equal(describeForLog(`https://www.tdfrecords.net/${'a'.repeat(400)}?t=1`).length, 160 + '?[redacted]'.length);
+  assert.equal(describeForLog(''), '<empty>');
+  assert.equal(describeForLog(42), '<number>');
+  assert.equal(describeForLog(null), '<null>');
+  for (const raw of [
+    'tdf-desktop://open?path=%2Freset%3Ftoken%3Dsecret-token',
+    'tdf-desktop://open?path=//evil.example/phish?token=secret-token',
+    '/reset?token=secret-token',
+    'not a url?token=secret-token',
+    'https://user:secret-token@www.tdfrecords.net/',
+  ]) assert.doesNotMatch(describeForLog(raw), /secret-token/, raw);
 });

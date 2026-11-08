@@ -115,23 +115,16 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: tdf-desktop/package-lock.json
-      - name: Resolve signing availability
-        id: signing
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" = "macOS" ]; then
-            if [ -n "$CSC_LINK" ]; then echo "unsigned=0" >> "$GITHUB_OUTPUT"; else echo "unsigned=1" >> "$GITHUB_OUTPUT"; fi
-          else
-            if [ -n "$WIN_CSC_LINK" ]; then echo "unsigned=0" >> "$GITHUB_OUTPUT"; else echo "unsigned=1" >> "$GITHUB_OUTPUT"; fi
-          fi
       - name: Install desktop dependencies
         run: npm ci --prefix tdf-desktop
       - name: Shell unit tests on the target platform
         run: npm test --prefix tdf-desktop
+      # prepare-channel.cjs and electron-builder.config.cjs derive one signing
+      # decision from the job variables above (tdf-desktop/scripts/signing.cjs):
+      # without a certificate the package name and its embedded channel.json
+      # both mark an unsigned test build, and packaging refuses a mismatch.
       - name: Build installers
         shell: bash
-        env:
-          TDF_DESKTOP_UNSIGNED: ${{ steps.signing.outputs.unsigned }}
         run: |
           npm run ${{ matrix.script }} --prefix tdf-desktop -- --publish never
           ls -la tdf-desktop/dist

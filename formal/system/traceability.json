@@ -17576,7 +17576,7 @@
       "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
       "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
       "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
-      "observability": "tdf-desktop.log, smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "observability": "tdf-desktop.log (URLs recorded without query strings, fragments or credentials), smoke receipts, About dialog diagnostics, workflow artifacts.",
       "implementation": [
         "tdf-desktop/src/main/main.cjs",
         "tdf-desktop/src/main/config.cjs",
@@ -17758,6 +17758,7 @@
       "implementation": [
         "tdf-desktop/electron-builder.config.cjs",
         "tdf-desktop/scripts/prepare-channel.cjs",
+        "tdf-desktop/scripts/signing.cjs",
         "tdf-desktop/src/main/updater.cjs",
         "tdf-desktop/package.json",
         "tdf-desktop/package-lock.json",
@@ -17767,7 +17768,8 @@
         "tdf-desktop/test/updater.test.cjs",
         "tdf-desktop/test/config.test.cjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "tdf-desktop/test/release-policy.test.cjs"
+        "tdf-desktop/test/release-policy.test.cjs",
+        "tdf-desktop/test/signing.test.cjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -17796,7 +17798,7 @@
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
     ".github/workflows/ci.yml": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/desktop.yml": "ec0a6ab959a91804e3eb2e9ea6c315493538b4f9543dd46306bcde3adfe11b42",
+    ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/event-operations-formal.yml": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
@@ -17813,7 +17815,7 @@
     "e2e/desktop/helpers/shell.mjs": "d4b22c14fc492b1e8fa17406a43f7e4c4195b173e343ee538714386a1ec16147",
     "e2e/desktop/operations.spec.mjs": "2da328457d5d35bd1b889ad7888747cebfce0db948bf32abbe9c30b2bac5e725",
     "e2e/desktop/playback.spec.mjs": "6d5b9689e14f381045c8116a16a5949c3a2d00f29ecd631413ed44a22917327d",
-    "e2e/desktop/shell-session.spec.mjs": "fd3f6c86de1cb875696b69828c503c4c0f88dafe423e1c7b1b499fe2926bf112",
+    "e2e/desktop/shell-session.spec.mjs": "4573bbedb2df1d8e91e2699d75068f2bb4c14be44172c657766c8a97254bcf50",
     "e2e/desktop/uploads.spec.mjs": "002cfdf016921752bb5c97d2ca2933720ed110b4c116e035e2be22ae8730cd5c",
     "e2e/torrent-audio/fixture-server.mjs": "c97be99807b4ac3839329a7fe3d59c8444283f56875d294c6e22156fa572d201",
     "e2e/torrent-audio/setup.mjs": "1e98a7c10e5e77d267cf8baa303675c0a240812e53adb3ad079e2fc1ef1d1875",
@@ -18612,22 +18614,24 @@
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
     "tdf-desktop/channels/local.json": "e3c51ea68810123c41038f0f2a0d945010e5e8b90af3b97703dcd64c659a6530",
     "tdf-desktop/channels/production.json": "90bb117814611f9fb4bf39f8d9ce542a6bcd1e95af6b8631f5fbfb4e3a524bfc",
-    "tdf-desktop/electron-builder.config.cjs": "9260156f071c3725fc4a2a1d8d1701005f3cbdbd8647c3a769ed22a34098e926",
+    "tdf-desktop/electron-builder.config.cjs": "a669965872acd873bb1add55392e02f18011ef7e258602eec50833adfb23b923",
     "tdf-desktop/package-lock.json": "d82fd2c876db15022230dfcf8cde475403b13f0e06ead2b3e93d3fd3e6c46e10",
     "tdf-desktop/package.json": "5a035d04a11b993ddefc82bcc9e5d8f6f753d3456ab155819f3c04885599d4fe",
-    "tdf-desktop/scripts/prepare-channel.cjs": "c246685b3ae734031c04c70ff63b6f8b3d2d73ee72effc4664c8c9130d0a7e87",
+    "tdf-desktop/scripts/prepare-channel.cjs": "f5eb69f82883963b0b51ce645051975d5f17a266220ac3e6a7c23fae6b1d1320",
+    "tdf-desktop/scripts/signing.cjs": "ab8215260ffd749af837d15b09d5f286caf88c1774d5db386bb019f07b4c16ea",
     "tdf-desktop/src/main/config.cjs": "aa9cedb9ed37805b5992e9758c13ececf556a7ef9e0c5ee5a5b4cf32013e342d",
-    "tdf-desktop/src/main/links.cjs": "b934417dd9dc26e22c95216dabd8934c37b38dcf942dde853e7fda66f1ff168a",
+    "tdf-desktop/src/main/links.cjs": "f44c3330c8fb3e5d7f9837bcf095970bd5e4dc2e22f2afacad36170bf21c76f8",
     "tdf-desktop/src/main/log.cjs": "7ed5121374f342c6778ee2aaa585bdf8ad911501b784abe0a5c9c8936d26abed",
-    "tdf-desktop/src/main/main.cjs": "cddf9c91cd9c9f915ef11cab96b0bcaa96329103b61f2b928b05c399bfc8c505",
+    "tdf-desktop/src/main/main.cjs": "3d1c69caedcfdd19a7bf5ee0bf1995563d338f6a40b0644daabc1a1a523b68b2",
     "tdf-desktop/src/main/menu.cjs": "8e816cc3b4ea94f4e49fc1b8044008da2610c09a226f7488b1fadb0c681739a3",
     "tdf-desktop/src/main/playbackState.cjs": "988a1451f782cd69f647bffbe278376133bc6dcf719eda05179db93f6704c5f3",
     "tdf-desktop/src/main/updater.cjs": "cdeb2f1a565952981931a0e11bd376f8f99a228ff00b49b75fe772432f4abd92",
     "tdf-desktop/src/preload/preload.cjs": "d10a3ead12ed41a32692d1ab423932b48c2b4b8d4e17130663dfb1bded0fdf3f",
     "tdf-desktop/test/config.test.cjs": "5a333c052ec4e0a08edbb1cf6afcc009e24f48ea97fc2086af9e3f9bc1e24a8a",
-    "tdf-desktop/test/links.test.cjs": "fae09e6155274164e05602a08231091cf968cf04e1356b36cf7d8928b94adc42",
+    "tdf-desktop/test/links.test.cjs": "5b9953c75ba42d6f8c1fdeac1b24c5300dd1c8c93933adc350ee5ef3065259df",
     "tdf-desktop/test/playbackState.test.cjs": "4642e931cbad941bb137d6d7b0c6903a895c47168b1901e5e99cc3ac45cb5a79",
     "tdf-desktop/test/release-policy.test.cjs": "23dbc21bf4040e53051ad8db68be1336bd0bf304978e8f0086a655ba68dbe3c0",
+    "tdf-desktop/test/signing.test.cjs": "c41014a2fad42e847525444fb739814efeaadcd7161f837feb872931024cda43",
     "tdf-desktop/test/updater.test.cjs": "3095f2683586b420caa56ebd0263e17bc732b0f305321ea30bbf5dcd384a9f1c",
     "tdf-hq-ui/browser-test/torrent-audio.html": "71327a943be3e23e4895beaceaa2ccfe1c8aff9cf89cb40da7dcd2b89ba6aca0",
     "tdf-hq-ui/e2e/storage-upload.html": "ae82c9fb53db6a8fbb03f1e883d374efcad8740009eb1fe9ee3b3b440d05c051",
@@ -34966,6 +34970,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-desktop/scripts/signing.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-desktop/src/main/updater.cjs": [
       {
         "requirement": "SYS-DESKTOP-003",
@@ -34997,6 +35007,12 @@
       }
     ],
     "tdf-desktop/test/release-policy.test.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-desktop/test/signing.test.cjs": [
       {
         "requirement": "SYS-DESKTOP-003",
         "relationship": "tests"
@@ -35203,7 +35219,7 @@
     {
       "id": "SURFACE-cc0ad60f02c62cee",
       "path": ".github/workflows/desktop.yml",
-      "sha256": "ec0a6ab959a91804e3eb2e9ea6c315493538b4f9543dd46306bcde3adfe11b42",
+      "sha256": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -35376,7 +35392,7 @@
     {
       "id": "SURFACE-cc2ad01c6769392e",
       "path": "e2e/desktop/shell-session.spec.mjs",
-      "sha256": "fd3f6c86de1cb875696b69828c503c4c0f88dafe423e1c7b1b499fe2926bf112",
+      "sha256": "4573bbedb2df1d8e91e2699d75068f2bb4c14be44172c657766c8a97254bcf50",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43869,7 +43885,7 @@
     {
       "id": "SURFACE-e283f7607c87d86d",
       "path": "tdf-desktop/electron-builder.config.cjs",
-      "sha256": "9260156f071c3725fc4a2a1d8d1701005f3cbdbd8647c3a769ed22a34098e926",
+      "sha256": "a669965872acd873bb1add55392e02f18011ef7e258602eec50833adfb23b923",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43905,7 +43921,19 @@
     {
       "id": "SURFACE-39df5c4b339b5ada",
       "path": "tdf-desktop/scripts/prepare-channel.cjs",
-      "sha256": "c246685b3ae734031c04c70ff63b6f8b3d2d73ee72effc4664c8c9130d0a7e87",
+      "sha256": "f5eb69f82883963b0b51ce645051975d5f17a266220ac3e6a7c23fae6b1d1320",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5afd256288b5aad6",
+      "path": "tdf-desktop/scripts/signing.cjs",
+      "sha256": "ab8215260ffd749af837d15b09d5f286caf88c1774d5db386bb019f07b4c16ea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43929,7 +43957,7 @@
     {
       "id": "SURFACE-b80e2418f31ebf79",
       "path": "tdf-desktop/src/main/links.cjs",
-      "sha256": "b934417dd9dc26e22c95216dabd8934c37b38dcf942dde853e7fda66f1ff168a",
+      "sha256": "f44c3330c8fb3e5d7f9837bcf095970bd5e4dc2e22f2afacad36170bf21c76f8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43953,7 +43981,7 @@
     {
       "id": "SURFACE-2233b8c59333ca18",
       "path": "tdf-desktop/src/main/main.cjs",
-      "sha256": "cddf9c91cd9c9f915ef11cab96b0bcaa96329103b61f2b928b05c399bfc8c505",
+      "sha256": "3d1c69caedcfdd19a7bf5ee0bf1995563d338f6a40b0644daabc1a1a523b68b2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44037,7 +44065,7 @@
     {
       "id": "SURFACE-593d47a6bfbd5083",
       "path": "tdf-desktop/test/links.test.cjs",
-      "sha256": "fae09e6155274164e05602a08231091cf968cf04e1356b36cf7d8928b94adc42",
+      "sha256": "5b9953c75ba42d6f8c1fdeac1b24c5300dd1c8c93933adc350ee5ef3065259df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -44062,6 +44090,18 @@
       "id": "SURFACE-e0c8fe00799cba13",
       "path": "tdf-desktop/test/release-policy.test.cjs",
       "sha256": "23dbc21bf4040e53051ad8db68be1336bd0bf304978e8f0086a655ba68dbe3c0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dda85ea04f03ddf8",
+      "path": "tdf-desktop/test/signing.test.cjs",
+      "sha256": "c41014a2fad42e847525444fb739814efeaadcd7161f837feb872931024cda43",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70549,7 +70589,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b27072a3d01a273e3ef6b9027440d436efc7d7f445b0c6a28887e226565b919d",
+      "sourceSha256": "3d7199ff3fd6686816a54aba40629d129c38bec4758ab0ed08c71c902ce32bd1",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70577,7 +70617,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b27072a3d01a273e3ef6b9027440d436efc7d7f445b0c6a28887e226565b919d",
+      "sourceSha256": "3d7199ff3fd6686816a54aba40629d129c38bec4758ab0ed08c71c902ce32bd1",
       "definition": {
         "states": [
           "absent",
@@ -70607,7 +70647,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b27072a3d01a273e3ef6b9027440d436efc7d7f445b0c6a28887e226565b919d",
+      "sourceSha256": "3d7199ff3fd6686816a54aba40629d129c38bec4758ab0ed08c71c902ce32bd1",
       "definition": {
         "export": [
           "queued",

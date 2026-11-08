@@ -43,8 +43,14 @@ Unpackaged runs are always marked "prueba sin firma", disable shell updates and
 accept `http://` only for loopback hosts. Packaged builds ignore these
 variables and read the embedded `channel.json`.
 
-Installers (the channel is prepared first; `TDF_DESKTOP_UNSIGNED=1` marks test
-packages explicitly):
+Installers. `scripts/prepare-channel.cjs` and `electron-builder.config.cjs`
+resolve one signing decision from the environment (`scripts/signing.cjs`):
+without `CSC_LINK`/`CSC_NAME` (macOS) or `WIN_CSC_LINK`/Azure Trusted Signing
+(Windows) the package is an unsigned test build, its embedded `channel.json`
+says `unsigned: true` and its file name carries `UNSIGNED-TEST`.
+`TDF_DESKTOP_UNSIGNED=1` forces that even when a certificate is available, and
+electron-builder refuses a `channel.json` whose flag disagrees with the
+environment it runs in:
 
 ```bash
 cd tdf-desktop
@@ -86,6 +92,10 @@ update feed, source commit, build time and the unsigned flag. The About dialog,
 - Diagnostics log (`tdf-desktop.log` in the user logs directory) records
   navigation decisions and update states only; never request bodies, tokens or
   page content.
+- The diagnostics log (`tdf-desktop.log`) records deep links, blocked
+  navigations and failed loads without query strings, fragments or embedded
+  credentials, so invitation or password-reset tokens carried by a link never
+  persist in log files.
 
 ## Update channel
 
@@ -94,7 +104,9 @@ update feed, source commit, build time and the unsigned flag. The About dialog,
   (`latest-mac.yml`, `latest.yml`, zip/exe/blockmap). Each version also lives in
   the immutable release `desktop-v<version>`.
 - Publication happens only when a `desktop-v<version>` tag is pushed and only
-  with signed artifacts; the release job refuses `UNSIGNED-TEST` files.
+  with signed artifacts: the release job fails unless the macOS certificate and
+  the three Apple notarization credentials are configured, and it refuses
+  `UNSIGNED-TEST` files.
 - Behavior: silent check 8 s after launch and on demand from the menu
   ("Buscar actualizaciones…"). Downloads start only after the user accepts; the
   package signature/hash is verified by electron-updater before installation;

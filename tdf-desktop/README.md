@@ -44,6 +44,11 @@ npm test
 TDF_DESKTOP_APP_URL=http://localhost:5173 TDF_DESKTOP_API_URL=http://localhost:8080 npm start
 ```
 
+Packaging resolves one signing decision from the environment
+(`scripts/signing.cjs`): without a certificate the package is an unsigned test
+build and its embedded `channel.json` says so; `TDF_DESKTOP_UNSIGNED=1` forces
+that even when a certificate is available.
+
 ```bash
 TDF_DESKTOP_UNSIGNED=1 npm run dist:mac
 ```

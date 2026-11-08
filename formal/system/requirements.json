@@ -17575,7 +17575,7 @@
       "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
       "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
       "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
-      "observability": "tdf-desktop.log, smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "observability": "tdf-desktop.log (URLs recorded without query strings, fragments or credentials), smoke receipts, About dialog diagnostics, workflow artifacts.",
       "implementation": [
         "tdf-desktop/src/main/main.cjs",
         "tdf-desktop/src/main/config.cjs",
@@ -17757,6 +17757,7 @@
       "implementation": [
         "tdf-desktop/electron-builder.config.cjs",
         "tdf-desktop/scripts/prepare-channel.cjs",
+        "tdf-desktop/scripts/signing.cjs",
         "tdf-desktop/src/main/updater.cjs",
         "tdf-desktop/package.json",
         "tdf-desktop/package-lock.json",
@@ -17766,7 +17767,8 @@
         "tdf-desktop/test/updater.test.cjs",
         "tdf-desktop/test/config.test.cjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "tdf-desktop/test/release-policy.test.cjs"
+        "tdf-desktop/test/release-policy.test.cjs",
+        "tdf-desktop/test/signing.test.cjs"
       ],
       "formalModels": [],
       "status": "specified and implemented",

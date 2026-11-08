@@ -7,7 +7,7 @@ const { app, BrowserWindow, Menu, clipboard, dialog, ipcMain, net, protocol, scr
 const fs = require('node:fs');
 const path = require('node:path');
 const { INTERNAL_HOST, INTERNAL_SCHEME, loadChannel, sanitizeAppPath } = require('./config.cjs');
-const { classifyNavigation, deepLinkFromArgv, isSafeExternalUrl, parseDeepLink } = require('./links.cjs');
+const { classifyNavigation, deepLinkFromArgv, describeForLog, isSafeExternalUrl, parseDeepLink } = require('./links.cjs');
 const { PlaybackState, isCommand } = require('./playbackState.cjs');
 const { createUpdater } = require('./updater.cjs');
 const { buildMenu } = require('./menu.cjs');
@@ -126,8 +126,11 @@ async function loadApp(contents, appPath) {
   try {
     await contents.loadURL(target);
   } catch (error) {
-    // did-fail-load handles the user-visible fallback; loadURL rejects for the same failure.
-    log.warn(`loadURL rejected: ${error.message}`);
+    // did-fail-load handles the user-visible fallback; loadURL rejects for the
+    // same failure. Its message quotes the full URL, so log the error code and
+    // a redacted target instead.
+    const reason = typeof error?.code === 'string' ? error.code : String(error?.message ?? error).split(' loading ')[0];
+    log.warn(`loadURL rejected: ${reason} loading ${describeForLog(target)}`);
   }
 }
 
@@ -146,10 +149,10 @@ function navigateTo(appPath) {
 function handleDeepLink(rawUrl) {
   const link = parseDeepLink(rawUrl, channel.appOrigin);
   if (!link) {
-    log.warn(`rejected deep link ${String(rawUrl).slice(0, 160)}`);
+    log.warn(`rejected deep link ${describeForLog(rawUrl)}`);
     return false;
   }
-  log.info(`deep link -> ${link.path}`);
+  log.info(`deep link -> ${describeForLog(link.path)}`);
   return navigateTo(link.path);
 }
 
@@ -177,7 +180,7 @@ function attachNavigationPolicy(contents) {
       log.info(`external navigation opened in the system browser: ${new URL(url).origin}`);
       void shell.openExternal(url);
     } else {
-      log.warn(`blocked navigation ${url.slice(0, 160)}`);
+      log.warn(`blocked navigation ${describeForLog(url)}`);
     }
   };
   contents.on('will-navigate', decide);
@@ -205,7 +208,7 @@ function attachNavigationPolicy(contents) {
         },
       };
     } else {
-      log.warn(`blocked popup ${url.slice(0, 160)}`);
+      log.warn(`blocked popup ${describeForLog(url)}`);
     }
     return { action: 'deny' };
   });
