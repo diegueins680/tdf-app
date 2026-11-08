@@ -41,4 +41,13 @@ describe('buildMerchOrdersCsv', () => {
     expect(csv).toContain('"\'=HYPERLINK(""https://evil.test"")"');
     expect(csv).not.toContain('"=HYPERLINK');
   });
+  it('preserves typed negative minor amounts while protecting negative-looking string identifiers', () => {
+    const csv = buildMerchOrdersCsv([order({
+      orderNumber: '-1+1', totalMinor: -3000, tdfCommissionMinor: -250, sellerNetMinor: -2750,
+    })], 'en');
+
+    expect(csv).toContain('"\'-1+1"');
+    expect(csv).toContain('"-3000","-250","-2750"');
+    expect(csv).not.toContain('"\'-3000"');
+  });
 });

@@ -209,7 +209,9 @@ function ChatWorkspace() {
   const [bannerError, setBannerError] = useState(null as string | null);
   const [unavailableNotification, setUnavailableNotification] = useState(false);
   const [sendError, setSendError] = useState(null as string | null);
-  const messagesEndRef = useRef(null as HTMLDivElement | null);
+  const messagesViewportRef = useRef(null as HTMLDivElement | null);
+  const [selectionNavigation, setSelectionNavigation] = useState(0);
+  const revealedNavigationRef = useRef(null as number | null);
   const requestParamConsumed = useRef<string | null>(null);
   const [readVersion, setReadVersion] = useState(0);
 
@@ -336,8 +338,17 @@ function ChatWorkspace() {
 
   useEffect(() => {
     if (!selectedThreadId) return;
-    messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
-  }, [messages.length, selectedThreadId]);
+    const viewport = messagesViewportRef.current;
+    if (!viewport) return;
+    // Explicit selection may reveal the conversation below the mobile list.
+    // Do it instantly and only once; incoming messages must not move ancestors.
+    if (revealedNavigationRef.current !== selectionNavigation && conversationAllowed && !messagesQuery.isPending) {
+      revealedNavigationRef.current = selectionNavigation;
+      viewport.scrollIntoView({ block: 'end', behavior: 'instant' });
+    }
+    // Follow messages without moving a conversation-list pointer target.
+    viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+  }, [conversationAllowed, messages.length, messagesQuery.isPending, selectedThreadId, selectionNavigation]);
 
   useEffect(() => {
     storeSelectedThreadId(selectedThreadId, myPartyId);
@@ -360,6 +371,7 @@ function ChatWorkspace() {
       setNewChatError(null);
       setBannerError(null);
       setUnavailableNotification(false);
+      setSelectionNavigation((version) => version + 1);
       setSelectedThreadId(thread.ctThreadId);
       await qc.invalidateQueries({ queryKey: ['chat-threads', myPartyId] });
     },
@@ -386,6 +398,7 @@ function ChatWorkspace() {
       }
       setBannerError(null);
       setUnavailableNotification(false);
+      setSelectionNavigation((version) => version + 1);
       setSelectedThreadId(numeric);
       return;
     }
@@ -603,6 +616,7 @@ function ChatWorkspace() {
                           onSelect={(threadId) => {
                             setUnavailableNotification(false);
                             setBannerError(null);
+                            setSelectionNavigation((version) => version + 1);
                             setSelectedThreadId(threadId);
                             setSendError(null);
                           }}
@@ -617,7 +631,8 @@ function ChatWorkspace() {
         </Card>
 
         <Card sx={{ flex: 1, minWidth: 0 }}>
-          <CardContent sx={{ display: 'flex', flexDirection: 'column', height: { xs: 'auto', md: 600 } }}>
+          {/* A bounded card keeps the message viewport as the scroll owner on mobile too. */}
+          <CardContent sx={{ display: 'flex', flexDirection: 'column', height: 600 }}>
             <Box sx={{ mb: 1 }}>
               {selectedThread && conversationAllowed ? (() => {
                 const threadDisplayName = selectedThread.ctOtherDisplayName.trim();
@@ -669,7 +684,7 @@ function ChatWorkspace() {
             </Box>
             <Divider sx={{ mb: 2 }} />
 
-            <Box sx={{ flex: 1, overflowY: 'auto', pr: 1, minHeight: 240 }}>
+            <Box ref={messagesViewportRef} sx={{ flex: 1, overflowY: 'auto', pr: 1, minHeight: 240 }}>
               {messagesLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                   <CircularProgress size={24} aria-label={t('auditAccessibility.loadingMessages')} />
@@ -704,7 +719,7 @@ function ChatWorkspace() {
                   {messages.map((message) => (
                     <MessageBubble key={message.cmId} message={message} myPartyId={myPartyId} />
                   ))}
-                  <div ref={messagesEndRef} />
+                  <div />
                 </Stack>
               )}
             </Box>
