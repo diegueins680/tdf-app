@@ -1,5 +1,5 @@
 {
-  "backendBase": "a5745dbbe1b7fe68a49b2595c5499896fd96a6bf",
+  "backendBase": "883e12ee394aa374dfecd89b10000e5efd76a773",
   "preservedFullPlayerSource": "4b7824841fcbf2f3bcb7e95adb5ceb93f60ec22d",
   "nativeSessionSource": "eeca9fe3d265c0a2a5be9d6574fe6a529ef11729",
   "nativeSpeedRepairSource": "b2216b7afcc140a0c9a461419cc9c6fea688d32d",
@@ -30,8 +30,30 @@
       "result": "passed",
       "scope": "Generated H.264/AAC video and independently generated audio; actual native clocks/events, synthetic API/catalog; no production storage."
     },
-    "fullUI": "running after identity fix",
-    "threeBrowserNativeSuite": "running after identity fix"
+    "fullUI": {
+      "result": "passed",
+      "suites": 376,
+      "tests": 4315
+    },
+    "threeBrowserNativeSuite": {
+      "result": "passed",
+      "tests": 45,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone",
+        "firefox-critical"
+      ]
+    },
+    "configuredStorageProbeControls": {
+      "tests": 22,
+      "result": "passed",
+      "source": "883e12ee394aa374dfecd89b10000e5efd76a773",
+      "scope": "Synthetic configured namespace, DNS/TLS-parameter and redirect controls; no real storage/TLS acceptance."
+    },
+    "uiRuntimeInputEquality": "git diff ef68fbf58 -- tdf-hq-ui produced zero bytes after concurrent backend/main merge; completed UI/browser executions retain those exact web inputs."
   },
   "counterexamples": [
     "Native pause did not set explicit pause latch across artist navigation",
@@ -98,7 +120,9 @@
     "tdf-hq-ui/src/player/types.ts": "d041e505b24d1205ec151f702f28b7dc817e903b0556ba4f5f62bd7f621aad7a",
     "tdf-hq-ui/src/utils/availableRadioStations.test.ts": "fb403dac0b0d3e81b4ff5651a231039a033f17520a3fbb0532cfcb14acb0cac8",
     "tdf-hq-ui/src/utils/availableRadioStations.ts": "d3a756e5ee95d3cf375dfaa5535a43e0dd6469aa45eec7e7403ac19d32427eeb",
-    "tdf-hq-ui/src/vite-env.d.ts": "774e4d6418a7f3b87c68fc1c018f99acd65d74771582e402ca1d490f5a489b86"
+    "tdf-hq-ui/src/vite-env.d.ts": "774e4d6418a7f3b87c68fc1c018f99acd65d74771582e402ca1d490f5a489b86",
+    "scripts/music-media-health.py": "a9b98debadbf1a1ccaec0f42b2a24ca03d0742dd3b32dfd94ccc0d517c9bf84d",
+    "scripts/test-music-media-health.py": "1139af6e4926516612974422bd09d3f488fec18ea275553699af8c8bde7fcce8"
   },
   "qualificationBeforeIdentityFix": {
     "fullUISuites": 375,
@@ -107,5 +131,6 @@
     "browserUnexpected": 0,
     "browserSkipped": 0,
     "scope": "Completed before track-wide authorization format filtering was corrected; not final source acceptance."
-  }
+  },
+  "concurrentSourcePreserved": "ba709f94fbded9582678837ef9ed3e10b4dab923"
 }

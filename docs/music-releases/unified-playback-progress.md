@@ -2,7 +2,7 @@
 
 Draft companion [PR716](https://github.com/diegueins680/tdf-app/pull/716) reuses
 [PR670](https://github.com/diegueins680/tdf-app/pull/670), retaining backend source
-a5745dbbe from [PR712](https://github.com/diegueins680/tdf-app/pull/712) and the
+883e12ee3 from [PR712](https://github.com/diegueins680/tdf-app/pull/712) and the
 native session controls from [PR706](https://github.com/diegueins680/tdf-app/pull/706).
 Native video/audio now share explicit pause, current-source event fences, bounded
 recovery and artist navigation with ordinary tracks. Delayed internal pause,
@@ -14,7 +14,7 @@ recordings now participate in the profile queue with exact Party filtering.
 The latest held composition passed type checking, two transport/artist suites
 with132 tests and three artist suites with41 tests. The track-wide authorization repair then passed three core suites/136 tests, including four controls that failed when format filtering downgraded protected identity. The earlier restored source
 64eeb8e64 passed368 suites/4208 tests; that whole-suite result predates native
-composition. The native composition subsequently completed375 suites/4311 tests and45 native browser cases across Chromium desktop/phone and Firefox. Those runs predate the track-wide identity repair; fresh full UI/browser runs for the corrected source and hosted checks remain pending. Local
+composition. The native composition subsequently completed375 suites/4311 tests and45 native browser cases across Chromium desktop/phone and Firefox. Those runs predate the track-wide identity repair; the corrected source subsequently passed376 suites/4315 tests and all45 browser cases. Hosted checks and independent review remain pending. Local
 browser attempts stopped before test execution on sandbox loopback permission
 and then missing jq PATH; both are retained as harness failures.
 
@@ -54,3 +54,28 @@ Current candidate qualification supersedes the earlier execution scope where exp
 The retained native-playback artifact from hosted run 42400968363 has 74 expected results, zero unexpected/flaky/skipped: 14 each for Chromium desktop/phone/tablet, Firefox critical and WebKit critical, plus two each for Android-small and WebKit iPhone. This exercises the stage's main-equivalent frontend, not PR #670's dependent artist-recovery UI. The adjusted campaign flow separately passed all eight Chromium desktop/phone cases locally. Physical devices and real providers remain unverified.
 
 Protected main advanced again through session-window, finance CSV and torrent-worker repairs. This stage normally incorporates `d0b10b60d`; the authentication change means historical whole-backend executions are not current-candidate qualification. Music-specific HTTP/SQL/backend inputs retain their earlier evidence scope, while fresh combined-head hosted backend qualification is required. The persistent-stop worker change passed all 23 untraced local scenarios.
+
+
+## Configured storage health boundary (2026-11-08)
+
+Untrusted legacy locations remain limited to public HTTPS on port 443, with DNS
+validation repeated after redirects and the checked TCP address pinned. Signed
+asset probes use only the literal operator `MUSIC_S3_ENDPOINT` HTTPS authority,
+its configured port/base path, and `MUSIC_S3_DERIVATIVE_BUCKET`. The health source
+view selects stream/preview derivatives; the probe cannot borrow credentials for
+another origin or bucket, escape the namespace through decoded traversal, or
+follow a signed redirect. Private DNS/loopback are trusted only through that
+exact operator configuration. The original hostname and port are retained for
+Host/SNI while the resolved TCP peer is pinned; default certificate and hostname
+verification remain enabled. An operator must supply valid TLS trust through
+normal system/Python configuration; no verification bypass is introduced.
+
+The final fake-connection/resolver harness rejects the original implementation
+for a configured private endpoint on port 9000 and passes the bounded repair.
+All 22 checks include the 13 original legacy/response/native-sample controls.
+They do not demonstrate a real private object-store TLS handshake, deployed
+worker identity, provider acceptance or complete legacy provenance. Existing
+byte/deadline caps, source-version leases, publication/territory gates and
+production activation requirements remain separate.
+
+The concurrent companion update ba709f94f is preserved by normal merge, including backend883e12ee3 configured-storage repair and current-main9df3922fc. The web runtime is byte-identical to completed ef68fbf58 UI/browser inputs; all22 configured-storage probe controls pass locally. Real storage/TLS and current whole-source hosted acceptance are separate.

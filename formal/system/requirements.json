@@ -16526,7 +16526,7 @@
         "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required. Frontend restoration is an unshipped composition; native-session integration and current-head verification remain required."
       },
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
-      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof.",
+      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance.",
       "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
     },
     {
@@ -17802,6 +17802,74 @@
       "property": "Visibility AND city AND artist-union AND type AND state AND effective-time, then pagination; canonical identity and no stale asynchronous continuation.",
       "verification": "React/API regressions, actual embedded PostgreSQL predicate with the previous-limit negative control, Hspec parser property and mobile browser fixture.",
       "evidence": "scripts/test-event-discovery-postgres.mjs; tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx; tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx; tdf-hq/test/Spec.hs"
+    },
+    {
+      "id": "ANALYTICS-WEEKLY-001",
+      "title": "Bounded aggregate weekly platform measurement",
+      "statement": "Prepare a read-only, repeatable-read aggregate query and summarize supplied current/previous seven-day windows without treating profile imports, telemetry milestones or missing data as verified human growth or campaign causality.",
+      "authority": "User instruction to implement weekly platform measurement, 2026-10-30; production collection remains contingent on an authorized read-only source.",
+      "domain": "analytics",
+      "actors": [
+        "Authorized report operator"
+      ],
+      "preconditions": [
+        "Explicit timezone-aware cutoff",
+        "Two comparable aggregate windows for summaries"
+      ],
+      "inputs": [
+        "Cutoff datetime",
+        "Aggregate-only JSON exported by the generated query"
+      ],
+      "state": {
+        "source": "supplied aggregate export, not independently verified"
+      },
+      "allowedTransitions": [
+        "No input -> read-only SQL text",
+        "Validated aggregate export -> labeled report"
+      ],
+      "forbiddenTransitions": [
+        "Missing metric -> zero",
+        "All-origin profile count -> human signup count",
+        "Synthetic fixture -> production result"
+      ],
+      "effects": [
+        "Print query or aggregate report; never open database or network connection"
+      ],
+      "authorization": "Existing authorized operator executes query with an approved read-only connection; tool does not obtain credentials or broaden grants.",
+      "privacy": "Export aggregate counts only, rejecting unexpected input fields; no identity/contact/token fields are queried or emitted.",
+      "concurrency": "Generated query uses one repeatable-read snapshot; output serialization does not mutate state.",
+      "idempotency": "Same cutoff and aggregate input produce the same summary.",
+      "failure": "Reject naive/injected cutoff, stale or incomplete export and invalid counts; missing coverage stays null.",
+      "recovery": "Obtain corrected aggregate input through existing authorized source; never substitute fixtures.",
+      "observability": "Source, collection time, local cutoff, half-open intervals, deltas and limitations accompany results.",
+      "source": "docs/analytics/weekly-platform-metrics.md",
+      "implementation": [
+        "scripts/weekly-platform-metrics.py"
+      ],
+      "tests": [
+        "scripts/test-weekly-platform-metrics.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Four offline tests and actual disposable PostgreSQL16 query/permission controls; production grants and collection unverified.",
+      "ambiguity": [
+        "Synthetic account exclusions and historical deletions are not classified.",
+        "No reliable origin/claim partition or campaign attribution is supplied.",
+        "Only extracted actual table DDL and the onboarding migration are qualified in disposable PostgreSQL; full canonical replay and production grants remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Offline preparation and isolated PostgreSQL aggregate/permission qualification implemented; production grants, actual collection and complete growth coverage remain unverified."
+      },
+      "critical": false,
+      "property": "Unknown growth coverage cannot become a verified human or attributed conversion count.",
+      "contract": "docs/analytics/weekly-platform-metrics.md",
+      "verification": "Four offline tests and actual PostgreSQL16 half-open boundaries, offset equivalence, snapshot/deadline checks, SELECT-only role and independent read-only write controls; no production collection or grants attested.",
+      "evidence": [
+        "Offline unit tests only; no production data collected.",
+        "reports/weekly-platform-metrics-main-qualification-2026-11-05.json"
+      ],
+      "historicalStatus": "New bounded measurement tooling, not a production observation."
     }
   ]
 }

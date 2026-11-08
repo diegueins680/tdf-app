@@ -670,6 +670,7 @@
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
       "scripts/test-video-campaign-postgres.sh",
+      "scripts/test-weekly-platform-metrics.py",
       "scripts/test-whatsapp-consent.sh",
       "scripts/test-whatsapp-redelivery.sh",
       "scripts/test_mail_deliverability_monitor.py",
@@ -700,6 +701,7 @@
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
       "scripts/verify-video-campaign-access.mjs",
+      "scripts/weekly-platform-metrics.py",
       "scripts/wrap-catalog-canonical-schema.mjs"
     ],
     "services": [
@@ -5280,7 +5282,7 @@
     {
       "id": "SURFACE-065b757f096cfd7c",
       "path": "scripts/music-media-health.py",
-      "sha256": "eec4dd17a794fffcdf81255fcb05ab43b084f0e24c404f51fba2e00ccc55f471",
+      "sha256": "a9b98debadbf1a1ccaec0f42b2a24ca03d0742dd3b32dfd94ccc0d517c9bf84d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6486,7 +6488,7 @@
     {
       "id": "SURFACE-f4fdf752dc07e153",
       "path": "scripts/test-music-media-health.py",
-      "sha256": "c064d32dcdf7a3b9ec5474bb577856f8f5274f43616e4add33bedc3d5e6ec6dc",
+      "sha256": "1139af6e4926516612974422bd09d3f488fec18ea275553699af8c8bde7fcce8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6976,6 +6978,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-d0a29d547d2a49db",
+      "path": "scripts/test-weekly-platform-metrics.py",
+      "sha256": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-da68a6be269c4e94",
       "path": "scripts/test-whatsapp-consent.sh",
       "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
@@ -7153,6 +7161,12 @@
       "id": "SURFACE-00216ea4e77a05b4",
       "path": "scripts/verify-video-campaign-access.mjs",
       "sha256": "0b6a82b0c2472d1735cbe9e0f84b2ecc1d513c3fa81b853bd2d7a932cea6ace7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-00fd92180a50abfd",
+      "path": "scripts/weekly-platform-metrics.py",
+      "sha256": "eb4989f17ff699f65c9a382b94afac31cd9599ff0b7cda517ce073dd69b1ba83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21894,6 +21908,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/analytics/weekly-platform-metrics.md",
+      "sha256": "afdbf3589c89084874fdb3f265e4eaa2679596067f69ff8bf6f1e28d07dcfa71",
+      "authority": "inferred",
+      "authorityBasis": "Status: implemented offline preparation; disposable PostgreSQL 16 execution qualified.",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/architecture/artist-catalog-unification.md",
       "sha256": "16af46856dd8fb92bfdd7edc8b9df6d4a78d2a4aedc7e33c96f5f71145a76a19",
       "authority": "inferred",
@@ -23722,7 +23743,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "1e704a6a50ad5e790f1c9810377f2ccc6e9fb98643b4c5aad8b1d9b0f57ce6c0",
+      "sha256": "1d090dcfbe5aea563708693fbbdc8e97ac3230de1d91ea9fdb6855f8609ee615",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30624,7 +30645,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "24b28396c2ad7ceb9946b38a3d491c26acea698f1b5c8df2855e696732fbfcf8",
+      "sha256": "dd05b181fc53b828bb4d1135b85e6e0cf8aed45974697d0d346f3bdd1df0c833",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

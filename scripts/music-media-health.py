@@ -14,7 +14,7 @@ import sys
 import time
 import uuid
 from datetime import datetime, timezone
-from urllib.parse import quote, urljoin, urlsplit
+from urllib.parse import quote, unquote, urljoin, urlsplit
 
 MAX_BYTES = 1024 * 1024
 DEADLINE_SECONDS = 25
@@ -24,12 +24,17 @@ class ProbeFailure(Exception):
         self.reason, self.permanent = reason, permanent
 
 
-def public_addresses(host):
+def resolved_addresses(host, port=443):
     # DNS runs in a killable child, including a resolver that ignores timeouts.
     result = subprocess.run([sys.executable, '-c',
-        'import socket,json,sys;print(json.dumps(sorted({x[4][0] for x in socket.getaddrinfo(sys.argv[1],443,type=socket.SOCK_STREAM)})))', host],
+        'import socket,json,sys;print(json.dumps(sorted({x[4][0] for x in socket.getaddrinfo(sys.argv[1],int(sys.argv[2]),type=socket.SOCK_STREAM)})))', host, str(port)],
         capture_output=True, text=True, timeout=4, check=True)
     addresses = json.loads(result.stdout)
+    return addresses
+
+
+def public_addresses(host):
+    addresses = resolved_addresses(host)
     if not addresses or any(not safe_address(value) for value in addresses):
         raise ProbeFailure('unsafe_url')
     return addresses
@@ -59,9 +64,55 @@ def validated_url(url):
     return parsed
 
 
+def safe_storage_component(value):
+    # Object paths must not escape the configured bucket through normalization
+    # by an HTTPS reverse proxy. Literal escaped punctuation remains an object key.
+    for _ in range(4):
+        if (not value or value in ('.', '..') or '/' in value or '\\' in value
+                or any(ord(c) < 32 or ord(c) == 127 for c in value)):
+            return False
+        decoded = unquote(value, errors='strict')
+        if decoded == value:
+            return True
+        value = decoded
+    return False
+
+
+def configured_storage_url(url, env):
+    """Trust only the literal configured HTTPS origin and derivative namespace."""
+    try:
+        endpoint = env['MUSIC_S3_ENDPOINT'].rstrip('/')
+        parsed, configured = urlsplit(url), urlsplit(endpoint)
+        for text, p in [(url, parsed), (endpoint, configured)]:
+            if (p.scheme != 'https' or not p.hostname or p.username or p.password
+                    or not 1 <= (443 if p.port is None else p.port) <= 65535 or '?' in text or '#' in text
+                    or '\\' in text or len(text) > 8192
+                    or any(ord(c) < 33 or ord(c) == 127 for c in text)):
+                raise ValueError()
+        # Exact authority also forbids aliases, alternate ports or userinfo;
+        # signed=True alone never authorizes another destination.
+        if parsed.netloc != configured.netloc:
+            raise ValueError()
+        base = configured.path.rstrip('/')
+        if base and any(not safe_storage_component(x) for x in base[1:].split('/')):
+            raise ValueError()
+        bucket = env['MUSIC_S3_DERIVATIVE_BUCKET']
+        if len(bucket) > 63 or not safe_storage_component(bucket):
+            raise ValueError()
+        prefix = base + '/' + quote(bucket, safe='') + '/'
+        if not parsed.path.startswith(prefix):
+            raise ValueError()
+        key = parsed.path[len(prefix):]
+        if not key or any(not safe_storage_component(x) for x in key.split('/')):
+            raise ValueError()
+    except (KeyError, TypeError, ValueError):
+        raise ProbeFailure('unsafe_url') from None
+    return parsed
+
+
 def s3_headers(url, env):
     """Sign only the operator configured object store, never legacy redirects."""
-    p = validated_url(url)
+    p = configured_storage_url(url, env)
     now = datetime.now(timezone.utc)
     timestamp, date = now.strftime('%Y%m%dT%H%M%SZ'), now.strftime('%Y%m%d')
     region = env['MUSIC_S3_REGION']
@@ -81,21 +132,29 @@ def s3_headers(url, env):
     return headers
 
 
-def fetch_prefix(url, *, signed=False, env=None, resolver=public_addresses, connection=http.client.HTTPSConnection):
+def fetch_prefix(url, *, signed=False, env=None, resolver=None, connection=http.client.HTTPSConnection):
     deadline = time.monotonic() + DEADLINE_SECONDS
     for redirect in range(4):
-        p = validated_url(url)
-        addresses = resolver(p.hostname)
-        if not addresses or any(not safe_address(x) for x in addresses):
+        p = configured_storage_url(url, env) if signed else validated_url(url)
+        port = 443 if p.port is None else p.port
+        resolve = resolver or ((lambda host: resolved_addresses(host, port)) if signed else public_addresses)
+        addresses = resolve(p.hostname)
+        try:
+            allowed = bool(addresses) and all(
+                not ipaddress.ip_address(x).is_unspecified and not ipaddress.ip_address(x).is_multicast
+                if signed else safe_address(x) for x in addresses)
+        except ValueError:
+            allowed = False
+        if not allowed:
             raise ProbeFailure('unsafe_url')
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise ProbeFailure('timeout')
-        conn = connection(p.hostname, timeout=min(8, remaining), context=ssl.create_default_context())
+        conn = connection(p.hostname, port=port, timeout=min(8, remaining), context=ssl.create_default_context())
         # Preserve original TLS SNI/certificate and Host while pinning the TCP
         # peer to an already checked address. No second DNS lookup or proxy use.
         conn._create_connection = lambda _address, timeout=None, source_address=None: socket.create_connection(
-            (addresses[0], 443), timeout=timeout, source_address=source_address)
+            (addresses[0], port), timeout=timeout, source_address=source_address)
         try:
             headers = {'Range': 'bytes=0-' + str(MAX_BYTES - 1), 'Accept-Encoding': 'identity'}
             if signed:

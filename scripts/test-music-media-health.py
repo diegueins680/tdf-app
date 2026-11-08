@@ -6,6 +6,7 @@ import math
 from pathlib import Path
 import shutil
 import socket
+import ssl
 import struct
 import unittest
 from unittest.mock import patch
@@ -26,9 +27,11 @@ class Connection:
     instances = []
     def __init__(self, host, **kwargs):
         self.host, self.sock, self.headers = host, None, None
+        self.options = kwargs
         self.__class__.instances.append(self)
     def request(self, method, path, headers):
         self.headers = headers
+        self.path = path
         self._create_connection((self.host,443), timeout=1)
     def getresponse(self): return self.__class__.responses.pop(0)
     def close(self): pass
@@ -106,5 +109,119 @@ class Checks(unittest.TestCase):
             self.assertEqual(health.probe('https://media.example/a'),('valid','decodable'))
         with patch.object(health,'fetch_prefix',return_value=(b'not audio',True)):
             self.assertEqual(health.probe('https://media.example/a'),('permanent','unsupported'))
+
+class ConfiguredStorageChecks(unittest.TestCase):
+    def environment(self, endpoint='https://music-storage:9000/storage'):
+        return {'MUSIC_S3_ENDPOINT': endpoint, 'MUSIC_S3_DERIVATIVE_BUCKET': 'music-derivatives',
+                'MUSIC_S3_REGION': 'us-east-1', 'MUSIC_S3_ACCESS_KEY_ID': 'synthetic-key',
+                'MUSIC_S3_SECRET_ACCESS_KEY': 'synthetic-secret'}
+
+    def fetch(self, url, *, env=None, responses=None, addresses=None):
+        Connection.instances = []
+        Connection.responses = responses if responses is not None else [Response(body=b'RIFF')]
+        self.resolved = []
+        def resolver(host):
+            self.resolved.append(host)
+            return ['10.20.30.40'] if addresses is None else addresses
+        with patch.object(health.socket, 'create_connection', return_value=None) as connect:
+            result = health.fetch_prefix(url, signed=True, env=env if env is not None else self.environment(),
+                                         resolver=resolver, connection=Connection)
+            self.peer = connect.call_args.args[0] if connect.call_args else None
+            return result
+
+    def test_signed_configured_private_port_keeps_pinned_peer_and_verified_tls_hostname(self):
+        result = self.fetch('https://music-storage:9000/storage/music-derivatives/recording/stream.mp3')
+        self.assertEqual(result, (b'RIFF', True))
+        self.assertEqual(self.resolved, ['music-storage'])
+        self.assertEqual(self.peer, ('10.20.30.40', 9000))
+        conn = Connection.instances[0]
+        self.assertEqual(conn.host, 'music-storage')
+        self.assertEqual(conn.options['port'], 9000)
+        self.assertTrue(conn.options['context'].check_hostname)
+        self.assertEqual(conn.options['context'].verify_mode, ssl.CERT_REQUIRED)
+        self.assertEqual(conn.headers['host'], 'music-storage:9000')
+        self.assertEqual(conn.path, '/storage/music-derivatives/recording/stream.mp3')
+        self.assertIn('Credential=synthetic-key/', conn.headers['Authorization'])
+        self.assertNotIn('synthetic-secret', conn.headers['Authorization'])
+
+    def test_literal_loopback_is_trusted_only_as_the_exact_configured_endpoint(self):
+        env = self.environment('https://127.0.0.1:9443')
+        self.assertEqual(self.fetch('https://127.0.0.1:9443/music-derivatives/stream.mp3',
+                                    env=env, addresses=['127.0.0.1']), (b'RIFF', True))
+        self.assertEqual(self.peer, ('127.0.0.1', 9443))
+
+    def test_configured_default_resolution_uses_bounded_child_and_actual_port(self):
+        result = type('Result', (), {'stdout': json.dumps(['10.20.30.40'])})()
+        Connection.instances, Connection.responses = [], [Response(body=b'RIFF')]
+        with patch.object(health.subprocess, 'run', return_value=result) as resolve, \
+                patch.object(health.socket, 'create_connection', return_value=None) as connect:
+            self.assertEqual(health.fetch_prefix(
+                'https://music-storage:9000/storage/music-derivatives/audio.mp3',
+                signed=True, env=self.environment(), connection=Connection), (b'RIFF', True))
+            self.assertEqual(resolve.call_args.args[0][-2:], ['music-storage', '9000'])
+            self.assertEqual(resolve.call_args.kwargs['timeout'], 4)
+            self.assertTrue(resolve.call_args.kwargs['check'])
+            self.assertEqual(connect.call_args.args[0], ('10.20.30.40', 9000))
+
+    def test_configured_default_https_port_retains_verified_transport(self):
+        env = self.environment('https://music-storage/storage')
+        self.assertEqual(self.fetch('https://music-storage/storage/music-derivatives/audio.mp3', env=env),
+                         (b'RIFF', True))
+        self.assertEqual(self.peer, ('10.20.30.40', 443))
+
+    def test_signed_flag_does_not_authorize_other_origins_ports_or_namespaces(self):
+        prefix = 'https://music-storage:9000/storage/music-derivatives/'
+        urls = ['https://evil.example/storage/music-derivatives/audio.mp3',
+                'https://music-storage.evil.example:9000/storage/music-derivatives/audio.mp3',
+                'https://music-storage:9001/storage/music-derivatives/audio.mp3',
+                'http://music-storage:9000/storage/music-derivatives/audio.mp3',
+                'https://u:p@music-storage:9000/storage/music-derivatives/audio.mp3',
+                'https://music-storage:9000/storage-other/music-derivatives/audio.mp3',
+                'https://music-storage:9000/storage/music-master/audio.mp3',
+                prefix, prefix + '../other/audio.mp3', prefix + '%2e%2e/other/audio.mp3',
+                prefix + '%252e%252e/other/audio.mp3', prefix + 'part%2f..%2faudio.mp3',
+                prefix + 'part\\audio.mp3', prefix + 'audio.mp3?credential=private',
+                prefix + 'audio.mp3#fragment']
+        for url in urls:
+            with self.subTest(url=url), self.assertRaises(health.ProbeFailure) as error:
+                self.fetch(url)
+            self.assertEqual(error.exception.reason, 'unsafe_url')
+            self.assertEqual(Connection.instances, [])
+            self.assertEqual(self.resolved, [])
+
+    def test_unsigned_path_cannot_borrow_configured_storage_trust(self):
+        with patch.object(health.socket, 'create_connection') as connect:
+            with self.assertRaises(health.ProbeFailure):
+                health.fetch_prefix('https://music-storage:9000/storage/music-derivatives/audio.mp3',
+                                    env=self.environment(), resolver=lambda _: ['10.20.30.40'], connection=Connection)
+            connect.assert_not_called()
+
+    def test_signed_redirect_never_sends_a_second_request_or_credentials(self):
+        with self.assertRaises(health.ProbeFailure) as error:
+            self.fetch('https://music-storage:9000/storage/music-derivatives/audio.mp3',
+                       responses=[Response(302, {'Location': 'https://evil.example/leak'})])
+        self.assertEqual(error.exception.reason, 'transport')
+        self.assertEqual(len(Connection.instances), 1)
+        self.assertEqual(self.resolved, ['music-storage'])
+
+    def test_invalid_operator_configuration_fails_before_resolution_or_connection(self):
+        endpoints = ['http://music-storage:9000', 'https://u:p@music-storage:9000',
+                     'https://music-storage:0', 'https://music-storage:65536',
+                     'https://music-storage:9000/storage?secret=value',
+                     'https://music-storage:9000/storage#fragment',
+                     'https://music-storage:9000//storage',
+                     'https://music-storage:9000/../storage']
+        for endpoint in endpoints:
+            with self.subTest(endpoint=endpoint), self.assertRaises(health.ProbeFailure):
+                self.fetch('https://music-storage:9000/storage/music-derivatives/audio.mp3',
+                           env=self.environment(endpoint))
+            self.assertEqual(Connection.instances, [])
+            self.assertEqual(self.resolved, [])
+
+    def test_invalid_or_nonsensical_configured_dns_answers_never_connect(self):
+        for addresses in [[], ['0.0.0.0'], ['::'], ['224.0.0.1'], ['not-an-address']]:
+            with self.subTest(addresses=addresses), self.assertRaises(health.ProbeFailure):
+                self.fetch('https://music-storage:9000/storage/music-derivatives/audio.mp3', addresses=addresses)
+            self.assertEqual(Connection.instances, [])
 
 if __name__=='__main__': unittest.main()

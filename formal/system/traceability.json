@@ -16527,7 +16527,7 @@
         "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required. Frontend restoration is an unshipped composition; native-session integration and current-head verification remain required."
       },
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
-      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof.",
+      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance.",
       "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
     },
     {
@@ -17803,6 +17803,74 @@
       "property": "Visibility AND city AND artist-union AND type AND state AND effective-time, then pagination; canonical identity and no stale asynchronous continuation.",
       "verification": "React/API regressions, actual embedded PostgreSQL predicate with the previous-limit negative control, Hspec parser property and mobile browser fixture.",
       "evidence": "scripts/test-event-discovery-postgres.mjs; tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx; tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx; tdf-hq/test/Spec.hs"
+    },
+    {
+      "id": "ANALYTICS-WEEKLY-001",
+      "title": "Bounded aggregate weekly platform measurement",
+      "statement": "Prepare a read-only, repeatable-read aggregate query and summarize supplied current/previous seven-day windows without treating profile imports, telemetry milestones or missing data as verified human growth or campaign causality.",
+      "authority": "User instruction to implement weekly platform measurement, 2026-10-30; production collection remains contingent on an authorized read-only source.",
+      "domain": "analytics",
+      "actors": [
+        "Authorized report operator"
+      ],
+      "preconditions": [
+        "Explicit timezone-aware cutoff",
+        "Two comparable aggregate windows for summaries"
+      ],
+      "inputs": [
+        "Cutoff datetime",
+        "Aggregate-only JSON exported by the generated query"
+      ],
+      "state": {
+        "source": "supplied aggregate export, not independently verified"
+      },
+      "allowedTransitions": [
+        "No input -> read-only SQL text",
+        "Validated aggregate export -> labeled report"
+      ],
+      "forbiddenTransitions": [
+        "Missing metric -> zero",
+        "All-origin profile count -> human signup count",
+        "Synthetic fixture -> production result"
+      ],
+      "effects": [
+        "Print query or aggregate report; never open database or network connection"
+      ],
+      "authorization": "Existing authorized operator executes query with an approved read-only connection; tool does not obtain credentials or broaden grants.",
+      "privacy": "Export aggregate counts only, rejecting unexpected input fields; no identity/contact/token fields are queried or emitted.",
+      "concurrency": "Generated query uses one repeatable-read snapshot; output serialization does not mutate state.",
+      "idempotency": "Same cutoff and aggregate input produce the same summary.",
+      "failure": "Reject naive/injected cutoff, stale or incomplete export and invalid counts; missing coverage stays null.",
+      "recovery": "Obtain corrected aggregate input through existing authorized source; never substitute fixtures.",
+      "observability": "Source, collection time, local cutoff, half-open intervals, deltas and limitations accompany results.",
+      "source": "docs/analytics/weekly-platform-metrics.md",
+      "implementation": [
+        "scripts/weekly-platform-metrics.py"
+      ],
+      "tests": [
+        "scripts/test-weekly-platform-metrics.py"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Four offline tests and actual disposable PostgreSQL16 query/permission controls; production grants and collection unverified.",
+      "ambiguity": [
+        "Synthetic account exclusions and historical deletions are not classified.",
+        "No reliable origin/claim partition or campaign attribution is supplied.",
+        "Only extracted actual table DDL and the onboarding migration are qualified in disposable PostgreSQL; full canonical replay and production grants remain unverified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Offline preparation and isolated PostgreSQL aggregate/permission qualification implemented; production grants, actual collection and complete growth coverage remain unverified."
+      },
+      "critical": false,
+      "property": "Unknown growth coverage cannot become a verified human or attributed conversion count.",
+      "contract": "docs/analytics/weekly-platform-metrics.md",
+      "verification": "Four offline tests and actual PostgreSQL16 half-open boundaries, offset equivalence, snapshot/deadline checks, SELECT-only role and independent read-only write controls; no production collection or grants attested.",
+      "evidence": [
+        "Offline unit tests only; no production data collected.",
+        "reports/weekly-platform-metrics-main-qualification-2026-11-05.json"
+      ],
+      "historicalStatus": "New bounded measurement tooling, not a production observation."
     }
   ],
   "sourceFingerprints": {
@@ -18394,7 +18462,7 @@
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
-    "scripts/music-media-health.py": "eec4dd17a794fffcdf81255fcb05ab43b084f0e24c404f51fba2e00ccc55f471",
+    "scripts/music-media-health.py": "a9b98debadbf1a1ccaec0f42b2a24ca03d0742dd3b32dfd94ccc0d517c9bf84d",
     "scripts/prepare-content-storage-reconciliation.mjs": "8032784954c085896cee00ab69bea66037443e6ff522941aa55ea244706dad57",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
     "scripts/prepare-native-session.py": "a4f3a668b63c11b6c7878bc6f7dafe0853ad2cc9e9e7db8ad6c691c43f680479",
@@ -18486,7 +18554,7 @@
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
     "scripts/test-music-media-health.mjs": "383825c93a9090858d72ae401cbcad93358cf4e540949c45ed0097b7d90b4efe",
-    "scripts/test-music-media-health.py": "c064d32dcdf7a3b9ec5474bb577856f8f5274f43616e4add33bedc3d5e6ec6dc",
+    "scripts/test-music-media-health.py": "1139af6e4926516612974422bd09d3f488fec18ea275553699af8c8bde7fcce8",
     "scripts/test-music-money-wire-verifier.py": "bc1c7cce17011641bbf01ff4ac5382c4d101526bbd3e913fa0c0ae436e915eb5",
     "scripts/test-music-payment-outcomes.sh": "f529c92e471a8118013eab1c229abc7c0cc9ec64b8ac925a8ef677e9f57c02ac",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
@@ -18546,6 +18614,7 @@
     "scripts/test-ticket-payment-gate.sh": "3d226d1c5413e352528c1a2b8a43db51a21408d2159d3129bf535a08b7e6679a",
     "scripts/test-verification-report.py": "c7135f7d76bdebc33b7493edd6284149a585c1b3220a3af61da03b3ddacb987f",
     "scripts/test-video-campaign-postgres.sh": "0e6c93dc5d5784fcdd874459d282c32c3b9634f21cbf114b206af6cda08c948a",
+    "scripts/test-weekly-platform-metrics.py": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
     "scripts/test-whatsapp-consent.sh": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
     "scripts/test-whatsapp-redelivery.sh": "aef7f8634e93d2c8f5555d56b626b674e84a84a6a18829fb6d8e8e22541015c2",
     "scripts/test_mail_deliverability_monitor.py": "7b8ba2c23a3b38bcac9934f79cf24a095be6fbd0b36b15d0c23e1f29d535685d",
@@ -18572,6 +18641,7 @@
     "scripts/verify-request-failures.py": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
     "scripts/verify-system-evidence.mjs": "01928fc197382c5a4a0e0e4107ed5311771d276217715b8bc88d42bb9f85ac17",
     "scripts/verify-video-campaign-access.mjs": "0b6a82b0c2472d1735cbe9e0f84b2ecc1d513c3fa81b853bd2d7a932cea6ace7",
+    "scripts/weekly-platform-metrics.py": "eb4989f17ff699f65c9a382b94afac31cd9599ff0b7cda517ce073dd69b1ba83",
     "services/campaign-platform/backup.py": "fbc72e9d0d38e09d7de286d980b3a2983b57ffed2867b00878cb27d3c3db5c83",
     "services/campaign-platform/backup_control.py": "65f1befe17e659b21b98a308583cf4e601d683a7beb03a108633aa154cba543a",
     "services/campaign-platform/backup_crypto.py": "4078c9daad93c68cb1c8feaafb42c676b34df89703fa1a792ade66f932679357",
@@ -35208,6 +35278,18 @@
         "requirement": "EVT-DISCOVERY-FILTER-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/weekly-platform-metrics.py": [
+      {
+        "requirement": "ANALYTICS-WEEKLY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-weekly-platform-metrics.py": [
+      {
+        "requirement": "ANALYTICS-WEEKLY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -39645,7 +39727,7 @@
     {
       "id": "SURFACE-065b757f096cfd7c",
       "path": "scripts/music-media-health.py",
-      "sha256": "eec4dd17a794fffcdf81255fcb05ab43b084f0e24c404f51fba2e00ccc55f471",
+      "sha256": "a9b98debadbf1a1ccaec0f42b2a24ca03d0742dd3b32dfd94ccc0d517c9bf84d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41928,7 +42010,7 @@
     {
       "id": "SURFACE-f4fdf752dc07e153",
       "path": "scripts/test-music-media-health.py",
-      "sha256": "c064d32dcdf7a3b9ec5474bb577856f8f5274f43616e4add33bedc3d5e6ec6dc",
+      "sha256": "1139af6e4926516612974422bd09d3f488fec18ea275553699af8c8bde7fcce8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -42904,6 +42986,18 @@
       ]
     },
     {
+      "id": "SURFACE-d0a29d547d2a49db",
+      "path": "scripts/test-weekly-platform-metrics.py",
+      "sha256": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ANALYTICS-WEEKLY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-da68a6be269c4e94",
       "path": "scripts/test-whatsapp-consent.sh",
       "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
@@ -43384,6 +43478,18 @@
         {
           "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
           "relationship": "formalModels"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-00fd92180a50abfd",
+      "path": "scripts/weekly-platform-metrics.py",
+      "sha256": "eb4989f17ff699f65c9a382b94afac31cd9599ff0b7cda517ce073dd69b1ba83",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ANALYTICS-WEEKLY-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -70946,7 +71052,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "24b28396c2ad7ceb9946b38a3d491c26acea698f1b5c8df2855e696732fbfcf8",
+      "sourceSha256": "dd05b181fc53b828bb4d1135b85e6e0cf8aed45974697d0d346f3bdd1df0c833",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70974,7 +71080,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "24b28396c2ad7ceb9946b38a3d491c26acea698f1b5c8df2855e696732fbfcf8",
+      "sourceSha256": "dd05b181fc53b828bb4d1135b85e6e0cf8aed45974697d0d346f3bdd1df0c833",
       "definition": {
         "states": [
           "absent",
@@ -71004,7 +71110,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "24b28396c2ad7ceb9946b38a3d491c26acea698f1b5c8df2855e696732fbfcf8",
+      "sourceSha256": "dd05b181fc53b828bb4d1135b85e6e0cf8aed45974697d0d346f3bdd1df0c833",
       "definition": {
         "export": [
           "queued",
@@ -94050,7 +94156,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 0,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 207,
+    "PARTIAL": 208,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
