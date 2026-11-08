@@ -5262,7 +5262,7 @@
     {
       "id": "SURFACE-065b757f096cfd7c",
       "path": "scripts/music-media-health.py",
-      "sha256": "a9b98debadbf1a1ccaec0f42b2a24ca03d0742dd3b32dfd94ccc0d517c9bf84d",
+      "sha256": "96c251959f321a8cfb9ef486e9cfbb36e91d47beb2f606ef6e84798f05a31644",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6462,7 +6462,7 @@
     {
       "id": "SURFACE-f4fdf752dc07e153",
       "path": "scripts/test-music-media-health.py",
-      "sha256": "1139af6e4926516612974422bd09d3f488fec18ea275553699af8c8bde7fcce8",
+      "sha256": "b70f9d104e634a6d6137600b03a3b9716dcc8c9a2641a124d17fc97431b5a195",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -23498,7 +23498,7 @@
     },
     {
       "path": "docs/music-releases/linux-worker-image.md",
-      "sha256": "51ce05ffee942a7c04219d6e54959e0f2d719d9af6e1c6be66e7822db2e5ebe2",
+      "sha256": "0b1edcd9e27e13054497ce773ccabe10cf253688edec56df26804a5fd7009dd9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30498,7 +30498,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "748a533e460f22304e1c56c3ad2c8cf1cee1fbeda48bdd9edc518860b7d337ac",
+      "sha256": "54c27501bdb64f94f96c95f58115b9b396bc162e4ed3a470939dbb3898a27452",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
