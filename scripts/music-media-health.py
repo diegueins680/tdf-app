@@ -193,9 +193,19 @@ def fetch_prefix(url, *, signed=False, env=None, resolver=None, connection=http.
                     ended = True
                     break
                 data.extend(block)
-            length = response.getheader('Content-Length', '')
+            length = response.getheader('Content-Length')
+            declared_length = None
+            if length is not None:
+                length = length.strip(' \t')
+                if not re.fullmatch(r'[0-9]+', length):
+                    raise ProbeFailure('transport')
+                declared_length = int(length)
+                # EOF does not establish a complete entity if framing promises more.
+                # Never turn a truncated transfer into a permanent media verdict.
+                if len(data) > declared_length or (ended and len(data) != declared_length):
+                    raise ProbeFailure('transport')
             whole_range = re.fullmatch(r'bytes 0-(\d+)/(\d+)', response.getheader('Content-Range', ''))
-            complete = (code == 200 and (ended or (length.isdigit() and int(length) == len(data))))
+            complete = (code == 200 and (ended or declared_length == len(data)))
             if code == 206 and whole_range:
                 last, total = map(int, whole_range.groups())
                 complete = last + 1 == total == len(data) and total <= MAX_BYTES
