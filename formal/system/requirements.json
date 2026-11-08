@@ -17503,10 +17503,10 @@
       ],
       "authorization": "Creation grants only the Customer role through the account.apple.customer automatic policy; linking requires existing credentials.",
       "privacy": "Apple verified relay/contact email is stored as the private primary email; both Google and Apple use canonical initialAccountName when a provider name is absent, never an email as the public display-name fallback. Tokens and raw nonces are never logged.",
-      "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses single-flight through a cancellation-safe lock. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
+      "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses and stale known keys single-flight through a cancellation-safe lock. A usable successful key set is cached for strictly less than 900 seconds; a matching kid does not extend that lifetime. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
       "idempotency": "Repeated login for a bound subject reuses the credential.",
       "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
-      "recovery": "After key retrieval failure or cancellation, fail closed during the attempt cooldown; retry key retrieval after the cooldown. Existing cached tokens still require an unexpired valid signature/claims, or the user can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
+      "recovery": "After key retrieval failure, unusable responses or cancellation, stale known keys fail closed during the attempt cooldown; retry retrieval after the cooldown. Failed attempts never renew successful-cache lifetime. Fresh known keys remain usable while every token signature and claim is rechecked. A backward clock cannot make a future cache timestamp fresh. Users can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
       "observability": "login_apple auth activity and rejected-token warnings without token content.",
       "source": "App Store Connect rejection notice relayed by the product owner",
       "implementation": [
@@ -17566,7 +17566,7 @@
       "confidence": "Source-bound compiled verifier/request/session-window/DTO/configuration cases, owned PostgreSQL lifecycle/issuer controls, and compatible Mobile710unit/89focused/type/lint/release/Metro plus12signing tests. Production provider configuration and physical-device/capability checks remain unverified release validation; no whole-system proof.",
       "ambiguity": [
         "Services ID audiences for web are configurable but not exercised.",
-        "Inherited known-kid cache entries have no residence TTL; signature and token expiry are rechecked, but this repair does not prove prompt provider key-revocation freshness."
+        "Successful key-set residence is bounded by the local 900 second cache policy, not instant provider revocation. Provider publication latency, fresh cached keys within that interval and already issued application sessions remain outside an immediate key-removal guarantee."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -17574,7 +17574,7 @@
       },
       "critical": true,
       "property": "NoSessionWithoutVerifiedAppleToken and ExplicitConsentBeforeCreation",
-      "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests.",
+      "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests. Injected-clock/fetch cache controls cover the 899/900 second boundary, withdrawn keys with fresh claims, stale failure/empty/cancel cooldown, concurrent refresh and clock rollback; these finite cases are not a universal revocation proof.",
       "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
       "contract": "tdf-hq/docs/openapi/api.yaml"
     },

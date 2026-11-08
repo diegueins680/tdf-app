@@ -415,6 +415,144 @@ spec = describe "Sign in with Apple identity token verification" $ do
         >>= (`shouldSatisfy` isMalformed)
       readIORef calls `shouldReturn` 0
 
+    it "refreshes a known kid at the successful-cache lifetime boundary and rejects a withdrawn key" $ do
+      cache <- newAppleKeyCache
+      rotated <- newSigningKey "replacement-key"
+      calls <- newIORef (0 :: Int)
+      let fetch = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor key]))
+          at seconds = verification { avNow = addUTCTime seconds now }
+          claimsAt seconds = withClaims
+            [("iat", Number (fromInteger (epochSeconds now + seconds - 5))),
+             ("exp", Number (fromInteger (epochSeconds now + seconds + 600)))]
+      first <- tokenWith key baseClaims
+      verifyAppleIdentityToken cache fetch verification first
+        >>= (`shouldSatisfy` either (const False) (const True))
+      fresh <- tokenWith key (claimsAt 899)
+      verifyAppleIdentityToken cache fetch (at 899) fresh
+        >>= (`shouldSatisfy` either (const False) (const True))
+      readIORef calls `shouldReturn` 1
+      withdrawn <- tokenWith key (claimsAt 900)
+      let replacement = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor rotated]))
+      verifyAppleIdentityToken cache replacement (at 900) withdrawn
+        `shouldReturn` Left (AppleTokenUnknownKey (skKid key))
+      readIORef calls `shouldReturn` 2
+      replacementToken <- tokenWith rotated (claimsAt 900)
+      verifyAppleIdentityToken cache replacement (at 900) replacementToken
+        >>= (`shouldSatisfy` either (const False) (const True))
+      readIORef calls `shouldReturn` 2
+
+    it "fails closed on stale known keys during failed-refresh cooldown without a fetch flood" $ do
+      cache <- newAppleKeyCache
+      calls <- newIORef (0 :: Int)
+      first <- tokenWith key baseClaims
+      let goodFetch = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor key]))
+          later = verification { avNow = addUTCTime 900 now }
+      verifyAppleIdentityToken cache goodFetch verification first
+        >>= (`shouldSatisfy` either (const False) (const True))
+      fresh <- tokenWith key (withClaims [("iat", Number (fromInteger (epochSeconds now + 895))),
+                                        ("exp", Number (fromInteger (epochSeconds now + 1600)))])
+      let offline = modifyIORef' calls (+ 1) >> pure (Left "offline")
+      verifyAppleIdentityToken cache offline later fresh
+        `shouldReturn` Left (AppleTokenKeysUnavailable "offline")
+      replicateM_ 8 $ verifyAppleIdentityToken cache goodFetch later fresh
+        `shouldReturn` Left (AppleTokenKeysUnavailable "JWKS refresh cooldown")
+      verifyAppleIdentityToken cache goodFetch later { avNow = addUTCTime 959 now } fresh
+        `shouldReturn` Left (AppleTokenKeysUnavailable "JWKS refresh cooldown")
+      readIORef calls `shouldReturn` 2
+      verifyAppleIdentityToken cache goodFetch later { avNow = addUTCTime 960 now } fresh
+        >>= (`shouldSatisfy` either (const False) (const True))
+      readIORef calls `shouldReturn` 3
+
+    it "does not renew stale keys from an empty or unusable successful response" $ do
+      let check keys = do
+            cache <- newAppleKeyCache
+            calls <- newIORef (0 :: Int)
+            first <- tokenWith key baseClaims
+            let fetch = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor key]))
+                later = verification { avNow = addUTCTime 900 now }
+            verifyAppleIdentityToken cache fetch verification first
+              >>= (`shouldSatisfy` either (const False) (const True))
+            fresh <- tokenWith key (withClaims [("iat", Number (fromInteger (epochSeconds now + 895))),
+                                              ("exp", Number (fromInteger (epochSeconds now + 1600)))])
+            verifyAppleIdentityToken cache
+              (modifyIORef' calls (+ 1) >> pure (Right (AppleJwks keys))) later fresh
+              `shouldReturn` Left (AppleTokenKeysUnavailable "no usable RSA keys")
+            verifyAppleIdentityToken cache fetch later fresh
+              `shouldReturn` Left (AppleTokenKeysUnavailable "JWKS refresh cooldown")
+            readIORef calls `shouldReturn` 2
+      check []
+      check [(jwkFor key) { ajKty = "EC" }]
+
+    it "single-flights concurrent stale known-key refreshes and replaces the key set" $ do
+      cache <- newAppleKeyCache
+      first <- tokenWith key baseClaims
+      verifyAppleIdentityToken cache (pure (Right (AppleJwks [jwkFor key]))) verification first
+        >>= (`shouldSatisfy` either (const False) (const True))
+      rotated <- newSigningKey "replacement-key"
+      fresh <- tokenWith key (withClaims [("iat", Number (fromInteger (epochSeconds now + 895))),
+                                        ("exp", Number (fromInteger (epochSeconds now + 1600)))])
+      calls <- newIORef (0 :: Int)
+      entered <- newEmptyMVar
+      release <- newEmptyMVar
+      begin <- newEmptyMVar
+      done <- replicateM 4 newEmptyMVar
+      let later = verification { avNow = addUTCTime 900 now }
+          fetch = do
+            modifyIORef' calls (+ 1)
+            putMVar entered ()
+            readMVar release
+            pure (Right (AppleJwks [jwkFor rotated]))
+      threads <- mapM (\result -> forkIO $ readMVar begin >>
+        verifyAppleIdentityToken cache fetch later fresh >>= putMVar result) done
+      E.finally (do
+        putMVar begin ()
+        timeout 1000000 (takeMVar entered) `shouldReturn` Just ()
+        timeout 100000 (takeMVar entered) `shouldReturn` Nothing
+        putMVar release ()
+        timeout 1000000 (mapM takeMVar done)
+          `shouldReturn` Just (replicate 4 (Left (AppleTokenUnknownKey (skKid key))))
+        readIORef calls `shouldReturn` 1) (mapM_ killThread threads)
+
+    it "propagates a cancelled stale-key refresh without authorizing the old key or losing cooldown" $ do
+      cache <- newAppleKeyCache
+      first <- tokenWith key baseClaims
+      verifyAppleIdentityToken cache (pure (Right (AppleJwks [jwkFor key]))) verification first
+        >>= (`shouldSatisfy` either (const False) (const True))
+      fresh <- tokenWith key (withClaims [("iat", Number (fromInteger (epochSeconds now + 895))),
+                                        ("exp", Number (fromInteger (epochSeconds now + 1600)))])
+      entered <- newEmptyMVar
+      never <- newEmptyMVar
+      result <- newEmptyMVar
+      let later = verification { avNow = addUTCTime 900 now }
+      worker <- forkIO $ do
+        outcome <- E.try (verifyAppleIdentityToken cache
+          (putMVar entered () >> takeMVar never) later fresh)
+          :: IO (Either E.AsyncException (Either AppleTokenError AppleIdentity))
+        putMVar result outcome
+      E.finally (do
+        timeout 1000000 (takeMVar entered) `shouldReturn` Just ()
+        killThread worker
+        timeout 1000000 (takeMVar result) `shouldReturn` Just (Left E.ThreadKilled)
+        calls <- newIORef (0 :: Int)
+        let fetch = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor key]))
+        timeout 1000000 (verifyAppleIdentityToken cache fetch later fresh)
+          `shouldReturn` Just (Left (AppleTokenKeysUnavailable "JWKS refresh cooldown"))
+        readIORef calls `shouldReturn` 0
+        verifyAppleIdentityToken cache fetch later { avNow = addUTCTime 960 now } fresh
+          >>= (`shouldSatisfy` either (const False) (const True))
+        readIORef calls `shouldReturn` 1) (killThread worker)
+
+    it "does not treat a future successful-cache timestamp as fresh after a clock rollback" $ do
+      cache <- newAppleKeyCache
+      first <- tokenWith key baseClaims
+      calls <- newIORef (0 :: Int)
+      let fetch = modifyIORef' calls (+ 1) >> pure (Right (AppleJwks [jwkFor key]))
+      verifyAppleIdentityToken cache fetch verification first
+        >>= (`shouldSatisfy` either (const False) (const True))
+      verifyAppleIdentityToken cache fetch verification { avNow = addUTCTime (-1) now } first
+        `shouldReturn` Left (AppleTokenKeysUnavailable "JWKS refresh cooldown")
+      readIORef calls `shouldReturn` 1
+
     it "still verifies signatures with cached keys from a map lookup" $ do
       token <- tokenWith key baseClaims
       let keys = Map.fromList [(skKid key, skPublic key)]

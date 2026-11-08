@@ -375,6 +375,7 @@ validateAppleClaims AppleVerification { avAudiences, avNow, avExpectedNonce } cl
 data AppleKeyCacheState = AppleKeyCacheState
   { akcKeys :: Map.Map Text PublicKey
   , akcLastFetch :: Maybe UTCTime
+  , akcLastSuccess :: Maybe UTCTime
   }
 
 data AppleKeyCache = AppleKeyCache
@@ -384,7 +385,8 @@ data AppleKeyCache = AppleKeyCache
 
 newAppleKeyCache :: IO AppleKeyCache
 newAppleKeyCache = do
-  state <- newIORef AppleKeyCacheState { akcKeys = Map.empty, akcLastFetch = Nothing }
+  state <- newIORef AppleKeyCacheState
+    { akcKeys = Map.empty, akcLastFetch = Nothing, akcLastSuccess = Nothing }
   fetchLock <- newMVar ()
   pure AppleKeyCache { akcState = state, akcFetchLock = fetchLock }
 
@@ -396,8 +398,15 @@ type AppleJwksFetch = IO (Either Text AppleJwks)
 minimumRefetchIntervalSeconds :: Double
 minimumRefetchIntervalSeconds = 60
 
--- | Verify a token, consulting the cache first and refetching the JWKS at most
--- once when the header names a key the cache does not hold (Apple rotates keys).
+-- | Local maximum residence of a successfully fetched usable key set. Apple
+-- may withdraw a known kid, so a matching kid alone cannot keep keys alive.
+-- This is a bounded cache policy, not an instantaneous revocation guarantee.
+maximumKeyCacheAgeSeconds :: Double
+maximumKeyCacheAgeSeconds = 900
+
+-- | Verify a token using only a fresh successful key set. Unknown ids and stale
+-- known ids share the same bounded refresh path; failed/empty/cancelled fetches
+-- never extend the last successful key set's lifetime.
 verifyAppleIdentityToken
   :: AppleKeyCache
   -> AppleJwksFetch
@@ -410,15 +419,20 @@ verifyAppleIdentityToken AppleKeyCache { akcState = ref, akcFetchLock } fetchKey
     Right kid -> do
       state <- readIORef ref
       keys <-
-        if Map.member kid (akcKeys state)
+        if fresh state && Map.member kid (akcKeys state)
           then pure (Right (akcKeys state))
           else refresh kid
       pure $ case keys of
         Left err -> Left err
         Right available -> verifyAppleIdentityTokenWithKeys verification (`Map.lookup` available) token
   where
-    -- Serialize only cache misses. The state is re-read after acquiring the
-    -- lock: another verifier may already have fetched this signing key.
+    fresh state = case akcLastSuccess state of
+      Nothing -> False
+      Just previous ->
+        let age = realToFrac (diffUTCTime (avNow verification) previous)
+        in age >= 0 && age < maximumKeyCacheAgeSeconds
+    -- Serialize misses and stale entries. Re-read after acquiring the lock:
+    -- another verifier may already have refreshed this signing key's set.
     -- withMVar restores asynchronous cancellation during the fetch and always
     -- releases the lock. The attempt timestamp lives outside the lock value,
     -- so cancellation must not roll it back and immediately permit amplification.
@@ -427,16 +441,16 @@ verifyAppleIdentityToken AppleKeyCache { akcState = ref, akcFetchLock } fetchKey
       let recentlyAttempted = case akcLastFetch state of
             Just previous -> realToFrac (diffUTCTime (avNow verification) previous) < minimumRefetchIntervalSeconds
             Nothing -> False
-      if Map.member kid (akcKeys state)
+      if fresh state && Map.member kid (akcKeys state)
         then pure (Right (akcKeys state))
         else if recentlyAttempted
-          then if Map.null (akcKeys state)
+          then if not (fresh state) || Map.null (akcKeys state)
             then pure (Left (AppleTokenKeysUnavailable "JWKS refresh cooldown"))
             else pure (Right (akcKeys state))
           else do
             -- Reserve before every fetch, including failed/empty responses.
-            -- Keep prior keys; successful refresh still replaces them exactly
-            -- as before, and each token's signature and lifetime are rechecked.
+            -- Prior keys remain usable only within their successful lifetime;
+            -- the attempt reservation must not renew that lifetime.
             atomicModifyIORef' ref $ \current ->
               (current { akcLastFetch = Just (avNow verification) }, ())
             fetched <- fetchKeys
@@ -448,7 +462,7 @@ verifyAppleIdentityToken AppleKeyCache { akcState = ref, akcFetchLock } fetchKey
                   then pure (Left (AppleTokenKeysUnavailable "no usable RSA keys"))
                   else do
                     atomicModifyIORef' ref $ \current ->
-                      (current { akcKeys = usable }, ())
+                      (current { akcKeys = usable, akcLastSuccess = Just (avNow verification) }, ())
                     pure (Right usable)
 
 -- | Production JWKS retrieval over HTTPS.
