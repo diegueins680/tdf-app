@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "47a476da7d05d17f1890711060a821a34dd2854a191b13be3c50f0696b2d07fa",
+    "tdf-hq/tdf-hq.cabal": "84b38e9bb52d76785ae44b37016e512797c097ad055412bcb1a8a5f1528f52bd",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -558,6 +558,17 @@
       "semanticReview": "Independent reversal of exactly these3 literal lines reproduces complete Main9df Cabal. All other controlled sources are byte-exact Main; source productionVault/unix behavior is unchanged, and both parent context histories and7 obligations are retained.",
       "independentReviewSha256": "b72542ad80b59791a077c377fdadddcfdf7a5370318f2bf5ff75e8492ab433f3",
       "qualification": "Restricted conditional authentication/recovery import, binding and translation context only; no storage/vault/quota/privacy/ownership/Drive/provider/HTTP/SQL/whole-program or release proof. Fresh scoped solver/controls and mandatory hosted current native checks remain required."
+    },
+    {
+      "reviewedAgainst": "be052c96d85309d9726e2985b261e5673daebd1f",
+      "materialRevision": "057e7e8fec04afa721b57dcabc390ca67120f63e",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "47a476da7d05d17f1890711060a821a34dd2854a191b13be3c50f0696b2d07fa",
+      "currentSha256": "84b38e9bb52d76785ae44b37016e512797c097ad055412bcb1a8a5f1528f52bd",
+      "change": "Expose TDF.DriveOAuthClient so exchange and vault refresh reuse the existing canonical client resolver and validators.",
+      "semanticReview": "Independent review verifies exactly one exposed-module addition and no other Cabal dependency, compiler, flag or registration change. Shared helper bodies and constants are copied from the canonical Server implementation; thin Server compatibility wrappers preserve its existing callers. All other controlled sources and the seven obligations stay unchanged.",
+      "independentReviewSha256": "89c345a8a8ff1bc41f7f79c9a1cf86e915ac1868f1d1cea9c296ad36db92a4ee",
+      "qualification": "Restricted conditional authentication/recovery import, binding and translation context only. This is not a StorageVault/OAuth/request-builder/provider/HTTP/SQL/transaction/whole-program or release proof. Actual request controls and fresh scoped solvers/controls plus mandatory hosted checks remain required."
     }
   ]
 }
