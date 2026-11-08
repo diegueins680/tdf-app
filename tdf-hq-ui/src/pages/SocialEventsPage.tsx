@@ -1,5 +1,6 @@
 import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
 import { buildEventFinanceCsvRows } from '../utils/eventFinanceCsv';
+import { serializeCsvCell, type CsvCell } from '../utils/csv';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
@@ -246,11 +247,8 @@ const parseOptionalUnsignedInt = (value: string): number | null => {
 
 const dateKeyFromIso = (iso: string) => DateTime.fromISO(iso).toISODate() ?? '';
 
-const csvEscape = (value: string | number | boolean | null | undefined) =>
-  `"${String(value ?? '').replace(/"/g, '""')}"`;
-
-const downloadCsvFile = (filename: string, rows: (string | number | boolean | null | undefined)[][]) => {
-  const csv = rows.map((row) => row.map(csvEscape).join(',')).join('\n');
+const downloadCsvFile = (filename: string, rows: CsvCell[][]) => {
+  const csv = rows.map((row) => row.map(serializeCsvCell).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

@@ -234,6 +234,23 @@ token without a window is a pre-enforcement session and is denied. Service and
 custom-label tokens may remain unbounded; a window on such a token is enforced
 when present. Legacy interactive sessions are not backfilled; users sign in again.
 
+Bounded admission requires both epochs and `0 <= issued <= now < expires`.
+This includes issuance and excludes expiry, and implies the migration's strict
+`expires > issued` relation without subtracting potentially overflowing Int64s.
+An incomplete pair, a negative issue epoch or an empty/reversed interval is
+invalid and fails closed for every label. Both epochs absent retain the stated
+service/custom policy and legacy-interactive refusal.
+
+The previous predicate checked only `now < expires`: issued=100, expires=200,
+now=99 was accepted even though the row is well formed. This counterexample
+models clock regression or future stored state, not an ordinary remote ability
+to choose token epochs. Pure boundary/generated Int64 cases and real SQLite
+lookup regressions exercise the shared admission rule; a resolvable live label
+is the positive control for credential lookup. Malformed in-memory test values
+are outside the post-migration PostgreSQL CHECK, not a claimed reachable remote
+attack. These finite checks do not prove time stays inside the window throughout
+later domain work or establish whole endpoint/refinement or clock reliability.
+
 Authentication denies an active, authenticatable token whose window has elapsed
 or is absent for an interactive label, in the request-time lookup, in both locked
 re-reads inside a transaction (`withCurrentAuthSession` and the social

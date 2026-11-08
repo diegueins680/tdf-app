@@ -1,9 +1,6 @@
 import type WebTorrent from 'webtorrent';
 import webTorrentBundleUrl from '../vendor/webtorrent/webtorrent.min.js?url';
-
-const TORRENT_WORKER_URL = '/webtorrent-sw.min.js';
-const TORRENT_WORKER_SCOPE = '/torrent-stream/';
-const TORRENT_WORKER_ACTIVATION_TIMEOUT_MS = 15_000;
+import { ensureTorrentWorker } from './torrentWorker';
 
 const PLAYABLE_AUDIO_EXTENSIONS = new Set([
   'aac',
@@ -52,7 +49,6 @@ interface CreateTorrentAudioSessionOptions {
   onWarning?: (message: string) => void;
 }
 
-let workerRegistrationPromise: Promise<ServiceWorkerRegistration> | null = null;
 let webTorrentConstructorPromise: Promise<WebTorrent.WebTorrent> | null = null;
 
 export function isMagnetLink(value: string): boolean {
@@ -101,55 +97,6 @@ export function pickPlayableAudioFile<T extends TorrentFileCandidate>(files: rea
   );
 }
 
-function waitForWorkerActivation(registration: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration> {
-  if (registration.active?.state === 'activated') {
-    return Promise.resolve(registration);
-  }
-
-  const worker = registration.installing ?? registration.waiting ?? registration.active;
-  if (!worker) {
-    return Promise.reject(new Error('No se pudo iniciar el servicio de torrents.'));
-  }
-
-  return new Promise((resolve, reject) => {
-    const timeout = window.setTimeout(() => {
-      worker.removeEventListener('statechange', handleStateChange);
-      reject(new Error('El servicio de torrents tardó demasiado en iniciar.'));
-    }, TORRENT_WORKER_ACTIVATION_TIMEOUT_MS);
-
-    const handleStateChange = () => {
-      if (worker.state === 'activated') {
-        window.clearTimeout(timeout);
-        worker.removeEventListener('statechange', handleStateChange);
-        resolve(registration);
-      } else if (worker.state === 'redundant') {
-        window.clearTimeout(timeout);
-        worker.removeEventListener('statechange', handleStateChange);
-        reject(new Error('No se pudo activar el servicio de torrents.'));
-      }
-    };
-
-    worker.addEventListener('statechange', handleStateChange);
-    handleStateChange();
-  });
-}
-
-async function ensureTorrentWorker(): Promise<ServiceWorkerRegistration> {
-  if (!('serviceWorker' in navigator)) {
-    throw new Error('Este navegador no permite reproducir torrents.');
-  }
-
-  workerRegistrationPromise ??= navigator.serviceWorker
-    .register(TORRENT_WORKER_URL, { scope: TORRENT_WORKER_SCOPE })
-    .then(waitForWorkerActivation)
-    .catch((error: unknown) => {
-      workerRegistrationPromise = null;
-      throw error;
-    });
-
-  return workerRegistrationPromise;
-}
-
 function errorMessage(error: Error | string): string {
   return typeof error === 'string' ? error : error.message;
 }
@@ -182,16 +129,18 @@ export async function createTorrentAudioSession({
     throw new Error('La reproducción del torrent fue cancelada.');
   }
 
-  const [WebTorrentClient, registration] = await Promise.all([
-    loadWebTorrentConstructor(),
-    ensureTorrentWorker(),
-  ]);
+  const WebTorrentClient = await loadWebTorrentConstructor();
 
   if (signal?.aborted) {
     throw new Error('La reproducción del torrent fue cancelada.');
   }
   if (!WebTorrentClient.WEBRTC_SUPPORT) {
     throw new Error('Este navegador no admite conexiones WebRTC para torrents.');
+  }
+
+  const registration = await ensureTorrentWorker();
+  if (signal?.aborted) {
+    throw new Error('La reproducción del torrent fue cancelada.');
   }
 
   const client = new WebTorrentClient({

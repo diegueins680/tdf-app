@@ -213,7 +213,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence, SAT witnesses and negative controls; actual Haskell boundary oracle. Caller preconditions manually inspected; SQL/whole-program proof open.",
+      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence and outer-validator sign-precondition implication, SAT witnesses/source mutations and negative controls; independent CPC refutations; actual Haskell boundary oracle. Translation/composition, dispatch, SQL and whole-program refinement remain open.",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -276,7 +276,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Same full-width source-derived SMT and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
+      "verification": "Same full-width source-derived SMT, outer-validator sign-precondition, independent CPC and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -1684,17 +1684,17 @@
       "critical": true,
       "status": "specified and implemented",
       "contract": "formal/system/identity-lifecycle.md",
-      "confidence": "Candidate repair authored without a compiled build; exact-head stack build, integration and rollout pending",
+      "confidence": "Specified shared admission rule with finite unit/property and SQLite controls; exact source-bound qualification is recorded separately. PostgreSQL locked-window and production rollout guarantees are not implied.",
       "ambiguity": [
         "Hashed token storage, sliding last-use refresh and login rate limits remain open.",
         "Production release sequencing after the additive migration is not yet verified."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
+        "reason": "Finite predicate/lookup regressions and inherited migration/config controls support the rule; exact candidate compilation and execution receipts are separate, and complete endpoint/clock/refinement and production rollout remain unresolved."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
-      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test Formal model formal/auth/SessionExpiry.tla: Apalache proves WithinWindowAtUse, LegacyInteractiveFailsClosed, TtlBoundedByCookie and ResetNeverAuthenticates inductively for up to four tokens and any clock movement; TLC explores 2,046,828 states; accepting tokens without expiry, or admitting a TTL above the cookie Max-Age, violates Safe in both tools; a reachability witness shows a minted session is accepted (scripts/verify-inductive-proofs.sh).",
+      "verification": "Actual shared-predicate boundary cases, generated full-width valid-window clock partitions, SQLite loadAuthedUser and credential-identification positive/negative controls, existing config validation, idempotent PostgreSQL migration/constraint controls and rollback-floor test. Fresh candidate receipts are separate; no complete endpoint/refinement proof. Conditional authorization/recovery projections remain separately scoped source-derived solver claims, not a proof of the complete validity-window helper. The retained formal/auth/SessionExpiry.tla model has actual source182ae5e2437756bea7edf28a5f13898eec040627 hosted verification (run42313255678/job128219591685): TLC1.7.2 checked three tokens, one legacy token, cookie Max-Age3, TTL2 and clock0..5; positive and missing-expiry/unchecked-TTL negative configurations completed. The reported2046828 state count is owner-reported and not independently verified from retained hosted logs. Apalache0.62.4 checked initiation, consecution and implication for any nonempty subset of up to four tokens, any legacy subset, TTL/Max-Age1..100000 with TTL<=Max-Age and clock0..MaxTime where MaxTime0..1000000; it also found the minted-session witness and missing-expiry negative control. The unchecked-TTL negative control runs in TLC only. These model inputs are retained byte-exact without rebinding the historical execution; the model encodes upper expiry/legacy/TTL/reset safety and does not establish the issued-at lower bound or complete malformed-window behavior of this stronger runtime rule. Correspondence to implementation remains by review, with no whole endpoint, compiler/translator or program refinement claim.",
       "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
@@ -1717,7 +1717,7 @@
       ],
       "id": "ID-SESSION-004",
       "title": "Interactive sessions expire on the server",
-      "statement": "A password or Google login session must carry a database-clock validity window and be denied once it elapses or when it is absent; legacy interactive sessions fail closed and are not backfilled, while service tokens may stay unbounded.",
+      "statement": "A password or Google login session must carry a well-formed database-clock half-open validity window and be denied before issuance, at or after expiry, or when its window is absent or malformed. Legacy interactive sessions fail closed without backfill; both-null service/custom tokens may stay unbounded.",
       "property": "WithinWindowAtUse /\\ LegacyInteractiveFailsClosed /\\ TtlBoundedByCookie",
       "actors": [
         "session holder",
@@ -1738,10 +1738,11 @@
       },
       "allowedTransitions": [
         "Login/signup/password change/recovery -> interactive token issued with window",
-        "Active token with now < expires -> authenticated",
-        "Service token without window -> authenticated"
+        "Well-formed bounded token with 0 <= issued <= now < expires -> session-time admission; existing identity, purpose and grant checks still apply",
+        "Service/custom token with both epochs absent -> session-time admission under existing identity, purpose and grant checks"
       ],
       "forbiddenTransitions": [
+        "now < issued or malformed/incomplete stored window -> authenticated",
         "now >= expires -> authenticated",
         "Interactive label without window -> authenticated",
         "Expired bearer -> credential identification for password change",
@@ -1753,7 +1754,7 @@
       "authorization": "Possession of an active, authenticatable token inside its validity window on the database clock.",
       "concurrency": "Clock sampled per request and again inside the locked session witness; issuance and window are one transaction.",
       "idempotency": "Denial is repeatable and effect-free; expiry does not renew or revoke other tokens.",
-      "failure": "401 for an expired, absent-window interactive or unknown token; startup fails on an invalid TTL.",
+      "failure": "401 for pre-issuance, expired, malformed, absent-window interactive or unknown tokens; startup fails on invalid TTL.",
       "recovery": "Sign in again. Apply the additive migration before the enforcing binary; never roll the binary back below the floor.",
       "implementation": [
         "tdf-hq/src/TDF/Models.hs",
@@ -2831,14 +2832,16 @@
       ],
       "tests": [
         "scripts/__tests__/dependency-security.test.mjs",
-        "tdf-hq-ui/src/api/socialV2.test.ts"
+        "tdf-hq-ui/src/api/socialV2.test.ts",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "High for scoped deterministic version rejection; partial dependency reachability assessment.",
       "ambiguity": [
         "No universal reachability or transitive supply-chain proof.",
-        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open."
+        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open.",
+        "Other unresolved high/moderate dependency advisories and release exposure remain open."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -11003,7 +11006,8 @@
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "tdf-hq/test/integration/interactions/notification-properties.sql",
-        "e2e/web/chat-notification-navigation.spec.mjs"
+        "e2e/web/chat-notification-navigation.spec.mjs",
+        "e2e/web/chat-mobile-follow.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/ChatNotificationAuthorization.tla",
@@ -12350,7 +12354,8 @@
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        "tdf-hq-ui/src/components/StudioGallery.tsx"
+        "tdf-hq-ui/src/components/StudioGallery.tsx",
+        "tdf-hq-ui/src/pages/NotFoundPage.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12361,7 +12366,8 @@
         "e2e/web/directory-favorite-recovery.spec.mjs",
         "e2e/web/directory-language.spec.mjs",
         "e2e/web/public-welcome.spec.mjs",
-        "tdf-hq-ui/src/components/StudioGallery.test.tsx"
+        "tdf-hq-ui/src/components/StudioGallery.test.tsx",
+        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -15300,7 +15306,7 @@
     {
       "id": "SYS-WEBTORRENT-BROWSER-001",
       "title": "Preserve browser playback while removing unused Node torrent dependencies",
-      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and worker URL and client API, with page control and dispatch governed by MUSIC-TORRENT-CONTROL-001, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
       "domain": "SYS",
       "critical": false,
       "actors": [
@@ -16561,7 +16567,9 @@
         "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
         "scripts/__tests__/video-campaign-access.test.mjs",
         "scripts/test-identity-reconciliation.sh",
-        "tdf-hq/test/sql/identity_reconciliation.sql"
+        "tdf-hq/test/sql/identity_reconciliation.sql",
+        "scripts/test-video-campaign-postgres.sh",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs"
       ],
       "formalModels": [
         "scripts/verify-video-campaign-access.mjs"
@@ -16915,6 +16923,443 @@
       "property": "Every installed resolver exact optional binding is present with matching version and archive integrity in the lock; canonical verification refuses runtime binding downloads.",
       "verification": "Deterministic negative fixtures, clean npmci and native probe with fallback disabled, reversible missing-binary fault; no mathematical proof.",
       "evidence": "scripts/__tests__/native-resolver-lock.test.mjs; candidate-source install/probe receipts separately recorded."
+    },
+    {
+      "id": "SYS-URI-DECODE-001",
+      "title": "Patched URI decoding preserves the installed CommonJS caller",
+      "statement": "The exact pinned Mobile query-string7 decoder must use integrity-pinned upstream0.5.1 through a callable adapter, preserving literal-plus normalization, valid Unicode, non-string rejection and one-level percent decoding; the named repeated-invalid-byte and distinct-percent-run regression oracles must reject their respective affected0.2.2 and0.5.0 implementations.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Mobile user",
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Install the committed Mobile npm v3 lock under the supported Node20.19.4 toolchain; use the exact root gitlink."
+      ],
+      "inputs": [
+        "URI component string",
+        "Malformed percent-encoded bytes",
+        "Non-string input",
+        "Committed dependency lock and local adapter"
+      ],
+      "state": {
+        "boundary": "Stateless synchronous codec; immutable module resolution; no persistence or lifecycle mutation."
+      },
+      "allowedTransitions": [
+        "Replace the affected dependency with the pinned upstream algorithm and reviewed caller adapter after client qualification."
+      ],
+      "forbiddenTransitions": [
+        "Implicitly dispatch the ES module namespace as a function",
+        "Fallback to the legacy vulnerable decoder",
+        "Claim a universal complexity or current incoming-link exploit proof from scoped tests"
+      ],
+      "effects": [
+        "Return a decoded string preserving the caller contract; perform no network or database action."
+      ],
+      "authorization": "Pure decoding grants no capability and performs no authenticated action. Dependency repair does not authorize Mobile distribution or importing newer Mobile-main product behavior.",
+      "privacy": "Neither the adapter nor its evidence collection logs real URI payloads; regression inputs are synthetic.",
+      "concurrency": "Synchronous calls per JavaScript runtime; instrumentation is confined to serialized tests and always restored.",
+      "idempotency": "The same input and pinned decoder yield the same output without persistent effects.",
+      "failure": "Non-string values raise TypeError; no silent legacy fallback. The instrumented budgets are finite executable test oracles, not production timeouts, input-size limits or universal complexity bounds.",
+      "recovery": "Retain the matched reviewed adapter/upstream pair and reproducible lock; repair compatibility rather than restoring the affected algorithm.",
+      "observability": "Record exact Mobile/root revisions, lock integrity, clean-install result, client gates, scoped negative-control results and bundle evidence.",
+      "source": "User audit sections10,18,21-25; upstream GHSA-vcc3-ghjq-m6fr; npm override documentation; fresh inspection of installed Expo6.0.24 and React Navigation parser sources.",
+      "contract": "formal/system/uri-decoder.md",
+      "implementation": [
+        "tdf-mobile/package.json",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/vendor/decode-uri-component/package.json",
+        "tdf-mobile/vendor/decode-uri-component/index.cjs",
+        "tdf-mobile/jest.config.js"
+      ],
+      "tests": [
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped actual-consumer and finite regression obligations; candidate0.5.1 evidence must be recorded at its exact revision. No universal decoder, advisory-free app, attack-path or device proof.",
+      "ambiguity": [
+        "Device/store distribution remains separately qualified.",
+        "Source inspection does not prove every possible future or dynamic parser call is unreachable."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "PARTIAL canonical obligation. Original Mobile7d9481d and baseline6fb0.5.0 codec/client/bundle observations retain historical source identity; fresh audit GHSA-qr28-fpjm-wq7f invalidates security clearance for that algorithm. Candidate0.5.1 requires fresh exact-source codec, client, audit and bundle evidence. Global dependency security and device/store distribution remain separate."
+      },
+      "authority": "approved",
+      "property": "For N in{4,8,16,32}, decoding repeated%FF preserves input and makes1..8N+8 built-in decode calls; actual0.2.2 violates that oracle atN=32. For N in{32,64}, the distinct runs %00%<two-digit hex>x followed by%zz decode to the exact expected string while summed UTF16 receiver lengths across synchronous String.replace calls are positive and <=4 times input length; actual0.5.0 violates the same budget atN=32. The installed query-string7 caller stays callable, and covered produced percent text is decoded only once. These finite families do not establish universal complexity.",
+      "verification": "Actual-consumer Jest and seeded Unicode tests; original0.2.2 call-budget and unadapted-namespace controls;0.5.0 distinct-run replacement-work negative control; one-level percent/BOM/truncated-byte cases; fresh exact-source clean locked install, client gates, audit and native bundles. Historical executions do not qualify changed source.",
+      "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
+    },
+    {
+      "id": "UX-BRAND-ICONS-001",
+      "title": "Official TDF Records application icons",
+      "statement": "Browser and installed web application icons use the unchanged official TDF Records symbol, with correct dimensions, safe padding and discoverable manifest references.",
+      "domain": "UX",
+      "authority": "Explicit product owner correction requested2026-10-29: application icon must use the official logo.",
+      "source": "formal/system/app-brand-icons.md",
+      "contract": "formal/system/app-brand-icons.md",
+      "actors": [
+        "Web visitor",
+        "User installing a web shortcut",
+        "Developer regenerating brand assets"
+      ],
+      "preconditions": [
+        "Existing approved TDF Records SVG symbol and repository Playwright Chromium are available."
+      ],
+      "inputs": [
+        "tdf-hq-ui/src/assets/tdf-isotype.svg"
+      ],
+      "state": {
+        "source": "official symbol SVG",
+        "outputs": "versioned browser and installable web icons"
+      },
+      "allowedTransitions": [
+        "Render the original paths onto the declared square canvas and publish the generated assets through normal review."
+      ],
+      "forbiddenTransitions": [
+        "Redraw the logo with generic TDF text or distort its proportions.",
+        "Claim an installed OS icon has refreshed solely because source assets changed."
+      ],
+      "effects": [
+        "Browser favicon, Apple touch icon and installable web manifest use the same official symbol."
+      ],
+      "authorization": "Explicit owner request authorizes the icon correction; normal protected review and publication rules remain.",
+      "privacy": "No account, database or provider credentials are needed for icon generation or anonymous verification.",
+      "concurrency": "Generate and validate from an isolated source checkout; preserve unrelated changes and the native Mobile pin.",
+      "idempotency": "The same SVG, script and browser renderer produce the same asset pixels.",
+      "failure": "Missing assets, incorrect dimensions, failed decoding or missing manifest references fail the artifact verification.",
+      "recovery": "Restore the preceding reviewed asset set; existing shortcut refresh remains controlled by the browser and OS.",
+      "observability": "Record source and asset hashes, dimensions, HTTP results and target-size visual previews.",
+      "implementation": [
+        "scripts/generate-app-icons.mjs",
+        "tdf-hq-ui/public/manifest.json"
+      ],
+      "tests": [],
+      "formalModels": [],
+      "verification": "Actual generation, PNG/ICO decoding, browser HTTP image loads and target-size screenshots; no general installed-device proof.",
+      "evidence": "reports/app-brand-icons-2026-10-29.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Scoped artifact and browser verification; publication and existing installed shortcut refresh remain separate.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The visual asset pipeline is specified; current verification receipts record the tested source and browser, while canonical publication and OS cache behavior are separate obligations."
+      },
+      "property": "Generated icon artwork preserves official SVG geometry, has sufficient foreground/background contrast, matches its declared dimensions and is reachable through the page and manifest icon references."
+    },
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001",
+      "title": "Consistent event finance reporting currency",
+      "statement": "Refuse single-currency summary and budget totals until every contributing nonzero amount matches the resolved event currency. Refuse an unreportable budget edit before its first write; preserve intentional foreign-currency entry authoring.",
+      "domain": "PAY",
+      "authority": "Explicit owner decision 2026-10-29: Refuse totals until contributing amounts match the event currency. Existing authoring validator and compatibility tests permit explicit foreign currencies.",
+      "source": "formal/system/event-finance-report-currency.md",
+      "contract": "formal/system/event-finance-report-currency.md",
+      "property": "No successful total relabels, converts or discards a nonzero contributing currency mismatch. Existing contributor filters, canonical exclusion, free tickets and foreign void/cancelled/unrelated rows remain.",
+      "actors": [
+        "Authorized event manager",
+        "Event budget/finance report reader"
+      ],
+      "preconditions": [
+        "Existing authorization and stored metadata/dimension validation",
+        "Existing observed contributor boundaries"
+      ],
+      "inputs": [
+        "Resolved event reporting currency",
+        "Selected manual, legacy and canonical ticket amounts",
+        "Budget-line observed posted actual entries"
+      ],
+      "state": {
+        "initial": "Selected persisted report inputs",
+        "terminal": [
+          "Consistent single-currency response",
+          "HTTP500 currency refusal before budget edit writes"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain explicit foreign-currency entries for individual reporting",
+        "Report amounts matching explicit or default event currency",
+        "Ignore only rows already outside contribution filters and zero amounts"
+      ],
+      "forbiddenTransitions": [
+        "Label foreign contributions with the event currency",
+        "Silently drop or convert a contributing foreign amount",
+        "Begin budget edit writes before refusing observed foreign actuals"
+      ],
+      "effects": [
+        "Read-only monetary reporting",
+        "Existing authorized budget update after its actual is reportable"
+      ],
+      "authorization": "No change to event management, provider, strict-admin or settlement authority.",
+      "privacy": "Synthetic native fixtures; no real customer/provider data.",
+      "concurrency": "Existing separate reads remain; no new serializable snapshot guarantee.",
+      "idempotency": "Same observed inputs produce same currency decision; no new provider calls or retry authority.",
+      "failure": "HTTP500 contributing-currency mismatch; range and existing stored metadata refusals retained.",
+      "recovery": "Authorized source correction or an explicitly specified future currency conversion design; do not modify financial rows to hide a mismatch.",
+      "observability": "Source-bound real handler baseline assertions, mutation controls and CI source selection.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Real-handler regression and compatibility executions; source-bounded native receipts recorded separately. No complete refinement proof.",
+      "evidence": "formal/system/event-finance-report-currency.md; reports/event-finance-report-currency-2026-10-29.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Explicit owner policy and actual create/store/summary counterexample; runtime qualification bound to source commits.",
+      "ambiguity": [
+        "Historical mixed-currency rows may block reports until authorized reconciliation; no exchange rates are available.",
+        "Production PostgreSQL concurrency/provider/deployment correspondence remains unproven."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite native real-handler verification; complete implementation and refinement proofs remain unknown."
+      }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+      "title": "Preserve each finance-entry amount currency in CSV",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "A finance_entry CSV row retains its authoritative efeCurrency with the unchanged raw efeAmountCents. Summary and budget rows retain reporting currency; the existing 24-column layout and all other values remain unchanged.",
+      "authority": "Owner financial-integrity mandate; explicit foreign-currency authoring is supported; PAY-EVENT-REPORT-CURRENCY-001 preserves individual entry units; the page renders entry amounts with efeCurrency. Existing common CSV currency semantics are explicitly clarified as amount units by this successor.",
+      "source": "formal/system/event-finance-csv-currency.md",
+      "contract": "formal/system/event-finance-csv-currency.md",
+      "property": "For every valid finance-entry DTO exported, row.currency equals entry.efeCurrency and row.entry_amount_cents equals entry.efeAmountCents; summary/budget units,24-column positions, event metadata and status remain unchanged.",
+      "actors": [
+        "Authorized event finance reader",
+        "CSV report consumer"
+      ],
+      "preconditions": [
+        "Existing event authorization and finance DTO validation",
+        "Entry currency and integer cents are authoritative wire values",
+        "CSV currency is an amount unit per record_type; no exchange rate is provided"
+      ],
+      "inputs": [
+        "Event and summary reporting currency",
+        "Listed finance entries including supported foreign void records",
+        "Budget rows and safe integer monetary fields"
+      ],
+      "state": {
+        "read": "Validated report objects",
+        "terminal": [
+          "CSV rows preserve amount-unit bindings",
+          "Existing precision/query/export refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Copy efeCurrency into finance_entry currency cell",
+        "Keep reporting currency for summary and budget rows",
+        "Preserve amounts, statuses, event metadata and row/column layout"
+      ],
+      "forbiddenTransitions": [
+        "Label a raw foreign entry amount with event currency",
+        "Invent an exchange rate or fallback currency",
+        "Drop a void or foreign row to force a single currency"
+      ],
+      "effects": [
+        "Read-only CSV representation only; no financial data or provider writes"
+      ],
+      "authorization": "Existing event finance authorization unchanged; no additional access granted.",
+      "privacy": "Synthetic fixtures only; no customer or provider records used as evidence.",
+      "concurrency": "Input objects are exported as observed; no serializable multi-query snapshot guarantee.",
+      "idempotency": "Equal input DTOs produce equal unit bindings; no mutation or provider retry is introduced.",
+      "failure": "Existing monetary-precision/query/CSV refusal is preserved; no silent currency substitution or amount conversion.",
+      "recovery": "Correct the authoritative source DTO through existing authorized workflows; never rewrite records or infer conversion in export.",
+      "observability": "Retain actual old-binding assertion and corrected CSV-helper logs/source hashes; bind final metadata/source/evidence separately.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven actual CSV helper Jest tests: a EUR void entry of 100 cents with valid USD summary of 30 cents and USD posted entry of 30 cents; existing precision and USD 24-column compatibility. TESTED only with exact-source execution evidence, not a complete implementation proof.",
+      "evidence": "formal/system/event-finance-csv-currency.md; source-bound execution reports recorded separately.",
+      "status": "specified and implemented",
+      "confidence": "Scoped source-function regression evidence; deployed consumers and implementation refinement remain unproven.",
+      "ambiguity": [
+        "No external CSV consumer/global currency-column contract was located; this successor explicitly defines amount-unit semantics.",
+        "Production exposure and mounted download/browser acceptance remain unknown.",
+        "Backend contributing-total currency policy and snapshot consistency remain separate."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite direct CSV-helper tests; full implementation refinement, deployed integration and external consumers unproven."
+      }
+    },
+    {
+      "id": "UI-CSV-STRING-PREFIX-001",
+      "title": "Use one typed CSV string-cell encoding policy for finance and merchandise",
+      "domain": "SEC",
+      "critical": true,
+      "statement": "The two CSV exports share a serializer that prefixes dangerous string prefixes while retaining typed negative monetary numbers, booleans, empty optional cells, CSV quoting/newlines and existing amount-unit/column contracts.",
+      "authority": "Owner execution mandate to repair concrete export security findings; existing merchandise apostrophe policy; scoped typed representation contract.",
+      "source": "formal/system/csv-export-text.md",
+      "contract": "formal/system/csv-export-text.md",
+      "property": "For string cells beginning with optional whitespace then ASCII/fullwidth =,+,-,@ or a leading whitespace prefix containing tab/CR/LF, prepend one apostrophe; for number/boolean/null/undefined cells do not add that prefix; always quote and double embedded quotes.",
+      "preconditions": [
+        "Existing authorization, validated DTO money/currency and precision guards remain authoritative",
+        "The serializer receives typed scalar cells; it does not infer string contents as numeric values",
+        "Spreadsheet import/re-save behavior is outside the verified boundary"
+      ],
+      "allowedTransitions": [
+        "Encode dangerous user-influenced string cells as explicitly prefixed text",
+        "Preserve raw typed negative cents and percentages",
+        "Keep the existing finance rows/currencies/24 columns and merchandise BOM/CRLF/authorized finance columns"
+      ],
+      "forbiddenTransitions": [
+        "Treat a negative number as a formula-like string",
+        "Remove CSV quoting, drop rows or coerce currency/amounts to conceal a failure",
+        "Claim universal spreadsheet or downstream re-save safety from finite encoding tests"
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/utils/csv.ts",
+        "tdf-hq-ui/src/utils/merch.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/csv.test.ts",
+        "tdf-hq-ui/src/utils/merch.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Scoped direct scalar tests plus mounted export Blob regression and old-source counterexamples; no spreadsheet execution, native/PG/formal model or whole-program proof.",
+      "evidence": "formal/system/csv-export-text.md; exact-source private execution records supplied separately",
+      "status": "specified and implemented",
+      "confidence": "Finite source-bound encoding/download controls only; deployment and external consumers unproven.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite scalar and mounted-download regressions; full implementation refinement and downstream spreadsheet behavior unproven."
+      },
+      "actors": [
+        "Authorized event finance reader",
+        "Authorized merchandise order-export reader",
+        "Downstream CSV consumer"
+      ],
+      "inputs": [
+        "Typed scalar cells from existing authorized DTOs",
+        "Original finance row/currency schema and merchandise column selection"
+      ],
+      "state": {
+        "read": "Original validated DTO cells before CSV encoding",
+        "terminal": [
+          "Quoted cell with explicit string prefix when required",
+          "Quoted typed number or boolean without a text prefix",
+          "Empty cell for absent optional value"
+        ]
+      },
+      "effects": [
+        "Read-only CSV representation; no persisted data, provider or financial writes"
+      ],
+      "authorization": "Existing backend event/order scope and authorized finance columns remain unchanged; the serializer grants no access.",
+      "privacy": "Existing export fields and column selection remain unchanged; tests use synthetic data and no new customer information is exported.",
+      "concurrency": "Pure per-cell encoding of the supplied observation; no multi-query snapshot or external consumer concurrency guarantee.",
+      "idempotency": "Equal typed raw inputs produce equal encoded cells. An already encoded CSV field is not a raw input and is not reapplied.",
+      "failure": "Preserve existing query/loading/precision/export error handling. No unsafe-value substitution, silent row drop, provider retry or assertion suppression.",
+      "recovery": "Repeat an authorized export from original typed DTOs; do not rewrite source records or infer currency conversion.",
+      "observability": "Source-bound old-product negative controls and actual mounted Blob/scalar test logs; no new production telemetry containing report cells.",
+      "ambiguity": [
+        "Spreadsheet import settings and re-save transformations are outside the encoded-cell policy.",
+        "No universal Excel or downstream formula-execution safety guarantee is claimed.",
+        "Production deployment and external CSV consumer acceptance remain unverified."
+      ]
+    },
+    {
+      "id": "MUSIC-TORRENT-CONTROL-001",
+      "title": "Control app pages before torrent playback and route requests to their originating tab",
+      "statement": "Before creating a torrent server or attaching audio, the activated owned root worker must be the exact document controller. Only actual stream-prefix URLs are intercepted; nonempty-client-ID streams dispatch solely to their originating document with bounded reply/resource lifetime.",
+      "domain": "MUSIC",
+      "critical": false,
+      "actors": [
+        "Music listener",
+        "Browser document",
+        "Torrent service worker",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Trusted browser service-worker scope/identity semantics and same-origin application scripts; no arbitrary concurrent foreign registrar.",
+        "One active WebTorrent server per document; controlled playback requests carry a nonempty initiating client ID.",
+        "Official reviewed WebTorrent 2.8.5 browser module; native WebRTC is required by existing product behavior."
+      ],
+      "inputs": [
+        "Root service-worker registration and controller/state events",
+        "FetchEvent.clientId and exact request URL",
+        "Synthetic torrent metadata and loopback audio in verification"
+      ],
+      "state": {
+        "boundary": "formal/system/torrent-worker-control.md"
+      },
+      "allowedTransitions": [
+        "No root owner -> register own known URL; own root -> reuse and revalidate.",
+        "Own activating worker -> observe activation AND actual control before server construction.",
+        "Own activated uncontrolled worker -> request eligible-client claim once and await real controller change.",
+        "Controlled stream request -> only initiating document -> bounded reply -> response/stream -> close ports."
+      ],
+      "forbiddenTransitions": [
+        "Overwrite an observed foreign root worker or foreign document controller.",
+        "Treat worker activation or a cached promise alone as current page control.",
+        "Broadcast a request with nonempty clientId to unrelated documents.",
+        "Intercept an unrelated app URL because a query embeds a stream/control URL.",
+        "Treat passing finite tests or absence of local WebKit execution as a universal proof."
+      ],
+      "effects": [
+        "Audio can stream through the controlling worker without unrelated tabs answering first.",
+        "Owned observers and message channels are released on completion/refusal/timeout."
+      ],
+      "authorization": "No change to backend authorization, provider state, real external peers or production deployment is authorized by this repair.",
+      "privacy": "Verification uses synthetic loopback-only content; no artist data or credentials. Same-origin ownership checks do not attest worker bytes at runtime.",
+      "concurrency": "Observe registration updates, worker state and controller changes together; use originating-client selection for controlled requests. Arbitrary concurrent foreign registration and multiple servers in one document remain outside assumptions.",
+      "idempotency": "Every ensure call revalidates browser state; owned registration is reused and explicit claim sent at most once per observed worker per wait.",
+      "failure": "Foreign workers refuse untouched; unavailable native WebRTC refuses; missing/nonresponding request owner returns404; unachieved page control refuses after15seconds with listener/timer cleanup.",
+      "recovery": "Retry a later session against current browser state. Preserve old narrow registrations rather than automatically deleting them.",
+      "observability": "Source-bound raw command exits, exact synthetic full/range bytes, controller identity, negative controls and explicit browser/protocol bounds.",
+      "source": "Existing torrentAudio and RadioWidget playback contracts; actual Chromium/Firefox narrow-scope HTML counterexample and Chromium two-document404; browser Clients.claim/controller semantics.",
+      "contract": "formal/system/torrent-worker-control.md",
+      "implementation": [
+        "tdf-hq-ui/src/utils/torrentWorker.ts",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "tdf-hq-ui/public/webtorrent-sw.min.js",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci.yml",
+        "scripts/build-torrent-audio-fixture.mjs",
+        "playwright.torrent-audio.config.mjs",
+        "e2e/torrent-audio/setup.mjs",
+        "e2e/torrent-audio/fixture-server.mjs",
+        "tdf-hq-ui/browser-test/torrent-audio.html"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/torrentWorker.test.ts",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "scripts/__tests__/torrent-worker-routing.test.mjs",
+        "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
+        "e2e/torrent-audio/streaming.spec.mjs",
+        "e2e/web/webtorrent-browser.spec.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite executable API-transition, actual worker-protocol, real HTTP resource and actual Vite/browser stream cases; no exhaustive liveness or refinement proof.",
+      "ambiguity": [
+        "Browser-specific null-controller reuse cause was not established; explicit claim handles the observed state.",
+        "Empty-client-ID legacy broadcast retains its first-response limitation; more-specific legacy pages may refuse until normal browser lifecycle/navigation resolves control."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite unit/protocol/browser controls are TESTED; arbitrary concurrent foreign registration, legacy empty-client ownership and universal browser liveness remain unproven."
+      },
+      "authority": "approved",
+      "property": "Server construction follows exact activated root control; controlled nonempty-client-ID requests reach only their initiating document; unrelated URLs pass through and owned resource waits are bounded.",
+      "verification": "Jest API-transition controls, Node actual worker VM/MessageChannel and real HTTP lifecycle controls; actual compiled helper in Chromium/Firefox locally and three browser projects enforced in pinned CI, with explicit unsupported-capability evidence and deliberate semantic faults.",
+      "evidence": "Candidate-commit qualification reports and raw execution receipts published separately; no universal proof."
     },
     {
       "id": "EVT-DISCOVERY-FILTER-001",
