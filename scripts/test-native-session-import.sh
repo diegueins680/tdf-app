@@ -6,21 +6,28 @@ repo_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 # adopts, drops or resets an existing caller database.
 PGPORT=5432
 export PGPORT
-tdf_test_db_init tdf_native_session_import_test
-batch=$(mktemp)
-cases=$(mktemp)
+batch=
+cases=
 cleanup_native_import() {
   result=$1
   trap - EXIT INT TERM
-  rm -f "$batch" "$cases"
+  if test -n "$batch" && ! rm -f "$batch"; then
+    test "$result" -ne 0 || result=1
+  fi
+  if test -n "$cases" && ! rm -f "$cases"; then
+    test "$result" -ne 0 || result=1
+  fi
   if ! tdf_test_db_cleanup; then
     test "$result" -ne 0 || result=1
   fi
   exit "$result"
 }
+tdf_test_db_init tdf_native_session_import_test
 trap 'cleanup_native_import $?' EXIT
 trap 'cleanup_native_import 130' INT
 trap 'cleanup_native_import 143' TERM
+batch=$(mktemp)
+cases=$(mktemp)
 tdf_test_psql -f "$repo_root/scripts/__tests__/fixtures/production-schema-20260814.sql" >/dev/null
 tdf_test_psql -f "$repo_root/scripts/__tests__/fixtures/catalog-production-source-fixture.sql" >/dev/null
 node "$repo_root/scripts/render-production-migration-batch.mjs" > "$batch"
