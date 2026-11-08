@@ -85,7 +85,7 @@
     "Format-first filtering downgraded denied protected video or malformed protected identity to an unbound audio URL; all four controls failed before track-wide filtering."
   ],
   "limitations": [
-    "Draft companion716 is not main, deployed, approved or a current-head hosted attestation.",
+    "Native follow-up PR718 is not main, deployed, approved or a current-head hosted attestation.",
     "Native Records persistent health, server source identity/grant correspondence and full catalog provenance remain open.",
     "Records native UUIDs are not offered as unsupported Music featured writes.",
     "Physical devices, real provider accounts, local Docker/S3 unavailable; guarded production release/receipt unqualified."
@@ -151,5 +151,13 @@
     "browserSkipped": 0,
     "scope": "Completed before track-wide authorization format filtering was corrected; not final source acceptance."
   },
-  "concurrentSourcePreserved": "ba709f94fbded9582678837ef9ed3e10b4dab923"
+  "concurrentSourcePreserved": "ba709f94fbded9582678837ef9ed3e10b4dab923",
+  "nativeIntegrationPR": "https://github.com/diegueins680/tdf-app/pull/718",
+  "restoredCheckpointMerge": {
+    "pr": 716,
+    "source": "ba709f94fbded9582678837ef9ed3e10b4dab923",
+    "merge": "077a0cc59b3c0eef71c21ebd44ea1f4352e13cba",
+    "target": "draft PR670 branch",
+    "nativeChangesIncluded": false
+  }
 }

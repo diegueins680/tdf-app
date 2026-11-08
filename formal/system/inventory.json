@@ -23743,7 +23743,7 @@
     },
     {
       "path": "docs/music-releases/unified-playback-progress.md",
-      "sha256": "4b687e5bd0f3d6f40e3d04c6dd80337b5b919872e66270be73ab791c398d7592",
+      "sha256": "f0a4af5c6832a7f877e58d07a9c4652e89611ef710a187565683e2ecbdd5405b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23771,7 +23771,7 @@
     },
     {
       "path": "docs/music-releases/universal-player-state.md",
-      "sha256": "d52a1932cf43a684c2a8cbe2e82af02ae7abb0c7d6b90c256f55b37b2444c691",
+      "sha256": "9be7ad21743b3823f9d902c70009289c934d012683c667d8d77ece66df717bff",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

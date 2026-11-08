@@ -1,6 +1,6 @@
 # Frontend reconciliation in progress
 
-Draft companion [PR716](https://github.com/diegueins680/tdf-app/pull/716) reuses
+Native follow-up [PR718](https://github.com/diegueins680/tdf-app/pull/718) reuses
 [PR670](https://github.com/diegueins680/tdf-app/pull/670), retaining backend source
 883e12ee3 from [PR712](https://github.com/diegueins680/tdf-app/pull/712) and the
 native session controls from [PR706](https://github.com/diegueins680/tdf-app/pull/706).
@@ -83,3 +83,5 @@ The concurrent companion update ba709f94f is preserved by normal merge, includin
 Current native source33c5835e8 is incorporated with both speed regression suites preserved. The four newer controls pass, bringing the targeted core suite to140 tests. Type checking passes. Only PlayerProvider.test.tsx changes relative to the fully executed web inputs; no second whole-suite result is invented for this test-only addition.
 
 The final normal repository gate exits 0 after regenerating merge-generated JSON. An earlier run read an unresolved traceability JSON file; its failed parse log is retained separately. The backend verification mirror has a tree exactly matching published source 883e12ee3: canonical Stack passes 4,312 examples (zero failures, 23 pending), and the actual compiled HTTP fixture passes on disposable PostgreSQL. This is logic/source correspondence, not a production image or runtime receipt.
+
+PR716 merged only source ba709f94f as 077a0cc59 into the draft PR670 branch. The later native transport implementation is PR718, initially at tree-exact source20cfa688a/f2ee9b712. It has not merged into PR670 or main and is not deployed. PR718 retains the actual716 merge ancestry.

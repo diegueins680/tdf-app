@@ -115,7 +115,7 @@ The historical archive-guard250 execution predates the owner source-health250; t
 
 ## Backend composition, 8 November 2026
 
-This unshipped frontend composition retains the original guarded artist-recovery rollout, disabled by default. Its backend is source a5745dbbe from PR712, with the forward 251-entry migration policy, public profile-withdrawal gate, stable diagnostics pagination and retained worker stop intent. Production deployment is still blocked. The held frontend now reconciles PR706 native video, independent audio and chapter controls with shared intent and recovery. Current-head hosted checks, protected integration and deployment remain separate obligations.
+This unshipped frontend composition retains the original guarded artist-recovery rollout, disabled by default. Its backend is source883e12ee3 from PR712, including the earlier qualified a5745dbbe stage, with the forward 251-entry migration policy, public profile-withdrawal gate, stable diagnostics pagination and retained worker stop intent. Production deployment is still blocked. The held frontend now reconciles PR706 native video, independent audio and chapter controls with shared intent and recovery. Current-head hosted checks, protected integration and deployment remain separate obligations.
 
 
 ## Native transport composition
@@ -141,3 +141,5 @@ sources. Native Records metadata remains outside that registry and its source
 identity/grant revalidation protocol; full native provenance and permission-change
 qualification is still required. Neither local transport tests nor a published
 Records feed establish that missing server correspondence.
+
+Native transport delivery is PR718, a follow-up to the earlier restored-UI checkpoint merged by PR716 into draft PR670. The native changes are not claimed merged or deployed by PR716.
