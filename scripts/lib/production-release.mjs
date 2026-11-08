@@ -1082,6 +1082,46 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'The artist-profile derived classified category is missing';
   END IF;
+  -- ADR 0132: marketplace offers (2026-11-08_marketplace_offers).
+  IF to_regclass('public.classified_offer_round') IS NULL
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'classified_category' AND column_name = 'intent')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'classified' AND column_name = 'slots_remaining')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'classified_application' AND column_name = 'current_round') THEN
+    RAISE EXCEPTION 'Marketplace offer schema (ADR 0132) is missing';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.classified_application'::regclass
+      AND conname = 'classified_application_status_check'
+      AND pg_get_constraintdef(oid) ILIKE '%countered_by_author%'
+      AND pg_get_constraintdef(oid) ILIKE '%countered_by_applicant%'
+      AND pg_get_constraintdef(oid) ILIKE '%expired%'
+  ) THEN
+    RAISE EXCEPTION 'classified_application_status_check does not declare negotiation states';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.classified'::regclass AND conname = 'classified_slots_remaining_check'
+  ) THEN
+    RAISE EXCEPTION 'classified_slots_remaining_check is missing';
+  END IF;
+  IF EXISTS (SELECT 1 FROM classified WHERE slots_remaining > slots OR slots_remaining < 0) THEN
+    RAISE EXCEPTION 'classified slot accounting is inconsistent';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM classified_application application
+    WHERE NOT EXISTS (SELECT 1 FROM classified_offer_round round
+                      WHERE round.application_id = application.id AND round.round_number = 1)
+  ) THEN
+    RAISE EXCEPTION 'classified_application rows without an initial negotiation round';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM classified_category WHERE code = 'offering-services' AND intent = 'offering')
+     OR NOT EXISTS (SELECT 1 FROM classified_category WHERE code = 'seeking-band' AND intent = 'seeking') THEN
+    RAISE EXCEPTION 'classified_category.intent seed is incomplete';
+  END IF;
   IF EXISTS (
     SELECT 1 FROM directory_artist_listing_audit()
     WHERE finding_kind IN ('missing_listing','duplicate_derived_listing','public_listing_non_public_profile','stale_listing_search_document')
