@@ -50,3 +50,27 @@ Server authentication, private-byte authorization, CDN revocation, physical devi
 ## I. Next highest-value action
 
 Finish canonical metadata, freshness and immutable admission, then retain the exact candidate commit. Obtain fresh hosted CI and independent review for the focused change before protected integration. Production acceptance remains separate.
+
+
+## Hosted follow-up for source E9
+
+[Primary CI 40452462229](https://github.com/diegueins680/tdf-app/actions/runs/40452462229) succeeds for e9f23483c7d4164a4551e6a90d6b82e6b09fd13a. The actual checkout aacc4cecb7ddb42ac2869930af6513caa1e5d1d5 has the same complete Git tree as E9. This documentation follow-up introduces no new runtime execution or approval claim for its own later commit.
+
+Hosted UI passes 3,578 tests in 311 suites, lint, types and build. Native playback passes 50 single-attempt cases across desktop, phone and tablet Chromium, Firefox and Linux WebKit: 40 decoder fixtures, five denial cases and five explicit mock cases. The disposal regression passes in all five profiles. Core browser personas pass 594 cases with 22 existing skips, followed by 10 rollout and 25 discovery passes. Primary backend, database integration and Mobile job skips remain skips; separate workflow results are not implied here.
+
+The ancillary Safe Install first attempt retains 3,577 passes and one unchanged event-workspace test failure at its lazy-loading fallback. The test never mounts the player. An unchanged second attempt passes 3,578 tests in 311 suites; exact timing cause remains unverified. No assertions, timeouts, configured retries or policy changed.
+
+The [hosted evidence packet](../../reports/player-listener-disposal-evidence-20261027/hosted-e9/README.md) archives raw logs, both ancillary attempts, the native artifact and per-case JSON, source identity and gate observations. Its deterministic packaging replays offline exactly. Original local evidence and historical qualifications remain intact.
+
+The immutable [Cloudflare preview](https://e79de665.tdf-app.pages.dev/buscar?q=rock) passes anonymous directory smoke checks at two viewports: one paused source-free engine, no page errors and stable source identity. No Play, login, write, real account or authorized media journey is performed. Vercel separately reports a rate-limit failure.
+
+At the recorded gate observation, 19 of 20 protected checks pass. FIFO admission waits for PR628, and E9 still requires independent review; auto-merge remains off. No production deployment or full acceptance is recorded. Physical devices, real delivery/revocation, SLOs, complete WCAG, rollback drills and mathematical refinement remain incomplete.
+
+
+## Historical evidence integration — 6 November 2026
+
+The candidate statuses and hosted follow-up above describe the E9 capture on 27 October, including its failed ancillary attempt and its separate successful retry. They do not describe new execution on this documentation integration.
+
+The original draft hold is resolved: [PR #629](https://github.com/diegueins680/tdf-app/pull/629) merged as `8250081de10fd21b4854be8736080bbcfd97bfab`, which is reachable from the observed protected baseline `81a06faa06731f866333a0b89fb266720c4fa065`. This integration preserves E9 and checkout AACC as the historical execution identities. The current baseline's 190 requirement records, 244-entry migration registry, runtime sources, dependencies, workflows and Mobile revision remain unchanged.
+
+Archive integrity, safe member paths, deterministic packaging replay and metadata freshness are checked separately for this documentation change. They establish preservation and correspondence; they do not transfer E9's runtime execution, independent approval or deployment status to this commit or to current production. Fresh protected-branch checks and current independent review remain required.
