@@ -92,7 +92,7 @@ it('lets admins reorder, edit, hide, add and confirm removal while retaining edi
   fireEvent.click(within(added).getByRole('button', { name: 'Quitar foto' }));
   expect(screen.getAllByRole('region')).toHaveLength(3);
   fireEvent.click(within(added).getByRole('button', { name: 'Confirmar quitar' }));
-  const draft = parseStudioGallery(JSON.parse(screen.getByTestId('draft').textContent!));
+  const draft = parseStudioGallery(JSON.parse(screen.getByTestId('draft').textContent));
   expect(draft.photos).toHaveLength(2);
   expect(draft.photos[0]).toMatchObject({ id: 'maps-control-room', title: 'Control actualizado', visible: false });
 });
@@ -125,4 +125,12 @@ it('saves visual edits through the versioned CMS API without publishing the auth
   expect(saved.photos[0]!.id).toBe('maps-control-room');
   expect(saved.photos[1]).toMatchObject({ id: 'maps-preamps', visible: false });
   expect(publish).not.toHaveBeenCalled();
+});
+
+
+it('keeps the full-size preview when an optional thumbnail is an empty string', () => {
+  const photo = { ...studioGallerySeed.photos[0]!, thumbnailUrl: '' };
+  const view = render(<StudioGalleryEditor value={{ schemaVersion: 1, photos: [photo] }} onChange={jest.fn()} onBusyChange={jest.fn()} />);
+  expect(view.container.querySelectorAll('img')).toHaveLength(1);
+  expect(view.container.querySelector('img')).toHaveAttribute('src', photo.imageUrl);
 });

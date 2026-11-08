@@ -52,7 +52,7 @@ export function StudioGalleryPhotos({ photos }: { photos: StudioPhoto[] }) {
                 {failedThumbnails.has(photo.id) ? (
                   <Typography sx={{ p: 2 }}>Foto no disponible. Abre para reintentar.</Typography>
                 ) : (
-                  <Box component="img" src={photo.thumbnailUrl || photo.imageUrl} alt={photo.alt} width={640} height={480} loading="lazy" decoding="async" referrerPolicy="no-referrer"
+                  <Box component="img" src={photo.thumbnailUrl?.length ? photo.thumbnailUrl : photo.imageUrl} alt={photo.alt} width={640} height={480} loading="lazy" decoding="async" referrerPolicy="no-referrer"
                     onError={() => setFailedThumbnails(previous => new Set(previous).add(photo.id))}
                     sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                 )}

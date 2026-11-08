@@ -129,3 +129,10 @@ describe('StudioGallery', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
+
+
+it('uses the full-size photo when a published optional thumbnail is empty', () => {
+  const photo = { ...studioGallerySeed.photos[0]!, thumbnailUrl: '' };
+  render(<StudioGalleryPhotos photos={[photo]} />);
+  expect(screen.getByRole('img', { name: photo.alt })).toHaveAttribute('src', photo.imageUrl);
+});

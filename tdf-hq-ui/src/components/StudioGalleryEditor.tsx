@@ -89,7 +89,7 @@ export default function StudioGalleryEditor({ value, onChange, onBusyChange, dis
     {value.photos.map((photo, index) => <Card component="section" aria-label={`Foto ${index + 1}: ${photo.title}`} key={photo.id} variant="outlined">
       <CardContent><Stack spacing={1.5}>
         <Stack direction="row" spacing={2} alignItems="center">
-          {isStudioImageUrl(photo.thumbnailUrl || photo.imageUrl) && <Box component="img" src={photo.thumbnailUrl || photo.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" sx={{ width: 88, height: 66, objectFit: 'cover', borderRadius: 1 }} />}
+          {isStudioImageUrl(photo.thumbnailUrl?.length ? photo.thumbnailUrl : photo.imageUrl) && <Box component="img" src={photo.thumbnailUrl?.length ? photo.thumbnailUrl : photo.imageUrl} alt="" loading="lazy" referrerPolicy="no-referrer" sx={{ width: 88, height: 66, objectFit: 'cover', borderRadius: 1 }} />}
           <Typography fontWeight={600}>{index + 1}. {photo.title || 'Sin título'}</Typography>
         </Stack>
         <Button aria-label={`Editar foto: ${photo.title}`} aria-expanded={editingPhotoId === photo.id} aria-controls={`studio-photo-fields-${photo.id}`} onClick={() => setEditingPhotoId(editingPhotoId === photo.id ? null : photo.id)}>Editar datos</Button>

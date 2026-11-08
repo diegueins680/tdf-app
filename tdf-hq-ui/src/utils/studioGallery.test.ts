@@ -23,3 +23,9 @@ it('keeps incomplete draft fields editable without accepting them as public cont
   expect(parseStudioGallery(draft, true).photos).toHaveLength(1);
   expect(() => parseStudioGallery(draft)).toThrow();
 });
+
+
+it('preserves an explicitly empty optional thumbnail for the existing full-image fallback', () => {
+  const photo = { ...studioGallerySeed.photos[0]!, thumbnailUrl: '' };
+  expect(parseStudioGallery({ schemaVersion: 1, photos: [photo] }).photos[0]?.thumbnailUrl).toBe('');
+});

@@ -14,6 +14,13 @@ gallery_test_port=${BASH_REMATCH[3]}
 if (( 10#$gallery_test_port < 1 || 10#$gallery_test_port > 65535 )); then
   echo 'Invalid disposable gallery database port' >&2; exit 2
 fi
+if (( $# > 0 )); then
+  if [[ $# -eq 1 && "$1" == '--check-routing-only' ]]; then
+    echo 'Studio gallery routing admission passed; no SQL executed'
+    exit 0
+  fi
+  echo 'Unknown gallery fixture argument' >&2; exit 2
+fi
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 psql_gallery() { psql "$TDF_GALLERY_TEST_DATABASE_URL" -X -q -v ON_ERROR_STOP=1 "$@"; }
 if [[ "$(psql_gallery -Atc "SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p')")" != 0 ]]; then

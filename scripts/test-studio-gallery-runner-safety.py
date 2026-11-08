@@ -16,7 +16,7 @@ DRIVER = args.script.resolve()
 VALID = 'postgresql://fixture:fixture@127.0.0.1:18792/tdf_studio_gallery_test'
 
 class GalleryRunnerSafety(unittest.TestCase):
-    def run_driver(self, url, extra=None):
+    def run_driver(self, url, extra=None, arguments=()):
         with tempfile.TemporaryDirectory(prefix='gallery-routing-') as directory:
             root = Path(directory)
             sentinel = root / 'psql-called.json'
@@ -30,7 +30,7 @@ class GalleryRunnerSafety(unittest.TestCase):
                        TDF_GALLERY_TEST_DATABASE_URL=url,
                        TDF_GALLERY_PSQL_SENTINEL=str(sentinel))
             env.update(extra or {})
-            result = subprocess.run(['bash', str(DRIVER)], env=env,
+            result = subprocess.run(['bash', str(DRIVER), *arguments], env=env,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=5)
             return result, json.loads(sentinel.read_text()) if sentinel.exists() else None
 
@@ -92,6 +92,23 @@ class GalleryRunnerSafety(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIsNotNone(call)
         self.assertIn(url, call)
+
+    def test_routing_only_mode_returns_without_psql(self):
+        result, call = self.run_driver(VALID, arguments=('--check-routing-only',))
+        self.assertEqual(result.returncode, 0)
+        self.assertIsNone(call)
+        self.assertIn(b'no SQL executed', result.stdout)
+
+    def test_routing_only_mode_still_rejects_current_process_overrides(self):
+        result, call = self.run_driver(VALID, {'PGHOSTADDR': '192.0.2.1'},
+                                       arguments=('--check-routing-only',))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIsNone(call)
+
+    def test_unknown_mode_rejected_before_psql(self):
+        result, call = self.run_driver(VALID, arguments=('--not-a-fixture-mode',))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIsNone(call)
 
 if __name__ == '__main__':
     unittest.main(argv=[sys.argv[0], *remaining])
