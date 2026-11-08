@@ -17449,7 +17449,8 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Ticketing/Inventory.hs",
-        "tdf-hq/tdf-hq.cabal"
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "tests": [
         "scripts/__tests__/event-crm-browser.mjs",

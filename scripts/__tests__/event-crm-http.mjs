@@ -112,6 +112,11 @@ sql("SELECT event_ticket_checkout_expire_holds(clock_timestamp()+interval '31 ho
 check('existing canonical hold expiry releases inventory once',sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='1');
 sql("SELECT event_ticket_checkout_expire_holds(clock_timestamp()+interval '31 hours',NULL,7001)");
 check('repeated expiry preserves paid inventory',sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='1');
+sql('UPDATE event_ticket_tier SET quantity_total=quantity_sold+1 WHERE id=7001');
+const lastSeat=await Promise.all([0,1].map(n=>request('/public/events/7001/ticket-orders',{key:`crm-last-seat-${n}-${randomUUID()}`,body:{tierId:7001,quantity:1,buyerName:'Última entrada sintética',buyerEmail:`last-seat-${n}@example.invalid`,termsAccepted:true}})));
+check('two real checkouts competing for the last ticket retain exactly one place',lastSeat.filter(r=>r.status===201).length===1&&lastSeat.filter(r=>r.status===409).length===1&&sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='2');
+sql("SELECT event_ticket_checkout_expire_holds(clock_timestamp()+interval '31 hours',NULL,7001)");
+check('expiring the competing last-ticket hold returns only its own place',sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='1');
 const member=race.find(r=>r.status===200).data.membershipId;
 await cmd(7101,{operation:'membership.revoke',membershipId:member});
 check('removing coordinator blocks subsequent reads exports and writes',
