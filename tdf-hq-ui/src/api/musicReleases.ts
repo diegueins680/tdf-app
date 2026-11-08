@@ -418,6 +418,10 @@ export interface MusicUploadReplayedCompletion {
 const isGoneResponse = (error: unknown): boolean =>
   typeof error === 'object' && error !== null && 'status' in error && (error as { status?: unknown }).status === 410;
 
+const isStorageStatus = (error: unknown, status: number): boolean =>
+  typeof error === 'object' && error !== null && (error as { storage?: unknown }).storage === true
+  && (error as { status?: unknown }).status === status;
+
 const isSessionExpired = (session: MusicUploadSession, now = Date.now()): boolean => {
   if (typeof session.expiresAt !== 'string') return false;
   const expiresAt = Date.parse(session.expiresAt);
@@ -454,9 +458,17 @@ const parseXmlElement = (body: string, localName: string): string | null => {
 
 const requestDirect = async (url: string, init: RequestInit): Promise<Response> => {
   const response = await fetch(url, { ...init, credentials: 'omit' });
-  if (!response.ok) throw new Error(`El almacenamiento rechazó la operación (${response.status}).`);
+  if (!response.ok) {
+    throw Object.assign(new Error(`El almacenamiento rechazó la operación (${response.status}).`), { status: response.status, storage: true });
+  }
   return response;
 };
+
+// Final multipart ETag per upload session, kept for this page lifetime. When
+// storage completed the multipart upload but /confirm did not reach the API,
+// the retry must confirm with this evidence: storage cannot complete twice.
+const completedMultipartEtags = new Map<string, string>();
+export const resetMusicUploadEvidenceForTests = (): void => { completedMultipartEtags.clear(); };
 
 const uploadPart = (
   url: string,
@@ -553,16 +565,30 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
     }
 
     onProgress?.({ phase: 'finalizing', completedBytes: file.size, totalBytes: file.size });
-    const completion = await get<CompletionInstruction>(apiPath(`/uploads/${session.id}/completion`), { signal });
-    const completedResponse = await requestDirect(completion.url, {
-      method: completion.method,
-      headers: { 'Content-Type': completion.contentType },
-      body: completion.body,
-      signal,
-    });
-    const responseBody = await completedResponse.text();
-    const finalEtag = parseMusicMultipartCompletion(responseBody, completedResponse.headers.get('ETag'));
-    return post(apiPath(`/uploads/${session.id}/confirm`), { etag: finalEtag }, { signal });
+    let finalEtag = completedMultipartEtags.get(session.id);
+    if (!finalEtag) {
+      const completion = await get<CompletionInstruction>(apiPath(`/uploads/${session.id}/completion`), { signal });
+      let completedResponse: Response;
+      try {
+        completedResponse = await requestDirect(completion.url, {
+          method: completion.method,
+          headers: { 'Content-Type': completion.contentType },
+          body: completion.body,
+          signal,
+        });
+      } catch (error) {
+        // The multipart upload was already consumed (NoSuchUpload) and no local
+        // evidence survived (for example after a reload): only a new session can recover.
+        if (!signal?.aborted && isStorageStatus(error, 404)) throw new MusicUploadSessionUnusableError('failed', session.id);
+        throw error;
+      }
+      const responseBody = await completedResponse.text();
+      finalEtag = parseMusicMultipartCompletion(responseBody, completedResponse.headers.get('ETag'));
+      completedMultipartEtags.set(session.id, finalEtag);
+    }
+    const confirmed = await post(apiPath(`/uploads/${session.id}/confirm`), { etag: finalEtag }, { signal });
+    completedMultipartEtags.delete(session.id);
+    return confirmed;
   } catch (error) {
     if (signal?.aborted) {
       try {

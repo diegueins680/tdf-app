@@ -18706,8 +18706,8 @@
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
     "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
     "tdf-hq-ui/src/api/musicReleases.search.test.ts": "669c73a1f2882d218c8b1054f19512fbc1c9dd1aaed3cd9568b20597db2c9eda",
-    "tdf-hq-ui/src/api/musicReleases.ts": "33df67f5e1a72dfbcaa3b4ae3ba5f928b506aaea79b8119537e703de448f16a8",
-    "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "4f2a49622632ac288339b871ed04614d6f8970f1e8c6255b240cd7ec020a6424",
+    "tdf-hq-ui/src/api/musicReleases.ts": "47713758df818e726e15f375146be25fa33a235d8885076821c8ca653dfd03ef",
+    "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "8f3721fed84de4ad71f0f087f1f5dc25de44c6c170ad17a091915486d7deab40",
     "tdf-hq-ui/src/api/musicStorageResponse.test.ts": "4d173a68d03907dd1106b079b472a92d6212b2938e8421b360cb78a315797b8f",
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
     "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
@@ -18966,8 +18966,8 @@
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "4dd4547567f2eeb1945a623bfeb3c57e36b78df60e2808410f7475a7005125fe",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
-    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "acbd50cc107b89cd65a130b2a5f6fb96ae0b7c5174668b0aa499a3a130236205",
-    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": "be33169a6e1986ac1edb1a436fa7699dfd74fceddeb97d7d924dbf1f6404efa3",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "ae65b3d5e0040db754f2d70e3b70ddb2fa4dbe5affc7dccd17e5424144a9eb35",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": "1495501c2218328632396e45b1bd140f7558eb2b9ef766e22af7248b734d749c",
     "tdf-hq-ui/src/pages/NotFoundPage.test.tsx": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
     "tdf-hq-ui/src/pages/NotFoundPage.tsx": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
     "tdf-hq-ui/src/pages/NotificationPage.tsx": "238197064a2439a50fc9cd7d075e511147d7852f46bc116e9ca82922b230d520",
@@ -45583,7 +45583,7 @@
     {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "33df67f5e1a72dfbcaa3b4ae3ba5f928b506aaea79b8119537e703de448f16a8",
+      "sha256": "47713758df818e726e15f375146be25fa33a235d8885076821c8ca653dfd03ef",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -45607,7 +45607,7 @@
     {
       "id": "SURFACE-a705d4292ecffee3",
       "path": "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
-      "sha256": "4f2a49622632ac288339b871ed04614d6f8970f1e8c6255b240cd7ec020a6424",
+      "sha256": "8f3721fed84de4ad71f0f087f1f5dc25de44c6c170ad17a091915486d7deab40",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51085,7 +51085,7 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "acbd50cc107b89cd65a130b2a5f6fb96ae0b7c5174668b0aa499a3a130236205",
+      "sha256": "ae65b3d5e0040db754f2d70e3b70ddb2fa4dbe5affc7dccd17e5424144a9eb35",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51109,7 +51109,7 @@
     {
       "id": "SURFACE-6dc3d41d6d23778b",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
-      "sha256": "be33169a6e1986ac1edb1a436fa7699dfd74fceddeb97d7d924dbf1f6404efa3",
+      "sha256": "1495501c2218328632396e45b1bd140f7558eb2b9ef766e22af7248b734d749c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
