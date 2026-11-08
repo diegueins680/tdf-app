@@ -578,6 +578,73 @@ describe('DirectorySearchPage', () => {
     }
   });
 
+  it.each([
+    { label: 'delayed Enter', values: ['piano'], delay: 301, expected: 'piano' },
+    { label: 'immediate Enter', values: ['piano'], delay: 0, expected: 'piano' },
+    { label: 'one rapid typing burst', values: ['p', 'pi', 'pia', 'piano'], delay: 301, expected: 'piano' },
+    { label: 'normalized whitespace', values: ['  piano   jazz  '], delay: 301, expected: 'piano jazz' },
+    { label: 'cleared query', values: [''], delay: 301, expected: '' },
+  ])('preserves Back and Forward without duplicate entries after $label', async ({ values, delay, expected }) => {
+    jest.useFakeTimers();
+    const quito = '22222222-2222-4222-8222-222222222222';
+    const { useLocation, useNavigate } = await import('react-router-dom');
+    function HistoryProbe() {
+      const location = useLocation();
+      const navigate = useNavigate();
+      return <div>
+        <span data-testid="debounced-history-search">{location.search}</span>
+        <button type="button" data-testid="debounced-history-back" onClick={() => navigate(-1)}>Back</button>
+        <button type="button" data-testid="debounced-history-forward" onClick={() => navigate(1)}>Forward</button>
+      </div>;
+    }
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const currentSearch = () => container.querySelector('[data-testid="debounced-history-search"]')?.textContent;
+    try {
+      await act(async () => {
+        root.render(<QueryClientProvider client={queryClient}>
+          <MemoryRouter initialEntries={[`/buscar?q=bass&cityId=${quito}`]}>
+            <DirectorySearchPage /><HistoryProbe />
+          </MemoryRouter>
+        </QueryClientProvider>);
+      });
+      await waitFor(() => expect(container.textContent).toContain('Synthetic Bassist'));
+      const query = container.querySelector<HTMLInputElement>('input[role="combobox"]')!;
+      expect(query.value).toBe('bass');
+      const nextSearch = expected ? `?q=${new URLSearchParams({ q: expected }).get('q')!.replace(/ /g, '+')}&cityId=${quito}` : `?cityId=${quito}`;
+      for (const value of values) {
+        await act(async () => { fireEvent.change(query, { target: { value } }); });
+      }
+      if (delay) {
+        await act(async () => { await jest.advanceTimersByTimeAsync(delay); });
+        expect(currentSearch()).toBe(nextSearch);
+      }
+      await act(async () => { fireEvent.submit(container.querySelector('form[role="search"]')!); });
+      await act(async () => { await jest.advanceTimersByTimeAsync(301); });
+      expect(currentSearch()).toBe(nextSearch);
+      await act(async () => { fireEvent.click(container.querySelector('[data-testid="debounced-history-back"]')!); });
+      expect(currentSearch()).toBe(`?q=bass&cityId=${quito}`);
+      expect(query.value).toBe('bass');
+      // A stale input timer must not bounce a restored POP back to piano.
+      await act(async () => { await jest.advanceTimersByTimeAsync(301); });
+      expect(currentSearch()).toBe(`?q=bass&cityId=${quito}`);
+      expect(query.value).toBe('bass');
+      await act(async () => { fireEvent.click(container.querySelector('[data-testid="debounced-history-forward"]')!); });
+      expect(currentSearch()).toBe(nextSearch);
+      expect(query.value).toBe(expected);
+      await act(async () => { await jest.advanceTimersByTimeAsync(301); });
+      expect(currentSearch()).toBe(nextSearch);
+      expect(addFavoriteMock).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      queryClient.clear();
+      jest.useRealTimers();
+    }
+  }, 15_000);
+
   it('pushes tab changes into history so back restores the previous search', async () => {
     const quito = '22222222-2222-4222-8222-222222222222';
     const { useLocation, useNavigate } = await import('react-router-dom');

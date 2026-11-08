@@ -117,10 +117,10 @@ class RealChecker(unittest.TestCase):
                     rows = {entry['id']: entry for entry in result['certificates']}
                     if not mutated:
                         self.assertTrue(result['executionPassed'], result['error'])
-                        self.assertEqual(len(rows), 14)
+                        self.assertEqual(len(rows), 16)
                         self.assertTrue(all(entry['status'] == 'PROVEN' for entry in rows.values()))
                         self.assertEqual(result['metrics']['independentlyCheckedDistinctInputs'], 1)
-                        self.assertEqual(sum('reusedFrom' in entry for entry in rows.values()), 13)
+                        self.assertEqual(sum('reusedFrom' in entry for entry in rows.values()), 15)
                         self.assertNotEqual(rows['arithmetic:capture-safety']['sourceObligationIds'],
                                             rows['arithmetic:refund-safety']['sourceObligationIds'])
                         for suite, names in certificates.CERTIFICATES.items():
