@@ -1,0 +1,123 @@
+tdf-hq> build (test) with ghc-9.10.3
+Preprocessing test suite 'tdf-hq-test' for tdf-hq-0.1.0.0...
+Building test suite 'tdf-hq-test' for tdf-hq-0.1.0.0...
+[260 of 321] Compiling TDF.Commerce.ProviderRetrySpec [Source file changed]
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:78:30: warning: [GHC-38856] [-Wunused-imports]
+    The import of ‘toSqlKey’
+    from module ‘Database.Persist.Sql’ is redundant
+   |
+78 | import Database.Persist.Sql (toSqlKey, fromSqlKey)
+   |                              ^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:372:36: warning: [GHC-68441] [-Wdeprecations]
+    In the use of ‘closeManager’
+    (imported from Network.HTTP.Client, but defined in Network.HTTP.Client.Manager):
+    Deprecated: "Manager will be closed for you automatically when no longer in use"
+    |
+372 |   bracket (HC.newManager settings) HC.closeManager $ \manager ->
+    |                                    ^^^^^^^^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:867:62: warning: [GHC-63394] [-Wx-partial]
+    In the use of ‘head’
+    (imported from Prelude, but defined in GHC.Internal.List):
+    "This is a partial function, it throws an error on empty lists. Use pattern matching, 'Data.List.uncons' or 'Data.Maybe.listToMaybe' instead. Consider refactoring to use "Data.List.NonEmpty"."
+    |
+867 |     map Event.pesReference results `shouldSatisfy` (\refs -> head refs == last refs)
+    |                                                              ^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2195:15: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘before’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+     |
+2195 |               before <- runSqlPool (paymentSnapshot payment) pool
+     |               ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2305:13: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘creation’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:2285:7
+     |
+2305 |         let creation = Refund.RefundCreation
+     |             ^^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:2656:9: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘before’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Hooks’)
+     |
+2656 |         before <- serviceOrderSnapshot pool payment
+     |         ^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:3691:14: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘pending’ shadows the existing binding
+      imported from ‘Test.Hspec’ at test/TDF/Commerce/ProviderRetrySpec.hs:39:1-27
+      (and originally defined in ‘hspec-core-2.11.17:Test.Hspec.Core.Spec’)
+     |
+3691 |         Just pending <- runSqlPool (get (entityKey request)) pool
+     |              ^^^^^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:4312:18: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘key’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:4314:9
+     |
+4312 |         purchase key = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+     |                  ^^^
+
+/private/tmp/tdf-correctness-cycle-20261028/tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs:4585:18: warning: [GHC-63397] [-Wname-shadowing]
+    This binding for ‘key’ shadows the existing binding
+      bound at test/TDF/Commerce/ProviderRetrySpec.hs:4587:9
+     |
+4585 |         purchase key = runHandler (runReaderT (checkout (TD.TicketPurchaseWithPromoDTO request
+     |                  ^^^
+
+[280 of 321] Compiling TDF.Version
+[280 of 322] Compiling TDF.Version
+[322 of 322] Linking .stack-work/dist/x86_64-osx/ghc-9.10.3/build/tdf-hq-test/tdf-hq-test [Objects changed]
+tdf-hq> copy/register
+Installing executable tdf-ddex-render in /private/tmp/tdf-correctness-cycle-20261028/tdf-hq/.stack-work/install/x86_64-osx/5183c6d274f593a36eae69d28d98c0a8b88f4a56934f2364cfcf4644158ab5e0/9.10.3/bin
+Installing executable tdf-hq-exe in /private/tmp/tdf-correctness-cycle-20261028/tdf-hq/.stack-work/install/x86_64-osx/5183c6d274f593a36eae69d28d98c0a8b88f4a56934f2364cfcf4644158ab5e0/9.10.3/bin
+tdf-hq> test (suite: tdf-hq-test, args: --match=ticket-reservation-clock --fail-on=empty --seed=20261029 +RTS -N2 -RTS)
+
+
+provider-retry-runtime PostgreSQL
+  ticket-reservation-clock
+    retains inclusive promotion start and end boundaries [✔]
+    retains inclusive tier start and end boundaries without committing test stock [✔]
+TICKET_CLOCK_WAIT event=27 end=2026-10-29 06:23:17.088296 UTC releasedAfter=Just 2026-10-29 06:13:17.138469 UTC
+    enforces deadline after the Event wait: checkout=False, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=28 end=2026-10-29 06:13:22.272057 UTC releasedAfter=Just 2026-10-29 06:13:22.286048 UTC
+    enforces deadline after the Event wait: checkout=False, promo=False, elapsed=True [✔]
+TICKET_CLOCK_WAIT event=29 end=2026-10-29 06:23:22.374289 UTC releasedAfter=Just 2026-10-29 06:13:22.409613 UTC
+    enforces deadline after the Event wait: checkout=True, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=30 end=2026-10-29 06:13:27.466189 UTC releasedAfter=Just 2026-10-29 06:13:27.473073 UTC
+    enforces deadline after the Event wait: checkout=True, promo=False, elapsed=True [✔]
+TICKET_CLOCK_WAIT event=31 end=2026-10-29 06:23:27.530806 UTC releasedAfter=Just 2026-10-29 06:13:27.564538 UTC
+    enforces deadline after the Event wait: checkout=True, promo=True, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=32 end=2026-10-29 06:13:32.62962 UTC releasedAfter=Just 2026-10-29 06:13:32.635697 UTC
+    enforces deadline after the Event wait: checkout=True, promo=True, elapsed=True [✔]
+TICKET_CLOCK_WAIT event=33 end=2026-10-29 06:23:32.679012 UTC releasedAfter=Just 2026-10-29 06:13:32.746545 UTC
+    enforces deadline after the Tier wait: checkout=False, promo=False, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=34 end=2026-10-29 06:13:37.863027 UTC releasedAfter=Just 2026-10-29 06:13:37.864881 UTC
+    enforces deadline after the Tier wait: checkout=False, promo=False, elapsed=True [✔]
+TICKET_CLOCK_WAIT event=35 end=2026-10-29 06:23:37.918728 UTC releasedAfter=Just 2026-10-29 06:13:37.957329 UTC
+    enforces deadline after the Promo wait: checkout=True, promo=True, elapsed=False [✔]
+TICKET_CLOCK_WAIT event=36 end=2026-10-29 06:13:43.01612 UTC releasedAfter=Just 2026-10-29 06:13:43.036946 UTC
+    enforces deadline after the Promo wait: checkout=True, promo=True, elapsed=True [✔]
+    retains a prior order and same-key promo replay after its deadline [✔]
+ticket-payment-gate-postgresql
+CANONICAL_CLOCK_WAIT event=38 end=2026-10-29 06:23:48.224614 UTC releasedAfter=Just 2026-10-29 06:13:48.267204 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=False, elapsed=False [✔]
+CANONICAL_CLOCK_WAIT event=39 end=2026-10-29 06:13:53.392259 UTC releasedAfter=Just 2026-10-29 06:13:53.40562 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=False, elapsed=True [✔]
+CANONICAL_CLOCK_WAIT event=40 end=2026-10-29 06:23:53.48896 UTC releasedAfter=Just 2026-10-29 06:13:53.524225 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=True, elapsed=False [✔]
+CANONICAL_CLOCK_WAIT event=41 end=2026-10-29 06:13:58.603363 UTC releasedAfter=Just 2026-10-29 06:13:58.606578 UTC
+  ticket-reservation-clock enforces canonical deadline: promo=True, elapsed=True [✔]
+
+Finished in 41.8440 seconds
+17 examples, 0 failures
+
+
+
+tdf-hq> Test suite tdf-hq-test passed
+Completed 2 action(s).

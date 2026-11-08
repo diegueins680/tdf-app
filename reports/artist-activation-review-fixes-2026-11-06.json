@@ -1,0 +1,78 @@
+{
+  "date": "2026-11-06",
+  "pullRequest": 667,
+  "reviewedParent": "db258c8b54fce2c36749ae3d25f6c54d246be905",
+  "protectedMain": "c47c2a8d8851a58a828dec830704f8c352496c20",
+  "findings": [
+    {
+      "thread": "PRRT_kwDOQPdUrM60ZBRm",
+      "priority": "P1",
+      "change": "Receive bounded upload chunks, write files and hash under a permanent per-asset flock inode without a SQLite transaction; recheck current authority and offset before the short commit. Deletion shares the lock."
+    },
+    {
+      "thread": "PRRT_kwDOQPdUrM60ZBRn",
+      "priority": "P2",
+      "change": "Protect every recorded settings.tiktok.images reference, including approved/scheduled/in-flight/historical provider states."
+    },
+    {
+      "thread": "PRRT_kwDOQPdUrM60ZBRp",
+      "priority": "P2",
+      "change": "Reject in-place edits for any non-null external identity, preserving blocked private YouTube video identity, approvals and Studio confirmation."
+    }
+  ],
+  "qualification": {
+    "campaignTests": {
+      "passed": 110,
+      "failed": 0,
+      "logSha256": "b147a64e7e01290a05cb38ee341ba23109855d0312b22ba467804c4abc1252a1",
+      "scope": "Real local HTTP/SQLite/filesystem boundaries and mocked external providers. Includes stalled body vs other user/worker writes, competing mutation refusal, editor revocation during receipt, real commit-abort/tail retry, photo reference protection and existing-video Studio recovery."
+    },
+    "negativeControls": {
+      "selectedTests": 3,
+      "allRejectOldImplementation": true,
+      "logSha256": "02776ed66b21e1ab81ef60c6be5884ae00471aeef0f674909d0b085d81cb6ba5",
+      "source": "Original server/domain from reviewedParent plus the new regression tests; three defects reproduced. Multiple subtest failures and downstream Studio refusal are retained."
+    },
+    "web": {
+      "passed": 4011,
+      "suites": 354,
+      "logSha256": "56cef86282a1f9027eb0d5803a9ab48d016fcafd473a33e1a0e4acce819f9bdb",
+      "scope": "Completed before these Python-only review fixes; web source remains byte-identical to reviewedParent."
+    },
+    "lint": {
+      "result": "PASS on serial rerun",
+      "logSha256": "afd290cb866a029420f31d40a50a211a02d0fc0f0d820cad3087b9d578f9a174",
+      "earlierAttempts": "Two concurrent runs exited137; retained as failures."
+    },
+    "repositoryQuality": {
+      "result": "BLOCKED locally",
+      "reason": "First run lacked pinned age tools. Checksum-pinned tools installed; rerun reached recovery-envelope tests but the executor Python fcntl lacks F_SEAL_WRITE. Required hosted Linux gate remains necessary.",
+      "logSha256": "2e9c5bab01d1e5be54f43cf023a98a68cf23a063437d2c4e51b5fb29ff72041d"
+    },
+    "preview": {
+      "cloudflare": "db258c8 preview built successfully; public Core refused that preview Origin with HTTP400. Canonical Origin read returned HTTP200 and artist535. No playback receipt is claimed.",
+      "vercel": "Preview requires a Vercel login; no sign-in or protection change performed.",
+      "localBrowser": "Chromium launch blocked by executor singleton-socket restriction."
+    }
+  },
+  "sourceSha256": {
+    "services/campaign-platform/server.py": "c820ea7972d2e089c95dae642ae9fab3b9a07c309bdc86bd1f9e892e7f2e1aa8",
+    "services/campaign-platform/domain.py": "be75956d0e24cd973252d122c992971a64765cc8a990f7e1aad4b24ca725019c",
+    "services/campaign-platform/tests/test_http.py": "17449bc6a0b7965bef8b404c9e21ceb6da34f7abc85eef02d89fc2d2d5f19b1d",
+    "services/campaign-platform/tests/test_domain.py": "fab9ac7939636eb8f0240d8577ee2e77df7fce2302609f2533bb621124d85740"
+  },
+  "preservation": {
+    "webSourceUnchanged": true,
+    "mobileRevision": "14318a730f96b2053f71885091bbc05cffc3294d",
+    "coreContractsAndMigrations": "Identical to protectedMain",
+    "productionDataWrites": [],
+    "campaignSourceChanges": [
+      "services/campaign-platform/server.py",
+      "services/campaign-platform/domain.py",
+      "services/campaign-platform/tests/test_http.py",
+      "services/campaign-platform/tests/test_domain.py"
+    ],
+    "existingCampaignsAndPublications": "No runtime/data mutation, repost, re-upload, approval/schedule reset or conversion claim."
+  },
+  "release": "Current new-head hosted checks, independent approval and protected admission still required; no merge or production deployment."
+}

@@ -61,6 +61,8 @@ RUN --mount=type=cache,target=/root/.stack,sharing=locked set -e; \
 # Copy sources (git metadata is provided via build args when available)
 COPY tdf-hq/app app
 COPY tdf-hq/src src
+# Template Haskell embeds these query files during compilation.
+COPY tdf-hq/sql/queries sql/queries
 COPY tdf-hq/config/default.env.example config/default.env
 COPY tdf-hq/docs docs
 COPY tdf-hq/assets assets

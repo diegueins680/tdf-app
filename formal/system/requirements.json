@@ -213,7 +213,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence, SAT witnesses and negative controls; actual Haskell boundary oracle. Caller preconditions manually inspected; SQL/whole-program proof open.",
+      "verification": "Source-derived signed-64-bit SMT safety/admission equivalence and outer-validator sign-precondition implication, SAT witnesses/source mutations and negative controls; independent CPC refutations; actual Haskell boundary oracle. Translation/composition, dispatch, SQL and whole-program refinement remain open.",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -276,7 +276,7 @@
         "tdf-hq/src/TDF/Commerce/StateMachine.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs"
       ],
-      "verification": "Same full-width source-derived SMT and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
+      "verification": "Same full-width source-derived SMT, outer-validator sign-precondition, independent CPC and actual-module oracle boundary as SYS-MONEY-001; provider execution and authorization excluded",
       "evidence": "payment-proof/result.json, TDF.Commerce.PaymentArithmeticSpec, backend Hspec",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -1246,7 +1246,9 @@
         "scripts/test-auth-predicates.py",
         "scripts/check-admin-guards.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "scripts/verify-auth-predicates.py"
+      ],
       "status": "specified and implemented",
       "critical": true,
       "confidence": "High for inspected predicates and targeted registry tests; per-handler HTTP denial execution remains open.",
@@ -1682,22 +1684,24 @@
       "critical": true,
       "status": "specified and implemented",
       "contract": "formal/system/identity-lifecycle.md",
-      "confidence": "Candidate repair authored without a compiled build; exact-head stack build, integration and rollout pending",
+      "confidence": "Specified shared admission rule with finite unit/property and SQLite controls; exact source-bound qualification is recorded separately. PostgreSQL locked-window and production rollout guarantees are not implied.",
       "ambiguity": [
         "Hashed token storage, sliding last-use refresh and login rate limits remain open.",
         "Production release sequencing after the additive migration is not yet verified."
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Implementation, additive migration, migration test and Hspec/config cases exist; exact candidate compilation, PostgreSQL runtime receipts, review and deployment remain pending."
+        "reason": "Finite predicate/lookup regressions and inherited migration/config controls support the rule; exact candidate compilation and execution receipts are separate, and complete endpoint/clock/refinement and production rollout remain unresolved."
       },
       "source": "formal/system/identity-lifecycle.md; OWASP Session Management Cheat Sheet; source-derived absence of baseline session expiry",
-      "verification": "Hspec validity-window cases on the SQLite adapter, config validation cases, idempotent PostgreSQL migration script with constraint negative controls, rollback-floor unit test",
+      "verification": "Actual shared-predicate boundary cases, generated full-width valid-window clock partitions, SQLite loadAuthedUser and credential-identification positive/negative controls, existing config validation, idempotent PostgreSQL migration/constraint controls and rollback-floor test. Fresh candidate receipts are separate; no complete endpoint/refinement proof. Conditional authorization/recovery projections remain separately scoped source-derived solver claims, not a proof of the complete validity-window helper. The retained formal/auth/SessionExpiry.tla model has actual source182ae5e2437756bea7edf28a5f13898eec040627 hosted verification (run42313255678/job128219591685): TLC1.7.2 checked three tokens, one legacy token, cookie Max-Age3, TTL2 and clock0..5; positive and missing-expiry/unchecked-TTL negative configurations completed. The reported2046828 state count is owner-reported and not independently verified from retained hosted logs. Apalache0.62.4 checked initiation, consecution and implication for any nonempty subset of up to four tokens, any legacy subset, TTL/Max-Age1..100000 with TTL<=Max-Age and clock0..MaxTime where MaxTime0..1000000; it also found the minted-session witness and missing-expiry negative control. The unchecked-TTL negative control runs in TLC only. These model inputs are retained byte-exact without rebinding the historical execution; the model encodes upper expiry/legacy/TTL/reset safety and does not establish the issued-at lower bound or complete malformed-window behavior of this stronger runtime rule. Correspondence to implementation remains by review, with no whole endpoint, compiler/translator or program refinement claim.",
       "evidence": "Migration test output, Hspec receipts and release-floor test output for the exact candidate",
       "domain": "ID",
       "privacy": "Fixtures are synthetic and local; never log production tokens or customer details.",
       "observability": "No token in production receipts; retain migration identity and exact tested source.",
-      "formalModels": [],
+      "formalModels": [
+        "formal/auth/SessionExpiry.tla"
+      ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/Spec.hs",
@@ -1713,7 +1717,7 @@
       ],
       "id": "ID-SESSION-004",
       "title": "Interactive sessions expire on the server",
-      "statement": "A password or Google login session must carry a database-clock validity window and be denied once it elapses or when it is absent; legacy interactive sessions fail closed and are not backfilled, while service tokens may stay unbounded.",
+      "statement": "A password or Google login session must carry a well-formed database-clock half-open validity window and be denied before issuance, at or after expiry, or when its window is absent or malformed. Legacy interactive sessions fail closed without backfill; both-null service/custom tokens may stay unbounded.",
       "property": "WithinWindowAtUse /\\ LegacyInteractiveFailsClosed /\\ TtlBoundedByCookie",
       "actors": [
         "session holder",
@@ -1734,10 +1738,11 @@
       },
       "allowedTransitions": [
         "Login/signup/password change/recovery -> interactive token issued with window",
-        "Active token with now < expires -> authenticated",
-        "Service token without window -> authenticated"
+        "Well-formed bounded token with 0 <= issued <= now < expires -> session-time admission; existing identity, purpose and grant checks still apply",
+        "Service/custom token with both epochs absent -> session-time admission under existing identity, purpose and grant checks"
       ],
       "forbiddenTransitions": [
+        "now < issued or malformed/incomplete stored window -> authenticated",
         "now >= expires -> authenticated",
         "Interactive label without window -> authenticated",
         "Expired bearer -> credential identification for password change",
@@ -1749,7 +1754,7 @@
       "authorization": "Possession of an active, authenticatable token inside its validity window on the database clock.",
       "concurrency": "Clock sampled per request and again inside the locked session witness; issuance and window are one transaction.",
       "idempotency": "Denial is repeatable and effect-free; expiry does not renew or revoke other tokens.",
-      "failure": "401 for an expired, absent-window interactive or unknown token; startup fails on an invalid TTL.",
+      "failure": "401 for pre-issuance, expired, malformed, absent-window interactive or unknown tokens; startup fails on invalid TTL.",
       "recovery": "Sign in again. Apply the additive migration before the enforcing binary; never roll the binary back below the floor.",
       "implementation": [
         "tdf-hq/src/TDF/Models.hs",
@@ -1958,8 +1963,10 @@
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/test-checkout-money-verifier.py"
       ],
-      "formalModels": [],
-      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "formalModels": [
+        "formal/payments/checkout_money_arithmetic.py"
+      ],
+      "verification": "61 Hspec examples include three 1000-case properties across checkout/cart/Merch; nine source mutations. Real cart HTTP conflicts and rollback passed at834fad2aa. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration. Z3 (formal/payments/checkout_money_arithmetic.py, pinned 4.13.3, executed locally at source 743c5c995538420f6702c6df1ae002792f7e1eaa; formal workflow configured, fresh hosted execution pending): under the exact TDF.Commerce.Money guards, accepted canonical lines (1 to 6, plus a step lemma for any length) are positive, within the parent, unchanged by Int64 narrowing and sum to the parent; accepted legacy cart amounts narrow unchanged; controls show that wrap-around before checking would accept wrong amounts.",
       "evidence": "checkout-money-tests.log; checkout-money-controls-final.json; checkout-overflow-before.log; production-checkout-arithmetic.json",
       "critical": true,
       "status": "specified and implemented",
@@ -2118,8 +2125,10 @@
         "scripts/__tests__/merch-commission-postgres.mjs",
         "scripts/test-checkout-money-verifier.py"
       ],
-      "formalModels": [],
-      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration.",
+      "formalModels": [
+        "formal/payments/merch_money_arithmetic.py"
+      ],
+      "verification": "Eight additional Hspec cases include a1000-case exact-commission property; four Merch source mutations join five existing controls. Actual maximal SQL insert and invalid-checkout HTTP rollback are required. Thirty actual SQL boundary inserts match an exact BigInt oracle; three SQL negative controls detect missing, overflowing and rounded constraints. Evidence admission requires all61 examples, zero pending, and actual three1000-case successful property reports; incomplete/malformed runs and compile-only mutations reject. Eight verifier regressions include the reproduced three1-case false-accept and runner orchestration. Z3 (formal/payments/merch_money_arithmetic.py, pinned 4.13.3, executed locally at source 743c5c995538420f6702c6df1ae002792f7e1eaa; formal workflow configured, fresh hosted execution pending): under the exact calculateMerchMoney guards, commission is the floor share within 0..base, stored fields fit Int64, commission + fee + seller net = total, and accepted cart lines fit within the accepted sum; four controls show each guard is needed.",
       "evidence": "merch-money-controls.json; merch-commission-postgres.log",
       "critical": true,
       "status": "specified and implemented",
@@ -2823,14 +2832,16 @@
       ],
       "tests": [
         "scripts/__tests__/dependency-security.test.mjs",
-        "tdf-hq-ui/src/api/socialV2.test.ts"
+        "tdf-hq-ui/src/api/socialV2.test.ts",
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
       "confidence": "High for scoped deterministic version rejection; partial dependency reachability assessment.",
       "ambiguity": [
         "No universal reachability or transitive supply-chain proof.",
-        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open."
+        "Runtime URI decoder compatibility repair and build-tool high-severity advisories remain open.",
+        "Other unresolved high/moderate dependency advisories and release exposure remain open."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -4806,7 +4817,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects. Legacy Stripe inventory completion requires a positive order quantity and one atomic event/tier-bound decrement guarded by sufficient current sold stock; an unsuccessful release rolls back completion while retaining processing and observed evidence. Legacy refund request creation must serialize the absence check and insertion with current event/order authority and paid amount, preserving one-request rejection on the legacy route and canonical successive allocations.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects. Legacy Stripe inventory completion requires a positive order quantity and one atomic event/tier-bound decrement guarded by sufficient current sold stock; an unsuccessful release rolls back completion while retaining processing and observed evidence. Legacy refund request creation must serialize the absence check and insertion with current event/order authority and paid amount, preserving one-request rejection on the legacy route and canonical successive allocations. New direct, legacy Stripe and public canonical ticket reservations must validate current sale and promotion windows against the same fresh database wall-time sample after their final admission locks, retaining inclusive endpoints, stored orders and existing reuse behavior.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4857,7 +4868,7 @@
       "failure": "Denied or failed audit/code-rotation transaction rolls back. No offline acceptance is introduced.",
       "recovery": "Retain populated immutable admission audit and configured approved cutoff; use compatible forward recovery where rollback refuses evidence loss. Inclusive policies require compatible serving backends; deactivate them before binary rollback and retain the additive schema.",
       "observability": "Exact source/binary/PG concurrency and finite-state model receipts plus existing immutable admission/transfer records.",
-      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001); formal/system/legacy-refund-inventory.md (EVT-LEGACY-REFUND-INVENTORY-001); formal/system/legacy-refund-request-creation.md (PAY-LEGACY-REFUND-REQUEST-001, AUTH-LEGACY-REFUND-REQUEST-001, PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001); formal/system/legacy-refund-history.md (PAY-LEGACY-REFUND-HISTORY-001); formal/system/legacy-ticket-inventory.md (EVT-TIER-EDIT-BOUNDS-001, EVT-LEGACY-RESERVE-BOUNDS-001); formal/system/legacy-ticket-eligibility.md (EVT-LEGACY-HOLD-ELIGIBILITY-001); formal/system/legacy-ticket-final-amount.md; formal/system/legacy-ticket-pricing-snapshot.md (EVT-LEGACY-PRICE-SNAPSHOT-001)",
+      "source": "Merged PR480 b06a4d392; TDF.Ticketing.Admission/Inventory/Transfer and formal/ticket-admission/README.md; docs/events/ticket-inclusive-tax.md (inclusive pricing implementation; event-specific tax approval is outside this contract); docs/events/paypal-refund-admission.md (external financial reconciliation remains separate); formal/system/legacy-stripe-refund.md (PAY-STRIPE-REFUND-EXECUTION-001); formal/system/legacy-stripe-refund-completion.md (PAY-STRIPE-REFUND-COMPLETION-001); formal/system/legacy-refund-inventory.md (EVT-LEGACY-REFUND-INVENTORY-001); formal/system/legacy-refund-request-creation.md (PAY-LEGACY-REFUND-REQUEST-001, AUTH-LEGACY-REFUND-REQUEST-001, PAY-LEGACY-REFUND-REQUEST-SNAPSHOT-001); formal/system/legacy-refund-history.md (PAY-LEGACY-REFUND-HISTORY-001); formal/system/legacy-ticket-inventory.md (EVT-TIER-EDIT-BOUNDS-001, EVT-LEGACY-RESERVE-BOUNDS-001); formal/system/legacy-ticket-eligibility.md (EVT-LEGACY-HOLD-ELIGIBILITY-001); formal/system/legacy-ticket-final-amount.md; formal/system/legacy-ticket-pricing-snapshot.md (EVT-LEGACY-PRICE-SNAPSHOT-001); formal/system/legacy-ticket-promo-limit.md (EVT-LEGACY-PROMO-LIMIT-001); formal/system/legacy-ticket-promo-snapshot.md (EVT-LEGACY-PROMO-SNAPSHOT-001); owner explicit 2026-10-29 reservation-time validity decision; formal/system/ticket-reservation-clock.md (EVT-TICKET-RESERVATION-CLOCK-001)",
       "property": "At-most-once admission, authorized-only and durable-audit in an eight-state design abstraction; not Haskell refinement; inclusive total equals advertised face less discount plus disclosed buyer fee and conserves integer tax/fee/liability components",
       "contract": "formal/ticket-admission/README.md",
       "implementation": [
@@ -4926,7 +4937,7 @@
       "formalModels": [
         "scripts/__tests__/ticket-admission-model.test.mjs"
       ],
-      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations. Legacy inventory follow-up: actual handler counterexamples for invalid stock, quantity and event binding; concurrent distinct requests share one tier; finite design controls expose stale prechecks, foreign tiers and nonpositive releases. Existing negative counters and other writers remain outside the guarantee. Legacy request creation: actual-handler table-lock races and committed paid-state, buyer, amount and organizer changes; compatibility for default/full/partial amounts, invalid amounts, prior requests and organizer authority; a bounded two-requester model exposes missing locks, stale snapshots and stale eligibility. The transaction explicitly selects READ COMMITTED; source-bound receipts retain exact scope and isolation evidence. Historical legacy approval: actual-handler duplicate identity/status and lock-wait cases require zero provider callbacks with preserved history; canonical successive partial replay bypasses the legacy guard. A finite twenty-input model detects omitted-history and pending-only guards. Direct writers, historical reconciliation and full SQL refinement remain separate obligations. Legacy tier edit/reservation concurrency: actual-handler direct/free-checkout counterexamples in both mutation orders, current-sold conditional edits and shared locked inventory authority; empty/exact/increased tier and event capacity compatibility. A bounded two-writer design model exposes stale sold, cached totals and omitted tier locking; no SQL refinement or global all-writer inventory proof. Legacy new-hold eligibility: actual normal organizer lifecycle/privacy changes racing both legacy purchase routes, exact refusal with zero effects and reverse-order admitted-sale preservation. Current locked predicate is shared; bounded editor/buyer model exposes cached eligibility, omitted lock and committed refusal-effects controls. Capability-catalog governance and SQL refinement remain separate.; actual-handler final fee-inclusive admission boundary/promo/free/replay regressions and separately scoped arithmetic evidence; Legacy pricing snapshot: normal organizer price/currency edits before new-hold admission, zero-effect409, harmless edits, earlier-sale preservation and free idempotent replay. Bounded buyer/editor pricing model with omitted price/currency/lock/refusal-effect controls; historical snapshots and later provider recovery remain separate. Actual Tier FIFO schedules and controlled removal of only the financial read FOR UPDATE verify that the lock is necessary even while Inventory locking remains.",
+      "verification": "Finite eight-state abstraction and three mutants; actual PG simultaneous buyers/scans/transfers and rollback tests require current combined execution. Inclusive pricing: actual Haskell quantity/conservation and rejected client-field cases; PostgreSQL exact totals, arithmetic constraints, old-writer rejection, purchased/approved immutability and audit preservation; existing web quote rendering tests. Bound PayPal order-readback parser rejects absent/wrong provider identity and retains exact amount/merchant checks; full provider-to-ticket integration remains pending. PostgreSQL capture-ledger cases cover zero/nonzero fee and tax with exact account amounts, balance and replay preservation. Per-ticket canonical refund projection: Integer partition properties, actual PostgreSQL partial/replay/cancellation/denial/rollback and competing request/admission transactions; bounded two-ticket model with three refund mutants. This internal primitive is not an enabled refund endpoint or provider-to-ticket end-to-end proof. Regression cases exhaust eight inbox attempts before capture binding, test the late capture fence, legacy paid/cancelled/refunded mutations during and after a partial refund, PayPal/Datafast request routing, retained ticket transfers and concurrent transfer/refund allocation. Modal regressions cover legacy raw Stripe errors, HTTP 5xx, buyer detail retention and actionable inventory refusals. Provider request construction remains unchanged. Read-only account readiness is separate from actual provider payment completion; no successful real payment is asserted. Legacy Stripe execution: actual-handler PostgreSQL concurrency, lost-response, exception, invalid-response, rejection, configuration and successful-full-refund regressions; a two-approver bounded design model checks the durable claim and stale-rejection controls. These checks do not establish legacy partial-refund allocations, provider response authenticity, admission during uncertainty or recovery of pre-existing uncertain attempts. Completion-evidence follow-up: actual-handler field/status counterexamples and exact positive completion, held observed-ID preservation and no execution replay, with an independent finite evidence model and omitted-guard controls. Source-bound receipts distinguish tested implementation from bounded design verification; legacy allocation, admission and recovery remain separate obligations. Legacy inventory follow-up: actual handler counterexamples for invalid stock, quantity and event binding; concurrent distinct requests share one tier; finite design controls expose stale prechecks, foreign tiers and nonpositive releases. Existing negative counters and other writers remain outside the guarantee. Legacy request creation: actual-handler table-lock races and committed paid-state, buyer, amount and organizer changes; compatibility for default/full/partial amounts, invalid amounts, prior requests and organizer authority; a bounded two-requester model exposes missing locks, stale snapshots and stale eligibility. The transaction explicitly selects READ COMMITTED; source-bound receipts retain exact scope and isolation evidence. Historical legacy approval: actual-handler duplicate identity/status and lock-wait cases require zero provider callbacks with preserved history; canonical successive partial replay bypasses the legacy guard. A finite twenty-input model detects omitted-history and pending-only guards. Direct writers, historical reconciliation and full SQL refinement remain separate obligations. Legacy tier edit/reservation concurrency: actual-handler direct/free-checkout counterexamples in both mutation orders, current-sold conditional edits and shared locked inventory authority; empty/exact/increased tier and event capacity compatibility. A bounded two-writer design model exposes stale sold, cached totals and omitted tier locking; no SQL refinement or global all-writer inventory proof. Legacy new-hold eligibility: actual normal organizer lifecycle/privacy changes racing both legacy purchase routes, exact refusal with zero effects and reverse-order admitted-sale preservation. Current locked predicate is shared; bounded editor/buyer model exposes cached eligibility, omitted lock and committed refusal-effects controls. Capability-catalog governance and SQL refinement remain separate.; actual-handler final fee-inclusive admission boundary/promo/free/replay regressions and separately scoped arithmetic evidence; Legacy pricing snapshot: normal organizer price/currency edits before new-hold admission, zero-effect409, harmless edits, earlier-sale preservation and free idempotent replay. Bounded buyer/editor pricing model with omitted price/currency/lock/refusal-effect controls; historical snapshots and later provider recovery remain separate. Actual Tier FIFO schedules and controlled removal of only the financial read FOR UPDATE verify that the lock is necessary even while Inventory locking remains.; Legacy promo redemption: real organizer limit reductions against waiting checkout, NULL/nonexhausted/increased/unchanged compatibility, Promo-row FIFO claim recheck and historical replay preservation; atomic current-column predicate. Twenty-input/sixty-history design with cached-cap and refusal-effect controls; no global historical count<=cap or full SQL refinement claim.; Legacy promo quote terms: real organizer financial/window/tier/minimum edits before waiting new-order admission, zero-effect409, harmless description/currency-case compatibility, Promo-row editor-first FIFO and historical financial snapshot/replay. Prior current-cap changes remain admissible under the atomic current cap predicate. Bounded nine-dimension/two-value one-field-at-a-time model and field/lock/refusal-effect controls do not prove all combinations, elapsed-time expiry or SQL/Haskell refinement.",
       "evidence": "Incoming review/test evidence is historical; final consolidated candidate must rerun.",
       "status": "specified and implemented",
       "critical": true,
@@ -10876,7 +10887,9 @@
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         ".github/workflows/ci.yml",
-        "tdf-hq-ui/src/components/ArtistFansList.tsx"
+        "tdf-hq-ui/src/components/ArtistFansList.tsx",
+        "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts"
       ],
       "tests": [
         "scripts/test-community-search.py",
@@ -10893,7 +10906,12 @@
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "playwright.discovery.config.mjs",
         "tdf-hq-ui/src/api/directory.test.ts",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-migration.sh",
+        "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
+        "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
+        "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
+        "e2e/web/public-welcome.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/DiscoveryFallbackPrivacy.tla",
@@ -10988,7 +11006,8 @@
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-mobile/src/navigation/notificationResponses.test.ts",
         "tdf-hq/test/integration/interactions/notification-properties.sql",
-        "e2e/web/chat-notification-navigation.spec.mjs"
+        "e2e/web/chat-notification-navigation.spec.mjs",
+        "e2e/web/chat-mobile-follow.spec.mjs"
       ],
       "formalModels": [
         "formal/event-operations/ChatNotificationAuthorization.tla",
@@ -12335,7 +12354,8 @@
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-        "tdf-hq-ui/src/components/StudioGallery.tsx"
+        "tdf-hq-ui/src/components/StudioGallery.tsx",
+        "tdf-hq-ui/src/pages/NotFoundPage.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
@@ -12346,7 +12366,8 @@
         "e2e/web/directory-favorite-recovery.spec.mjs",
         "e2e/web/directory-language.spec.mjs",
         "e2e/web/public-welcome.spec.mjs",
-        "tdf-hq-ui/src/components/StudioGallery.test.tsx"
+        "tdf-hq-ui/src/components/StudioGallery.test.tsx",
+        "tdf-hq-ui/src/pages/NotFoundPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -12675,8 +12696,10 @@
         ".github/workflows/ci.yml",
         "scripts/test-provider-domain-harness.py"
       ],
-      "formalModels": [],
-      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required.",
+      "formalModels": [
+        "formal/payments/provider_binding_admission.py"
+      ],
+      "verification": "Finite full-schema PostgreSQL matrix, witnessed blocking/retry at READ COMMITTED and REPEATABLE READ, original-guard and removed-reference controls. Compiled full-schema runtime qualification and current-head protected checks remain required. Z3 (formal/payments/provider_binding_admission.py, pinned 4.13.3, source sha256 pinned, executed locally at source 743c5c995538420f6702c6df1ae002792f7e1eaa; formal workflow configured, fresh hosted execution pending): the encoded admission predicate implies the stated agreement for hosted and direct evidence and refuses non-succeeded or mismatched attempts; each of the 25 hosted-branch conjuncts is necessary. Manual evidence and the Domo hold guard are not encoded.",
       "evidence": "formal/system/evidence/2026-10-26-provider-domain-main/ records clean223-schema qualification atcb777,317 compiled cases, independent optimized-harness counterexamples, failed earlier attempts and exact scoped integration hashes. Fresh final-head CI/review remain separate.",
       "critical": true,
       "status": "specified and implemented",
@@ -13417,13 +13440,15 @@
         ".github/workflows/ci.yml",
         "scripts/ci-job-admission.mjs",
         "package.json",
-        "scripts/ci-change-scope.mjs"
+        "scripts/ci-change-scope.mjs",
+        "scripts/__tests__/experiment-http-runtime.mjs"
       ],
       "tests": [
         "scripts/__tests__/ci-job-admission.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
-        "scripts/__tests__/ci-change-scope.test.mjs"
+        "scripts/__tests__/ci-change-scope.test.mjs",
+        "scripts/__tests__/experiment-http-cleanup.test.mjs"
       ],
       "formalModels": [],
       "ambiguity": [
@@ -13997,7 +14022,9 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "formal/payments/domo_quote_arithmetic.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
       "confidence": "High: lemmas proved unbounded; the composition into calculateDomoQuote is checked by properties, not mechanically refined.",
       "ambiguity": [
         "The Domo quote lifecycle (DomoQuoteState) and its refund policy after deposit_paid -> cancelled are not specified here.",
@@ -14222,7 +14249,9 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "formal/payments/domo_quote_arithmetic.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_quote_arithmetic.py"
+      ],
       "confidence": "High: lemmas unbounded, composition property-tested.",
       "ambiguity": [
         "A deposit course whose total is at most 50.00 can have a zero balance, so the deposit equals the full price; whether such courses should use the deposit mode is a business decision (F-20)."
@@ -14393,7 +14422,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/domo_cancellation_refund.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable. A requested Domo cancellation refund is approved and executed by a different strict administrator with the Admin module through the shared PayPal refund approval (POST /admin/services/storefront/refunds/{refundId}/approve), bound to the deposit checkout's verified PayPal capture; Datafast refunds remain unsupported (503).",
@@ -14484,7 +14515,9 @@
     {
       "historicalStatus": null,
       "critical": true,
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/deposit_policy_arithmetic.py"
+      ],
       "status": "specified and implemented",
       "observability": "Not applicable.",
       "recovery": "Not applicable.",
@@ -14540,7 +14573,7 @@
         "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator.sql",
         "tdf-hq/sql/2026-11-04_domo_quote_deposit_policy_validator_rollback.sql"
       ],
-      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals).",
+      "verification": "QuickCheck properties on the real function (never rejects, minimum raise, exact switch condition, non-positive totals). Z3 (formal/payments/deposit_policy_arithmetic.py, pinned 4.13.3, executed locally at source 743c5c995538420f6702c6df1ae002792f7e1eaa; formal workflow configured, fresh hosted execution pending): for every valid policy and Int64 inputs, an admitted deposit leaves a positive balance, stays within the approved share and is not below the minimum or computed deposit; a higher minimum never turns full payment into a deposit; controls show both full-payment guards are needed.",
       "evidence": "tdf-hq-test DepositPolicySpec run.",
       "tests": [
         "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs",
@@ -15273,7 +15306,7 @@
     {
       "id": "SYS-WEBTORRENT-BROWSER-001",
       "title": "Preserve browser playback while removing unused Node torrent dependencies",
-      "statement": "The browser playback dependency must retain the reviewed official bundle and existing worker lifecycle, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
+      "statement": "The browser playback dependency must retain the reviewed official bundle and worker URL and client API, with page control and dispatch governed by MUSIC-TORRENT-CONTROL-001, omit unused Node torrent packages, preserve audit thresholds, and retain separately checked provenance, notices and conservative component advisory coverage.",
       "domain": "SYS",
       "critical": false,
       "actors": [
@@ -15502,6 +15535,80 @@
       }
     },
     {
+      "id": "SYS-ROUTE-REQUIREMENTS-001",
+      "title": "Every mutating compiled route is attributed to requirements or listed as unspecified",
+      "statement": "Each POST, PUT, PATCH and DELETE operation in the compiled API surface must have exactly one entry in formal/system/route-requirements.json, naming the requirements that cover it or marking it unspecified, and CI must fail when a mutating route is added, removed or renamed without updating the ledger.",
+      "domain": "SYS",
+      "authority": "Formal audit 2026-10-31 finding F-05 (407 of 508 mutating routes unmapped by a heuristic; the exact number to be fixed by a per-route mapping); formal/system/audit-2026-10-31-phase1.md section 42.",
+      "source": "formal/system/audit-2026-10-31-phase1.md",
+      "contract": "formal/system/audit-2026-10-31-phase1.md",
+      "property": "The ledger's route set equals the mutating operations of formal/system/compiled-api-surface.json, without duplicates. An entry is named (a requirement names METHOD and path, parameters compared by position), path-named (a requirement names the path and it is the only mutating method on it), reviewed (requirements plus a written note) or unspecified (no requirements). Named and path-named entries are recomputed from requirements.json on every check, so they cannot drift from the text; a reviewed entry is refused once the text names the route. Every listed requirement exists, and the summary counts match the entries.",
+      "actors": [
+        "Maintainer adding or changing a route",
+        "CI",
+        "Reviewer attributing a route"
+      ],
+      "preconditions": [
+        "Current compiled API surface snapshot",
+        "formal/system/requirements.json"
+      ],
+      "inputs": [
+        "formal/system/compiled-api-surface.json",
+        "formal/system/requirements.json",
+        "formal/system/route-requirements.json",
+        "--write option"
+      ],
+      "state": {
+        "initial": "Ledger and surface on disk",
+        "terminal": [
+          "Ledger accepted",
+          "Check failed with the offending routes"
+        ]
+      },
+      "allowedTransitions": [
+        "Regenerate named and path-named entries from requirement text",
+        "Keep reviewed entries across regeneration"
+      ],
+      "forbiddenTransitions": [
+        "Accept a mutating route missing from the ledger",
+        "Accept a stale or duplicate entry",
+        "Accept coverage the requirement text does not support, or a reviewed entry without a note",
+        "Count an attribution as conformance"
+      ],
+      "effects": [
+        "Read-only check; --write rewrites only the ledger file"
+      ],
+      "authorization": "Local tool; no network or credentials.",
+      "privacy": "Route paths and requirement identifiers only.",
+      "concurrency": "Single sequential run.",
+      "idempotency": "--write on an unchanged surface, requirements and ledger reproduces the ledger byte for byte.",
+      "failure": "Each inconsistency is printed and the exit status is 1.",
+      "recovery": "Run with --write, then review entries that remain unspecified or add a reviewed attribution with a note.",
+      "observability": "The ledger summary counts named, path-named, reviewed and unspecified routes.",
+      "implementation": [
+        "scripts/check-route-requirements.py",
+        "formal/system/route-requirements.json"
+      ],
+      "tests": [
+        "scripts/test-route-requirements.py"
+      ],
+      "formalModels": [],
+      "verification": "8 unit tests: build and bases on a synthetic surface, positional parameter matching, the two-method path rule, a missing new route, a stale route, requirement text changes, unsupported coverage, reviewed entries (note, unknown requirement, kept by --write), duplicates and summary drift, and the repository ledger being current. CI runs the check and the tests in the formal workflow.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 42",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Exact over the compiled snapshot; attribution comes from requirement text, not from handler analysis.",
+      "ambiguity": [
+        "The compiled description carries no handler names, so a route is attributed by the requirement text that names it, not by the handler that serves it.",
+        "A requirement that names a route is not evidence that the handler conforms to it.",
+        "Read-only GET routes are out of scope."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Complete and gated attribution ledger; 501 of 516 mutating routes remain unspecified debt."
+      }
+    },
+    {
       "id": "PAY-INVOICE-ISSUE-001",
       "title": "A session invoice and its SRI document are issued at most once per request",
       "statement": "POST /invoices/{sessionId}/generate must not issue a second SRI electronic invoice for a retried, doubled or concurrent request. Issuing to SRI requires an idempotencyKey; the same key and request returns the stored answer, a different request with the key is refused, and an unanswered reservation refuses replays instead of issuing again. The SRI script output is accepted only when it validates against the request.",
@@ -15568,11 +15675,15 @@
       "tests": [
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq/test/TDF/APITypesSpec.hs",
-        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs"
+        "tdf-hq/test/TDF/Invoice/SessionIssueSpec.hs",
+        "scripts/test-session-invoice-issue.sh",
+        "scripts/__tests__/disposable-postgres-url.test.mjs"
       ],
-      "formalModels": [],
-      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse.",
-      "evidence": "formal/system/audit-2026-10-31-phase1.md section 40",
+      "formalModels": [
+        "formal/payments/SessionInvoiceIssue.tla"
+      ],
+      "verification": "SessionIssueSpec: key validation, fingerprint invariance and sensitivity, replay decision table, and the reservation, completion and release statements on SQLite including duplicate reservation and per-session scoping. Migration applied forward, rolled back and reapplied on the full PostgreSQL schema. Web helper tests for key reuse. Added PostgreSQL validation recipe: scripts/test-session-invoice-issue.sh selects the two real SessionIssueSpec cases for the advisory-lock query API and concurrent new-key reservation, rejects pending examples and zero successful examples, and is wired into backend CI. The runner creates a unique owned database without an initial drop, installs cleanup only after successful creation, validates local/CI routing and port, rejects libpq routing overrides, and passes credentials only through environment variables; isolated PATH-stub regressions exercise those guards and cleanup, not PostgreSQL semantics. These two PostgreSQL cases were not executed during the 2026-11-06 consolidation; fresh hosted execution remains required. SessionInvoiceIssue.tla encodes OneRunPerKey and NoBlindDuplicate; scripts/verify-inductive-proofs.sh configures TLC exploration, Apalache induction and the split-check/reservation negative control. Owner-reported model results have not been independently replayed in this consolidation; no current TLC/Apalache pass is claimed. The model-to-implementation correspondence is by review, not mechanical refinement.",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md sections 40 and 43; formal/payments/README.md",
       "critical": true,
       "status": "specified and implemented",
       "confidence": "Unit and SQLite reservation tests; no end-to-end run against the SRI portal.",
@@ -15583,7 +15694,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Server-side reservation tested on SQLite and the migration on PostgreSQL; no portal or concurrent HTTP run."
+        "reason": "Server-side reservation tested on SQLite and the migration on PostgreSQL; no portal or concurrent HTTP run. The newly wired two-case PostgreSQL CI run and TLC/Apalache model executions remain unverified for this candidate; wrapper controls alone do not execute PostgreSQL."
       }
     },
     {
@@ -15669,7 +15780,9 @@
         "Mobile contracts client"
       ],
       "authorization": "Unchanged: validateContractsAccess requires the operations role for create, PDF and send.",
-      "formalModels": [],
+      "formalModels": [
+        "formal/payments/ContractSend.tla"
+      ],
       "critical": true,
       "status": "specified and implemented",
       "implementation": [
@@ -15685,7 +15798,7 @@
       "tests": [
         "tdf-hq/test/TDF/Contracts/StoreSpec.hs"
       ],
-      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41",
+      "evidence": "formal/system/audit-2026-10-31-phase1.md section 41; formal/system/audit-2026-10-31-phase1.md section 43; formal/payments/README.md",
       "id": "CONTRACT-SEND-001",
       "title": "A contract is reported as sent only after the mail transport accepts it",
       "statement": "POST /contracts/{id}/send must email the contract PDF to the recipient and answer status sent only after SMTP accepted the message; without email configuration it must refuse with 503 instead of claiming success.",
@@ -15724,7 +15837,7 @@
       "failure": "Not configured 503; transport refusal 502 with the failure recorded.",
       "recovery": "A delivery left without outcome means the process stopped during SMTP; staff resend after checking the recipient.",
       "observability": "contract_delivery rows plus the existing [Email] smtp_attempt and smtp_accepted logs.",
-      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id.",
+      "verification": "StoreSpec on SQLite with an injected transport: 503 with nothing recorded when email is absent, accepted delivery and attached PDF when the transport accepts, 502 and recorded failure when it refuses, 404 without sending for an unknown id. ContractSend.tla encodes SentMeansAccepted, NoUnrecordedMail, AcceptedMeansMailed and UnavailableIsInert; scripts/verify-inductive-proofs.sh configures TLC exploration, Apalache induction for up to four requests, and the row-after-SMTP negative control. Owner-reported model results have not been independently replayed in this consolidation; no current TLC/Apalache pass or mechanical implementation refinement is claimed.",
       "confidence": "Handler tests with an injected transport; no live SMTP run.",
       "ambiguity": [
         "SMTP acceptance is not delivery to the inbox.",
@@ -16164,7 +16277,8 @@
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
         "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
         "scripts/__tests__/ci-pipeline.test.mjs",
-        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx"
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
@@ -16188,6 +16302,1160 @@
       "failure": "Errors preserve drafts and retry metadata; unknown transfer or deletion outcome retains accounting until reconciliation. Provider errors do not invalidate unrelated TDF login.",
       "recovery": "Same-tab metadata expires after eight hours and is purged by account/session cleanup. Browser reload requires reselecting the original binary; successful matching uploads reconcile the original key. Storage denial warns the user to keep the tab open.",
       "observability": "No tokens or private bodies in diagnostics; compiler observations, synthetic test receipts and production version reads identify their evidence boundary."
+    },
+    {
+      "id": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+      "title": "Private non-storable responses for music bearer credentials",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "The eight inventoried music credential operations emit exactly one Cache-Control: private, no-store response header, including GET/HEAD aliases and success or denial responses; unrelated operations and all non-cache headers, status and body remain unchanged.",
+      "authority": "Explicit universal audio implementation directive sections 13, 14 and 17, plus scoped credential-cache implementation instruction 2026-10-26; independent release review remains required.",
+      "source": "docs/music-releases/credential-cache-control.md",
+      "contract": "formal/system/music-credential-cache.md",
+      "property": "For an inventoried method and decoded path, replace all case-insensitive Cache-Control headers with one private/no-store directive. The transformation is idempotent, preserves other response/request data, and is identity for every other request.",
+      "actors": [
+        "Public listener",
+        "Authorized uploader or downloader",
+        "Canonical WAI application and boot response boundary"
+      ],
+      "preconditions": [
+        "Request handling uses Server.mkApp or the canonical boot wrapper.",
+        "WAI method/path/header representations and compliant cache handling are trusted.",
+        "The operation inventory is reviewed when credential endpoints change."
+      ],
+      "inputs": [
+        "Request method, decoded pathInfo and query parameters",
+        "Response status, headers and body from routing, authorization, startup or exception handling"
+      ],
+      "state": {
+        "boundary": "Request-local response transformation; no database or session state",
+        "routeInventory": "Eight music credential operations plus HEAD for their GET routes",
+        "publication": "Existing authorization, feature gates and credential lifetimes remain authoritative"
+      },
+      "allowedTransitions": [
+        "Inventoried response -> one private/no-store directive, otherwise identical response",
+        "Unrelated request -> unchanged response",
+        "Nested transformation -> same single directive"
+      ],
+      "forbiddenTransitions": [
+        "Music bearer credential response remains publicly cacheable through an inventoried route alias.",
+        "A conflicting duplicate Cache-Control survives the transformation.",
+        "Catalog/library/payment responses or other headers/status/body are changed by this scoped policy."
+      ],
+      "effects": [
+        "Replace only the Cache-Control header for inventoried music credential operations."
+      ],
+      "authorization": "The boundary grants no access and does not alter existing feature, territory, ownership, entitlement, upload or DDEX predicates.",
+      "privacy": "Music signed credentials should not be stored by compliant browser/shared HTTP caches. Previously issued grants, storage/CDN object caching and unrelated private response policies remain outside this change.",
+      "concurrency": "The transformation has no shared mutable state and does not consume or replace the response stream.",
+      "idempotency": "Filtering all Cache-Control instances before adding one directive makes nested application/boot boundaries idempotent.",
+      "failure": "Apply the same header transformation to matched denied, startup and exception responses without changing their status, body or recovery semantics.",
+      "recovery": "Application-only rollback requires no data or schema changes but reintroduces the missing cache instruction; existing credential expiry remains unchanged.",
+      "observability": "Focused WAI/Servant and application-route tests plus separate exact-candidate HTTP response-header receipts; no credential logging is added.",
+      "implementation": [
+        "tdf-hq/src/TDF/MusicRelease/CredentialCache.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/tdf-hq.cabal"
+      ],
+      "interactions": [
+        "MEDIA-MUSIC-RELEASE-001",
+        "MEDIA-MUSIC-ASSET-001",
+        "MEDIA-MUSIC-PLAYER-001"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/MusicCredentialCacheSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/MusicCredentialCacheMain.hs"
+      ],
+      "formalModels": [],
+      "verification": "Focused canonical Stack run passed42 examples with zero failures against the actual WAI boundary and public Servant router. The three registered actual mkApp cases and fresh candidate HTTP checks remain separate. No mathematical proof, S3 signature enforcement or cache-provider conformance claim.",
+      "evidence": "reports/music-credential-cache-2026-10-26.json; historical actual 5f HTTP baseline with absent header, not credential-byte delivery or a demonstrated disclosure.",
+      "status": "specified and implemented",
+      "confidence": "Scoped implementation; candidate runtime, CI, independent review and deployment remain separate gates.",
+      "ambiguity": [
+        "No new/future credential endpoint is automatically covered without inventory review.",
+        "Noncompliant caches, previous stored responses, media-object/CDN caching and unauthorized redistribution are not solved by this response header.",
+        "No current-candidate compiled HTTP or production acceptance is claimed before its own receipt."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped response boundary and42 finite WAI/public-router examples pass in canonical Stack. Actual mkApp cases, aggregate/current-candidate HTTP checks, CI, independent review and deployment remain pending; this is not formal proof or global cache-policy verification."
+      }
+    },
+    {
+      "id": "PAY-DATAFAST-001",
+      "title": "Shared Dataweb merchant metadata and saved ticket contact",
+      "statement": "New Datafast checkout creation requires configured merchant MID, TID, PSERV and USER_DATA2, sends the same validated protocol metadata in every domain, preserves UTF-8 form values and does not make existing payment status configuration depend on creation metadata. Ticket payment creation retains the validated optional phone saved at order creation; absent or invalid stored phones stay absent. Both Datafast request builders preserve supplied buyer name tokens without placeholder names or duplicated single-name surnames.",
+      "domain": "PAY",
+      "authority": "User request to finish Datafast payments and prepare onboarding; published Datafast Dataweb field requirements.",
+      "source": "User request 2026-10-29; https://developers.datafast.com.ec/Index.aspx",
+      "property": "Incomplete merchant metadata denies a fresh checkout before provider attempt allocation or gateway creation; existing status configuration remains usable. Stored ticket phone input survives the payment context and uses the initial order validation boundary.",
+      "contract": "formal/system/datafast-merchant-metadata.md",
+      "actors": [
+        "Checkout customer",
+        "Configured Dataweb merchant",
+        "Payment reconciliation operator"
+      ],
+      "preconditions": [
+        "Existing checkout authorization, immutable money/provider binding and capability gates remain authoritative.",
+        "Merchant credentials and environment are independently validated."
+      ],
+      "inputs": [
+        "Required merchant configuration, optional protocol version, UTF-8 checkout form fields"
+      ],
+      "state": {
+        "boundary": "Pure metadata admission and create-versus-status configuration; no additional lifecycle states."
+      },
+      "allowedTransitions": [
+        "Valid configured creation metadata may reach existing checkout admission.",
+        "Missing or malformed creation metadata denies new checkout availability."
+      ],
+      "forbiddenTransitions": [
+        "API credentials alone imply certified merchant readiness.",
+        "Missing creation metadata disables the base configuration used for existing status queries.",
+        "A buyer value changes the HTTP form parameter structure."
+      ],
+      "invariants": [
+        "Metadata field names and environment checks remain consistent across creation handlers.",
+        "Validation diagnostics do not echo configured values.",
+        "Free-text buyer name projection never adds or removes a supplied name token; absent name components stay empty without a fictitious fallback."
+      ],
+      "authorization": "Existing customer, merchant, capability and payment-attempt authorization is unchanged; this contract grants no provider activation.",
+      "privacy": "Merchant values and customer payloads are not verification receipts; synthetic test values only.",
+      "concurrency": "No cross-process environment rotation or payment state-machine guarantee is introduced.",
+      "idempotency": "Existing operation identities, attempt locks and replay behavior remain unchanged.",
+      "failure": "Reject invalid metadata before creating a provider attempt or contacting the gateway.",
+      "recovery": "Use existing authenticated status verification; removing creation metadata is not a refund, no-charge proof or fallback authorization.",
+      "observability": "Retain actual regression, fixed test outputs, source identity and explicit external blockers.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
+        "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
+        "tdf-hq/config/default.env.example",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification.",
+      "evidence": "Exact-candidate local test logs retained in the operator workspace; public secrets excluded.",
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Scoped local contract only; actual merchant sandbox and all-domain request qualification remain unverified.",
+      "ambiguity": [
+        "Buyer identity, address/IP, cart and tax fields still require applicable provider certification and implementation review.",
+        "No production activation, credentialed sandbox transaction, 3DS result or charge is established.",
+        "Free-text first/rest name projection is not structured or verified legal identity; provider handling of incomplete or single-name profiles remains unqualified."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local configuration and form transport boundary only; onboarding, merchant credentials and provider certification are external blockers."
+      },
+      "effects": [
+        "Validate merchant metadata before a new provider attempt or checkout request; keep existing status configuration independent of creation metadata.",
+        "Project the optional stored ticket buyer_phone to the Datafast payment request without fallback or new collection.",
+        "Use one supplied-name projection in shared service and marketplace Datafast request builders, preserving existing multi-component behavior without invented data."
+      ]
+    },
+    {
+      "id": "MEDIA-VIDEO-CAMPAIGN-001",
+      "title": "Artists prepare durable organic video launch campaigns",
+      "statement": "An authenticated artist can save, resume, duplicate and export private video campaign drafts for their own artist identity. Strict administrators with the Admin module and current resource managers may select another existing artist; manager access requires the canonical subject association and current private-view/edit grants, and public featuring additionally requires publication capability and eligible profile state. Saving, preparing for review and exporting never publish, schedule provider actions or spend money.",
+      "domain": "MEDIA",
+      "actors": [
+        "Artist",
+        "Strict administrator",
+        "Prospective follower",
+        "Currently authorized directory manager"
+      ],
+      "preconditions": [
+        "Artist profile exists. Current session and authoritative role/module grants remain valid. Additive campaign migration is applied."
+      ],
+      "inputs": [
+        "Video and media HTTPS links",
+        "Campaign UUID and expected revision",
+        "Instagram/TikTok copy and relative calendar",
+        "Explicit follow command",
+        "Allowlisted campaign attribution",
+        "Editable primary campaign objective, retained on save/resume and template import/export"
+      ],
+      "state": {
+        "initial": "draft",
+        "states": [
+          "draft",
+          "ready",
+          "piece-draft",
+          "piece-prepared",
+          "piece-exported",
+          "piece-published-manually"
+        ]
+      },
+      "allowedTransitions": [
+        "Valid revisions save drafts atomically.",
+        "A lost-save exact replay returns the preceding result.",
+        "Complete media and copy permit review-ready status.",
+        "Manual publication records require a URL on the selected platform.",
+        "An explicit command on a locked review-ready revision updates only the public TDF featured-video field; no external platform publication occurs."
+      ],
+      "forbiddenTransitions": [
+        "A caller without current artist ownership, strict administrator capability or the corresponding live directory grant manages another artist campaign.",
+        "Stale revisions overwrite newer edits.",
+        "Saving or exporting starts a provider publication or paid advertisement.",
+        "Unauthenticated or unverified conversions inflate account/follow counters."
+      ],
+      "effects": [
+        "PostgreSQL stores campaign documents and unique verified conversion events.",
+        "An exported plan contains per-piece attribution links.",
+        "An explicitly approved command can expose the selected video on the artist public TDF profile."
+      ],
+      "authorization": "Current-session/current-role locks cover all management. Self artist or strict administrator is checked first; otherwise the current canonical directory subject, manager actor, active private-view/edit grants and eligible profile state are rechecked under manager/profile shared locks in the same transaction. Featuring additionally requires can_publish, published/allowed profile visibility, saved rights/technical checks and the exact campaign revision.",
+      "privacy": "Campaign lists and metrics are private to their artist/admin scope; no provider credentials enter the document or public client configuration. Both new Party references participate in canonical identity dependency discovery and reject inserts/reassignments to archived identities.",
+      "concurrency": "Compare-and-swap revision guards prevent lost updates; unique campaign/artist and campaign/viewer/kind constraints prevent duplicates.",
+      "idempotency": "Creation and update retries recover only the immediately preceding identical save. Conversion retries preserve a unique event.",
+      "failure": "Invalid documents, ambiguous scope, stale revisions and unverifiable conversions reject. The editor preserves an unsaved draft after a failed save.",
+      "recovery": "Retry an uncertain save with the same UUID, body and expected revision. Reconcile a changed saved version rather than overwrite it.",
+      "observability": "Owner metrics show historical verified registration/follow creations; existing configured analytics can record profile views. External reach and causal attribution are not claimed. Per-piece source breakdown is additive; shared bio destinations cannot identify distinct posts.",
+      "source": "Diego approved organic registrations/follows campaign prompt on 2026-10-17 and requested execution on 2026-10-20.",
+      "implementation": [
+        "tdf-hq/src/TDF/VideoCampaigns.hs",
+        "tdf-hq/src/TDF/ModelsExtra.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/sql/2026-10-20_video_campaigns.sql",
+        "tdf-hq-ui/src/api/videoCampaigns.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.ts",
+        "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "tdf-hq-ui/src/utils/artistFollowIntent.ts",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
+        "scripts/verify-video-campaign-access.mjs",
+        "scripts/quality-repo.sh",
+        ".github/workflows/catalog-list-audit.yml",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+        "scripts/test-identity-reconciliation.sh",
+        "tdf-hq/test/sql/identity_reconciliation.sql"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+        "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
+        "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
+        "e2e/web/video-campaigns.spec.mjs",
+        "e2e/web/artist-follow.spec.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "scripts/__tests__/video-campaign-access.test.mjs",
+        "scripts/test-identity-reconciliation.sh",
+        "tdf-hq/test/sql/identity_reconciliation.sql",
+        "scripts/test-video-campaign-postgres.sh",
+        "scripts/__tests__/video-campaign-postgres-runner.test.mjs"
+      ],
+      "formalModels": [
+        "scripts/verify-video-campaign-access.mjs"
+      ],
+      "status": "specified and implemented",
+      "confidence": "medium",
+      "critical": false,
+      "ambiguity": [
+        "Production deployment and an authenticated campaign save are not verified.",
+        "Video encoding and provider publishing are not background services in this implementation.",
+        "One-hour authenticated attribution is first accepted piece and does not prove causality or cross-device returns.",
+        "The finite manager abstraction and SQL examples do not prove full HTTP authorization interleavings or production deployment."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused web tests pass; backend and hosted verification remain required. No formal proof or production rollout is claimed."
+      },
+      "authority": "Approved Liquid Paper Girl launch prompt and repository authorization/storage boundaries.",
+      "property": "Artist-scoped drafts are durable and publishing remains explicitly separate from preparation.",
+      "contract": "docs/artists/video-campaigns.md",
+      "verification": "Scope and validation tests, real SQLite helper persistence, web save/resume and attribution tests; current PostgreSQL authorization guard reused. Finite 16,384-case manager predicate and 13 guard-removal controls, source-presence binding and actual PostgreSQL directory-grant examples; not full implementation/interleaving refinement.",
+      "evidence": "PR #599, paired Mobile contract PR and current-revision test receipts. Historical media measurements are retained but original and derivative bytes are unavailable in this run."
+    },
+    {
+      "id": "CAMP-SERVER-001",
+      "title": "Server-owned musical campaign execution with scoped authorization",
+      "statement": "Any registered user may prepare and execute musical campaigns on their own connected accounts; TDF posts require current admin approval, and execution survives browser disconnection without automatically replaying uncertain provider effects.",
+      "authority": "approved",
+      "source": "Diego explicit campaign-platform implementation instruction, 2026-10-29; docs/campaign-platform/operations.md",
+      "property": "authorized current version and account precede each provider publication; uncertain effects never automatically replay; private campaign isolation and original preservation hold at tested boundaries; upload receipt and hashing do not hold the SQLite write lock; current per-asset offsets and authority gate commit; referenced TikTok photos and existing external publication identities cannot be discarded by deletion or in-place edits; persisted provider sessions also prohibit replacing a resumable piece version before a final external ID exists; successful pending verification polls do not exhaust consecutive-error retries; email eligibility precedes its batch limit while delivered or uncertain claims remain non-replayable; generated plan graphics may attach only to the unchanged unapproved piece IDs created by that plan, preserving manual/concurrent revisions; completed clip renders attach at most once to an unchanged initial unapproved draft, preserving subsequent manual media and metadata revisions; absent or non-object Core sessions return401 without creating an actor, while upstream availability/JSON failures retain503; expired uploaded YouTube schedules require explicit owner date/rights reapproval bound to current campaign/piece versions, prior date and exact external video, preserving upload/session identities and separate TDF Studio authority without replaying running or uncertain verification",
+      "contract": "formal/system/campaign-server.md",
+      "implementation": [
+        ".github/workflows/campaign-platform.yml",
+        "scripts/quality-repo.sh",
+        "services/campaign-platform/backup.py",
+        "services/campaign-platform/backup_control.py",
+        "services/campaign-platform/backup_crypto.py",
+        "services/campaign-platform/deploy.py",
+        "services/campaign-platform/deploy_sandbox.py",
+        "services/campaign-platform/domain.py",
+        "services/campaign-platform/drive_backup.py",
+        "services/campaign-platform/facebook.py",
+        "services/campaign-platform/graphics.py",
+        "services/campaign-platform/import_rojo.py",
+        "services/campaign-platform/media.py",
+        "services/campaign-platform/model_check.py",
+        "services/campaign-platform/monitor.py",
+        "services/campaign-platform/notifications.py",
+        "services/campaign-platform/planning.py",
+        "services/campaign-platform/providers.py",
+        "services/campaign-platform/qualify_media.py",
+        "services/campaign-platform/requirements.txt",
+        "services/campaign-platform/schema.sql",
+        "services/campaign-platform/server.py",
+        "services/campaign-platform/stream_backup_object.py",
+        "services/campaign-platform/tdf-campaign-api.service",
+        "services/campaign-platform/tdf-campaign-backup-request.service",
+        "services/campaign-platform/tdf-campaign-backup-request.timer",
+        "services/campaign-platform/tdf-campaign-backup.service",
+        "services/campaign-platform/tdf-campaign-backup.timer",
+        "services/campaign-platform/tdf-campaign-monitor.service",
+        "services/campaign-platform/tdf-campaign-monitor.timer",
+        "services/campaign-platform/tdf-campaign-worker.service",
+        "services/campaign-platform/tiktok.py",
+        "services/campaign-platform/tiktok_environment.py",
+        "services/campaign-platform/tiktok_token.py",
+        "services/campaign-platform/ui/app.js",
+        "services/campaign-platform/ui/index.html",
+        "services/campaign-platform/ui/style.css",
+        "services/campaign-platform/ui/tdf-logo.png",
+        "services/campaign-platform/ui/tdf-logo.svg",
+        "services/campaign-platform/ui/tiktok.js",
+        "services/campaign-platform/verify_drive_backup.py",
+        "services/campaign-platform/worker.py",
+        "services/campaign-platform/youtube_upload.py",
+        "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx",
+        "tdf-hq-ui/src/routes/protectedRoutes.tsx",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "verification": "SQLite concurrency and multi-actor HTTP boundaries; finite model with three negative controls; real-media exports; authenticated block encryption and resumable-upload protocol tests; actual private Drive upload/resumption and separately recorded recovery verification. Facebook protocols retain controlled mocks; two explicitly selected TDF Pages now have live server-side identity/permission checks and two real approved text/link posts, one attempt each, verified by provider readback and native Page views with the exact YouTube route. Other Facebook formats and external-user review remain unqualified. No full implementation refinement. TikTok controlled protocol, SQLite consent binding, HTTP isolation, token rotation and actual UI tests, with two deliberately failing guard-removal controls; no production/public TikTok posting or app-audit qualification. Isolated private-only sandbox policy has separate HTTP/admin, provider-username, environment/client binding and real UI tests; production audit remains required. A separate authorized personal-account sandbox send completed once as SELF_ONLY with read-only status confirmation and authenticated owner HD playback; this does not establish production audit, public or anonymous playback, photo sending or auditory synchronization. November 6 review regressions use a stalled HTTP upload body while another user and the worker write, competing upload/deletion refusal, mid-upload editor revocation, a real SQLite commit-abort/retry, TikTok photo references across publication states and blocked-video Studio recovery. The original implementation is retained as a three-case negative control. A mocked resumable YouTube protocol pauses after the first 8 MiB checkpoint, refuses an in-place edit, and resumes the unchanged suffix with one initialization. TikTok worker regressions cover healthy pending polls, a transient error, recovery/completion, and the unchanged three-retry failure bound. SMTP fixtures cover delivered/ineligible cross-user batch starvation, expired notices, uncertain failures and concurrent durable claims without sending real mail. Plan regressions preserve pre-existing manual Facebook carousels and matching Story names, bind generated images only to new IDs, retain template metadata and reject late attachment after human edits or approval.",
+      "evidence": "reports/campaign-platform-2026-10-29.json; reports/campaign-platform-drive-2026-10-29.json; docs/campaign-platform/operations.md; exact-commit hosted workflow when run; reports/campaign-platform-tiktok-2026-10-29.json; reports/campaign-platform-current-main-2026-10-30.json; reports/campaign-platform-facebook-current-main-2026-10-30.json",
+      "status": "specified and implemented",
+      "critical": true,
+      "domain": "CAMP",
+      "actors": [
+        "Authenticated campaign owner",
+        "Explicit campaign team member",
+        "Strict TDF administrator",
+        "Durable server worker"
+      ],
+      "preconditions": [
+        "A canonical TDF session identifies the actor",
+        "External providers grant the required application and account permissions"
+      ],
+      "inputs": [
+        "Master and derivative media, rights consent, connected accounts, text, dates with IANA timezone, exact-version approval"
+      ],
+      "state": {
+        "campaign": [
+          "draft",
+          "approved",
+          "active",
+          "paused",
+          "cancelled",
+          "completed"
+        ],
+        "job": [
+          "queued",
+          "running",
+          "completed",
+          "blocked",
+          "unknown",
+          "failed",
+          "cancelled"
+        ],
+        "storage": "SQLite WAL metadata and separately retained file objects"
+      },
+      "allowedTransitions": [
+        "draft -> approved only for current reviewed versions",
+        "approved -> active subject to quotas",
+        "queued -> running through one transactional claim",
+        "uncertain publication -> unknown with manual reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "Cross-user access without explicit team authority",
+        "Publication to TDF without current admin approval",
+        "Automatic replay after uncertain publication",
+        "Public YouTube release before HD and exact-video Studio confirmation"
+      ],
+      "effects": [
+        "Private uploads, derived real media, approved supported publications, explicit assisted tasks, durable notifications and measurement checkpoints"
+      ],
+      "authorization": "Canonical TDF session; owner and per-campaign roles; independent TDF and private-message approvals. Admin alone does not grant blanket private-campaign access. The isolated TikTok sandbox restricts entry to its designated administrator, verifies its configured creator username and account scope, and preserves personal ownership for a private test account.",
+      "privacy": "Provider credentials stay encrypted on server; export and logs omit credentials; media capabilities expire. Private Drive backup is restricted to its admin custodian, encrypted before upload, with separately held recovery key and owner-only folder.",
+      "concurrency": "SQLite immediate transactions serialize local claims/reservations. No distributed exactly-once guarantee across provider boundaries.",
+      "idempotency": "Imported existing publications never create new publication jobs. Unique piece/kind jobs preserve identity. Unknown provider effects cannot auto-retry.",
+      "failure": "Fail closed on missing credentials, expired dates, quota, unavailable providers or stale authorization; retain uncertain results for review.",
+      "recovery": "Systemd restarts local services; uncertain publications require reconciliation. Independent private Drive backup resumes acknowledged encrypted ranges and commits manifest last; recovery qualification is scoped to captured ready objects, configuration and isolated campaign SQLite. Core PostgreSQL, production failover and incomplete uploads are excluded.",
+      "observability": "Versioned audit records, server heartbeat, independent monitor, notifications, per-provider status and metric availability.",
+      "tests": [
+        "services/campaign-platform/tests/test_backups.py",
+        "services/campaign-platform/tests/test_domain.py",
+        "services/campaign-platform/tests/test_facebook.py",
+        "services/campaign-platform/tests/test_http.py",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "services/campaign-platform/tests/test_tiktok.py",
+        "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "services/campaign-platform/tests/test_tiktok_sandbox.py",
+        "services/campaign-platform/tests/test_notifications.py",
+        "services/campaign-platform/tests/test_planning.py"
+      ],
+      "formalModels": [
+        "services/campaign-platform/model_check.py"
+      ],
+      "confidence": "Observed finite implementation boundaries and bounded design model; external provider completeness and unbounded refinement not established.",
+      "ambiguity": [
+        "Google/Meta/TikTok verification and native assisted features remain external prerequisites.",
+        "Push/WhatsApp notifications and physical capacity for larger tiers remain pending. Key replacement, retention deletion and full-host disaster recovery require separate procedures.",
+        "Native web route requires normal protected integration; live standalone panel is independently deployed."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Scoped local/server checks cover authorization and recovery boundaries. Full refinement, unrestricted provider automation, protected frontend rollout and full-host failover remain unestablished."
+      }
+    },
+    {
+      "id": "ART-VIDEO-001",
+      "title": "Canonical artist videos and explicit follow journey",
+      "domain": "ART",
+      "statement": "Show public artist videos in TDF using existing canonical identity and explicit authenticated follows, with server-owned hosted media and permission-checked publication.",
+      "authority": "Diego explicit implementation instruction 2026-11-02 after approving TDF custody, real stills, all sources, web/native and campaign edits with existing controls preserved.",
+      "source": "docs/artists/platform-videos.md",
+      "contract": "docs/artists/platform-videos.md",
+      "actors": [
+        "Anonymous viewer",
+        "Registered artist",
+        "Verified current manager",
+        "TDF administrator"
+      ],
+      "preconditions": [
+        "Canonical Core artist identity exists",
+        "Normal campaign membership and current artist authority verified",
+        "External rights and insertion availability reviewed"
+      ],
+      "inputs": [
+        "Canonical artist Party",
+        "Current authenticated session",
+        "Official provider URL or finished same-campaign asset",
+        "Exact video version and rights/technical confirmations",
+        "Explicit viewer play/follow action",
+        "Optional exact published session or matching approved featured-provider identity"
+      ],
+      "state": {
+        "video": "Private version or exact published version",
+        "follow": "Existing canonical fan relationship; no new implicit state",
+        "media": "Existing quota-reserved assets and unchanged originals",
+        "selection": "Requested session bound to this canonical artist; changing featured video cannot substitute a different shared session."
+      },
+      "allowedTransitions": [
+        "Own artist or current manager plus campaign editor saves private version",
+        "Exact current version plus rights/technical review and campaign approval publishes; TDF scope additionally requires current strict admin",
+        "Edit clears publication approval",
+        "Authorized exact-version unpublish withdraws new public reads",
+        "Anonymous viewer opens player; explicit authenticated follow uses existing reconciliation"
+      ],
+      "forbiddenTransitions": [
+        "Publish a stale version or foreign campaign asset",
+        "Grant management by profile-name match, signup or unapproved claim",
+        "Treat TDF admin status as blanket campaign membership",
+        "Publish TDF scope without current TDF admin",
+        "Create followers on playback or signup",
+        "Replay existing external publications or change approved schedule times",
+        "Count iframe load as actual watch time",
+        "Replace a requested unavailable session with another featured video or interpret a query as an arbitrary player URL"
+      ],
+      "effects": [
+        "Versioned video metadata and audit in existing SQLite",
+        "Anonymous read of only approved public metadata and linked media",
+        "Existing consent-controlled analytics; no provider view inference"
+      ],
+      "authorization": "Current Core canonical artist and Party/admin or exact managed-directory edit capability; existing campaign membership independently required. TDF scope needs current strict admin for publication.",
+      "privacy": "No credential copy or arbitrary iframe HTML; public projection excludes owner, campaign and original paths. No source URLs or private Vimeo hashes in analytics. Existing auth/follow session ownership preserved.",
+      "concurrency": "SQLite immediate transaction serializes source deduplication and optimistic version changes; file probe precedes exact transactional version readback.",
+      "idempotency": "Unique artist/provider-source identity reuses identical create; conflicting duplicates and stale updates fail. No external provider publication is executed.",
+      "failure": "Unavailable embeds retain a truthful fallback; failed authority reads fail closed; wrong codecs stay private without changing original.",
+      "recovery": "Withdraw current public version, repair a new version and re-review. Already downloaded bytes cannot be revoked. Existing backup snapshot covers metadata and assets.",
+      "observability": "Source tests distinguish URL safety, current manager capabilities, version/deduplication, HTTP anonymous/media/range boundaries and follow continuation; device/prod/provider qualification recorded separately.",
+      "implementation": [
+        "services/campaign-platform/videos.py",
+        "services/campaign-platform/domain.py",
+        "services/campaign-platform/server.py",
+        "services/campaign-platform/ui/videos.js",
+        "services/campaign-platform/ui/app.js",
+        "services/campaign-platform/ui/index.html",
+        "tdf-hq-ui/src/utils/videoSource.ts",
+        "tdf-hq-ui/src/utils/videoWatch.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
+        "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
+        "tdf-mobile/app/(tabs)/social.tsx",
+        "tdf-mobile/src/navigation/deepLinks.ts",
+        "tdf-mobile/package.json",
+        "tdf-mobile/ios/Podfile.lock",
+        "tdf-mobile/.github/workflows/interaction-simulator.yml",
+        "tdf-hq-ui/src/utils/artistFollowIntent.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts"
+      ],
+      "tests": [
+        "services/campaign-platform/tests/test_videos.py",
+        "services/campaign-platform/tests/test_http.py",
+        "tdf-hq-ui/src/utils/videoSource.test.ts",
+        "tdf-hq-ui/src/utils/videoWatch.test.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.intent.test.ts",
+        "tdf-mobile/__tests__/DeepLinks.test.ts",
+        "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
+        "e2e/web/artist-follow.spec.mjs",
+        "tdf-hq-ui/src/components/SessionVideoPreview.campaign.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped source implementation; finite tests and actual deployment/device evidence are distinct.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Source implementation prepared; hosted CI, independent review, protected deployment and public playback/device qualification still required. No whole-program refinement claim."
+      },
+      "property": "No public draft or stale version, unauthorized artist/campaign mutation, implicit follow, duplicated provider-source identity or iframe-load watch claim. Shared-session links preserve canonical artist/source identity, credits and playback continuity across metadata resolution; Mobile retains only bounded public acquisition fields.",
+      "verification": "Finite source and HTTP/UI tests; actual local embed preview and Metro bundles recorded separately from protected deploy and device qualification.",
+      "evidence": "Current-run receipts are private; source checks do not claim production deployment, external-provider progress SDK qualification or physical-device playback.",
+      "pendingPairedMobileWork": {
+        "pullRequest": "https://github.com/diegueins680/tdf-mobile/pull/177",
+        "scope": "Separate unmerged Mobile work, absent from the preserved main Mobile pin. These references are pending, not current implementation evidence.",
+        "implementation": [
+          "tdf-mobile/app/artistPublic.tsx",
+          "tdf-mobile/src/components/ArtistPublicWebView.tsx",
+          "tdf-mobile/src/components/ArtistPublicWebView.web.tsx",
+          "tdf-mobile/src/lib/artistPublicUrl.ts"
+        ],
+        "tests": [
+          "tdf-mobile/__tests__/ArtistPublicUrl.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "SYS-NATIVE-RESOLVER-001",
+      "title": "Lock optional native resolver dependencies and refuse runtime installation during verification",
+      "statement": "The canonical test resolver must load from a complete lock-based install with runtime package downloads disabled. Its published exact optional binding declarations must have matching locked package records.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Use the committed npm v3 workspace lock and canonical npmrc; installed unrs-resolver matches its locked version.",
+        "Trust npm registry metadata and archive SRI; native code and the platform runtime remain assumptions."
+      ],
+      "inputs": [
+        "package-lock.json",
+        "node_modules/unrs-resolver/package.json"
+      ],
+      "state": {
+        "boundary": "formal/system/native-resolver-lock.md"
+      },
+      "allowedTransitions": [
+        "Refresh the same pinned module through npm, preserving existing package records and manifests while restoring missing optional dependency records."
+      ],
+      "forbiddenTransitions": [
+        "Omit or mismatch an exact optional binding lock record.",
+        "Allow the canonical UI verifier or Safe Install to lazily download missing native packages during tests.",
+        "Treat structural lock checks as executed compatibility on all recorded platforms."
+      ],
+      "effects": [
+        "Fail repository checks on incomplete resolver lock evidence; fail UI verification before running suites when the host resolver cannot load without runtime downloads."
+      ],
+      "authorization": "This test-tool repair authorizes no product, provider or deployment operations.",
+      "privacy": "Registry requests contain public package identities only; test probes require no application data or credentials.",
+      "concurrency": "Probe in a fresh process against the immutable candidate; installations and missing-binary controls use isolated owned workspaces.",
+      "idempotency": "Structural verification is deterministic for fixed files; runtime load depends on the documented platform.",
+      "failure": "Reject missing declarations, pins, archive integrity or native initialization without lazy installation.",
+      "recovery": "Restore the npm-generated reviewed lock records and reinstall; do not add manual native copies to claim a canonical install pass.",
+      "observability": "Retain old-lock install/load counterexample, corrected clean-install/load result, missing-binary fault and restoration, source hashes and platform limits.",
+      "source": "Canonical npm ci CI recipes and confirmed successful pristine install followed by failed native resolver initialization without runtime fallback; user reliability and verification mission.",
+      "contract": "formal/system/native-resolver-lock.md",
+      "implementation": [
+        "package-lock.json",
+        "scripts/check-native-resolver-lock.mjs",
+        "scripts/quality-repo.sh",
+        "scripts/quality-ui.sh",
+        ".github/workflows/ci-safe-install.yml"
+      ],
+      "tests": [
+        "scripts/__tests__/native-resolver-lock.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite lock controls and actual host startup/failure probes; no complete transitive graph or supply-chain proof.",
+      "ambiguity": [
+        "Other native platforms require actual execution evidence; recorded platform entries alone do not establish compatibility."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Structural/host controls implemented; candidate-specific clean-install, fault and hosted evidence are separately recorded."
+      },
+      "authority": "Engineering invariant derived from the authorized correctness mission and canonical install recipe; required GitHub approval remains separate.",
+      "property": "Every installed resolver exact optional binding is present with matching version and archive integrity in the lock; canonical verification refuses runtime binding downloads.",
+      "verification": "Deterministic negative fixtures, clean npmci and native probe with fallback disabled, reversible missing-binary fault; no mathematical proof.",
+      "evidence": "scripts/__tests__/native-resolver-lock.test.mjs; candidate-source install/probe receipts separately recorded."
+    },
+    {
+      "id": "SYS-URI-DECODE-001",
+      "title": "Patched URI decoding preserves the installed CommonJS caller",
+      "statement": "The exact pinned Mobile query-string7 decoder must use integrity-pinned upstream0.5.1 through a callable adapter, preserving literal-plus normalization, valid Unicode, non-string rejection and one-level percent decoding; the named repeated-invalid-byte and distinct-percent-run regression oracles must reject their respective affected0.2.2 and0.5.0 implementations.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Mobile user",
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Install the committed Mobile npm v3 lock under the supported Node20.19.4 toolchain; use the exact root gitlink."
+      ],
+      "inputs": [
+        "URI component string",
+        "Malformed percent-encoded bytes",
+        "Non-string input",
+        "Committed dependency lock and local adapter"
+      ],
+      "state": {
+        "boundary": "Stateless synchronous codec; immutable module resolution; no persistence or lifecycle mutation."
+      },
+      "allowedTransitions": [
+        "Replace the affected dependency with the pinned upstream algorithm and reviewed caller adapter after client qualification."
+      ],
+      "forbiddenTransitions": [
+        "Implicitly dispatch the ES module namespace as a function",
+        "Fallback to the legacy vulnerable decoder",
+        "Claim a universal complexity or current incoming-link exploit proof from scoped tests"
+      ],
+      "effects": [
+        "Return a decoded string preserving the caller contract; perform no network or database action."
+      ],
+      "authorization": "Pure decoding grants no capability and performs no authenticated action. Dependency repair does not authorize Mobile distribution or importing newer Mobile-main product behavior.",
+      "privacy": "Neither the adapter nor its evidence collection logs real URI payloads; regression inputs are synthetic.",
+      "concurrency": "Synchronous calls per JavaScript runtime; instrumentation is confined to serialized tests and always restored.",
+      "idempotency": "The same input and pinned decoder yield the same output without persistent effects.",
+      "failure": "Non-string values raise TypeError; no silent legacy fallback. The instrumented budgets are finite executable test oracles, not production timeouts, input-size limits or universal complexity bounds.",
+      "recovery": "Retain the matched reviewed adapter/upstream pair and reproducible lock; repair compatibility rather than restoring the affected algorithm.",
+      "observability": "Record exact Mobile/root revisions, lock integrity, clean-install result, client gates, scoped negative-control results and bundle evidence.",
+      "source": "User audit sections10,18,21-25; upstream GHSA-vcc3-ghjq-m6fr; npm override documentation; fresh inspection of installed Expo6.0.24 and React Navigation parser sources.",
+      "contract": "formal/system/uri-decoder.md",
+      "implementation": [
+        "tdf-mobile/package.json",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/vendor/decode-uri-component/package.json",
+        "tdf-mobile/vendor/decode-uri-component/index.cjs",
+        "tdf-mobile/jest.config.js"
+      ],
+      "tests": [
+        "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.2.2/index.cjs",
+        "tdf-mobile/scripts/fixtures/decode-uri-component-0.5.0/index.js"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped actual-consumer and finite regression obligations; candidate0.5.1 evidence must be recorded at its exact revision. No universal decoder, advisory-free app, attack-path or device proof.",
+      "ambiguity": [
+        "Device/store distribution remains separately qualified.",
+        "Source inspection does not prove every possible future or dynamic parser call is unreachable."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "PARTIAL canonical obligation. Original Mobile7d9481d and baseline6fb0.5.0 codec/client/bundle observations retain historical source identity; fresh audit GHSA-qr28-fpjm-wq7f invalidates security clearance for that algorithm. Candidate0.5.1 requires fresh exact-source codec, client, audit and bundle evidence. Global dependency security and device/store distribution remain separate."
+      },
+      "authority": "approved",
+      "property": "For N in{4,8,16,32}, decoding repeated%FF preserves input and makes1..8N+8 built-in decode calls; actual0.2.2 violates that oracle atN=32. For N in{32,64}, the distinct runs %00%<two-digit hex>x followed by%zz decode to the exact expected string while summed UTF16 receiver lengths across synchronous String.replace calls are positive and <=4 times input length; actual0.5.0 violates the same budget atN=32. The installed query-string7 caller stays callable, and covered produced percent text is decoded only once. These finite families do not establish universal complexity.",
+      "verification": "Actual-consumer Jest and seeded Unicode tests; original0.2.2 call-budget and unadapted-namespace controls;0.5.0 distinct-run replacement-work negative control; one-level percent/BOM/truncated-byte cases; fresh exact-source clean locked install, client gates, audit and native bundles. Historical executions do not qualify changed source.",
+      "evidence": "tdf-mobile/src/lib/__tests__/uriDecoder.test.ts"
+    },
+    {
+      "id": "UX-BRAND-ICONS-001",
+      "title": "Official TDF Records application icons",
+      "statement": "Browser and installed web application icons use the unchanged official TDF Records symbol, with correct dimensions, safe padding and discoverable manifest references.",
+      "domain": "UX",
+      "authority": "Explicit product owner correction requested2026-10-29: application icon must use the official logo.",
+      "source": "formal/system/app-brand-icons.md",
+      "contract": "formal/system/app-brand-icons.md",
+      "actors": [
+        "Web visitor",
+        "User installing a web shortcut",
+        "Developer regenerating brand assets"
+      ],
+      "preconditions": [
+        "Existing approved TDF Records SVG symbol and repository Playwright Chromium are available."
+      ],
+      "inputs": [
+        "tdf-hq-ui/src/assets/tdf-isotype.svg"
+      ],
+      "state": {
+        "source": "official symbol SVG",
+        "outputs": "versioned browser and installable web icons"
+      },
+      "allowedTransitions": [
+        "Render the original paths onto the declared square canvas and publish the generated assets through normal review."
+      ],
+      "forbiddenTransitions": [
+        "Redraw the logo with generic TDF text or distort its proportions.",
+        "Claim an installed OS icon has refreshed solely because source assets changed."
+      ],
+      "effects": [
+        "Browser favicon, Apple touch icon and installable web manifest use the same official symbol."
+      ],
+      "authorization": "Explicit owner request authorizes the icon correction; normal protected review and publication rules remain.",
+      "privacy": "No account, database or provider credentials are needed for icon generation or anonymous verification.",
+      "concurrency": "Generate and validate from an isolated source checkout; preserve unrelated changes and the native Mobile pin.",
+      "idempotency": "The same SVG, script and browser renderer produce the same asset pixels.",
+      "failure": "Missing assets, incorrect dimensions, failed decoding or missing manifest references fail the artifact verification.",
+      "recovery": "Restore the preceding reviewed asset set; existing shortcut refresh remains controlled by the browser and OS.",
+      "observability": "Record source and asset hashes, dimensions, HTTP results and target-size visual previews.",
+      "implementation": [
+        "scripts/generate-app-icons.mjs",
+        "tdf-hq-ui/public/manifest.json"
+      ],
+      "tests": [],
+      "formalModels": [],
+      "verification": "Actual generation, PNG/ICO decoding, browser HTTP image loads and target-size screenshots; no general installed-device proof.",
+      "evidence": "reports/app-brand-icons-2026-10-29.json",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "Scoped artifact and browser verification; publication and existing installed shortcut refresh remain separate.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The visual asset pipeline is specified; current verification receipts record the tested source and browser, while canonical publication and OS cache behavior are separate obligations."
+      },
+      "property": "Generated icon artwork preserves official SVG geometry, has sufficient foreground/background contrast, matches its declared dimensions and is reachable through the page and manifest icon references."
+    },
+    {
+      "id": "PAY-EVENT-REPORT-CURRENCY-001",
+      "title": "Consistent event finance reporting currency",
+      "statement": "Refuse single-currency summary and budget totals until every contributing nonzero amount matches the resolved event currency. Refuse an unreportable budget edit before its first write; preserve intentional foreign-currency entry authoring.",
+      "domain": "PAY",
+      "authority": "Explicit owner decision 2026-10-29: Refuse totals until contributing amounts match the event currency. Existing authoring validator and compatibility tests permit explicit foreign currencies.",
+      "source": "formal/system/event-finance-report-currency.md",
+      "contract": "formal/system/event-finance-report-currency.md",
+      "property": "No successful total relabels, converts or discards a nonzero contributing currency mismatch. Existing contributor filters, canonical exclusion, free tickets and foreign void/cancelled/unrelated rows remain.",
+      "actors": [
+        "Authorized event manager",
+        "Event budget/finance report reader"
+      ],
+      "preconditions": [
+        "Existing authorization and stored metadata/dimension validation",
+        "Existing observed contributor boundaries"
+      ],
+      "inputs": [
+        "Resolved event reporting currency",
+        "Selected manual, legacy and canonical ticket amounts",
+        "Budget-line observed posted actual entries"
+      ],
+      "state": {
+        "initial": "Selected persisted report inputs",
+        "terminal": [
+          "Consistent single-currency response",
+          "HTTP500 currency refusal before budget edit writes"
+        ]
+      },
+      "allowedTransitions": [
+        "Retain explicit foreign-currency entries for individual reporting",
+        "Report amounts matching explicit or default event currency",
+        "Ignore only rows already outside contribution filters and zero amounts"
+      ],
+      "forbiddenTransitions": [
+        "Label foreign contributions with the event currency",
+        "Silently drop or convert a contributing foreign amount",
+        "Begin budget edit writes before refusing observed foreign actuals"
+      ],
+      "effects": [
+        "Read-only monetary reporting",
+        "Existing authorized budget update after its actual is reportable"
+      ],
+      "authorization": "No change to event management, provider, strict-admin or settlement authority.",
+      "privacy": "Synthetic native fixtures; no real customer/provider data.",
+      "concurrency": "Existing separate reads remain; no new serializable snapshot guarantee.",
+      "idempotency": "Same observed inputs produce same currency decision; no new provider calls or retry authority.",
+      "failure": "HTTP500 contributing-currency mismatch; range and existing stored metadata refusals retained.",
+      "recovery": "Authorized source correction or an explicitly specified future currency conversion design; do not modify financial rows to hide a mismatch.",
+      "observability": "Source-bound real handler baseline assertions, mutation controls and CI source selection.",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Real-handler regression and compatibility executions; source-bounded native receipts recorded separately. No complete refinement proof.",
+      "evidence": "formal/system/event-finance-report-currency.md; reports/event-finance-report-currency-2026-10-29.json",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Explicit owner policy and actual create/store/summary counterexample; runtime qualification bound to source commits.",
+      "ambiguity": [
+        "Historical mixed-currency rows may block reports until authorized reconciliation; no exchange rates are available.",
+        "Production PostgreSQL concurrency/provider/deployment correspondence remains unproven."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite native real-handler verification; complete implementation and refinement proofs remain unknown."
+      }
+    },
+    {
+      "id": "UI-EVENT-FINANCE-CSV-CURRENCY-001",
+      "title": "Preserve each finance-entry amount currency in CSV",
+      "domain": "PAY",
+      "critical": true,
+      "statement": "A finance_entry CSV row retains its authoritative efeCurrency with the unchanged raw efeAmountCents. Summary and budget rows retain reporting currency; the existing 24-column layout and all other values remain unchanged.",
+      "authority": "Owner financial-integrity mandate; explicit foreign-currency authoring is supported; PAY-EVENT-REPORT-CURRENCY-001 preserves individual entry units; the page renders entry amounts with efeCurrency. Existing common CSV currency semantics are explicitly clarified as amount units by this successor.",
+      "source": "formal/system/event-finance-csv-currency.md",
+      "contract": "formal/system/event-finance-csv-currency.md",
+      "property": "For every valid finance-entry DTO exported, row.currency equals entry.efeCurrency and row.entry_amount_cents equals entry.efeAmountCents; summary/budget units,24-column positions, event metadata and status remain unchanged.",
+      "actors": [
+        "Authorized event finance reader",
+        "CSV report consumer"
+      ],
+      "preconditions": [
+        "Existing event authorization and finance DTO validation",
+        "Entry currency and integer cents are authoritative wire values",
+        "CSV currency is an amount unit per record_type; no exchange rate is provided"
+      ],
+      "inputs": [
+        "Event and summary reporting currency",
+        "Listed finance entries including supported foreign void records",
+        "Budget rows and safe integer monetary fields"
+      ],
+      "state": {
+        "read": "Validated report objects",
+        "terminal": [
+          "CSV rows preserve amount-unit bindings",
+          "Existing precision/query/export refusal"
+        ]
+      },
+      "allowedTransitions": [
+        "Copy efeCurrency into finance_entry currency cell",
+        "Keep reporting currency for summary and budget rows",
+        "Preserve amounts, statuses, event metadata and row/column layout"
+      ],
+      "forbiddenTransitions": [
+        "Label a raw foreign entry amount with event currency",
+        "Invent an exchange rate or fallback currency",
+        "Drop a void or foreign row to force a single currency"
+      ],
+      "effects": [
+        "Read-only CSV representation only; no financial data or provider writes"
+      ],
+      "authorization": "Existing event finance authorization unchanged; no additional access granted.",
+      "privacy": "Synthetic fixtures only; no customer or provider records used as evidence.",
+      "concurrency": "Input objects are exported as observed; no serializable multi-query snapshot guarantee.",
+      "idempotency": "Equal input DTOs produce equal unit bindings; no mutation or provider retry is introduced.",
+      "failure": "Existing monetary-precision/query/CSV refusal is preserved; no silent currency substitution or amount conversion.",
+      "recovery": "Correct the authoritative source DTO through existing authorized workflows; never rewrite records or infer conversion in export.",
+      "observability": "Retain actual old-binding assertion and corrected CSV-helper logs/source hashes; bind final metadata/source/evidence separately.",
+      "implementation": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts"
+      ],
+      "formalModels": [],
+      "verification": "Counterexample-driven actual CSV helper Jest tests: a EUR void entry of 100 cents with valid USD summary of 30 cents and USD posted entry of 30 cents; existing precision and USD 24-column compatibility. TESTED only with exact-source execution evidence, not a complete implementation proof.",
+      "evidence": "formal/system/event-finance-csv-currency.md; source-bound execution reports recorded separately.",
+      "status": "specified and implemented",
+      "confidence": "Scoped source-function regression evidence; deployed consumers and implementation refinement remain unproven.",
+      "ambiguity": [
+        "No external CSV consumer/global currency-column contract was located; this successor explicitly defines amount-unit semantics.",
+        "Production exposure and mounted download/browser acceptance remain unknown.",
+        "Backend contributing-total currency policy and snapshot consistency remain separate."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite direct CSV-helper tests; full implementation refinement, deployed integration and external consumers unproven."
+      }
+    },
+    {
+      "id": "UI-CSV-STRING-PREFIX-001",
+      "title": "Use one typed CSV string-cell encoding policy for finance and merchandise",
+      "domain": "SEC",
+      "critical": true,
+      "statement": "The two CSV exports share a serializer that prefixes dangerous string prefixes while retaining typed negative monetary numbers, booleans, empty optional cells, CSV quoting/newlines and existing amount-unit/column contracts.",
+      "authority": "Owner execution mandate to repair concrete export security findings; existing merchandise apostrophe policy; scoped typed representation contract.",
+      "source": "formal/system/csv-export-text.md",
+      "contract": "formal/system/csv-export-text.md",
+      "property": "For string cells beginning with optional whitespace then ASCII/fullwidth =,+,-,@ or a leading whitespace prefix containing tab/CR/LF, prepend one apostrophe; for number/boolean/null/undefined cells do not add that prefix; always quote and double embedded quotes.",
+      "preconditions": [
+        "Existing authorization, validated DTO money/currency and precision guards remain authoritative",
+        "The serializer receives typed scalar cells; it does not infer string contents as numeric values",
+        "Spreadsheet import/re-save behavior is outside the verified boundary"
+      ],
+      "allowedTransitions": [
+        "Encode dangerous user-influenced string cells as explicitly prefixed text",
+        "Preserve raw typed negative cents and percentages",
+        "Keep the existing finance rows/currencies/24 columns and merchandise BOM/CRLF/authorized finance columns"
+      ],
+      "forbiddenTransitions": [
+        "Treat a negative number as a formula-like string",
+        "Remove CSV quoting, drop rows or coerce currency/amounts to conceal a failure",
+        "Claim universal spreadsheet or downstream re-save safety from finite encoding tests"
+      ],
+      "implementation": [
+        "tdf-hq-ui/src/utils/csv.ts",
+        "tdf-hq-ui/src/utils/merch.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/csv.test.ts",
+        "tdf-hq-ui/src/utils/merch.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Scoped direct scalar tests plus mounted export Blob regression and old-source counterexamples; no spreadsheet execution, native/PG/formal model or whole-program proof.",
+      "evidence": "formal/system/csv-export-text.md; exact-source private execution records supplied separately",
+      "status": "specified and implemented",
+      "confidence": "Finite source-bound encoding/download controls only; deployment and external consumers unproven.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite scalar and mounted-download regressions; full implementation refinement and downstream spreadsheet behavior unproven."
+      },
+      "actors": [
+        "Authorized event finance reader",
+        "Authorized merchandise order-export reader",
+        "Downstream CSV consumer"
+      ],
+      "inputs": [
+        "Typed scalar cells from existing authorized DTOs",
+        "Original finance row/currency schema and merchandise column selection"
+      ],
+      "state": {
+        "read": "Original validated DTO cells before CSV encoding",
+        "terminal": [
+          "Quoted cell with explicit string prefix when required",
+          "Quoted typed number or boolean without a text prefix",
+          "Empty cell for absent optional value"
+        ]
+      },
+      "effects": [
+        "Read-only CSV representation; no persisted data, provider or financial writes"
+      ],
+      "authorization": "Existing backend event/order scope and authorized finance columns remain unchanged; the serializer grants no access.",
+      "privacy": "Existing export fields and column selection remain unchanged; tests use synthetic data and no new customer information is exported.",
+      "concurrency": "Pure per-cell encoding of the supplied observation; no multi-query snapshot or external consumer concurrency guarantee.",
+      "idempotency": "Equal typed raw inputs produce equal encoded cells. An already encoded CSV field is not a raw input and is not reapplied.",
+      "failure": "Preserve existing query/loading/precision/export error handling. No unsafe-value substitution, silent row drop, provider retry or assertion suppression.",
+      "recovery": "Repeat an authorized export from original typed DTOs; do not rewrite source records or infer currency conversion.",
+      "observability": "Source-bound old-product negative controls and actual mounted Blob/scalar test logs; no new production telemetry containing report cells.",
+      "ambiguity": [
+        "Spreadsheet import settings and re-save transformations are outside the encoded-cell policy.",
+        "No universal Excel or downstream formula-execution safety guarantee is claimed.",
+        "Production deployment and external CSV consumer acceptance remain unverified."
+      ]
+    },
+    {
+      "id": "MUSIC-TORRENT-CONTROL-001",
+      "title": "Control app pages before torrent playback and route requests to their originating tab",
+      "statement": "Before creating a torrent server or attaching audio, the activated owned root worker must be the exact document controller. Only actual stream-prefix URLs are intercepted; nonempty-client-ID streams dispatch solely to their originating document with bounded reply/resource lifetime.",
+      "domain": "MUSIC",
+      "critical": false,
+      "actors": [
+        "Music listener",
+        "Browser document",
+        "Torrent service worker",
+        "CI worker"
+      ],
+      "preconditions": [
+        "Trusted browser service-worker scope/identity semantics and same-origin application scripts; no arbitrary concurrent foreign registrar.",
+        "One active WebTorrent server per document; controlled playback requests carry a nonempty initiating client ID.",
+        "Official reviewed WebTorrent 2.8.5 browser module; native WebRTC is required by existing product behavior."
+      ],
+      "inputs": [
+        "Root service-worker registration and controller/state events",
+        "FetchEvent.clientId and exact request URL",
+        "Synthetic torrent metadata and loopback audio in verification"
+      ],
+      "state": {
+        "boundary": "formal/system/torrent-worker-control.md"
+      },
+      "allowedTransitions": [
+        "No root owner -> register own known URL; own root -> reuse and revalidate.",
+        "Own activating worker -> observe activation AND actual control before server construction.",
+        "Own activated uncontrolled worker -> request eligible-client claim once and await real controller change.",
+        "Controlled stream request -> only initiating document -> bounded reply -> response/stream -> close ports."
+      ],
+      "forbiddenTransitions": [
+        "Overwrite an observed foreign root worker or foreign document controller.",
+        "Treat worker activation or a cached promise alone as current page control.",
+        "Broadcast a request with nonempty clientId to unrelated documents.",
+        "Intercept an unrelated app URL because a query embeds a stream/control URL.",
+        "Treat passing finite tests or absence of local WebKit execution as a universal proof."
+      ],
+      "effects": [
+        "Audio can stream through the controlling worker without unrelated tabs answering first.",
+        "Owned observers and message channels are released on completion/refusal/timeout."
+      ],
+      "authorization": "No change to backend authorization, provider state, real external peers or production deployment is authorized by this repair.",
+      "privacy": "Verification uses synthetic loopback-only content; no artist data or credentials. Same-origin ownership checks do not attest worker bytes at runtime.",
+      "concurrency": "Observe registration updates, worker state and controller changes together; use originating-client selection for controlled requests. Arbitrary concurrent foreign registration and multiple servers in one document remain outside assumptions.",
+      "idempotency": "Every ensure call revalidates browser state; owned registration is reused and explicit claim sent at most once per observed worker per wait.",
+      "failure": "Foreign workers refuse untouched; unavailable native WebRTC refuses; missing/nonresponding request owner returns404; unachieved page control refuses after15seconds with listener/timer cleanup.",
+      "recovery": "Retry a later session against current browser state. Preserve old narrow registrations rather than automatically deleting them.",
+      "observability": "Source-bound raw command exits, exact synthetic full/range bytes, controller identity, negative controls and explicit browser/protocol bounds.",
+      "source": "Existing torrentAudio and RadioWidget playback contracts; actual Chromium/Firefox narrow-scope HTML counterexample and Chromium two-document404; browser Clients.claim/controller semantics.",
+      "contract": "formal/system/torrent-worker-control.md",
+      "implementation": [
+        "tdf-hq-ui/src/utils/torrentWorker.ts",
+        "tdf-hq-ui/src/utils/torrentAudio.ts",
+        "tdf-hq-ui/public/webtorrent-sw.min.js",
+        "scripts/quality-repo.sh",
+        ".github/workflows/ci.yml",
+        "scripts/build-torrent-audio-fixture.mjs",
+        "playwright.torrent-audio.config.mjs",
+        "e2e/torrent-audio/setup.mjs",
+        "e2e/torrent-audio/fixture-server.mjs",
+        "tdf-hq-ui/browser-test/torrent-audio.html"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/utils/torrentWorker.test.ts",
+        "tdf-hq-ui/src/utils/torrentAudio.test.ts",
+        "scripts/__tests__/torrent-worker-routing.test.mjs",
+        "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
+        "e2e/torrent-audio/streaming.spec.mjs",
+        "e2e/web/webtorrent-browser.spec.mjs",
+        "scripts/__tests__/ci-pipeline.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Finite executable API-transition, actual worker-protocol, real HTTP resource and actual Vite/browser stream cases; no exhaustive liveness or refinement proof.",
+      "ambiguity": [
+        "Browser-specific null-controller reuse cause was not established; explicit claim handles the observed state.",
+        "Empty-client-ID legacy broadcast retains its first-response limitation; more-specific legacy pages may refuse until normal browser lifecycle/navigation resolves control."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite unit/protocol/browser controls are TESTED; arbitrary concurrent foreign registration, legacy empty-client ownership and universal browser liveness remain unproven."
+      },
+      "authority": "approved",
+      "property": "Server construction follows exact activated root control; controlled nonempty-client-ID requests reach only their initiating document; unrelated URLs pass through and owned resource waits are bounded.",
+      "verification": "Jest API-transition controls, Node actual worker VM/MessageChannel and real HTTP lifecycle controls; actual compiled helper in Chromium/Firefox locally and three browser projects enforced in pinned CI, with explicit unsupported-capability evidence and deliberate semantic faults.",
+      "evidence": "Candidate-commit qualification reports and raw execution receipts published separately; no universal proof."
+    },
+    {
+      "id": "EVT-DISCOVERY-FILTER-001",
+      "title": "City and canonical performing-artist event filtering",
+      "statement": "Apply existing event visibility and city, performing artist, type, state and effective end/start time restrictions before pagination. Selected artist IDs form an OR set; independent categories use AND. Expose multi-artist autocomplete, explicit past inclusion and coherent page/calendar results in the signed-in events workspace.",
+      "domain": "EVT",
+      "critical": false,
+      "actors": [
+        "Event viewer",
+        "Event organizer"
+      ],
+      "preconditions": [
+        "Existing canonical event, venue, city, artist and publication models remain authoritative.",
+        "Production has the reviewed directory normalizer and city catalog schema."
+      ],
+      "inputs": [
+        "City text",
+        "At most 50 canonical social Artist IDs",
+        "Event type and lifecycle state",
+        "Current instant or explicit past inclusion",
+        "Page offset"
+      ],
+      "state": {
+        "boundary": "formal/system/event-discovery-filtering.md"
+      },
+      "allowedTransitions": [
+        "Unfiltered to intersected city/type/state/time and artist-union search",
+        "Upcoming to explicit past inclusion",
+        "Organizer maintains canonical lineup through existing authorized write"
+      ],
+      "forbiddenTransitions": [
+        "Discard matches by searching a bounded venue prefix",
+        "Conflate Artist and Party identities",
+        "Infer lineup from attendees or text names",
+        "Replace current results with a stale city response",
+        "Continue a lineup write after session change or unmount"
+      ],
+      "effects": [
+        "Parameterized discovery predicates before LIMIT/OFFSET",
+        "URL-preserved filters, page counts and matching calendar dates",
+        "Canonical lineup maintenance for old and new events",
+        "Resolve distinct displayed-event venue IDs directly with account-scoped caching and cancellation; never depend on a bounded venue list."
+      ],
+      "authorization": "Existing server event-read and organizer-write checks remain authoritative; no new anonymous management surface.",
+      "privacy": "No visibility expansion; city and performer matching only narrow the already authorized result set.",
+      "concurrency": "Query identities and cancellation isolate searches; lineup continuation guards session and unmount. Existing full-event PUT does not prevent concurrent field races.",
+      "idempotency": "Canonical selected IDs are deduplicated; no automatic production backfill or event creation.",
+      "failure": "Invalid artist members fail with 400. Request errors remain distinct from no matches. Missing historical links are not invented.",
+      "recovery": "Clear filters, include past events, retry failed reads or update a canonical lineup as organizer.",
+      "observability": "Visible active controls, page-qualified counts, explicit date and request-error states.",
+      "source": "User approved city New York, multi-artist ANY autocomplete, upcoming default with visible past inclusion, and execution of the resulting prompt on 2026-11-04.",
+      "contract": "formal/system/event-discovery-filtering.md",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/queries/social-event-city-match.sql",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
+        ".github/workflows/ci.yml",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq/Dockerfile"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
+        "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
+        "e2e/web/event-discovery-filters.spec.mjs",
+        "scripts/test-event-discovery-postgres.mjs",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Executed city SQL and React regressions cover finite fixtures; compiled handler, hosted browser and production verification remain separate.",
+      "ambiguity": [
+        "The exact production New York event was not identified; runtime reproduction is unverified.",
+        "Anonymous agenda retains upcoming-only public behavior; authenticated filters target the reported workspace.",
+        "Concurrent full-event edits remain outside the existing API guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local React/API and isolated PostgreSQL regressions are available; pinned Stack, current-head hosted browser/CI and production reproduction still require verification."
+      },
+      "authority": "approved by user",
+      "property": "Visibility AND city AND artist-union AND type AND state AND effective-time, then pagination; canonical identity and no stale asynchronous continuation.",
+      "verification": "React/API regressions, actual embedded PostgreSQL predicate with the previous-limit negative control, Hspec parser property and mobile browser fixture.",
+      "evidence": "scripts/test-event-discovery-postgres.mjs; tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx; tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx; tdf-hq/test/Spec.hs"
     },
     {
       "id": "ANALYTICS-WEEKLY-001",

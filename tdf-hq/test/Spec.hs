@@ -47,11 +47,13 @@ import System.FilePath ((</>))
 import System.IO (hClose)
 import System.IO.Temp (withSystemTempDirectory, withSystemTempFile)
 import Test.Hspec
+import qualified TDF.VideoCampaignsSpec as VideoCampaignsSpec
 import qualified TDF.Auth.AccountNameSpec as AccountNameSpec
 import qualified TDF.Auth.GoogleProfileNameSpec as GoogleProfileNameSpec
 import qualified TDF.Commerce.WorkerLoggingSpec as WorkerLoggingSpec
 import qualified TDF.Commerce.CheckoutMoneySpec as CheckoutMoneySpec
 import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
+import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
@@ -533,6 +535,7 @@ import TDF.Server.SocialEventsHandlers (
     validateInvitationStatusInput,
     validateInvitationStatusUpdateInput,
     validateEventArtistIds,
+    validateEventArtistFilter,
     validateArtistName,
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
@@ -652,6 +655,7 @@ import qualified TDF.LedgerPostingSpec as LedgerPostingSpec
 import qualified TDF.MusicPublicationSpec as MusicPublicationSpec
 import qualified TDF.InteractionWriteBudgetSpec as InteractionWriteBudgetSpec
 import qualified TDF.MusicPurchaseSpec as MusicPurchaseSpec
+import qualified TDF.MusicCredentialCacheSpec as MusicCredentialCacheSpec
 import qualified TDF.MusicRelease.DomainSpec as MusicDomainSpec
 import qualified TDF.MusicRelease.ContentSpec as MusicContentSpec
 import qualified TDF.MusicRelease.DDEX.ERN432Spec as MusicErn432Spec
@@ -909,6 +913,7 @@ main = hspec $ do
     StartupResponseSpec.spec
     WorkerLoggingSpec.spec
     PaymentArithmeticSpec.spec
+    DatafastConfigSpec.spec
     CheckoutMoneySpec.spec
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
@@ -2780,10 +2785,23 @@ main = hspec $ do
                       , ("DATAFAST_BASE_URL", Just "https://eu-test.oppwa.com")
                       , ("DATAFAST_ENV", Just "sandbox")
                       , ("DATAFAST_TEST_MODE", Nothing)
+                      , ("DATAFAST_MID", Just "1234567890")
+                      , ("DATAFAST_TID", Just "PD123456")
+                      , ("DATAFAST_PSERV", Just "12345678")
+                      , ("DATAFAST_USER_DATA2", Just "Synthetic Merchant")
+                      , ("DATAFAST_VERSIONDF", Just "2")
                       ]
                 -- Only local environment parsing and SQLite queries; no provider requests.
                 withEnvOverrides (fixture "merchant-A") $
                   checkBoth [CheckoutStore.ProviderPayPal] [CheckoutStore.ProviderDatafast]
+                -- API credentials alone do not make a certifiable Dataweb request.
+                forM_ ["DATAFAST_MID", "DATAFAST_TID", "DATAFAST_PSERV", "DATAFAST_USER_DATA2"] $ \field ->
+                  withEnvOverrides (fixture "merchant-A") $
+                    withEnvOverrides [(field, Nothing)] $ do
+                      checkBoth [CheckoutStore.ProviderPayPal] []
+                      statusConfig <- runHandler $ runReaderT ServiceStorefront.loadServiceDatafastEnv
+                        (error "Status configuration must not read unrelated application configuration")
+                      fmap ServiceStorefront.sdfEntityId statusConfig `shouldBe` Right "merchant-A"
                 withEnvOverrides (fixture "merchant-B") $ checkBoth [] []
                 withEnvOverrides (fixture "") $ checkBoth [] []
                 withEnvOverrides (fixture "merchant-A") $
@@ -12514,6 +12532,24 @@ main = hspec $ do
             assertInvalid "   " "artist name is required"
             assertInvalid "Los\nMentores" "artist name must not contain control characters"
 
+    describe "event discovery artist filter" $ do
+        it "preserves single IDs and deduplicates the OR set" $ do
+            fmap (map fromSqlKey) (validateEventArtistFilter (Just "42, 7,0042"))
+                `shouldBe` Right [7, 42]
+            fmap (map fromSqlKey) (validateEventArtistFilter (Just "42"))
+                `shouldBe` Right [42]
+            validateEventArtistFilter Nothing `shouldBe` Right []
+        it "rejects malformed, empty, negative and overflowing members" $
+            forM_ ["1,", "1,,2", "0", "-1", "1 OR 1=1", "9223372036854775808"] $ \raw ->
+                validateEventArtistFilter (Just raw) `shouldSatisfy` isLeft
+        it "bounds the submitted list before deduplication" $
+            validateEventArtistFilter (Just (Data.Text.intercalate "," (replicate 51 "1")))
+                `shouldSatisfy` isLeft
+        it "roundtrips a canonical singleton" $ QC.property $ \(QC.Positive value) ->
+            let key = (value :: Int64)
+            in fmap (map fromSqlKey) (validateEventArtistFilter (Just (Data.Text.pack (show key))))
+                == Right [key]
+
     describe "validateEventArtistIds" $ do
         let mkArtist rawArtistId =
                 ArtistDTO
@@ -18009,6 +18045,7 @@ main = hspec $ do
     EventOperationsTypesSpec.spec
     EventOperationsDatabaseBoundarySpec.spec
     EventResearchSpec.spec
+    VideoCampaignsSpec.spec
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
@@ -18025,6 +18062,7 @@ main = hspec $ do
       describe "music-unit-content" MusicContentSpec.spec
       describe "music-unit-ddex" MusicErn432Spec.spec
       describe "music-unit-storage" MusicS3Spec.spec
+      describe "music-unit-credential-cache" MusicCredentialCacheSpec.spec
     DriveReplaySpec.spec
     WhatsAppRedeliverySpec.spec
     LiveIntakeIdentitySpec.spec

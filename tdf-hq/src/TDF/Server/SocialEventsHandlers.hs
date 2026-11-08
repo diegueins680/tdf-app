@@ -4,6 +4,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 module TDF.Server.SocialEventsHandlers (
@@ -61,6 +62,7 @@ module TDF.Server.SocialEventsHandlers (
     resolveExistingPartyIdText,
     resolveUniqueRsvpRow,
     validateEventArtistIds,
+    validateEventArtistFilter,
     toggleMomentReactionDb,
     redactMomentReactionIdentity,
     normalizeMomentMediaType,
@@ -153,7 +155,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Base64.URL as B64URL
 import Data.Char (
-    GeneralCategory (Format, LineSeparator, ParagraphSeparator),
+    GeneralCategory (Format, LineSeparator, ParagraphSeparator, NonSpacingMark),
     generalCategory,
     isAlphaNum,
     isAscii,
@@ -164,6 +166,7 @@ import Data.Char (
     isHexDigit,
  )
 import Data.Int (Int64)
+import Data.FileEmbed (embedFile)
 import Data.List (nub, sortOn)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes, fromMaybe, isJust, isNothing, listToMaybe, mapMaybe)
@@ -201,6 +204,7 @@ import Database.Persist.Sql
     , fromSqlKey
     , orderClause
     , rawExecute
+    , rawExecuteCount
     , rawSql
     , runSqlPool
     , runSqlPoolWithIsolation
@@ -342,13 +346,14 @@ publicUpcomingEventsServer mCity mArtistPartyId mStartAfter mLimit = do
     -- Artist profile carousels read through this public projection so every
     -- anonymous-listing predicate (public-listable state, public metadata and
     -- no suppressed external reference) applies to them as well.
+    cityFilter <- either throwError pure (validateSocialEventsListFilter "city" mCity)
     artistPartyFilter <- either throwError pure (validateArtistPartyIdFilter mArtistPartyId)
     let startAfter = fromMaybe now mStartAfter
         limit = min 200 (max 1 (fromMaybe 50 mLimit))
     liftIO $
         runSqlPool
             ( do
-                rows <- selectPublicUpcomingSocialEvents mCity artistPartyFilter startAfter limit
+                rows <- selectPublicUpcomingSocialEvents cityFilter artistPartyFilter startAfter limit
                 catMaybes
                     <$> mapM
                         (\(eventEntity, Single canonicalCity) ->
@@ -394,18 +399,13 @@ selectPublicUpcomingSocialEvents mCity mArtistPartyId startAfter limit = do
         eventStartColumn = eventTable <> "." <> eventStartField
         eventMetadataColumn = eventTable <> "." <> eventMetadataField
         metadataClause = visibleImportedMetadataClause backendName eventMetadataColumn
-        (cityClause, cityValues) = case mCity of
+        (cityClause, cityValues) = case cleanMaybeText mCity of
             Nothing -> ("", [])
-            Just rawCity ->
-                let matchClause
-                        | "postgres" `T.isInfixOf` backendName =
-                            "position(lower(?) in lower(directory_event.city_name))>0"
-                        | "sqlite" `T.isInfixOf` backendName =
-                            "instr(lower(directory_event.city_name),lower(?))>0"
-                        | otherwise = "1=0"
-                 in ( " AND directory_event.city_name IS NOT NULL AND " <> matchClause
-                    , [PersistText (T.strip rawCity)]
-                    )
+            Just rawCity
+                | "postgres" `T.isInfixOf` backendName ->
+                    (" AND (" <> eventCitySearchSql <> ")", [PersistText rawCity])
+                | otherwise ->
+                    (" AND instr(lower(directory_event.city_name),lower(?))>0", [PersistText rawCity])
         orderedQuery =
             "SELECT ??,directory_event.city_name FROM "
                 <> eventTable
@@ -414,7 +414,7 @@ selectPublicUpcomingSocialEvents mCity mArtistPartyId startAfter limit = do
                 <> " AS directory_event ON directory_event.id="
                 <> eventIdColumn
                 <> " WHERE "
-                <> eventStartColumn
+                <> "coalesce(" <> eventTable <> ".end_time," <> eventStartColumn <> ")"
                 <> ">=? AND "
                 <> metadataClause
                 <> cityClause
@@ -2130,6 +2130,14 @@ validateEventTimeZone rawTimeZone =
                     then Right timeZone
                     else Left err400{errBody = "time zone must be a valid IANA-style identifier"}
 
+-- Search-only normalization. Do not rewrite persisted city/subscription keys.
+normalizeEventSearchLabel :: T.Text -> T.Text
+normalizeEventSearchLabel = T.unwords . T.words . T.map foldAccent
+    . T.filter ((/= NonSpacingMark) . generalCategory) . T.toCaseFold
+  where
+    foldAccent character = fromMaybe character (lookup character
+        (zip "áàäâãéèëêíìïîóòöôõúùüûñç" "aaaaaeeeeiiiiooooouuuunc"))
+
 normalizeEventCityName :: T.Text -> T.Text
 normalizeEventCityName = T.toCaseFold . T.unwords . T.words . T.strip
 
@@ -2402,65 +2410,60 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             Nothing -> pure []
             Just raw ->
                 case iso8601ParseM (T.unpack raw) of
-                    Just t -> pure [SocialEventStartTime >=. t]
+                    Just t -> pure ([SocialEventEndTime >=. Just t]
+                        ||. [SocialEventEndTime ==. Nothing, SocialEventStartTime >=. t])
                     Nothing -> throwError err400{errBody = "Invalid start_after value (expected ISO-8601 datetime)"}
-        cityFilter <- do
-            venueRows <- liftIO $ runSqlPool (selectList [] [LimitTo 5000]) envPool
-            subscribedCities <-
-                if scope == "subscribed"
+        backendName <- liftIO $ runSqlPool getRDBMS envPool
+        let useDatabaseCitySearch = "postgres" `T.isInfixOf` T.toCaseFold backendName
+            databaseCityFilter = case cityFilterText of
+                Just city | useDatabaseCitySearch -> (eventCitySearchSql, [PersistText city])
+                _ -> ("", [])
+        cityFilter <- if scope /= "subscribed" && (useDatabaseCitySearch || isNothing cityFilterText)
+            then pure []
+            else do
+                venueRows <- liftIO $ runSqlPool (selectList [] []) envPool
+                subscribedCities <- if scope == "subscribed"
                     then liftIO (loadSubscribedEventCities envPool currentPartyId)
                     else pure []
-            let cityNeedle = T.toCaseFold <$> cityFilterText
-                matchesRequestedCity venue =
-                    case cityNeedle of
-                        Nothing -> True
-                        Just needle ->
-                            maybe
-                                False
-                                (T.isInfixOf needle . T.toCaseFold)
-                                (SM.venueCity venue)
-                requestedVenueIds =
-                    [ entityKey venueRow
-                    | venueRow@(Entity _ venue) <- venueRows
-                    , matchesRequestedCity venue
-                    ]
-                subscribedVenueIds =
-                    [ entityKey venueRow
-                    | venueRow@(Entity _ venue) <- venueRows
-                    , any (venueMatchesEventCity venue) subscribedCities
-                    ]
-            subscribedEventIds <-
-                if scope /= "subscribed"
-                    then pure []
-                    else liftIO $ runSqlPool (resolveSubscribedEventIds subscribedCities subscribedVenueIds) envPool
-            if (isJust cityFilterText && null requestedVenueIds)
-                || (scope == "subscribed" && null subscribedEventIds)
-                then pure [SocialEventId ==. toSqlKey 0]
-                else
-                    pure $
-                        (if isJust cityFilterText then [SocialEventVenueId <-. map Just requestedVenueIds] else [])
-                            ++ (if scope == "subscribed" then [SocialEventId <-. subscribedEventIds] else [])
+                let requestedVenueIds =
+                        [ entityKey row
+                        | row@(Entity _ venue) <- venueRows
+                        , maybe True (\needle -> maybe False
+                            (T.isInfixOf (normalizeEventCityName needle) . normalizeEventCityName)
+                            (SM.venueCity venue)) cityFilterText
+                        ]
+                    subscribedVenueIds =
+                        [ entityKey row
+                        | row@(Entity _ venue) <- venueRows
+                        , any (venueMatchesEventCity venue) subscribedCities
+                        ]
+                subscribedEventIds <- if scope == "subscribed"
+                    then liftIO $ runSqlPool
+                        (resolveSubscribedEventIds subscribedCities subscribedVenueIds) envPool
+                    else pure []
+                pure $ (if isJust cityFilterText && not useDatabaseCitySearch
+                        then [SocialEventVenueId <-. map Just requestedVenueIds] else [])
+                    ++ (if scope == "subscribed"
+                        then [SocialEventId <-. subscribedEventIds] else [])
         venueFilter <- case fmap T.strip mVenueId of
             Nothing -> pure []
             Just "" -> pure []
             Just raw -> do
                 venueKey <- either throwError pure (parseVenueIdEither raw)
                 pure [SocialEventVenueId ==. Just venueKey]
-        artistFilter <- case fmap T.strip mArtistId of
-            Nothing -> pure []
-            Just "" -> pure []
-            Just raw -> do
-                artistKey <- parseArtistId raw
-                artistLinks <- liftIO $ runSqlPool (selectList [EventArtistArtistId ==. artistKey] []) envPool
-                let eventIds = map (eventArtistEventId . entityVal) artistLinks
-                if null eventIds
-                    then pure [SocialEventId ==. toSqlKey 0]
-                    else pure [SocialEventId <-. eventIds]
+        artistKeys <- either throwError pure (validateEventArtistFilter mArtistId)
+        let artistClause = if null artistKeys then "" else
+                "EXISTS (SELECT 1 FROM event_artist discovery_artist WHERE discovery_artist.event_id=social_event.id AND discovery_artist.artist_id IN ("
+                    <> T.intercalate "," (replicate (length artistKeys) "?") <> "))"
+            (cityClause, cityValues) = databaseCityFilter
+            searchClauses = filter (not . T.null) [cityClause, artistClause]
+            discoveryFilter =
+                (T.intercalate " AND " (map (\clause -> "(" <> clause <> ")") searchClauses),
+                 cityValues ++ map toPersistValue artistKeys)
         let filters =
                 startFilter
                     ++ cityFilter
                     ++ venueFilter
-                    ++ artistFilter
                     ++ maybe [] (\eventTypeUuid -> [SocialEventEventTypeId ==. Just eventTypeUuid]) eventTypeFilter
                     ++ maybe [] (\stateUuid -> [SocialEventWorkflowStateId ==. Just stateUuid]) workflowStateFilter
         let dateOrder =
@@ -2471,8 +2474,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             liftIO $
                 runSqlPool
                     ( if hasStrictAdminAccess user
-                        then selectUnsuppressedSocialEvents filters dateOrder limit offset
-                        else selectVisibleSocialEvents filters dateOrder limit offset
+                        then selectUnsuppressedSocialEvents filters discoveryFilter dateOrder limit offset
+                        else selectVisibleSocialEvents filters discoveryFilter dateOrder limit offset
                     )
                     envPool
         loadSocialEventListDTOs (defaultCurrency envConfig) envPool rows
@@ -3151,6 +3154,34 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     == T.toUpper (eventTicketTierCurrency quotedTier) -> Right ()
             _ -> Left err409{errBody = "Ticket tier pricing changed; reload before buying"}
 
+    lockTicketPurchasePromo :: Maybe (Entity PromoCode) -> SqlPersistT IO (Either ServerError ())
+    lockTicketPurchasePromo Nothing = pure (Right ())
+    lockTicketPurchasePromo (Just (Entity promoKey quoted)) = do
+        backendName <- T.toCaseFold <$> getRDBMS
+        current <-
+            if "postgres" `T.isInfixOf` backendName
+                then listToMaybe <$> (rawSql
+                    "SELECT ?? FROM promo_code WHERE id = ? FOR UPDATE"
+                    [toPersistValue promoKey] :: SqlPersistT IO [Entity PromoCode])
+                else getEntity promoKey
+        -- Counters and caps stay authoritative at the atomic claim. Harmless
+        -- descriptive edits and later changes to stored orders are independent.
+        let sameTerms actual =
+                SM.promoCodeEventId actual == SM.promoCodeEventId quoted
+                    && SM.promoCodeDiscountType actual == SM.promoCodeDiscountType quoted
+                    && SM.promoCodeDiscountValue actual == SM.promoCodeDiscountValue quoted
+                    && T.toUpper (SM.promoCodeCurrency actual)
+                        == T.toUpper (SM.promoCodeCurrency quoted)
+                    && SM.promoCodeValidFrom actual == SM.promoCodeValidFrom quoted
+                    && SM.promoCodeValidUntil actual == SM.promoCodeValidUntil quoted
+                    && SM.promoCodeTierIds actual == SM.promoCodeTierIds quoted
+                    && SM.promoCodeMinPurchaseAmountCents actual
+                        == SM.promoCodeMinPurchaseAmountCents quoted
+                    && SM.promoCodeIsActive actual == SM.promoCodeIsActive quoted
+        pure $ case current of
+            Just (Entity _ promo) | sameTerms promo -> Right ()
+            _ -> Left err409{errBody = "Promotion changed; reload before buying"}
+
     deleteEvent :: T.Text -> AppM NoContent
     deleteEvent rawId = do
         Env{..} <- ask
@@ -3538,7 +3569,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         offset <- either throwError pure (validateSocialEventsListOffset mOffset)
         nameFilter <-
             either throwError pure $
-                fmap T.toCaseFold <$> validateSocialEventsListFilter "name" mNameFilter
+                fmap normalizeEventSearchLabel <$> validateSocialEventsListFilter "name" mNameFilter
         -- Party relationship lookup is an exact indexed equality, so callers never
         -- have to page through the whole catalog (bounded by the offset cap) to
         -- find the one profile that belongs to a Party.
@@ -3552,16 +3583,23 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         partyCondition
                         ( [Desc ArtistProfileCreatedAt]
                             ++ if hasFilter
-                                then [LimitTo 1000]
+                                then []
                                 else [LimitTo limit, OffsetBy offset]
                         )
                     )
                     envPool
-        artists <- forM rows $ \(Entity aid a) -> do
+        let namedRows = case nameFilter of
+                Nothing -> rows
+                Just name -> filter
+                    (T.isInfixOf name . normalizeEventSearchLabel . artistProfileName . entityVal) rows
+            selectedRows = if hasFilter && isNothing mGenreIdFilter
+                then take limit (drop offset namedRows)
+                else namedRows
+        artists <- forM selectedRows $ \(Entity aid a) -> do
             (genreList, genreIds) <- liftIO $ runSqlPool (loadArtistGenreSelections aid a) envPool
             let nameMatches = case nameFilter of
                     Nothing -> True
-                    Just name -> T.isInfixOf name (T.toCaseFold (artistProfileName a))
+                    Just name -> T.isInfixOf name (normalizeEventSearchLabel (artistProfileName a))
             let genreMatches = case mGenreIdFilter of
                     Nothing -> True
                     Just genreId -> genreId `elem` genreIds
@@ -3570,7 +3608,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 else pure Nothing
         let filtered = catMaybes artists
         pure
-            ( if hasFilter
+            ( if isJust mGenreIdFilter
                 then take limit (drop offset filtered)
                 else filtered
             )
@@ -4771,8 +4809,9 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         case admission of
                             Left refused -> pure (Left refused)
                             Right () -> Right <$> do
+                                admissionTime <- TicketInventory.ticketReservationTime
                                 reserved <- TicketInventory.reserveTicketInventory
-                                    eventKey tierKey ticketPurchaseQuantity now
+                                    eventKey tierKey ticketPurchaseQuantity admissionTime
                                 if not reserved
                                     then pure Nothing
                                     else do
@@ -5293,19 +5332,15 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 let createReservedOrder = do
                         promoClaimed <- case mPromoCodeEnt of
                             Nothing -> pure True
-                            Just (Entity promoKey promo) -> do
-                                let redemptionFilters =
-                                        [ PromoCodeId ==. promoKey
-                                        , PromoCodeIsActive ==. True
-                                        ]
-                                            ++ maybe
-                                                []
-                                                (\limit -> [PromoCodeCurrentRedemptions <. limit])
-                                                (SM.promoCodeMaxRedemptions promo)
-                                (> 0)
-                                    <$> updateWhereCount
-                                        redemptionFilters
-                                        [PromoCodeCurrentRedemptions +=. 1]
+                            Just (Entity promoKey _) ->
+                                -- The organizer can change the cap while this
+                                -- checkout waits. Bind the claim to the current
+                                -- row, including NULL/unlimited, atomically.
+                                (> 0) <$> rawExecuteCount
+                                    "UPDATE promo_code SET current_redemptions=current_redemptions+1 \
+                                    \WHERE id=? AND is_active=TRUE AND \
+                                    \(max_redemptions IS NULL OR current_redemptions<max_redemptions)"
+                                    [toPersistValue promoKey]
                         if not promoClaimed
                             then do
                                 update
@@ -5367,8 +5402,16 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                     liftIO (throwIO ticketTermsChangedError)
                                 pricing <- lockTicketPurchaseTierPricing eventKey tierKey tier
                                 either (liftIO . throwIO) pure pricing
+                                promotion <- lockTicketPurchasePromo mPromoCodeEnt
+                                either (liftIO . throwIO) pure promotion
+                                admissionTime <- TicketInventory.ticketReservationTime
+                                forM_ mPromoCodeEnt $ \(Entity _ promo) ->
+                                    either (const $ liftIO $ throwIO err409
+                                        {errBody = "Promotion is outside its validity window; reload before buying"})
+                                        pure (validatePromoCodeDateWindow admissionTime
+                                            (SM.promoCodeValidFrom promo) (SM.promoCodeValidUntil promo))
                                 reserved <- TicketInventory.reserveTicketInventory
-                                    eventKey tierKey ticketPurchaseQuantity now
+                                    eventKey tierKey ticketPurchaseQuantity admissionTime
                                 if reserved then createReservedOrder else pure Nothing
                             )
                             envPool
@@ -6347,7 +6390,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
     listBudgetLines :: T.Text -> AppM [EventBudgetLineDTO]
     listBudgetLines eventIdStr = do
         Env{..} <- ask
-        (eventKey, _) <- requireManagedEvent eventIdStr
+        (eventKey, eventRec) <- requireManagedEvent eventIdStr
         budgetRows <-
             liftIO $
                 runSqlPool
@@ -6360,13 +6403,13 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                     envPool
         forM budgetRows $ \lineEnt@(Entity lineKey lineRec) -> do
             let lineTypeVal = normalizeBudgetLineType (Just (eventBudgetLineLineType lineRec))
-                exactActualCents = sum
-                    [ toInteger (eventFinanceEntryAmountCents entry)
-                    | Entity _ entry <- postedEntries
+                contributingEntries =
+                    [ entryEnt
+                    | entryEnt@(Entity _ entry) <- postedEntries
                     , eventFinanceEntryBudgetLineId entry == Just lineKey
                     , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
                     ]
-            actualCents <- checkedEventFinanceCents exactActualCents
+            actualCents <- checkedEventBudgetActualCents (defaultCurrency envConfig) eventRec contributingEntries
             pure (budgetLineEntityToDTO eventKey (Just actualCents) lineEnt)
 
     createBudgetLine :: T.Text -> EventBudgetLineDTO -> AppM EventBudgetLineDTO
@@ -6408,7 +6451,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
     updateBudgetLine eventIdStr lineIdStr dto = do
         Env{..} <- ask
         now <- liftIO getCurrentTime
-        (eventKey, _) <- requireManagedEvent eventIdStr
+        (eventKey, eventRec) <- requireManagedEvent eventIdStr
         lineKey <- parseKeyOr400 "budget line" lineIdStr
         mLine <- liftIO $ runSqlPool (get lineKey) envPool
         lineRec <- maybe (throwError err404{errBody = "Budget line not found"}) pure mLine
@@ -6436,13 +6479,12 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                         []
                     )
                     envPool
-        let exactActualCents =
-                sum
-                    [ toInteger (eventFinanceEntryAmountCents entry)
-                    | Entity _ entry <- postedEntries
-                    , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
-                    ]
-        actualCents <- checkedEventFinanceCents exactActualCents
+        let contributingEntries =
+                [ entryEnt
+                | entryEnt@(Entity _ entry) <- postedEntries
+                , normalizeFinanceDirection (Just (eventFinanceEntryDirection entry)) == lineTypeVal
+                ]
+        actualCents <- checkedEventBudgetActualCents (defaultCurrency envConfig) eventRec contributingEntries
         liftIO $
             runSqlPool
                 ( update
@@ -6636,7 +6678,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             either
                 (throwError . financeInvariantServerError)
                 pure
-                (traverse storedFinanceEntrySummaryFields allFinanceRows)
+                (traverse (storedFinanceEntrySummaryFields eventCurrencyVal) allFinanceRows)
         captured <- liftIO $ runSqlPool (TicketRefund.capturedTicketRevenue eventKey eventCurrencyVal) envPool
         let capturedIds = Set.fromList [key | (key,_,_) <- captured]
             canonicalGross = sum [toInteger paid | (_,paid,_) <- captured]
@@ -6647,7 +6689,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             either
                 (throwError . financeInvariantServerError)
                 pure
-                (traverse storedTicketOrderSummaryFields (filter (\(Entity key _) -> key `Set.notMember` capturedIds) ticketOrders))
+                (traverse (storedTicketOrderSummaryFieldsInCurrency eventCurrencyVal) (filter (\(Entity key _) -> key `Set.notMember` capturedIds) ticketOrders))
 
         let plannedIncomeCents =
                 sum
@@ -8152,6 +8194,23 @@ toggleMomentReactionDb actorPartyId actorPartyText momentKey reactionTypeId requ
                 , EventMomentReactionReactorPartyId ==. actorPartyText
                 ]
             pure False
+
+-- The same shipped SQL predicate is used by public and authenticated discovery.
+-- It reads the canonical city (ES/EN and persisted aliases), then venue text,
+-- then an external source only when there is no usable venue location.
+eventCitySearchSql :: T.Text
+eventCitySearchSql = TE.decodeUtf8 $(embedFile "sql/queries/social-event-city-match.sql")
+
+-- Preserve the existing artistId parameter and single-ID callers. CSV values
+-- express an OR over canonical social artist IDs; malformed entries fail closed.
+validateEventArtistFilter :: Maybe T.Text -> Either ServerError [ArtistProfileId]
+validateEventArtistFilter raw = case cleanMaybeText raw of
+    Nothing -> Right []
+    Just value
+        | length (T.splitOn "," value) > maxEventArtistsPerEvent ->
+            Left err400{errBody = "artistId supports at most 50 artists"}
+        | otherwise -> Set.toList . Set.fromList <$> traverse
+            (fmap toSqlKey . parseInt64Either "artist" . T.strip) (T.splitOn "," value)
 
 validateEventArtistIds :: [ArtistDTO] -> Either ServerError [ArtistProfileId]
 validateEventArtistIds artists
@@ -10114,11 +10173,12 @@ loadExternalEventSources pool eventKey =
 
 selectUnsuppressedSocialEvents ::
     [Filter SocialEvent] ->
+    (T.Text, [PersistValue]) ->
     SelectOpt SocialEvent ->
     Int ->
     Int ->
     SqlPersistT IO [Entity SocialEvent]
-selectUnsuppressedSocialEvents filters dateOrder limit offset = do
+selectUnsuppressedSocialEvents filters (searchClause, searchValues) dateOrder limit offset = do
     backend <- ask :: SqlPersistT IO SqlBackend
     eventTable <- getEscapedRawName "social_event"
     externalRefTable <- getEscapedRawName "external_event_ref"
@@ -10149,17 +10209,19 @@ selectUnsuppressedSocialEvents filters dateOrder limit offset = do
             "SELECT ?? FROM "
                 <> eventTable
                 <> combinedFilterClause
+                <> (if T.null searchClause then "" else " AND (" <> searchClause <> ")")
                 <> orderClause (Just PrefixTableName) backend [dateOrder, Asc SocialEventId]
     query <- getConnLimitOffset (limit, offset) orderedQuery
-    rawSql query (filterValues <> [PersistText externalEventRefSuppressedStatus])
+    rawSql query (filterValues <> [PersistText externalEventRefSuppressedStatus] <> searchValues)
 
 selectVisibleSocialEvents ::
     [Filter SocialEvent] ->
+    (T.Text, [PersistValue]) ->
     SelectOpt SocialEvent ->
     Int ->
     Int ->
     SqlPersistT IO [Entity SocialEvent]
-selectVisibleSocialEvents filters dateOrder limit offset = do
+selectVisibleSocialEvents filters (searchClause, searchValues) dateOrder limit offset = do
     backend <- ask :: SqlPersistT IO SqlBackend
     eventTable <- getEscapedRawName "social_event"
     externalRefTable <- getEscapedRawName "external_event_ref"
@@ -10191,9 +10253,10 @@ selectVisibleSocialEvents filters dateOrder limit offset = do
             "SELECT ?? FROM "
                 <> eventTable
                 <> combinedFilterClause
+                <> (if T.null searchClause then "" else " AND (" <> searchClause <> ")")
                 <> orderClause (Just PrefixTableName) backend [dateOrder, Asc SocialEventId]
     query <- getConnLimitOffset (limit, offset) orderedQuery
-    rawSql query filterValues
+    rawSql query (filterValues <> searchValues)
 
 -- Keep the imported-event visibility predicate correlated with each candidate
 -- row. This avoids expanding the complete retained import history into a NOT IN
@@ -10667,9 +10730,31 @@ financeEntryEntityToDTOEither (Entity entryKey entryRec) = do
             , efeUpdatedAt = Just (eventFinanceEntryUpdatedAt entryRec)
             }
 
-storedFinanceEntrySummaryFields :: Entity EventFinanceEntry -> Either T.Text (Int, T.Text, T.Text, T.Text)
-storedFinanceEntrySummaryFields (Entity _ entryRec) = do
+-- Authoring may retain other currencies; a single-currency report cannot
+-- combine their contributing amounts without an established conversion.
+validateEventFinanceReportCurrency :: T.Text -> T.Text -> Either T.Text ()
+validateEventFinanceReportCurrency eventCurrency rawCurrency =
+    case normalizeEventCurrencyCode rawCurrency of
+        Just currency | currency == eventCurrency -> Right ()
+        _ -> Left "Contributing amount currency does not match the event reporting currency"
+
+checkedEventBudgetActualCents :: T.Text -> SocialEvent -> [Entity EventFinanceEntry] -> AppM Int
+checkedEventBudgetActualCents reportDefault eventRec entries = do
+    let contributingAmounts = filter ((/= 0) . eventFinanceEntryAmountCents . entityVal) entries
+    unless (null contributingAmounts) $ do
+        (eventCurrency, _) <-
+            either (throwError . storedEventMetadataServerError) pure
+                (validateStoredEventFinanceMetadata reportDefault eventRec)
+        forM_ contributingAmounts $ \(Entity _ entry) ->
+            either (throwError . financeInvariantServerError) pure
+                (validateEventFinanceReportCurrency eventCurrency (eventFinanceEntryCurrency entry))
+    checkedEventFinanceCents (sum [toInteger (eventFinanceEntryAmountCents entry) | Entity _ entry <- entries])
+
+storedFinanceEntrySummaryFields :: T.Text -> Entity EventFinanceEntry -> Either T.Text (Int, T.Text, T.Text, T.Text)
+storedFinanceEntrySummaryFields eventCurrency (Entity _ entryRec) = do
     (directionVal, sourceVal, statusVal) <- validateStoredFinanceEntryDimensions entryRec
+    when (statusVal /= "void") $
+        validateEventFinanceReportCurrency eventCurrency (eventFinanceEntryCurrency entryRec)
     pure (eventFinanceEntryAmountCents entryRec, directionVal, sourceVal, statusVal)
 
 storedBudgetLineSummaryFields :: Entity EventBudgetLine -> Either T.Text (Int, T.Text)
@@ -10681,6 +10766,13 @@ storedTicketOrderSummaryFields (Entity _ orderRec) =
     case parseTicketOrderStatus (eventTicketOrderStatus orderRec) of
         Just statusVal -> Right (eventTicketOrderAmountCents orderRec, statusVal)
         Nothing -> Left "Stored ticket order status is invalid"
+
+storedTicketOrderSummaryFieldsInCurrency :: T.Text -> Entity EventTicketOrder -> Either T.Text (Int, T.Text)
+storedTicketOrderSummaryFieldsInCurrency eventCurrency orderEnt@(Entity _ orderRec) = do
+    fields@(amountCents, statusVal) <- storedTicketOrderSummaryFields orderEnt
+    when (amountCents /= 0 && statusVal /= "cancelled") $
+        validateEventFinanceReportCurrency eventCurrency (eventTicketOrderCurrency orderRec)
+    pure fields
 
 ticketOrderAccountingEntriesEither ::
     SocialEventId ->

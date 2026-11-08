@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "baselineCommit": "0d66f3d7a1a81d4ecc02d84ae5c95f184df75e9d",
+  "sourceCommit": "0702ba67f901bdc3ba62eaf278dba6ca4804b232",
+  "sourceTree": "ee1ec4987d6c56285726adbaacb433cfb7574a27",
+  "registeredSourceInputs": 1408,
+  "sourceDigest": "2296829821f09bb8afb9d50bb0cbbd188f4d115c5fc523556a923b8577a6852d",
+  "mobileRevision": "7000df1da934aa467e443ad267c0a8caa1e9cb72",
+  "executionHashesMatchCommittedTreeAndMobilePin": true,
+  "newContract": {
+    "path": "formal/system/legacy-ticket-promo-limit.md",
+    "sha256": "6d582deba26d8b346e73532712219d4b4f92e528488869e348b67ff3cf3128cf",
+    "discoveryEntryMatches": true
+  },
+  "otherRequirementsUnchanged": 153,
+  "normativeCatalogDecisionObjectsPreserved": 1353,
+  "evidenceOnlyConsumerCountRowsRefreshed": 1,
+  "cleanCommittedReporterPass": true,
+  "immutableSourceAdmissionPass": true,
+  "parentPR": 662,
+  "mainObserved": "e302dc7fa76ac1c20e4e95cb946c82019ee17bb2",
+  "requiredReviewPending": true,
+  "currentMainCompositionPending": true,
+  "servingExecutableQualification": "NOT_RUN locally for this source; new hosted build required. Parent661 serving receipt remains historical; no older executable promoted.",
+  "release": "BLOCKED",
+  "scope": "Implementation TESTED; finite buyer/editor model BOUNDED_VERIFIED under documented bounds. Source correspondence does not prove SQL/Haskell refinement, authentication, provider payment or reproducible executable identity.",
+  "pullRequest": 663
+}

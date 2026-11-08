@@ -1,0 +1,9 @@
+{
+  "baseline": "7cd6d8a3a811027b0a4880af4e1c4c500a27ac9a",
+  "wholeDecisionFileExactBaseline": true,
+  "sha256": "20c455b7157ef9dab29b4f3de42d8f768f3964b7c41c14f02654e09eb8c9b4b9",
+  "normativeDecisionObjects": 1353,
+  "actualCatalogCILaneTests": 8,
+  "failures": 0,
+  "consumerEvidenceNotRewritten": true
+}

@@ -52,6 +52,7 @@ import           System.Environment (lookupEnv)
 import qualified TDF.API.Types as APITypes
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.EventTickets as TicketDomain
+import TDF.Commerce.TicketBuyerContact (ticketPaymentBuyerPhone, normalizeTicketBuyerPhone)
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import           TDF.DB (Env(..))
 import           TDF.Commerce.ProviderAdapter.Http (sharedProviderManager)
@@ -191,14 +192,7 @@ validatePositiveKey fieldName value
   | otherwise = Right value
 
 normalizePhone :: Maybe Text -> Either ServerError (Maybe Text)
-normalizePhone raw = case T.strip <$> raw of
-  Nothing -> Right Nothing
-  Just "" -> Right Nothing
-  Just clean
-    | T.length clean > 24 -> Left (badRequest "buyerPhone is too long")
-    | T.any (\char -> not (isAlphaNum char || char `elem` ['+','-',' ','(',')'])) clean ->
-        Left (badRequest "buyerPhone contains unsupported characters")
-    | otherwise -> Right (Just clean)
+normalizePhone = either (Left . badRequest) Right . normalizeTicketBuyerPhone
 
 normalizePromoCode :: Maybe Text -> Either ServerError (Maybe Text)
 normalizePromoCode raw = case T.toUpper . T.strip <$> raw of
@@ -647,17 +641,26 @@ createTicketCheckoutTransaction
               | otherwise -> Left (conflict
                   "Promotion changed or became unavailable while ticket inventory was being held")
             _ -> Left (conflict "Promotion is no longer available")
+      -- The last possible row-lock wait includes the policy and promotion.
+      -- Use this same database-time sample for promo and tier admission only;
+      -- original request/audit timestamps and hold duration remain unchanged.
+      admissionTime <- Inventory.ticketReservationTime
       case (lockedEventEligibility, lockedTiers, lockedPromo) of
         (Left eventError, _, _) -> pure (Left eventError)
         (Right (), [Entity _ lockedTier], Right transactionPromo)
           | SM.eventTicketTierEventId lockedTier == eventKey
           , SM.eventTicketTierIsActive lockedTier
-          , SocialEvents.isTicketTierSaleOpen now lockedTier ->
-              reserveAndCreate transactionPromo
+          , SocialEvents.isTicketTierSaleOpen admissionTime lockedTier ->
+              case transactionPromo of
+                Just (ValidPromo (Entity _ promo) _)
+                  | Left message <- SocialEvents.validatePromoCodeDateWindow admissionTime
+                      (SM.promoCodeValidFrom promo) (SM.promoCodeValidUntil promo) ->
+                      pure (Left (conflict message))
+                _ -> reserveAndCreate admissionTime transactionPromo
         (_, _, Left promoError) -> pure (Left promoError)
         _ -> pure (Left (conflict "Ticket tier is no longer available"))
-    reserveAndCreate transactionPromo = do
-      reserved <- Inventory.reserveTicketInventory eventKey tierKey quantityInt now
+    reserveAndCreate admissionTime transactionPromo = do
+      reserved <- Inventory.reserveTicketInventory eventKey tierKey quantityInt admissionTime
       if not reserved
         then pure (Left (conflict "Event or ticket tier inventory is exhausted"))
         else claimPromoAndCreate transactionPromo
@@ -984,7 +987,7 @@ loadTicketPaymentContext orderKey = do
   case rows of
     [( Single eventId, Single checkoutId, Single createKey, Single checkoutStatus
      , Single environmentText, Single amountMinor, Single currency
-     , Single holdExpiresAt, Single mBuyerName, Single mBuyerEmail, _
+     , Single holdExpiresAt, Single mBuyerName, Single mBuyerEmail, Single mMetadata
      )] -> do
       environment <- either (throwError . internal) pure $
         Checkout.resolveCheckoutEnvironment (Just (T.unpack environmentText))
@@ -1002,7 +1005,7 @@ loadTicketPaymentContext orderKey = do
         , tpcHoldExpiresAt = holdExpiresAt
         , tpcBuyerName = buyerName
         , tpcBuyerEmail = buyerEmail
-        , tpcBuyerPhone = Nothing
+        , tpcBuyerPhone = ticketPaymentBuyerPhone mMetadata
         }
     [] -> throwError notFound
     _ -> throwError (internal "Ticket payment context is ambiguous")
@@ -1363,7 +1366,7 @@ createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
   when (tpcCheckoutStatus context == "paid") $
     throwError (conflict "This ticket order is already paid")
   ensureNoOtherActiveTicketAttempt context Checkout.ProviderDatafast
-  datafast <- ServiceStorefront.loadServiceDatafastEnv
+  (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireTicketProvider context
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast

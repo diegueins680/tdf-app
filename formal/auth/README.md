@@ -25,3 +25,41 @@ issues a fresh revision. Browser storage failures (memory-only intent, the
 suites cover them.
 
 Run: `npm run verify:inductive-proofs`.
+
+## Interactive session expiry (ID-SESSION-004)
+
+`SessionExpiry.tla` models bearer tokens and their validity window on the database
+clock: `TDF.Auth.apiTokenWithinValidity`, `TDF.ServerAuth.sessionValidityWindow`
+(expiry = issue time + max(1, TTL)) and `TDF.Config.validateSessionTokenTtl`
+(startup refuses a TTL above the cookie Max-Age). Tokens are interactive
+(password or Google login), service, or password reset. Legacy interactive
+sessions exist from the start without an expiry and are not backfilled. The
+modeled database clock may move forwards or backwards within the parameter
+domains below. Tokens can be revoked.
+
+`Safe` = `WithinWindowAtUse` (every accepted interactive use is before its expiry)
+`/\ LegacyInteractiveFailsClosed` (an interactive token without expiry is never
+accepted) `/\ TtlBoundedByCookie` (every interactive window is 1 to Max-Age
+seconds) `/\ ResetNeverAuthenticates`.
+
+| Obligation | Tool | Result |
+|---|---|---|
+| Bounded exploration: 3 tokens (one legacy), Max-Age 3, TTL 2, clock 0..5 | TLC 1.7.2 | no violation; owner-reported 2,046,828 states (count not independently verified from retained hosted logs) |
+| Token without expiry accepted (pre-enforcement) | TLC | `Safe` violated, as expected |
+| TTL above Max-Age admitted at startup | TLC | `Safe` violated, as expected |
+| `Init ⇒ IndInv`, `IndInv ∧ Next ⇒ IndInv′`, `IndInv ⇒ Safe` | Apalache 0.62.4 | **proved** for up to four tokens, any legacy subset, Max-Age and TTL in 1..100000 with TTL ≤ Max-Age, and clock readings 0..MaxTime with MaxTime in 0..1,000,000, including backwards steps |
+| A minted session is accepted (non-vacuity witness) | Apalache | reachable, as expected |
+| Token without expiry accepted: reachable violation | Apalache | counterexample found, as expected |
+
+The step from the model to the code is by review: one validity check per
+authenticated request (`lookupUsernameFromToken` and the `AuthProtect` handler).
+The cookie itself, and the browser forgetting it, are outside the model.
+
+The SessionExpiry model/CFG inputs above retain their actual hosted execution at
+source `182ae5e2437756bea7edf28a5f13898eec040627` ([verify job](https://github.com/diegueins680/tdf-app/actions/runs/42313255678/job/128219591685)); this composition does not relabel it as a new execution. The unchecked-TTL negative control is run in TLC only; the missing-expiry control is checked in both tools.
+
+The model checks upper expiry, legacy rejection, TTL bounds and reset-token exclusion.
+It does not encode the stronger issued-at lower bound or malformed-window denial
+of the complete runtime predicate introduced in PR #690. The separate source-derived
+authorization/recovery projections also do not establish that full helper or
+whole-session refinement; native and PostgreSQL witnesses keep their own identities.
