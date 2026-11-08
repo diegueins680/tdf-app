@@ -538,8 +538,10 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
         ? 'Formato no admitido. Usa WAV, FLAC o AIFF.' : 'Formato no admitido. Usa JPEG, PNG o TIFF.' } }));
       return;
     }
-    // Retrying the same file reuses its Idempotency-Key, so the server resumes
-    // the existing upload session instead of creating a duplicate asset.
+    // Retrying the same file after a network failure reuses its Idempotency-Key,
+    // so the server resumes the existing upload session instead of creating a
+    // duplicate asset. An explicit cancellation deletes that session server-side,
+    // so the next attempt must carry a fresh key (see the AbortError branch).
     const previous = uploadAttempts.current[key];
     const idempotencyKey = previous && sameUploadFile(previous.file, file) ? previous.idempotencyKey : newRef('music-upload');
     const controller = new AbortController();
@@ -564,6 +566,9 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
       setUploads((current) => ({ ...current, [key]: { progress: 100, message: 'Carga confirmada; procesamiento en cola.' } }));
     } catch (reason) {
       if (isAbortError(reason) || controller.signal.aborted) {
+        // The cancelled upload session is gone; a retry is a new upload of the same file.
+        const cancelled = uploadAttempts.current[key];
+        if (cancelled) uploadAttempts.current[key] = { ...cancelled, idempotencyKey: newRef('music-upload') };
         setUploads((current) => ({ ...current, [key]: { progress: 0, message: 'Carga cancelada. Puedes reintentar el mismo archivo.', cancelled: true, retryable: true } }));
       } else {
         setUploads((current) => ({ ...current, [key]: { progress: 0, message: '', retryable: true,

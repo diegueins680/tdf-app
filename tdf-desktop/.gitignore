@@ -2,4 +2,8 @@ node_modules/
 dist/
 generated/
 build/icon.png
+# Root .gitignore ignores every build/ directory; the signing entitlements are source.
+!build/
+build/channel.json
+!build/entitlements.mac.plist
 *.log

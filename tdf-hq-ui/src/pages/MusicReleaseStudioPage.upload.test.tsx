@@ -93,7 +93,7 @@ it('uploads a dropped master, then retries the same file with the same Idempoten
   } finally { close(); }
 });
 
-it('cancels an in-flight upload through its signal and keeps the retry available', async () => {
+it('cancels an in-flight upload through its signal and retries the same file as a new upload', async () => {
   uploadAsset.mockImplementationOnce(({ signal }) => new Promise((_resolve, reject) => {
     signal?.addEventListener('abort', () => reject(new DOMException('Upload cancelled', 'AbortError')));
   }));
@@ -107,7 +107,11 @@ it('cancels an in-flight upload through its signal and keeps the retry available
     expect(uploadAsset.mock.calls[0]?.[0].signal?.aborted).toBe(true);
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Reintentar pista 1' })); });
     await waitFor(() => expect(uploadAsset).toHaveBeenCalledTimes(2));
-    expect(uploadAsset.mock.calls[1]?.[0].idempotencyKey).toBe(uploadAsset.mock.calls[0]?.[0].idempotencyKey);
+    // The server deleted the cancelled session; replaying its key would return
+    // a cancelled session, so the retry carries a fresh key for the same file.
+    expect(uploadAsset.mock.calls[1]?.[0].file).toBe(uploadAsset.mock.calls[0]?.[0].file);
+    expect(uploadAsset.mock.calls[1]?.[0].idempotencyKey).toMatch(/^music-upload-/);
+    expect(uploadAsset.mock.calls[1]?.[0].idempotencyKey).not.toBe(uploadAsset.mock.calls[0]?.[0].idempotencyKey);
   } finally { close(); }
 });
 

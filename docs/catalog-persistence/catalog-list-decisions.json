@@ -34077,6 +34077,177 @@
       },
       "reviewBatch": "event-finance-csv-currency-2026-10-30",
       "reviewMethod": "manual-source-review"
+    },
+    {
+      "id": "9f5a58afbcc5a21f3a81",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a field would only break the local Media Session/desktop bridge typing; it grants nothing and stores nothing.",
+      "justification": "Field names of the in-memory playback-session state handed to the shared Media Session owner registry (status, title, artist, album, artworkUrl). They are typed wire fields, not selectable business values; persisted release and radio records remain authoritative for titles and artists.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "line": 1411,
+        "kind": "object-registry",
+        "name": "state",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "162bb73e8a27ecdbd80d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Renaming a field would only break the local Media Session/desktop bridge typing; it grants nothing and stores nothing.",
+      "justification": "Field names of the in-memory playback-session state handed to the shared Media Session owner registry (status, title, artist, album, artworkUrl). They are typed wire fields, not selectable business values; persisted release and radio records remain authoritative for titles and artists.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "line": 706,
+        "kind": "object-registry",
+        "name": "state",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "19b53762aa84c847059a",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Adding an owner requires a new audio element owner in code; the union is checked by the compiler and the shell sanitizer.",
+      "justification": "Closed set of in-page audio owners (release player, radio) that can hold the single system playback session. It is an implementation dispatch discriminant mirrored by tdf-desktop/src/main/playbackState.cjs, not a business catalog or permission registry.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/desktop/shell.ts",
+        "line": 8,
+        "kind": "literal-union",
+        "name": "DesktopPlaybackOwner",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "d3fe8dedc63dbee01dcf",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing a status requires matching changes in the shell sanitizer and menu model; no persisted data depends on it.",
+      "justification": "Playback engine status reported to the desktop shell (idle, loading, playing, paused, error). Client media mechanics mirroring the existing PlaybackStatus of the global player; not governed reference data.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/desktop/shell.ts",
+        "line": 9,
+        "kind": "literal-union",
+        "name": "DesktopPlaybackStatus",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "dd837be242ffaf6c73c5",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A new command needs a handler in playbackSession.ts and acceptance in the shell; the set is validated on both sides.",
+      "justification": "Native menu and media-key commands (play, pause, toggle, next, previous) routed to the active in-page audio owner. Transport-control dispatch tags, individually reviewed; they authorize no media access and are not selectable business values.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/desktop/shell.ts",
+        "line": 10,
+        "kind": "literal-union",
+        "name": "DesktopPlaybackCommand",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "70eef2bc5a9e8ef6ab65",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The switch is the exhaustive handler of DesktopPlaybackCommand; the compiler and unit tests cover each branch.",
+      "justification": "Exhaustive dispatch of the five playback commands to the active owner handlers; same closed technical set as DesktopPlaybackCommand, not a catalog.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/playbackSession.ts",
+        "line": 108,
+        "kind": "switch-cases",
+        "name": "command",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "ee97985b0d9abc1b1ed3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The list must match the browser Media Session API action names; it is a platform contract, not editable data.",
+      "justification": "Media Session API action names (play, pause, previoustrack, nexttrack, seekto) managed for the active owner. Browser platform identifiers, not business or reference data.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/playbackSession.ts",
+        "line": 40,
+        "kind": "array",
+        "name": "MEDIA_ACTIONS",
+        "valueCount": 5
+      }
+    },
+    {
+      "id": "57fc580c92ca2352698d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The role names are the music upload API asset roles already enforced server-side; the union narrows the client to the two Studio upload surfaces.",
+      "justification": "Client-side narrowing of the music asset roles that the release Studio uploads (master_audio, cover_original); the server-side MusicAssetRole contract remains authoritative. Used only to pick accept filters and drop-zone validation.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "line": 50,
+        "kind": "literal-union",
+        "name": "UploadRole",
+        "valueCount": 2
+      }
+    },
+    {
+      "id": "2cf4da8b8443b9be1b48",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Test double fields follow the browser Media Session API; changing them only affects the unit test.",
+      "justification": "Jest fake of navigator.mediaSession (metadata, playbackState, setActionHandler) used by playbackSession.test.ts. Test fixture mirroring a browser API; a consumer, not an authority.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "desktop-shell-20261108",
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/playbackSession.test.ts",
+        "line": 31,
+        "kind": "object-registry",
+        "name": "mediaSession",
+        "valueCount": 3
+      }
     }
   ]
 }

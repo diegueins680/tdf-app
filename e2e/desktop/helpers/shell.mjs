@@ -25,6 +25,9 @@ export async function launchShell({ appOrigin, args = [], env = {} } = {}) {
     args: [DESKTOP_DIR, '--no-sandbox', ...args],
     env: {
       ...process.env,
+      // The journeys exercise the loopback "local" channel even when the
+      // surrounding CI job prepares the production channel for packaging.
+      TDF_DESKTOP_CHANNEL: 'local',
       TDF_DESKTOP_APP_URL: appOrigin,
       TDF_DESKTOP_API_URL: API_ORIGIN,
       ELECTRON_DISABLE_SECURITY_WARNINGS: 'true',
