@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T02:57:22.318Z",
+  "generatedAt": "2026-11-08T03:48:29.479Z",
   "repositoryRoot": ".",
-  "filesScanned": 2666,
+  "filesScanned": 2668,
   "candidateCount": 1419,
   "byClassification": {
     "dynamic-business-catalog": 929,
@@ -6001,7 +6001,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 905,
+      "consumerCount": 906,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6288,7 +6288,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 905,
+      "consumerCount": 906,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -8942,7 +8942,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1571,
+      "consumerCount": 1572,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -10570,7 +10570,7 @@
       "lines": [
         101
       ],
-      "consumerCount": 103,
+      "consumerCount": 104,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -10680,7 +10680,8 @@
         "scripts/test-domo-deposit-policy-validator.sh",
         "scripts/test-event-memory-recovery-browser.mjs",
         "scripts/test-music-directory-contract.mjs",
-        "scripts/test-music-directory-migration.sh"
+        "scripts/test-music-directory-migration.sh",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/auth.ts",
@@ -11083,7 +11084,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 128,
+      "consumerCount": 130,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -11202,8 +11203,10 @@
         "scripts/test-isolated-application-canary.py",
         "scripts/test-player-session-model.mjs",
         "scripts/test-records-youtube-catalog-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
         "scripts/verification-report.py",
-        "scripts/verify-proof-certificates.py"
+        "scripts/verify-proof-certificates.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -16550,7 +16553,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 917,
+      "consumerCount": 918,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17330,7 +17333,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 913,
+      "consumerCount": 914,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17620,7 +17623,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 913,
+      "consumerCount": 914,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -26000,7 +26003,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 986,
+      "consumerCount": 987,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -30000,7 +30003,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 244,
+      "consumerCount": 246,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
@@ -30164,7 +30167,9 @@
         "scripts/test-state-machines.py",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/test-verified-experience-reviews-migration.sh"
+        "scripts/test-verified-experience-reviews-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -45833,7 +45838,7 @@
       "lines": [
         2
       ],
-      "consumerCount": 120,
+      "consumerCount": 122,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -45945,7 +45950,9 @@
         "scripts/test-event-memory-source-permissions.py",
         "scripts/test-isolated-application-canary.py",
         "scripts/test-player-session-model.mjs",
-        "scripts/test-records-youtube-catalog-migration.sh"
+        "scripts/test-records-youtube-catalog-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -45993,7 +46000,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 174,
+      "consumerCount": 176,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -46137,7 +46144,9 @@
         "scripts/test-player-session-model.mjs",
         "scripts/test-public-booking-http-concurrency.sh",
         "scripts/test-records-youtube-catalog-migration.sh",
-        "scripts/test_mail_deliverability_monitor.py"
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/test_mail_deliverability_monitor.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/lib/whatsapp_consent_conformance.py",
@@ -46190,7 +46199,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 111,
+      "consumerCount": 113,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
@@ -46306,9 +46315,11 @@
         "scripts/test-recovery-files.py",
         "scripts/test-specification-conformance.py",
         "scripts/test-verification-report.py",
+        "scripts/test-weekly-platform-metrics.py",
         "scripts/ux-audit-inventory.mjs",
         "scripts/verification-report.py",
-        "scripts/verify-payment-arithmetic.py"
+        "scripts/verify-payment-arithmetic.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/eventMemoryModeration.ts",
@@ -51081,7 +51092,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 1013,
+      "consumerCount": 1014,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -53044,7 +53055,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 233,
+      "consumerCount": 235,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -53202,7 +53213,9 @@
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
         "scripts/test-specification-conformance.py",
-        "scripts/test-unified-checkout-migration.sh"
+        "scripts/test-unified-checkout-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -53263,7 +53276,7 @@
       "lines": [
         81
       ],
-      "consumerCount": 190,
+      "consumerCount": 192,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -53410,7 +53423,9 @@
         "scripts/test-provider-domain-binding.py",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-service-booking-checkout-runtime-migration.sh",
-        "scripts/test-unified-checkout-migration.sh"
+        "scripts/test-unified-checkout-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/generated-api-conformance.test.mjs",
@@ -53927,7 +53942,7 @@
       "lines": [
         39
       ],
-      "consumerCount": 27,
+      "consumerCount": 29,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql"
       ],
@@ -53961,7 +53976,9 @@
       "automationConsumers": [
         "scripts/check-mobile-distribution.mjs",
         "scripts/test-recovery-expiry-verifier.py",
-        "scripts/verify-recovery-expiry.py"
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/verify-recovery-expiry.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/pages/DatafastReturnPage.tsx"
@@ -54121,7 +54138,7 @@
       "lines": [
         60
       ],
-      "consumerCount": 351,
+      "consumerCount": 353,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -55772,7 +55789,7 @@
       "lines": [
         4446
       ],
-      "consumerCount": 351,
+      "consumerCount": 353,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -58537,7 +58554,7 @@
       "lines": [
         332
       ],
-      "consumerCount": 1103,
+      "consumerCount": 1104,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -61357,7 +61374,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 1013,
+      "consumerCount": 1014,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -71498,7 +71515,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 1013,
+      "consumerCount": 1014,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -71798,7 +71815,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 1013,
+      "consumerCount": 1014,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74175,7 +74192,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 1013,
+      "consumerCount": 1014,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -76666,7 +76683,7 @@
       "lines": [
         155
       ],
-      "consumerCount": 101,
+      "consumerCount": 103,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -76772,9 +76789,11 @@
         "scripts/test-specification-conformance.py",
         "scripts/test-verification-report.py",
         "scripts/test-verified-experience-reviews-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
         "scripts/ux-audit-inventory.mjs",
         "scripts/verification-report.py",
-        "scripts/verify-payment-arithmetic.py"
+        "scripts/verify-payment-arithmetic.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/eventMemoryModeration.ts",
@@ -78514,7 +78533,7 @@
       "lines": [
         181
       ],
-      "consumerCount": 228,
+      "consumerCount": 229,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -78680,7 +78699,8 @@
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "scripts/test-studio-internship-audit-api-e2e.sh",
         "scripts/test-studio-internship-audit-migration.sh",
-        "scripts/verification-report.py"
+        "scripts/verification-report.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/domoQuotes.test.ts",
@@ -79497,7 +79517,7 @@
       "lines": [
         31
       ],
-      "consumerCount": 160,
+      "consumerCount": 162,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -79632,7 +79652,9 @@
         "scripts/test-isolated-application-canary.py",
         "scripts/test-music-directory-migration.sh",
         "scripts/test-player-session-model.mjs",
-        "scripts/test-records-youtube-catalog-migration.sh"
+        "scripts/test-records-youtube-catalog-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -80185,7 +80207,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 936,
+      "consumerCount": 937,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -85431,7 +85453,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 69,
+      "consumerCount": 71,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-14_catalog_canonical_schema.sql",
@@ -85505,9 +85527,11 @@
         "scripts/test-recovery-files.py",
         "scripts/test-specification-conformance.py",
         "scripts/test-verification-report.py",
+        "scripts/test-weekly-platform-metrics.py",
         "scripts/ux-audit-inventory.mjs",
         "scripts/verification-report.py",
-        "scripts/verify-payment-arithmetic.py"
+        "scripts/verify-payment-arithmetic.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/eventMemoryModeration.ts",
@@ -88707,7 +88731,7 @@
         3413,
         3515
       ],
-      "consumerCount": 371,
+      "consumerCount": 373,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -88969,7 +88993,7 @@
       "lines": [
         3447
       ],
-      "consumerCount": 272,
+      "consumerCount": 273,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -89224,7 +89248,7 @@
       "lines": [
         8182
       ],
-      "consumerCount": 470,
+      "consumerCount": 472,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -93812,7 +93836,7 @@
       "lines": [
         14555
       ],
-      "consumerCount": 129,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -93931,7 +93955,9 @@
         "scripts/test-event-memory-source-permissions.py",
         "scripts/test-isolated-application-canary.py",
         "scripts/test-player-session-model.mjs",
-        "scripts/test-records-youtube-catalog-migration.sh"
+        "scripts/test-records-youtube-catalog-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -95454,7 +95480,7 @@
       "lines": [
         15938
       ],
-      "consumerCount": 270,
+      "consumerCount": 272,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -101992,7 +102018,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 129,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -102113,7 +102139,9 @@
         "scripts/test-music-track-search.mjs",
         "scripts/test-player-session-model.mjs",
         "scripts/test-records-youtube-catalog-migration.sh",
-        "scripts/test-release-journal.py"
+        "scripts/test-release-journal.py",
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -115226,7 +115254,7 @@
       "lines": [
         279
       ],
-      "consumerCount": 149,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -115355,7 +115383,9 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-player-session-model.mjs",
         "scripts/test-records-youtube-catalog-migration.sh",
-        "scripts/verification-report.py"
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/verification-report.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -151717,7 +151747,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 147,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -151845,7 +151875,9 @@
         "scripts/test-music-directory-migration.sh",
         "scripts/test-player-session-model.mjs",
         "scripts/test-records-youtube-catalog-migration.sh",
-        "scripts/verification-report.py"
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/verification-report.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -164490,7 +164522,7 @@
       "lines": [
         2428
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
@@ -164615,7 +164647,8 @@
         "scripts/test-prepare-native-session.py",
         "scripts/test-records-youtube-catalog-migration.sh",
         "scripts/test-studio-internship-audit-api-e2e.mjs",
-        "scripts/verify-music-money-wire.py"
+        "scripts/verify-music-money-wire.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/client.test.ts",
@@ -164854,7 +164887,7 @@
       "lines": [
         30
       ],
-      "consumerCount": 164,
+      "consumerCount": 166,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
@@ -164984,7 +165017,9 @@
         "scripts/test-event-rsvp-identity-migration.sh",
         "scripts/test-isolated-application-canary.py",
         "scripts/test-player-session-model.mjs",
-        "scripts/test-records-youtube-catalog-migration.sh"
+        "scripts/test-records-youtube-catalog-migration.sh",
+        "scripts/test-weekly-platform-metrics.py",
+        "scripts/weekly-platform-metrics.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/accountDeletion.test.ts",
@@ -166709,7 +166744,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 1013,
+      "consumerCount": 1014,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
