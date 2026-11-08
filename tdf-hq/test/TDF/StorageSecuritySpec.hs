@@ -28,11 +28,13 @@ import TDF.Config (loadConfig, assetsRootDir)
 import TDF.ContentStorage
 import TDF.DB (Env(..), makePool, sharedTlsManager)
 import TDF.StorageVault
-import TDF.Server (mkApp, driveUploadServer, privateDrivePermissionsSafe)
+import TDF.Server (mkApp, driveUploadServer, privateDrivePermissionsSafe, resolveDriveClientCreds)
 import qualified Network.HTTP.Client as HTTP
 import Network.HTTP.Types.Status (statusCode)
+import Network.HTTP.Types.URI (parseSimpleQuery)
 import Network.Wai.Handler.Warp (testWithApplication)
-import Data.Aeson (object, (.=))
+import Data.Aeson (encode, object, (.=))
+import qualified Data.Text.Encoding as TE
 
 spec :: Spec
 spec = do
@@ -91,6 +93,63 @@ spec = do
         privateDrivePermissionsSafe "owner" (object ["permissions" .= [own,broad]]) `shouldBe` False
       privateDrivePermissionsSafe "owner" (object ["permissions" .= [own],"nextPageToken" .= ("more" :: T.Text)]) `shouldBe` False
       privateDrivePermissionsSafe "owner" (object []) `shouldBe` False
+
+  describe "storage-security OAuth refresh request" $ do
+    let valid =
+          [ ("normalizes a complete Drive pair before refreshing", Just "  drive-client\n", Just "\tdrive-secret  ", Just "google-client", Just "google-secret")
+          , ("normalizes the complete Google fallback before refreshing", Nothing, Nothing, Just " google-client\n", Just "\tgoogle-secret ")
+          , ("prefers a complete Drive pair without mixing fallback values", Just "drive-client", Just "drive-secret", Just "google-client", Just "google-secret")
+          , ("permits a complete Drive pair with no fallback configured", Just "drive-client", Just "drive-secret", Nothing, Nothing)
+          ]
+        invalid =
+          [ ("rejects an explicitly blank Drive client id", Just " ", Just "drive-secret", Just "google-client", Just "google-secret")
+          , ("rejects an explicitly blank Drive secret", Just "drive-client", Just "\t", Just "google-client", Just "google-secret")
+          , ("rejects internal whitespace in the Drive client id", Just "drive client", Just "drive-secret", Nothing, Nothing)
+          , ("rejects control characters in the Drive secret", Just "drive-client", Just "drive\NULsecret", Nothing, Nothing)
+          , ("rejects hidden formatting in the Drive secret", Just "drive-client", Just "drive\x202E\&secret", Nothing, Nothing)
+          , ("rejects non-ASCII Drive secrets", Just "drive-client", Just "secr\233t", Nothing, Nothing)
+          , ("rejects oversized Drive secrets", Just "drive-client", Just (T.replicate 4097 "a"), Nothing, Nothing)
+          , ("rejects path characters in the Drive client id", Just "drive/client", Just "drive-secret", Nothing, Nothing)
+          , ("rejects a Drive id without its secret instead of mixing Google fallback", Just "drive-client", Nothing, Just "google-client", Just "google-secret")
+          , ("rejects a Drive secret without its id instead of mixing Google fallback", Nothing, Just "drive-secret", Just "google-client", Just "google-secret")
+          , ("rejects a partial Google fallback id", Nothing, Nothing, Just "google-client", Nothing)
+          , ("rejects a partial Google fallback secret", Nothing, Nothing, Nothing, Just "google-secret")
+          , ("validates an unused Google fallback id even with a complete Drive pair", Just "drive-client", Just "drive-secret", Just "bad/google-client", Just "google-secret")
+          , ("validates an unused Google fallback secret even with a complete Drive pair", Just "drive-client", Just "drive-secret", Just "google-client", Just "google secret")
+          , ("rejects absent application client credentials", Nothing, Nothing, Nothing, Nothing)
+          , ("rejects an explicitly blank Google fallback id", Nothing, Nothing, Just " ", Just "google-secret")
+          , ("rejects an explicitly blank Google fallback secret", Nothing, Nothing, Just "google-client", Just " ")
+          ]
+    forM_ valid $ \(name, driveId, driveSecret, googleId, googleSecret) -> it name $ do
+      expected <- either (const (expectationFailure "Expected canonical valid credentials" >> fail "invalid fixture")) pure
+        (resolveDriveClientCreds driveId driveSecret googleId googleSecret)
+      prepared <- buildDriveRefreshRequest driveId driveSecret googleId googleSecret "synthetic-refresh"
+      case prepared of
+        Left _ -> expectationFailure "Expected a canonical refresh request"
+        Right request -> do
+          HTTP.method request `shouldBe` "POST"
+          HTTP.secure request `shouldBe` True
+          HTTP.host request `shouldBe` "oauth2.googleapis.com"
+          HTTP.port request `shouldBe` 443
+          HTTP.path request `shouldBe` "/token"
+          HTTP.queryString request `shouldBe` ""
+          HTTP.redirectCount request `shouldBe` 0
+          HTTP.responseTimeout request `shouldBe` HTTP.responseTimeoutMicro 30000000
+          HTTP.requestHeaders request `shouldBe` [("Content-Type", "application/x-www-form-urlencoded")]
+          case HTTP.requestBody request of
+            HTTP.RequestBodyBS body -> parseSimpleQuery body `shouldBe`
+              [("client_id", TE.encodeUtf8 (fst expected)), ("client_secret", TE.encodeUtf8 (snd expected)),
+               ("refresh_token", "synthetic-refresh"), ("grant_type", "refresh_token")]
+            _ -> expectationFailure "Unexpected refresh request body constructor"
+    forM_ invalid $ \(name, driveId, driveSecret, googleId, googleSecret) -> it name $ do
+      resolveDriveClientCreds driveId driveSecret googleId googleSecret `shouldSatisfy` isLeft
+      prepared <- buildDriveRefreshRequest driveId driveSecret googleId googleSecret "synthetic-refresh"
+      case prepared of
+        Right _ -> expectationFailure "Invalid configuration must fail before constructing a provider request"
+        Left err -> do
+          errHTTPCode err `shouldBe` 503
+          errBody err `shouldBe` encode (object ["code" .= ("storage_vault_unavailable" :: T.Text)])
+          errHeaders err `shouldBe` [("Content-Type", "application/json"), ("Cache-Control", "no-store")]
 
   database <- runIO (lookupEnv "TDF_STORAGE_SECURITY_DATABASE_URL")
   case database of

@@ -5,7 +5,7 @@
 module TDF.StorageVault
   ( sealCredential, openCredential, credentialBinding, isVaultHandle
   , storeConnection, resolveConnection, refreshConnection, revokeConnection
-  , classifyRefreshFailure
+  , classifyRefreshFailure, buildDriveRefreshRequest
   ) where
 
 import Control.Monad (unless, when)
@@ -218,6 +218,26 @@ instance FromJSON ProviderToken where
           || seconds <= 0 || seconds > (86400 :: Int)) (fail "Invalid credential")
     pure (ProviderToken access refresh seconds)
 
+-- The single request builder used by the actual vault refresh path. Constructing
+-- a request performs no provider I/O; callers can inspect this transport boundary.
+buildDriveRefreshRequest
+  :: Maybe Text -> Maybe Text -> Maybe Text -> Maybe Text -> Text
+  -> IO (Either ServerError Request)
+buildDriveRefreshRequest driveClient driveSecret googleClient googleSecret refresh =
+  let client = driveClient <|> googleClient
+      secret = driveSecret <|> googleSecret
+  in case (client, secret) of
+    (Just cid, Just cs) | not (T.null cid || T.null cs) -> do
+      request <- parseRequest "https://oauth2.googleapis.com/token"
+      pure (Right (request
+        { method = "POST", redirectCount = 0, responseTimeout = responseTimeoutMicro 30000000
+        , requestHeaders = [("Content-Type", "application/x-www-form-urlencoded")]
+        , requestBody = RequestBodyBS (renderSimpleQuery False
+            [("client_id", TE.encodeUtf8 cid), ("client_secret", TE.encodeUtf8 cs)
+            ,("refresh_token", TE.encodeUtf8 refresh), ("grant_type", "refresh_token")])
+        }))
+    _ -> pure (Left (failure err503 "storage_vault_unavailable"))
+
 refreshProvider :: Manager -> Credential -> IO (Either ServerError (Credential, Int))
 refreshProvider _ (Credential _ Nothing) = pure (Left (failure err409 "storage_reconnect_required"))
 refreshProvider manager (Credential _ (Just refresh)) = do
@@ -226,20 +246,13 @@ refreshProvider manager (Credential _ (Just refresh)) = do
     googleClient <- lookupEnv "GOOGLE_CLIENT_ID"
     driveSecret <- lookupEnv "DRIVE_CLIENT_SECRET"
     googleSecret <- lookupEnv "GOOGLE_CLIENT_SECRET"
-    -- Match the OAuth application's exchange configuration. This fallback is
-    -- only client metadata; a personal refresh never uses a service token.
-    let client = driveClient <|> googleClient
-        secret = driveSecret <|> googleSecret
-    case (client,secret) of
-      (Just cid,Just cs) | not (null cid || null cs) -> do
-        request <- parseRequest "https://oauth2.googleapis.com/token"
-        response <- httpLbs request
-          { method = "POST", redirectCount = 0, responseTimeout = responseTimeoutMicro 30000000
-          , requestHeaders = [("Content-Type","application/x-www-form-urlencoded")]
-          , requestBody = RequestBodyBS (renderSimpleQuery False
-              [("client_id",TE.encodeUtf8 (T.pack cid)),("client_secret",TE.encodeUtf8 (T.pack cs))
-              ,("refresh_token",TE.encodeUtf8 refresh),("grant_type","refresh_token")])
-          } manager
+    -- This is the same request builder exercised by transport-boundary controls.
+    prepared <- buildDriveRefreshRequest (T.pack <$> driveClient) (T.pack <$> driveSecret)
+      (T.pack <$> googleClient) (T.pack <$> googleSecret) refresh
+    case prepared of
+      Left err -> pure (Left err)
+      Right request -> do
+        response <- httpLbs request manager
         if statusCode (responseStatus response) /= 200
           then do
             let payload = decodeStrict' (BL.toStrict (responseBody response)) :: Maybe Value
@@ -248,5 +261,4 @@ refreshProvider manager (Credential _ (Just refresh)) = do
           else case decodeStrict' (BL.toStrict (responseBody response)) of
             Just (ProviderToken access next seconds) -> pure (Right (Credential access next,seconds))
             Nothing -> pure (Left (failure err502 "storage_provider_unavailable"))
-      _ -> pure (Left (failure err503 "storage_vault_unavailable"))
   pure (either (const (Left (failure err503 "storage_provider_unavailable"))) id result)
