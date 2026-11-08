@@ -1,0 +1,146 @@
+{
+  "at": "2026-10-29T21:42:21.860Z",
+  "source": "tdf-hq-ui/src/assets/tdf-isotype.svg",
+  "sourceSha256": "e4d27318fa89f8798e657cb68fcce26a36837ee88553a98e22327aa6b1c56024",
+  "passed": true,
+  "geometryPreserved": true,
+  "icoPngFallback": true,
+  "cacheVersioned": true,
+  "icons": [
+    {
+      "name": "tdf-app-icon-1024.png",
+      "size": 1024,
+      "sha256": "89a4872a2d51431f2dff9e3c9e836cd180c72b0bba8cd1edf8c8ee7e94380105",
+      "width": 1024,
+      "height": 1024,
+      "whitePixels": 118597,
+      "transparentPixels": 0,
+      "maxRadius": 274.38021065667255,
+      "corner": [
+        15,
+        23,
+        42,
+        255
+      ]
+    },
+    {
+      "name": "tdf-app-icon-512.png",
+      "size": 512,
+      "sha256": "96d38ef48b5d386554aa357fdd5c89856fb8e2c19b4de0d20f37d2c11558106d",
+      "width": 512,
+      "height": 512,
+      "whitePixels": 29419,
+      "transparentPixels": 0,
+      "maxRadius": 137.02007152238681,
+      "corner": [
+        15,
+        23,
+        42,
+        255
+      ]
+    },
+    {
+      "name": "tdf-app-icon-192.png",
+      "size": 192,
+      "sha256": "2ae62d4425a0987915c1cbd05233bd8118e0253278e4f864661a5301d98f9a9a",
+      "width": 192,
+      "height": 192,
+      "whitePixels": 4025,
+      "transparentPixels": 0,
+      "maxRadius": 51.171281008002914,
+      "corner": [
+        15,
+        23,
+        42,
+        255
+      ]
+    },
+    {
+      "name": "apple-touch-icon.png",
+      "size": 180,
+      "sha256": "386a2016827e9216e488a3a1b2cd8c5e3cd69a1187bc8b3d186648874b74ebca",
+      "width": 180,
+      "height": 180,
+      "whitePixels": 3518,
+      "transparentPixels": 0,
+      "maxRadius": 47.900939447989956,
+      "corner": [
+        15,
+        23,
+        42,
+        255
+      ]
+    },
+    {
+      "name": "favicon-32.png",
+      "size": 32,
+      "sha256": "4245b8d756d3773cd24cd88146fcd81f4def32a1aa24f6116c7a664cb2e0c3be",
+      "width": 32,
+      "height": 32,
+      "whitePixels": 82,
+      "transparentPixels": 0,
+      "maxRadius": 8.276472678623424,
+      "corner": [
+        15,
+        23,
+        42,
+        255
+      ]
+    },
+    {
+      "name": "favicon-16.png",
+      "size": 16,
+      "sha256": "471a909ad2a49ceb6a66020995d791f4af6b6f53e28ea80c735a5a8f623f09c9",
+      "width": 16,
+      "height": 16,
+      "whitePixels": 15,
+      "transparentPixels": 0,
+      "maxRadius": 3.8078865529319543,
+      "corner": [
+        15,
+        23,
+        42,
+        255
+      ]
+    }
+  ],
+  "manifest": {
+    "name": "TDF Records",
+    "short_name": "TDF",
+    "description": "Plataforma de gesti\u00f3n para estudios de grabaci\u00f3n, sellos discogr\u00e1ficos y artistas",
+    "start_url": "/inicio",
+    "display": "standalone",
+    "background_color": "#f8f7f5",
+    "theme_color": "#7c3aed",
+    "orientation": "portrait-primary",
+    "icons": [
+      {
+        "src": "/tdf-app-icon-192.png?v=official-logo-1",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any maskable"
+      },
+      {
+        "src": "/tdf-app-icon-512.png?v=official-logo-1",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+      }
+    ],
+    "categories": [
+      "business",
+      "music",
+      "productivity"
+    ],
+    "lang": "es"
+  },
+  "scope": "Actual local HTTP, PNG pixel decoding, dimensions, contrast, mask-safe artwork and browser previews; no installed-device or production publication claim.",
+  "validation": {
+    "webProductionBuild": "PASS",
+    "initialJsGzipBytes": 337664,
+    "preloadedModules": 5,
+    "previewImage": "reports/app-brand-icons-preview-2026-10-29.png",
+    "nativeSourceChanged": false,
+    "canonicalDeployment": false
+  }
+}
