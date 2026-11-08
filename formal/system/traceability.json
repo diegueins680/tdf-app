@@ -19173,7 +19173,7 @@
     "tdf-hq/src/TDF/DTO.hs": "90b7f5a64a919d401338ab13c0763fa383095edd67531888ce97075ae888844b",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
     "tdf-hq/src/TDF/Directory/Policy.hs": "d8b30f2fb422f4bc8c0a378400340025dfef1be1b0e05a9643f37e443ce9ce2c",
-    "tdf-hq/src/TDF/DriveOAuthClient.hs": "aa7fb3b23f9c580adae908f6bf36bba95a67032b49e0cc2fdf17d71f3b3ea882",
+    "tdf-hq/src/TDF/DriveOAuthClient.hs": "3d5bb29922ad21c6bf618af565fba70cfe29b5c6fcca2272c8c61e3ee370c3ac",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
@@ -59650,7 +59650,7 @@
     {
       "id": "SURFACE-e2f92ea378a434f8",
       "path": "tdf-hq/src/TDF/DriveOAuthClient.hs",
-      "sha256": "aa7fb3b23f9c580adae908f6bf36bba95a67032b49e0cc2fdf17d71f3b3ea882",
+      "sha256": "3d5bb29922ad21c6bf618af565fba70cfe29b5c6fcca2272c8c61e3ee370c3ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
