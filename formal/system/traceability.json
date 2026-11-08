@@ -12377,8 +12377,9 @@
         "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
         "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
         "scripts/test-studio-gallery-migration.sh",
-        "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts",
-        "tdf-hq-ui/src/utils/studioGallery.test.ts"
+        "tdf-hq-ui/src/testFixtures/studioGallery.ts",
+        "tdf-hq-ui/src/utils/studioGallery.test.ts",
+        "scripts/test-studio-gallery-runner-safety.py"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -17545,7 +17546,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "8c2b033290f3a737c2411957ccf4ce77c24154588a2f22d9f58445f394dd5222",
+    ".github/workflows/ci.yml": "4b0cb4fcca1e428dd85625683b6f61cf64bf83c8597b2e419bc4491e31ca9bb0",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
@@ -17554,7 +17555,7 @@
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
-    "docs/catalog-persistence/catalog-list-decisions.json": "06e8fec8ff27a303366d3160b176e4a9fdb4f3dc116ae40eaaa5a45e22c9b3ad",
+    "docs/catalog-persistence/catalog-list-decisions.json": "3bb58164956f4898debe1397eaa23bf3d45c7fbf515b2e0845475b07c4b54de6",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -17972,7 +17973,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "17780afb045566fb339fca2ec57c58a583875b3f82fcaf10f02b9f72fa0d1a78",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -18260,7 +18261,8 @@
     "scripts/test-specification-inventory.py": "803f1a3ba0e54e29c3f7ea8fcc2c7e263a0b1c450c0e358912091bd745332369",
     "scripts/test-state-machines.py": "8b04bc8695f89b092627c7a9e58c83ba4a718e12d83dfad3cd07634d0c8d8f72",
     "scripts/test-stripe-integration.sh": "f3c057e5afea48b657a2eeb35763b49054979cfaf84ec2e48940617a2d64f8df",
-    "scripts/test-studio-gallery-migration.sh": "bf3f33e6d3f2efd57e604f561917c635cc12f23a24035197c668c5836a291f92",
+    "scripts/test-studio-gallery-migration.sh": "42cf15ffb993ed44439390aec75f82944a94a8dcb92b9ec86fd44fb3a6604087",
+    "scripts/test-studio-gallery-runner-safety.py": "2b2905f47cd1f07113cc8af3e9be163338ef27cc164bba03b3779738f7541dfd",
     "scripts/test-studio-internship-audit-api-e2e.mjs": "2c4671ee52541c181cfe9e00d8bc7d0f98e8e54921adc513c0bf9aa657662c40",
     "scripts/test-studio-internship-audit-api-e2e.sh": "13c745c4dad1a5e11a5dba96c32c57da0d5b8b4b1bd8285670cd08d31f077d1b",
     "scripts/test-ticket-admission.sh": "e861b2b98961f0c24ddacd5e67f3622ea665d118ad69979948dc82cb1aa81800",
@@ -18383,7 +18385,6 @@
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "53db01321e43f5989d4bb555d676025491d773487e198b2627dc8e27ae61126c",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
-    "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts": "59977921a01388d1031141a24337a1d3313c21d42305ac757aa9e6b8c12fc162",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "c56a20ab2521faed8bfd6e435636898248694c6ba0d75ce2ea66514aca688bc8",
     "tdf-hq-ui/src/analytics/errorReporting.ts": "c47953821d45c98c9feddca8a4ebb90fdcf350e64e6a568cf243f82129fa52b4",
     "tdf-hq-ui/src/analytics/growthAttribution.test.ts": "fefe42899bf23e119afc88b328c9b2732fa35af6bf28af6caf744ae9d926c6fa",
@@ -18499,10 +18500,10 @@
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
     "tdf-hq-ui/src/components/StripeCheckoutModal.tsx": "ea482eb2a183b37795bef0c861b6c7be12d989df32f7a472345ab2c6576883b1",
-    "tdf-hq-ui/src/components/StudioGallery.test.tsx": "17beff96219419b67cda66b71fe8a954044aaf91f53989d7a30e4461a44db622",
-    "tdf-hq-ui/src/components/StudioGallery.tsx": "6a67dce4329be0d37c8952762758527a41a47afd60d7662962b57f8616cbd960",
-    "tdf-hq-ui/src/components/StudioGalleryEditor.tsx": "50764aefe36112256a7168eb4a5277f3d57d65ded18a865234ec2e3d95b42918",
-    "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx": "62fb9058ae4c6f9e0fe8764397ccc085c11474dc2c05240c8ff123e38133d054",
+    "tdf-hq-ui/src/components/StudioGallery.test.tsx": "a4a418f0084338e8fe10b1cee3d57fec1a80d95d523e8a0747d5f76a1344f9e6",
+    "tdf-hq-ui/src/components/StudioGallery.tsx": "e32e4567ed798f570bc040ef189aa9dff8d7dd03e064195af7b060de82a8fd26",
+    "tdf-hq-ui/src/components/StudioGalleryEditor.tsx": "cee4736a1bc141d0dc7b3aa8ab20703a0590b3e9904ab7057c8fac4eb4fe75d3",
+    "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx": "ecc2a2d6b44349447a7b2d59a7d5bf6637b7bea4186d57156934b12598188ce0",
     "tdf-hq-ui/src/components/TicketCredentialQR.tsx": "0ae153c24a40b2a2688c5eeb93e04a7b7c15f0a37a3cc1414950061bbf556831",
     "tdf-hq-ui/src/components/TopBar.tsx": "3103c4693585b90c462206149c79af0e45107a8ff9203afecaf70ebe7fee1fb5",
     "tdf-hq-ui/src/components/UserProfileLink.test.tsx": "ba04e4f640c835620550e32ae875a32fcf18234f14792ff89551a1a260f633d6",
@@ -18784,6 +18785,7 @@
     "tdf-hq-ui/src/session/useOwnedTabDraft.ts": "dc6ef35ba25ea48639b1f533540a6aa7592b7a0df3e0efde8bc3b63ce785af22",
     "tdf-hq-ui/src/session/useSessionOwner.ts": "5d95885c49fe3980687031db118bfe03714cb317d5bb749c791f322abe44ef5d",
     "tdf-hq-ui/src/styles/navigation.css": "772cc716f647a8ae280e4c2f8f0bb0756cd2dd436e744a30b15c952ac0fa18cd",
+    "tdf-hq-ui/src/testFixtures/studioGallery.ts": "2d018881bd274f2e183b0f8c7049b8b342b729fc6bb227e5f032e405f3499c47",
     "tdf-hq-ui/src/theme/AppThemeProvider.tsx": "840ccaf4c10eab5b8f5bbd570f65687c82332fbcdbc4d7e6e7804732e78d0a1a",
     "tdf-hq-ui/src/theme/appTheme.ts": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
@@ -18840,7 +18842,7 @@
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
     "tdf-hq-ui/src/utils/signupFields.ts": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
-    "tdf-hq-ui/src/utils/studioGallery.test.ts": "4b492b76fe97f010442afe6cd492f3e051feb6c67a61f109ca17e8eb61e63264",
+    "tdf-hq-ui/src/utils/studioGallery.test.ts": "2dfa1260a3a0052aaf0d58f850275fd75a1e66cdfc923665cd763f75ab4af02a",
     "tdf-hq-ui/src/utils/studioGallery.ts": "bb811f20ee26490604c6db8c11e88a220d07e4b5d334e1d2e31e901acdee13b1",
     "tdf-hq-ui/src/utils/torrentAudio.test.ts": "f087ac0025221d5acdec23f0d1324cbb97663818a4bf59e6bba97602dd213369",
     "tdf-hq-ui/src/utils/torrentAudio.ts": "ba3680f2a1b9d4dd35c2c1f3d7e34aa133c57a579f6055ce04f857437eb1c893",
@@ -31343,13 +31345,19 @@
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts": [
+    "tdf-hq-ui/src/testFixtures/studioGallery.ts": [
       {
         "requirement": "UX-WELCOME-001",
         "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/utils/studioGallery.test.ts": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-studio-gallery-runner-safety.py": [
       {
         "requirement": "UX-WELCOME-001",
         "relationship": "tests"
@@ -34626,7 +34634,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8c2b033290f3a737c2411957ccf4ce77c24154588a2f22d9f58445f394dd5222",
+      "sha256": "4b0cb4fcca1e428dd85625683b6f61cf64bf83c8597b2e419bc4491e31ca9bb0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -36088,7 +36096,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629",
+      "sha256": "17780afb045566fb339fca2ec57c58a583875b3f82fcaf10f02b9f72fa0d1a78",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -41912,7 +41920,19 @@
     {
       "id": "SURFACE-078dea30964c514e",
       "path": "scripts/test-studio-gallery-migration.sh",
-      "sha256": "bf3f33e6d3f2efd57e604f561917c635cc12f23a24035197c668c5836a291f92",
+      "sha256": "42cf15ffb993ed44439390aec75f82944a94a8dcb92b9ec86fd44fb3a6604087",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-210fe9c567c3a287",
+      "path": "scripts/test-studio-gallery-runner-safety.py",
+      "sha256": "2b2905f47cd1f07113cc8af3e9be163338ef27cc164bba03b3779738f7541dfd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -43723,18 +43743,6 @@
       "requirements": [
         {
           "requirement": "SYS-WEB-SHELL-001",
-          "relationship": "tests"
-        }
-      ]
-    },
-    {
-      "id": "SURFACE-543b08fe0d319163",
-      "path": "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts",
-      "sha256": "59977921a01388d1031141a24337a1d3313c21d42305ac757aa9e6b8c12fc162",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "UX-WELCOME-001",
           "relationship": "tests"
         }
       ]
@@ -46270,7 +46278,7 @@
     {
       "id": "SURFACE-428957fe77018d21",
       "path": "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-      "sha256": "17beff96219419b67cda66b71fe8a954044aaf91f53989d7a30e4461a44db622",
+      "sha256": "a4a418f0084338e8fe10b1cee3d57fec1a80d95d523e8a0747d5f76a1344f9e6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46282,7 +46290,7 @@
     {
       "id": "SURFACE-cf86306debf08604",
       "path": "tdf-hq-ui/src/components/StudioGallery.tsx",
-      "sha256": "6a67dce4329be0d37c8952762758527a41a47afd60d7662962b57f8616cbd960",
+      "sha256": "e32e4567ed798f570bc040ef189aa9dff8d7dd03e064195af7b060de82a8fd26",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46294,7 +46302,7 @@
     {
       "id": "SURFACE-b9a81b0af6c907f7",
       "path": "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
-      "sha256": "50764aefe36112256a7168eb4a5277f3d57d65ded18a865234ec2e3d95b42918",
+      "sha256": "cee4736a1bc141d0dc7b3aa8ab20703a0590b3e9904ab7057c8fac4eb4fe75d3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -46306,7 +46314,7 @@
     {
       "id": "SURFACE-3f41bba71c906727",
       "path": "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
-      "sha256": "62fb9058ae4c6f9e0fe8764397ccc085c11474dc2c05240c8ff123e38133d054",
+      "sha256": "ecc2a2d6b44349447a7b2d59a7d5bf6637b7bea4186d57156934b12598188ce0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52087,6 +52095,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-7c4fe7f1b409f809",
+      "path": "tdf-hq-ui/src/testFixtures/studioGallery.ts",
+      "sha256": "2d018881bd274f2e183b0f8c7049b8b342b729fc6bb227e5f032e405f3499c47",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-3ca67f521e3dc4c4",
       "path": "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
       "sha256": "c754f819d6fa85a83c701c2c596bd1818911da85b39868c6dbfcd5df024c61a8",
@@ -53165,7 +53185,7 @@
     {
       "id": "SURFACE-3d0c6eff29dbf059",
       "path": "tdf-hq-ui/src/utils/studioGallery.test.ts",
-      "sha256": "4b492b76fe97f010442afe6cd492f3e051feb6c67a61f109ca17e8eb61e63264",
+      "sha256": "2dfa1260a3a0052aaf0d58f850275fd75a1e66cdfc923665cd763f75ab4af02a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69743,7 +69763,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9faf5c2beac99d0565cbcf6ad2ce9cd70d3834ac705f3aed0b488bb36386d488",
+      "sourceSha256": "dd52656f5e32cdbb2327bbf342670da6192476ffbc3d4c8e8b102cc65364f1a1",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -69771,7 +69791,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9faf5c2beac99d0565cbcf6ad2ce9cd70d3834ac705f3aed0b488bb36386d488",
+      "sourceSha256": "dd52656f5e32cdbb2327bbf342670da6192476ffbc3d4c8e8b102cc65364f1a1",
       "definition": {
         "states": [
           "absent",
@@ -69801,7 +69821,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9faf5c2beac99d0565cbcf6ad2ce9cd70d3834ac705f3aed0b488bb36386d488",
+      "sourceSha256": "dd52656f5e32cdbb2327bbf342670da6192476ffbc3d4c8e8b102cc65364f1a1",
       "definition": {
         "export": [
           "queued",

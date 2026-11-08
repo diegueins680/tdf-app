@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T04:32:55.900Z",
+  "generatedAt": "2026-11-08T06:00:17.850Z",
   "repositoryRoot": ".",
-  "filesScanned": 2668,
+  "filesScanned": 2669,
   "candidateCount": 1408,
   "byClassification": {
     "dynamic-business-catalog": 922,
@@ -4222,7 +4222,7 @@
       "lines": [
         131
       ],
-      "consumerCount": 338,
+      "consumerCount": 339,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -8586,7 +8586,7 @@
       "lines": [
         168
       ],
-      "consumerCount": 268,
+      "consumerCount": 269,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -8877,7 +8877,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1571,
+      "consumerCount": 1572,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -9408,7 +9408,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 262,
+      "consumerCount": 263,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -15460,7 +15460,7 @@
       "lines": [
         140
       ],
-      "consumerCount": 230,
+      "consumerCount": 231,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -16041,7 +16041,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 222,
+      "consumerCount": 223,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -16259,7 +16259,7 @@
       "lines": [
         24
       ],
-      "consumerCount": 267,
+      "consumerCount": 268,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -22806,7 +22806,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 228,
+      "consumerCount": 229,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -39004,7 +39004,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 274,
+      "consumerCount": 275,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -85317,7 +85317,7 @@
       "lines": [
         61
       ],
-      "consumerCount": 215,
+      "consumerCount": 216,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -88219,7 +88219,7 @@
       "lines": [
         11291
       ],
-      "consumerCount": 1021,
+      "consumerCount": 1022,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -96589,7 +96589,7 @@
       "lines": [
         18960
       ],
-      "consumerCount": 1016,
+      "consumerCount": 1017,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",

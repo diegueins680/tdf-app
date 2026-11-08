@@ -647,6 +647,7 @@
       "scripts/test-state-machines.py",
       "scripts/test-stripe-integration.sh",
       "scripts/test-studio-gallery-migration.sh",
+      "scripts/test-studio-gallery-runner-safety.py",
       "scripts/test-studio-internship-audit-api-e2e.mjs",
       "scripts/test-studio-internship-audit-api-e2e.sh",
       "scripts/test-studio-internship-audit-migration.sh",
@@ -795,7 +796,6 @@
       "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx",
       "tdf-hq-ui/src/__tests__/analytics.test.ts",
       "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
-      "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts",
       "tdf-hq-ui/src/__tests__/publicBookingRooms.test.ts",
       "tdf-hq-ui/src/analytics/errorReporting.test.ts",
       "tdf-hq-ui/src/analytics/errorReporting.ts",
@@ -1552,6 +1552,7 @@
       "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
       "tdf-hq-ui/src/session/useSessionOwner.ts",
       "tdf-hq-ui/src/test/accessibility.ts",
+      "tdf-hq-ui/src/testFixtures/studioGallery.ts",
       "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
       "tdf-hq-ui/src/theme/AppThemeProvider.tsx",
       "tdf-hq-ui/src/theme/appTheme.ts",
@@ -3095,7 +3096,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "8c2b033290f3a737c2411957ccf4ce77c24154588a2f22d9f58445f394dd5222",
+      "sha256": "4b0cb4fcca1e428dd85625683b6f61cf64bf83c8597b2e419bc4491e31ca9bb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3761,7 +3762,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629",
+      "sha256": "17780afb045566fb339fca2ec57c58a583875b3f82fcaf10f02b9f72fa0d1a78",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6809,7 +6810,13 @@
     {
       "id": "SURFACE-078dea30964c514e",
       "path": "scripts/test-studio-gallery-migration.sh",
-      "sha256": "bf3f33e6d3f2efd57e604f561917c635cc12f23a24035197c668c5836a291f92",
+      "sha256": "42cf15ffb993ed44439390aec75f82944a94a8dcb92b9ec86fd44fb3a6604087",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-210fe9c567c3a287",
+      "path": "scripts/test-studio-gallery-runner-safety.py",
+      "sha256": "2b2905f47cd1f07113cc8af3e9be163338ef27cc164bba03b3779738f7541dfd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7662,12 +7669,6 @@
       "id": "SURFACE-077e9bba1bd34cd9",
       "path": "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
       "sha256": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-543b08fe0d319163",
-      "path": "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts",
-      "sha256": "59977921a01388d1031141a24337a1d3313c21d42305ac757aa9e6b8c12fc162",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9131,25 +9132,25 @@
     {
       "id": "SURFACE-428957fe77018d21",
       "path": "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-      "sha256": "17beff96219419b67cda66b71fe8a954044aaf91f53989d7a30e4461a44db622",
+      "sha256": "a4a418f0084338e8fe10b1cee3d57fec1a80d95d523e8a0747d5f76a1344f9e6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cf86306debf08604",
       "path": "tdf-hq-ui/src/components/StudioGallery.tsx",
-      "sha256": "6a67dce4329be0d37c8952762758527a41a47afd60d7662962b57f8616cbd960",
+      "sha256": "e32e4567ed798f570bc040ef189aa9dff8d7dd03e064195af7b060de82a8fd26",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b9a81b0af6c907f7",
       "path": "tdf-hq-ui/src/components/StudioGalleryEditor.tsx",
-      "sha256": "50764aefe36112256a7168eb4a5277f3d57d65ded18a865234ec2e3d95b42918",
+      "sha256": "cee4736a1bc141d0dc7b3aa8ab20703a0590b3e9904ab7057c8fac4eb4fe75d3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3f41bba71c906727",
       "path": "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
-      "sha256": "62fb9058ae4c6f9e0fe8764397ccc085c11474dc2c05240c8ff123e38133d054",
+      "sha256": "ecc2a2d6b44349447a7b2d59a7d5bf6637b7bea4186d57156934b12598188ce0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12207,6 +12208,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7c4fe7f1b409f809",
+      "path": "tdf-hq-ui/src/testFixtures/studioGallery.ts",
+      "sha256": "2d018881bd274f2e183b0f8c7049b8b342b729fc6bb227e5f032e405f3499c47",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3ca67f521e3dc4c4",
       "path": "tdf-hq-ui/src/theme/AppThemeProvider.test.tsx",
       "sha256": "c754f819d6fa85a83c701c2c596bd1818911da85b39868c6dbfcd5df024c61a8",
@@ -12857,7 +12864,7 @@
     {
       "id": "SURFACE-3d0c6eff29dbf059",
       "path": "tdf-hq-ui/src/utils/studioGallery.test.ts",
-      "sha256": "4b492b76fe97f010442afe6cd492f3e051feb6c67a61f109ca17e8eb61e63264",
+      "sha256": "2dfa1260a3a0052aaf0d58f850275fd75a1e66cdfc923665cd763f75ab4af02a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30428,7 +30435,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9faf5c2beac99d0565cbcf6ad2ce9cd70d3834ac705f3aed0b488bb36386d488",
+      "sha256": "dd52656f5e32cdbb2327bbf342670da6192476ffbc3d4c8e8b102cc65364f1a1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
