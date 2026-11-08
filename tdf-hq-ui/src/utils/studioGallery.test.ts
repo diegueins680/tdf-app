@@ -1,5 +1,5 @@
 import { parseStudioGallery } from './studioGallery';
-import { studioGallerySeed } from '../__tests__/fixtures/studioGallery';
+import { studioGallerySeed } from '../testFixtures/studioGallery';
 
 it.each([
   { photos: [studioGallerySeed.photos[0], studioGallerySeed.photos[0]] },

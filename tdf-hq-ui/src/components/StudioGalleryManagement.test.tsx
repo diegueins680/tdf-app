@@ -7,7 +7,7 @@ import { useState } from 'react';
 import type { CmsContentDTO, CmsContentIn } from '../api/cms';
 import type { StudioGalleryPayload } from '../utils/studioGallery';
 import { parseStudioGallery } from '../utils/studioGallery';
-import { studioGallerySeed } from '../__tests__/fixtures/studioGallery';
+import { studioGallerySeed } from '../testFixtures/studioGallery';
 
 jest.setTimeout(15000);
 

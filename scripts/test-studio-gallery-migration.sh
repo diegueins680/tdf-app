@@ -2,10 +2,18 @@
 set -euo pipefail
 # Use an empty disposable PostgreSQL database; never production or a shared DB.
 : "${TDF_GALLERY_TEST_DATABASE_URL:?Point this at an empty local disposable database}"
-case "$TDF_GALLERY_TEST_DATABASE_URL" in
-  postgresql://*@127.0.0.1:*/*|postgresql://*@localhost:*/*) ;;
-  *) echo 'Refusing to test outside localhost' >&2; exit 2 ;;
-esac
+# This runner accepts one explicit disposable-loopback database, not libpq
+# service/query routing or an environment-supplied address override.
+if [[ -n "${PGHOSTADDR:-}${PGSERVICE:-}${PGSERVICEFILE:-}" ]]; then
+  echo 'Refusing libpq routing overrides for the disposable gallery database' >&2; exit 2
+fi
+if [[ ! "$TDF_GALLERY_TEST_DATABASE_URL" =~ ^postgresql://[a-zA-Z0-9_-]+(:[a-zA-Z0-9_-]+)?@(127[.]0[.]0[.]1|localhost):([0-9]{1,5})/tdf_studio_gallery_test$ ]]; then
+  echo 'Use the explicit loopback port and tdf_studio_gallery_test database, without URI options' >&2; exit 2
+fi
+gallery_test_port=${BASH_REMATCH[3]}
+if (( 10#$gallery_test_port < 1 || 10#$gallery_test_port > 65535 )); then
+  echo 'Invalid disposable gallery database port' >&2; exit 2
+fi
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 psql_gallery() { psql "$TDF_GALLERY_TEST_DATABASE_URL" -X -q -v ON_ERROR_STOP=1 "$@"; }
 if [[ "$(psql_gallery -Atc "SELECT count(*) FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind IN ('r','p')")" != 0 ]]; then

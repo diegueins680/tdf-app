@@ -12376,8 +12376,9 @@
         "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
         "tdf-hq-ui/src/components/StudioGalleryManagement.test.tsx",
         "scripts/test-studio-gallery-migration.sh",
-        "tdf-hq-ui/src/__tests__/fixtures/studioGallery.ts",
-        "tdf-hq-ui/src/utils/studioGallery.test.ts"
+        "tdf-hq-ui/src/testFixtures/studioGallery.ts",
+        "tdf-hq-ui/src/utils/studioGallery.test.ts",
+        "scripts/test-studio-gallery-runner-safety.py"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",

@@ -3,7 +3,7 @@ import { createTheme } from '@mui/material/styles';
 import '@testing-library/jest-dom';
 import { render, screen, fireEvent, within, act } from '@testing-library/react';
 import { StudioGalleryPhotos } from './StudioGallery';
-import { studioGallerySeed } from '../__tests__/fixtures/studioGallery';
+import { studioGallerySeed } from '../testFixtures/studioGallery';
 const StudioGallery = () => <StudioGalleryPhotos photos={studioGallerySeed.photos.slice(4)} />;
 
 const leavingScreen = createTheme().transitions.duration.leavingScreen;
