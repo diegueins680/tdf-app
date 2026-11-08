@@ -82,6 +82,9 @@ function describeForLog(value) {
     const base = `${url.protocol}${slashes}${credentials}${url.host}${url.pathname}`.slice(0, 160);
     return `${base}${url.search ? '?[redacted]' : ''}${url.hash ? '#[redacted]' : ''}`;
   }
+  // Only a validated in-app path may use the relative-path formatter.
+  // Opaque or malformed URLs can still contain credentials when URL parsing fails.
+  if (!sanitizeAppPath(trimmed)) return '<invalid-url>';
   const cut = trimmed.search(/[?#]/);
   const head = (cut === -1 ? trimmed : trimmed.slice(0, cut)).slice(0, 160);
   if (cut === -1) return head;

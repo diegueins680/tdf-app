@@ -81,3 +81,18 @@ test('log descriptions keep scheme, host and path but never query strings, fragm
     'https://user:secret-token@www.tdfrecords.net/',
   ]) assert.doesNotMatch(describeForLog(raw), /secret-token/, raw);
 });
+
+
+test('malformed credential-bearing links log only a generic redacted descriptor and never navigate', () => {
+  for (const raw of [
+    'tdf-desktop://user:SYNTHETIC_PASSWORD@[invalid]/open',
+    'tdf-desktop://SYNTHETIC_USERNAME@[invalid]/open',
+    'https://user:SYNTHETIC%5FPASSWORD@bad host/',
+    'tdf-desktop://user:SYNTHETIC_PASSWORD@\u0000invalid/open',
+  ]) {
+    assert.equal(parseDeepLink(raw, origin), null);
+    assert.equal(classifyNavigation(raw, origin), 'blocked');
+    assert.equal(describeForLog(raw), '<invalid-url>');
+    assert.doesNotMatch(describeForLog(raw), /SYNTHETIC/);
+  }
+});
