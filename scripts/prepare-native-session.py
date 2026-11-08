@@ -5,7 +5,7 @@ The caller uploads only the inspected derivatives, verifies their public URLs,
 then applies the rendered SQL through the normal authorized operator workflow.
 Existing published Records identities remain the catalog source of truth.
 """
-import argparse, hashlib, json, pathlib, re, subprocess, uuid
+import argparse, hashlib, json, os, pathlib, re, subprocess, tempfile, uuid
 from urllib.parse import urlparse
 
 NAMESPACE = uuid.UUID('7a2ac340-5653-40c1-886a-65b31b4c06b3')
@@ -27,6 +27,25 @@ def checksum(path):
         for chunk in iter(lambda: f.read(1024 * 1024), b''):
             sha.update(chunk)
     return sha.hexdigest()
+
+def validate_sql_output(output, input_path):
+    require(output.resolve() != input_path.resolve()
+            and not (output.exists() and output.samefile(input_path)),
+            'SQL output must not replace the input manifest')
+
+def write_private_sql(output, sql, input_path):
+    validate_sql_output(output, input_path)
+    fd, temporary = tempfile.mkstemp(prefix='.' + output.name + '.', suffix='.tmp', dir=output.parent)
+    temporary = pathlib.Path(temporary)
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8') as stream:
+            os.fchmod(stream.fileno(), 0o600)
+            stream.write(sql)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, output)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 def inspect_file(path):
     require(path.is_file() and not path.is_symlink(), 'Media must be a regular local file')
@@ -72,20 +91,21 @@ def render_sql(manifest):
     provider = stable_id('provider:tdf')
     resource = stable_id('native:' + parent_id)
     metadata = literal(json.dumps({'tdfNative': native}, ensure_ascii=False)) + '::jsonb'
+    preparation = literal(json.dumps({'tool': 'prepare-native-session.py', 'declaredState': native['state']})) + '::jsonb'
     source_url = next((s['url'] for s in native.get('sources', []) if s['mediaType'].startswith('video/')), manifest.get('publicUrl', 'https://www.tdfrecords.net/records'))
     poster = literal(manifest['posterUrl']) if manifest.get('posterUrl') else 'NULL'
     sql = f'''SET LOCAL lock_timeout='3s'; SET LOCAL statement_timeout='45s';
 SELECT pg_advisory_xact_lock(hashtextextended('records-native-session:{parent_id}',0));
 LOCK TABLE {table},record_external_resource,external_provider,{relation},recording,recording_external_resource,recording_contributor,collection_recording IN SHARE ROW EXCLUSIVE MODE;
-DO $import$ DECLARE resource_key uuid; BEGIN
+DO $import$ DECLARE parent_resource_key uuid; resource_key uuid; BEGIN
 IF EXISTS(SELECT 1 FROM audit_log WHERE action='records_native_session_imported' AND diff::jsonb->>'manifestSha256'={literal(fingerprint)}) THEN RETURN; END IF;
 IF NOT EXISTS(SELECT 1 FROM {table} item JOIN workflow_state state ON state.id=item.workflow_state_id WHERE item.id={literal(parent_id)}::uuid AND item.code={literal(manifest['entity']['expectedCode'])} AND item.active AND state.code='published') THEN RAISE EXCEPTION 'Expected existing published Records entity'; END IF;
 IF EXISTS(SELECT 1 FROM party p WHERE p.id=ANY(ARRAY{native['artistPartyIds']}::bigint[]) AND NOT EXISTS(SELECT 1 FROM artist_profile a WHERE a.artist_party_id=p.id)) OR (SELECT count(*) FROM party WHERE id=ANY(ARRAY{native['artistPartyIds']}::bigint[]))<>{len(set(native['artistPartyIds']))} THEN RAISE EXCEPTION 'Expected canonical artist profiles'; END IF;
 INSERT INTO external_provider(id,code,name_es,name_en,provider_kind,public_metadata,active) VALUES({literal(provider)}::uuid,'tdf','TDF Records','TDF Records','native-media',true,true) ON CONFLICT(code) DO NOTHING;
 INSERT INTO record_external_resource(id,provider_id,external_code,resource_kind,canonical_url,label_es,label_en,duration_ms,thumbnail_url,availability,verified_at,provider_metadata)
 SELECT {literal(resource)}::uuid,id,{literal('native:'+parent_id)},'video',{literal(source_url)},'Reproducir en TDF','Play on TDF',{native['durationMs']},{poster},NULL,NULL,{metadata} FROM external_provider WHERE code='tdf'
-ON CONFLICT(provider_id,resource_kind,external_code) DO UPDATE SET canonical_url=excluded.canonical_url,thumbnail_url=excluded.thumbnail_url,duration_ms=excluded.duration_ms,provider_metadata=excluded.provider_metadata,updated_at=now(),version=record_external_resource.version+1 RETURNING id INTO resource_key;
-INSERT INTO {relation}({parent_column},resource_id,relation_kind,primary_resource,sort_order) VALUES({literal(parent_id)}::uuid,resource_key,'native-stream',true,0) ON CONFLICT({parent_column},resource_id,relation_kind) DO NOTHING;
+ON CONFLICT(provider_id,resource_kind,external_code) DO UPDATE SET canonical_url=excluded.canonical_url,thumbnail_url=excluded.thumbnail_url,duration_ms=excluded.duration_ms,provider_metadata=excluded.provider_metadata,updated_at=now(),version=record_external_resource.version+1 RETURNING id INTO parent_resource_key;
+INSERT INTO {relation}({parent_column},resource_id,relation_kind,primary_resource,sort_order) VALUES({literal(parent_id)}::uuid,parent_resource_key,'native-stream',true,0) ON CONFLICT({parent_column},resource_id,relation_kind) DO NOTHING;
 UPDATE {table} SET updated_at=now(),version=version+1,published_revision=published_revision+1 WHERE id={literal(parent_id)}::uuid;
 '''
     # Chapters remain linked to the original published Records resource. They do
@@ -104,7 +124,7 @@ INSERT INTO record_external_resource(id,provider_id,external_code,resource_kind,
 SELECT {literal(child_resource)}::uuid,id,{literal('native:'+chapter['id'])},'video',{literal(source_url)},{literal(chapter['title'])},{literal(chapter['title'])},{chapter['endMs']-chapter['startMs']},{poster},{child_json} FROM external_provider WHERE code='tdf' ON CONFLICT(provider_id,resource_kind,external_code) DO UPDATE SET provider_metadata=excluded.provider_metadata,updated_at=now(),version=record_external_resource.version+1 RETURNING id INTO resource_key;
 INSERT INTO recording_external_resource(recording_id,resource_id,relation_kind,primary_resource,sort_order) VALUES({literal(chapter['id'])}::uuid,resource_key,'native-stream',true,0) ON CONFLICT DO NOTHING;
 '''
-    sql += f'''INSERT INTO audit_log(actor_id,entity,entity_id,action,diff,created_at) VALUES(NULL,'{table}',{literal(parent_id)},'records_native_session_imported',jsonb_build_object('manifestSha256',{literal(fingerprint)},'entityId',{literal(parent_id)},'resourceId',{literal(resource)},'native',{literal(json.dumps(native,ensure_ascii=False))}::jsonb,'authorization','Owner requested native playback of TDF sessions and supplied the original master'),clock_timestamp());
+    sql += f'''INSERT INTO audit_log(actor_id,entity,entity_id,action,diff,created_at) VALUES(NULL,'{table}',{literal(parent_id)},'records_native_session_imported',jsonb_build_object('manifestSha256',{literal(fingerprint)},'entityId',{literal(parent_id)},'resourceId',parent_resource_key,'native',{literal(json.dumps(native,ensure_ascii=False))}::jsonb,'preparation',{preparation}),clock_timestamp());
 END $import$;
 SELECT json_build_object('entityId',{literal(parent_id)},'manifestSha256',{literal(fingerprint)},'imported',EXISTS(SELECT 1 FROM audit_log WHERE action='records_native_session_imported' AND diff::jsonb->>'manifestSha256'={literal(fingerprint)}));
 '''
@@ -116,11 +136,13 @@ def main():
     parser.add_argument('--sql', type=pathlib.Path)
     parser.add_argument('--inspect-media', action='store_true')
     args = parser.parse_args()
+    if args.sql:
+        validate_sql_output(args.sql, args.manifest)
     manifest = json.loads(args.manifest.read_text()); validate(manifest)
     if args.inspect_media:
         print(json.dumps([inspect_file(pathlib.Path(f)) for f in manifest.get('localFiles', [])], indent=2))
     if args.sql:
-        args.sql.write_text(render_sql(manifest)); args.sql.chmod(0o600)
+        write_private_sql(args.sql, render_sql(manifest), args.manifest)
         print(json.dumps({'sql': str(args.sql), 'sha256': checksum(args.sql), 'productionWritten': False}))
 
 if __name__ == '__main__':

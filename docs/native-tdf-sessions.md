@@ -40,6 +40,11 @@ YouTube. Existing YouTube resources remain historical source references.
    `id`, `title`, `startMs` and `endMs`; each credit contains `name` and `role`.
 6. Run `python3 scripts/prepare-native-session.py manifest.json --inspect-media --sql /private/tmp/native-session-import.sql`. The tool validates the manifest
    and prepares SQL; it never connects to production or uploads a file.
+   The audit records the tool and declared processing state, not proof of an
+   owner request, rights approval or original-master inspection. Keep those
+   separately reviewed operator records with the import receipt. SQL output
+   replaces an existing SQL file atomically with mode0600; it refuses the input
+   manifest itself, including symlink/hardlink aliases.
 7. Upload only inspected derivatives to TDF-controlled storage, retaining space
    headroom. Use immutable content-addressed filenames, verify server checksums,
    MIME types and public `206 Partial Content` responses, including end ranges.
@@ -47,6 +52,12 @@ YouTube. Existing YouTube resources remain historical source references.
    rollback restoring original rows, successful import, idempotent replay and
    unchanged accounts, permissions and migrations. Apply the reviewed transaction
    once through the authorized operator workflow, preserving its hash and receipt.
+   The generated SQL is a transaction fragment: its local settings and locks
+   require a transaction-capable caller. For the isolated rehearsal, use
+   `psql -X --set ON_ERROR_STOP=1 --single-transaction --dbname="$NATIVE_REHEARSAL_DSN" --file=/private/tmp/native-session-import.sql`.
+   The audit resource identity is the actual returned parent resource UUID,
+   including when an existing resource is reused; chapter upserts do not replace
+   that parent identity. Earlier receipts are not retroactively rewritten.
 9. Read back `/records/feed` and test full session/song playback in the actual web
    build with YouTube blocked. Verify desktop/mobile layouts, mode/quality
    switching, navigation continuity, source failures and radio takeover. Public
