@@ -1954,6 +1954,14 @@
     },
     {
       "method": "POST",
+      "path": "/login/apple",
+      "basis": "named",
+      "requirements": [
+        "AUTH-APPLE-SIGNIN-001"
+      ]
+    },
+    {
+      "method": "POST",
       "path": "/login/google",
       "basis": "named",
       "requirements": [

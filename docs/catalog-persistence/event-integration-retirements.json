@@ -63,8 +63,21 @@
         "kind": "haskell-list",
         "name": "expectedSecurityRoleAssignmentPolicyBindings"
       },
-      "replacementId": "ff4edc0f8d2debecf71c",
-      "reason": "Current main and pinned mobile already review the replacement fingerprint; retain their exact decision and archive the superseded branch fingerprint."
+      "replacementId": "1279a6ec9ef3dbb7e1c4",
+      "reason": "Preserve every canonical policy binding and complete historical review; add only account.apple.customer / apple-account-create / customer / requires_verified_email=True. The actual247migration requires an active automatic non-emergency Customer role and rejects incompatible existing bindings. This is a deny-by-default persisted security-policy code mirror, not caller-selected grants or permission to activate Apple/native release.",
+      "previousReplacementIds": [
+        "ff4edc0f8d2debecf71c"
+      ],
+      "previousCurrentResolution": null,
+      "currentResolution": {
+        "id": "1279a6ec9ef3dbb7e1c4",
+        "valueCount": 30,
+        "sourceParents": [
+          "e7ec452787e15f09deda4c4328ec6a8c1cece727",
+          "f615c862b1a7d50406cc0506d21d7650e607fa5f"
+        ],
+        "justification": "Preserve every canonical policy binding and complete historical review; add only account.apple.customer / apple-account-create / customer / requires_verified_email=True. The actual247migration requires an active automatic non-emergency Customer role and rejects incompatible existing bindings. This is a deny-by-default persisted security-policy code mirror, not caller-selected grants or permission to activate Apple/native release."
+      }
     },
     {
       "originalDecision": {
@@ -684,17 +697,17 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "9010d4490996f491c965",
-      "reason": "Preserve the entire 246-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced ateadfe23980ec336caacd96329ba561b1ed18c3f9. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production.",
-      "previousReplacementId": "806180f5957fc4a7520f",
+      "replacementId": "4dc5a2f26154a0f125db",
+      "reason": "Preserve the entire 248-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced ateadfe23980ec336caacd96329ba561b1ed18c3f9, now after the Apple sign-in policy and issuer allowlist entries that protected main integrated at 083d1c6e1d0c709ea14b621782ff9faa3d60d572. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production.",
+      "previousReplacementId": "a20e04bc426cc6383584",
       "currentResolution": {
-        "id": "9010d4490996f491c965",
-        "valueCount": 247,
+        "id": "4dc5a2f26154a0f125db",
+        "valueCount": 249,
         "sourceParents": [
-          "8ee6c7a66e2504f425863ca6f5b83062723efd58",
+          "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
           "eadfe23980ec336caacd96329ba561b1ed18c3f9"
         ],
-        "justification": "Preserve the entire 246-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced ateadfe23980ec336caacd96329ba561b1ed18c3f9. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production."
+        "justification": "Preserve the entire 248-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced ateadfe23980ec336caacd96329ba561b1ed18c3f9, now after the Apple sign-in policy and issuer allowlist entries that protected main integrated at 083d1c6e1d0c709ea14b621782ff9faa3d60d572. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production."
       },
       "change": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
       "sourceReviewReferences": [
@@ -816,17 +829,6 @@
           "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
-        },
-        {
-          "sourceRevision": "8ee6c7a66e2504f425863ca6f5b83062723efd58",
-          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-          "sourceFileSha256": "5174986b6fd5dd9aa17a2cade99dddfbb32f1d8e457d29dcd23ddaafd6894ed4",
-          "sourceEntry": {
-            "id": "806180f5957fc4a7520f"
-          },
-          "sourceEntryCanonicalSha256": "3cac1756d5703059ce08c0f061a96e955684c142d540a34c57a641b23b544505",
-          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
-          "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
         }
       ],
       "previousReplacementIds": [
@@ -862,9 +864,419 @@
         "255ec943da9a86e36cc7",
         "be0b1503a04f9fa295ee",
         "969410f2f45854cc54fc",
-        "806180f5957fc4a7520f"
+        "806180f5957fc4a7520f",
+        "a20e04bc426cc6383584"
       ],
-      "previousReason": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required."
+      "previousReason": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver.",
+      "previousCurrentResolution": {
+        "id": "a20e04bc426cc6383584",
+        "valueCount": 248,
+        "sourceParents": [
+          "7c1525edf0f02fe53f985c24862940b91c11cdfa",
+          "f615c862b1a7d50406cc0506d21d7650e607fa5f"
+        ],
+        "justification": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver."
+      },
+      "previousResolution": {
+        "originalDecision": {
+          "id": "7578a30aa3cc5aa23870",
+          "classification": "security-system-registry",
+          "disposition": "retain-reviewed-deployment-manifest",
+          "specializedModel": "production migration manifest and applied migration ledger",
+          "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+          "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+          "reviewed": true
+        },
+        "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+        "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+        "source": {
+          "file": "scripts/production-migrations.json",
+          "kind": "json-array",
+          "name": "migrations"
+        },
+        "replacementId": "a20e04bc426cc6383584",
+        "reason": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver.",
+        "previousReplacementId": "4e282e4c258854caa655",
+        "currentResolution": {
+          "id": "a20e04bc426cc6383584",
+          "valueCount": 248,
+          "sourceParents": [
+            "7c1525edf0f02fe53f985c24862940b91c11cdfa",
+            "f615c862b1a7d50406cc0506d21d7650e607fa5f"
+          ],
+          "justification": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver."
+        },
+        "change": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
+        "sourceReviewReferences": [
+          {
+            "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "dfa00521daab7ab21082169feef62f988da149470afb2bf24151bf53674e05ac",
+            "sourceEntry": {
+              "id": "f48c34252ff8930b3d74"
+            },
+            "sourceEntryCanonicalSha256": "d08e3ff9409b47ab035fc67269d79010fd3738333fdc971c305ded3ddfeadf9b",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          },
+          {
+            "sourceRevision": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "816e33527bddc88f717e3a02a1ae1c9b04cbabeba90271e80488579a7d5fa1f9",
+            "sourceEntry": {
+              "id": "2634b239375f2ad309ba"
+            },
+            "sourceEntryCanonicalSha256": "6bcc3d19c2aea1adb0ce6ede68d59ec60b025b953a083bc5be6090f4be90ed1a",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+          },
+          {
+            "sourceRevision": "df3417afcd9095d570d7be683eef5ab3382361d1",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "08f6e44ccd5ce830bee7363c0e66639cc9081be85e7b7c487d8b2089336cf062",
+            "sourceEntry": {
+              "id": "a2bb0e828d5b94c1cb31"
+            },
+            "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          },
+          {
+            "sourceRevision": "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "979001b3f6bedf6eba7b3a125f243b680c120c81a722286b7faaee25e5ba49a1",
+            "sourceEntry": {
+              "id": "903e61463c0222f30d9b"
+            },
+            "sourceEntryCanonicalSha256": "9adad9f469eb233e58e2cbfac22651f797d7aba5e438d1f10ce880c436e0566c",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          },
+          {
+            "sourceRevision": "644a3303bc938cabac5673a9940850e1bb124566",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "18ab55179d6524a8aa50b1f5d4d309e2201d7e9171844172ac8d4d57f382faa0",
+            "sourceEntry": {
+              "id": "d9468b767dadec9cf3d8"
+            },
+            "sourceEntryCanonicalSha256": "61cbf1e27157b704dcad31fb8800df2d3498c2b57efb3dbc519f63f8b38e1c18",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          },
+          {
+            "sourceRevision": "dd9adc5d654033878e34107c2da4c9bf731f7980",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "dc58f1432d87069b5c371863e0fa86edf58ce30b32ceada8080847ef5c56a3af",
+            "sourceEntry": {
+              "id": "040c32c5b44ceadb2dde"
+            },
+            "sourceEntryCanonicalSha256": "e863458f044f4994d17134c7cd04ae00e8d48c95c2f59f23f076c6d27cfcf85e",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          },
+          {
+            "sourceRevision": "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "0b9536229569ebb50323855af3125b46747fb6098eacd8d5e644fd225aee6f8a",
+            "sourceEntry": {
+              "id": "27def070486792cad395"
+            },
+            "sourceEntryCanonicalSha256": "085659be48eed02b09860767b22855e80f1fe17bddca460289a6ab13504fca03",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          },
+          {
+            "sourceRevision": "1976242a72541ecfff90a54c72659df42f7bd085",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "f4534b111db59dd606d8969cc61c23dbd45943bbe681564d53f0b10a0fc46c2f",
+            "sourceEntry": {
+              "id": "438668da134480da0a9e"
+            },
+            "sourceEntryCanonicalSha256": "fae5221769f1e07714cd6160b57b8ae09146c3840d305f109d81baa176396032",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+          },
+          {
+            "sourceRevision": "8efa5afe186705545103db80c527a09133708ede",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "826d062b22110a61740b80a7532a091aa2546056f84628b8a73c4feeff4cd1d3",
+            "sourceEntry": {
+              "id": "d7fc1df6cbade4a92d25"
+            },
+            "sourceEntryCanonicalSha256": "2f296e8d9b65c2373cb22aa9684c06fed0a37329cc5b137e34eb3e3e8e9d778f",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Complete parent review retained unchanged; no independent approval inferred."
+          },
+          {
+            "sourceRevision": "cf16b20e708b0ad28300db7a56f610e628265a33",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "47debbdb6904594f3f36f0a37e1fd036b8c7dab7544601b51768e5f30e70373e",
+            "sourceEntry": {
+              "id": "255ec943da9a86e36cc7"
+            },
+            "sourceEntryCanonicalSha256": "2530e2e5813e50276d2882a93a6f0daad7362a42de39338a9012de36105ae13e",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Complete parent review retained unchanged; no independent approval inferred."
+          },
+          {
+            "sourceRevision": "7ab198f88f70ce7f27f0e97c34089d4145ce6929",
+            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+            "sourceFileSha256": "f7e2be57118023b5855c199358105305ccdf0cbc26e2af919ed9582b638a31a2",
+            "sourceEntry": {
+              "id": "969410f2f45854cc54fc"
+            },
+            "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
+            "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+            "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
+          }
+        ],
+        "previousReplacementIds": [
+          "e60cbdb9121493f47fa6",
+          "a8128668e1b74b7c0ae4",
+          "3f336173e03f10fc023c",
+          "2b073f20afd2f3798b1e",
+          "a1eb1e750e7543b88fe1",
+          "c94cd70c1272ec9ede1b",
+          "b7cc47848f3f9882770f",
+          "7ca220a96b9b65a0fe15",
+          "38bbe0c3d9b9d4ddaa9d",
+          "d55b0d93ab3224fe96ac",
+          "0ab5d4354ae923d8f2db",
+          "79a6def1e91baee6e937",
+          "8229b8202552298c955e",
+          "c6a62c7c7469e8974ff1",
+          "9ada14767bee1662f97d",
+          "cff15f30aa13965e5729",
+          "6ff395b6131079017c9d",
+          "a70a9a4dd05ce44e950b",
+          "f48c34252ff8930b3d74",
+          "2634b239375f2ad309ba",
+          "a2bb0e828d5b94c1cb31",
+          "903e61463c0222f30d9b",
+          "d9468b767dadec9cf3d8",
+          "040c32c5b44ceadb2dde",
+          "27def070486792cad395",
+          "438668da134480da0a9e",
+          "ef3b8933af3854450a02",
+          "050f309300a1688162fa",
+          "d7fc1df6cbade4a92d25",
+          "255ec943da9a86e36cc7",
+          "be0b1503a04f9fa295ee",
+          "969410f2f45854cc54fc",
+          "806180f5957fc4a7520f"
+        ],
+        "previousReason": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+        "previousCurrentResolution": {
+          "id": "806180f5957fc4a7520f",
+          "valueCount": 246,
+          "sourceParents": [
+            "7ab198f88f70ce7f27f0e97c34089d4145ce6929",
+            "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
+          ],
+          "justification": "Preserve the entire 245-entry manifest and its complete review graph unchanged; append only the forward video campaign Party-reference registry and archive guards introduced at09fd7babb92e45c1da1b9e5017de53b6378b4f7c. Preserve the original draft-video SQL byte for byte. No seed, identity merge, campaign activation, deployment or release waiver."
+        },
+        "previousResolution": {
+          "originalDecision": {
+            "id": "7578a30aa3cc5aa23870",
+            "classification": "security-system-registry",
+            "disposition": "retain-reviewed-deployment-manifest",
+            "specializedModel": "production migration manifest and applied migration ledger",
+            "risk": "Reordering prerequisites, changing applied SQL or duplicating IDs can corrupt deployment history.",
+            "justification": "The manifest contains 98 ordered entries, seven more than the retired fingerprint, and moves contextual reputation before Party selector indexes. This is a deployment execution registry, not business data. Immutable-SHA, checksum and ordering tests remain required; classification does not authorize executing or activating migrations.",
+            "reviewed": true
+          },
+          "originalDecisionSha256": "3b61d93605a1690f72015ff3120fb06931b292221d6c4f53c6d9a2ccddb4339d",
+          "sourceRevision": "ea79b46addea67087c85c03ea6f9c29d45ca19da",
+          "source": {
+            "file": "scripts/production-migrations.json",
+            "kind": "json-array",
+            "name": "migrations"
+          },
+          "replacementId": "4e282e4c258854caa655",
+          "reason": "Preserve every object and SQL byte of the protected246-entry manifest and its complete review graph; append only the original Apple customer-account policy migration with its original introduction ancestor. Actual isolated247apply/replay/schema and incompatible-role rejection are recorded. This execution registry grants no production deployment, activation, or release waiver.",
+          "previousReplacementId": "969410f2f45854cc54fc",
+          "currentResolution": {
+            "id": "4e282e4c258854caa655",
+            "valueCount": 247,
+            "sourceParents": [
+              "e7ec452787e15f09deda4c4328ec6a8c1cece727",
+              "f615c862b1a7d50406cc0506d21d7650e607fa5f"
+            ],
+            "justification": "Preserve every object and SQL byte of the protected246-entry manifest and its complete review graph; append only the original Apple customer-account policy migration with its original introduction ancestor. Actual isolated247apply/replay/schema and incompatible-role rejection are recorded. This execution registry grants no production deployment, activation, or release waiver."
+          },
+          "change": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
+          "sourceReviewReferences": [
+            {
+              "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "dfa00521daab7ab21082169feef62f988da149470afb2bf24151bf53674e05ac",
+              "sourceEntry": {
+                "id": "f48c34252ff8930b3d74"
+              },
+              "sourceEntryCanonicalSha256": "d08e3ff9409b47ab035fc67269d79010fd3738333fdc971c305ded3ddfeadf9b",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "4b81ab4ab92416aa31dc816057fb8e6a736596d1",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "816e33527bddc88f717e3a02a1ae1c9b04cbabeba90271e80488579a7d5fa1f9",
+              "sourceEntry": {
+                "id": "2634b239375f2ad309ba"
+              },
+              "sourceEntryCanonicalSha256": "6bcc3d19c2aea1adb0ce6ede68d59ec60b025b953a083bc5be6090f4be90ed1a",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode"
+            },
+            {
+              "sourceRevision": "df3417afcd9095d570d7be683eef5ab3382361d1",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "08f6e44ccd5ce830bee7363c0e66639cc9081be85e7b7c487d8b2089336cf062",
+              "sourceEntry": {
+                "id": "a2bb0e828d5b94c1cb31"
+              },
+              "sourceEntryCanonicalSha256": "2a868127eeb27cf8ffcaf4d162dd6123bf0ae8ad9ce54901c0cabb631cf43e6e",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+            },
+            {
+              "sourceRevision": "70f35ce2a7c3bdd385c2f22e210c34aae4855d5f",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "979001b3f6bedf6eba7b3a125f243b680c120c81a722286b7faaee25e5ba49a1",
+              "sourceEntry": {
+                "id": "903e61463c0222f30d9b"
+              },
+              "sourceEntryCanonicalSha256": "9adad9f469eb233e58e2cbfac22651f797d7aba5e438d1f10ce880c436e0566c",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+            },
+            {
+              "sourceRevision": "644a3303bc938cabac5673a9940850e1bb124566",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "18ab55179d6524a8aa50b1f5d4d309e2201d7e9171844172ac8d4d57f382faa0",
+              "sourceEntry": {
+                "id": "d9468b767dadec9cf3d8"
+              },
+              "sourceEntryCanonicalSha256": "61cbf1e27157b704dcad31fb8800df2d3498c2b57efb3dbc519f63f8b38e1c18",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+            },
+            {
+              "sourceRevision": "dd9adc5d654033878e34107c2da4c9bf731f7980",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "dc58f1432d87069b5c371863e0fa86edf58ce30b32ceada8080847ef5c56a3af",
+              "sourceEntry": {
+                "id": "040c32c5b44ceadb2dde"
+              },
+              "sourceEntryCanonicalSha256": "e863458f044f4994d17134c7cd04ae00e8d48c95c2f59f23f076c6d27cfcf85e",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+            },
+            {
+              "sourceRevision": "458df5ef1a0b95c6ce57858e3b8fb1fb9199c8d5",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "0b9536229569ebb50323855af3125b46747fb6098eacd8d5e644fd225aee6f8a",
+              "sourceEntry": {
+                "id": "27def070486792cad395"
+              },
+              "sourceEntryCanonicalSha256": "085659be48eed02b09860767b22855e80f1fe17bddca460289a6ab13504fca03",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+            },
+            {
+              "sourceRevision": "1976242a72541ecfff90a54c72659df42f7bd085",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "f4534b111db59dd606d8969cc61c23dbd45943bbe681564d53f0b10a0fc46c2f",
+              "sourceEntry": {
+                "id": "438668da134480da0a9e"
+              },
+              "sourceEntryCanonicalSha256": "fae5221769f1e07714cd6160b57b8ae09146c3840d305f109d81baa176396032",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Entire parent review is unchanged and retained; no independent PR approval is inferred."
+            },
+            {
+              "sourceRevision": "8efa5afe186705545103db80c527a09133708ede",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "826d062b22110a61740b80a7532a091aa2546056f84628b8a73c4feeff4cd1d3",
+              "sourceEntry": {
+                "id": "d7fc1df6cbade4a92d25"
+              },
+              "sourceEntryCanonicalSha256": "2f296e8d9b65c2373cb22aa9684c06fed0a37329cc5b137e34eb3e3e8e9d778f",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Complete parent review retained unchanged; no independent approval inferred."
+            },
+            {
+              "sourceRevision": "cf16b20e708b0ad28300db7a56f610e628265a33",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "47debbdb6904594f3f36f0a37e1fd036b8c7dab7544601b51768e5f30e70373e",
+              "sourceEntry": {
+                "id": "255ec943da9a86e36cc7"
+              },
+              "sourceEntryCanonicalSha256": "2530e2e5813e50276d2882a93a6f0daad7362a42de39338a9012de36105ae13e",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Complete parent review retained unchanged; no independent approval inferred."
+            },
+            {
+              "sourceRevision": "7ab198f88f70ce7f27f0e97c34089d4145ce6929",
+              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+              "sourceFileSha256": "f7e2be57118023b5855c199358105305ccdf0cbc26e2af919ed9582b638a31a2",
+              "sourceEntry": {
+                "id": "969410f2f45854cc54fc"
+              },
+              "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
+              "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+              "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
+            }
+          ],
+          "previousReplacementIds": [
+            "e60cbdb9121493f47fa6",
+            "a8128668e1b74b7c0ae4",
+            "3f336173e03f10fc023c",
+            "2b073f20afd2f3798b1e",
+            "a1eb1e750e7543b88fe1",
+            "c94cd70c1272ec9ede1b",
+            "b7cc47848f3f9882770f",
+            "7ca220a96b9b65a0fe15",
+            "38bbe0c3d9b9d4ddaa9d",
+            "d55b0d93ab3224fe96ac",
+            "0ab5d4354ae923d8f2db",
+            "79a6def1e91baee6e937",
+            "8229b8202552298c955e",
+            "c6a62c7c7469e8974ff1",
+            "9ada14767bee1662f97d",
+            "cff15f30aa13965e5729",
+            "6ff395b6131079017c9d",
+            "a70a9a4dd05ce44e950b",
+            "f48c34252ff8930b3d74",
+            "2634b239375f2ad309ba",
+            "a2bb0e828d5b94c1cb31",
+            "903e61463c0222f30d9b",
+            "d9468b767dadec9cf3d8",
+            "040c32c5b44ceadb2dde",
+            "27def070486792cad395",
+            "438668da134480da0a9e",
+            "ef3b8933af3854450a02",
+            "050f309300a1688162fa",
+            "d7fc1df6cbade4a92d25",
+            "255ec943da9a86e36cc7",
+            "be0b1503a04f9fa295ee",
+            "969410f2f45854cc54fc",
+            "806180f5957fc4a7520f"
+          ],
+          "previousReason": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+          "previousCurrentResolution": {
+            "id": "806180f5957fc4a7520f",
+            "valueCount": 246,
+            "sourceParents": [
+              "7ab198f88f70ce7f27f0e97c34089d4145ce6929",
+              "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
+            ],
+            "justification": "Preserve the entire 245-entry manifest and its complete review graph unchanged; append only the forward video campaign Party-reference registry and archive guards introduced at09fd7babb92e45c1da1b9e5017de53b6378b4f7c. Preserve the original draft-video SQL byte for byte. No seed, identity merge, campaign activation, deployment or release waiver."
+          }
+        }
+      }
     }
-  ]
+  ],
+  "appleSignInMainf615History": {
+    "source": "e7ec452787e15f09deda4c4328ec6a8c1cece727",
+    "main": "f615c862b1a7d50406cc0506d21d7650e607fa5f",
+    "originalDocumentSHA256": "cdb94b9b23531b6a4656f2387a1a66af4f28efa7544477610ad6ec8f114c9c69",
+    "reason": "Only two current fingerprint resolutions change; original histories and entire preceding resolutions are retained. No stale active approval remains."
+  }
 }

@@ -7,6 +7,8 @@ Historical green results are not current-candidate evidence.
 
 - [audit-2026-10-31-phase1.md](audit-2026-10-31-phase1.md): phase-1 inventory of the system-wide formal audit (docs/prompts/formal-validation.md): measured baseline, P0 money/security coverage gaps, state-machine structure checks, preliminary findings and open owner questions. Measurement only; no conformance claim.
 
+- [desktop-shell.md](desktop-shell.md): Electron shell boundary over the hosted TDF origin, one system playback session shared by release player and radio, reproducible installers with a fail-closed shell update channel (SYS-DESKTOP-001..003); Linux Electron and unit evidence, installed macOS/Windows acceptance pending.
+
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
 - [event-planning-ux.md](event-planning-ux.md): explicit event clocks, standard ticket fee estimates and bounded poster retry/session checks, with delegated management still pending.
