@@ -132,6 +132,7 @@ These checks make drift fail CI; run them before changing a mapped surface.
 - [startup-gates.md](startup-gates.md): the capability-gate policy of the startup verifier, every asserted flag in every state against the real SQL, the restart-hazard list (AUTHORITY-077), exhaustive one-state model with controls.
 - [operations-worker-tick.md](operations-worker-tick.md): Operations worker maintenance tick: poisoned outbox rows fail alone with attempts, backoff and dead letter (AUTHORITY-076), bounded negative controls.
 - [access-grant.md](access-grant.md): reviewed access-request decisions, self-service correction (AUTHORITY-054), invitation-link claims, expiry repair and bounded negative controls.
+- [whatsapp-consent.md](whatsapp-consent.md): WhatsApp consent double opt-in: race-safe row creation (AUTHORITY-074), one-statement claim, release, timestamped confirmation and withdrawal, bounded negative controls.
 - [messaging.md](messaging.md): current-session/consent authority, rejected mutation rollback, bounded model and delivery/idempotency exclusions.
 - Domain contracts retain their existing source locations. This index references
   them instead of maintaining another handwritten copy of their transitions.
