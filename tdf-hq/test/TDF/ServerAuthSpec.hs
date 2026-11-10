@@ -938,10 +938,16 @@ appleSessionValiditySpec :: Spec
 appleSessionValiditySpec = describe "Apple interactive session validity" $ do
   let token label expiry = ApiToken "synthetic-apple-session" (toSqlKey 1)
         label True (Just 0) expiry
+      -- A token with no validity window at all, as minted before expiry
+      -- enforcement or managed explicitly as a service credential.
+      unwindowed label = ApiToken "synthetic-apple-session" (toSqlKey 1)
+        label True Nothing Nothing
   it "recognizes canonical and normalized Apple login labels as interactive" $ do
     isInteractiveSessionLabel (Just "apple-login:apple:subject") `shouldBe` True
     isInteractiveSessionLabel (Just "  APPLE-LOGIN:apple:subject  ") `shouldBe` True
   it "rejects legacy Apple sessions without a server-side expiry" $ do
+    apiTokenWithinValidity 100 (unwindowed (Just "apple-login:apple:subject"))
+      `shouldBe` False
     apiTokenWithinValidity 100 (token (Just "apple-login:apple:subject") Nothing)
       `shouldBe` False
   it "accepts a live Apple session and rejects equality and later expiry boundaries" $ do
@@ -950,4 +956,6 @@ appleSessionValiditySpec = describe "Apple interactive session validity" $ do
     apiTokenWithinValidity 100 live `shouldBe` False
     apiTokenWithinValidity 101 live `shouldBe` False
   it "retains explicitly managed unbounded service tokens" $ do
-    apiTokenWithinValidity 100 (token (Just "service:synthetic") Nothing) `shouldBe` True
+    apiTokenWithinValidity 100 (unwindowed (Just "service:synthetic")) `shouldBe` True
+  it "rejects a service token whose validity window is incomplete" $ do
+    apiTokenWithinValidity 100 (token (Just "service:synthetic") Nothing) `shouldBe` False
