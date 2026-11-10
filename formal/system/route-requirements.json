@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 516,
+    "total": 517,
     "named": 434,
     "path-named": 0,
     "reviewed": 82,
-    "unspecified": 0,
+    "unspecified": 1,
     "covered": 516
   },
   "routes": [
@@ -1247,6 +1247,12 @@
       "requirements": [
         "DIR-SUBMISSIONS-001"
       ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/drive/token",
+      "basis": "unspecified",
+      "requirements": []
     },
     {
       "method": "POST",
