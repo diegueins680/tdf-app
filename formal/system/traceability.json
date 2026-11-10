@@ -10176,7 +10176,9 @@
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "e2e/web/marketplace-negotiation.spec.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
-        "scripts/__tests__/production-release.test.mjs"
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/test-community-search.py",
+        "scripts/__tests__/directory-search-plan-parity.mjs"
       ],
       "formalModels": [
         "docs/music-directory/formal-model.yaml"
@@ -27059,7 +27061,7 @@
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
     "scripts/__tests__/directory-saved-search-http.mjs": "e578cd631b35124723a5e86f3ad01787b3ef45d8ea7fb5b4ad9fd4e6cca68c5f",
-    "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
+    "scripts/__tests__/directory-search-plan-parity.mjs": "79ea65f9a6d8fba40359e8c3ac84d5c903a01a2a3e86aee1073aa9548a728c69",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
     "scripts/__tests__/event-draft-plan.test.mjs": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
@@ -27253,7 +27255,7 @@
     "scripts/test-checkout-policy-terms-identity-migration.sh": "ceded6be2927dfcb777863190ea62779d58c3637e706d48c6dce5a58b97096c1",
     "scripts/test-checkout-terms-history.sh": "237e633cf0bc7e6efd3317e6dfeeddc2f43a2fd948fbae7888e0ee371324f922",
     "scripts/test-checkout-terms-upgrade-concurrency.py": "7f0d4db4046fa61057d2198469529b92bdeb9b05cf0b55233f8a047e042ba504",
-    "scripts/test-community-search.py": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
+    "scripts/test-community-search.py": "e9875b4d849e072f384e2d96c827c0190b147c347b24806c5e85071efccb9584",
     "scripts/test-content-storage-postgres.mjs": "3c68a16e43c08e6d241a4b5bc39c5b0b08d625bffa740dcd6c8b1916c2cf074d",
     "scripts/test-course-identity.sh": "a5015eb97b9548529eb7b7165379ed7c78f2c62a8d8186707b131927870cbbd9",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
@@ -40646,6 +40648,30 @@
         "relationship": "tests"
       }
     ],
+    "scripts/test-community-search.py": [
+      {
+        "requirement": "MKT-DEMAND-OFFER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/directory-search-plan-parity.mjs": [
+      {
+        "requirement": "MKT-DEMAND-OFFER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/WhatsApp/History.hs": [
       {
         "requirement": "MSG-WHATSAPP-REDELIVERY-001",
@@ -41084,16 +41110,6 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
-      }
-    ],
-    "scripts/test-community-search.py": [
-      {
-        "requirement": "DISCOVERY-NAV-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "DIR-SAVED-SEARCH-001",
-        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": [
@@ -41667,12 +41683,6 @@
       }
     ],
     "scripts/__tests__/directory-saved-search-http.mjs": [
-      {
-        "requirement": "DIR-SAVED-SEARCH-001",
-        "relationship": "tests"
-      }
-    ],
-    "scripts/__tests__/directory-search-plan-parity.mjs": [
       {
         "requirement": "DIR-SAVED-SEARCH-001",
         "relationship": "tests"
@@ -47400,9 +47410,13 @@
     {
       "id": "SURFACE-38cae059ca169cb6",
       "path": "scripts/__tests__/directory-search-plan-parity.mjs",
-      "sha256": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
+      "sha256": "79ea65f9a6d8fba40359e8c3ac84d5c903a01a2a3e86aee1073aa9548a728c69",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "MKT-DEMAND-OFFER-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "DIR-SAVED-SEARCH-001",
           "relationship": "tests"
@@ -51553,9 +51567,13 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
+      "sha256": "e9875b4d849e072f384e2d96c827c0190b147c347b24806c5e85071efccb9584",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "MKT-DEMAND-OFFER-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "DISCOVERY-NAV-001",
           "relationship": "tests"
@@ -82667,7 +82685,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6448b2320517f0bd271bbc0c637a5e422c926e05a693ff47825a51f7c699d3b7",
+      "sourceSha256": "b60208e795df7e7a251ad71006f83939358bb7a0c4aa58cfe02d5aefb49369a7",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -82695,7 +82713,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6448b2320517f0bd271bbc0c637a5e422c926e05a693ff47825a51f7c699d3b7",
+      "sourceSha256": "b60208e795df7e7a251ad71006f83939358bb7a0c4aa58cfe02d5aefb49369a7",
       "definition": {
         "states": [
           "absent",
@@ -82725,7 +82743,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6448b2320517f0bd271bbc0c637a5e422c926e05a693ff47825a51f7c699d3b7",
+      "sourceSha256": "b60208e795df7e7a251ad71006f83939358bb7a0c4aa58cfe02d5aefb49369a7",
       "definition": {
         "export": [
           "queued",

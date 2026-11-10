@@ -10175,7 +10175,9 @@
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "e2e/web/marketplace-negotiation.spec.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
-        "scripts/__tests__/production-release.test.mjs"
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/test-community-search.py",
+        "scripts/__tests__/directory-search-plan-parity.mjs"
       ],
       "formalModels": [
         "docs/music-directory/formal-model.yaml"

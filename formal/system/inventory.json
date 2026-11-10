@@ -3856,7 +3856,7 @@
     {
       "id": "SURFACE-38cae059ca169cb6",
       "path": "scripts/__tests__/directory-search-plan-parity.mjs",
-      "sha256": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
+      "sha256": "79ea65f9a6d8fba40359e8c3ac84d5c903a01a2a3e86aee1073aa9548a728c69",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6046,7 +6046,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
+      "sha256": "e9875b4d849e072f384e2d96c827c0190b147c347b24806c5e85071efccb9584",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30645,7 +30645,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6448b2320517f0bd271bbc0c637a5e422c926e05a693ff47825a51f7c699d3b7",
+      "sha256": "b60208e795df7e7a251ad71006f83939358bb7a0c4aa58cfe02d5aefb49369a7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
