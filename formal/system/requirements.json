@@ -22739,7 +22739,8 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Auth/Throttle.hs",
-        "tdf-hq/sql/2026-11-10_auth_rate_limit.sql"
+        "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+        "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",

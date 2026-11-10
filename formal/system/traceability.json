@@ -22740,7 +22740,8 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Auth/Throttle.hs",
-        "tdf-hq/sql/2026-11-10_auth_rate_limit.sql"
+        "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+        "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
@@ -27994,6 +27995,7 @@
     "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql": "02185d6050fe65042d41f79e6b3ab26ea6c71fe3b8d47b298698cbf736d25407",
     "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
     "tdf-hq/sql/2026-11-10_auth_rate_limit.sql": "278f16a38d411fbf41cbb0068f2588f93f9ba710c3026830c9307f2a2108d7c5",
+    "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql": "c5e0cf83c9179be4d56e75767f0274e2e94d50ab73a3b3deee93a3af6cd5f149",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "0d1e154b6a4a1a2b474b0d3093ceaf8bef5010ee47e61bd4026e38591fd99924",
@@ -43878,6 +43880,12 @@
       },
       {
         "requirement": "AUTH-PASSWORD-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql": [
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
         "relationship": "implementation"
       }
     ],
@@ -68872,7 +68880,12 @@
       "path": "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql",
       "sha256": "c5e0cf83c9179be4d56e75767f0274e2e94d50ab73a3b3deee93a3af6cd5f149",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7c4cd603babd8c4c",
@@ -80581,7 +80594,6 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
-    "SURFACE-f1c80d1e17711b59",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-87ed7351125c499c",
     "SURFACE-1c1ef431782f3c8d",
@@ -82244,7 +82256,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6119d3a526c4f06e223300a71abf3470f2ece9c07f9eaef06354d3e8c784bcf1",
+      "sourceSha256": "9b8e425c280c784dd06a71146ad6743649358979798c5c839a06df97818d87da",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -82272,7 +82284,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6119d3a526c4f06e223300a71abf3470f2ece9c07f9eaef06354d3e8c784bcf1",
+      "sourceSha256": "9b8e425c280c784dd06a71146ad6743649358979798c5c839a06df97818d87da",
       "definition": {
         "states": [
           "absent",
@@ -82302,7 +82314,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6119d3a526c4f06e223300a71abf3470f2ece9c07f9eaef06354d3e8c784bcf1",
+      "sourceSha256": "9b8e425c280c784dd06a71146ad6743649358979798c5c839a06df97818d87da",
       "definition": {
         "export": [
           "queued",
