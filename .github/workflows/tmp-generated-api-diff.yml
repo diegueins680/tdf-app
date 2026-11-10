@@ -1,0 +1,18 @@
+name: tmp generated api diff
+on:
+  workflow_dispatch:
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - run: npm run generate:api:ui
+      - name: Print diff of the generated web client
+        run: |
+          git diff --no-color -- tdf-hq-ui/src/api/generated/types.ts > /tmp/generated.diff || true
+          wc -l /tmp/generated.diff
+          cat /tmp/generated.diff
