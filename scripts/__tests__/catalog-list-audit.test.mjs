@@ -148,7 +148,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.ok(!active.some(entry => entry.id === previous.id));
   const storageMerge = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
   const rawManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && !storageMerge.storageMigrationIds.includes(entry.id));
+    'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && entry.id !== '2026-11-08_marketplace_offers' && !storageMerge.storageMigrationIds.includes(entry.id));
   const manifest = asReviewedBeforeRegistryRefresh(rawManifest);
   assert.equal(canonicalHash(manifest.slice(0, 213)), protectedPrefixHash);
   assert.equal(transition.protectedMainManifestCanonicalSha256, protectedPrefixHash);
@@ -198,7 +198,7 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(decision220.evidence.valueCount, 220);
   const pointer = successors.find(entry => entry.name === 'migrations');
   const latestCurrent = active.find(entry => entry.id === pointer.currentId);
-  const finalCurrent = latestCurrent.previousDecision.previousDecision.previousDecision;
+  const finalCurrent = latestCurrent.previousDecision.previousDecision.previousDecision.previousDecision;
   assert.equal(finalCurrent?.reviewed, true);
   const history = []; const seen = new Set();
   const visit = value => {
@@ -432,12 +432,12 @@ test('memory226 and ledger succession preserve213/214/220/221/222/224/225 review
   assert.equal(current.reviewMethod, 'successor-of-reviewed-decisions');
   assert.equal(current.evidence.valueCount, 221);
   assert.equal(pointer.currentId, latestCurrent.id);
-  assert.equal(pointer.valueCount, 246);
+  assert.equal(pointer.valueCount, 247);
   assert.equal(pointer.change, latestCurrent.justification);
   const retirement = integration.retirements.find(entry => entry.source.name === 'migrations');
   assert.equal(retirement.replacementId, latestCurrent.id);
   assert.equal(retirement.currentResolution.id, latestCurrent.id);
-  assert.equal(retirement.currentResolution.valueCount, 246);
+  assert.equal(retirement.currentResolution.valueCount, 247);
   assert.equal(retirement.reason, latestCurrent.justification);
   for (const decision of retiredParents) {
     assert.ok(pointer.previousCurrentIds.includes(decision.id));
@@ -728,10 +728,10 @@ test('ticket main merge retains stale approvals only as provenance', async () =>
 
 test('storage/main integration preserves both exact parent reviews and manifest views', async () => {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'docs/catalog-persistence/storage-main-integration-20261104.json'), 'utf8'));
-  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references');
+  const manifest = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== '2026-10-20_video_campaigns' && entry.id !== '2026-11-06_video_campaign_identity_references' && entry.id !== '2026-11-08_marketplace_offers');
   const { active, successors } = await readReconciliation();
   const extension = active.find(entry => entry.id === successors.find(item => item.name === 'migrations').currentId);
-  const current = extension.previousDecision.previousDecision;
+  const current = extension.previousDecision.previousDecision.previousDecision;
   const canonicalHash = value => createHash('sha256').update(JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item) ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item)).digest('hex');
   assert.equal(manifest.length, 244);
   assert.equal(canonicalHash(manifest.slice(0, 239)), ledger.protectedMainPrefixCanonicalSha256);
@@ -755,12 +755,14 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   const priorDecisions = JSON.parse((await execFileAsync('git', ['show', `${main}:${decisionsPath}`], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout);
   const decisions = JSON.parse(await fs.readFile(path.join(workspaceRoot, decisionsPath), 'utf8'));
   const latest = decisions.decisions.find(item => item.evidence?.file === 'scripts/production-migrations.json');
-  const videoReview = latest.previousDecision;
+  const identityReview = latest.previousDecision;
+  assert.equal(identityReview.id, '806180f5957fc4a7520f');
+  const videoReview = identityReview.previousDecision;
   assert.equal(videoReview.id, '969410f2f45854cc54fc');
   assert.deepEqual(videoReview.previousDecision,
     priorDecisions.decisions.find(item => item.id === 'be0b1503a04f9fa295ee'));
   assert.equal(old.length, 244);
-  assert.equal(current.length, 246);
+  assert.equal(current.length, 247);
   assert.deepEqual(current.slice(0, 244), old);
   assert.deepEqual(current[244], { id: '2026-10-20_video_campaigns', path: 'tdf-hq/sql/2026-10-20_video_campaigns.sql', introducedBy: introduction });
   const originalSql = (await execFileAsync('git', ['show', `${introduction}:${current[244].path}`], { cwd: workspaceRoot })).stdout;
@@ -774,4 +776,15 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   assert.deepEqual(videoReview, priorReview);
   assert.equal(await fs.readFile(path.join(workspaceRoot, current[245].path), 'utf8'), (await execFileAsync('git', ['show', forward + ':' + current[245].path], { cwd: workspaceRoot })).stdout);
   await execFileAsync('git', ['merge-base', '--is-ancestor', forward, 'HEAD'], { cwd: workspaceRoot });
+  // ADR 0132: marketplace offers append on top of the exact 246-entry identity manifest.
+  const marketplace = '8ee6c7a66e2504f425863ca6f5b83062723efd58';
+  const marketplaceIntroduction = 'eadfe23980ec336caacd96329ba561b1ed18c3f9';
+  assert.deepEqual(current[246], { id: '2026-11-08_marketplace_offers', path: 'tdf-hq/sql/2026-11-08_marketplace_offers.sql', introducedBy: marketplaceIntroduction });
+  const identityManifest = JSON.parse((await execFileAsync('git', ['show', marketplace + ':scripts/production-migrations.json'], { cwd: workspaceRoot })).stdout).migrations;
+  assert.equal(identityManifest.length, 247);
+  assert.deepEqual(current, identityManifest);
+  const identityPriorReview = JSON.parse((await execFileAsync('git', ['show', marketplace + ':' + decisionsPath], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions.find(item => item.id === identityReview.id);
+  assert.deepEqual(identityReview, identityPriorReview);
+  assert.equal(await fs.readFile(path.join(workspaceRoot, current[246].path), 'utf8'), (await execFileAsync('git', ['show', marketplaceIntroduction + ':' + current[246].path], { cwd: workspaceRoot })).stdout);
+  await execFileAsync('git', ['merge-base', '--is-ancestor', marketplaceIntroduction, 'HEAD'], { cwd: workspaceRoot });
 });

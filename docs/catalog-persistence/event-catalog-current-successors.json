@@ -393,12 +393,12 @@
     },
     {
       "historicalReplacementId": "7578a30aa3cc5aa23870",
-      "currentId": "806180f5957fc4a7520f",
+      "currentId": "9010d4490996f491c965",
       "file": "scripts/production-migrations.json",
       "kind": "json-array",
       "name": "migrations",
-      "valueCount": 246,
-      "change": "Preserve the entire 245-entry manifest and its complete review graph unchanged; append only the forward video campaign Party-reference registry and archive guards introduced at09fd7babb92e45c1da1b9e5017de53b6378b4f7c. Preserve the original draft-video SQL byte for byte. No seed, identity merge, campaign activation, deployment or release waiver.",
+      "valueCount": 247,
+      "change": "Preserve the entire 246-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced ateadfe23980ec336caacd96329ba561b1ed18c3f9. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",
@@ -518,6 +518,17 @@
           "sourceEntryCanonicalSha256": "24348c04edbc82948052df44400f2c37767b3c06b30123dbe367e4f57baed47c",
           "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
           "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
+        },
+        {
+          "sourceRevision": "8ee6c7a66e2504f425863ca6f5b83062723efd58",
+          "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
+          "sourceFileSha256": "5174986b6fd5dd9aa17a2cade99dddfbb32f1d8e457d29dcd23ddaafd6894ed4",
+          "sourceEntry": {
+            "id": "806180f5957fc4a7520f"
+          },
+          "sourceEntryCanonicalSha256": "3cac1756d5703059ce08c0f061a96e955684c142d540a34c57a641b23b544505",
+          "hashEncoding": "UTF-8 JSON, sorted keys, compact separators, unescaped Unicode",
+          "reason": "Exact prior review retained as provenance; fresh checks and independent approval remain required."
         }
       ],
       "previousCurrentIds": [
@@ -547,7 +558,8 @@
         "d7fc1df6cbade4a92d25",
         "255ec943da9a86e36cc7",
         "be0b1503a04f9fa295ee",
-        "969410f2f45854cc54fc"
+        "969410f2f45854cc54fc",
+        "806180f5957fc4a7520f"
       ],
       "previousResolution": {
         "historicalReplacementId": "7578a30aa3cc5aa23870",
@@ -8000,7 +8012,7 @@
           ]
         }
       ],
-      "previousCurrentId": "969410f2f45854cc54fc"
+      "previousCurrentId": "806180f5957fc4a7520f"
     }
   ]
 }

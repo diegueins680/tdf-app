@@ -3772,7 +3772,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "9652e93bc4b3d2e5f21085414c2884e7f673728f5fa7e6bdd92c2306b0c47629",
+      "sha256": "a439ba18cdf7bad748673a02c2d97540e9e9a0d89c3794ce09d4d3ec5b7ad4f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30519,7 +30519,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "bd61c6d60af88e8ca19de01d02fa5fc809eb9a90fdac8e9896913cdf2a6c3786",
+      "sha256": "40964b704f525acdaad4896021e777f2673ae5af8f82185c3189299fa9b79066",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -10170,7 +10170,8 @@
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
-        "e2e/web/marketplace-negotiation.spec.mjs"
+        "e2e/web/marketplace-negotiation.spec.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [
         "docs/music-directory/formal-model.yaml"
