@@ -37834,6 +37834,25 @@
         "name": "mediaSession",
         "valueCount": 3
       }
+    },
+    {
+      "id": "375e2baef11729d8d3ed",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unreviewed failure vocabulary could reflect runtime data or hide the rejected admission boundary.",
+      "justification": "Individually reviewed: these nine strings name fixed read-only inspection phases, not selectable business data or deployment authority. They must remain a closed protocol vocabulary; complete-message, exit-status and empty-stdout checks reject arbitrary remote diagnostics. Rejection never creates a runtime receipt or permits release preparation.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "release-recovery-diagnostics-2026-11-10",
+      "evidence": {
+        "file": "scripts/inspect-hetzner-production.mjs",
+        "line": 17,
+        "kind": "array",
+        "name": "failureStages",
+        "valueCount": 9
+      }
     }
   ]
 }

@@ -841,16 +841,20 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.ok(review, 'the desktop shell reviews need their exact branch review');
     assert.deepEqual(active.find(row => row.id === review.id), review);
   }
-  const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
-    ...desktopReviews.map(row => row.id)]);
-  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id));
+  // Project the immutable historical review by its own IDs. Separately reviewed
+  // additions must not change that historical view or any protected-main row.
+  const appleReviews = await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a');
+  const appleIds = new Set(appleReviews.map(row => row.id));
+  const historicalAppleView = active.filter(row => appleIds.has(row.id));
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);
   assert.equal(historicalAppleView.length, 1411);
-  assert.deepEqual(historicalAppleView,
-    await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1423);
+  assert.deepEqual(historicalAppleView, appleReviews);
+  const protectedMainReviews = await reviewedParent('083d1c6e1d0c709ea14b621782ff9faa3d60d572');
+  assert.equal(protectedMainReviews.length, 1423);
+  assert.deepEqual(active.slice(0, protectedMainReviews.length), protectedMainReviews);
+  assert.equal(new Set(active.map(row => row.id)).size, active.length);
   const history = new Map();
   const visit = row => {
     if (!row) return;
