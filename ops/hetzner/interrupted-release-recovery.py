@@ -151,6 +151,9 @@ class Abort:
         require(isinstance(admission['originalDeployment'],dict) and admission['originalDeployment'])
         require(len(canonical(admission)) <= MAX_ADMISSION//2)
         original = frozen_prefix(self.parent)
+        # No unrestricted reboot/recovery is exposed for exceptional legacy plans.
+        # Future integration must establish the live restricted boundary first.
+        require('legacyStopPolicyHash' not in original['plan'])
         require(admission['releaseNonce'] == original['releaseNonce'] and admission['planHash'] == original['planHash'])
         os.mkdir('abort',0o700,dir_fd=self.parent)
         # Directory existence itself is the irreversible normal-release latch.

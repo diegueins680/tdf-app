@@ -96,6 +96,36 @@ class WriterFenceTests(unittest.TestCase):
         for invalid in (text+'\nJob=',text+'\nUnexpected=secret',text.replace('Job=\n','')):
             with self.assertRaises(ValueError):w.parse_properties(invalid)
 
+    def test_ordinary_inventory_still_denies_quarantine_and_unknown_units(self):
+        for names in (w.UNITS|{w.quarantine.UNIT},w.UNITS|{'tdf-unknown.service'}):
+            with patch.object(w,'execute',return_value='\n'.join(sorted(names))),patch.object(w,'observe_backup_units') as backup:
+                with self.assertRaises(ValueError):w.observe_units(HASHES,timer_stopped=False)
+                backup.assert_not_called()
+
+    def test_restricted_inventory_requires_exact_live_guard_and_closing_equality(self):
+        receipt={'persistentConfigurationSha256':'a'*64,'hostBypassAdmissionVerified':False}
+        inventory='\n'.join(sorted(w.UNITS|{w.quarantine.UNIT}))
+        with patch.object(w.quarantine,'observe_persistent',return_value=receipt),patch.object(w,'execute',return_value=inventory),patch.object(w,'observe_backup_units',return_value={'timerStopped':True}) as backup:
+            result=w.observe_restricted_units(HASHES,'a'*64,timer_stopped=True)
+            self.assertFalse(result['stopAuthorized']);self.assertFalse(result['recoveryAuthorized'])
+            backup.assert_called_once_with(HASHES,timer_stopped=True)
+        with patch.object(w.quarantine,'observe_persistent',side_effect=[receipt,{**receipt,'persistentConfigurationSha256':'b'*64}]),patch.object(w,'execute',return_value=inventory),patch.object(w,'observe_backup_units',return_value={}):
+            with self.assertRaises(ValueError):w.observe_restricted_units(HASHES,'a'*64,timer_stopped=False)
+        with patch.object(w.quarantine,'observe_persistent',return_value=receipt),patch.object(w,'execute') as execute:
+            with self.assertRaises(ValueError):w.observe_restricted_units(HASHES,'b'*64,timer_stopped=False)
+            execute.assert_not_called()
+
+    def test_restricted_unit_inventory_rejects_missing_extra_duplicate_or_drift(self):
+        receipt={'persistentConfigurationSha256':'a'*64}
+        names=sorted(w.UNITS|{w.quarantine.UNIT});valid='\n'.join(names)
+        for invalid in ('\n'.join(sorted(w.UNITS)),valid+'\ntdf-unknown.service',valid+'\n'+names[0]):
+            with patch.object(w.quarantine,'observe_persistent',return_value=receipt),patch.object(w,'execute',return_value=invalid),patch.object(w,'observe_backup_units') as backup:
+                with self.assertRaises(ValueError):w.observe_restricted_units(HASHES,'a'*64,timer_stopped=False)
+                backup.assert_not_called()
+        for responses in ([valid,valid+'\ntdf-unknown.service'],[valid,valid,valid,valid+'\ntdf-unknown.service']):
+            with patch.object(w.quarantine,'observe_persistent',return_value=receipt),patch.object(w,'execute',side_effect=responses),patch.object(w,'observe_backup_units',return_value={}):
+                with self.assertRaises(ValueError):w.observe_restricted_units(HASHES,'a'*64,timer_stopped=False)
+
     def test_partial_docker_fences_admit_only_declared_stopped_services(self):
         host=SyntheticHost();before=host.sources(host.expected)['runtimeConfigurationSha256']
         stopped=frozenset()

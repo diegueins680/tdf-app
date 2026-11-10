@@ -24,6 +24,23 @@ class AdmissionTests(unittest.TestCase):
         self.evidence=self.root/'evidence';self.evidence.mkdir(mode=0o700)
         with j.open_journal(self.control) as q:q.initialize(PLAN,'b'*32)
 
+    def test_restricted_prepare_rejects_ordinary_plan_before_observation(self):
+        with j.open_journal(self.control) as q,patch.object(m,'observe') as observe:
+            with self.assertRaises(ValueError):m.prepare_restricted(q,self.evidence,{}, {},'a'*64)
+            observe.assert_not_called()
+            self.assertFalse((self.evidence/m.NAME).exists())
+
+    def test_restricted_prepare_requires_matching_observed_policy_before_publication(self):
+        for suffix,digest in (('mismatch','f'*64),('invalid','invalid')):
+            control=self.root/suffix;control.mkdir(mode=0o700)
+            value={**VALUE,'units':{'admission':{'restriction':{'persistentConfigurationSha256':'b'*64}}}}
+            plan={**PLAN,'schemaVersion':2,'legacyStopPolicyHash':'c'*64}
+            with j.open_journal(control) as q,patch.object(m.abort,'boot_identity',return_value=HOST),patch.object(m,'observe',return_value=value) as observe:
+                q.initialize(plan,'b'*32)
+                with self.assertRaises(ValueError):m.prepare_restricted(q,self.evidence,{}, {},digest)
+                if suffix=='invalid':observe.assert_not_called()
+                self.assertFalse((self.evidence/m.NAME).exists())
+
     def test_saved_before_shutdown_can_reopen_and_bind_abort(self):
         with j.open_journal(self.control) as q,patch.object(m,'observe',return_value=VALUE),patch.object(m.abort,'boot_identity',return_value=HOST):
             receipt=m.prepare(q,self.evidence,{},{});self.assertTrue(receipt['preparedBeforeShutdown'])

@@ -61,6 +61,13 @@ WantedBy=multi-user.target
 def run(args): return q.run(args).decode().strip()
 
 
+def require_active_ufw():
+    require(re.search(r'^ENABLED=yes\s*$',Path('/etc/ufw/ufw.conf').read_text(),re.MULTILINE))
+    for command,suffix in (('iptables',''),('ip6tables','6')):
+        for chain in ('INPUT','OUTPUT','FORWARD'):
+            run([command,'--wait','2','--check',chain,'--jump','ufw'+suffix+'-before-'+chain.lower()])
+
+
 def write(path, value):
     fd = os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
     try:
@@ -166,6 +173,7 @@ def saved():
 
 def prepare(machine):
     require(not run(DOCKER+['ps','--all','--quiet']) and not Path('/opt/tdf/production').exists())
+    if os.environ.get('TDF_QUARANTINE_TEST_UFW')=='1':require_active_ufw()
     for path in (FIXTURE_DIR,q.DIRECTORY,q.UNIT_PATH,q.DROPIN_PATH,RECEIVER_PATH):require(not path.exists())
     require(not any(row.get('table',{}).get('name')==q.TABLE
                     for row in json.loads(run(['nft','--json','list','tables']))['nftables']))
@@ -232,6 +240,7 @@ def verify():
         require(time.monotonic()<deadline);time.sleep(.25)
     current=q.observe_persistent();require(current==data['policy'])
     if data['ufwChecked']:
+        require_active_ufw()
         ufw=q.properties('ufw.service',('ActiveState','ActiveEnterTimestampMonotonic'))
         guard=q.properties(q.UNIT,('ExecMainStartTimestampMonotonic','ActiveEnterTimestampMonotonic'))
         docker=q.properties('docker.service',('ExecMainStartTimestampMonotonic',))
