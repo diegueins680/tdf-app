@@ -40,6 +40,7 @@ module TDF.ServerAdmin
   , normalizeBrainEntryTags
   ) where
 
+import TDF.Server.DomoRefunds (domoRefundAdminServer)
 import TDF.Server.RecordsIngestion (recordsIngestionServer)
 import           Control.Exception      (SomeException, try)
 import           Control.Applicative    ((<|>))
@@ -266,6 +267,7 @@ adminServer user =
   :<|> ragRouter
   :<|> socialRouter
   :<|> domoRouter
+  :<|> domoRefundAdminServer user
   :<|> recordsIngestionServer user
   where
     domoRouter = domoCancelHandler

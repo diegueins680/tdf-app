@@ -86,11 +86,12 @@ export default function DomoQuoteCheckoutPage() {
     request
       .then((response) => {
         setQuote(response);
+        setCancellation(response.cancellation ?? null);
         if (resourcePath) navigate(location.pathname, { replace: true });
         // A cancelled quote keeps its recorded outcome on the server. Replaying
         // the holder's cancellation is idempotent and returns that record
         // unchanged, so a reload shows what was collected, retained and owed.
-        if (response.quoteStatus === 'cancelled') {
+        if (response.quoteStatus === 'cancelled' && !response.cancellation) {
           DomoQuotes.cancelQuote(response.quoteId, lookupToken)
             .then((outcome) => setCancellation(outcome))
             .catch(() => setCancellation(null));
@@ -275,7 +276,6 @@ export default function DomoQuoteCheckoutPage() {
   const expired = quote.quoteStatus === 'expired' || quote.paymentStatus === 'expired';
   const canAccept = ['sent', 'viewed'].includes(quote.quoteStatus) && !expired;
   const awaitingPayment = quote.quoteStatus === 'deposit_due' && !paid && !expired;
-  const cancelled = quote.quoteStatus === 'cancelled';
   const canCancel = !expired && !['cancelled', 'completed', 'expired'].includes(quote.quoteStatus) && quote.paymentStatus !== 'processing';
   const returnUrl = typeof window === 'undefined'
     ? ''
@@ -301,7 +301,7 @@ export default function DomoQuoteCheckoutPage() {
                   <Chip label={`${quote.guests} ${english ? 'guests' : 'invitados'}`} variant="outlined" />
                   <Chip label={quote.eventType} variant="outlined" />
                 </Stack>
-                {cancelled ? <Alert severity="info">{english
+                {quote.quoteStatus === 'cancelled' ? <Alert severity="info">{english
                   ? 'This quote was cancelled and the date was released. Any collected payment is handled by the recorded cancellation outcome below.'
                   : 'Esta cotización fue cancelada y la fecha quedó liberada. Cualquier pago cobrado se gestiona según el resultado de cancelación registrado abajo.'}</Alert>
                   : paid ? <Alert severity="success">{english
@@ -333,7 +333,7 @@ export default function DomoQuoteCheckoutPage() {
                 <Stack direction="row" justifyContent="space-between"><Typography fontWeight={800}>{english ? 'Total event quote' : 'Total cotizado'}</Typography><Typography fontWeight={800}>{money(quote.totalMinor, quote.currency)}</Typography></Stack>
                 <Stack direction="row" justifyContent="space-between"><Typography color="primary" fontWeight={900}>{english ? 'Initial deposit due' : 'Depósito inicial'}</Typography><Typography color="primary" fontWeight={900}>{money(quote.depositMinor, quote.currency)}</Typography></Stack>
                 <Stack direction="row" justifyContent="space-between"><Typography>{english ? 'Remaining balance' : 'Saldo restante'}</Typography><Typography>{money(quote.balanceMinor, quote.currency)}</Typography></Stack>
-                {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'}: {date(quote.holdExpiresAt, quote.timezone)}.</Typography>}
+                {!paid && quote.quoteStatus !== 'cancelled' && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'}: {date(quote.holdExpiresAt, quote.timezone)}.</Typography>}
                 {canAccept && <>
                   <FormControlLabel control={<Checkbox checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} />} label={english
                     ? `I accept the exact quote and terms version ${quote.termsVersion}. Acceptance does not mean payment.`
@@ -341,13 +341,14 @@ export default function DomoQuoteCheckoutPage() {
                   <Button variant="contained" disabled={!termsAccepted || busy} onClick={() => void handleAccept()}>{english ? 'Accept quote and choose deposit method' : 'Aceptar cotización y elegir método de depósito'}</Button>
                 </>}
                 {message && <Alert severity="warning">{message}</Alert>}
-                {cancellation && <Alert severity={cancellation.refundStatus === 'awaiting_operator' ? 'info' : 'success'}>
+                {cancellation && <Alert severity={cancellation.refundStatus === 'succeeded' || cancellation.refundDueMinor === 0 ? 'success' : 'info'}>
                   {english
                     ? `Quote cancelled. Collected: ${money(cancellation.depositCollectedMinor + cancellation.balanceCollectedMinor, cancellation.currency)}. Retained by policy: ${money(cancellation.retainedMinor, cancellation.currency)}. Refund due: ${money(cancellation.refundDueMinor, cancellation.currency)}.`
                     : `Cotización cancelada. Cobrado: ${money(cancellation.depositCollectedMinor + cancellation.balanceCollectedMinor, cancellation.currency)}. Retenido según política: ${money(cancellation.retainedMinor, cancellation.currency)}. Reembolso debido: ${money(cancellation.refundDueMinor, cancellation.currency)}.`}
-                  {cancellation.refundStatus === 'awaiting_operator' && (english
-                    ? ' An operator will issue the refund request; you will be contacted by email.'
-                    : ' Un operador emitirá la solicitud de reembolso; te contactaremos por correo.')}
+                  {cancellation.refundDueMinor > 0 && (cancellation.refundStatus === 'succeeded'
+                    ? (english ? ' Refund confirmed.' : ' Devolución confirmada.')
+                    : (english ? ' Refund pending confirmation. A request or approval does not mean the money has been returned.'
+                      : ' Devolución pendiente de confirmación. Una solicitud o aprobación no significa que el dinero haya sido devuelto.'))}
                 </Alert>}
                 {canCancel && !cancellation && <Button variant="text" color="error" disabled={busy} onClick={() => setCancelOpen(true)}>{english ? 'Cancel quote' : 'Cancelar cotización'}</Button>}
                 {awaitingPayment && quote.paymentMethods.length === 0 && <Alert severity="info">{english

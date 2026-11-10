@@ -1406,6 +1406,10 @@ serviceRefundRecoveryHandler
 serviceRefundRecoveryHandler user shouldQuery rawId = do
   env@Env{..} <- ask
   ref <- parseRefundReference rawId
+  existing <- liftIO (runSqlPool (Refund.loadRefund ref) envPool)
+    >>= maybe (throwError err404) pure
+  _ <- liftIO (runSqlPool (loadServiceOrderNumberForCheckout (Refund.rrCheckout existing)) envPool)
+    >>= maybe (throwError err404) pure
   let configured binding = do
         result <- runHandler (runReaderT (refundQueryConfigured binding) env)
         pure (either (const False) id result)
