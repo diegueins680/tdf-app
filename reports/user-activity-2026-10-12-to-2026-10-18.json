@@ -1,0 +1,732 @@
+{
+  "title": "TDF platform weekly user activity",
+  "period": {
+    "start_inclusive": "2026-10-12T00:00:00-05:00",
+    "end_exclusive": "2026-10-19T00:00:00-05:00",
+    "timezone": "America/Guayaquil"
+  },
+  "comparison": {
+    "start_inclusive": "2026-10-05T00:00:00-05:00",
+    "end_exclusive": "2026-10-12T00:00:00-05:00"
+  },
+  "source": {
+    "type": "Verified live production PostgreSQL read-only queries",
+    "backend_commit": "7ab344400d0878838b9b12742ca4cc5cd7f38f94",
+    "capture": {
+      "kind": "capture",
+      "captured_at": "2026-10-23T23:50:35.162422-05:00",
+      "timezone": "America/Guayaquil",
+      "read_only": "on"
+    }
+  },
+  "definitions": {
+    "observed_active_users": "Distinct actor/party identifiers across successful authentication/account creation and persisted engagement, messaging, follows, RSVP, interaction, profile creation, event creation, fan-club and favorite records in the specified period; excludes CRM-only party creation and actorless bookings/orders. This is observed activity, not complete visitor or session analytics.",
+    "new_accounts": "Distinct auth account_consent_recorded/signup actors, reconciled to signup_completed_at in user_onboarding_progress. Google initial logins overlap with signup; events are not added as separate users.",
+    "onboarding": "Signup cohort members with completed_at before their respective cohort week end.",
+    "first_value": "Signup cohort members with first_value_completed_at before their respective cohort week end.",
+    "staff": "Active current admin/reception/intern role membership; historical role membership at event time was not reconstructed.",
+    "status": "Booking and order statuses are current at query time, not reconstructed as of the reporting cutoff."
+  },
+  "limitations": [
+    "Anonymous visitors, page views, session duration, device split and listening time were not measured by these queries.",
+    "Persisted rows can omit deleted records and uninstrumented actions. Zero records means no activity observed in these sources.",
+    "Staff activity is included in the overall total and separately quantified.",
+    "CRM parties and auto-created fan profiles are not counted as additional new users.",
+    "Follow rows and their engagement log records describe the same actions and must not be summed.",
+    "Three tentative booking records have no recorded creator; self-service origin is unverified."
+  ],
+  "results": [
+    {
+      "kind": "capture",
+      "captured_at": "2026-10-23T23:50:35.162422-05:00",
+      "timezone": "America/Guayaquil",
+      "read_only": "on"
+    },
+    {
+      "kind": "audit_groups",
+      "data": [
+        {
+          "week": "last_week",
+          "entity": "auth",
+          "action": "account_consent_recorded",
+          "events": 13,
+          "actors": 13,
+          "actorless": 0
+        },
+        {
+          "week": "last_week",
+          "entity": "auth",
+          "action": "login_google",
+          "events": 8,
+          "actors": 7,
+          "actorless": 0
+        },
+        {
+          "week": "last_week",
+          "entity": "auth",
+          "action": "signup",
+          "events": 6,
+          "actors": 6,
+          "actorless": 0
+        },
+        {
+          "week": "last_week",
+          "entity": "auth",
+          "action": "login_password",
+          "events": 3,
+          "actors": 2,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "entity": "auth",
+          "action": "login_password",
+          "events": 16,
+          "actors": 5,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "entity": "auth",
+          "action": "account_consent_recorded",
+          "events": 9,
+          "actors": 9,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "entity": "auth",
+          "action": "signup",
+          "events": 7,
+          "actors": 7,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "entity": "auth",
+          "action": "login_google",
+          "events": 6,
+          "actors": 4,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "entity": "artist_profile",
+          "action": "upsert",
+          "events": 1,
+          "actors": 1,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "entity": "feature_access_request",
+          "action": "access_request_approved",
+          "events": 1,
+          "actors": 1,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "entity": "feature_access_request",
+          "action": "access_request_submitted",
+          "events": 1,
+          "actors": 1,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "engagement_groups",
+      "data": [
+        {
+          "week": "last_week",
+          "entity_type": "artist",
+          "event_type": "follow",
+          "events": 9,
+          "actors": 5,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "entity_type": "artist",
+          "event_type": "follow",
+          "events": 10,
+          "actors": 2,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "audit_log",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 30,
+          "actors": 14,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "records": 41,
+          "actors": 13,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "engagement_event",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 9,
+          "actors": 5,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "records": 10,
+          "actors": 2,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "chat_message",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 1,
+          "actors": 1,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "party_follow",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 2,
+          "actors": 2,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "fan_follow",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 9,
+          "actors": 5,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "records": 10,
+          "actors": 2,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "artist_follow",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "event_rsvp",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 3,
+          "actors": 3,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "records": 2,
+          "actors": 1,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "event_moment",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "event_moment_comment",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "event_moment_reaction",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "interaction_event",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 4,
+          "actors": 1,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "records": 1,
+          "actors": 1,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "interaction_comment",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 1,
+          "actors": 1,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "interaction_reaction",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 3,
+          "actors": 1,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "records": 1,
+          "actors": 1,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "feedback",
+      "data": [
+        {
+          "week": "prior_week",
+          "records": 1,
+          "actors": 0,
+          "actorless": 1
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "artist_profile",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 1,
+          "actors": 1,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "records": 3,
+          "actors": 3,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "fan_profile",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 13,
+          "actors": 13,
+          "actorless": 0
+        },
+        {
+          "week": "prior_week",
+          "records": 9,
+          "actors": 9,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "social_artist_profile",
+      "data": [
+        {
+          "week": "prior_week",
+          "records": 1,
+          "actors": 1,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "booking",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 3,
+          "actors": 0,
+          "actorless": 3
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "course_registration",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "event_ticket_order",
+      "data": [
+        {
+          "week": "last_week",
+          "records": 2,
+          "actors": 0,
+          "actorless": 2
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "social_event",
+      "data": [
+        {
+          "week": "prior_week",
+          "records": 1,
+          "actors": 1,
+          "actorless": 0
+        }
+      ]
+    },
+    {
+      "kind": "source_counts",
+      "table": "fan_club_post",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "fan_club_post_reaction",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "directory_favorite",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "merch_favorite",
+      "data": []
+    },
+    {
+      "kind": "source_counts",
+      "table": "service_order",
+      "data": []
+    },
+    {
+      "kind": "party_growth",
+      "data": [
+        {
+          "week": "last_week",
+          "parties": 48,
+          "organizations": 5,
+          "with_credentials": 13
+        },
+        {
+          "week": "prior_week",
+          "parties": 9,
+          "organizations": 0,
+          "with_credentials": 9
+        }
+      ]
+    },
+    {
+      "kind": "onboarding",
+      "data": [
+        {
+          "cohort": "prior_week",
+          "signed_up": 9,
+          "onboarded_by_week_end": 2,
+          "activated_by_week_end": 2
+        },
+        {
+          "cohort": "last_week",
+          "signed_up": 13,
+          "onboarded_by_week_end": 5,
+          "activated_by_week_end": 3
+        }
+      ]
+    },
+    {
+      "kind": "coverage",
+      "data": [
+        {
+          "source": "audit_log",
+          "total": 284,
+          "earliest": "2026-05-14T22:13:34.67834-05:00",
+          "latest": "2026-10-23T16:05:20.988509-05:00"
+        },
+        {
+          "source": "engagement_event",
+          "total": 31,
+          "earliest": "2026-09-16T09:39:34.407902-05:00",
+          "latest": "2026-10-20T23:05:33.394016-05:00"
+        },
+        {
+          "source": "party",
+          "total": 372,
+          "earliest": "2025-11-19T12:09:46.361619-05:00",
+          "latest": "2026-10-23T19:58:53.037242-05:00"
+        },
+        {
+          "source": "onboarding_signups",
+          "total": 36,
+          "earliest": "2026-09-17T15:43:15.609167-05:00",
+          "latest": "2026-10-23T16:05:20.089186-05:00"
+        }
+      ]
+    },
+    {
+      "kind": "active_summary",
+      "data": [
+        {
+          "week": "last_week",
+          "observed_active_users": 14,
+          "login_users": 9,
+          "login_events": 11,
+          "new_accounts_by_audit": 13,
+          "existing_active_accounts": 1,
+          "active_staff_current_roles": 1,
+          "test_named_active": 0,
+          "signup_cohort": 13,
+          "completed_onboarding": 5,
+          "first_value": 3
+        },
+        {
+          "week": "prior_week",
+          "observed_active_users": 15,
+          "login_users": 8,
+          "login_events": 22,
+          "new_accounts_by_audit": 9,
+          "existing_active_accounts": 6,
+          "active_staff_current_roles": 1,
+          "test_named_active": 0,
+          "signup_cohort": 9,
+          "completed_onboarding": 2,
+          "first_value": 2
+        }
+      ]
+    },
+    {
+      "kind": "daily",
+      "data": [
+        {
+          "day": "2026-10-12",
+          "active_users": 2,
+          "signups": 2,
+          "logins": 1
+        },
+        {
+          "day": "2026-10-13",
+          "active_users": 3,
+          "signups": 2,
+          "logins": 3
+        },
+        {
+          "day": "2026-10-14",
+          "active_users": 3,
+          "signups": 3,
+          "logins": 0
+        },
+        {
+          "day": "2026-10-15",
+          "active_users": 5,
+          "signups": 5,
+          "logins": 6
+        },
+        {
+          "day": "2026-10-16",
+          "active_users": 0,
+          "signups": 0,
+          "logins": 0
+        },
+        {
+          "day": "2026-10-17",
+          "active_users": 0,
+          "signups": 0,
+          "logins": 0
+        },
+        {
+          "day": "2026-10-18",
+          "active_users": 1,
+          "signups": 1,
+          "logins": 1
+        }
+      ]
+    },
+    {
+      "kind": "retention",
+      "prior_active": 15,
+      "both_weeks": 1,
+      "behavioral_users_last_week": 8,
+      "new_cohort_behavioral_users": 7
+    },
+    {
+      "kind": "booking_status",
+      "data": [
+        {
+          "status": "Tentative",
+          "bookings": 3,
+          "linked_parties": 3
+        }
+      ]
+    },
+    {
+      "kind": "ticket_status",
+      "data": [
+        {
+          "status": "pending",
+          "currency": "USD",
+          "orders": 1,
+          "ticket_quantity": 1,
+          "order_amount_cents": 2000,
+          "with_purchase_timestamp": 1
+        },
+        {
+          "status": "cancelled",
+          "currency": "USD",
+          "orders": 1,
+          "ticket_quantity": 1,
+          "order_amount_cents": 2000,
+          "with_purchase_timestamp": 1
+        }
+      ]
+    },
+    {
+      "kind": "marketplace_activity",
+      "orders_created": 0,
+      "orders_paid": 0
+    },
+    {
+      "kind": "onboarding_first_values",
+      "data": [
+        {
+          "first_value": "artist_followed",
+          "count": 3
+        },
+        {
+          "first_value": null,
+          "count": 10
+        }
+      ]
+    },
+    {
+      "kind": "interaction_kinds",
+      "data": [
+        {
+          "kind": "comment",
+          "entity_kind": "recording_session",
+          "events": 1
+        },
+        {
+          "kind": "reaction",
+          "entity_kind": "recording_session",
+          "events": 1
+        },
+        {
+          "kind": "reaction",
+          "entity_kind": "record_release",
+          "events": 2
+        }
+      ]
+    },
+    {
+      "kind": "staff_segments",
+      "data": [
+        {
+          "week": "last_week",
+          "active_users": 14,
+          "staff": 1,
+          "repeat_staff": 1
+        },
+        {
+          "week": "prior_week",
+          "active_users": 15,
+          "staff": 1,
+          "repeat_staff": 1
+        }
+      ]
+    },
+    {
+      "kind": "signup_methods",
+      "data": [
+        {
+          "method": "google",
+          "users": 7
+        },
+        {
+          "method": "password",
+          "users": 6
+        }
+      ]
+    },
+    {
+      "kind": "ticket_payment_outcomes",
+      "data": [
+        {
+          "status": "pending",
+          "currency": "USD",
+          "orders": 1
+        },
+        {
+          "status": "cancelled",
+          "currency": "USD",
+          "orders": 1
+        }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "file": "/private/tmp/tdf-weekly-activity-counts-20261023.jsonl",
+      "sha256": "2544b60a2c8166ead8efe324746c78fea9a9bdba15da436e9555092bdc3fc22f"
+    },
+    {
+      "file": "/private/tmp/tdf-weekly-activity-detail-20261023.jsonl",
+      "sha256": "07ed6af0264608b2cc758cdc619952fdec32718acab39108bc31ad5790e778b1"
+    },
+    {
+      "file": "/private/tmp/tdf-weekly-activity-validation-20261023.jsonl",
+      "sha256": "81ff73a8156e1a4aaf5eef0641a1b16049f4a6ca321b0f0d43cc0896a62865b7"
+    }
+  ],
+  "validation": {
+    "production_identity_consistent": true,
+    "signup_counts_reconciled": true,
+    "daily_login_totals_reconciled": true,
+    "signup_method_totals_reconciled": true
+  }
+}
