@@ -47,7 +47,8 @@ def load(path):
 
 def normalize(path):
     """Compare paths with parameters by position: /a/{id} == /a/{sessionId}."""
-    path = path.rstrip(".,;)")
+    # Prose punctuation after a named path ("POST /a/{id}/cancel: ...") is not part of it.
+    path = path.rstrip(".,;):")
     path = re.sub(r"\{[^}/]*\}|(?<=/):[A-Za-z_][A-Za-z0-9_]*", "{}", path)
     return path.rstrip("/") or "/"
 

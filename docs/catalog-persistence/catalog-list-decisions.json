@@ -34079,6 +34079,46 @@
       "reviewMethod": "manual-source-review"
     },
     {
+      "id": "afe675892f43a8a4de73",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The two constructors select which election window a handler checks; adding one changes handler code, not business data.",
+      "justification": "FanClubElectionPhase names the two election windows (candidacy, voting) that validateFanClubElectionPhase checks for POST .../candidacy and POST .../vote (COMMUNITY-CLUB-ELECTION-001). It mirrors the two timestamp pairs on FanClubElection and is not user-selectable or stored.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "formal-audit-phase3-20261107",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/ServerFanClub.hs",
+        "line": 1887,
+        "kind": "haskell-sum-type",
+        "name": "FanClubElectionPhase",
+        "valueCount": 2,
+        "requirement": "COMMUNITY-CLUB-ELECTION-001"
+      }
+    },
+    {
+      "id": "6f876292d2fcb1dd7a86",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The three values name the canonical checkout statuses the sync trigger mirrors onto a marketplace order; adding one changes the trigger and handler code, not business data.",
+      "justification": "canonicalMarketplaceOrderStatuses lets validateStoredMarketplaceOrderStatus accept holding, awaiting_payment and processing as a stored current status of a canonical order (PUT /marketplace/orders/{orderId}, MKT-OPS-ORDERS-001) while they stay refused as update targets. The values mirror commerce_checkout statuses written by trg_marketplace_sync_verified_checkout and are not user-selectable.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "formal-audit-phase3-20261107",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Server.hs",
+        "line": 19720,
+        "kind": "haskell-list",
+        "name": "canonicalMarketplaceOrderStatuses",
+        "valueCount": 3,
+        "requirement": "MKT-OPS-ORDERS-001"
+      }
+    },
+    {
       "id": "b3eadb9d52a262f5371f",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",

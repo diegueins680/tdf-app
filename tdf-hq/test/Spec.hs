@@ -540,6 +540,7 @@ import TDF.Server.SocialEventsHandlers (
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
     validateArtistProfileWriteAccess,
+    validateArtistProfilePartyChange,
     validateAuthenticatedPartyReference,
     validateTicketCheckInLookup,
     validateStoredTicketOrderStatus,
@@ -12515,6 +12516,25 @@ main = hspec $ do
                 `shouldSatisfy` isLeft
             (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenreIds\":[\"11111111-1111-4111-8111-111111111111\"]}")
                 `shouldSatisfy` isRight
+
+    describe "validateArtistProfilePartyChange" $ do
+        let user roles = AuthedUser
+                { auPartyId = toSqlKey 7
+                , auRoles = roles
+                , auModules = modulesForRoles roles
+                , auApiTokenId = Nothing
+                , auSessionWitness = Nothing
+                }
+            owner = user [Artist]
+            admin = user [Admin]
+        it "keeps the stored party when an owner omits it or repeats it" $ do
+            validateArtistProfilePartyChange owner (Just "7") Nothing `shouldBe` Right (Just "7")
+            validateArtistProfilePartyChange owner (Just "7") (Just " 7 ") `shouldBe` Right (Just "7")
+        it "refuses an owner moving the profile to another party" $
+            fmap errHTTPCode (either Just (const Nothing) (validateArtistProfilePartyChange owner (Just "7") (Just "99")))
+                `shouldBe` Just 403
+        it "lets a strict administrator move a profile to another party" $
+            validateArtistProfilePartyChange admin (Just "7") (Just "99") `shouldBe` Right (Just "99")
 
     describe "validateArtistName" $ do
         it "trims canonical artist names before persistence" $
