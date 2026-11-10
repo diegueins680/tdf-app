@@ -3741,7 +3741,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7791,7 +7791,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7891,7 +7891,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7903,7 +7903,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -8292,7 +8292,9 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "tdf-hq/test/TDF/MusicPublicationSpec.hs",
         "scripts/test-music-publication.sh",
-        "scripts/test-music-integration-rehearsal.mjs"
+        "scripts/test-music-integration-rehearsal.mjs",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
+        "e2e/desktop/uploads.spec.mjs"
       ],
       "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script; PostgreSQL spec of the schedulers (scripts/test-music-publication.sh); bounded TLC model of scheduled publication with four negative controls (formal/system/music-publication.md); bounded one-row withdrawal fairness model with a permanent failure and a starvation mutation control",
       "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); scheduler reproduction, spec and model results in formal/system/music-publication.md (2026-10-11); no production evidence (migrations not applied in production)",
@@ -9200,7 +9202,8 @@
         "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
         "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
         "scripts/verify-google-account-name.py",
-        "tdf-hq-ui/src/utils/inAppBrowser.test.ts"
+        "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
+        "scripts/test-google-account-name-verifier.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -9660,7 +9663,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference. Artist priority admits only events with public-listable capability and public metadata, including for administrative viewers; management-only event fields are excluded from the card projection.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
       "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -10668,7 +10671,7 @@
         "classification": "PARTIAL",
         "reason": "Implemented, tested over HTTP and PostgreSQL and model-checked within bounds; not deployed."
       },
-      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure \u2026', 'operations worker \u2026', 'operations retried \u2026', 'operations migration \u2026'; formal/event-operations/OperationsFailureReplay.tla",
+      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
       "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
       "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
       "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
@@ -11024,7 +11027,7 @@
     {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
-      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image\u2019s temporary initialization socket server is insufficient.",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
       "domain": "SYS",
       "actors": [
         "CI fixture runner",
@@ -11174,7 +11177,7 @@
       "domain": "PAY",
       "critical": true,
       "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
-      "authority": "User audit sections 14\u201315 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
       "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
       "contract": "formal/system/music-purchase-replay.md",
       "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
@@ -11263,7 +11266,7 @@
       "critical": true,
       "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
       "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
-      "source": "User audit sections9\u201315 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "source": "User audit sections9–15 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
       "contract": "formal/system/music-money-wire.md",
       "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
       "actors": [
@@ -11377,7 +11380,7 @@
       "critical": false,
       "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
       "authority": "User audit validation and traceability requirements",
-      "source": "User audit sections9,24\u201325; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "source": "User audit sections9,24–25; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
       "contract": "formal/system/music-test-entrypoint.md",
       "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
       "actors": [
@@ -13656,8 +13659,8 @@
       "id": "BOOK-STUDIO-TIMEZONE-001",
       "title": "Public studio hours use Quito time independently of visitor preferences",
       "domain": "BOOK",
-      "statement": "The public studio booking page interprets 08:00\u201322:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
-      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00\u201322:00.",
+      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
+      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
       "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
       "contract": "formal/system/public-booking-timezone.md",
       "actors": [
@@ -26499,6 +26502,385 @@
         "classification": "PARTIAL",
         "reason": "The named offline validation and no-import boundaries are covered by finite controls; no whole contract, ticketing, money or server authorization proof is claimed."
       }
+    },
+    {
+      "id": "AUTH-APPLE-SIGNIN-001",
+      "title": "Sign in with Apple creates or resumes sessions only from verified Apple identity tokens",
+      "statement": "POST /login/apple verifies an Apple identity token (RS256 signature against Apple published keys, issuer, configured audiences, lifetime with 60 second skew, and nonce digest) before any database effect, then applies the same binding, linking and explicit-consent account creation rules as Google through auth_provider_identity.",
+      "authority": "App Store review guideline 4.8 rejection of TDF Mobile for offering Google login without Sign in with Apple (2026-10-13)",
+      "domain": "AUTH",
+      "actors": [
+        "Visitor",
+        "Returning user",
+        "Apple identity provider"
+      ],
+      "preconditions": [
+        "APPLE_SIGN_IN_AUDIENCES lists the iOS bundle id (default com.tdfrecords.app) and the Sign in with Apple capability is enabled for the App ID."
+      ],
+      "inputs": [
+        "Apple identity token",
+        "raw nonce",
+        "optional full name",
+        "createNewAccount, termsAccepted, termsVersion",
+        "optional linkAccount credentials"
+      ],
+      "state": {
+        "boundary": "POST /login/apple and auth_provider_identity",
+        "states": [
+          "unbound Apple subject",
+          "bound Apple subject",
+          "authenticated"
+        ]
+      },
+      "allowedTransitions": [
+        "bound Apple subject with valid token -> session",
+        "unbound subject with linkAccount password proof -> bound -> session",
+        "unbound subject with createNewAccount=true and current terms and a verified token email -> Customer/Fan account -> session"
+      ],
+      "forbiddenTransitions": [
+        "token with bad signature, issuer, audience, lifetime, nonce or algorithm yielding a session",
+        "account creation without explicit createNewAccount and current terms",
+        "account linking by email alone",
+        "account creation when the token carries no email"
+      ],
+      "effects": [
+        "Binds issuer https://appleid.apple.com and token sub to one credential under an advisory lock; records login_apple activity and account consent."
+      ],
+      "authorization": "Creation grants only the Customer role through the account.apple.customer automatic policy; linking requires existing credentials.",
+      "privacy": "Apple verified relay/contact email is stored as the private primary email; both Google and Apple use canonical initialAccountName when a provider name is absent, never an email as the public display-name fallback. Tokens and raw nonces are never logged.",
+      "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses and stale known keys single-flight through a cancellation-safe lock. A usable successful key set is cached for strictly less than 900 seconds; a matching kid does not extend that lifetime. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
+      "idempotency": "Repeated login for a bound subject reuses the credential.",
+      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
+      "recovery": "After key retrieval failure, unusable responses or cancellation, stale known keys fail closed during the attempt cooldown; retry retrieval after the cooldown. Failed attempts never renew successful-cache lifetime. Fresh known keys remain usable while every token signature and claim is rechecked. A backward clock cannot make a future cache timestamp fresh. Users can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
+      "observability": "login_apple auth activity and rejected-token warnings without token content.",
+      "source": "App Store Connect rejection notice relayed by the product owner",
+      "implementation": [
+        "tdf-hq/src/TDF/AppleSignIn.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Catalog/Integrity.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "scripts/production-migrations.json",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/app.config.ts",
+        "tdf-mobile/app.json",
+        "tdf-mobile/ios/Podfile.lock",
+        "tdf-mobile/ios/TDFRecords/Info.plist",
+        "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/package.json",
+        "tdf-mobile/scripts/ios-signing.py",
+        "tdf-mobile/scripts/verify-ios-artifact.py",
+        "tdf-mobile/src/api/auth.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/lib/appleSignIn.ts",
+        "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
+        "tdf-mobile/src/localization/onboardingCopy.ts",
+        "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
+        "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql",
+        "tdf-mobile/.env.example",
+        "scripts/lib/production-release.mjs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/AppleSignInSpec.hs",
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "tdf-mobile/__tests__/AuthScreen.test.tsx",
+        "tdf-mobile/__tests__/appleSignIn.test.ts",
+        "tdf-mobile/scripts/tests/test_ios_signing.py",
+        "scripts/verify-request-failures.py",
+        "scripts/verify-cors-boundary.py",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts",
+        "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source-bound compiled verifier/request/session-window/DTO/configuration cases, owned PostgreSQL lifecycle/issuer controls, and compatible Mobile710unit/89focused/type/lint/release/Metro plus12signing tests. Production provider configuration and physical-device/capability checks remain unverified release validation; no whole-system proof.",
+      "ambiguity": [
+        "Services ID audiences for web are configurable but not exercised.",
+        "Successful key-set residence is bounded by the local 900 second cache policy, not instant provider revocation. Provider publication latency, fresh cached keys within that interval and already issued application sessions remain outside an immediate key-removal guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "PARTIAL: synthetic compiled verifier and owned-database lifecycle/issuer controls cover the enumerated boundary; no production Apple request, provisioning or physical-device acceptance was exercised."
+      },
+      "critical": true,
+      "property": "NoSessionWithoutVerifiedAppleToken and ExplicitConsentBeforeCreation",
+      "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests. Injected-clock/fetch cache controls cover the 899/900 second boundary, withdrawn keys with fresh claims, stale failure/empty/cancel cooldown, concurrent refresh and clock rollback; these finite cases are not a universal revocation proof.",
+      "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
+      "contract": "tdf-hq/docs/openapi/api.yaml"
+    },
+    {
+      "id": "SYS-DESKTOP-001",
+      "title": "Desktop shell hosts only the authorized TDF origin with validated entry points",
+      "statement": "The Electron shell hosts the channel appOrigin in a sandboxed, context-isolated renderer without Node; exposes a frozen window.tdfDesktop bridge only on that origin and re-validates every IPC sender; classifies navigations and popups so only the hosted origin and bundled internal pages open inside the shell while http(s) destinations go to the system browser and other schemes are blocked; parses tdf-desktop://open deep links into safe in-app paths or rejects them before navigating; limits permissions to media, notifications, fullscreen, clipboard and speaker selection; labels unpackaged and unsigned builds; and offers no Google sign-in inside the shell.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "Every navigation, popup, deep link and IPC message is classified against appOrigin before any effect; rejected inputs are logged and inert.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Electron shell",
+        "states": [
+          "unpackaged-unsigned",
+          "packaged-unsigned-test",
+          "packaged-signed"
+        ]
+      },
+      "allowedTransitions": [
+        "hosted application loaded -> offline fallback -> retry -> hosted application loaded"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log (URLs recorded without query strings, fragments or credentials), smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-desktop/src/main/main.cjs",
+        "tdf-desktop/src/main/config.cjs",
+        "tdf-desktop/src/main/links.cjs",
+        "tdf-desktop/src/main/menu.cjs",
+        "tdf-desktop/src/main/log.cjs",
+        "tdf-desktop/src/preload/preload.cjs",
+        "tdf-desktop/channels/production.json",
+        "tdf-desktop/channels/local.json",
+        "tdf-hq-ui/src/desktop/shell.ts",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+      ],
+      "tests": [
+        "tdf-desktop/test/links.test.cjs",
+        "tdf-desktop/test/config.test.cjs",
+        "tdf-hq-ui/src/desktop/shell.test.ts",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "e2e/desktop/shell-session.spec.mjs",
+        "e2e/desktop/operations.spec.mjs",
+        "e2e/desktop/helpers/shell.mjs",
+        "e2e/desktop/helpers/api-fixture.mjs",
+        "playwright.desktop.config.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": true
+    },
+    {
+      "id": "SYS-DESKTOP-002",
+      "title": "Release player and radio share one system playback session",
+      "statement": "The web application keeps one ordered playback-owner registry: the owner that most recently started or selected audio installs its metadata and action handlers on the Media Session and reports to the desktop shell; passive updates never change the active owner; releasing the active owner restores the previous one; shell commands route to the active owner; the shell menu mirrors the last sanitized report.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "At any time at most one owner controls navigator.mediaSession and the shell menu, and it is the most recently activated owner still registered.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Electron shell",
+        "states": [
+          "unpackaged-unsigned",
+          "packaged-unsigned-test",
+          "packaged-signed"
+        ]
+      },
+      "allowedTransitions": [
+        "hosted application loaded -> offline fallback -> retry -> hosted application loaded"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log, smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-hq-ui/src/player/playbackSession.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-desktop/src/main/playbackState.cjs",
+        "tdf-desktop/src/main/menu.cjs",
+        "tdf-desktop/src/preload/preload.cjs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/playbackSession.test.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "tdf-desktop/test/playbackState.test.cjs",
+        "e2e/desktop/playback.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": false
+    },
+    {
+      "id": "SYS-DESKTOP-003",
+      "title": "Desktop installers, shell update channel and recovery are reproducible and fail closed",
+      "statement": "electron-builder produces DMG/ZIP (macOS x64, arm64) and NSIS (Windows x64, arm64) from one source commit with the validated channel embedded; signing and notarization run only when credentials exist, otherwise signing is explicitly disabled and artifacts carry UNSIGNED-TEST; electron-updater uses a generic feed, downloads only on user decision, verifies before installing and leaves the installed version on failure; unsigned or unpackaged builds disable updates; the workflow publishes to the feed only from a matching desktop-v<version> tag with signed artifacts and runs an installed smoke on both platforms.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "No unsigned or unverified package is ever installed or published; a failed update leaves the installed version runnable.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Shell updater",
+        "states": [
+          "disabled",
+          "idle",
+          "checking",
+          "available",
+          "downloading",
+          "downloaded",
+          "up-to-date",
+          "error"
+        ]
+      },
+      "allowedTransitions": [
+        "idle -> checking -> available -> downloading -> downloaded -> install on quit or on request",
+        "checking -> up-to-date",
+        "checking|downloading -> error -> idle (retry)"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log, smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-desktop/electron-builder.config.cjs",
+        "tdf-desktop/scripts/prepare-channel.cjs",
+        "tdf-desktop/scripts/signing.cjs",
+        "tdf-desktop/src/main/updater.cjs",
+        "tdf-desktop/package.json",
+        "tdf-desktop/package-lock.json",
+        ".github/workflows/desktop.yml"
+      ],
+      "tests": [
+        "tdf-desktop/test/updater.test.cjs",
+        "tdf-desktop/test/config.test.cjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-desktop/test/release-policy.test.cjs",
+        "tdf-desktop/test/signing.test.cjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": false
     }
   ]
 }

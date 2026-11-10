@@ -62,6 +62,14 @@ Authoritative contracts and boundaries:
 
 [→ Web UI Documentation](tdf-hq-ui/README.md)
 
+### Desktop App - `tdf-desktop/`
+**Tech Stack:** Electron (Chromium) + electron-builder + electron-updater
+**Purpose:** macOS and Windows shell that hosts the canonical web application with native media controls, validated deep links and a shell update channel
+
+- Same session, permissions, routes and API as the web; no business logic in the shell
+- Installers built in CI (`.github/workflows/desktop.yml`); unsigned builds are marked `UNSIGNED-TEST`
+- Decision and limits: [ADR 0132](docs/adr/0132-desktop-shell-electron.md), [docs/desktop/README.md](docs/desktop/README.md)
+
 ### Mobile App - `tdf-mobile/`
 **Tech Stack:** Expo + React Native + React Query + TypeScript  
 **Purpose:** Mobile interface for students and staff

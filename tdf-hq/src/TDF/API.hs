@@ -442,6 +442,7 @@ type SessionCookieHeaders = Headers '[Header "Set-Cookie" Text]
 
 type LoginAPI = ReqBody '[JSON] LoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 type GoogleLoginAPI = ReqBody '[JSON] GoogleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
+type AppleLoginAPI = ReqBody '[JSON] AppleLoginRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
 type SignupAPI = ReqBody '[JSON] SignupRequest :> Post '[JSON] (SessionCookieHeaders LoginResponse)
 
@@ -668,6 +669,7 @@ type API =
   :<|> SessionAPI
   :<|> "login"  :> LoginAPI
   :<|> "login"  :> "google" :> GoogleLoginAPI
+  :<|> "login"  :> "apple" :> AppleLoginAPI
   :<|> "signup" :> SignupAPI
   :<|> "password" :> PasswordAPI
   :<|> "v1" :> AuthV1API
