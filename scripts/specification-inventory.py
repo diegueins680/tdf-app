@@ -67,7 +67,7 @@ def material_source(relative):
     path = Path(relative)
     if (relative.startswith("tdf-hq-ui/public/") and path.suffix == ".html") or (relative.startswith("services/campaign-platform/ui/") and path.suffix in {".html", ".css", ".svg", ".png"}):
         return True
-    roots = {"tdf-hq", "tdf-hq-ui", "tdf-mobile", "scripts", "functions", "streaming",
+    roots = {"tdf-hq", "tdf-hq-ui", "tdf-mobile", "tdf-desktop", "scripts", "functions", "streaming",
              "tidal-agent", "ops", "e2e", "test", ".github", "services"}
     suffixes = {".hs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py", ".sh",
                 ".sql", ".json", ".yaml", ".yml", ".toml", ".cabal", ".service", ".timer"}

@@ -363,6 +363,38 @@ interface CancelInstruction { abortUrl: string | null }
 
 const apiPath = (path: string) => `/music${path}`;
 
+/**
+ * A replayed Idempotency-Key found a session the server will no longer resume
+ * (cancelled, failed or expired). The caller must allocate a new key; the
+ * `name` is stable so callers can detect it without importing the class.
+ */
+export class MusicUploadSessionUnusableError extends Error {
+  constructor(public readonly status: MusicUploadSession['status'], public readonly sessionId: string) {
+    super(`La sesión de carga anterior quedó en estado ${status}. Reintenta para crear una nueva carga del mismo archivo.`);
+    this.name = 'MusicUploadSessionUnusableError';
+  }
+}
+
+export interface MusicUploadReplayedCompletion {
+  status: 'completed';
+  sessionId: string;
+  replayed: true;
+}
+
+/** The server answers 410 Gone for operations on a session past its lifetime. */
+const isGoneResponse = (error: unknown): boolean =>
+  typeof error === 'object' && error !== null && 'status' in error && (error as { status?: unknown }).status === 410;
+
+const isStorageStatus = (error: unknown, status: number): boolean =>
+  typeof error === 'object' && error !== null && (error as { storage?: unknown }).storage === true
+  && (error as { status?: unknown }).status === status;
+
+const isSessionExpired = (session: MusicUploadSession, now = Date.now()): boolean => {
+  if (typeof session.expiresAt !== 'string') return false;
+  const expiresAt = Date.parse(session.expiresAt);
+  return Number.isFinite(expiresAt) && expiresAt <= now;
+};
+
 const throwIfAborted = (signal?: AbortSignal) => {
   if (signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError');
 };
@@ -393,9 +425,17 @@ const parseXmlElement = (body: string, localName: string): string | null => {
 
 const requestDirect = async (url: string, init: RequestInit): Promise<Response> => {
   const response = await fetch(url, { ...init, credentials: 'omit' });
-  if (!response.ok) throw new Error(`El almacenamiento rechazó la operación (${response.status}).`);
+  if (!response.ok) {
+    throw Object.assign(new Error(`El almacenamiento rechazó la operación (${response.status}).`), { status: response.status, storage: true });
+  }
   return response;
 };
+
+// Final multipart ETag per upload session, kept for this page lifetime. When
+// storage completed the multipart upload but /confirm did not reach the API,
+// the retry must confirm with this evidence: storage cannot complete twice.
+const completedMultipartEtags = new Map<string, string>();
+export const resetMusicUploadEvidenceForTests = (): void => { completedMultipartEtags.clear(); };
 
 const uploadPart = (
   url: string,
@@ -445,6 +485,20 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
     { headers: { 'Idempotency-Key': options.idempotencyKey }, signal },
   );
 
+  // A replayed Idempotency-Key returns the earlier session. One the server has
+  // already confirmed (for example when the confirm response was lost) has
+  // nothing left to transfer; one it will not resume needs a new key.
+  if (session.status === 'completed') {
+    onProgress?.({ phase: 'finalizing', completedBytes: file.size, totalBytes: file.size });
+    return { status: 'completed', sessionId: session.id, replayed: true } satisfies MusicUploadReplayedCompletion;
+  }
+  if (session.status === 'cancelled' || session.status === 'failed' || session.status === 'expired') {
+    throw new MusicUploadSessionUnusableError(session.status, session.id);
+  }
+  // The stored status is not rewritten when the lifetime ends; the server
+  // rejects further operations with 410 instead.
+  if (isSessionExpired(session)) throw new MusicUploadSessionUnusableError('expired', session.id);
+
   try {
     if (!session.providerUploadIdBound) {
       if (!session.createMultipartUrl) throw new Error('La sesión no incluyó una URL para iniciar multipart.');
@@ -478,16 +532,30 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
     }
 
     onProgress?.({ phase: 'finalizing', completedBytes: file.size, totalBytes: file.size });
-    const completion = await get<CompletionInstruction>(apiPath(`/uploads/${session.id}/completion`), { signal });
-    const completedResponse = await requestDirect(completion.url, {
-      method: completion.method,
-      headers: { 'Content-Type': completion.contentType },
-      body: completion.body,
-      signal,
-    });
-    const responseBody = await completedResponse.text();
-    const finalEtag = parseMusicMultipartCompletion(responseBody, completedResponse.headers.get('ETag'));
-    return post(apiPath(`/uploads/${session.id}/confirm`), { etag: finalEtag }, { signal });
+    let finalEtag = completedMultipartEtags.get(session.id);
+    if (!finalEtag) {
+      const completion = await get<CompletionInstruction>(apiPath(`/uploads/${session.id}/completion`), { signal });
+      let completedResponse: Response;
+      try {
+        completedResponse = await requestDirect(completion.url, {
+          method: completion.method,
+          headers: { 'Content-Type': completion.contentType },
+          body: completion.body,
+          signal,
+        });
+      } catch (error) {
+        // The multipart upload was already consumed (NoSuchUpload) and no local
+        // evidence survived (for example after a reload): only a new session can recover.
+        if (!signal?.aborted && isStorageStatus(error, 404)) throw new MusicUploadSessionUnusableError('failed', session.id);
+        throw error;
+      }
+      const responseBody = await completedResponse.text();
+      finalEtag = parseMusicMultipartCompletion(responseBody, completedResponse.headers.get('ETag'));
+      completedMultipartEtags.set(session.id, finalEtag);
+    }
+    const confirmed = await post(apiPath(`/uploads/${session.id}/confirm`), { etag: finalEtag }, { signal });
+    completedMultipartEtags.delete(session.id);
+    return confirmed;
   } catch (error) {
     if (signal?.aborted) {
       try {
@@ -496,7 +564,9 @@ export const uploadMusicAsset = async (options: UploadMusicAssetOptions): Promis
       } catch {
         // The server-side cleanup worker remains responsible for abandoned multipart uploads.
       }
+      throw error;
     }
+    if (isGoneResponse(error)) throw new MusicUploadSessionUnusableError('expired', session.id);
     throw error;
   }
 };

@@ -1,0 +1,12 @@
+{
+  "name": "production",
+  "appOrigin": "https://www.tdfrecords.net",
+  "apiOrigin": "https://api.tdfrecords.net",
+  "startPath": "/inicio",
+  "updates": {
+    "enabled": true,
+    "provider": "generic",
+    "url": "https://github.com/diegueins680/tdf-app/releases/download/desktop-latest",
+    "channel": "latest"
+  }
+}

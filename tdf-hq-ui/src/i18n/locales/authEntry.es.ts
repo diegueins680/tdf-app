@@ -52,6 +52,7 @@ export default {
   "googleContinue": "O continúa con Google",
   "googleSignup": "¿Primera vez? Crear cuenta con Google",
   "googleWaiting": "Activaremos Google cuando el servicio termine de arrancar.",
+  "googleDesktopUnavailable": "Iniciar sesión con Google no está disponible en la app de escritorio. Usa tu correo y contraseña de TDF; si solo usabas Google, restablece primero tu contraseña.",
   "rememberDevice": "Recordarme en este dispositivo",
   "rememberHint": "Mantendremos tu sesión iniciada si este navegador permite guardar sus datos.",
   "signingIn": "Ingresando…",

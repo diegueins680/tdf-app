@@ -43,7 +43,49 @@ import { musicPreviewRangeError } from '../utils/musicPreviewRange';
 type DraftContent = Omit<MusicReleaseContentInput, 'expectedUpdatedAt'>;
 type DraftMetadata = Omit<MusicReleaseMetadataDraft, 'expectedUpdatedAt'>;
 type AvailabilityDraft = MusicReleaseContentInput['availability'][number];
-interface UploadState { progress: number; message: string; error?: string }
+interface UploadState { progress: number; message: string; error?: string; inFlight?: boolean; cancelled?: boolean; retryable?: boolean }
+type UploadRole = 'master_audio' | 'cover_original';
+interface UploadAttempt { file: File; idempotencyKey: string; role: UploadRole; recordingId?: string | null; controller: AbortController | null }
+
+export const MASTER_AUDIO_ACCEPT = 'audio/wav,audio/x-wav,audio/flac,audio/x-flac,audio/aiff,audio/x-aiff';
+export const COVER_IMAGE_ACCEPT = 'image/jpeg,image/png,image/tiff';
+const ACCEPT_EXTENSIONS: Record<UploadRole, readonly string[]> = {
+  master_audio: ['.wav', '.flac', '.aif', '.aiff'],
+  cover_original: ['.jpg', '.jpeg', '.png', '.tif', '.tiff'],
+};
+
+/** A dropped or chosen file is admitted by declared type or, when the OS omits it, by extension. */
+export const acceptsUploadFile = (role: UploadRole, file: Pick<File, 'name' | 'type'>): boolean => {
+  const accept = role === 'master_audio' ? MASTER_AUDIO_ACCEPT : COVER_IMAGE_ACCEPT;
+  const type = file.type.trim().toLowerCase();
+  if (type && accept.split(',').includes(type)) return true;
+  const name = file.name.toLowerCase();
+  return ACCEPT_EXTENSIONS[role].some((extension) => name.endsWith(extension));
+};
+
+/**
+ * One Idempotency-Key scope per intended lifecycle request: the version plus a
+ * stable serialization of the whole payload (target state, dates, timezone,
+ * reason). Identical retries replay; any changed parameter is a new request.
+ */
+export const musicTransitionScope = (versionId: string, input: Record<string, unknown>): string => {
+  const stable = (value: unknown): unknown => Array.isArray(value) ? value.map(stable)
+    : value && typeof value === 'object'
+      ? Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, stable(v)]))
+      : value;
+  return `${versionId}:${JSON.stringify(stable(input))}`;
+};
+
+/** The same file selected again keeps its request identity so a retry resumes instead of duplicating. */
+export const sameUploadFile = (a: Pick<File, 'name' | 'size' | 'lastModified'>, b: Pick<File, 'name' | 'size' | 'lastModified'>): boolean =>
+  a.name === b.name && a.size === b.size && a.lastModified === b.lastModified;
+
+const isAbortError = (reason: unknown): boolean =>
+  reason instanceof DOMException ? reason.name === 'AbortError'
+    : reason instanceof Error && reason.name === 'AbortError';
+// Detected by name: the API module is mocked wholesale in several tests.
+const isUnusableUploadSession = (reason: unknown): boolean =>
+  reason instanceof Error && reason.name === 'MusicUploadSessionUnusableError';
 type Raw = Record<string, unknown>;
 
 const asRaw = (value: unknown): Raw => value && typeof value === 'object' ? value as Raw : {};
@@ -190,14 +232,41 @@ export const musicReleaseDraftFromVersion = (version: MusicReleaseVersion): { me
   };
 };
 
-function UploadProgress({ state }: { state?: UploadState }) {
+function UploadProgress({ state, label, onCancel, onRetry }: {
+  state?: UploadState; label: string; onCancel?: () => void; onRetry?: () => void;
+}) {
   if (!state) return null;
-  return <>
-    <LinearProgress variant="determinate" value={state.progress} />
-    <Typography variant="caption" color={state.error ? 'error' : 'text.secondary'}>
-      {state.error ?? state.message}
-    </Typography>
-  </>;
+  return <Stack spacing={0.5} data-testid={`upload-progress-${label}`}>
+    <LinearProgress variant="determinate" value={state.progress} aria-label={`Progreso de carga ${label}`} />
+    <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+      <Typography variant="caption" color={state.error ? 'error' : 'text.secondary'} role="status">
+        {state.error ?? state.message}
+      </Typography>
+      {state.inFlight && onCancel && <Button size="small" color="inherit" onClick={onCancel}>Cancelar carga {label}</Button>}
+      {state.retryable && !state.inFlight && onRetry && <Button size="small" onClick={onRetry}>Reintentar {label}</Button>}
+    </Stack>
+  </Stack>;
+}
+
+function UploadDropZone({ kind, disabled, hint, onFile, children }: {
+  kind: UploadRole; disabled: boolean; hint: string; onFile: (file: File) => void; children: React.ReactNode;
+}) {
+  const [active, setActive] = useState(false);
+  return <Box
+    data-testid={`upload-dropzone-${kind}`}
+    onDragOver={(event) => { if (disabled) return; event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setActive(true); }}
+    onDragLeave={() => setActive(false)}
+    onDrop={(event) => {
+      event.preventDefault(); setActive(false);
+      if (disabled) return;
+      const file = Array.from(event.dataTransfer.files).find((candidate) => acceptsUploadFile(kind, candidate));
+      if (file) onFile(file);
+    }}
+    sx={{ p: 1.5, border: '1px dashed', borderColor: active ? 'primary.main' : 'divider', borderRadius: 2,
+      bgcolor: active ? 'action.hover' : 'transparent', transition: 'background-color 120ms' }}
+  >
+    <Stack spacing={1}>{children}<Typography variant="caption" color="text.secondary">{hint}</Typography></Stack>
+  </Box>;
 }
 
 export default function MusicReleaseStudioPage() {
@@ -309,6 +378,11 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
   const [error, setError] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [uploads, setUploads] = useState<Record<string, UploadState>>({});
+  const uploadAttempts = useRef<Record<string, UploadAttempt>>({});
+  // One Idempotency-Key per intended lifecycle transition of this version. A
+  // retry after a connection loss replays the same request instead of asking
+  // the server for a second publication action.
+  const transitionKeys = useRef<Record<string, string>>({});
   const [scheduleLocal, setScheduleLocal] = useState('');
   const [takedownLocal, setTakedownLocal] = useState('');
   const [reviewField, setReviewField] = useState('');
@@ -335,6 +409,11 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
   const updatedAt = useRef('');
   const canEdit = version.data ? ['draft','uploading','processing','validation_failed','changes_requested'].includes(version.data.state) : false;
   const editable = canEdit && !isSaving && !actionPending;
+  // While a file is being transferred the editor stays locked through
+  // `editable`, but the fieldset-level lock below is lifted: a disabled
+  // fieldset disables every descendant button, including the per-file
+  // "Cancelar carga" control, which must keep receiving clicks.
+  const uploading = Object.values(uploads).some((state) => state.inFlight === true);
   const isAdmin = session?.roles.some((role) => ['admin','superadmin','owner'].includes(role.toLowerCase())) ?? false;
   const analytics = useQuery({
     queryKey: ['music-release-analytics', releaseId, analyticsFrom, analyticsTo],
@@ -466,24 +545,77 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
     }] })); setDirty(true);
   };
 
-  const upload = async (key: string, file: File, role: 'master_audio' | 'cover_original', recordingId?: string | null) => {
-    if (operationPending.current || saving.current) return;
+  const upload = async (key: string, file: File, role: UploadRole, recordingId?: string | null) => {
+    if (operationPending.current || saving.current) {
+      setUploads((current) => ({ ...current, [key]: { ...current[key], progress: current[key]?.progress ?? 0,
+        message: 'Espera a que termine la operación en curso y vuelve a intentarlo.', retryable: true } }));
+      return;
+    }
+    if (!acceptsUploadFile(role, file)) {
+      setUploads((current) => ({ ...current, [key]: { progress: 0, message: '', error: role === 'master_audio'
+        ? 'Formato no admitido. Usa WAV, FLAC o AIFF.' : 'Formato no admitido. Usa JPEG, PNG o TIFF.' } }));
+      return;
+    }
+    // Retrying the same file after a network failure reuses its Idempotency-Key,
+    // so the server resumes the existing upload session instead of creating a
+    // duplicate asset. An explicit cancellation deletes that session server-side,
+    // so the next attempt must carry a fresh key (see the AbortError branch).
+    const previous = uploadAttempts.current[key];
+    const idempotencyKey = previous && sameUploadFile(previous.file, file) ? previous.idempotencyKey : newRef('music-upload');
+    const controller = new AbortController();
+    uploadAttempts.current[key] = { file, idempotencyKey, role, recordingId, controller };
     operationPending.current = true; setActionPending(true);
     try {
-      if (!await persistDraft()) return;
-      setUploads((current) => ({ ...current, [key]: { progress: 0, message: 'Calculando checksum…' } }));
+      if (!await persistDraft()) {
+        setUploads((current) => ({ ...current, [key]: { progress: 0, message: 'El borrador no se pudo guardar; conserva el archivo y reintenta.', retryable: true } }));
+        return;
+      }
+      setUploads((current) => ({ ...current, [key]: { progress: 0, message: 'Calculando checksum…', inFlight: true } }));
       await musicReleases.uploadAsset({ releaseId, versionId, recordingId, assetRole: role, file,
-        idempotencyKey: newRef('music-upload'),
+        idempotencyKey,
+        signal: controller.signal,
         onProgress: (progress) => setUploads((current) => ({ ...current, [key]: {
           progress: progress.totalBytes ? Math.round(progress.completedBytes * 100 / progress.totalBytes) : 0,
           message: progress.phase === 'hashing' ? 'Calculando checksum…' : progress.phase === 'uploading' ? 'Subiendo directamente al almacenamiento…' : 'Confirmando…',
+          inFlight: true,
         } })),
       });
-      const refreshed = await musicReleases.getVersion(releaseId, versionId); applyVersion(refreshed);
-      setUploads((current) => ({ ...current, [key]: { progress: 100, message: 'Carga confirmada; procesamiento en cola.' } }));
+      // The upload is confirmed server-side from here on: a failed refresh must
+      // not offer a retry that would transfer or confirm the asset again.
+      try {
+        const refreshed = await musicReleases.getVersion(releaseId, versionId); applyVersion(refreshed);
+        setUploads((current) => ({ ...current, [key]: { progress: 100, message: 'Carga confirmada; procesamiento en cola.' } }));
+      } catch {
+        setUploads((current) => ({ ...current, [key]: { progress: 100, message: 'Carga confirmada; no se pudo refrescar la versión. Recarga la página para ver el procesamiento.' } }));
+      }
     } catch (reason) {
-      setUploads((current) => ({ ...current, [key]: { progress: 0, message: '', error: reason instanceof Error ? reason.message : 'Falló la carga.' } }));
-    } finally { operationPending.current = false; setActionPending(false); }
+      if (isAbortError(reason) || controller.signal.aborted) {
+        // The cancelled upload session is gone; a retry is a new upload of the same file.
+        const cancelled = uploadAttempts.current[key];
+        if (cancelled) uploadAttempts.current[key] = { ...cancelled, idempotencyKey: newRef('music-upload') };
+        setUploads((current) => ({ ...current, [key]: { progress: 0, message: 'Carga cancelada. Puedes reintentar el mismo archivo.', cancelled: true, retryable: true } }));
+      } else if (isUnusableUploadSession(reason)) {
+        // The replayed session cannot resume (cancelled/failed/expired server-side).
+        const stale = uploadAttempts.current[key];
+        if (stale) uploadAttempts.current[key] = { ...stale, idempotencyKey: newRef('music-upload') };
+        setUploads((current) => ({ ...current, [key]: { progress: 0, message: '', retryable: true,
+          error: reason instanceof Error ? reason.message : 'La sesión de carga anterior ya no es reutilizable.' } }));
+      } else {
+        setUploads((current) => ({ ...current, [key]: { progress: 0, message: '', retryable: true,
+          error: reason instanceof Error ? reason.message : 'Falló la carga.' } }));
+      }
+    } finally {
+      const attempt = uploadAttempts.current[key];
+      if (attempt?.controller === controller) uploadAttempts.current[key] = { ...attempt, controller: null };
+      operationPending.current = false; setActionPending(false);
+    }
+  };
+
+  const cancelUpload = (key: string) => { uploadAttempts.current[key]?.controller?.abort(); };
+  const retryUpload = (key: string) => {
+    const attempt = uploadAttempts.current[key];
+    if (!attempt) return;
+    void upload(key, attempt.file, attempt.role, attempt.recordingId);
   };
 
   const acceptAndValidate = async () => {
@@ -506,7 +638,12 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
     operationPending.current = true; setActionPending(true);
     try {
       if (!await persistDraft()) return;
-      await musicReleases.transition(releaseId, versionId, { targetState, reason: null, ...extra }, newRef('music-transition'));
+      const input = { targetState, reason: null, ...extra };
+      const transitionKey = musicTransitionScope(versionId, input);
+      const idempotencyKey = transitionKeys.current[transitionKey] ?? newRef('music-transition');
+      transitionKeys.current[transitionKey] = idempotencyKey;
+      await musicReleases.transition(releaseId, versionId, input, idempotencyKey);
+      delete transitionKeys.current[transitionKey];
       const next = await musicReleases.getVersion(releaseId, versionId);
       applyVersion(next); setStatus(`Estado actualizado: ${next.state}.`); setError(null);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'La transición fue rechazada.'); }
@@ -627,7 +764,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
         : undefined
     }>Esta versión es inmutable. Las correcciones crean un nuevo grafo editable y conservan esta versión intacta.</Alert>}
 
-    <Box component="fieldset" disabled={isSaving || actionPending} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
+    <Box component="fieldset" disabled={isSaving || (actionPending && !uploading)} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}>
     <Stack spacing={3}>
     <Card><CardContent><Stack spacing={2}>
       <Typography variant="h6">1. Metadatos del release</Typography>
@@ -685,19 +822,28 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
           <Alert severity="warning">{musicPreviewRangeError(track.previewStartMs, track.previewDurationMs, currentVersion.tracks.find((item) => item.recordingId === track.recordingId)?.durationMs)}</Alert>}
         <TextField label="ISRC aportado (opcional)" value={content.identifiers.find((identifier) => identifier.trackRef === track.clientRef && identifier.type === 'isrc')?.value ?? ''}
           onChange={(event) => { const value = event.target.value; setContent((current) => ({ ...current, identifiers: [...current.identifiers.filter((identifier) => !(identifier.trackRef === track.clientRef && identifier.type === 'isrc')), ...(value.trim() ? [{ trackRef: track.clientRef, type: 'isrc' as const, value }] : [])] })); setDirty(true); }} disabled={!editable} />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
-          <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} disabled={!editable || !track.recordingId}>
-            Cargar máster WAV/FLAC/AIFF<input hidden type="file" accept="audio/wav,audio/x-wav,audio/flac,audio/aiff,audio/x-aiff" onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload(track.clientRef, file, 'master_audio', track.recordingId); }} />
-          </Button>
-          {!track.recordingId && <Typography variant="body2" color="text.secondary">Guarda primero para asignar el recordingId.</Typography>}
-          <Typography variant="body2">Duración técnica: {currentVersion.tracks.find((item) => item.recordingId === track.recordingId)?.durationMs ?? 'pendiente'}</Typography>
-        </Stack>
-        <UploadProgress state={uploads[track.clientRef]} />
+        <UploadDropZone kind="master_audio" disabled={!editable || !track.recordingId}
+          hint={`Arrastra aquí el máster de la pista ${index + 1} (WAV, FLAC o AIFF) o elígelo con el botón.`}
+          onFile={(file) => { void upload(track.clientRef, file, 'master_audio', track.recordingId); }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+            <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} disabled={!editable || !track.recordingId}>
+              Cargar máster WAV/FLAC/AIFF<input hidden type="file" accept={MASTER_AUDIO_ACCEPT} data-testid={`master-input-${index + 1}`} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void upload(track.clientRef, file, 'master_audio', track.recordingId); }} />
+            </Button>
+            {!track.recordingId && <Typography variant="body2" color="text.secondary">Guarda primero para asignar el recordingId.</Typography>}
+            <Typography variant="body2">Duración técnica: {currentVersion.tracks.find((item) => item.recordingId === track.recordingId)?.durationMs ?? 'pendiente'}</Typography>
+          </Stack>
+          <UploadProgress state={uploads[track.clientRef]} label={`pista ${index + 1}`}
+            onCancel={() => cancelUpload(track.clientRef)} onRetry={() => retryUpload(track.clientRef)} />
+        </UploadDropZone>
       </Stack>)}
-      <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} disabled={!editable}>
-        Cargar portada original<input hidden type="file" accept="image/jpeg,image/png,image/tiff" onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload('cover', file, 'cover_original'); }} />
-      </Button>
-      <UploadProgress state={uploads['cover']} />
+      <UploadDropZone kind="cover_original" disabled={!editable}
+        hint="Arrastra aquí la portada original (JPEG, PNG o TIFF) o elígela con el botón."
+        onFile={(file) => { void upload('cover', file, 'cover_original'); }}>
+        <Button component="label" variant="outlined" startIcon={<CloudUploadIcon />} disabled={!editable} sx={{ alignSelf: 'flex-start' }}>
+          Cargar portada original<input hidden type="file" accept={COVER_IMAGE_ACCEPT} data-testid="cover-input" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ''; if (file) void upload('cover', file, 'cover_original'); }} />
+        </Button>
+        <UploadProgress state={uploads['cover']} label="portada" onCancel={() => cancelUpload('cover')} onRetry={() => retryUpload('cover')} />
+      </UploadDropZone>
       <Stack direction="row" spacing={1} flexWrap="wrap">{currentVersion.assets.map((asset) => <Chip key={asset.id} label={`${asset.role}: ${asset.processingState}`} size="small" />)}</Stack>
     </Stack></CardContent></Card>
 
@@ -785,15 +931,15 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
           <Button color="warning" disabled={actionPending || currentVersion.state !== 'in_review' || !reviewBody.trim()} onClick={() => void requestChanges()}>Solicitar cambios</Button>
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <Button disabled={currentVersion.state !== 'ready_for_review'} onClick={() => void transition('in_review')}>Iniciar revisión</Button>
-          <Button disabled={currentVersion.state !== 'in_review'} onClick={() => void transition('approved')}>Aprobar versión inmutable</Button>
+          <Button disabled={actionPending || currentVersion.state !== 'ready_for_review'} onClick={() => void transition('in_review')}>Iniciar revisión</Button>
+          <Button disabled={actionPending || currentVersion.state !== 'in_review'} onClick={() => void transition('approved')}>Aprobar versión inmutable</Button>
           <TextField type="datetime-local" label="Publicar" InputLabelProps={{ shrink: true }} value={scheduleLocal} onChange={(event) => setScheduleLocal(event.target.value)} />
-          <Button variant="contained" disabled={!scheduleLocal || currentVersion.state !== 'approved'} onClick={() => void transition('scheduled', { releaseAtUtc: new Date(scheduleLocal).toISOString(), releaseTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone, embargoUntilUtc: new Date(scheduleLocal).toISOString() })}>Programar</Button>
+          <Button variant="contained" disabled={actionPending || !scheduleLocal || currentVersion.state !== 'approved'} onClick={() => void transition('scheduled', { releaseAtUtc: new Date(scheduleLocal).toISOString(), releaseTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone, embargoUntilUtc: new Date(scheduleLocal).toISOString() })}>Programar</Button>
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <Button color="error" disabled={!['in_review','approved','scheduled','published'].includes(currentVersion.state)} onClick={() => void transition('suspended', { reason: 'Suspensión editorial desde Studio' })}>Suspender</Button>
+          <Button color="error" disabled={actionPending || !['in_review','approved','scheduled','published'].includes(currentVersion.state)} onClick={() => void transition('suspended', { reason: 'Suspensión editorial desde Studio' })}>Suspender</Button>
           <TextField type="datetime-local" label="Retirar" InputLabelProps={{ shrink: true }} value={takedownLocal} onChange={(event) => setTakedownLocal(event.target.value)} />
-          <Button color="error" disabled={!takedownLocal || !['published','suspended','replacement_pending'].includes(currentVersion.state)} onClick={() => void transition('takedown_scheduled', { reason: 'Retiro programado desde Studio', takedownAtUtc: new Date(takedownLocal).toISOString(), takedownTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone })}>Programar retiro</Button>
+          <Button color="error" disabled={actionPending || !takedownLocal || !['published','suspended','replacement_pending'].includes(currentVersion.state)} onClick={() => void transition('takedown_scheduled', { reason: 'Retiro programado desde Studio', takedownAtUtc: new Date(takedownLocal).toISOString(), takedownTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone })}>Programar retiro</Button>
           <Button color="error" disabled={!editable} onClick={() => void transition('cancelled', { reason: 'Cancelación editorial desde Studio' })}>Cancelar borrador</Button>
         </Stack></>}
     </Stack></CardContent></Card>

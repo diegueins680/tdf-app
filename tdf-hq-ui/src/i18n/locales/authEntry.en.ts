@@ -52,6 +52,7 @@ export default {
   "googleContinue": "Or continue with Google",
   "googleSignup": "New here? Create an account with Google",
   "googleWaiting": "Google sign-in will be available when the service is ready.",
+  "googleDesktopUnavailable": "Google sign-in is not available in the desktop app. Use your TDF email and password; if you only used Google before, reset your password first.",
   "rememberDevice": "Remember me on this device",
   "rememberHint": "Keep your session signed in on this browser when browser storage is available.",
   "signingIn": "Signing in…",

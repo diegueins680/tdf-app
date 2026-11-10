@@ -831,7 +831,18 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.ok(review, 'the route-specification reviews need their exact protected-main review');
     assert.deepEqual(active.find(row => row.id === review.id), review);
   }
-  const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id)]);
+  // The desktop shell (#717) adds nine reviewed playback and desktop lists;
+  // keep their exact branch reviews outside the historical Apple view as well.
+  const desktopBranch = await reviewedParent('3668640fa56a558bbd3bd95881526d5faf5be22c');
+  const desktopReviews = ['9f5a58afbcc5a21f3a81', '162bb73e8a27ecdbd80d', '19b53762aa84c847059a',
+    'd3fe8dedc63dbee01dcf', 'dd837be242ffaf6c73c5', '70eef2bc5a9e8ef6ab65', 'ee97985b0d9abc1b1ed3',
+    '57fc580c92ca2352698d', '2cf4da8b8443b9be1b48'].map(id => desktopBranch.find(row => row.id === id));
+  for (const review of desktopReviews) {
+    assert.ok(review, 'the desktop shell reviews need their exact branch review');
+    assert.deepEqual(active.find(row => row.id === review.id), review);
+  }
+  const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
+    ...desktopReviews.map(row => row.id)]);
   const historicalAppleView = active.filter(row => !laterMainIds.has(row.id));
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
@@ -839,7 +850,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   assert.equal(historicalAppleView.length, 1411);
   assert.deepEqual(historicalAppleView,
     await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1414);
+  assert.equal(active.length, 1423);
   const history = new Map();
   const visit = row => {
     if (!row) return;
