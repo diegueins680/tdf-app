@@ -68,6 +68,10 @@ creating a duplicate profile or a fictitious user account.
 The backend verifies a real account/follow creation within the last hour and
 after campaign creation, a known campaign piece and review-ready status.
 Uniqueness on campaign + viewer + kind prevents retries inflating conversions.
+Initial campaign creation and conversion insertion use atomic conflict-tolerant
+inserts. Concurrent identical creation retries recover the same saved revision;
+different initial documents return a409. Conversion retries retain the first
+stored attribution and return normally without incrementing the count.
 The first accepted piece receives attribution. These are historical creations,
 not current follower totals. Request-supplied attribution is not proof of
 causality, cross-device attribution or complete measurement of delayed returns.
@@ -151,6 +155,15 @@ authorization uses the existing transaction guard; SQLite helper tests do not
 prove its PostgreSQL locking behavior. Web tests cover save/resume, failed-save
 recovery, anonymous exclusion, attribution continuity and validation. The real
 production rollout and authenticated save require operator deployment access.
+
+The isolated PostgreSQL/HTTP lane in
+`scripts/__tests__/identity-http-runtime.mjs` holds a controlled insert barrier
+until two actual requests reach it. It checks concurrent identical and
+conflicting campaign creations, registration/follow conversion retries, one
+stored event per kind, artist isolation and rejection of unreviewed featuring.
+The fixture creates synthetic identities and performs no provider publication.
+This exercises bounded real database interleavings; it is not a universal
+concurrency or production-deployment proof.
 
 ## Manager verification boundary
 

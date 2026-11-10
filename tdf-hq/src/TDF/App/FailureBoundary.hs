@@ -9,8 +9,11 @@ import qualified Control.Exception.Safe as Safe
 import Control.Monad (void, when)
 import Data.IORef (newIORef, readIORef, atomicModifyIORef')
 import Data.Text (Text)
-import Network.HTTP.Types (status500)
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import Network.HTTP.Types (mkStatus, status500)
 import Network.Wai (Middleware, Response, responseLBS)
+import Servant.Server (ServerError (..))
 
 internalErrorResponse :: Response
 internalErrorResponse = responseLBS status500
@@ -33,10 +36,25 @@ requestExceptionBoundary logger next request send = do
         send response
       failed exception = do
         started <- readIORef responseStarted
-        if started then throwIO exception else do
-          reportUnhandledException logger exception
-          sendOnce internalErrorResponse
+        if started then throwIO exception else
+          case fromException exception :: Maybe ServerError of
+            -- servant-server 0.20's runHandler does not catch a ServerError
+            -- thrown with throwIO (only throwError), so a refusal raised
+            -- inside IO would otherwise collapse into the generic 500. The
+            -- error is the handler's own response, never arbitrary text.
+            Just serverErr -> sendOnce (serverErrorResponse serverErr)
+            Nothing -> do
+              reportUnhandledException logger exception
+              sendOnce internalErrorResponse
   Safe.handleAny failed (next request sendOnce)
+
+-- | The response servant itself would send for a ServerError raised with
+-- throwError: the authored status, headers and body.
+serverErrorResponse :: ServerError -> Response
+serverErrorResponse err =
+  responseLBS (mkStatus (errHTTPCode err) (errReasonPhrase' err)) (errHeaders err) (errBody err)
+  where errReasonPhrase' = encodeReason . errReasonPhrase
+        encodeReason = TE.encodeUtf8 . T.pack
 
 bestEffortActivity :: (Text -> IO ()) -> IO () -> IO ()
 bestEffortActivity logger action = Safe.handleAny

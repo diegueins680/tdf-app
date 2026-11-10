@@ -9623,8 +9623,7 @@ serviceMarketplaceServer user =
 
 listServiceAds :: AppM [Api.ServiceAdDTO]
 listServiceAds = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     ads <- selectList [ServiceAdActive ==. True] [Desc ServiceAdCreatedAt]
     let providerIds = map (serviceAdProviderPartyId . entityVal) ads
     providers <- if null providerIds then pure [] else selectList [PartyId <-. providerIds] []
@@ -9685,9 +9684,8 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
   slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
-  pool <- asks envPool
   let catalogKey = toSqlKey catalogId
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     mCatalog <- get catalogKey
     case validateServiceMarketplaceCatalog mCatalog of
       Left serverErr -> liftIO $ throwIO serverErr
@@ -9704,7 +9702,7 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
         , serviceAdActive = True
         , serviceAdCreatedAt = now
         }
-  dto <- liftIO $ flip runSqlPool pool $ do
+  dto <- runDB $ do
     adId <- insert record
     ent <- getJustEntity adId
     mProvider <- get (auPartyId user)
@@ -9715,16 +9713,14 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
 
 listServiceAdSlots :: Int64 -> AppM [Api.ServiceAdSlotDTO]
 listServiceAdSlots adId = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     Entity adKey _ <- resolveServiceAdEntity adId
     slots <- selectList [ServiceAdSlotAdId ==. adKey] [Asc ServiceAdSlotStartsAt]
     pure (map toServiceAdSlotDTO slots)
 
 createServiceAdSlot :: AuthedUser -> Int64 -> Api.ServiceAdSlotCreateReq -> AppM Api.ServiceAdSlotDTO
 createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     ad@(Entity adKey _) <- resolveServiceAdEntity adId
     when (serviceAdProviderPartyId (entityVal ad) /= auPartyId user) $
       liftIO $ throwIO err403
@@ -9750,8 +9746,7 @@ createServiceMarketplaceBooking _ _ =
 
 completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
 completeServiceMarketplaceBooking user rawBookingId = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     Entity bookingKey booking <- resolveServiceMarketplaceBookingEntity rawBookingId
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
     escrow <- either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
@@ -11319,12 +11314,8 @@ selectPublicBookingManualPayment
 selectPublicBookingManualPayment
     rawBookingId mLookupToken Api.PublicBookingManualPaymentReq{..} = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
-  let method = T.toLower (T.strip pbmprPaymentMethod)
-  unless (method == "bank_transfer") $
-    throwError err400 { errBody = "Only bank transfer is available for public manual payment" }
-  when (sbpcCheckoutStatus context == "processing") $
-    throwError err409
-      { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  either throwError pure
+    (validatePublicManualPaymentSelection (sbpcCheckoutStatus context) pbmprPaymentMethod)
   ensureNoActiveServiceBookingOnlineAttempt context
   requireServiceBookingProvider
     context (sbpcEnvironment context) Checkout.ProviderBankTransfer
@@ -11553,12 +11544,9 @@ createServiceBookingCheckoutTransaction
       :: IO (Either SomeException (Either ServerError (Key Booking))))
   case result of
     Right value -> pure value
-    Left exception -> case fromException exception :: Maybe SomeAsyncException of
-      Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception :: Maybe SqlError of
-        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
-          { errBody = "The selected room or resource was reserved by another request" })
-        _ -> liftIO (throwIO exception)
+    Left exception -> case publicBookingTransactionFailure exception of
+      Just serverErr -> pure (Left serverErr)
+      Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
@@ -11795,6 +11783,45 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
   when createdNow (notifyEngineerIfNeeded dto)
   pure dto
 
+-- | SQL failures a public booking transaction turns into 409 instead of a
+-- generic 500: the calendar exclusion (23P01), the lifecycle and snapshot
+-- triggers (23514) and serialization or deadlock aborts (40001, 40P01), the
+-- same set the staff path maps in runBookingTransaction.
+-- | Every refusal a public booking transaction can raise: a ServerError thrown
+-- with throwIO inside the transaction (servant's runHandler does not catch
+-- those, so without this mapping they answered a generic 500), or a SQL
+-- conflict the calendar turns into 409. Asynchronous exceptions and anything
+-- else propagate.
+publicBookingTransactionFailure :: SomeException -> Maybe ServerError
+publicBookingTransactionFailure exception =
+  case fromException exception :: Maybe SomeAsyncException of
+    Just _ -> Nothing
+    Nothing ->
+      case fromException exception of
+        Just serverErr -> Just serverErr
+        Nothing -> fromException exception >>= publicBookingSqlConflict
+
+publicBookingSqlConflict :: SqlError -> Maybe ServerError
+publicBookingSqlConflict sqlError
+  | sqlState sqlError == "23P01" =
+      Just err409 { errBody = "The selected room or resource was reserved by another request" }
+  | sqlState sqlError `elem` ["23514", "40001", "40P01"] =
+      Just err409 { errBody = "Booking conflicts with the resource calendar or checkout lifecycle" }
+  | otherwise = Nothing
+
+-- | Admission for a public bank-transfer selection: only bank transfer, never
+-- on a paid deposit, and not while another rail is processing.
+validatePublicManualPaymentSelection :: Text -> Text -> Either ServerError ()
+validatePublicManualPaymentSelection checkoutStatus rawMethod
+  | T.toLower (T.strip rawMethod) /= "bank_transfer" =
+      Left err400 { errBody = "Only bank transfer is available for public manual payment" }
+  | checkoutStatus == "paid" =
+      Left err409 { errBody = "This booking deposit is already paid" }
+  | checkoutStatus == "processing" =
+      Left err409
+        { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  | otherwise = Right ()
+
 createPublicTentativeBookingTransaction
   :: Text
   -> Text
@@ -11813,12 +11840,9 @@ createPublicTentativeBookingTransaction
       :: IO (Either SomeException (Either ServerError (Key Booking, Bool))))
   case result of
     Right value -> pure value
-    Left exception -> case fromException exception :: Maybe SomeAsyncException of
-      Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception :: Maybe SqlError of
-        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
-          { errBody = "The selected room or resource was reserved by another request" })
-        _ -> liftIO (throwIO exception)
+    Left exception -> case publicBookingTransactionFailure exception of
+      Just serverErr -> pure (Left serverErr)
+      Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
@@ -19703,12 +19727,23 @@ resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaid
         then Left err400 { errBody = "paidAt is required when status is paid" }
         else Right paidAtFinal
 
+-- | A stored order status is either one of the legacy statuses an operator may
+-- set, or one of the canonical checkout statuses that
+-- @trg_marketplace_sync_verified_checkout@ mirrors onto a canonical order
+-- (@awaiting_payment@ at creation, then @processing@ or @failed@). The latter
+-- are never accepted as an update target, but an order carrying one must
+-- still be editable.
 validateStoredMarketplaceOrderStatus :: Text -> Either ServerError Text
-validateStoredMarketplaceOrderStatus rawStatus =
-  case normalizeMarketplaceOrderStatus rawStatus of
-    Just normalized -> Right normalized
-    Nothing ->
-      Left err500 { errBody = "Stored marketplace order status is invalid" }
+validateStoredMarketplaceOrderStatus rawStatus
+  | T.strip rawStatus `elem` canonicalMarketplaceOrderStatuses = Right (T.strip rawStatus)
+  | otherwise =
+      case normalizeMarketplaceOrderStatus rawStatus of
+        Just normalized -> Right normalized
+        Nothing ->
+          Left err500 { errBody = "Stored marketplace order status is invalid" }
+
+canonicalMarketplaceOrderStatuses :: [Text]
+canonicalMarketplaceOrderStatuses = ["holding", "awaiting_payment", "processing"]
 
 isPaidMarketplaceOrderStatus :: Text -> Bool
 isPaidMarketplaceOrderStatus rawStatus =
