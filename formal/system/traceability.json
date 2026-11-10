@@ -13944,7 +13944,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record.",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction.",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -16566,7 +16566,7 @@
       "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-events-routes.md.",
       "source": "formal/system/social-events-routes.md",
       "contract": "formal/system/social-events-routes.md",
-      "property": "Public route authenticated by HMAC (503 without configuration, 400 bad signature or JSON). payment_intent.succeeded validates the evidence and moves a pending order to paid with a conditional update, issuing tickets; canceled cancels it and releases inventory and promotion redemptions. Outcomes are never overwritten (conditional updates, PAY-TIP-001 / StripeIntentOutcome model).",
+      "property": "Public route authenticated by HMAC (503 without configuration, 400 bad signature or JSON). payment_intent.succeeded validates the evidence and moves a pending order to paid with a conditional update, issuing tickets; canceled cancels it and releases inventory and promotion redemptions. Outcomes are never overwritten (conditional updates, PAY-TIP-001 / StripeIntentOutcome model). When a succeeded PaymentIntent with a positive amount matches a ticket order but fails the binding or evidence validation, the handler still answers 400 and first commits an open commerce_reconciliation_exception (provider stripe, verified_payment_not_admitted, internal reference event_ticket_order:{id}, expected and received amounts). A valid capture for an order that is neither pending nor paid issues no ticket and records verified_payment_on_closed_order.",
       "actors": [
         "Stripe"
       ],
@@ -16605,16 +16605,19 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/Spec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end.",
       "evidence": "formal/system/social-events-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "When succeeded evidence does not match the order, the legacy ticket path only answers 400; unlike the canonical capture paths (PAY-CAPTURE-RECON-001) it records no reconciliation exception, so captured money can be left unrecorded."
+        "Course registrations, artist tips and marketplace orders paid through this webhook are matched by a conditional status update only and record no exception when nothing matches.",
+        "The exception's merchant reference is the constant \"stripe\" and its environment comes from the event's livemode flag (production when absent); no Stripe account id is configured.",
+        "A refused event is not stored, so Stripe keeps redelivering it; the open-exception fingerprint keeps that to one row."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",
@@ -20761,7 +20764,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/public-intake-routes.md.",
       "source": "formal/system/public-intake-routes.md",
       "contract": "formal/system/public-intake-routes.md",
-      "property": "The token is a canonical UUID matching exactly one asset qr_code (404/409). Checkout accepts party loans and rentals only, requires terms, a holder email or phone, condition, a managed photo URL and dueAt (400), refuses an already checked-out asset (409) and inserts the checkout and asset status. Checkin requires the open checkout to be a party loan or rental (409), condition and photo (400) and closes it. Upload requires the asset to be available or on a party loan (409), validates the form and 1 byte..10 MB (400) and writes the file under the public inventory root without a database row.",
+      "property": "The token is a canonical UUID matching exactly one asset qr_code (404/409). Checkout accepts party loans and rentals only, requires terms, a holder email or phone, condition, a managed photo URL and dueAt (400), refuses an already checked-out asset (409) and inserts the checkout and asset status. Checkin requires the open checkout to be a party loan or rental (409), condition and photo (400) and closes it. Upload requires the asset to be available or on a party loan (409), validates the form, 1 byte..10 MB and the image signature of the declared type (400) and writes the file under the public inventory root without a database row.",
       "actors": [
         "Anonymous QR holder"
       ],
@@ -21715,7 +21718,7 @@
     {
       "id": "SVCMKT-PROVIDER-ADS-001",
       "title": "Service marketplace provider ads and slots",
-      "statement": "An authenticated party publishes a provider ad and opens time slots on it. Routes: POST /service-marketplace/ads; POST /service-marketplace/ads/{adId}/slots.",
+      "statement": "A party holding a staff-assigned provider role publishes a provider ad and opens time slots on it. Routes: POST /service-marketplace/ads; POST /service-marketplace/ads/{adId}/slots.",
       "domain": "SVCMKT",
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
       "source": "formal/system/ads-storefront-routes.md",
@@ -21749,11 +21752,11 @@
         "service_ad",
         "service_ad_slot"
       ],
-      "authorization": "Any authenticated account may create an ad; slots require ad ownership.",
+      "authorization": "validateServiceAdProvider on both routes: one of Admin, Manager, StudioManager, Engineer, Teacher, Producer, LiveSessionsProducer, Artist, Artista, Songwriter, DJ, Photographer, Publicist, TourManager, StageManager, RoadCrew, Promotor, Promoter, Agency or Vendor (403 otherwise); slots also require ad ownership.",
       "privacy": "Unchanged; see the route table.",
       "concurrency": "No locks; no overlap check between slots.",
       "idempotency": "None: a duplicate headline per provider or an identical slot window hits a unique constraint (500).",
-      "failure": "400 invalid; 403 not the owner; 404 catalog or ad; 409 inactive catalog.",
+      "failure": "400 invalid; 403 no provider role or not the owner; 404 catalog or ad; 409 inactive catalog.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
@@ -21763,13 +21766,13 @@
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateServiceAdProvider is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
       "evidence": "formal/system/ads-storefront-routes.md",
       "critical": false,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Any account, including Fan or Customer, may publish a provider ad; siblings use module gates.",
+        "The gate is a role allow-list: there is no provider application or approval record, and ads created earlier by other accounts remain listed.",
         "Duplicate headlines and identical slots answer 500 instead of 409.",
         "Slots are not checked for overlap."
       ],
@@ -22137,7 +22140,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/artists-assets-label-routes.md.",
       "source": "formal/system/artists-assets-label-routes.md",
       "contract": "formal/system/artists-assets-label-routes.md",
-      "property": "Every route needs operations access. Creation validates name, category and photo URL (400). Uploads accept one image part (jpeg, png, webp, gif) whose extension matches the declared type, 1 byte..10 MiB (400), and write it under the public assets root at inventory/{uuid}-{name} without a database row. Patches need at least one field (400), a known room (400), refuse a status change while a checkout is open and booked without one (409). Delete refuses an asset with any checkout history (409). QR rotation replaces the token unconditionally.",
+      "property": "Every route needs operations access. Creation validates name, category and photo URL (400). Uploads accept one image part (jpeg, png, webp, gif) whose extension matches the declared type, 1 byte..10 MiB (400) and whose leading bytes are that format's signature (400), and write it under the public assets root at inventory/{uuid}-{name} without a database row. Patches need at least one field (400), a known room (400), refuse a status change while a checkout is open and booked without one (409). Delete refuses an asset with any checkout history (409). QR rotation replaces the token unconditionally.",
       "actors": [
         "Operations staff"
       ],
@@ -22185,13 +22188,13 @@
         "tdf-hq/test/TDF/ServerExtraSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateInventoryAssetUploadSignature is unit-tested in tdf-hq/test/TDF/ServerExtraSpec.hs.",
       "evidence": "formal/system/artists-assets-label-routes.md",
       "critical": false,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Uploads trust the declared MIME type (no content sniffing), land in the public root, have no database record and are never cleaned up.",
+        "Uploads land in the public root, have no database record and are never cleaned up; only the leading signature is checked, the image is not decoded.",
         "QR rotation invalidates printed codes with no confirmation or audit.",
         "A delete racing a checkout answers 500."
       ],
@@ -22420,7 +22423,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ddex-radio-session-routes.md.",
       "source": "formal/system/ddex-radio-session-routes.md",
       "contract": "formal/system/ddex-radio-session-routes.md",
-      "property": "Every route needs a staff module grant under a coherent role set (validateRadioCatalogAccess, 403). Stream URLs must be public HTTP(S) without userinfo, fragment or private hosts (400); legacy UUID-path URLs answer 503 on save. Save upserts the stream by URL with an active country and published genre (400). Import takes up to 8 public source URLs (default four hard-coded lists) and a limit of 1..800 (400), fetches each source, parses stations and upserts them with observation rows in one transaction, counting failed sources. Refresh fetches up to 400 active streams with a 5-second timeout and updates name, genre and last check per stream. Now-playing fetches two ICY metadata blocks and answers 502 on failure.",
+      "property": "Every route needs a staff module grant under a coherent role set (validateRadioCatalogAccess, 403). Stream URLs must be public HTTP(S) without userinfo, fragment or private hosts (400); legacy UUID-path URLs answer 503 on save. Save upserts the stream by URL with an active country and published genre (400). Import takes up to 8 public source URLs (default four hard-coded lists) and a limit of 1..800 (400), fetches each source, parses stations and upserts them with observation rows in one transaction, counting failed sources. Refresh fetches up to 400 active streams with a 5-second timeout and updates name, genre and last check per stream. Now-playing fetches two ICY metadata blocks and answers 502 on failure. Every server-side fetch follows no redirect and keeps no cookie (hardenRadioFetchRequest); source imports time out after 10 seconds; refresh re-validates each stored URL before fetching it.",
       "actors": [
         "Staff"
       ],
@@ -22466,13 +22469,13 @@
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "validateRadioCatalogAccess and validateRadioStreamUrl are tested in tdf-hq/test/TDF/ServerSpec.hs; the rest is read from the handlers.",
+      "verification": "validateRadioCatalogAccess and validateRadioStreamUrl are tested in tdf-hq/test/TDF/ServerSpec.hs; the rest is read from the handlers. Added 2026-11-10: hardenRadioFetchRequest is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
       "evidence": "formal/system/ddex-radio-session-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Host validation is lexical: redirects and DNS rebinding are not re-checked, so a public source can redirect the server to a private address.",
+        "Host validation is lexical: DNS rebinding is not re-checked, so a public name that resolves to a private address is still fetched. Redirects are no longer followed.",
         "Source and metadata bodies are read without a size cap.",
         "Concurrent inserts of the same URL answer 500 instead of merging.",
         "now-playing does not apply the legacy-URL 503 guard its siblings apply."
@@ -22688,7 +22691,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
       "source": "formal/system/identity-routes.md",
       "contract": "formal/system/identity-routes.md",
-      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, answers 401 \"Account disabled\" for an inactive credential and 401 \"Invalid username or password\" otherwise, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome.",
+      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once ten invalid-credential answers were recorded for the identifier in the current 15-minute window (auth_rate_limit, counted per normalized identifier whether or not the account exists), checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
       "actors": [
         "Anonymous visitor"
       ],
@@ -22730,26 +22733,29 @@
       "privacy": "Stores credentials, names and phones from anonymous input.",
       "concurrency": "Row locks on party and credential; advisory lock per Google identity; signup existence check and insert are not serialized.",
       "idempotency": "Every login mints a new token; signup is unkeyed and a racing duplicate email hits the unique username (500).",
-      "failure": "400 invalid; 401 credentials, disabled or token; 409 existing email; 500 unconfigured Google; 503 policy.",
+      "failure": "400 invalid; 401 credentials or token; 429 throttled; 409 existing email; 500 unconfigured Google; 503 policy.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAuth.hs",
-        "tdf-hq/src/TDF/Auth.hs"
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/sql/2026-11-10_auth_rate_limit.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
-        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs"
+        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the counters and the handler wiring are read from the code and exercised by the PostgreSQL HTTP suites, not by a dedicated test.",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No rate limit, lockout or failed-attempt counter exists anywhere, so online password guessing is unbounded.",
-        "Login discloses that a disabled account exists (\"Account disabled\" vs \"Invalid username or password\").",
+        "Throttling is per identifier only: the backend has no trusted client address (no proxy-forwarding contract), so one client can still try a few passwords against many accounts, and anyone can lock a known identifier out of password login for up to fifteen minutes by failing ten times. Google login is not throttled.",
+        "Signup still discloses an existing email with 409.",
         "A racing duplicate signup answers 500 instead of 409.",
         "A Google account may share a primary email with a password account, after which email login for that address matches two parties and fails."
       ],
@@ -22767,7 +22773,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
       "source": "formal/system/identity-routes.md",
       "contract": "formal/system/identity-routes.md",
-      "property": "Reset issuance needs a valid email (400) and always answers 204; for an active credential it deactivates older reset tokens and creates a password-reset token with a 900-second database-clock window and a recovery challenge row, then emails it (ID-SESSION-003). Confirmation needs a UUID token and a valid password (400), locks the credential, requires an active account (403), consumes the token with a conditional update inside the window (400 otherwise), replaces the password, revokes password, Google and reset tokens and mints a session (ID-SESSION-001/002). Change takes a username in the body or the bearer token (Cookie is never read), validates both passwords (400), answers 403 for a disabled account before checking the password and 401 for unknown or wrong credentials, then replaces the password, revokes interactive sessions and mints a session.",
+      "property": "Reset issuance needs a valid email (400) and always answers 204; past five requests for the email in an hour it issues and sends nothing; otherwise, for an active credential it deactivates older reset tokens and creates a password-reset token with a 900-second database-clock window and a recovery challenge row, then emails it (ID-SESSION-003). Confirmation needs a UUID token and a valid password (400), locks the credential, requires an active account (403), consumes the token with a conditional update inside the window (400 otherwise), replaces the password, revokes password, Google and reset tokens and mints a session (ID-SESSION-001/002). Change takes a username in the body or the bearer token (Cookie is never read), validates both passwords (400), answers 403 for a disabled account before checking the password and 401 for unknown or wrong credentials, then replaces the password, revokes interactive sessions and mints a session.",
       "actors": [
         "Account holder"
       ],
@@ -22809,10 +22815,13 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAuth.hs",
-        "tdf-hq/src/TDF/Auth.hs"
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/sql/2026-11-10_auth_rate_limit.sql"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerAuthSpec.hs"
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -22821,7 +22830,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No rate limit on reset emails or current-password guessing.",
+        "Current-password guessing on the change route is not throttled; reset confirmation relies on the token's entropy and its 900-second window.",
         "With a username in the body the change route needs no session, which contradicts its registered handler-session boundary; the Cookie header is never read.",
         "The change route answers 403 \"Account disabled\" for any known disabled username without a password.",
         "No audit or activity row records a password change."
@@ -23397,7 +23406,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
       "source": "formal/system/social-messaging-routes.md",
       "contract": "formal/system/social-messaging-routes.md",
-      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false.",
+      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered.",
       "actors": [
         "Social inbox staff",
         "Administrator"
@@ -23438,7 +23447,7 @@
       "privacy": "Sends messages to contacts' phones and social accounts.",
       "concurrency": "No locks; the send precedes the record.",
       "idempotency": "None: a retry sends twice; two concurrent Meta replies both send.",
-      "failure": "400 invalid; 403 access; 404 message; 503 unconfigured.",
+      "failure": "400 invalid; 403 access; 404 message; 409 consent withdrawn; 503 unconfigured.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
@@ -23451,13 +23460,13 @@
         "tdf-hq/test/TDF/ServerExtraSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
       "evidence": "formal/system/social-messaging-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "WhatsApp replies never consult whats_app_consent, so staff can message an opted-out number, and do not mark the inbound message replied.",
+        "WhatsApp replies do not mark the inbound message replied; the operator-question route and the administrator send route do not consult consent.",
         "Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a number never subscribed.",
         "Consent and opt-out are gated by the plain Admin role while siblings use strict admin."
       ],
@@ -23609,7 +23618,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "PlaceToPay needs the feature flag (503), a body of at most 1 MiB (400) and a sha256 signature over requestId, status, date and the secret compared in constant time (401); the event is stored signature-verified with an encrypted payload. PayPhone callbacks (both paths) carry no signature: the adapter classifies them untrusted and query-required (400 otherwise), the store id must match (400) and the transaction ids must already match an immutable binding (404) before the event is stored untrusted; the worker queries the provider before admitting money (PAY-ADAPTER-BINDING-001).",
+      "property": "PlaceToPay needs the feature flag (503), a body of at most 1 MiB (400) and a sha256 signature over requestId, status, date and the secret compared in constant time (401); the event is stored signature-verified with an encrypted payload. PayPhone callbacks (both paths) carry no signature: the adapter classifies them untrusted and query-required (400 otherwise), the store id must match (400) and the transaction ids must already match an immutable binding (404) before the event is stored untrusted; the worker queries the provider before admitting money (PAY-ADAPTER-BINDING-001). A bound event that ends as a dead letter without an exception of its own (refused admission, unsupported or unavailable query, exhausted retries) leaves one open provider_event_dead_letter reconciliation exception, written in the dead-letter transaction and only if the inbox row is a dead letter at that attempt.",
       "actors": [
         "PlaceToPay",
         "PayPhone"
@@ -23648,19 +23657,20 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The hosted worker path (ProviderReconciliation) admits money with recordVerifiedPayment and dead-letters a rejected admission without a reconciliation exception, so PAY-CAPTURE-RECON-001 is not met literally there; the inbox row remains replayable.",
+        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue.",
         "/NotificacionPago is an undocumented alias of the PayPhone handler."
       ],
       "conformance": {
@@ -23817,7 +23827,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "Every route needs a strict administrator (403) and the Google client configuration (503). Token exchange validates the code and redirect URI (400), calls Google and stores access and refresh tokens on google_calendar_config. Sync needs a known calendar (404) and a refresh token (401), refreshes the access token when expired, lists events from Google (502 on failure) and upserts google_calendar_event with the cursor.",
+      "property": "Every route needs a strict administrator (403) and the Google client configuration (503). Token exchange validates the code and redirect URI (400), calls Google and stores access and refresh tokens on google_calendar_config sealed with AES-256-GCM under GOOGLE_CALENDAR_TOKEN_KEY (503 without the key; no token is written unsealed). Sync needs a known calendar (404) and a refresh token (401), refreshes the access token when expired, lists events from Google (502 on failure) and upserts google_calendar_event with the cursor. Stored tokens are opened before use: a token written before encryption existed is still read and is sealed at its next refresh; a sealed token without the key, under another key or altered answers 503.",
       "actors": [
         "Strict administrator"
       ],
@@ -23857,19 +23867,21 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Calendar/Models.hs"
+        "tdf-hq/src/TDF/Calendar/Models.hs",
+        "tdf-hq/src/TDF/Calendar/TokenCipher.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: the cipher (key admission, sealing, tamper and wrong-key refusal, legacy plaintext passthrough) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the handler wiring is read from the code.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Access and refresh tokens are stored in plain text, unlike the encrypted provider inbox payloads."
+        "Rows written before encryption keep plaintext tokens until their next refresh; there is no backfill migration.",
+        "Key rotation is not supported: changing GOOGLE_CALENDAR_TOKEN_KEY makes stored tokens unreadable until the calendar is reconnected."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",
@@ -24291,12 +24303,12 @@
     {
       "id": "OPS-SEED-ROUTES-001",
       "title": "Operator seeding routes",
-      "statement": "Operators holding the seed secret load demo data, inventory assets and the demo session; the routes are disabled without the secret and refused in hosted or production runtimes. Routes: POST /seed; POST /input-list/inventory/seed; POST /input-list/sessions/seed.",
+      "statement": "Strict administrators holding the seed secret load demo data, inventory assets and the demo session; the routes are disabled without the secret and refused in hosted or production runtimes. Routes: POST /seed; POST /input-list/inventory/seed; POST /input-list/sessions/seed.",
       "domain": "OPS",
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
       "source": "formal/system/content-ops-routes.md",
       "contract": "formal/system/content-ops-routes.md",
-      "property": "requireSeedToken answers 403 when SEED_TRIGGER_TOKEN is unset, 401 without X-Seed-Token, 400 for a malformed header and 403 on mismatch (constant-time compare); the configuration refuses the token at startup when hosted-platform markers or a production environment name are present. /seed runs seedAll in one transaction (demo credentials only when allowed); the inventory and session seeds upsert assets and insert the demo session if absent.",
+      "property": "Every route sits behind AuthProtect and validateSeedOperator: a strict administrator with the Admin module (403), as POST /admin/seed requires. Then requireSeedToken answers 403 when SEED_TRIGGER_TOKEN is unset, 401 without X-Seed-Token, 400 for a malformed header and 403 on mismatch (constant-time compare); the configuration refuses the token at startup when hosted-platform markers or a production environment name are present. /seed runs seedAll in one transaction (demo credentials only when allowed); the inventory and session seeds upsert assets and insert the demo session if absent.",
       "actors": [
         "Operator"
       ],
@@ -24327,11 +24339,11 @@
         "asset",
         "session, session_room, input rows"
       ],
-      "authorization": "Operator secret (AUTH-PUBLIC-001 operator-secret boundary).",
+      "authorization": "Strict administrator session with ModuleAdmin, then the operator secret. The routes are no longer public.",
       "privacy": "Unchanged; see the route table.",
       "concurrency": "No serialization between concurrent seeds.",
       "idempotency": "Upserts and select-then-insert.",
-      "failure": "400 header; 401 missing; 403 disabled or mismatch.",
+      "failure": "400 header; 401 no session or missing header; 403 not a strict administrator, disabled or mismatch.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
@@ -24340,16 +24352,16 @@
         "tdf-hq/src/TDF/Config.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+        "tdf-hq/test/TDF/ServerAdminSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateSeedOperator is unit-tested in tdf-hq/test/TDF/ServerSpec.hs and the compiled API surface records AuthProtect on the three routes.",
       "evidence": "formal/system/content-ops-routes.md",
       "critical": false,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The routes are weaker than POST /admin/seed, which also requires a strict administrator and ModuleAdmin.",
         "The production guard relies on platform markers; a self-hosted box without them can enable seeding.",
         "No audit row records a seed run."
       ],
@@ -26507,7 +26519,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "1c3398d4e96e8c37fe12818018f30a8281d6565c4a1e865f9a49b3aafab2d8d9",
+    "docs/catalog-persistence/catalog-list-decisions.json": "5ae22e8b6a00e1d5ee7e17bfdd2a1256f3440e9d71848c85635c22703d3d135f",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -26874,13 +26886,13 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "c592780532eff39cd73ee7a2878b2120e3f09ad2684bd2dfcd1d45db99fcf09b",
+    "formal/system/compiled-api-surface.json": "4caab8378c661438a22408e0d98d9e1bb5074f3473dff4d4727f09e98f019d82",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
-    "formal/system/public-routes.json": "6c3951102c06d0cbc7ba8c4fd4edc65ef57624c0bdf1671981fb39fc2eb0785d",
+    "formal/system/public-routes.json": "0e94301370fe28e1888ca66b00a0599271611820fcddd07ccbb4489a53a8f748",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "682b8b5877fa37c094ffce47c75fe05d7048679570ded706b4c3660f047884e2",
+    "formal/system/recovery-expiry-arithmetic.json": "e74301ae089963cd76c06414e33888b5faee089b25d0405d7bf234ab7e69662e",
     "formal/system/route-requirements.json": "4f28eb65d07564668746e110e1cf70716efeef4a694ffac9c3fcbc37ff65b661",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -27206,7 +27218,7 @@
     "scripts/test-public-booking-http-concurrency.sh": "6bcbfa2634384f4288b10b140c9e1aa0a518c5ffa7beb0347bac988d9b92fb60",
     "scripts/test-public-booking-tentative-idempotency-migration.sh": "38afada9051290eabf477e2558badbcf0a5c6a0207761f82a7a364db4018030b",
     "scripts/test-public-route-denial.py": "d5a13f375d8fc5e730174af326b9c6f78bec1dfd1a7dc8c6536e87d17f7a297f",
-    "scripts/test-public-routes.py": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
+    "scripts/test-public-routes.py": "fc959608bfb70097b378625bbc914645db7f87237fa7df536b851a967607f4fb",
     "scripts/test-public-ticket-checkout-runtime-migration.sh": "15748f87c2da0c89a785901853ddfaae6d86aee56e129c63b76e867637849f3d",
     "scripts/test-rag-index-privacy.sh": "d7086eccde1db152d9a6b0df4d7f9c806157aed92f654b489d4e677fcfb00ce9",
     "scripts/test-recovery-envelope.py": "730f6d41789ac414c6578b1e19d9be44f47e19299e9c5826dc831248291d59d0",
@@ -27818,7 +27830,7 @@
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "599d5043999681fa29685122f17e5383cca4d27a3df7022538dd4a8d5e863b87",
-    "tdf-hq/config/default.env.example": "8a477205e4dca468c32fbe2b5f7db4bce06e716898d17f4ee7df199d8038a888",
+    "tdf-hq/config/default.env.example": "3c7d42b92d6b894c6ae8689552438b0d42badb31a28efc944b41f22220ab364b",
     "tdf-hq/docs/openapi/api.yaml": "4ca7920bde8ef05dd5181334f9b0ef1bbb8cff1e591e9bf2d532a989520336cc",
     "tdf-hq/docs/openapi/directory.yaml": "114c0e6650440093d3599c08fe9d40ad5d3086bbe3441a885a0ab0f0d1449811",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
@@ -27981,9 +27993,10 @@
     "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql": "e2ae1da6c06c7d68b8a17a1b20ebf1903be36adc0c64447d8eb319dd430f3000",
     "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql": "02185d6050fe65042d41f79e6b3ab26ea6c71fe3b8d47b298698cbf736d25407",
     "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
+    "tdf-hq/sql/2026-11-10_auth_rate_limit.sql": "278f16a38d411fbf41cbb0068f2588f93f9ba710c3026830c9307f2a2108d7c5",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
-    "tdf-hq/src/TDF/API.hs": "c5a3b1529b86339f16f10d2697107df71d932a93564021a3fc4c7ba37ecf8016",
+    "tdf-hq/src/TDF/API.hs": "0d1e154b6a4a1a2b474b0d3093ceaf8bef5010ee47e61bd4026e38591fd99924",
     "tdf-hq/src/TDF/API/Admin.hs": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
     "tdf-hq/src/TDF/API/Catalog.hs": "a062b9681db64a9f68114888a0c296935944903efcbfedd672de2a3991e9d781",
     "tdf-hq/src/TDF/API/ContentStorage.hs": "252b724cba9b5a963757472792a4073f8562e7e1819b6e6840ca270dc5bf9f9b",
@@ -28008,9 +28021,11 @@
     "tdf-hq/src/TDF/Artists/Promotion.hs": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
     "tdf-hq/src/TDF/Auth.hs": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
+    "tdf-hq/src/TDF/Auth/Throttle.hs": "2e1f163c4a7508c656c0e4929c2ed9671dea28d979b476e7264de0c54a49af26",
     "tdf-hq/src/TDF/CMS/Models.hs": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
     "tdf-hq/src/TDF/Calendar/Models.hs": "ade52945cff1553e3e6e88edbd3a67457bda196364df216a62a8d1d69e8bcee8",
-    "tdf-hq/src/TDF/CampaignAutomation.hs": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
+    "tdf-hq/src/TDF/Calendar/TokenCipher.hs": "926c4158eee01f8eaf46ee5786c4208da3dd2a62b9f99dd9bada1af87e8bf656",
+    "tdf-hq/src/TDF/CampaignAutomation.hs": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "11a254c269bd9750e24f77c59552d33a6e690987386a45f61a3ed4a94bf65ab1",
     "tdf-hq/src/TDF/Catalog/Security.hs": "91fd8939b7bfb352044eae190f55eb94f8c6015230b7f93b5a35b09031115b99",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "6b84509305413c3b5bd16747db831d09f24d1a67a39744c9ff03ebd62e13f8a3",
@@ -28035,9 +28050,9 @@
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs": "901c237849c3a4b102ea5e0bdc16c029bfce1096fec5ccb40d0e8e3aa9d2f5cf",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs": "58979fe9954101dc83c6ee6f24d61c424d0f5a16258b2eeb3a7e76fff71dcea9",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
-    "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "ed7e4240362edafb3cb90524c148832e6880cf89f62a6ea3120add7c0dfc0016",
+    "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "edd3db953b7f89b6a79cce9fe5cddcc8711f13169a8558335fc40339634d085f",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
-    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "7d431209f0f362df9b000b57b78802fcee71768e885a4404e16adf23c8996963",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
@@ -28096,7 +28111,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "581d9ae1ab8bd947487db7d8f89d7e62ff4a5c6ffdaa99c436b72e3f84ceefc3",
+    "tdf-hq/src/TDF/Server.hs": "e1b2265e98213701538b6d50a6ccc7f4e427b87dca0f2c0e248b86a3c6faa4a2",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
@@ -28120,15 +28135,15 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "d1234048a5dbef693b73cb16a2688d3245a530d96216fecc7e541cbabf51bb77",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
-    "tdf-hq/src/TDF/ServerAuth.hs": "9666d010cc08c4755e4ba46a26f5e925c64d8af003e489cd1dccc3784bc5f0f5",
-    "tdf-hq/src/TDF/ServerExtra.hs": "a602375a16e0480187d5ca9385ab554625096c2ba2f45ef5ef57e71d41150dd2",
+    "tdf-hq/src/TDF/ServerAuth.hs": "c78ded06340a6c6affa8762da5a3675258ea8337adeeeb8672a710a4d0017cda",
+    "tdf-hq/src/TDF/ServerExtra.hs": "fac511e58b2072a96962ad2e025ae6c34e568ec8593502a1c0b33e83e572100b",
     "tdf-hq/src/TDF/ServerFanClub.hs": "fd0030b5c216270bf2381982e7eec4202afc7a8607e4a581398723692a3cb461",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
     "tdf-hq/src/TDF/ServerInstagramOAuth.hs": "e663522c1efc4eae60d077274478c68b14e6edf779c7fe083692339323fb4355",
@@ -28136,7 +28151,7 @@
     "tdf-hq/src/TDF/ServerInternships.hs": "d94b9e0807f968bc1eca088fbce77d882c079f4dd8382534b8efdf966471c1f5",
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerProposals.hs": "1a2a6c39e8ea7ad9b4154f7164fd19141b39acab00dc533b4ff79e3c81dbe65b",
-    "tdf-hq/src/TDF/ServerRadio.hs": "5cf8676925d3e588a3bfd0bc564377839d6aaf6c7256f9835be7664c171a40f6",
+    "tdf-hq/src/TDF/ServerRadio.hs": "c7e8c81810d6f08ea2e513b6b120c4d8e167e87a7738acd765411e4d13f0329c",
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": "2bb64ea8ae2173a5b9d6893291d58969816d91013b1a6fca28dc513178518da3",
     "tdf-hq/src/TDF/Services/RecordsIngestion.hs": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
@@ -28160,7 +28175,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+    "tdf-hq/tdf-hq.cabal": "f7ab070f0dc3d1e99bbf2da95db48967aa092dff631c9b0a04d4fd5476c73476",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -28168,7 +28183,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "e1a266bc079693bcae99423f9685f48abdaa9ec7f16112ec9cc7e5c5833c2573",
+    "tdf-hq/test/Spec.hs": "63d6b403ceedbfa976dc0aaf6701e291db94617a3c2bb5234d54f38de6df9802",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
     "tdf-hq/test/TDF/Artists/PromotionSpec.hs": "25a6ee8483bbc8b485f039b6d45cdfe417979ad3f93d3fba10f05e24a12ddd83",
@@ -28185,7 +28200,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "0f365325abbec6564548389a6c805ed9d1c600c339b854fbf0c88ecae5c3b78e",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "91d02ff1e4fd44dac6632160b6cdc4d66d892134831ade23eb6b9dd2357af1a8",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -28232,10 +28247,10 @@
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
-    "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
+    "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "b923722adcc5bb09810b1df7cb3020d262ec6f09438d69904b5a56c318e8c4f3",
+    "tdf-hq/test/TDF/ServerSpec.hs": "80f93b2c079d78672cad8f6273e5d8ff47fc790d9f766b10166742b2917faa70",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -29682,6 +29697,14 @@
         "relationship": "tests"
       },
       {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-PASSWORD-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "AUTH-ACCESS-REQUEST-LIFECYCLE-001",
         "relationship": "tests"
       },
@@ -29731,6 +29754,10 @@
       },
       {
         "requirement": "CMS-CONTENT-ADMIN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-SEED-ROUTES-001",
         "relationship": "tests"
       },
       {
@@ -31181,6 +31208,10 @@
       },
       {
         "requirement": "ART-PROFILE-WRITE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-STRIPE-WEBHOOK-001",
         "relationship": "tests"
       },
       {
@@ -42378,6 +42409,10 @@
       {
         "requirement": "PAY-PROVIDER-INBOX-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-HOSTED-NOTIFICATIONS-001",
+        "relationship": "implementation"
       }
     ],
     "formal/payments/ProviderInbox.tla": [
@@ -43826,6 +43861,26 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq/src/TDF/Auth/Throttle.hs": [
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PASSWORD-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-10_auth_rate_limit.sql": [
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PASSWORD-RECOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq/src/TDF/Social/RelationshipWrites.hs": [
       {
         "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
@@ -43863,6 +43918,12 @@
       }
     ],
     "tdf-hq/src/TDF/Calendar/Models.hs": [
+      {
+        "requirement": "INTEG-GOOGLE-CALENDAR-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Calendar/TokenCipher.hs": [
       {
         "requirement": "INTEG-GOOGLE-CALENDAR-001",
         "relationship": "implementation"
@@ -52481,7 +52542,7 @@
     {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
-      "sha256": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
+      "sha256": "fc959608bfb70097b378625bbc914645db7f87237fa7df536b851a967607f4fb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68791,6 +68852,29 @@
       ]
     },
     {
+      "id": "SURFACE-31c7d0747e8a3118",
+      "path": "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+      "sha256": "278f16a38d411fbf41cbb0068f2588f93f9ba710c3026830c9307f2a2108d7c5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PASSWORD-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f1c80d1e17711b59",
+      "path": "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql",
+      "sha256": "c5e0cf83c9179be4d56e75767f0274e2e94d50ab73a3b3deee93a3af6cd5f149",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -68838,7 +68922,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "c5a3b1529b86339f16f10d2697107df71d932a93564021a3fc4c7ba37ecf8016",
+      "sha256": "0d1e154b6a4a1a2b474b0d3093ceaf8bef5010ee47e61bd4026e38591fd99924",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -69498,6 +69582,22 @@
       ]
     },
     {
+      "id": "SURFACE-fcdcb342b1a07142",
+      "path": "tdf-hq/src/TDF/Auth/Throttle.hs",
+      "sha256": "2e1f163c4a7508c656c0e4929c2ed9671dea28d979b476e7264de0c54a49af26",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-PASSWORD-RECOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8c41b16bda1eb6d1",
       "path": "tdf-hq/src/TDF/CMS/Models.hs",
       "sha256": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
@@ -69522,9 +69622,21 @@
       ]
     },
     {
+      "id": "SURFACE-57235d95566bd74b",
+      "path": "tdf-hq/src/TDF/Calendar/TokenCipher.hs",
+      "sha256": "926c4158eee01f8eaf46ee5786c4208da3dd2a62b9f99dd9bada1af87e8bf656",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "INTEG-GOOGLE-CALENDAR-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
+      "sha256": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70007,11 +70119,15 @@
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "ed7e4240362edafb3cb90524c148832e6880cf89f62a6ea3120add7c0dfc0016",
+      "sha256": "edd3db953b7f89b6a79cce9fe5cddcc8711f13169a8558335fc40339634d085f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-PROVIDER-INBOX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-HOSTED-NOTIFICATIONS-001",
           "relationship": "implementation"
         }
       ]
@@ -70035,7 +70151,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
+      "sha256": "7d431209f0f362df9b000b57b78802fcee71768e885a4404e16adf23c8996963",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71299,7 +71415,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "581d9ae1ab8bd947487db7d8f89d7e62ff4a5c6ffdaa99c436b72e3f84ceefc3",
+      "sha256": "e1b2265e98213701538b6d50a6ccc7f4e427b87dca0f2c0e248b86a3c6faa4a2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72170,7 +72286,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+      "sha256": "d1234048a5dbef693b73cb16a2688d3245a530d96216fecc7e541cbabf51bb77",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72446,7 +72562,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "9666d010cc08c4755e4ba46a26f5e925c64d8af003e489cd1dccc3784bc5f0f5",
+      "sha256": "c78ded06340a6c6affa8762da5a3675258ea8337adeeeb8672a710a4d0017cda",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72502,7 +72618,7 @@
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "a602375a16e0480187d5ca9385ab554625096c2ba2f45ef5ef57e71d41150dd2",
+      "sha256": "fac511e58b2072a96962ad2e025ae6c34e568ec8593502a1c0b33e83e572100b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72693,7 +72809,7 @@
     {
       "id": "SURFACE-5a72b47f8b63ff19",
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
-      "sha256": "5cf8676925d3e588a3bfd0bc564377839d6aaf6c7256f9835be7664c171a40f6",
+      "sha256": "c7e8c81810d6f08ea2e513b6b120c4d8e167e87a7738acd765411e4d13f0329c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73192,7 +73308,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+      "sha256": "f7ab070f0dc3d1e99bbf2da95db48967aa092dff631c9b0a04d4fd5476c73476",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73371,7 +73487,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e1a266bc079693bcae99423f9685f48abdaa9ec7f16112ec9cc7e5c5833c2573",
+      "sha256": "63d6b403ceedbfa976dc0aaf6701e291db94617a3c2bb5234d54f38de6df9802",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73456,6 +73572,10 @@
         },
         {
           "requirement": "ART-PROFILE-WRITE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-STRIPE-WEBHOOK-001",
           "relationship": "tests"
         },
         {
@@ -73785,7 +73905,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "0f365325abbec6564548389a6c805ed9d1c600c339b854fbf0c88ecae5c3b78e",
+      "sha256": "91d02ff1e4fd44dac6632160b6cdc4d66d892134831ade23eb6b9dd2357af1a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74683,7 +74803,7 @@
     {
       "id": "SURFACE-fd889b176c72565e",
       "path": "tdf-hq/test/TDF/ServerExtraSpec.hs",
-      "sha256": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
+      "sha256": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74767,7 +74887,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "b923722adcc5bb09810b1df7cb3020d262ec6f09438d69904b5a56c318e8c4f3",
+      "sha256": "80f93b2c079d78672cad8f6273e5d8ff47fc790d9f766b10166742b2917faa70",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74895,6 +75015,14 @@
           "relationship": "tests"
         },
         {
+          "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "AUTH-PASSWORD-RECOVERY-001",
+          "relationship": "tests"
+        },
+        {
           "requirement": "AUTH-ACCESS-REQUEST-LIFECYCLE-001",
           "relationship": "tests"
         },
@@ -74944,6 +75072,10 @@
         },
         {
           "requirement": "CMS-CONTENT-ADMIN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "OPS-SEED-ROUTES-001",
           "relationship": "tests"
         },
         {
@@ -80449,6 +80581,7 @@
     "SURFACE-528ba14a45085166",
     "SURFACE-926be86200012f94",
     "SURFACE-dd062802b0652474",
+    "SURFACE-f1c80d1e17711b59",
     "SURFACE-7c4cd603babd8c4c",
     "SURFACE-87ed7351125c499c",
     "SURFACE-1c1ef431782f3c8d",
@@ -82111,7 +82244,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b0d357b60dd796ccc82d1964a3a39c4705ed9726688587beac0d1db6193f2819",
+      "sourceSha256": "6119d3a526c4f06e223300a71abf3470f2ece9c07f9eaef06354d3e8c784bcf1",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -82139,7 +82272,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b0d357b60dd796ccc82d1964a3a39c4705ed9726688587beac0d1db6193f2819",
+      "sourceSha256": "6119d3a526c4f06e223300a71abf3470f2ece9c07f9eaef06354d3e8c784bcf1",
       "definition": {
         "states": [
           "absent",
@@ -82169,7 +82302,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b0d357b60dd796ccc82d1964a3a39c4705ed9726688587beac0d1db6193f2819",
+      "sourceSha256": "6119d3a526c4f06e223300a71abf3470f2ece9c07f9eaef06354d3e8c784bcf1",
       "definition": {
         "export": [
           "queued",

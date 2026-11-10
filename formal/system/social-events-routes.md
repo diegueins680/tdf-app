@@ -62,7 +62,7 @@ unintended.
 ## Open behaviours for the owner to decide
 
 **Money and records**
-- Stripe webhook: when the evidence for a succeeded payment does not match the order, the legacy ticket path answers only 400. It records no reconciliation exception, unlike the canonical capture paths (PAY-CAPTURE-RECON-001).
+- **Decided 2026-11-10.** Stripe webhook: a succeeded ticket capture that the order cannot admit still answers 400 but now leaves an open reconciliation exception (`verified_payment_not_admitted`), and a valid capture for a closed order leaves `verified_payment_on_closed_order` (PAY-CAPTURE-RECON-001). Still open: course registrations, tips and marketplace orders on this webhook record nothing when no row matches.
 - Promotion codes are unique across all events, not per event.
 
 **Concurrency and data integrity**

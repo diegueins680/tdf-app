@@ -34137,6 +34137,26 @@
         "valueCount": 12,
         "consumerCount": 86
       }
+    },
+    {
+      "id": "a95cbb8b9256407889ea",
+      "classification": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "role_permission",
+      "priority": "P0-security",
+      "risk": "The list decides who may publish a service-marketplace ad. A missing role locks a provider out; an added role lets a self-service account advertise.",
+      "justification": "serviceAdProviderRoles is the allow-list applied by validateServiceAdProvider to POST /service-marketplace/ads and its slots (SVCMKT-PROVIDER-ADS-001, owner decision of 2026-11-10 to stop any account from publishing ads). It is deny-by-default and names only staff-assigned roles. It is authority held in code: the durable form is a provider permission in the security catalog or a provider approval record, neither of which exists yet, so it is recorded here for migration rather than retained.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "formal-audit-owner-decisions-20261110",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Server.hs",
+        "line": 9736,
+        "kind": "haskell-list",
+        "name": "serviceAdProviderRoles",
+        "valueCount": 20,
+        "requirement": "SVCMKT-PROVIDER-ADS-001"
+      }
     }
   ]
 }

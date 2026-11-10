@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/ServerAuth.hs": "9666d010cc08c4755e4ba46a26f5e925c64d8af003e489cd1dccc3784bc5f0f5",
+    "tdf-hq/src/TDF/ServerAuth.hs": "c78ded06340a6c6affa8762da5a3675258ea8337adeeeb8672a710a4d0017cda",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+    "tdf-hq/tdf-hq.cabal": "f7ab070f0dc3d1e99bbf2da95db48967aa092dff631c9b0a04d4fd5476c73476",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -529,6 +529,22 @@
       "change": "Compose protected main Cabal (unchanged since 6033b84e) with the event-discovery extra-source-files entry for sql/queries/social-event-city-match.sql.",
       "semanticReview": "Removing exactly the single extra-source-files line reproduces protected main Cabal bytes. All other reviewed source bytes and hashes match protected main, including the re-pinned Auth.hs. Both context-review histories are retained unchanged. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed by this reconciliation.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "b1614afd18b02e8cd0d46f71d798b7f38764bcec",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+      "currentSha256": "f7ab070f0dc3d1e99bbf2da95db48967aa092dff631c9b0a04d4fd5476c73476",
+      "change": "Register two new library modules, TDF.Calendar.TokenCipher (AES-256-GCM sealing of stored Google Calendar tokens) and TDF.Auth.Throttle (per-account counters for login failures, signup and password-reset requests). No other line changes.",
+      "semanticReview": "Removing exactly the two added exposed-module lines reproduces protected main Cabal bytes. No dependency, flag, extension, source path or existing registration changes; both modules use packages already listed (crypton, memory, base64-bytestring, entropy, persistent, time). Neither module imports or redefines an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. Auth.hs, Models.hs, Server/RecordsIngestion.hs, the recovery expiry SQL and Stack/lock are byte-identical to protected main. Obligation claims, assumptions and translations are unchanged. Fresh source-bound solver execution remains required; this pin refresh is not a proof or release authorization."
+    },
+    {
+      "reviewedAgainst": "b1614afd18b02e8cd0d46f71d798b7f38764bcec",
+      "source": "tdf-hq/src/TDF/ServerAuth.hs",
+      "previousSha256": "9666d010cc08c4755e4ba46a26f5e925c64d8af003e489cd1dccc3784bc5f0f5",
+      "currentSha256": "c78ded06340a6c6affa8762da5a3675258ea8337adeeeb8672a710a4d0017cda",
+      "change": "Password login refuses with 429 once the failures recorded for the identifier use up the window (TDF.Auth.Throttle) and counts each invalid-credential answer; runLogin checks the password before the active flag and answers a disabled account exactly like a wrong password; signup and password-reset requests consume a per-email counter, the reset route answering unchanged and issuing nothing past the limit. Adds the import, authThrottleRefusal and loginInvalidMessage.",
+      "semanticReview": "recoveryWindowValid, createPasswordResetToken, the recovery challenge insert and every expression the restricted translator reads are byte-identical to protected main; the edits are confined to login, runLogin, signup and the request half of passwordReset, plus one import and two new top-level helpers. No reset token is issued on a path that did not issue one before; past the limit strictly fewer are issued. The recovery expiry SQL, identity-lifecycle contract and Stack/lock are unchanged. Obligation claims, assumptions, translations and limitations are preserved. Fresh source-bound solver/replay/control execution remains required."
     }
   ]
 }

@@ -114,8 +114,8 @@ type InputListPublicAPI =
          :> Get '[JSON] [Entity InventoryItem]
 
 type InputListSeedAPI =
-       "inventory" :> "seed" :> SeedAPI
-  :<|> "sessions" :> "seed" :> SeedAPI
+       "inventory" :> "seed" :> AuthProtect "bearer-token" :> SeedAPI
+  :<|> "sessions" :> "seed" :> AuthProtect "bearer-token" :> SeedAPI
 
 type InputListAPI = InputListPublicAPI :<|> InputListSeedAPI
 
@@ -682,7 +682,7 @@ type API =
   :<|> WhatsAppWebhookAPI
   :<|> MetaAPI
   :<|> AcademyAPI
-  :<|> "seed"   :> SeedAPI
+  :<|> "seed"   :> AuthProtect "bearer-token" :> SeedAPI
   :<|> "input-list" :> InputListAPI
   :<|> AdsPublicAPI
   :<|> CmsPublicAPI

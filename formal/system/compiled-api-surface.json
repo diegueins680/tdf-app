@@ -6874,7 +6874,9 @@
           }
         ],
         "bodies": [],
-        "authCombinators": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
         "internalInputs": [],
         "method": "POST",
         "successStatus": 200,
@@ -7016,7 +7018,9 @@
           }
         ],
         "bodies": [],
-        "authCombinators": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
         "internalInputs": [],
         "method": "POST",
         "successStatus": 200,
@@ -7060,7 +7064,9 @@
           }
         ],
         "bodies": [],
-        "authCombinators": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
         "internalInputs": [],
         "method": "POST",
         "successStatus": 200,

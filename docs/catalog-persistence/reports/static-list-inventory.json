@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-10T13:08:14.132Z",
+  "generatedAt": "2026-11-10T15:09:21.475Z",
   "repositoryRoot": ".",
   "filesScanned": 2661,
-  "candidateCount": 1412,
+  "candidateCount": 1413,
   "byClassification": {
     "dynamic-business-catalog": 924,
     "genuine-technical-constant": 73,
     "governed-reference-data": 146,
-    "security-system-registry": 269
+    "security-system-registry": 270
   },
   "exactDuplicateGroupCount": 187,
   "normalizedVariantGroupCount": 158,
@@ -229,6 +229,7 @@
             "c7c31a11cdb3859ae4bb",
             "e3c566bd60e870870833",
             "b98a766c7b4ff0a8cb40",
+            "a95cbb8b9256407889ea",
             "36e01411d3e513210144",
             "d037afba41db8fb11181",
             "5cddac55b32b2e5dedd2",
@@ -287,7 +288,8 @@
           "value": "Agency",
           "candidateIds": [
             "acfef0444a2027697eee",
-            "c7c31a11cdb3859ae4bb"
+            "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea"
           ]
         },
         {
@@ -471,6 +473,7 @@
             "fffe489557d71ad441fc",
             "c7c31a11cdb3859ae4bb",
             "e3c566bd60e870870833",
+            "a95cbb8b9256407889ea",
             "7618c56d2de477e73dd6",
             "598c0ce2531763c3625f",
             "6cca713d50b03a2289b9",
@@ -490,6 +493,7 @@
             "acfef0444a2027697eee",
             "fffe489557d71ad441fc",
             "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea",
             "7618c56d2de477e73dd6",
             "598c0ce2531763c3625f",
             "6cca713d50b03a2289b9",
@@ -1205,7 +1209,8 @@
           "candidateIds": [
             "acfef0444a2027697eee",
             "fffe489557d71ad441fc",
-            "c7c31a11cdb3859ae4bb"
+            "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea"
           ]
         },
         {
@@ -1386,6 +1391,7 @@
             "e3c566bd60e870870833",
             "2bfc98ca137852d43a28",
             "b98a766c7b4ff0a8cb40",
+            "a95cbb8b9256407889ea",
             "a61846dc2f60f618c282",
             "47177fdd7a3a1a1e606a",
             "b992fe0dfb2c10aeb363"
@@ -2113,6 +2119,7 @@
           "candidateIds": [
             "acfef0444a2027697eee",
             "b98a766c7b4ff0a8cb40",
+            "a95cbb8b9256407889ea",
             "5cddac55b32b2e5dedd2",
             "fbffe52a398d3fdc9875",
             "a61846dc2f60f618c282",
@@ -2241,6 +2248,7 @@
             "c7c31a11cdb3859ae4bb",
             "e3c566bd60e870870833",
             "b98a766c7b4ff0a8cb40",
+            "a95cbb8b9256407889ea",
             "5cddac55b32b2e5dedd2",
             "fbffe52a398d3fdc9875",
             "bd40838152dacd509fa7",
@@ -2889,7 +2897,8 @@
           "candidateIds": [
             "acfef0444a2027697eee",
             "fffe489557d71ad441fc",
-            "c7c31a11cdb3859ae4bb"
+            "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea"
           ]
         },
         {
@@ -3045,6 +3054,7 @@
             "c7c31a11cdb3859ae4bb",
             "2bfc98ca137852d43a28",
             "b98a766c7b4ff0a8cb40",
+            "a95cbb8b9256407889ea",
             "5cddac55b32b2e5dedd2",
             "fbffe52a398d3fdc9875",
             "ca24aa12b0188e2814c4",
@@ -3066,7 +3076,8 @@
           "candidateIds": [
             "acfef0444a2027697eee",
             "fffe489557d71ad441fc",
-            "c7c31a11cdb3859ae4bb"
+            "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea"
           ]
         },
         {
@@ -3085,7 +3096,8 @@
           "candidateIds": [
             "acfef0444a2027697eee",
             "fffe489557d71ad441fc",
-            "c7c31a11cdb3859ae4bb"
+            "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea"
           ]
         },
         {
@@ -3122,7 +3134,8 @@
           "candidateIds": [
             "acfef0444a2027697eee",
             "fffe489557d71ad441fc",
-            "c7c31a11cdb3859ae4bb"
+            "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea"
           ]
         },
         {
@@ -3746,7 +3759,8 @@
             "acfef0444a2027697eee",
             "fffe489557d71ad441fc",
             "8198ab124386e907d329",
-            "c7c31a11cdb3859ae4bb"
+            "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea"
           ]
         },
         {
@@ -3818,6 +3832,7 @@
             "acfef0444a2027697eee",
             "d59f9ae9a0661a40b363",
             "b98a766c7b4ff0a8cb40",
+            "a95cbb8b9256407889ea",
             "5cddac55b32b2e5dedd2",
             "fbffe52a398d3fdc9875",
             "bd40838152dacd509fa7",
@@ -3918,6 +3933,7 @@
             "c7c31a11cdb3859ae4bb",
             "e3c566bd60e870870833",
             "b98a766c7b4ff0a8cb40",
+            "a95cbb8b9256407889ea",
             "6e9dcc28b4e64ee61eef",
             "ceb231befa3e3e7a9866",
             "a61846dc2f60f618c282",
@@ -3983,7 +3999,8 @@
             "acfef0444a2027697eee",
             "fffe489557d71ad441fc",
             "8198ab124386e907d329",
-            "c7c31a11cdb3859ae4bb"
+            "c7c31a11cdb3859ae4bb",
+            "a95cbb8b9256407889ea"
           ]
         },
         {
@@ -12141,7 +12158,8 @@
       "exactDuplicateIds": [],
       "similarCandidateIds": [
         "c7c31a11cdb3859ae4bb",
-        "fffe489557d71ad441fc"
+        "fffe489557d71ad441fc",
+        "a95cbb8b9256407889ea"
       ]
     },
     {
@@ -15400,7 +15418,7 @@
       "lines": [
         175
       ],
-      "consumerCount": 62,
+      "consumerCount": 63,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -15426,6 +15444,7 @@
         "tdf-hq/src/TDF/Invoice/Datil.hs",
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
+        "tdf-hq/src/TDF/ServerRadio.hs",
         "tdf-hq/src/TDF/Social/AccountOwnership.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs",
@@ -29040,7 +29059,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 402,
+      "consumerCount": 403,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2026-04-23_inventory_checkout_amounts.sql",
@@ -81272,7 +81291,8 @@
       "exactDuplicateIds": [],
       "similarCandidateIds": [
         "c7c31a11cdb3859ae4bb",
-        "acfef0444a2027697eee"
+        "acfef0444a2027697eee",
+        "a95cbb8b9256407889ea"
       ]
     },
     {
@@ -86977,7 +86997,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "environment-list",
       "name": "SUPPORTED_CURRENCIES",
-      "line": 175,
+      "line": 180,
       "values": [
         "USD",
         "EUR",
@@ -86990,7 +87010,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        175
+        180
       ],
       "consumerCount": 7,
       "backendConsumers": [
@@ -87027,7 +87047,7 @@
       "domain": "international-reference-data",
       "kind": "environment-list",
       "name": "SUPPORTED_LOCALES",
-      "line": 177,
+      "line": 182,
       "values": [
         "en",
         "es",
@@ -87038,7 +87058,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        177
+        182
       ],
       "consumerCount": 5,
       "backendConsumers": [
@@ -92910,7 +92930,8 @@
       "exactDuplicateIds": [],
       "similarCandidateIds": [
         "fffe489557d71ad441fc",
-        "acfef0444a2027697eee"
+        "acfef0444a2027697eee",
+        "a95cbb8b9256407889ea"
       ]
     },
     {
@@ -102970,7 +102991,7 @@
       "lines": [
         257
       ],
-      "consumerCount": 24,
+      "consumerCount": 25,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
@@ -102981,7 +103002,8 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/test/TDF/DriveReplaySpec.hs",
-        "tdf-hq/test/TDF/MusicPublicationSpec.hs"
+        "tdf-hq/test/TDF/MusicPublicationSpec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -156282,7 +156304,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "QueryFailure",
-      "line": 131,
+      "line": 141,
       "values": [
         "QueryUnsupported",
         "QueryUnavailable",
@@ -156291,7 +156313,7 @@
       "valueCount": 3,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        131
+        141
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -159294,7 +159316,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 2609,
+      "line": 2634,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -159302,7 +159324,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2609
+        2634
       ],
       "consumerCount": 4,
       "backendConsumers": [
@@ -159336,7 +159358,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4931,
+      "line": 4978,
       "values": [
         "confirmed",
         "tentative",
@@ -159345,7 +159367,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4931
+        4978
       ],
       "consumerCount": 59,
       "backendConsumers": [
@@ -159441,7 +159463,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 6261,
+      "line": 6318,
       "values": [
         "note",
         "call",
@@ -159454,7 +159476,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        6261
+        6318
       ],
       "consumerCount": 127,
       "backendConsumers": [
@@ -159614,6 +159636,129 @@
       ]
     },
     {
+      "id": "a95cbb8b9256407889ea",
+      "file": "tdf-hq/src/TDF/Server.hs",
+      "sourceKind": "production",
+      "surface": "backend",
+      "domain": "security-authorization",
+      "kind": "haskell-list",
+      "name": "serviceAdProviderRoles",
+      "line": 9736,
+      "values": [
+        "Admin",
+        "Manager",
+        "StudioManager",
+        "Engineer",
+        "Teacher",
+        "Producer",
+        "LiveSessionsProducer",
+        "Artist",
+        "Artista",
+        "Songwriter",
+        "DJ",
+        "Photographer",
+        "Publicist",
+        "TourManager",
+        "StageManager",
+        "RoadCrew",
+        "Promotor",
+        "Promoter",
+        "Agency",
+        "Vendor"
+      ],
+      "valueCount": 20,
+      "recommendedClassification": "security-system-registry",
+      "lines": [
+        9736
+      ],
+      "consumerCount": 55,
+      "backendConsumers": [
+        "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
+        "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
+        "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
+        "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+        "tdf-hq/sql/preflight_security_emergency_readiness.sql",
+        "tdf-hq/sql/test_admin_operations_control_center.sql",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/DB.hs",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Normalize.hs",
+        "tdf-hq/src/TDF/Models.hs",
+        "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
+        "tdf-hq/src/TDF/ServerFuture.hs",
+        "tdf-hq/test/TDF/LiveIntakeIdentitySpec.hs",
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
+        "tdf-hq/test/integration/artist_self_service_fixture.sql"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/session.test.ts",
+        "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "tdf-hq-ui/src/components/TopBar.test.tsx",
+        "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
+        "tdf-hq-ui/src/pages/AdminUsersPage.tsx",
+        "tdf-hq-ui/src/pages/BrainAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
+        "tdf-hq-ui/src/pages/StudentCreationDialogs.test.tsx",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
+        "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
+        "tdf-hq-ui/src/session/SessionContext.test.ts",
+        "tdf-hq-ui/src/utils/__tests__/roles.test.ts",
+        "tdf-hq-ui/src/utils/accessControl.test.ts",
+        "tdf-hq-ui/src/utils/loginRouting.test.ts"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "automationConsumers": [
+        "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/check-admin-guards.py",
+        "scripts/generate-feature-audit-reports.mjs",
+        "scripts/test-auth-predicates.py",
+        "scripts/test-specification-conformance.py",
+        "scripts/verify-auth-predicates.py"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/session.test.ts",
+        "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
+        "tdf-hq/src/TDF/DDEX/ERN/V432/Normalize.hs",
+        "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
+        "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/features/generatedFeatureRegistry.ts"
+      ],
+      "decision": "security-system-registry",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "role_permission",
+      "priority": "P0-security",
+      "risk": "The list decides who may publish a service-marketplace ad. A missing role locks a provider out; an added role lets a self-service account advertise.",
+      "justification": "serviceAdProviderRoles is the allow-list applied by validateServiceAdProvider to POST /service-marketplace/ads and its slots (SVCMKT-PROVIDER-ADS-001, owner decision of 2026-11-10 to stop any account from publishing ads). It is deny-by-default and names only staff-assigned roles. It is authority held in code: the durable form is a provider permission in the security catalog or a provider approval record, neither of which exists yet, so it is recorded here for migration rather than retained.",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": [
+        "acfef0444a2027697eee",
+        "c7c31a11cdb3859ae4bb",
+        "fffe489557d71ad441fc"
+      ]
+    },
+    {
       "id": "92bdf7d80182ff259008",
       "file": "tdf-hq/src/TDF/Server.hs",
       "sourceKind": "production",
@@ -159621,7 +159766,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16767,
+      "line": 16842,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -159629,7 +159774,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16767
+        16842
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -159654,7 +159799,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "canonicalMarketplaceOrderStatuses",
-      "line": 19745,
+      "line": 19820,
       "values": [
         "holding",
         "awaiting_payment",
@@ -159663,7 +159808,7 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        19745
+        19820
       ],
       "consumerCount": 154,
       "backendConsumers": [
@@ -160768,7 +160913,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1789,
+      "line": 1877,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -160779,7 +160924,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1789
+        1877
       ],
       "consumerCount": 92,
       "backendConsumers": [
@@ -160947,7 +161092,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 3737,
+      "line": 3750,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -160955,7 +161100,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        3737
+        3750
       ],
       "consumerCount": 4,
       "backendConsumers": [
@@ -163941,7 +164086,7 @@
       "domain": "fan-social",
       "kind": "haskell-list",
       "name": "clearWhatsAppProviderCredentialEnv",
-      "line": 768,
+      "line": 771,
       "values": [
         "WA_TOKEN",
         "WHATSAPP_TOKEN",
@@ -163953,7 +164098,7 @@
       "valueCount": 6,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        768
+        771
       ],
       "consumerCount": 3,
       "backendConsumers": [
