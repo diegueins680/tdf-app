@@ -1,0 +1,46 @@
+{
+  "sourceRevision": "ca2935818b42ebfbd5e7f18fafde74374bbae1f1",
+  "sourceTree": "95153d1677495703b14c6d45f27edb8db01548c5",
+  "sourceWorktreeDirty": false,
+  "binarySha256": "9fa5102b4acdd45726acaa83447d48496b4178e16fbdc332684fd9b052cded88",
+  "sourceDigest": "4a0505284e7584a0996a5247616e2ccb3d93070d930cc1b3c4c47cbe5b43ad91",
+  "descriptionSha256": "2c1a025329c906cd22205660b943962f77bb34f08f76b46ea899d94fd56814a0",
+  "traceabilitySha256": "f1a86a50be0d596374dfd89802a248d8f643d6e062e974a8d4ee0289140da6e7",
+  "observedAt": "2026-11-06T07:18:20.464Z",
+  "schemaVersion": 1,
+  "scope": "Compiler-produced declaration adoption for the storage security candidate; not production conformance",
+  "previousSnapshotSha256": "ff49f9bbb0a4c5c5a153464be64d3de46e6440381b6ffba43ffb2ed7c56ec78e",
+  "adoptedSnapshotSha256": "b48fbae4b0d9bff3fc271a4b8d664dfdac5756ad13b6d4829dc2870ea6f0e519",
+  "review": {
+    "added": [
+      "DELETE /drive/token, bearer-token, 204"
+    ],
+    "removed": [],
+    "changedExistingDeclarationsExceptOrdinal": [],
+    "rawMountsChangedExceptOrdinal": false,
+    "operationCount": 923,
+    "rawMountCount": 2
+  },
+  "localValidation": {
+    "backend": {
+      "examples": 4270,
+      "failures": 0,
+      "pending": 22
+    },
+    "securityPostgresAndHttp": {
+      "examples": 10,
+      "failures": 0
+    },
+    "initialBackendRun": {
+      "examples": 4268,
+      "failures": 6,
+      "correction": "Drive replay fixtures now select public explicitly; two cases prove default-private replay and rejection of private-to-public request-key reuse"
+    }
+  },
+  "limitations": [
+    "Compiler syntax from the supplied executable, not attestation that its binary was built from this checkout. CI binds the build separately. Type names are not JSON schema. Discovery gaps are unresolved obligations.",
+    "Compiled routing does not certify HTTP/provider/persistent-volume or coordinated files/database/key restoration.",
+    "The complete 397 undocumented, 25 documented-without-typed-route, and 8 response-status discovery gaps remain existing tracked obligations.",
+    "No production activation, deployment, provider write or historical inventory was performed."
+  ]
+}

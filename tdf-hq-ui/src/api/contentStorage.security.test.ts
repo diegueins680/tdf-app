@@ -1,0 +1,67 @@
+import { jest } from '@jest/globals';
+import { createElement } from 'react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+
+let epoch = 1;
+const get = jest.fn(); const put = jest.fn(); const del = jest.fn();
+jest.unstable_mockModule('./client', () => ({ get, put, del }));
+jest.unstable_mockModule('./authHeader', () => ({ buildAuthorizationHeader: () => 'Bearer tdf-session' }));
+jest.unstable_mockModule('../config/apiBase', () => ({ resolveApiBase: () => 'https://api.tdf.test' }));
+jest.unstable_mockModule('../session/authEvents', () => ({ getAuthSessionEpoch: () => epoch }));
+const storage = await import('./contentStorage');
+const { default: PrivateAttachmentLink } = await import('../components/PrivateAttachmentLink');
+const identifier = '00000000-0000-4000-8000-000000000001';
+const url = `https://api.tdf.test/storage/files/${identifier}`;
+const fetchMock = jest.fn<typeof fetch>();
+beforeEach(() => { epoch = 1; fetchMock.mockReset(); globalThis.fetch = fetchMock; });
+afterEach(cleanup);
+
+it('only sends TDF authentication to exact canonical storage URLs', async () => {
+  for (const foreign of [`https://evil.test/storage/files/${identifier}`, `${url}?download=1`, `${url}#public`, 'https://api.tdf.test@evil.test/storage/files/' + identifier]) {
+    await expect(storage.downloadStorageUrl(foreign, 'private.pdf')).rejects.toThrow('Invalid protected storage URL');
+  }
+  expect(fetchMock).not.toHaveBeenCalled();
+  expect(storage.storageFileIdFromUrl(url)).toBe(identifier);
+});
+
+it('does not deliver bytes after an account or session change', async () => {
+  fetchMock.mockResolvedValue({ ok: true, blob: async () => { epoch += 1; return new Blob(['private']); } } as Response);
+  await expect(storage.downloadStorageUrl(url, 'private.pdf')).rejects.toThrow('Session changed');
+  expect(fetchMock).toHaveBeenCalledWith(url, expect.objectContaining({ cache: 'no-store', credentials: 'include', redirect: 'error', headers: { Authorization: 'Bearer tdf-session' } }));
+});
+
+it('never downloads an unauthorized response body', async () => {
+  const blob = jest.fn();
+  fetchMock.mockResolvedValue({ ok: false, status: 404, blob } as unknown as Response);
+  await expect(storage.downloadStorageUrl(url, 'private.pdf')).rejects.toThrow('Storage file unavailable');
+  expect(blob).not.toHaveBeenCalled();
+});
+
+it('keeps private attachment retries visible without delivering bytes after an account change', async () => {
+  let complete: ((response: Response) => void) | undefined;
+  fetchMock.mockImplementation(() => new Promise<Response>((resolve) => { complete = resolve; }));
+  const originalCreate = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
+  const createObjectURL = jest.fn(() => 'blob:synthetic-owned-attachment');
+  Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectURL });
+  const clickDownload = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+  try {
+    render(createElement(PrivateAttachmentLink, { href: url, fileName: 'private.pdf' }, 'Abrir adjunto'));
+    const link = screen.getByRole('link', { name: 'Abrir adjunto' });
+    fireEvent.click(link);
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    expect(link.getAttribute('aria-busy')).toBe('true');
+    fireEvent.click(link);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    epoch += 1;
+    complete?.({ ok: true, blob: async () => new Blob(['private']) } as Response);
+    expect((await screen.findByRole('alert')).textContent).toContain('No pudimos abrir el adjunto');
+    await waitFor(() => expect(link.getAttribute('aria-busy')).toBe('false'));
+    expect(link.getAttribute('href')).toBe(url);
+    expect(createObjectURL).not.toHaveBeenCalled();
+    expect(clickDownload).not.toHaveBeenCalled();
+  } finally {
+    clickDownload.mockRestore();
+    if (originalCreate) Object.defineProperty(URL, 'createObjectURL', originalCreate);
+    else Reflect.deleteProperty(URL, 'createObjectURL');
+  }
+});

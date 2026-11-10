@@ -52,14 +52,30 @@ export async function loadStorageFiles(after?: string): Promise<StorageFile[]> {
   return value as StorageFile[];
 }
 export const deleteStorageFile = (fileId: string): Promise<void> => del<void>(`/storage/files/${encodeURIComponent(fileId)}`);
-export async function downloadStorageFile(file: StorageFile): Promise<void> {
+export function storageFileIdFromUrl(value: string): string | null {
+  try {
+    const base = new URL(resolveApiBase(), window.location.origin);
+    const url = new URL(value, `${base.origin}/`);
+    if (url.origin !== base.origin || url.search || url.hash || url.username || url.password) return null;
+    const prefix = `${base.pathname.replace(/\/$/, '')}/storage/files/`;
+    const identifier = url.pathname.startsWith(prefix) ? url.pathname.slice(prefix.length) : '';
+    return /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(identifier) ? identifier : null;
+  } catch { return null; }
+}
+
+export const downloadStorageFile = (file: StorageFile): Promise<void> => downloadStorageUrl(
+  `${resolveApiBase()}/storage/files/${encodeURIComponent(file.fileId)}`, file.fileName,
+);
+export async function downloadStorageUrl(url: string, fileName: string): Promise<void> {
+  const identifier = storageFileIdFromUrl(url);
+  if (!identifier) throw new Error('Invalid protected storage URL');
   const epoch = getAuthSessionEpoch();
   const authorization = buildAuthorizationHeader();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 30_000);
   try {
-  const response = await fetch(`${resolveApiBase()}/storage/files/${encodeURIComponent(file.fileId)}`, {
-    credentials: 'include', cache: 'no-store', headers: authorization ? { Authorization: authorization } : {},
+  const response = await fetch(`${resolveApiBase()}/storage/files/${identifier}`, {
+    credentials: 'include', cache: 'no-store', redirect: 'error', headers: authorization ? { Authorization: authorization } : {},
     signal: controller.signal,
   });
   if (!response.ok) throw new Error('Storage file unavailable');
@@ -67,7 +83,7 @@ export async function downloadStorageFile(file: StorageFile): Promise<void> {
   if (epoch !== getAuthSessionEpoch()) throw new Error('Session changed');
   const url = URL.createObjectURL(data);
   const anchor = document.createElement('a');
-  anchor.href = url; anchor.download = file.fileName; anchor.click();
+  anchor.href = url; anchor.download = fileName; anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   } finally { clearTimeout(timer); }
 }
