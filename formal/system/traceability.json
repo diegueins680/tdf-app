@@ -1,8 +1,105 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4299e09e08aec71c69a082423b93aee535eba958",
+  "mobileRevision": "739c172c41a32e6edbab9bcf2915a4251360630d",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
+    {
+      "id": "AUTH-EVENT-WATCH-001",
+      "title": "Purpose-limited event watch service credentials",
+      "domain": "AUTH",
+      "statement": "An event-watch service may ingest only its server-scoped research candidates. Each commit requires an active unexpired parent client and purpose-specific short-lived session; publication also requires an explicit publication grant and existing research checks. Service credentials never grant interactive administrative authority. Existing-event materialization also requires the current curator and service namespace under retained event/reference locks; a reassigned curator cannot reuse another creator's run.",
+      "authority": "User authorized dedicated event-watch authentication and third-party event imports, 2026-10-21",
+      "source": "tdf-hq/docs/event-watch-service-auth.md",
+      "contract": "formal/system/event-watch-service-auth.md",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "Source-bound local canonical Stack/GHC9.10.3, focused Hspec and PostgreSQL16.13/HTTP checks passed with controlled original-implementation counterexamples; paired client, current hosted checks and independent review remain.",
+      "state": {
+        "client": [
+          "active",
+          "revoked",
+          "expired"
+        ],
+        "session": [
+          "issued",
+          "expired",
+          "invalidated"
+        ]
+      },
+      "allowedTransitions": [
+        "Operator provisions scoped client",
+        "Current client exchanges secret for session",
+        "Operator rotation invalidates sessions"
+      ],
+      "forbiddenTransitions": [
+        "Service credential becomes interactive administrator",
+        "Expired or revoked session commits an import",
+        "Unscoped client publishes an event"
+      ],
+      "effects": [
+        "Source-backed candidate and optional event/audit commit together",
+        "Client update invalidates its sessions"
+      ],
+      "observability": "Candidate/run audit identifies the curator Party and namespace; credentials and database errors are not exposed.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Finite actual native/SQL/HTTP controls qualify the exercised paths. No all-schedule, replica-clock or whole-program refinement proof; current paired API, hosted CI and independent review remain merge gates, with operational provisioning/deployment separate."
+      },
+      "actors": [
+        "Event research service",
+        "Credential operator"
+      ],
+      "preconditions": [
+        "Reviewed schema deployed",
+        "Operator provisions a purpose-specific client"
+      ],
+      "inputs": [
+        "Random service credential",
+        "Source-backed event candidate",
+        "Publication intent"
+      ],
+      "authorization": "Separate AuthProtect event-watch context; client namespace and publication scope are checked inside the write transaction. Existing targets require both current event organizer and a retained current-provider reference; separate clients sharing an audit Party do not share authority. A provider-ref-selected target requires that exact reference key still map to the target after its event lock wait; a different alias is insufficient.",
+      "privacy": "Only hashes stored; no secrets in logs, SQL, repository or public configuration.",
+      "concurrency": "Parent/session locks retained through commit; expiry checked after lock waits. Existing event then namespace-reference locks retain both owner and scope through the service transaction.",
+      "idempotency": "Stable client provider and external ID use existing research deduplication and audit receipts. Reused runs retain their historical creator; a changed curator must choose a new run key.",
+      "failure": "Invalid credentials or scope reject; all failed imports roll back; persistence errors sanitized.",
+      "recovery": "Rotate/revoke parent client to invalidate all issued sessions; preserve manually edited materialized events.",
+      "property": "commit implies current service session, current client and permitted publication",
+      "implementation": [
+        "tdf-hq/src/TDF/EventWatch.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/EventResearch.hs",
+        "tdf-hq/sql/2026-10-21_event_watch_service_auth.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/docs/openapi/event-watch.yaml",
+        "tdf-hq/tdf-hq.cabal",
+        "scripts/event-watch-client.mjs",
+        "scripts/production-migrations.json",
+        ".github/workflows/event-watch-auth.yml",
+        "tdf-hq/sql/2026-11-07_event_watch_archived_actor_guard.sql",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventWatchSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/sql/event_watch_service_auth.sql",
+        "scripts/event-watch-client.test.mjs",
+        "scripts/test-event-watch-http.py",
+        "scripts/__tests__/event-watch-http-runner.test.mjs",
+        "tdf-hq/test/sql/event_watch_archived_actor.sql"
+      ],
+      "formalModels": [
+        "scripts/event-watch-auth-model.test.mjs"
+      ],
+      "verification": "Original Hspec lifetime/hash/parser and provisioning/model negative controls; complete canonical SQL apply/replay and absent archive-guard negative control; compiled-app HTTP namespace/interactive isolation, publication/pilot eligibility, session retention, rotation/deactivation and expiry during observed row/advisory lock waits. Execution receipts retain their actual source and finite scope. Controlled original implementation fails foreign-event, linked-replay, shared-actor namespace, post-admission ownership-transfer and reused-run creator cases; final implementation must pass the same frozen HTTP harness. A separate actual deleted-reference control exposes stale selection despite enabled pilot/search triggers; the exact mapping is rechecked under a retained share lock.",
+      "evidence": "Candidate-specific test logs; see contract for explicit limits.",
+      "ambiguity": [
+        "Finite controlled transactions do not establish all concurrent schedules, replica clock behavior or physical commit-time expiry measurement.",
+        "Live deployment, edge rate limits, curator provisioning and private job-secret delivery are operational prerequisites not performed by code integration."
+      ]
+    },
     {
       "id": "SYS-RELEASE-001",
       "statement": "Recovery after deployment must preserve the target's applicable provider and contact identity protections, including retained request receipts and replay behavior.",
@@ -26616,17 +26713,18 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
+    ".github/workflows/ci.yml": "c2681da3e5adcd86312a5951e583542a94c47423cbb5fae400a86c02e1046fe8",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/event-operations-formal.yml": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
+    ".github/workflows/event-watch-auth.yml": "2cec00f1fc96c877f33fd229e16f2607038a4e14fa954b4306f91d1480317d5a",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "00bf8b14158c0d7d161d41c42dd1181523cdcc1f06f2aeb1f23e3e02d19215b6",
+    "docs/catalog-persistence/catalog-list-decisions.json": "f1a2f1f6f81f022a531b525cc57ef7c771b0e9a7728343a43412fc40fede8bcf",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -26992,14 +27090,14 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "a059161f1e863b175bebca83adeaa40d186ee3f3a72ba5d4f5c90776b2e7eafd",
+    "formal/system/compiled-api-surface.json": "4f8db6fc47e01312ab33bcd1cc5f5b7cd011fee73384b787656855e453ca7ccd",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
-    "formal/system/public-routes.json": "a4d7b6030e4064c05306227ecad526339a3b2442d5360f6e1eb8cbb864110d84",
+    "formal/system/public-routes.json": "0198d99213dc278e22f71645f0afc4cf5740cd05a041ba4b84cdec93cf9b5654",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "2c1f465ecdb6dcafd24748ce0c791ecc3ba9dca12a7ced5cb4992df1b1e8854c",
-    "formal/system/route-requirements.json": "abd5231294bd51a6240602f4771d9be2597c1e614829c3a26b16a3f5e5fef441",
+    "formal/system/recovery-expiry-arithmetic.json": "e6b7d78cfb0369722d2f81b297de21bc7ecee5f57293b3ee88890091c326f8f3",
+    "formal/system/route-requirements.json": "20ae66c529492ba4b01837c0ba93eb694660a043d52359c2bb833d71b13ab019",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -27045,7 +27143,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "a27042dedef0905645b75c59160e725c6db2f2225d3ba1d50eb31311767446a0",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "025896ed32b14e995be8e5bad4103a6aaff2371696ba890c6923a168f518b2de",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -27068,6 +27166,7 @@
     "scripts/__tests__/event-raci-browser-runner.test.mjs": "0a036a388afece87cf55c150dfac92e411ffcc4c82e76301f502b8c288d9c657",
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": "3a631e1d3c328f48749b886db2896a0db5ef8640e5dcde7f2d31712e6fcc4ea2",
     "scripts/__tests__/event-report-crypto.test.mjs": "92363873ec7bf9f0567239f2687f790657eaa2801c19e2e5617baefb40642a81",
+    "scripts/__tests__/event-watch-http-runner.test.mjs": "cabc2289e4240ebb5a27282fb0ace2f30e3bc8c02739cb687be54309450af6d2",
     "scripts/__tests__/experiment-http-cleanup.test.mjs": "2f41b3eb6a220db965e96b65f81bb57bc3009862a77f5d702d69777451cf56c1",
     "scripts/__tests__/experiment-http-runtime.mjs": "886cfb653ebd0a545af85954868e33ae2a9c0bf67bbac1387b945bc59af58659",
     "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json": "a66f789a8a0bb626c3bfa31f7cfa6deed7be711cec4d0dc32f1423160200ab87",
@@ -27156,6 +27255,9 @@
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
     "scripts/event-planning-ux-model.mjs": "2b95df24f81b818fa00017e2a00e1a6c0397c212ebebcc3bb9af26869fc60406",
+    "scripts/event-watch-auth-model.test.mjs": "9212b3dab36d96a459d8b559c589fbbb96e4d788595fbccf63974553e8aa841c",
+    "scripts/event-watch-client.mjs": "60906390dac54898a34e7ab9dc58020e2dc7e4afa69c253b0d113f99ef03408d",
+    "scripts/event-watch-client.test.mjs": "1145f1974d5f79a792ca4ac6593cef113d05cf57320fc407845a637a7523ea28",
     "scripts/fetch-ddex-ern432-schema.sh": "9a7e2da809fd59d0709067b8fdd75f71a21dd474449d62c28551d1ac1b1f3a84",
     "scripts/generate-app-icons.mjs": "0d85263b6dc6e4d6909b7e7f6378a13c499446521b69eccd7e089ab7b68d5cc0",
     "scripts/generate-identity-party-reference-view.mjs": "980ebaec42704393878751e4dd40238f02f64ada510b3a02d60154d884b07493",
@@ -27209,7 +27311,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "3c2d171b9e55a6594aaa497d95e7fd56b8ebe2b54194de6cea22f5a5b8becca9",
+    "scripts/production-migrations.json": "5d8cc1698fe0d45eb327e4dd8f3df7a35f6f0bbe427e9f49c70cc61d79e6bc7a",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -27272,6 +27374,7 @@
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
+    "scripts/test-event-watch-http.py": "c0a8d1be6a6e2f9f8f8fdb938bce639a919ab36cd9fc81c93f18bece87ee2c5d",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
@@ -27505,7 +27608,7 @@
     "tdf-hq-ui/src/api/fans.ts": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "00ac6131f322521d2232350733258f0666bdd7ccd25a67d0d6d343e6729b12ee",
+    "tdf-hq-ui/src/api/generated/types.ts": "5b6db697412c5c00770c77c7dacb6cd02667170759ee7268d9b470cccbb7f7a1",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "6ae18f71871c7dfcebff6c55180ecadb1791feb220e35e6c24009f59b2030799",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -27939,8 +28042,9 @@
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "599d5043999681fa29685122f17e5383cca4d27a3df7022538dd4a8d5e863b87",
     "tdf-hq/config/default.env.example": "8a477205e4dca468c32fbe2b5f7db4bce06e716898d17f4ee7df199d8038a888",
-    "tdf-hq/docs/openapi/api.yaml": "4826734e2eea92b03731be956d0335c466d8e6cb6f689fcec15a542c0cdd5424",
+    "tdf-hq/docs/openapi/api.yaml": "9cdce93b1cea177b9c58429eed0f68f77b07cd79a41536d93119b774d114e9f6",
     "tdf-hq/docs/openapi/directory.yaml": "114c0e6650440093d3599c08fe9d40ad5d3086bbe3441a885a0ab0f0d1449811",
+    "tdf-hq/docs/openapi/event-watch.yaml": "ef3cbdacae900697ddf740670c70f3a4fd1f8fe8a009e853432ce4be332e0a89",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
     "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
     "tdf-hq/docs/openapi/reviews.yaml": "3c05bc6db0ebdbe04b72feb910a3f51e9c8631873c4de9a22c7beb52bb41e411",
@@ -28056,6 +28160,7 @@
     "tdf-hq/sql/2026-10-16_ledger_entry_write_fence.sql": "af468bf34bbfe36bfc6e3321a02ff71875d1ac49d7351a23fb607568de1d643f",
     "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql": "b6e7cb3bfdb7228af49ef7b6ec5a124c1eae0810ea11cf3ccb9fec24f8b4b764",
     "tdf-hq/sql/2026-10-20_video_campaigns.sql": "6d79f7b97f10d7ea72f057b3bff3c0a4a89cebc5ec531346d3780078f35c27a6",
+    "tdf-hq/sql/2026-10-21_event_watch_service_auth.sql": "ee9ec40561fad3bface011d95f8a52ca1cb2d224dd7b296172d79a8e231fdede",
     "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql": "27c2a344d5b0f88fd9757dff720c692e55564d9fb3df5531ed22f38aaafb2694",
     "tdf-hq/sql/2026-10-24_ledger_guard_namespace.sql": "3f0cf2121f5de8bc3074c0d7d1eddaf1fb8217d3d46895ae5b0e92070da9ec05",
     "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": "673f7bb790c4e791a0c8caeb5eacbf20873331b65470c000a8ed27fff68cf8e4",
@@ -28104,9 +28209,10 @@
     "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
     "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql": "a7c92a8d08fbd31316c6feaf64714e6a062f158c99420e6a04c7c4db29db5f15",
     "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql": "b88961fb0f27ecaaded3e59643aa005633e48843d53fc71bb334fcffde80e448",
+    "tdf-hq/sql/2026-11-07_event_watch_archived_actor_guard.sql": "1b26b064cedb374374df4de752c8c7fa516b385c4be21d25b577f7038ac805f6",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
-    "tdf-hq/src/TDF/API.hs": "423e3156ab7e386197f584aa654ff9b972dd71d5dbba7e243aa0d88de8ba7c00",
+    "tdf-hq/src/TDF/API.hs": "ec60bd4077b1e120308d5ccbe098a4c1d2da16e67abdfea74e420fc11f5489cb",
     "tdf-hq/src/TDF/API/Admin.hs": "fadc0f212fce8046e9a116d4d431df510dd3adb0c1df4b0c28d497e089a4862f",
     "tdf-hq/src/TDF/API/Catalog.hs": "a062b9681db64a9f68114888a0c296935944903efcbfedd672de2a3991e9d781",
     "tdf-hq/src/TDF/API/ContentStorage.hs": "252b724cba9b5a963757472792a4073f8562e7e1819b6e6840ca270dc5bf9f9b",
@@ -28130,7 +28236,7 @@
     "tdf-hq/src/TDF/AppleSignIn.hs": "76eba8d3f0377c7a130ec60ac5b8f16cd8c75a53d69c7fe2f52e0c77aa578dea",
     "tdf-hq/src/TDF/Artists/Enrichment.hs": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
     "tdf-hq/src/TDF/Artists/Promotion.hs": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
-    "tdf-hq/src/TDF/Auth.hs": "cbf9a2642b4e43acf65afc04812816703020981198d6e9cf8f090dac7e69b4fb",
+    "tdf-hq/src/TDF/Auth.hs": "982ef66e9567951e8f3ff8d9ec22e8115bafea7db969990d7eeed2809a729a8e",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
     "tdf-hq/src/TDF/CMS/Models.hs": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
     "tdf-hq/src/TDF/Calendar/Models.hs": "ade52945cff1553e3e6e88edbd3a67457bda196364df216a62a8d1d69e8bcee8",
@@ -28184,6 +28290,7 @@
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
+    "tdf-hq/src/TDF/EventWatch.hs": "fd5462ec02cdd467e8eae02ef8de59c19f297e5368a92d1890a17691686f2da7",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "57565241bce5f077ef7703008e3dba09686952c804b5fee0910326f47cad42e3",
     "tdf-hq/src/TDF/Interactions/API.hs": "1c87397e99ddc44da1178cdb7e696a32966dc02760e58ea32863c162df88d58b",
@@ -28220,14 +28327,14 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "15768a3ab48b31a7dc9059d54d157af1993690feea8e452bd826bd991af4b0cc",
+    "tdf-hq/src/TDF/Server.hs": "9b7554b96ead0e544cac6c2da2b2bd366c6bf833365fcd77befe531c802d8440",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "0195a6a9888c881caebc81348b83fc0f98c278af778fcb2d22d69c9ab82d5215",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
-    "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
+    "tdf-hq/src/TDF/Server/EventResearch.hs": "b8d18f5dc81381768fda53c199d4857320d968a48eca151077a391d3adab6449",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "7e350af012396bb5a846a13f29c91cf2a2f6b8a0d3498f73a050aa2d1d401fd9",
@@ -28284,7 +28391,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
+    "tdf-hq/tdf-hq.cabal": "65233fbb3d599466066349c1a78e1886447ac5ebb3a3f12b396337e3acd98680",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -28292,7 +28399,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+    "tdf-hq/test/Spec.hs": "732235e9d9b8bac00bc22695246382379044c9cf913d2aac9aabc1a239bbe35d",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -28329,6 +28436,7 @@
     "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
+    "tdf-hq/test/TDF/EventWatchSpec.hs": "c47d2afa04a61b11be8b01373866bd250f62647ede31e8a56b18db9ef3a972dc",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
@@ -28404,6 +28512,8 @@
     "tdf-hq/test/integration/ticket_manual_review_fixture.sql": "6958af8af06ccb89a3f8fdc28b17493d5d4c590da5499b56033eb1c32ea549d5",
     "tdf-hq/test/integration/ticket_order_quantity_limit.sql": "3b0644e828f65673d57532ecb8d27a26df155c3a0d9399337be5a58af5aa7548",
     "tdf-hq/test/integration/ticket_tax_invoices.sql": "42f6d4b99f5606dacdb33c7925b8c4e4756e05d5e1ebfaeb2b5882894ca219ea",
+    "tdf-hq/test/sql/event_watch_archived_actor.sql": "74a60031ee90003cc0ec131869e88f9bbaca09c0cd804ffb4a754fbb0b3daf35",
+    "tdf-hq/test/sql/event_watch_service_auth.sql": "0dd7ec412c9e259e4670f6a9877871c9d7b80d5e80986dad4a5168e06dcb37f6",
     "tdf-hq/test/sql/identity_reconciliation.sql": "03917f0481ccaeb39cbd5338efe34361e231e20b8ce1ad1317a0fb21a933342c",
     "tdf-hq/test/sql/music_correction_asset_graph.sql": "38b7f28265b110df62c8dcfac76a88ce2c978b2a280b464c7229c08b0ae5175e",
     "tdf-hq/test/sql/music_ddex_operations.sql": "89a95fec6d389d28987667a2e254358eed5b9c2c2cdc6e96ab4389b36377ae32",
@@ -28444,7 +28554,7 @@
     "tdf-mobile/__tests__/eventMomentWirePayload.test.ts": "5aa80192f305412e8c79ca0e427605680333b391491108e922e20e9019f85d0c",
     "tdf-mobile/__tests__/eventMoments.test.ts": "8d2e690a4253ac3c39a84e54beaa92db2d3cdb6fefe60ef26e77c9e4c532a824",
     "tdf-mobile/__tests__/eventMomentsRepository.test.ts": "c43a3a723719ec489e1ba91e456cfa44a981ce41a6348fd0ca7c2a6e02361542",
-    "tdf-mobile/__tests__/featureRegistry.test.ts": "1ab135bf265b974320e20f3f5710fc64b0e23877b99beb8273267e7d021c7cad",
+    "tdf-mobile/__tests__/featureRegistry.test.ts": "337bd6aeeeca7bcd31c061a0e63df2a4b45507bb4a9c0171cb29b9c87bb95ac2",
     "tdf-mobile/__tests__/liveBroadcastsRepository.test.ts": "ff98004607a259e2b0e9a9e677d121a564a78e61e6a66074e948e04d15ff9d6d",
     "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts": "1dc10f0182ae85dd59d046e553d4b0e9714dc6e3edcd481143bcedc5d71b969b",
     "tdf-mobile/__tests__/onboardingApi.test.ts": "4770fd9508a3a13c6ab0fb701d900b32633bac7b377d3f4fed4498f0b0c08300",
@@ -28488,7 +28598,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "00ac6131f322521d2232350733258f0666bdd7ccd25a67d0d6d343e6729b12ee",
+    "tdf-mobile/src/api/generated/types.ts": "c35c8f02c3cee9afb8b3bbc04c3a96bd31c1eb18af9397c128ced296ec5fdbb5",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -28499,7 +28609,7 @@
     "tdf-mobile/src/experiments/NewUserOnboardingGate.tsx": "80c962ddd011c5b8121d9da53af1ddd4b4c691533d24fd233fbc4e39723f6e19",
     "tdf-mobile/src/features/directory/previewImage.ts": "c29605bbb2d8a794106068ab2dc1d3e0d568797403168a3e7fee0d7059c37674",
     "tdf-mobile/src/features/featureRegistry.ts": "1e4c7047aaaaf481b1dbeb0c5f07652eb0672bd382926a6863c82042f51f2864",
-    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+    "tdf-mobile/src/features/generatedFeatureRegistry.ts": "49472dfbee590b19cd986c26ecd779d6be19ccdd8040e690b09c03502eeeb657",
     "tdf-mobile/src/feedback/FeedbackEntry.tsx": "7964eaf7976c58daf264bacf94ea4854af265f0146cfbd16a1429e385bc46e7b",
     "tdf-mobile/src/feedback/metadata.ts": "62336d3a2cf7f055624bdb4f4bd20aedbfd47afc3fbddb2cefaa2d4ce1e26861",
     "tdf-mobile/src/hooks/usePartyOwnership.ts": "d95a290a5cf31cb69c41b257144118cec54fc1d132ff24971d0283da05405cca",
@@ -28520,9 +28630,9 @@
     "tdf-mobile/src/localization/eventExperienceCopy.ts": "5ddb85172b79e36a24366b30b573b51462adb0500a94747355d47943d5b238e4",
     "tdf-mobile/src/localization/onboardingCopy.ts": "58e4e181760d5850403bb9e01980e09ee21caddb46e4c82f6207d01abfc0c949",
     "tdf-mobile/src/navigation/deepLinks.ts": "6d1185dd9e204bd685da9fe358de42c7254f27eacd80b8f59fdd43d6fb1baebf",
-    "tdf-mobile/src/navigation/notificationResponses.test.ts": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
-    "tdf-mobile/src/navigation/notificationTarget.ts": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
-    "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
+    "tdf-mobile/src/navigation/notificationResponses.test.ts": "4a0751458c9bb8cbb48e5f7e4257c1c3064c00d4b6e073eb3dedc8b42e2d0460",
+    "tdf-mobile/src/navigation/notificationTarget.ts": "fc5c33c9774bd9a3ca3ef4fbb6e9fe64888c77ee3f07e5e1681d8db8b850e9ac",
+    "tdf-mobile/src/notifications/NotificationScreen.test.tsx": "9c3e22f7517a34aceb560cb0435aa9bef54f5e523e53790cc65858bf531d5d44",
     "tdf-mobile/src/providers/AppProviders.tsx": "ffd5a5922918be901c68d31503279220aa978775fbd213b5ef186d9502902a0a",
     "tdf-mobile/src/providers/AuthProvider.tsx": "e5ac647ae75d11db1ed43b9cbaff0c92c0b2c3f631e92564fb00e900ce31c74d",
     "tdf-mobile/src/providers/AuthQueryProviders.tsx": "ae919bad36236b53ab80d17674b5f70e438178e1e9cf3b482c9bd4c437e66ed2",
@@ -28538,6 +28648,874 @@
     "third_party/webtorrent/bundled-provenance.json": "82971c29f4d319e78318ff66b933ddbfdbf30bc8d8ba83739a804a488722bede"
   },
   "reverseTraceability": {
+    "tdf-hq/src/TDF/EventWatch.hs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Auth.hs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-REGISTRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-004",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-SUBJECT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PASSWORD-RECOVERY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/API.hs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-ESCROW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-ESCROW-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ARTIST-INVITE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server.hs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-ESCROW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-ESCROW-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-CHECKOUT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-BOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-CALENDAR-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-RAG-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-RADIO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-PUBLIC-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-WHATSAPP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ACCESS-PROVISION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-ENROLL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-META-REDELIVERY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-RAG-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-PUBLIC-VISIBILITY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-SOCIAL-OAUTH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PKG-PURCHASE-EXPIRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COURSE-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-PROFILE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-FOLLOW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "COMMUNITY-FAN-NOTIFICATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-CART-ROUTES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-PAYMENT-RAILS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-BUYER-REQUESTS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-OPS-ORDERS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-OPS-REVIEWS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-PUBLIC-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-PUBLIC-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "BOOK-MANUAL-REVIEW-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ADS-ADMIN-CATALOG-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ADS-AUTOMATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ADS-PUBLIC-INQUIRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SVCMKT-PROVIDER-ADS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SVCMKT-BOOKING-COMPLETE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-SELF-SERVICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "LABEL-NOTES-TRACKS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ACCESS-REQUEST-LIFECYCLE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CRM-PARTY-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-STAFF-TOOLS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-CHAT-WRITES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "NAV-PREFERENCES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-STAFF-OUTBOUND-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-LEGACY-RECORDS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ACADEMY-ACCOUNT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "INTEG-GOOGLE-CALENDAR-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-WRITES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AI-STAFF-ASSISTANTS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CMS-CONTENT-ADMIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-SEED-ROUTES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-ISSUE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-STORE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "CONTRACT-SEND-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/EventResearch.hs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-RESEARCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-10-21_event_watch_service_auth.sql": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/docs/openapi/api.yaml": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-ARTIST-CLAIM-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "LEGAL-CONSENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/docs/openapi/event-watch.yaml": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/tdf-hq.cabal": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-BUILD-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-RAG-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-ENTRY-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-RAG-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/event-watch-client.mjs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/production-migrations.json": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-003",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ID-SESSION-004",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "REC-DDEX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SEARCH-SYNC-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-INBOUND-CAPTURE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DATA-INDEX-DECLARATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-MUSIC-OUTCOME-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/event-watch-auth.yml": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-07_event_watch_archived_actor_guard.sql": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/ci.yml": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-API-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-API-002",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-TRACE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-ENVELOPE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "OPS-CI-REGISTRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PRIV-RAG-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DISCOVERY-NAV-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MSG-NOTIFY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-CI-BROWSER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-VERSION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DIR-SAVED-SEARCH-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DOMAIN-BINDING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-SOURCES-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-INVITATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-MODERATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-CI-SELECTED-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/EventWatchSpec.hs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/Spec.hs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ID-SESSION-004",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-RAG-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-API-003",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-RETRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-DRIVE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-STREAM-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-INVOICE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-READINESS-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PRIV-RAG-002",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-MUSIC-TEST-ENTRY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "DEPLOY-VERSION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-TIP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-ADAPTER-BINDING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-INVITATION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "ART-PROFILE-WRITE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "QA-REPORT-AUTHORING-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "QA-REPORT-EVIDENCE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "FEEDBACK-PUBLIC-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "LIVE-SESSION-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-PLANNING-UX-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/sql/event_watch_service_auth.sql": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/event-watch-client.test.mjs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-event-watch-http.py": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/event-watch-http-runner.test.mjs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq/test/sql/event_watch_archived_actor.sql": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/event-watch-auth-model.test.mjs": [
+      {
+        "requirement": "AUTH-EVENT-WATCH-001",
+        "relationship": "formalModels"
+      }
+    ],
     "scripts/production-release.mjs": [
       {
         "requirement": "SYS-RELEASE-001",
@@ -29380,314 +30358,6 @@
         "relationship": "tests"
       }
     ],
-    "tdf-hq/src/TDF/Server.hs": [
-      {
-        "requirement": "SYS-ESCROW-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SYS-ESCROW-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-CHECKOUT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-BOOK-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "BOOK-CALENDAR-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-RAG-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SYS-API-003",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-RADIO-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-WEBHOOK-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-DRIVE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-PUBLIC-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-READINESS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-ACCESS-PROVISION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "COURSE-ENROLL-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "LEGAL-CONSENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-WHATSAPP-REDELIVERY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-META-REDELIVERY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-TIP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ART-PUBLIC-VISIBILITY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-CAPTURE-RECON-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-SOCIAL-OAUTH-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PKG-PURCHASE-EXPIRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "COURSE-ADMIN-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "COMMUNITY-FAN-PROFILE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "COMMUNITY-FAN-FOLLOW-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "COMMUNITY-FAN-NOTIFICATION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-CART-ROUTES-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-PAYMENT-RAILS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-BUYER-REQUESTS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-OPS-ORDERS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-OPS-REVIEWS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "BOOK-PUBLIC-INTAKE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "BOOK-PUBLIC-PAYMENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "BOOK-MANUAL-REVIEW-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ADS-ADMIN-CATALOG-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ADS-AUTOMATION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ADS-PUBLIC-INQUIRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SVCMKT-PROVIDER-ADS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SVCMKT-BOOKING-COMPLETE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ART-SELF-SERVICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "LABEL-NOTES-TRACKS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-ACCESS-REQUEST-LIFECYCLE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "CRM-PARTY-INTAKE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SOCIAL-STAFF-TOOLS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-CHAT-WRITES-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "NAV-PREFERENCES-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-STAFF-OUTBOUND-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-LEGACY-RECORDS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ACADEMY-ACCOUNT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "INTEG-GOOGLE-CALENDAR-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-WRITES-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AI-STAFF-ASSISTANTS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "CMS-CONTENT-ADMIN-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "OPS-SEED-ROUTES-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-ISSUE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "CONTRACT-STORE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "CONTRACT-SEND-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-DATAFAST-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/API.hs": [
-      {
-        "requirement": "SYS-ESCROW-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SYS-ESCROW-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SYS-API-003",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-RADIO-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-PUBLIC-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-READINESS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-WHATSAPP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-ARTIST-INVITE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-TIP-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
-        "relationship": "implementation"
-      }
-    ],
     "scripts/__tests__/legacy-escrow-contract.test.mjs": [
       {
         "requirement": "SYS-ESCROW-001",
@@ -29969,96 +30639,6 @@
     "scripts/check-generated-api.mjs": [
       {
         "requirement": "SYS-API-001",
-        "relationship": "implementation"
-      }
-    ],
-    ".github/workflows/ci.yml": [
-      {
-        "requirement": "SYS-API-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SYS-API-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SYS-TRACE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-ENVELOPE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-PLAYER-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "OPS-CI-REGISTRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "DISCOVERY-NAV-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-NOTIFY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SYS-CI-BROWSER-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-VERSION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DIR-SAVED-SEARCH-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-DISCOVERY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-DOMAIN-BINDING-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-SOURCES-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "SOCIAL-EVENT-INVITATION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SOCIAL-EVENT-MODERATION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SYS-CI-SELECTED-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MUSIC-TORRENT-CONTROL-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-FILTER-001",
         "relationship": "implementation"
       }
     ],
@@ -30568,52 +31148,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq/src/TDF/Auth.hs": [
-      {
-        "requirement": "AUTH-REGISTRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ID-SESSION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ID-SESSION-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ID-SESSION-004",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-RADIO-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "COURSE-SUBJECT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-INTAKE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-PASSWORD-RECOVERY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq/src/TDF/Models.hs": [
       {
         "requirement": "AUTH-REGISTRY-001",
@@ -30759,72 +31293,6 @@
     "tdf-hq-ui/src/utils/roles.ts": [
       {
         "requirement": "ID-ARTIST-CLAIM-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/docs/openapi/api.yaml": [
-      {
-        "requirement": "ID-ARTIST-CLAIM-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-WEBHOOK-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-STREAM-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-READINESS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-INTAKE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-TICKET-MANUAL-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-TICKET-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "LEGAL-CONSENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-MUSIC-OUTCOME-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-TRACK-SEARCH-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "WEB-CONTENT-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -31144,64 +31612,6 @@
         "relationship": "implementation"
       }
     ],
-    "scripts/production-migrations.json": [
-      {
-        "requirement": "ID-SESSION-003",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "ID-SESSION-004",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "REC-DDEX-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DIR-SEARCH-SYNC-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MKT-ARTIST-LISTING-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "OPS-INBOUND-CAPTURE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DATA-INDEX-DECLARATION-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DISCOVERY-NAV-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MSG-NOTIFY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-MUSIC-OUTCOME-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
-        "relationship": "implementation"
-      }
-    ],
     "scripts/verify-recovery-expiry.py": [
       {
         "requirement": "ID-SESSION-003",
@@ -31292,132 +31702,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq/test/Spec.hs": [
-      {
-        "requirement": "ID-SESSION-004",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-RECOVERY-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PRIV-RAG-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SYS-API-003",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-RETRY-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-DRIVE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-STREAM-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-TICKET-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "DEPLOY-READINESS-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "OPS-CLIENT-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PRIV-INTAKE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SYS-MUSIC-TEST-ENTRY-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-VERSION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "SOCIAL-EVENT-MEMORY-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-TIP-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-CAPTURE-RECON-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-ADAPTER-BINDING-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-INVITATION-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "ART-PROFILE-WRITE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "QA-REPORT-AUTHORING-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "QA-REPORT-EVIDENCE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "FEEDBACK-PUBLIC-INTAKE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "LIVE-SESSION-INTAKE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-PLANNING-UX-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-DATAFAST-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-FILTER-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
-        "relationship": "tests"
-      }
-    ],
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": [
       {
         "requirement": "ID-SESSION-004",
@@ -31487,60 +31771,6 @@
     "tdf-hq/stack.yaml": [
       {
         "requirement": "SYS-BUILD-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/tdf-hq.cabal": [
-      {
-        "requirement": "SYS-BUILD-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-RAG-001",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "MEDIA-DRIVE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-INVOICE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "DEPLOY-READINESS-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-ENTRY-002",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PRIV-RAG-002",
-        "relationship": "tests"
-      },
-      {
-        "requirement": "PAY-MUSIC-MONEY-WIRE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-STORAGE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "MEDIA-MUSIC-CREDENTIAL-CACHE-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "PAY-DATAFAST-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "EVT-DISCOVERY-FILTER-001",
-        "relationship": "implementation"
-      },
-      {
-        "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "implementation"
       }
     ],
@@ -43668,12 +43898,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq/src/TDF/Server/EventResearch.hs": [
-      {
-        "requirement": "EVT-RESEARCH-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": [
       {
         "requirement": "MSG-ADMIN-WHATSAPP-001",
@@ -45737,9 +45961,13 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
+      "sha256": "c2681da3e5adcd86312a5951e583542a94c47423cbb5fae400a86c02e1046fe8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "SYS-API-001",
           "relationship": "implementation"
@@ -45891,6 +46119,18 @@
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
           "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b9ab87f6eae01e83",
+      "path": ".github/workflows/event-watch-auth.yml",
+      "sha256": "2cec00f1fc96c877f33fd229e16f2607038a4e14fa954b4306f91d1480317d5a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -47203,7 +47443,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a27042dedef0905645b75c59160e725c6db2f2225d3ba1d50eb31311767446a0",
+      "sha256": "025896ed32b14e995be8e5bad4103a6aaff2371696ba890c6923a168f518b2de",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47630,6 +47870,18 @@
       "sha256": "5f357eef6f3a2fa6ea61b605c6d7b307ba21af2e771f7449ecfc435856850b26",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-af2bf2ea051a1d07",
+      "path": "scripts/__tests__/event-watch-http-runner.test.mjs",
+      "sha256": "cabc2289e4240ebb5a27282fb0ace2f30e3bc8c02739cb687be54309450af6d2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-f7856cacfae2c515",
@@ -49188,6 +49440,42 @@
       ]
     },
     {
+      "id": "SURFACE-9a09a20663cdcf82",
+      "path": "scripts/event-watch-auth-model.test.mjs",
+      "sha256": "9212b3dab36d96a459d8b559c589fbbb96e4d788595fbccf63974553e8aa841c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "formalModels"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2257e6fe5005b625",
+      "path": "scripts/event-watch-client.mjs",
+      "sha256": "60906390dac54898a34e7ab9dc58020e2dc7e4afa69c253b0d113f99ef03408d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-fed491b85e079876",
+      "path": "scripts/event-watch-client.test.mjs",
+      "sha256": "1145f1974d5f79a792ca4ac6593cef113d05cf57320fc407845a637a7523ea28",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-dcae70b991cf88b5",
       "path": "scripts/fetch-ddex-ern432-schema.sh",
       "sha256": "9a7e2da809fd59d0709067b8fdd75f71a21dd474449d62c28551d1ac1b1f3a84",
@@ -50239,9 +50527,13 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "3c2d171b9e55a6594aaa497d95e7fd56b8ebe2b54194de6cea22f5a5b8becca9",
+      "sha256": "5d8cc1698fe0d45eb327e4dd8f3df7a35f6f0bbe427e9f49c70cc61d79e6bc7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "ID-SESSION-003",
           "relationship": "implementation"
@@ -52014,6 +52306,18 @@
       "sha256": "f294474136eaa8c48fb1607e5ef2803f8f16afc645d5883cc04a6eef66cb6942",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-c88b7aa20861ec89",
+      "path": "scripts/test-event-watch-http.py",
+      "sha256": "c0a8d1be6a6e2f9f8f8fdb938bce639a919ab36cd9fc81c93f18bece87ee2c5d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ec70a1725f0a44fe",
@@ -55781,7 +56085,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "00ac6131f322521d2232350733258f0666bdd7ccd25a67d0d6d343e6729b12ee",
+      "sha256": "5b6db697412c5c00770c77c7dacb6cd02667170759ee7268d9b470cccbb7f7a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64812,9 +65116,13 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "4826734e2eea92b03731be956d0335c466d8e6cb6f689fcec15a542c0cdd5424",
+      "sha256": "9cdce93b1cea177b9c58429eed0f68f77b07cd79a41536d93119b774d114e9f6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "ID-ARTIST-CLAIM-001",
           "relationship": "implementation"
@@ -64897,6 +65205,18 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b692d5a00ca458d8",
+      "path": "tdf-hq/docs/openapi/event-watch.yaml",
+      "sha256": "ef3cbdacae900697ddf740670c70f3a4fd1f8fe8a009e853432ce4be332e0a89",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
           "relationship": "implementation"
         }
       ]
@@ -68635,6 +68955,18 @@
       ]
     },
     {
+      "id": "SURFACE-d8be2d8c36ef8613",
+      "path": "tdf-hq/sql/2026-10-21_event_watch_service_auth.sql",
+      "sha256": "ee9ec40561fad3bface011d95f8a52ca1cb2d224dd7b296172d79a8e231fdede",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-485e38bfb3a8d257",
       "path": "tdf-hq/sql/2026-10-22_checkout_terms_history_append_only.sql",
       "sha256": "27c2a344d5b0f88fd9757dff720c692e55564d9fb3df5531ed22f38aaafb2694",
@@ -69235,6 +69567,18 @@
       ]
     },
     {
+      "id": "SURFACE-8f09cbb155b4856d",
+      "path": "tdf-hq/sql/2026-11-07_event_watch_archived_actor_guard.sql",
+      "sha256": "1b26b064cedb374374df4de752c8c7fa516b385c4be21d25b577f7038ac805f6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -69282,9 +69626,13 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "423e3156ab7e386197f584aa654ff9b972dd71d5dbba7e243aa0d88de8ba7c00",
+      "sha256": "ec60bd4077b1e120308d5ccbe098a4c1d2da16e67abdfea74e420fc11f5489cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "SYS-ESCROW-001",
           "relationship": "implementation"
@@ -69900,9 +70248,13 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "cbf9a2642b4e43acf65afc04812816703020981198d6e9cf8f090dac7e69b4fb",
+      "sha256": "982ef66e9567951e8f3ff8d9ec22e8115bafea7db969990d7eeed2809a729a8e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "AUTH-REGISTRY-001",
           "relationship": "implementation"
@@ -71115,6 +71467,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-3a01ccd554262082",
+      "path": "tdf-hq/src/TDF/EventWatch.hs",
+      "sha256": "fd5462ec02cdd467e8eae02ef8de59c19f297e5368a92d1890a17691686f2da7",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-6c2b99a15ac48184",
       "path": "tdf-hq/src/TDF/FeatureRegistry.hs",
       "sha256": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
@@ -71783,9 +72147,13 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "15768a3ab48b31a7dc9059d54d157af1993690feea8e452bd826bd991af4b0cc",
+      "sha256": "9b7554b96ead0e544cac6c2da2b2bd366c6bf833365fcd77befe531c802d8440",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "SYS-ESCROW-001",
           "relationship": "implementation"
@@ -72235,9 +72603,13 @@
     {
       "id": "SURFACE-06aae7ecd0fab607",
       "path": "tdf-hq/src/TDF/Server/EventResearch.hs",
-      "sha256": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
+      "sha256": "b8d18f5dc81381768fda53c199d4857320d968a48eca151077a391d3adab6449",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "EVT-RESEARCH-001",
           "relationship": "implementation"
@@ -73684,9 +74056,13 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
+      "sha256": "65233fbb3d599466066349c1a78e1886447ac5ebb3a3f12b396337e3acd98680",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "SYS-BUILD-001",
           "relationship": "implementation"
@@ -73867,9 +74243,13 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+      "sha256": "732235e9d9b8bac00bc22695246382379044c9cf913d2aac9aabc1a239bbe35d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "tests"
+        },
         {
           "requirement": "ID-SESSION-004",
           "relationship": "tests"
@@ -74648,6 +75028,18 @@
       "requirements": [
         {
           "requirement": "EVT-OWNER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-547f139f8c21f3f3",
+      "path": "tdf-hq/test/TDF/EventWatchSpec.hs",
+      "sha256": "c47d2afa04a61b11be8b01373866bd250f62647ede31e8a56b18db9ef3a972dc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
           "relationship": "tests"
         }
       ]
@@ -76569,6 +76961,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-9723cb22c567cc2e",
+      "path": "tdf-hq/test/sql/event_watch_archived_actor.sql",
+      "sha256": "74a60031ee90003cc0ec131869e88f9bbaca09c0cd804ffb4a754fbb0b3daf35",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2068ff0fa117c8d9",
+      "path": "tdf-hq/test/sql/event_watch_service_auth.sql",
+      "sha256": "0dd7ec412c9e259e4670f6a9877871c9d7b80d5e80986dad4a5168e06dcb37f6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-EVENT-WATCH-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-fff0fc437764ddd9",
       "path": "tdf-hq/test/sql/identity_reconciliation.sql",
       "sha256": "03917f0481ccaeb39cbd5338efe34361e231e20b8ce1ad1317a0fb21a933342c",
@@ -77287,7 +77703,7 @@
     {
       "id": "SURFACE-7aafc197c0caae2e",
       "path": "tdf-mobile/__tests__/featureRegistry.test.ts",
-      "sha256": "1ab135bf265b974320e20f3f5710fc64b0e23877b99beb8273267e7d021c7cad",
+      "sha256": "337bd6aeeeca7bcd31c061a0e63df2a4b45507bb4a9c0171cb29b9c87bb95ac2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78497,6 +78913,20 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-e5d01bb1f3e3279e",
+      "path": "tdf-mobile/src/api/accountStorage.test.ts",
+      "sha256": "4a3d899b59a81cb207591cdc134396faba696cadf6f1161927006f83b2e4e45e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-63d827763e05c996",
+      "path": "tdf-mobile/src/api/accountStorage.ts",
+      "sha256": "803a284094d3639df64a501a56f73b97d02b78c02fe03ddc65a801897b5eef49",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
       "id": "SURFACE-c3ef7b9d8509d838",
       "path": "tdf-mobile/src/api/artists.ts",
       "sha256": "9f08c8c9fd453f87655b3cbb7d6bd576b83d2cb1f6d1374a98c38bfe4faf8eee",
@@ -78627,7 +79057,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "00ac6131f322521d2232350733258f0666bdd7ccd25a67d0d6d343e6729b12ee",
+      "sha256": "c35c8f02c3cee9afb8b3bbc04c3a96bd31c1eb18af9397c128ced296ec5fdbb5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78807,6 +79237,13 @@
       "id": "SURFACE-4a29841c2910dae2",
       "path": "tdf-mobile/src/api/types.ts",
       "sha256": "c76f001e0adafd63b068b8e62ae987eaa7b0ca1ec0463d4afb144dc39815c2f0",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-5bd8a24e27435925",
+      "path": "tdf-mobile/src/api/upload.compatibility.test.ts",
+      "sha256": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -79112,7 +79549,7 @@
     {
       "id": "SURFACE-3cdceeb8afd26986",
       "path": "tdf-mobile/src/features/generatedFeatureRegistry.ts",
-      "sha256": "7befb5f315c7e165fbbeb77014b7fa1b8306efeeb22439b35f03e5acfbacd796",
+      "sha256": "49472dfbee590b19cd986c26ecd779d6be19ccdd8040e690b09c03502eeeb657",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79712,7 +80149,7 @@
     {
       "id": "SURFACE-335f0e863443a35b",
       "path": "tdf-mobile/src/navigation/notificationResponses.test.ts",
-      "sha256": "a1b88857847e2f17b4c1d77e34875ebcfa8dbc3329e2eb09af10916a18bbd8f6",
+      "sha256": "4a0751458c9bb8cbb48e5f7e4257c1c3064c00d4b6e073eb3dedc8b42e2d0460",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79739,7 +80176,7 @@
     {
       "id": "SURFACE-1b440686d0fdbde2",
       "path": "tdf-mobile/src/navigation/notificationTarget.ts",
-      "sha256": "635b13a8a72aeed82cf22482e8213ddc7df33c54a95f6b9b655b5ddd53e2b33c",
+      "sha256": "fc5c33c9774bd9a3ca3ef4fbb6e9fe64888c77ee3f07e5e1681d8db8b850e9ac",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79780,7 +80217,7 @@
     {
       "id": "SURFACE-c524a39784b123fa",
       "path": "tdf-mobile/src/notifications/NotificationScreen.test.tsx",
-      "sha256": "8309c2ee6791950ecfc31aa48f43156876156099c87ebe701f291e079aad2c05",
+      "sha256": "9c3e22f7517a34aceb560cb0435aa9bef54f5e523e53790cc65858bf531d5d44",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81381,6 +81818,8 @@
     "SURFACE-3469b2a00ddfcab0",
     "SURFACE-837d0ebca6fefd3b",
     "SURFACE-5755b7368095cc8f",
+    "SURFACE-e5d01bb1f3e3279e",
+    "SURFACE-63d827763e05c996",
     "SURFACE-c3ef7b9d8509d838",
     "SURFACE-e8c55bfb71a219d9",
     "SURFACE-befc4b8bb8e310b8",
@@ -81407,6 +81846,7 @@
     "SURFACE-7976405ee26783dd",
     "SURFACE-9742dd7e6fc15e5d",
     "SURFACE-4a29841c2910dae2",
+    "SURFACE-5bd8a24e27435925",
     "SURFACE-ceac2e6abbe05738",
     "SURFACE-44f0271f8adb8837",
     "SURFACE-88103f1d6fb89685",
@@ -82737,7 +83177,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b287a505c3d0fdaa87d0ac483db5d751275c610c8aea6f1ea8ff93f85ed009b",
+      "sourceSha256": "5b89510bcaa83f8e29375040762cb686b15b907e499986cc31baa74e752a1199",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -82765,7 +83205,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b287a505c3d0fdaa87d0ac483db5d751275c610c8aea6f1ea8ff93f85ed009b",
+      "sourceSha256": "5b89510bcaa83f8e29375040762cb686b15b907e499986cc31baa74e752a1199",
       "definition": {
         "states": [
           "absent",
@@ -82795,7 +83235,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b287a505c3d0fdaa87d0ac483db5d751275c610c8aea6f1ea8ff93f85ed009b",
+      "sourceSha256": "5b89510bcaa83f8e29375040762cb686b15b907e499986cc31baa74e752a1199",
       "definition": {
         "export": [
           "queued",
@@ -84894,6 +85334,53 @@
         "401",
         "403",
         "500"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "POST /integrations/event-watch/token",
+      "operationId": "exchangeEventWatchCredentials",
+      "source": "tdf-hq/docs/openapi/event-watch.yaml",
+      "security": [],
+      "responses": [
+        "200",
+        "401",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /integrations/event-watch/candidates",
+      "operationId": "listEventWatchCandidates",
+      "source": "tdf-hq/docs/openapi/event-watch.yaml",
+      "security": [
+        {
+          "eventWatchToken": []
+        }
+      ],
+      "responses": [
+        "200",
+        "401",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "PUT /integrations/event-watch/import",
+      "operationId": "importEventWatchCandidate",
+      "source": "tdf-hq/docs/openapi/event-watch.yaml",
+      "security": [
+        {
+          "eventWatchToken": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "401",
+        "403",
+        "409",
+        "503"
       ],
       "conformance": "not-established-by-client-generation"
     },
@@ -105760,7 +106247,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 207,
+    "PARTIAL": 208,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
