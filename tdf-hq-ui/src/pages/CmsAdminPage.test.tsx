@@ -379,6 +379,27 @@ describe('CmsAdminPage', () => {
     await cleanup();
   });
 
+  it('puts the locale query before a route fragment in the live-page link', async () => {
+    const fanHub = authoredContents[0]!;
+    const originalRoute = fanHub.publicRoute;
+    fanHub.publicRoute = '/tdf#estudio';
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => {
+        const link = Array.from(container.querySelectorAll('a'))
+          .find((el) => (el.textContent ?? '').trim() === 'Abrir página en vivo');
+        expect(link).toBeDefined();
+        const href = link!.getAttribute('href') ?? '';
+        expect(href).toMatch(/\/tdf\?locale=[a-z-]+#estudio$/i);
+      });
+    } finally {
+      fanHub.publicRoute = originalRoute;
+      await cleanup();
+    }
+  });
+
   it('keeps the live-page action beside the live summary instead of pointing admins to another part of the page', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

@@ -30,6 +30,8 @@ import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 import { getCmsLiveEditorActionState } from './cmsAdminLiveEditorActions';
+import StudioGalleryEditor from '../components/StudioGalleryEditor';
+import { parseStudioGallery, STUDIO_GALLERY_SLUG } from '../utils/studioGallery';
 
 const STORAGE_KEY = 'tdf-cms-admin:last-selection';
 const DRAFT_PREFIX = 'tdf-cms-admin:draft';
@@ -198,6 +200,12 @@ export default function CmsAdminPage() {
   );
   const normalizedSlugFilter = slugFilter.trim();
   const hasSlugSelection = Boolean(contentIdFilter && selectedContent && normalizedSlugFilter);
+  const isStudioGallery = selectedContent?.contentTypeCode === 'studio-photo-gallery' && normalizedSlugFilter === STUDIO_GALLERY_SLUG;
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const galleryDraft = useMemo(() => {
+    if (!isStudioGallery) return null;
+    try { return parseStudioGallery(JSON.parse(payload), true); } catch { return null; }
+  }, [isStudioGallery, payload]);
   const saveActionLabel = 'Guardar borrador';
   const baseStatusHelperText = 'Guardará esta versión como borrador sin cambiar la página en vivo.';
 
@@ -258,13 +266,14 @@ export default function CmsAdminPage() {
   useEffect(() => {
     try {
       const parsed = JSON.parse(payload);
+      if (isStudioGallery) parseStudioGallery(parsed);
       setPayloadError(null);
       setFormattedPayload(JSON.stringify(parsed, null, 2));
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'JSON inválido';
       setPayloadError(msg);
     }
-  }, [payload]);
+  }, [payload, isStudioGallery]);
 
   const listQuery = useQuery({
     queryKey: ['cms-content', contentIdFilter, localeFilter],
@@ -349,10 +358,11 @@ export default function CmsAdminPage() {
     if (!hasSlugSelection) {
       return;
     }
-    if (payloadError) return;
+    if (payloadError || galleryUploading) return;
     let parsed: unknown = null;
     try {
       parsed = JSON.parse(payload);
+      if (isStudioGallery) parseStudioGallery(parsed);
     } catch {
       return;
     }
@@ -438,9 +448,16 @@ export default function CmsAdminPage() {
     }
   };
 
-  const liveUrl = hasSlugSelection
-    ? `${PUBLIC_BASE}${selectedContent?.publicRoute ?? `/${normalizedSlugFilter}`}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`
+  // A route may carry a fragment (e.g. /tdf#estudio); the locale query has to
+  // come before it, or the browser treats it as part of the fragment.
+  const liveRoute = selectedContent?.publicRoute ?? `/${normalizedSlugFilter}`;
+  const liveFragmentIndex = liveRoute.indexOf('#');
+  const livePath = liveFragmentIndex === -1 ? liveRoute : liveRoute.slice(0, liveFragmentIndex);
+  const liveFragment = liveFragmentIndex === -1 ? '' : liveRoute.slice(liveFragmentIndex);
+  const liveLocaleQuery = localeFilter
+    ? `${livePath.includes('?') ? '&' : '?'}locale=${encodeURIComponent(localeFilter)}`
     : '';
+  const liveUrl = hasSlugSelection ? `${PUBLIC_BASE}${livePath}${liveLocaleQuery}${liveFragment}` : '';
   const livePayloadPretty = useMemo(() => {
     if (!liveContent) return '';
     try {
@@ -1024,7 +1041,15 @@ export default function CmsAdminPage() {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
-                <TextField
+                {isStudioGallery && galleryDraft && <StudioGalleryEditor
+                  key={contentIdFilter + ':' + localeFilter}
+                  value={galleryDraft}
+                  onChange={value => setPayload(JSON.stringify(value, null, 2))}
+                  onBusyChange={setGalleryUploading}
+                  disabled={createMutation.isPending}
+                />}
+                {isStudioGallery && payloadError && <Alert severity="warning">{payloadError}</Alert>}
+                {(!isStudioGallery || !galleryDraft) && <TextField
                   label="Payload JSON"
                   fullWidth
                   multiline
@@ -1033,7 +1058,7 @@ export default function CmsAdminPage() {
                   onChange={(e) => setPayload(e.target.value)}
                   helperText={payloadHelperText}
                   error={Boolean(payloadError)}
-                />
+                />}
                 <Stack direction="row" spacing={1} flexWrap="wrap">
                   {showFormatPayloadAction && (
                     <Button variant="outlined" onClick={handleFormatPayload}>
@@ -1105,7 +1130,7 @@ export default function CmsAdminPage() {
                     <Button
                       variant="contained"
                       onClick={handleCreate}
-                      disabled={createMutation.isPending || !canSaveVersion}
+                      disabled={createMutation.isPending || galleryUploading || !canSaveVersion}
                     >
                       {saveActionLabel}
                     </Button>

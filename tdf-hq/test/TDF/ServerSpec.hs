@@ -335,6 +335,8 @@ import TDF.Server
     , validateRequiredCmsSlug
     , validateOptionalCmsTitle
     , validateOptionalCmsPayload
+    , validateStudioGalleryPayload
+    , studioGalleryImageUrlAllowed
     , validateCmsContentPathId
     , validateOptionalCmsSlugFilter
     , validateOptionalCmsSlugPrefix
@@ -4414,6 +4416,55 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid
                 "title must not contain control characters or hidden formatting characters"
                 (validateOptionalCmsTitle (Just ("Hero" <> T.singleton '\x2028' <> "Draft")))
+
+    describe "validateStudioGalleryPayload" $ do
+        -- A later pair replaces an earlier one, so overrides follow the defaults.
+        let photoWith overrides = object
+                ( [ "id" .= ("sala-a" :: Text)
+                  , "title" .= ("Sala A" :: Text)
+                  , "alt" .= ("Sala de grabación" :: Text)
+                  , "imageUrl" .= ("https://images.example.invalid/sala-a.webp" :: Text)
+                  , "visible" .= True
+                  ] <> overrides )
+            gallery photos = object ["schemaVersion" .= (1 :: Int), "photos" .= (photos :: [A.Value])]
+            strict = validateStudioGalleryPayload False
+            draft = validateStudioGalleryPayload True
+
+        it "accepts a complete gallery and bundled or credential-free HTTPS image URLs" $ do
+            strict (gallery [photoWith []]) `shouldBe` Right ()
+            strict (gallery []) `shouldBe` Right ()
+            strict (gallery [photoWith ["capturedAt" .= ("2026-02" :: Text), "sourceUrl" .= ("https://maps.example.invalid/p/1" :: Text)]])
+                `shouldBe` Right ()
+            studioGalleryImageUrlAllowed "/assets/tdf-studio/sala-a-1280.webp" `shouldBe` True
+            studioGalleryImageUrlAllowed "https://images.example.invalid/a.webp" `shouldBe` True
+
+        it "rejects payloads the public gallery would refuse to render" $ do
+            strict (object ["schemaVersion" .= (1 :: Int), "photos" .= ("invalid" :: Text)]) `shouldSatisfy` isLeft
+            strict (object ["schemaVersion" .= (2 :: Int), "photos" .= ([] :: [A.Value])]) `shouldSatisfy` isLeft
+            strict (gallery [A.String "not a photo"]) `shouldSatisfy` isLeft
+            strict (gallery [photoWith ["title" .= (7 :: Int)]]) `shouldSatisfy` isLeft
+            strict (gallery [photoWith ["visible" .= ("yes" :: Text)]]) `shouldSatisfy` isLeft
+            strict (gallery [photoWith [], photoWith []]) `shouldSatisfy` isLeft
+            strict (gallery [photoWith ["id" .= ("sala a" :: Text)]]) `shouldSatisfy` isLeft
+            strict (gallery [photoWith ["credit" .= A.Null]]) `shouldSatisfy` isLeft
+            strict (gallery [photoWith ["capturedAt" .= ("2026-02-30" :: Text)]]) `shouldSatisfy` isLeft
+            strict (gallery (replicate 201 (photoWith []))) `shouldSatisfy` isLeft
+
+        it "rejects unsafe image and source URLs on publication" $ do
+            let unsafe url = strict (gallery [photoWith ["imageUrl" .= (url :: Text)]])
+            unsafe "http://images.example.invalid/a.webp" `shouldSatisfy` isLeft
+            unsafe "javascript:alert(1)" `shouldSatisfy` isLeft
+            unsafe "https://user:secret@images.example.invalid/a.webp" `shouldSatisfy` isLeft
+            unsafe "/assets/other/sala-a-1280.webp" `shouldSatisfy` isLeft
+            strict (gallery [photoWith ["thumbnailUrl" .= ("data:image/png;base64,AA==" :: Text)]]) `shouldSatisfy` isLeft
+            strict (gallery [photoWith ["sourceUrl" .= ("/assets/tdf-studio/sala-a-640.webp" :: Text)]]) `shouldSatisfy` isLeft
+
+        it "keeps incomplete drafts editable while still enforcing the payload shape" $ do
+            draft (gallery [photoWith ["title" .= ("" :: Text), "imageUrl" .= ("" :: Text)]]) `shouldBe` Right ()
+            strict (gallery [photoWith ["title" .= ("" :: Text)]]) `shouldSatisfy` isLeft
+            draft (object ["schemaVersion" .= (1 :: Int), "photos" .= ("invalid" :: Text)]) `shouldSatisfy` isLeft
+            draft (gallery [photoWith [], photoWith []]) `shouldSatisfy` isLeft
+            draft (gallery [photoWith ["visible" .= A.Null]]) `shouldSatisfy` isLeft
 
     describe "validateOptionalCmsPayload" $ do
         it "allows omitted and object payloads but rejects JSON null as ambiguous CMS content" $ do
