@@ -26,6 +26,52 @@ INSERT INTO event_crm_control(event_id,enabled,transport_required,updated_by) VA
 INSERT INTO event_crm_transport_slot(event_id,direction,departure_time) VALUES
   (7002,'outbound','11:00'),(7002,'outbound','12:00'),(7002,'return','17:00'),(7002,'return','18:00'),(7002,'return','22:00');
 UPDATE event_crm_transport_slot SET departure_place=CASE WHEN direction='outbound' THEN 'Punto de partida de ensayo' ELSE 'Sede sintética de ensayo' END WHERE event_id=7002;
+
+-- Model a transfer submitted while its reservation was live and reviewed after
+-- expiry. Seed the historical timestamps on insert; the runtime keeps them immutable.
+DO $$
+DECLARE
+  late_order bigint;
+  late_checkout uuid;
+  late_attempt uuid;
+  hold_start timestamptz := now() - interval '20 minutes';
+  hold_end timestamptz := now() - interval '10 minutes';
+  buyer_email text := 'late-payment@example.invalid';
+BEGIN
+  INSERT INTO event_ticket_order(event_id,tier_id,buyer_name,buyer_email,quantity,amount_cents,
+    currency,status,original_amount_cents,payment_method,purchased_at)
+    VALUES(7001,7001,'Pago tardío sintético',buyer_email,1,2000,'USD','cancelled',2000,
+      'bank_transfer',hold_start) RETURNING id INTO late_order;
+  INSERT INTO commerce_checkout_session(domain_type,domain_order_id,status,environment,currency,
+    subtotal_minor,tax_minor,total_minor,customer_email,lookup_token_hash,idempotency_key,expires_at,created_at)
+    VALUES('event_ticket_order',late_order::text,'expired','sandbox','USD',2000,0,2000,buyer_email,
+      encode(digest('crm-late-checkout','sha256'),'hex'),'crm-late-checkout',hold_end,hold_start)
+    RETURNING id INTO late_checkout;
+  INSERT INTO commerce_checkout_line_item(checkout_id,line_number,product_type,product_id,
+    product_version,description,quantity,unit_amount_minor,subtotal_minor,total_minor,snapshot)
+    VALUES(late_checkout,1,'event_ticket','7001','manual-review-v1','General',1,2000,2000,2000,'{}');
+  INSERT INTO event_ticket_checkout_runtime(order_id,event_id,tier_id,checkout_id,policy_id,
+    policy_version,lookup_token_hash,create_idempotency_key,create_request_sha256,fulfillment_status,
+    quantity,currency,unit_price_minor,gross_face_value_minor,net_face_value_minor,buyer_fee_bps,
+    buyer_fee_minor,organizer_fee_bps,organizer_fee_minor,tax_bps,tax_minor,checkout_total_minor,
+    organizer_payable_minor,platform_fee_minor,terms_version,terms_accepted_at,hold_expires_at,created_at)
+    SELECT late_order,7001,7001,late_checkout,id,policy_version,
+      encode(digest('crm-late-runtime','sha256'),'hex'),'crm-late-runtime',
+      encode(digest('crm-late-request','sha256'),'hex'),'expired',1,'USD',2000,2000,2000,0,
+      0,0,0,0,0,2000,2000,0,terms_version,hold_start,hold_end,hold_start
+    FROM event_ticket_checkout_policy WHERE event_id=7001 AND active;
+  INSERT INTO commerce_payment_attempt(checkout_id,provider,environment,operation,status,amount_minor,
+    currency,merchant_account_ref,idempotency_key)
+    VALUES(late_checkout,'bank_transfer','sandbox','manual_verify','requires_review',2000,'USD',
+      'tdf-manual-settlement','crm-late-attempt') RETURNING id INTO late_attempt;
+  INSERT INTO commerce_manual_payment_evidence(checkout_id,payment_attempt_id,status)
+    VALUES(late_checkout,late_attempt,'awaiting_evidence');
+  UPDATE commerce_manual_payment_evidence SET status='submitted',customer_reference='TEST-LATE',
+    currency='USD',submitted_amount_minor=2000,submitted_by=7104,
+    submitted_at=hold_start+interval '1 minute',sale_occurred_at=hold_start+interval '1 minute'
+    WHERE payment_attempt_id=late_attempt;
+END $$;
+
 INSERT INTO revenue_feature_flag(flag_key,enabled,environment,reason) VALUES
   ('commerce.event_tickets',true,'sandbox','Disposable local HTTP test only'),
   ('checkout.bank_transfer',true,'sandbox','Disposable local HTTP test only')

@@ -18098,7 +18098,7 @@
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
     "scripts/__tests__/event-crm-browser.mjs": "5cb78bdb020d334b136dff44cd2c93f461798ab8a4b8094e6fec628a8cddc8f6",
-    "scripts/__tests__/event-crm-http.mjs": "f72d62570d5ffd4bc4677ea9f61a8f22a7e536ace47a6d7c57fa12db662f0fd6",
+    "scripts/__tests__/event-crm-http.mjs": "844abf9b177ba6455417729fdd9307ac6ec963486698397168123630a37ffc0a",
     "scripts/__tests__/event-crm-model.test.mjs": "25cdfa9b65cbbfe2b6ce0e3159349fd5e14c612b440f3a9183ffc11908fd085a",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -18761,8 +18761,8 @@
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
     "tdf-hq-ui/src/pages/EventCrmPage.tsx": "f75d670657e1bd64cd05e2252e9d6f5019832d1a26c781fa6dccf3677406b5ba",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
-    "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx": "2214bb53774781baa3c54d9ac34ae2f15d55ae117914d42c390af34f4d527d73",
-    "tdf-hq-ui/src/pages/EventTeamInvitationPage.tsx": "8a624903f88a822d96fc0d8e234b3912f737081ac90475f3983c88b44f3d742f",
+    "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx": "3df54247e9af5fd16b91e737fe85412223f4589e26f2879e41e1854989ca133b",
+    "tdf-hq-ui/src/pages/EventTeamInvitationPage.tsx": "c538b59b0afed51d2174693f53f80e5906f80730e6ea6ab7aff3dd505b4f9030",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
@@ -19378,7 +19378,7 @@
     "tdf-hq/test/integration/directory_event_search_sync.sql": "5bb5a92c5403719e7398b2613a2c7956a152a69d0f88c7b0646e9b743206f8f6",
     "tdf-hq/test/integration/directory_saved_search_parity_postgres.sql": "98c52b8c11c22fdbb85ab5ed923a3185e54a2cf6438d0b485155e55640dda557",
     "tdf-hq/test/integration/event_crm_fixture.sql": "11149ce4e6f6a6f5eab2dab60b982623d4df728611de2866e8ad72782fe94280",
-    "tdf-hq/test/integration/event_crm_http_fixture.sql": "82350398a7d509b8d09eebaf52461727d5be7f2299a82087669fa04e4b3c23a6",
+    "tdf-hq/test/integration/event_crm_http_fixture.sql": "ac3a229af129af026186627c3faebdced417bac8c0003fbbbd1c01fab67dffa6",
     "tdf-hq/test/integration/event_memory_invitation_concurrency.sql": "77ddee672d66a77b0be449438eaa469c692391d3737d1cd177016b789fe7ff26",
     "tdf-hq/test/integration/event_memory_invitations.sql": "1198457183a305bb1d5fcd616e5e31b0b9575d57b17e7c32fbe1ea5d539d5fb6",
     "tdf-hq/test/integration/event_memory_source_moderation.sql": "3c86d2ad1c40f006501a8fcabe31cd904f2b9e5046fcd336749dd0346de67e07",
@@ -36642,7 +36642,7 @@
     {
       "id": "SURFACE-add592fecc233fec",
       "path": "scripts/__tests__/event-crm-http.mjs",
-      "sha256": "f72d62570d5ffd4bc4677ea9f61a8f22a7e536ace47a6d7c57fa12db662f0fd6",
+      "sha256": "844abf9b177ba6455417729fdd9307ac6ec963486698397168123630a37ffc0a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49649,7 +49649,7 @@
     {
       "id": "SURFACE-bd45d7e48903a05f",
       "path": "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx",
-      "sha256": "2214bb53774781baa3c54d9ac34ae2f15d55ae117914d42c390af34f4d527d73",
+      "sha256": "3df54247e9af5fd16b91e737fe85412223f4589e26f2879e41e1854989ca133b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49661,7 +49661,7 @@
     {
       "id": "SURFACE-ad8fdf4abc248ded",
       "path": "tdf-hq-ui/src/pages/EventTeamInvitationPage.tsx",
-      "sha256": "8a624903f88a822d96fc0d8e234b3912f737081ac90475f3983c88b44f3d742f",
+      "sha256": "c538b59b0afed51d2174693f53f80e5906f80730e6ea6ab7aff3dd505b4f9030",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63589,7 +63589,7 @@
     {
       "id": "SURFACE-12a9beba05e73888",
       "path": "tdf-hq/test/integration/event_crm_http_fixture.sql",
-      "sha256": "82350398a7d509b8d09eebaf52461727d5be7f2299a82087669fa04e4b3c23a6",
+      "sha256": "ac3a229af129af026186627c3faebdced417bac8c0003fbbbd1c01fab67dffa6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

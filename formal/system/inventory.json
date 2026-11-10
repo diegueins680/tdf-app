@@ -3882,7 +3882,7 @@
     {
       "id": "SURFACE-add592fecc233fec",
       "path": "scripts/__tests__/event-crm-http.mjs",
-      "sha256": "f72d62570d5ffd4bc4677ea9f61a8f22a7e536ace47a6d7c57fa12db662f0fd6",
+      "sha256": "844abf9b177ba6455417729fdd9307ac6ec963486698397168123630a37ffc0a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10806,13 +10806,13 @@
     {
       "id": "SURFACE-bd45d7e48903a05f",
       "path": "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx",
-      "sha256": "2214bb53774781baa3c54d9ac34ae2f15d55ae117914d42c390af34f4d527d73",
+      "sha256": "3df54247e9af5fd16b91e737fe85412223f4589e26f2879e41e1854989ca133b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ad8fdf4abc248ded",
       "path": "tdf-hq-ui/src/pages/EventTeamInvitationPage.tsx",
-      "sha256": "8a624903f88a822d96fc0d8e234b3912f737081ac90475f3983c88b44f3d742f",
+      "sha256": "c538b59b0afed51d2174693f53f80e5906f80730e6ea6ab7aff3dd505b4f9030",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18522,7 +18522,7 @@
     {
       "id": "SURFACE-12a9beba05e73888",
       "path": "tdf-hq/test/integration/event_crm_http_fixture.sql",
-      "sha256": "82350398a7d509b8d09eebaf52461727d5be7f2299a82087669fa04e4b3c23a6",
+      "sha256": "ac3a229af129af026186627c3faebdced417bac8c0003fbbbd1c01fab67dffa6",
       "semanticConformance": "not-established-by-discovery"
     },
     {

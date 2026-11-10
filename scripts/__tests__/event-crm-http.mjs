@@ -57,11 +57,17 @@ for(const kind of ['expired','revoked']){
 }
 const importRows=[{name:'Contacto sintético HTTP',email:'crm-http-only@example.invalid',phone:'0991112223',stage:'paid',quantity:2},
   {name:'Contacto sintético HTTP',email:'crm-http-only@example.invalid',phone:'+593991112223',stage:'reserved',quantity:2}];
+const ordersBeforeImport=sql('SELECT count(*) FROM event_ticket_order');
 const plan=await cmd(7104,{operation:'import.preview',rows:importRows});
 check('preview detects file duplicates and unpaid claims',plan.status===200&&plan.data.preview[1].duplicateOf===0&&plan.data.preview[0].paymentReconciliationRequired);
-await cmd(7104,{operation:'import.confirm',importId:plan.data.importId});
-await cmd(7104,{operation:'import.confirm',importId:plan.data.importId});
-check('HTTP repeated import produces one contact/link and zero sales',sql("SELECT count(*) FROM party WHERE primary_email='crm-http-only@example.invalid'")==='1'&&sql('SELECT count(*) FROM event_crm_lead')==='1'&&sql('SELECT count(*) FROM event_ticket_order')==='0');
+const imported=await cmd(7104,{operation:'import.confirm',importId:plan.data.importId});
+const importedAgain=await cmd(7104,{operation:'import.confirm',importId:plan.data.importId});
+check('HTTP repeated import produces one contact/link and no orders, sales or holds',
+ imported.status===200&&importedAgain.status===200&&importedAgain.data.replayed===true&&
+ sql("SELECT count(*) FROM party WHERE primary_email='crm-http-only@example.invalid'")==='1'&&
+ sql('SELECT count(*) FROM event_crm_lead')==='1'&&sql('SELECT count(*) FROM event_ticket_order')===ordersBeforeImport&&
+ sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='0'&&
+ (await request('/event-crm/events/7001',{actor:7101})).data.sales.length===0);
 
 const verifier=await cmd(7101,{operation:'invitation.create',recipientPartyId:7107,role:'payment_verifier'});
 await invite(7107,verifier.data.token,true);
@@ -118,18 +124,15 @@ const lastSeat=await Promise.all([0,1].map(n=>request('/public/events/7001/ticke
 check('two real checkouts competing for the last ticket retain exactly one place',lastSeat.filter(r=>r.status===201).length===1&&lastSeat.filter(r=>r.status===409).length===1&&sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='2');
 sql("SELECT event_ticket_checkout_expire_holds(clock_timestamp()+interval '31 hours',NULL,7001)");
 check('expiring the competing last-ticket hold returns only its own place',sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='1');
-// A refused review must keep the reconciliation exception it recorded.
-const lateOrder=await request('/public/events/7001/ticket-orders',{key:`crm-late-${randomUUID()}`,body:{tierId:7001,quantity:1,buyerName:'Pago tardío sintético',buyerEmail:'late-payment@example.invalid',termsAccepted:true}});
-assert.equal(lateOrder.status,201,'Canonical public checkout must create the late-payment order');
-const lateId=lateOrder.data.orderId;assert(Number.isSafeInteger(lateId));
-const lateClaim=await cmd(7104,{operation:'manual.submit',orderId:lateId,provider:'cash',reference:`TEST-late-${lateId}`,occurredAt:new Date().toISOString(),amountMinor:2000});
-assert.equal(lateClaim.status,200,'Late cash claim must be submitted while the hold is live');
-sql(`UPDATE event_ticket_checkout_runtime SET hold_expires_at=clock_timestamp()+interval '2 seconds' WHERE order_id=${lateId}`);
-await new Promise(resolve=>setTimeout(resolve,3000));
-const lateReview=await cmd(7107,{operation:'manual.review',orderId:lateId,provider:'cash',action:'approve',notes:'Synthetic approval after hold expiry'});
+// A refused review must keep the reconciliation exception it recorded. The
+// fixture starts expired so no mutation of the immutable hold or sleep is needed.
+const lateId=Number(sql("SELECT order_id FROM event_ticket_checkout_runtime WHERE create_idempotency_key='crm-late-runtime'"));
+assert(Number.isSafeInteger(lateId)&&lateId>0);
+const lateReview=await cmd(7107,{operation:'manual.review',orderId:lateId,provider:'bank_transfer',action:'approve',notes:'Synthetic approval after hold expiry'});
 check('refused review after hold expiry keeps its reconciliation exception and issues nothing',
   lateReview.status===409&&lateReview.data.code==='manual_review_refused'&&
   sql(`SELECT count(*) FROM commerce_reconciliation_exception WHERE exception_type='manual_payment_after_ticket_hold_expiry' AND internal_reference='${lateId}'`)==='1'&&
+  sql(`SELECT m.status FROM commerce_manual_payment_evidence m JOIN event_ticket_checkout_runtime r ON r.checkout_id=m.checkout_id WHERE r.order_id=${lateId}`)==='submitted'&&
   sql(`SELECT count(*) FROM event_ticket WHERE order_ref_id=${lateId}`)==='0');
 const member=race.find(r=>r.status===200).data.membershipId;
 await cmd(7101,{operation:'membership.revoke',membershipId:member});
@@ -141,6 +144,10 @@ const verifierMember=sql('SELECT id FROM event_crm_membership WHERE party_id=710
 await cmd(7101,{operation:'membership.revoke',membershipId:verifierMember});
 check('withdrawing verifier access blocks financial confirmation retries',(await cmd(7107,{operation:'manual.review',orderId:orders[0],provider:'cash',action:'approve',notes:'Retry after revoked'})).status===404);
 check('pilot identity is private and transport sales remain disabled',(await request('/event-crm/events/7002',{actor:7101})).data.combinationSalesEnabled===false);
+check('private pilot exposes neither a public storefront nor a purchasable ticket',
+ (await request('/public/events/7002/tickets')).status===404&&
+ (await request('/public/events/7002/ticket-orders',{key:`crm-draft-${randomUUID()}`,body:{tierId:7002,quantity:1,buyerName:'Ensayo privado',buyerEmail:'draft@example.invalid',termsAccepted:true}})).status===404&&
+ sql('SELECT count(*) FROM event_ticket_order WHERE event_id=7002')==='0');
 check('private draft keeps price windows and unknown trip capacities without selling',sql("SELECT count(*) FROM event_ticket_tier WHERE event_id=7002 AND NOT is_active AND ((price_cents=2000 AND sales_end='2026-12-02T04:59:59.999999Z'::timestamptz) OR (price_cents=3000 AND sales_start='2026-12-05T05:00:00Z'::timestamptz))")==='2'&&sql('SELECT count(*) FROM event_crm_transport_slot WHERE event_id=7002 AND capacity IS NULL')==='5');
 
 // Optional real-browser phase uses the same live authenticated HTTP server.
