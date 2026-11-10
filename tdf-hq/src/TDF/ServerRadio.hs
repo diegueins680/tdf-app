@@ -22,6 +22,7 @@ module TDF.ServerRadio
   , validateRadioMetadataRefreshLimit
   , resolveRadioNowPlayingFetchResult
   , parseIcyMetaIntHeader
+  , validateRadioCatalogAccess
   ) where
 
 import           Control.Applicative    ((<|>))
@@ -51,7 +52,7 @@ import           Database.Persist       (Entity(..), PersistValue(PersistText), 
                                          SelectOpt(Asc, Desc, LimitTo), deleteBy, getBy, insert, repsert,
                                          get, selectFirst, selectList, update, updateWhere)
 import           Database.Persist.Sql   (Single(..), SqlPersistT, fromSqlKey, rawSql, runSqlPool, toSqlKey)
-import           Servant                (NoContent(..), ServerError, ServerT, err400, err500, err502, err503, errBody, throwError, (:<|>)(..))
+import           Servant                (NoContent(..), ServerError, ServerT, err400, err403, err500, err502, err503, errBody, throwError, (:<|>)(..))
 import           Network.HTTP.Client    (BodyReader, Manager, brRead, httpLbs, parseRequest, responseBody,
                                          responseHeaders, responseTimeoutMicro, requestHeaders, withResponse, Request(..))
 import           Network.HTTP.Types.URI (urlDecode)
@@ -64,7 +65,7 @@ import           TDF.API.Types          (RadioAutoStopOptionDTO(..), RadioAutoSt
                                          RadioMetadataRefreshRequest(..), RadioMetadataRefreshResult(..),
                                          RadioNowPlayingRequest(..), RadioNowPlayingResult(..),
                                          RadioTransmissionRequest(..), RadioTransmissionInfo(..))
-import           TDF.Auth               (AuthedUser(..))
+import           TDF.Auth               (AuthedUser(..), ModuleAccess, hasModuleAccess)
 import qualified TDF.Catalog.Models     as Catalog
 import           TDF.DB                 (Env(..), sharedTlsManager)
 import           TDF.Models
@@ -828,6 +829,21 @@ splitStreamTitle title =
        (artist, track):_ -> (Just artist, Just track)
        [] -> (Nothing, Nothing)
 
+-- | The shared radio catalog (stream upserts, imports, metadata refreshes)
+-- and the server-side stream fetches behind them are staff tools: the caller
+-- must hold at least one module grant under a coherent role set. Accounts
+-- with no module (Fan, Promoter, Agency, ...) keep their own presence routes
+-- and the read-only search, but cannot rewrite the catalog or make the server
+-- fetch URLs on their behalf.
+validateRadioCatalogAccess :: AuthedUser -> Either ServerError ()
+validateRadioCatalogAccess user
+  | fromSqlKey (auPartyId user) <= 0 =
+      Left err403 { errBody = "Valid authenticated party required" }
+  | not (any (`hasModuleAccess` user) [minBound .. maxBound :: ModuleAccess]) =
+      -- hasModuleAccess already requires coherent, unique role grants.
+      Left err403 { errBody = "Radio catalog changes require a staff module grant" }
+  | otherwise = Right ()
+
 radioServer
   :: forall m.
      ( MonadReader Env m
@@ -932,6 +948,7 @@ radioServer user =
 
     upsertActive :: RadioStreamUpsert -> m RadioStreamDTO
     upsertActive payload = do
+      either throwError pure (validateRadioCatalogAccess user)
       streamUrl <- either throwError pure (validateRadioStreamUrl (rsuStreamUrl payload))
       when (isLegacyBroadcastUrl streamUrl) $ throwError nativeBroadcastUnavailable
       name <- either throwError pure $
@@ -961,6 +978,7 @@ radioServer user =
 
     importStreams :: RadioImportRequest -> m RadioImportResult
     importStreams RadioImportRequest{..} = do
+      either throwError pure (validateRadioCatalogAccess user)
       cleanedSources <- either throwError pure (validateRadioImportSources rirSources)
       cap <- either throwError pure (validateRadioImportLimit rirLimit)
       manager <- pure sharedTlsManager
@@ -1011,6 +1029,7 @@ radioServer user =
 
     refreshMetadata :: RadioMetadataRefreshRequest -> m RadioMetadataRefreshResult
     refreshMetadata RadioMetadataRefreshRequest{..} = do
+      either throwError pure (validateRadioCatalogAccess user)
       cap <- either throwError pure (validateRadioMetadataRefreshLimit rmrLimit)
       let onlyMissing = fromMaybe False rmrOnlyMissing
       now <- liftIO getCurrentTime
@@ -1053,6 +1072,7 @@ radioServer user =
 
     nowPlaying :: RadioNowPlayingRequest -> m RadioNowPlayingResult
     nowPlaying RadioNowPlayingRequest{..} = do
+      either throwError pure (validateRadioCatalogAccess user)
       streamUrl <- either throwError pure (validateRadioStreamUrl rnpStreamUrl)
       manager <- pure sharedTlsManager
       result <- liftIO $ fetchNowPlaying manager streamUrl
