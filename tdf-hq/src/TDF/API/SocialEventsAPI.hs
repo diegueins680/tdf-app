@@ -60,6 +60,7 @@ import System.FilePath (takeExtension)
 import TDF.Server.TicketPaymentReceipt (TicketPaymentReceipt)
 
 import TDF.API.EventResearchAPI (EventResearchRoutes)
+import TDF.Contracts.EventWorkspaceAPI (EventWorkspaceAPI)
 
 import TDF.DTO.SocialEventsDTO (
     ArtistDTO,
@@ -665,3 +666,4 @@ type SocialEventsAPI =
         :<|> FinanceRoutes
         :<|> LogisticsRoutes
         :<|> MemoryInvitationRoutes
+        :<|> EventWorkspaceAPI

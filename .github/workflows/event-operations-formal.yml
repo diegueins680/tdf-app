@@ -180,6 +180,11 @@ jobs:
             https://github.com/apalache-mc/apalache/releases/download/v0.62.4/apalache.tgz \
             --output "${RUNNER_TEMP}/tdf-formal-tools/apalache-0.62.4.tgz"
 
+      - name: Check account acceptance and mutation controls
+        env:
+          TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar
+        run: node scripts/verify-event-agreements-formal.mjs
+
       - name: Check event operations models
         env:
           TLA2TOOLS_JAR: ${{ runner.temp }}/tdf-formal-tools/tla2tools-1.7.2.jar

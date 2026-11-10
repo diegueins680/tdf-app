@@ -69,3 +69,7 @@ it('retains an event-memory invitation identity through login without accepting 
   expect(resolvePostAuthPath(null, ['Customer'], [], redirect)).toBe(path);
   expect(notificationTargetPath(notification({ nTargetType: 'event_memories', nTargetId: 141, nTargetKey: 'https://bad.test' }))).toBeNull();
 });
+
+it('opens a private agreement notification in its event workspace', () => {
+  expect(notificationTargetPath(notification({ nTargetType: 'event_agreement', nTargetId: 216, nTargetKey: 'c84ad7a0-ea51-42ac-94bb-66b43857a200' }))).toBe('/social/eventos/216/acuerdos?agreement=c84ad7a0-ea51-42ac-94bb-66b43857a200');
+});

@@ -65,6 +65,8 @@ executable tdf-hq-exe
     TDF.API.SocialDiscoveryAPI
     TDF.API.SocialSyncAPI
     TDF.Contracts.API
+    TDF.Contracts.EventWorkspaceAPI
+    TDF.Contracts.EventWorkspace
     TDF.Contracts.Server
     TDF.Contracts.Types
     TDF.Courses.Production
@@ -355,6 +357,8 @@ test-suite tdf-hq-test
     TDF.CourseIdentitySpec
     TDF.TrialIdentitySpec
     TDF.MarketplaceIdentitySpec
+    TDF.Contracts.DeliverySpec
+    TDF.Contracts.EventWorkspaceSpec
     TDF.Commerce.WorkerLoggingSpec
     TDF.Commerce.CheckoutMoneySpec
     TDF.Commerce.PaymentArithmeticSpec
