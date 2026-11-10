@@ -39,6 +39,7 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import {
   Directory,
+  type ClassifiedApplication,
   type DirectoryInvitation,
   type DirectoryPortfolioItem,
   type DirectoryProfileLink,
@@ -47,7 +48,12 @@ import {
   type DirectoryTaxonomyItem,
   type ManagedClassified,
   type ManagedDirectoryProfile,
+  type PriceMode,
 } from '../api/directory';
+import MyOffersPanel from '../features/marketplace/MyOffersPanel';
+import OfferCard from '../features/marketplace/OfferCard';
+import OfferForm from '../features/marketplace/OfferForm';
+import OffersBoard from '../features/marketplace/OffersBoard';
 import { useSession } from '../session/SessionContext';
 import { firstNonEmptyString } from '../utils/stringValues';
 
@@ -64,6 +70,7 @@ function DirectoryNotificationContext({ kind, id }: { kind: string; id: string }
   const valid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
   const query = useQuery({ queryKey: ['directory', kind === 'invitation' ? 'invitations' : 'applications', 'notification-context', session?.partyId, kind, id],
     queryFn: () => Directory.notificationContext(kind, id), enabled: valid, retry: false });
+  const taxonomies = useQuery({ queryKey: ['directory', 'taxonomies', 'es'], queryFn: () => Directory.taxonomies('es'), staleTime: 30 * 60 * 1000, enabled: kind === 'application' });
   const data = query.isError ? undefined : query.data;
   const value = (key: string) => typeof data?.[key] === 'string' ? data[key] : '';
   const profileName = (key: string) => {
@@ -78,10 +85,10 @@ function DirectoryNotificationContext({ kind, id }: { kind: string; id: string }
     : /^(event|venue)$/.test(resultType) && /^\d+$/.test(resultId)
       ? `/${resultType === 'event' ? 'eventos' : 'venues'}/${resultId}` : null;
   return <Container sx={{ py: 4 }}><Stack spacing={2}>
-    <Typography variant="h4" component="h1">{kind === 'application' ? 'Postulación' : kind === 'invitation' ? 'Invitación' : kind === 'review' ? 'Reseña' : 'Resultado de tu alerta'}</Typography>
+    <Typography variant="h4" component="h1">{kind === 'application' ? 'Oferta' : kind === 'invitation' ? 'Invitación' : kind === 'review' ? 'Reseña' : 'Resultado de tu alerta'}</Typography>
     {query.isPending && valid && <CircularProgress />}
     {(!valid || query.isError) && <Alert severity="info">Este recurso ya no está disponible para tu cuenta o tu acceso ha cambiado.</Alert>}
-    {data && kind === 'application' && <><Typography>{value('title')}</Typography><ApplicationRow application={data} authorProfileId={value('authorProfileId')} /></>}
+    {data && kind === 'application' && <><Typography>{value('title')}</Typography><OfferCard offer={data as unknown as ClassifiedApplication} currencies={taxonomies.data?.currencies} authorProfileId={value('authorProfileId') || undefined} showClassified /></>}
     {data && kind === 'invitation' && <InvitationCard invitation={data as unknown as DirectoryInvitation} />}
     {data && kind === 'review' && <><Typography>{profileName('authorProfile')} → {profileName('subjectProfile')}</Typography><Typography>{typeof data['rating'] === 'number' ? data['rating'] : ''} / 5</Typography><MarkdownText>{value('body')}</MarkdownText><Chip label={value('status')} /></>}
     {data && kind === 'alert' && <><Typography>{value('searchName')}</Typography><Typography>{value('title')}</Typography>{path && <Button component={RouterLink} to={path}>Ver resultado</Button>}</>}
@@ -121,17 +128,19 @@ function DirectoryManagement() {
         <Alert severity="info" action={<Button color="inherit" onClick={() => ageMutation.mutate()} disabled={ageMutation.isPending}>Soy mayor de edad</Button>}>
           Para publicar, responder o contactar se requiere control de edad. La declaración de adulto no se muestra como identidad verificada; las cuentas de menores requieren consentimiento aprobado de su representante.
         </Alert>
-        <Tabs value={tab} onChange={(_, value: unknown) => { if (typeof value === 'number') setTab(value); }} aria-label="Administración del directorio">
+        <Tabs value={tab} onChange={(_, value: unknown) => { if (typeof value === 'number') setTab(value); }} aria-label="Administración del directorio" variant="scrollable">
           <Tab label={`Perfiles (${profiles.data?.length ?? 0})`} />
-          <Tab label={`Clasificados (${classifieds.data?.length ?? 0})`} />
-          <Tab label="Responder, contactar o invitar" />
+          <Tab label={`Anuncios (${classifieds.data?.length ?? 0})`} />
+          <Tab label="Ofertar, contactar o invitar" />
           <Tab label="Invitaciones" />
+          <Tab label="Mis ofertas" />
         </Tabs>
 
         {tab === 0 && <ProfilePanel profiles={profiles.data ?? []} loading={profiles.isLoading} onCreate={() => { setEditingProfile(undefined); setProfileOpen(true); }} onEdit={(profile) => { setEditingProfile(profile); setProfileOpen(true); }} onRefresh={refresh} />}
-        {tab === 1 && <ClassifiedPanel classifieds={classifieds.data ?? []} loading={classifieds.isLoading} onCreate={() => setClassifiedOpen(true)} onRefresh={refresh} />}
-        {tab === 2 && <OpportunityActionPanel profiles={profiles.data ?? []} classifieds={classifieds.data ?? []} applyId={params.get('apply')} contactId={params.get('contact')} inviteId={params.get('invite')} contextKind={contextKind} onDone={() => { setNotice('Acción enviada de forma segura.'); setParams({}); }} />}
+        {tab === 1 && <ClassifiedPanel classifieds={classifieds.data ?? []} loading={classifieds.isLoading} taxonomies={taxonomies.data} onCreate={() => setClassifiedOpen(true)} onRefresh={refresh} />}
+        {tab === 2 && <OpportunityActionPanel profiles={profiles.data ?? []} classifieds={classifieds.data ?? []} taxonomies={taxonomies.data} applyId={params.get('apply')} applySlug={params.get('slug')} contactId={params.get('contact')} inviteId={params.get('invite')} contextKind={contextKind} onDone={() => { setNotice('Acción enviada de forma segura.'); setParams({}); }} />}
         {tab === 3 && <InvitationPanel />}
+        {tab === 4 && <MyOffersPanel currencies={taxonomies.data?.currencies} />}
 
         <ProfileDialog profile={editingProfile} open={profileOpen} onClose={() => setProfileOpen(false)} taxonomies={taxonomies.data} onSaved={() => { setProfileOpen(false); void refresh(); setNotice(editingProfile ? 'Perfil actualizado.' : 'Perfil creado como borrador.'); }} />
         <ClassifiedDialog open={classifiedOpen} onClose={() => setClassifiedOpen(false)} profiles={profiles.data ?? []} taxonomies={taxonomies.data} onCreated={() => { setClassifiedOpen(false); void refresh(); setNotice('Clasificado creado como borrador. Revísalo y publícalo cuando esté listo.'); }} />
@@ -154,39 +163,34 @@ function ProfilePanel({ profiles, loading, onCreate, onEdit, onRefresh }: { prof
   </Stack>;
 }
 
-function ClassifiedPanel({ classifieds, loading, onCreate, onRefresh }: { classifieds: ManagedClassified[]; loading: boolean; onCreate: () => void; onRefresh: () => Promise<unknown> }) {
+function ClassifiedPanel({ classifieds, loading, taxonomies, onCreate, onRefresh }: { classifieds: ManagedClassified[]; loading: boolean; taxonomies?: DirectoryTaxonomies; onCreate: () => void; onRefresh: () => Promise<unknown> }) {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<string | null>(null);
-  const applications = useQuery({ queryKey: ['directory', 'applications', selected], queryFn: () => Directory.applications(selected!), enabled: Boolean(selected) });
   const status = useMutation({ mutationFn: ({ id, value }: { id: string; value: string }) => Directory.setClassifiedStatus(id, value), onSuccess: onRefresh });
   if (loading) return <CircularProgress aria-label={t('auditAccessibility.loadingClassifieds')} />;
   return <Stack spacing={2}>
-    <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Publicar oportunidad</Button>
-    {classifieds.length === 0 && <Alert severity="info">Todavía no tienes clasificados. Los anuncios básicos son gratuitos.</Alert>}
-    {classifieds.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2.5, borderRadius: 3 }}><Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}><Box><Typography variant="h5" fontWeight={800}>{item.title}</Typography><Typography color="text.secondary">{item.sourceProfileId ? 'Anuncio automático de tu perfil de artista: se actualiza, pausa y reactiva con el perfil.' : `Vence: ${item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'al publicar +30 días'}`}</Typography></Box><Stack direction="row" gap={1} alignItems="center" flexWrap="wrap"><Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />{!item.sourceProfileId && item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}{!item.sourceProfileId && item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}<Button onClick={() => setSelected(selected === item.id ? null : item.id)}>Postulaciones</Button></Stack></Stack>{selected === item.id && <Stack mt={2} spacing={1}>{applications.isLoading && <CircularProgress size={24} aria-label={t('auditAccessibility.loadingApplications')} />}{applications.data?.length === 0 && <Typography color="text.secondary">Sin postulaciones todavía.</Typography>}{applications.data?.map((application) => <ApplicationRow key={String(application['id'])} application={application} authorProfileId={item.authorProfileId} />)}</Stack>}</Paper>)}
+    <Button variant="contained" startIcon={<AddIcon />} onClick={onCreate} sx={{ alignSelf: 'flex-start' }}>Publicar anuncio</Button>
+    {classifieds.length === 0 && <Alert severity="info">Todavía no tienes anuncios. Publica lo que buscas (una banda, un venue, un tecladista) o lo que ofreces; los anuncios básicos son gratuitos.</Alert>}
+    {classifieds.map((item) => <Paper key={item.id} variant="outlined" sx={{ p: 2.5, borderRadius: 3 }} data-testid="managed-classified">
+      <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={2}>
+        <Box>
+          <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+            <Chip size="small" color={item.intent === 'seeking' ? 'secondary' : 'info'} label={t(`marketplace.intent.${item.intent}`)} />
+            <Typography variant="h5" fontWeight={800}>{item.title}</Typography>
+          </Stack>
+          <Typography color="text.secondary">{item.sourceProfileId ? 'Anuncio automático de tu perfil de artista: se actualiza, pausa y reactiva con el perfil.' : `Vence: ${item.expiresAt ? new Date(item.expiresAt).toLocaleDateString() : 'al publicar +30 días'}`}</Typography>
+          {!item.sourceProfileId && <Typography variant="body2" color="text.secondary" mt={0.5}>{t('marketplace.board.slots', { remaining: item.slotsRemaining, total: item.slots })} · {t('marketplace.managed.offers', { count: item.offerCount, open: item.openOfferCount })}</Typography>}
+        </Box>
+        <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
+          <Chip label={item.status} color={item.status === 'published' ? 'success' : 'default'} />
+          {!item.sourceProfileId && item.status === 'draft' && <Button onClick={() => status.mutate({ id: item.id, value: 'published' })}>Publicar</Button>}
+          {!item.sourceProfileId && item.status === 'published' && <Button startIcon={<CheckCircleIcon />} onClick={() => status.mutate({ id: item.id, value: 'filled' })}>Marcar cubierto</Button>}
+          {!item.sourceProfileId && <Button onClick={() => setSelected(selected === item.id ? null : item.id)}>{selected === item.id ? 'Ocultar ofertas' : `Ofertas (${item.offerCount})`}</Button>}
+        </Stack>
+      </Stack>
+      {selected === item.id && <OffersBoard classified={item} currencies={taxonomies?.currencies} />}
+    </Paper>)}
   </Stack>;
-}
-
-function ApplicationRow({ application, authorProfileId }: { application: Record<string, unknown>; authorProfileId: string }) {
-  const client = useQueryClient();
-  const [conversationMessage, setConversationMessage] = useState('Hola, aceptamos tu postulación y queremos continuar la conversación en TDF.');
-  const profile = typeof application['applicantProfile'] === 'object' && application['applicantProfile'] ? application['applicantProfile'] as Record<string, unknown> : {};
-  const applicationId = String(application['id']);
-  const applicantProfileId = typeof profile['id'] === 'string' ? profile['id'] : '';
-  const refresh = () => client.invalidateQueries({ queryKey: ['directory', 'applications'] });
-  const mutation = useMutation({ mutationFn: (status: string) => Directory.setApplicationStatus(applicationId, status), onSuccess: refresh });
-  const conversation = useMutation({
-    mutationFn: async () => {
-      await Directory.contact({ senderProfileId: authorProfileId, targetProfileId: applicantProfileId, contextKind: 'application', contextId: applicationId, message: conversationMessage.trim() }, `directory-application-contact-${applicationId}`);
-      return Directory.setApplicationStatus(applicationId, 'conversation_open');
-    },
-    onSuccess: refresh,
-  });
-  const profileName = typeof profile['name'] === 'string' ? profile['name'] : 'Perfil postulante';
-  const message = typeof application['message'] === 'string' ? application['message'] : '';
-  const applicationStatus = typeof application['status'] === 'string' ? application['status'] : 'submitted';
-  const awaitingDecision = ['submitted', 'viewed', 'shortlisted'].includes(applicationStatus);
-  return <Paper sx={{ p: 2, bgcolor: 'action.hover' }}><Stack spacing={1}><Typography fontWeight={800}>{profileName}</Typography><MarkdownText>{message}</MarkdownText>{applicationStatus === 'accepted' && <TextField label="Mensaje para abrir la conversación" value={conversationMessage} onChange={(event) => setConversationMessage(event.target.value)} multiline minRows={2} inputProps={{ minLength: 1, maxLength: 5000 }} />}{(Boolean(mutation.error) || Boolean(conversation.error)) && <Alert severity="error">{(mutation.error ?? conversation.error)?.message}</Alert>}<Stack direction="row" gap={1} flexWrap="wrap"><Chip size="small" label={applicationStatus} />{awaitingDecision && <><Button size="small" onClick={() => mutation.mutate('shortlisted')}>Preseleccionar</Button><Button size="small" onClick={() => mutation.mutate('accepted')}>Aceptar</Button><Button size="small" onClick={() => mutation.mutate('rejected')}>Rechazar</Button></>}{applicationStatus === 'accepted' && <Button size="small" variant="contained" onClick={() => conversation.mutate()} disabled={!applicantProfileId || !conversationMessage.trim() || conversation.isPending}>Abrir conversación</Button>}</Stack></Stack></Paper>;
 }
 
 function InvitationPanel() {
@@ -502,7 +506,15 @@ function ClassifiedDialog({ open, onClose, profiles, taxonomies, onCreated }: { 
   const [currencyId, setCurrencyId] = useState('');
   const [budgetNegotiable, setBudgetNegotiable] = useState(false);
   const [serviceOfferingId, setServiceOfferingId] = useState('');
+  // ADR 0132 marketplace fields
+  const [slots, setSlots] = useState('1');
+  const [priceMode, setPriceMode] = useState<PriceMode | ''>('');
+  const [offerDeadlineAt, setOfferDeadlineAt] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState('');
+  const [capacity, setCapacity] = useState('');
+  const [equipmentProvided, setEquipmentProvided] = useState('');
   const selectedCategory = taxonomies?.classifiedCategories.find((item) => item.id === categoryId);
+  const categoryIntent = typeof selectedCategory?.metadata?.['intent'] === 'string' ? selectedCategory.metadata['intent'] : 'seeking';
   const required = taxonomyRequirements(selectedCategory);
   const selectedCompensation = taxonomies?.compensationTypes.find((item) => item.id === compensationTypeId);
   const budgetMode = typeof selectedCompensation?.metadata?.['budget'] === 'string' ? selectedCompensation.metadata['budget'] : undefined;
@@ -547,11 +559,15 @@ function ClassifiedDialog({ open, onClose, profiles, taxonomies, onCreated }: { 
       currencyId: minMinor !== undefined || maxMinor !== undefined ? selectedCurrencyId : undefined,
       budgetNegotiable: budgetNegotiable || selectedCompensation?.code === 'negotiable',
       serviceOfferingId: serviceOfferingId || undefined,
+      slots: Math.min(100, Math.max(1, Number(slots) || 1)),
+      priceMode: priceMode || undefined,
+      offerDeadlineAt: toIso(offerDeadlineAt),
+      terms: buildClassifiedTerms({ durationMinutes, capacity, equipmentProvided }),
     });
   }, onSuccess: onCreated });
   const basicsValid = Boolean(profileId && categoryId && title.trim().length >= 5 && description.trim().length >= 20);
   const showBudget = Boolean(compensationTypeId && budgetMode !== 'forbidden');
-  return <Dialog open={open} onClose={onClose} fullWidth maxWidth="md"><DialogTitle>Nueva oportunidad o clasificado</DialogTitle><DialogContent><Stack spacing={2} pt={1}><FormControl><InputLabel>Perfil que publica</InputLabel><Select label="Perfil que publica" value={profileId} onChange={(event) => setProfileId(event.target.value)}>{profiles.map((profile) => <MenuItem key={profile.id} value={profile.id}>{profile.name}</MenuItem>)}</Select></FormControl><FormControl><InputLabel>Categoría</InputLabel><Select label="Categoría" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>{(taxonomies?.classifiedCategories ?? []).filter((item) => !item.derived).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl>{required.size > 0 && <Alert severity="info">Esta categoría requiere: {Array.from(required).map(requirementLabel).join(', ')}.</Alert>}<TextField label="Título" value={title} onChange={(event) => setTitle(event.target.value)} required inputProps={{ minLength: 5, maxLength: 160 }} /><TextField label="Descripción" value={description} onChange={(event) => setDescription(event.target.value)} multiline minRows={6} required inputProps={{ minLength: 20, maxLength: 10000 }} /><TaxonomyMultiSelect label="Profesiones buscadas" items={taxonomies?.professions ?? []} values={professionIds} onChange={setProfessionIds} required={required.has('professionIds')} /><TaxonomyMultiSelect label="Instrumentos buscados" items={taxonomies?.instruments ?? []} values={instrumentIds} onChange={setInstrumentIds} required={required.has('instrumentIds')} /><TaxonomyMultiSelect label="Géneros" items={taxonomies?.genres ?? []} values={genreIds} onChange={setGenreIds} required={required.has('genreIds')} /><TaxonomyMultiSelect label="Ciudades" items={taxonomies?.cities ?? []} values={cityIds} onChange={setCityIds} required={required.has('locations')} /><Stack direction={{ xs: 'column', sm: 'row' }} gap={1}><FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="Acepta remoto" /><FormControlLabel control={<Switch checked={availableToTravel} onChange={(event) => setAvailableToTravel(event.target.checked)} />} label="Disponible para viajar" /></Stack><Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><TextField fullWidth label="Inicio" type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} InputLabelProps={{ shrink: true }} required={required.has('dateRange')} /><TextField fullWidth label="Fin" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} InputLabelProps={{ shrink: true }} required={required.has('dateRange')} /></Stack><FormControl><InputLabel>Experiencia requerida</InputLabel><Select label="Experiencia requerida" value={experienceLevel} onChange={(event) => setExperienceLevel(event.target.value)}>{[['any','Cualquier nivel'],['beginner','Principiante'],['intermediate','Intermedio'],['advanced','Avanzado'],['professional','Profesional']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl><FormControl required={required.has('compensationTypeId')}><InputLabel>Compensación</InputLabel><Select label="Compensación" value={compensationTypeId} onChange={(event) => { setCompensationTypeId(event.target.value); setBudgetMin(''); setBudgetMax(''); }}>{(taxonomies?.compensationTypes ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl>{showBudget && <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><FormControl sx={{ minWidth: 150 }}><InputLabel>Moneda</InputLabel><Select label="Moneda" value={selectedCurrencyId} onChange={(event) => setCurrencyId(event.target.value)}>{(taxonomies?.currencies ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.code} · {item.symbol ?? item.name}</MenuItem>)}</Select></FormControl><TextField label={budgetMode === 'exact' ? 'Monto' : 'Presupuesto mínimo'} type="number" value={budgetMin} onChange={(event) => setBudgetMin(event.target.value)} inputProps={{ min: 0, step: '0.01' }} required={required.has('budget')} />{budgetMode !== 'exact' && <TextField label="Presupuesto máximo" type="number" value={budgetMax} onChange={(event) => setBudgetMax(event.target.value)} inputProps={{ min: 0, step: '0.01' }} required={budgetMode === 'range'} />}<FormControlLabel control={<Switch checked={budgetNegotiable} onChange={(event) => setBudgetNegotiable(event.target.checked)} />} label="Negociable" /></Stack>}<FormControl required={required.has('serviceOfferingId')}><InputLabel>Servicio vinculado</InputLabel><Select label="Servicio vinculado" value={serviceOfferingId} onChange={(event) => setServiceOfferingId(event.target.value)}><MenuItem value="">Sin servicio comercial</MenuItem>{(taxonomies?.serviceOfferings ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><Typography variant="caption" color="text.secondary">El anuncio vence 30 días después de publicarse. Las ofertas reservables se vinculan al marketplace mediante el servicio seleccionado, sin duplicar el producto comercial.</Typography>{basicsValid && validationError && <Alert severity="warning">{validationError}</Alert>}{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}</Stack></DialogContent><DialogActions><Button onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={() => mutation.mutate()} disabled={!basicsValid || Boolean(validationError) || mutation.isPending}>Guardar borrador</Button></DialogActions></Dialog>;
+  return <Dialog open={open} onClose={onClose} fullWidth maxWidth="md"><DialogTitle>Nueva oportunidad o clasificado</DialogTitle><DialogContent><Stack spacing={2} pt={1}><FormControl><InputLabel>Perfil que publica</InputLabel><Select label="Perfil que publica" value={profileId} onChange={(event) => setProfileId(event.target.value)}>{profiles.map((profile) => <MenuItem key={profile.id} value={profile.id}>{profile.name}</MenuItem>)}</Select></FormControl><FormControl><InputLabel>Categoría</InputLabel><Select label="Categoría" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>{(taxonomies?.classifiedCategories ?? []).filter((item) => !item.derived).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl>{required.size > 0 && <Alert severity="info">Esta categoría requiere: {Array.from(required).map(requirementLabel).join(', ')}.</Alert>}<TextField label="Título" value={title} onChange={(event) => setTitle(event.target.value)} required inputProps={{ minLength: 5, maxLength: 160 }} /><TextField label="Descripción" value={description} onChange={(event) => setDescription(event.target.value)} multiline minRows={6} required inputProps={{ minLength: 20, maxLength: 10000 }} /><TaxonomyMultiSelect label="Profesiones buscadas" items={taxonomies?.professions ?? []} values={professionIds} onChange={setProfessionIds} required={required.has('professionIds')} /><TaxonomyMultiSelect label="Instrumentos buscados" items={taxonomies?.instruments ?? []} values={instrumentIds} onChange={setInstrumentIds} required={required.has('instrumentIds')} /><TaxonomyMultiSelect label="Géneros" items={taxonomies?.genres ?? []} values={genreIds} onChange={setGenreIds} required={required.has('genreIds')} /><TaxonomyMultiSelect label="Ciudades" items={taxonomies?.cities ?? []} values={cityIds} onChange={setCityIds} required={required.has('locations')} /><Stack direction={{ xs: 'column', sm: 'row' }} gap={1}><FormControlLabel control={<Switch checked={remote} onChange={(event) => setRemote(event.target.checked)} />} label="Acepta remoto" /><FormControlLabel control={<Switch checked={availableToTravel} onChange={(event) => setAvailableToTravel(event.target.checked)} />} label="Disponible para viajar" /></Stack><Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><TextField fullWidth label="Inicio" type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} InputLabelProps={{ shrink: true }} required={required.has('dateRange')} /><TextField fullWidth label="Fin" type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} InputLabelProps={{ shrink: true }} required={required.has('dateRange')} /></Stack><FormControl><InputLabel>Experiencia requerida</InputLabel><Select label="Experiencia requerida" value={experienceLevel} onChange={(event) => setExperienceLevel(event.target.value)}>{[['any','Cualquier nivel'],['beginner','Principiante'],['intermediate','Intermedio'],['advanced','Avanzado'],['professional','Profesional']].map(([value,label]) => <MenuItem key={value} value={value}>{label}</MenuItem>)}</Select></FormControl><FormControl required={required.has('compensationTypeId')}><InputLabel>Compensación</InputLabel><Select label="Compensación" value={compensationTypeId} onChange={(event) => { setCompensationTypeId(event.target.value); setBudgetMin(''); setBudgetMax(''); }}>{(taxonomies?.compensationTypes ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl>{showBudget && <Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><FormControl sx={{ minWidth: 150 }}><InputLabel>Moneda</InputLabel><Select label="Moneda" value={selectedCurrencyId} onChange={(event) => setCurrencyId(event.target.value)}>{(taxonomies?.currencies ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.code} · {item.symbol ?? item.name}</MenuItem>)}</Select></FormControl><TextField label={budgetMode === 'exact' ? 'Monto' : 'Presupuesto mínimo'} type="number" value={budgetMin} onChange={(event) => setBudgetMin(event.target.value)} inputProps={{ min: 0, step: '0.01' }} required={required.has('budget')} />{budgetMode !== 'exact' && <TextField label="Presupuesto máximo" type="number" value={budgetMax} onChange={(event) => setBudgetMax(event.target.value)} inputProps={{ min: 0, step: '0.01' }} required={budgetMode === 'range'} />}<FormControlLabel control={<Switch checked={budgetNegotiable} onChange={(event) => setBudgetNegotiable(event.target.checked)} />} label="Negociable" /></Stack>}<FormControl required={required.has('serviceOfferingId')}><InputLabel>Servicio vinculado</InputLabel><Select label="Servicio vinculado" value={serviceOfferingId} onChange={(event) => setServiceOfferingId(event.target.value)}><MenuItem value="">Sin servicio comercial</MenuItem>{(taxonomies?.serviceOfferings ?? []).map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}</Select></FormControl><Divider /><Typography fontWeight={700}>{categoryIntent === 'offering' ? 'Condiciones de lo que ofreces' : 'Cómo recibirás ofertas'}</Typography><Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><TextField label={categoryIntent === 'offering' ? 'Compromisos que aceptas' : 'Cupos (ofertas que aceptarás)'} type="number" value={slots} onChange={(event) => setSlots(event.target.value)} inputProps={{ min: 1, max: 100 }} sx={{ minWidth: 220 }} helperText="Al cubrir los cupos el anuncio se marca como cubierto." /><FormControl sx={{ minWidth: 220 }}><InputLabel id="classified-price-mode">Modo de precio</InputLabel><Select labelId="classified-price-mode" label="Modo de precio" value={priceMode} onChange={(event) => setPriceMode(event.target.value as PriceMode | '')}><MenuItem value="">Según presupuesto</MenuItem><MenuItem value="open">Abierto: solo recibo ofertas</MenuItem><MenuItem value="suggested" disabled={!showBudget}>Sugerido: precio de referencia negociable</MenuItem><MenuItem value="fixed" disabled={!showBudget}>Fijo: las ofertas aceptan el precio</MenuItem></Select></FormControl><TextField fullWidth label="Fecha límite para ofertar" type="datetime-local" value={offerDeadlineAt} onChange={(event) => setOfferDeadlineAt(event.target.value)} InputLabelProps={{ shrink: true }} helperText="Opcional; por defecto, el vencimiento del anuncio." /></Stack><Stack direction={{ xs: 'column', sm: 'row' }} gap={2}><TextField fullWidth label="Duración estimada (minutos)" type="number" value={durationMinutes} onChange={(event) => setDurationMinutes(event.target.value)} inputProps={{ min: 0, step: 15 }} /><TextField fullWidth label="Aforo o tamaño esperado" type="number" value={capacity} onChange={(event) => setCapacity(event.target.value)} inputProps={{ min: 0 }} /></Stack><TextField label={categoryIntent === 'offering' ? 'Qué incluye (equipo, montaje, traslado)' : 'Equipo provisto o requerido'} value={equipmentProvided} onChange={(event) => setEquipmentProvided(event.target.value)} inputProps={{ maxLength: 500 }} /><Typography variant="caption" color="text.secondary">El anuncio vence 30 días después de publicarse. Quienes respondan verán el modo de precio y podrán ofertar o contraofertar según corresponda; tú comparas las ofertas y eliges.</Typography>{basicsValid && validationError && <Alert severity="warning">{validationError}</Alert>}{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}</Stack></DialogContent><DialogActions><Button onClick={onClose}>Cancelar</Button><Button variant="contained" onClick={() => mutation.mutate()} disabled={!basicsValid || Boolean(validationError) || mutation.isPending}>Guardar borrador</Button></DialogActions></Dialog>;
 }
 
 function TaxonomyMultiSelect({ label, items, values, onChange, required = false }: { label: string; items: DirectoryTaxonomyItem[]; values: string[]; onChange: (values: string[]) => void; required?: boolean }) {
@@ -598,7 +614,15 @@ export function classifiedFormError(input: { required: Set<string>; cityIds: str
   return null;
 }
 
-function OpportunityActionPanel({ profiles, classifieds, applyId, contactId, inviteId, contextKind, onDone }: { profiles: ManagedDirectoryProfile[]; classifieds: ManagedClassified[]; applyId: string | null; contactId: string | null; inviteId: string | null; contextKind: 'profile' | 'classified' | 'application' | 'invitation'; onDone: () => void }) {
+function buildClassifiedTerms(input: { durationMinutes: string; capacity: string; equipmentProvided: string }): Record<string, unknown> | undefined {
+  const terms: Record<string, unknown> = {};
+  if (input.durationMinutes.trim() && Number(input.durationMinutes) >= 0) terms['durationMinutes'] = Number(input.durationMinutes);
+  if (input.capacity.trim() && Number(input.capacity) >= 0) terms['capacity'] = Number(input.capacity);
+  if (input.equipmentProvided.trim()) terms['equipmentProvided'] = input.equipmentProvided.trim();
+  return Object.keys(terms).length ? terms : undefined;
+}
+
+function OpportunityActionPanel({ profiles, classifieds, taxonomies, applyId, applySlug, contactId, inviteId, contextKind, onDone }: { profiles: ManagedDirectoryProfile[]; classifieds: ManagedClassified[]; taxonomies?: DirectoryTaxonomies; applyId: string | null; applySlug: string | null; contactId: string | null; inviteId: string | null; contextKind: 'profile' | 'classified' | 'application' | 'invitation'; onDone: () => void }) {
   const [profileId, setProfileId] = useState('');
   const [message, setMessage] = useState('');
   const [classifiedId, setClassifiedId] = useState('');
@@ -607,11 +631,11 @@ function OpportunityActionPanel({ profiles, classifieds, applyId, contactId, inv
     if (classifiedId && !eligibleClassifieds.some((classified) => classified.id === classifiedId)) setClassifiedId('');
   }, [classifiedId, eligibleClassifieds]);
   const mutation = useMutation({ mutationFn: () => {
-    if (applyId) return Directory.apply(applyId, { applicantProfileId: profileId, message: message.trim(), portfolio: [] });
     if (contactId) return Directory.contact({ senderProfileId: profileId, targetProfileId: contactId, contextKind, contextId: contactId, message: message.trim() });
     if (inviteId) return Directory.invite({ senderProfileId: profileId, targetProfileId: inviteId, classifiedId: classifiedId || undefined, message: message.trim() });
     throw new Error('Abre un perfil o clasificado público para iniciar esta acción.');
   }, onSuccess: onDone });
-  if (!applyId && !contactId && !inviteId) return <Alert severity="info">Abre un perfil o clasificado desde <Button component={RouterLink} to="/buscar">la búsqueda</Button> para postularte, contactar o invitar.</Alert>;
-  return <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Stack component="form" spacing={2} onSubmit={(event: FormEvent) => { event.preventDefault(); mutation.mutate(); }}><Typography variant="h5" fontWeight={800}>{applyId ? 'Enviar postulación' : inviteId ? 'Invitar a una oportunidad' : 'Iniciar conversación'}</Typography><FormControl><InputLabel>Actuar como perfil</InputLabel><Select label="Actuar como perfil" value={profileId} onChange={(event) => setProfileId(event.target.value)}><MenuItem value="" disabled>Selecciona explícitamente un perfil</MenuItem>{profiles.map((profile) => <MenuItem key={profile.id} value={profile.id}>{profile.name}</MenuItem>)}</Select></FormControl>{inviteId && <FormControl><InputLabel>Oportunidad</InputLabel><Select label="Oportunidad" value={classifiedId} onChange={(event) => setClassifiedId(event.target.value)}><MenuItem value="">Invitación general</MenuItem>{eligibleClassifieds.map((classified) => <MenuItem key={classified.id} value={classified.id}>{classified.title}</MenuItem>)}</Select></FormControl>}<TextField label="Mensaje" multiline minRows={5} value={message} onChange={(event) => setMessage(event.target.value)} required inputProps={{ minLength: 10, maxLength: 5000 }} helperText="No incluyas teléfono ni correo si aún no quieres compartirlos." />{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}<Button type="submit" variant="contained" disabled={!profileId || message.trim().length < 10 || mutation.isPending}>{mutation.isPending ? 'Enviando…' : applyId ? 'Postularme' : inviteId ? 'Enviar invitación' : 'Abrir conversación'}</Button></Stack></Paper>;
+  if (!applyId && !contactId && !inviteId) return <Alert severity="info">Abre un perfil o anuncio desde <Button component={RouterLink} to="/buscar">la búsqueda</Button> para ofertar, contactar o invitar.</Alert>;
+  if (applyId) return <OfferForm classifiedId={applyId} classifiedSlug={applySlug} profiles={profiles} taxonomies={taxonomies} onDone={onDone} />;
+  return <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}><Stack component="form" spacing={2} onSubmit={(event: FormEvent) => { event.preventDefault(); mutation.mutate(); }}><Typography variant="h5" fontWeight={800}>{inviteId ? 'Invitar a una oportunidad' : 'Iniciar conversación'}</Typography><FormControl><InputLabel>Actuar como perfil</InputLabel><Select label="Actuar como perfil" value={profileId} onChange={(event) => setProfileId(event.target.value)}><MenuItem value="" disabled>Selecciona explícitamente un perfil</MenuItem>{profiles.map((profile) => <MenuItem key={profile.id} value={profile.id}>{profile.name}</MenuItem>)}</Select></FormControl>{inviteId && <FormControl><InputLabel>Oportunidad</InputLabel><Select label="Oportunidad" value={classifiedId} onChange={(event) => setClassifiedId(event.target.value)}><MenuItem value="">Invitación general</MenuItem>{eligibleClassifieds.map((classified) => <MenuItem key={classified.id} value={classified.id}>{classified.title}</MenuItem>)}</Select></FormControl>}<TextField label="Mensaje" multiline minRows={5} value={message} onChange={(event) => setMessage(event.target.value)} required inputProps={{ minLength: 10, maxLength: 5000 }} helperText="No incluyas teléfono ni correo si aún no quieres compartirlos." />{mutation.error && <Alert severity="error">{mutation.error.message}</Alert>}<Button type="submit" variant="contained" disabled={!profileId || message.trim().length < 10 || mutation.isPending}>{mutation.isPending ? 'Enviando…' : inviteId ? 'Enviar invitación' : 'Abrir conversación'}</Button></Stack></Paper>;
 }

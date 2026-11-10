@@ -32,6 +32,7 @@ import Data.Time (UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
+import System.Environment (lookupEnv)
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import Data.Scientific (base10Exponent, toBoundedInteger, toRealFloat)
@@ -91,12 +92,15 @@ directoryPublicServer =
 
 searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
   mProfessionId mServiceId mInstrumentId mGenreId mRemote mAvailable
-  mDateFrom mDateTo mCursor mLimit mProfileKind = do
+  mDateFrom mDateTo mCursor mLimit mProfileKind mIntent = do
   query <- validateQuery mQuery
   entityType <- validateEntityType mEntityType
   let profileKind = normalizeOptional mProfileKind
+      intent = normalizeOptional mIntent
   when (maybe False (`notElem` ["person","artist","band","project"]) profileKind) $
     throwError err400 { errBody = "unsupported profileKind" }
+  when (maybe False (`notElem` ["seeking","offering"]) intent) $
+    throwError err400 { errBody = "unsupported intent" }
   (latitude, longitude, radiusKm) <- validateGeo mLatitude mLongitude mRadiusKm
   let limit = min 50 (max 1 (fromMaybe 20 mLimit))
       cursor = normalizeOptional mCursor
@@ -107,6 +111,7 @@ searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
         , optionalUuid mInstrumentId, optionalUuid mGenreId
         , maybe PersistNull PersistBool mRemote, maybe PersistNull PersistBool mAvailable
         , optionalTime mDateFrom, optionalTime mDateTo, optionalText profileKind
+        , optionalText intent
         ]
       eventVisibilityParams = [PersistText Social.externalEventRefSuppressedStatus]
   ranked <- jsonRows (searchSql False) (commonParams <> eventVisibilityParams <> [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))])
@@ -199,7 +204,10 @@ directoryFilterClause =
   "document.effective_at,document.expires_at,input.q,(SELECT alias_entity_ids FROM directory_query_aliases),input.profile_kind," <>
   "input.city_id,input.profession_id,input.service_id,input.instrument_id,input.genre_id," <>
   "input.remote_only,input.available_only,input.date_from,input.date_to) " <>
-  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) "
+  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>
+  -- ADR 0132: an intent filter only ever selects classifieds, by their
+  -- category intent (busco / ofrezco).
+  "AND (input.intent IS NULL OR (document.entity_kind='classified' AND EXISTS (SELECT 1 FROM classified intent_classified JOIN classified_category intent_category ON intent_category.id=intent_classified.category_id WHERE intent_classified.id::text=document.entity_id AND intent_category.intent=input.intent))) "
 
 directoryEntityTypeClause :: Text
 directoryEntityTypeClause =
@@ -210,7 +218,7 @@ directoryEntityTypeClause =
 -- Materialize only aliases: typed inputs remain foldable for index conditions.
 directorySearchInputSql :: Text
 directorySearchInputSql =
-  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind), " <>
+  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind,?::text intent), " <>
   "directory_query_aliases AS MATERIALIZED (SELECT directory_query_alias_entity_ids((SELECT q FROM input)) alias_entity_ids), "
 
 searchSql :: Bool -> Text
@@ -226,7 +234,7 @@ searchSql sponsoredOnly =
   "ranked AS (SELECT scored.*,round(((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)/5)::numeric,6) organic_score FROM scored), " <>
   "boundary AS (SELECT organic_score,source_updated_at,entity_kind,entity_id FROM ranked WHERE entity_kind||':'||entity_id=?::text), " <>
   "page AS (SELECT ranked.* FROM ranked WHERE NOT EXISTS (SELECT 1 FROM boundary) OR EXISTS (SELECT 1 FROM boundary b WHERE ranked.organic_score<b.organic_score OR (ranked.organic_score=b.organic_score AND (ranked.source_updated_at<b.source_updated_at OR (ranked.source_updated_at=b.source_updated_at AND (ranked.entity_kind>b.entity_kind OR (ranked.entity_kind=b.entity_kind AND ranked.entity_id>b.entity_id)))))) ORDER BY organic_score DESC,source_updated_at DESC,entity_kind,entity_id LIMIT ?) " <>
-  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'profileKind',profile_kind,'canonicalPath',CASE WHEN entity_kind='profile' THEN canonical_path ELSE NULL END,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'cursor',entity_kind||':'||entity_id) FROM page"
+  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'profileKind',profile_kind,'canonicalPath',CASE WHEN entity_kind='profile' THEN canonical_path ELSE NULL END,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'intent',CASE WHEN entity_kind='classified' THEN (SELECT intent_category.intent FROM classified intent_classified JOIN classified_category intent_category ON intent_category.id=intent_classified.category_id WHERE intent_classified.id::text=page.entity_id) ELSE NULL END,'cursor',entity_kind||':'||entity_id) FROM page"
 
 -- `total` and `cities` describe the current query (its entity type included),
 -- so "Resultados orgánicos · N" is the full match count, not the page size.
@@ -294,7 +302,7 @@ directoryTaxonomies mLocale =
    <> "'classifiedCategories',(SELECT coalesce(jsonb_agg(jsonb_build_object("
    <> "'id',item.id,'code',item.code,'slug',item.current_slug,"
    <> "'name',CASE WHEN requested.locale='en' THEN item.name_en ELSE item.name_es END,"
-   <> "'requirements',item.requirements,'derived',item.requirements->>'derivation' IS NOT NULL) ORDER BY item.sort_order),'[]'::jsonb) "
+   <> "'requirements',item.requirements,'derived',item.requirements->>'derivation' IS NOT NULL,'metadata',jsonb_build_object('intent',item.intent)) ORDER BY item.sort_order),'[]'::jsonb) "
    <> "FROM classified_category item WHERE item.active),"
    <> "'compensationTypes',(SELECT coalesce(jsonb_agg(jsonb_build_object("
    <> "'id',item.id,'code',item.code,'slug',item.current_slug,"
@@ -400,7 +408,7 @@ publicProfileReviews slugValue mCursor mLimit = do
 
 publicClassified slugValue =
   jsonOne err404
-    "SELECT jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'description',classified.description,'category',jsonb_build_object('id',category.id,'code',category.code,'name',category.name_es),'author',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'modality',jsonb_build_object('onsite',classified.onsite,'remote',classified.remote,'travel',classified.available_to_travel),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'metroId',location.metropolitan_area_id,'radiusKm',location.service_radius_km)) FROM classified_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.classified_id=classified.id),'[]'::jsonb),'compensation',CASE WHEN classified.compensation_type_id IS NULL THEN NULL ELSE jsonb_build_object('typeId',classified.compensation_type_id,'minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'startsAt',classified.starts_at,'endsAt',classified.ends_at,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'imageUrl',CASE WHEN classified.source_profile_id IS NOT NULL THEN directory_profile_preview_image_url(classified.source_profile_id) ELSE (SELECT document.image_url FROM directory_search_document document WHERE document.entity_kind='classified' AND document.entity_id=classified.id::text) END,'sourceProfile',CASE WHEN classified.source_profile_id IS NULL THEN NULL ELSE jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind,'canonicalUrl','/directorio/'||profile.slug) END,'canonicalUrl','/clasificados/'||classified.slug) FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_public_profile profile ON profile.id=classified.author_profile_id WHERE classified.slug=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now()"
+    "SELECT jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'description',classified.description,'category',jsonb_build_object('id',category.id,'code',category.code,'name',category.name_es),'author',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'modality',jsonb_build_object('onsite',classified.onsite,'remote',classified.remote,'travel',classified.available_to_travel),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'metroId',location.metropolitan_area_id,'radiusKm',location.service_radius_km)) FROM classified_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.classified_id=classified.id),'[]'::jsonb),'compensation',CASE WHEN classified.compensation_type_id IS NULL THEN NULL ELSE jsonb_build_object('typeId',classified.compensation_type_id,'minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'startsAt',classified.starts_at,'endsAt',classified.ends_at,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'intent',category.intent,'priceMode',classified.price_mode,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'offerDeadlineAt',classified.offer_deadline_at,'terms',classified.terms,'offerStats',(SELECT jsonb_build_object('count',count(*),'minMinor',CASE WHEN count(*)>=3 THEN min(application.current_amount_minor) END,'maxMinor',CASE WHEN count(*)>=3 THEN max(application.current_amount_minor) END,'currencyId',CASE WHEN count(*)>=3 AND count(DISTINCT application.currency_id)=1 THEN min(application.currency_id::text)::uuid END) FROM classified_application application WHERE application.classified_id=classified.id AND application.status NOT IN ('withdrawn','expired')),'imageUrl',CASE WHEN classified.source_profile_id IS NOT NULL THEN directory_profile_preview_image_url(classified.source_profile_id) ELSE (SELECT document.image_url FROM directory_search_document document WHERE document.entity_kind='classified' AND document.entity_id=classified.id::text) END,'sourceProfile',CASE WHEN classified.source_profile_id IS NULL THEN NULL ELSE jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind,'canonicalUrl','/directorio/'||profile.slug) END,'canonicalUrl','/clasificados/'||classified.slug) FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_public_profile profile ON profile.id=classified.author_profile_id WHERE classified.slug=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now()"
     [PersistText (T.toLower (T.strip slugValue))]
 
 publicEvent eventId = jsonOne err404
@@ -423,6 +431,9 @@ directoryProtectedServer user =
   :<|> changeClassifiedStatus user
   :<|> listApplications user
   :<|> createApplication user
+  :<|> listMyApplications user
+  :<|> getApplication user
+  :<|> counterOffer user
   :<|> changeApplicationStatus user
   :<|> listInvitations user
   :<|> createInvitation user
@@ -849,16 +860,17 @@ profileSummary user profileId = jsonOne err404
   ("SELECT managed.value FROM (" <> managedProfileSql <> ") managed WHERE managed.value->>'id'=?")
   [toPersistValue (auPartyId user),PersistText (UUID.toText profileId)]
 
-listManagedClassifieds user = jsonRows "SELECT jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'sourceProfileId',classified.source_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'version',classified.version) FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id" [toPersistValue (auPartyId user)]
+listManagedClassifieds user = jsonRows ("SELECT " <> managedClassifiedProjectionSql <> " FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id") [toPersistValue (auPartyId user)]
 
 createClassified user idempotency request@ClassifiedCreateRequest
   { authorProfileId, categoryId, title, slug, description, onsite, remote
   , availableToTravel, startsAt, endsAt, experienceLevel, compensationTypeId
   , budgetMinMinor, budgetMaxMinor, currencyId, budgetNegotiable
-  , serviceOfferingId, serviceAdId, expiresAt } = do
+  , serviceOfferingId, serviceAdId, expiresAt, slots, priceMode, offerDeadlineAt, terms } = do
   requireProfileCapability user authorProfileId "publish"
   requireAdult user
   validateClassified request
+  (slotCount, mode, termsValue) <- validateMarketplaceFields slots priceMode terms budgetMinMinor budgetMaxMinor currencyId budgetNegotiable
   classifiedId <- reserveIdempotency user "classified.create" idempotency request "classified"
   existing <- jsonRows "SELECT jsonb_build_object('id',id,'slug',slug,'status',status,'version',version) FROM classified WHERE id=?" [toPersistValue classifiedId]
   case existing of
@@ -868,11 +880,36 @@ createClassified user idempotency request@ClassifiedCreateRequest
       let expiry=fromMaybe (addUTCTime (30*24*60*60) now) expiresAt
       when (expiry<=now || expiry>addUTCTime (90*24*60*60) now) $
         throwError err400 {errBody="expiresAt must be in the future and no more than 90 days away; renew manually after publication"}
+      when (maybe False (\deadline -> deadline<=now || deadline>expiry) offerDeadlineAt) $
+        throwError err400 {errBody="offerDeadlineAt must be in the future and no later than expiresAt"}
       runDB $ do
-        rawExecute "INSERT INTO classified(id,author_profile_id,category_id,title,slug,description,status,moderation_status,onsite,remote,available_to_travel,starts_at,ends_at,experience_level,compensation_type_id,budget_min_minor,budget_max_minor,currency_id,budget_negotiable,service_offering_id,service_ad_id,expires_at,duplicate_fingerprint) VALUES (?,?,?,?,?,?,'draft','allowed',?,?,?,?,?,?,?,?,?,?,?,?,?,?,encode(digest(directory_normalize_text(?)||':'||directory_normalize_text(?),'sha256'),'hex'))"
-          [toPersistValue classifiedId,toPersistValue authorProfileId,toPersistValue categoryId,PersistText (T.strip title),PersistText (T.toLower (T.strip slug)),PersistText (T.strip description),PersistBool onsite,PersistBool remote,PersistBool availableToTravel,optionalTime startsAt,optionalTime endsAt,optionalText experienceLevel,optionalUuid compensationTypeId,optionalInt64 budgetMinMinor,optionalInt64 budgetMaxMinor,optionalUuid currencyId,PersistBool budgetNegotiable,optionalUuid serviceOfferingId,optionalInt64 serviceAdId,toPersistValue expiry,PersistText title,PersistText description]
+        rawExecute "INSERT INTO classified(id,author_profile_id,category_id,title,slug,description,status,moderation_status,onsite,remote,available_to_travel,starts_at,ends_at,experience_level,compensation_type_id,budget_min_minor,budget_max_minor,currency_id,budget_negotiable,service_offering_id,service_ad_id,expires_at,duplicate_fingerprint,slots,slots_remaining,price_mode,offer_deadline_at,terms) VALUES (?,?,?,?,?,?,'draft','allowed',?,?,?,?,?,?,?,?,?,?,?,?,?,?,encode(digest(directory_normalize_text(?)||':'||directory_normalize_text(?),'sha256'),'hex'),?,?,?,?,?::jsonb)"
+          [toPersistValue classifiedId,toPersistValue authorProfileId,toPersistValue categoryId,PersistText (T.strip title),PersistText (T.toLower (T.strip slug)),PersistText (T.strip description),PersistBool onsite,PersistBool remote,PersistBool availableToTravel,optionalTime startsAt,optionalTime endsAt,optionalText experienceLevel,optionalUuid compensationTypeId,optionalInt64 budgetMinMinor,optionalInt64 budgetMaxMinor,optionalUuid currencyId,PersistBool budgetNegotiable,optionalUuid serviceOfferingId,optionalInt64 serviceAdId,toPersistValue expiry,PersistText title,PersistText description,PersistInt64 (fromIntegral slotCount),PersistInt64 (fromIntegral slotCount),PersistText (priceModeText mode),optionalTime offerDeadlineAt,PersistText (decodeJsonText termsValue)]
         replaceClassifiedSelectionsDB classifiedId request
       classifiedSummary classifiedId
+
+-- ADR 0132: slots, price mode and structured terms. The price mode defaults
+-- from the budget exactly as the migration backfilled existing rows.
+validateMarketplaceFields :: Maybe Int -> Maybe Text -> Maybe Value -> Maybe Int64 -> Maybe Int64 -> Maybe UUID -> Bool -> AppM (Int, PriceMode, Value)
+validateMarketplaceFields slots priceMode terms budgetMinMinor budgetMaxMinor currencyId budgetNegotiable = do
+  let slotCount = fromMaybe 1 slots
+  when (slotCount < 1 || slotCount > 100) $ throwError err400 {errBody="slots must be between 1 and 100"}
+  mode <- case priceMode of
+    Nothing -> pure $ case budgetMaxMinor of
+      Nothing -> PriceOpen
+      Just maximumValue
+        | budgetNegotiable -> PriceSuggested
+        | maybe True (== maximumValue) budgetMinMinor -> PriceFixed
+        | otherwise -> PriceSuggested
+    Just raw -> maybe (throwError err400 {errBody="priceMode must be open, suggested or fixed"}) pure (parsePriceMode raw)
+  when (mode /= PriceOpen && (budgetMaxMinor == Nothing || currencyId == Nothing)) $
+    throwError err400 {errBody="suggested and fixed prices require budgetMaxMinor and currencyId"}
+  when (mode == PriceFixed && maybe False (\minimumValue -> Just minimumValue /= budgetMaxMinor) budgetMinMinor) $
+    throwError err400 {errBody="a fixed price requires a single amount"}
+  let termsValue = fromMaybe (object []) terms
+  requireJsonObject "terms" termsValue
+  when (BL.length (encode termsValue) > 20000) $ throwError err400 {errBody="terms is too large"}
+  pure (slotCount, mode, termsValue)
 
 validateClassified ClassifiedCreateRequest
   { categoryId, title, slug, description, onsite, remote, availableToTravel
@@ -959,65 +996,293 @@ changeClassifiedStatus user classifiedId DirectoryStatusRequest{status=newStatus
   to <- maybe (throwError err400 {errBody="invalid target classified state"}) pure (parseClassifiedStatus newStatus)
   unless (allowedClassifiedTransition from to) $ throwError err409 {errBody="undeclared classified transition"}
   runDB $ do
-    rawExecute "UPDATE classified SET status=? WHERE id=?" [PersistText newStatus,toPersistValue classifiedId]
+    rawExecute "UPDATE classified SET status=?,closed_at=CASE WHEN ? IN ('filled','withdrawn') THEN now() ELSE closed_at END,published_at=CASE WHEN ?='published' AND published_at IS NULL THEN now() ELSE published_at END,updated_at=now(),version=version+1 WHERE id=?" [PersistText newStatus,PersistText newStatus,PersistText newStatus,toPersistValue classifiedId]
     rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'classified.status','classified',?,?,?,?,jsonb_build_object('authorProfileId',?::text,'reason',?::text))" [toPersistValue (auPartyId user),PersistText (UUID.toText classifiedId),PersistText oldStatus,PersistText newStatus,PersistText ("classified-status-"<>UUID.toText classifiedId),PersistText (UUID.toText authorProfile),optionalText statusReason]
+    -- ADR 0132: closing a classified rejects every open offer with a reason.
+    forM_ (closureRejectionReason to) $ \reason -> closeOpenOffersDB user classifiedId reason
     refreshClassifiedDB classifiedId
   when (newStatus == "published") $
     recordAuthenticatedEvent user "classified_published" "classified" (UUID.toText classifiedId)
   classifiedSummary classifiedId
 
+-- Rejects open offers of a classified, notifies each offerer and audits the
+-- bulk rejection. Runs inside the caller's transaction.
+closeOpenOffersDB :: AuthedUser -> UUID -> Text -> SqlPersistT IO ()
+closeOpenOffersDB user classifiedId reason = do
+  rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,'marketplace.offer.rejected','Oferta cerrada',CASE WHEN ?='slots_filled' THEN 'El anuncio cubrió sus cupos con otra oferta.' ELSE 'El anuncio se cerró antes de decidir sobre tu oferta.' END,'directory_application',application.id::text,FALSE,now() FROM classified_application application JOIN directory_profile_manager manager ON manager.profile_id=application.applicant_profile_id AND manager.active AND manager.can_contact WHERE application.classified_id=? AND application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [PersistText reason,toPersistValue classifiedId]
+  rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) SELECT ?,'application.status','application',application.id::text,application.status,'rejected','classified-close-'||application.classified_id::text,jsonb_build_object('reason',?::text) FROM classified_application application WHERE application.classified_id=? AND application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [toPersistValue (auPartyId user),PersistText reason,toPersistValue classifiedId]
+  rawExecute "UPDATE classified_application SET status='rejected',rejection_reason=?,updated_at=now(),version=version+1 WHERE classified_id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [PersistText reason,toPersistValue classifiedId]
+
 parseClassifiedStatus value = lookup value [("draft",Draft),("pending_moderation",PendingModeration),("published",Published),("paused",Paused),("filled",Filled),("expired",Expired),("withdrawn",Withdrawn),("rejected",Rejected),("moderated",Moderated)]
 
-classifiedSummary classifiedId = jsonOne err404 "SELECT jsonb_build_object('id',id,'authorProfileId',author_profile_id,'sourceProfileId',source_profile_id,'title',title,'slug',slug,'status',status,'moderationStatus',moderation_status,'expiresAt',NULLIF(expires_at,'infinity'::timestamptz),'version',version) FROM classified WHERE id=?" [toPersistValue classifiedId]
+classifiedSummary classifiedId = jsonOne err404 ("SELECT " <> managedClassifiedProjectionSql <> " FROM classified JOIN classified_category category ON category.id=classified.category_id WHERE classified.id=?") [toPersistValue classifiedId]
 
-listApplications user classifiedId = do
+-- Shared projection for the author's own listings (ADR 0132 adds intent,
+-- slots, price mode, offer deadline and the number of offers received).
+managedClassifiedProjectionSql :: Text
+managedClassifiedProjectionSql =
+  "jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'sourceProfileId',classified.source_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'version',classified.version,'intent',category.intent,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'priceMode',classified.price_mode,'offerDeadlineAt',classified.offer_deadline_at,'budget',CASE WHEN classified.budget_max_minor IS NULL AND classified.budget_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'offerCount',(SELECT count(*) FROM classified_application application WHERE application.classified_id=classified.id),'openOfferCount',(SELECT count(*) FROM classified_application application WHERE application.classified_id=classified.id AND application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')))"
+
+listApplications user classifiedId mSort = do
   _ <- requireClassifiedAuthor user classifiedId
-  jsonRows "SELECT jsonb_build_object('id',application.id,'classifiedId',application.classified_id,'applicantProfile',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'message',application.message,'portfolio',application.portfolio,'availability',application.availability_text,'proposedAmountMinor',application.proposed_amount_minor,'currencyId',application.currency_id,'status',application.status,'submittedAt',application.submitted_at,'version',application.version) FROM classified_application application JOIN directory_profile profile ON profile.id=application.applicant_profile_id WHERE application.classified_id=? ORDER BY application.submitted_at DESC,application.id" [toPersistValue classifiedId]
+  orderBy <- case normalizeOptional mSort of
+    Nothing -> pure "application.submitted_at DESC,application.id"
+    Just "recent" -> pure "application.updated_at DESC,application.id"
+    Just "price_asc" -> pure "application.current_amount_minor ASC NULLS LAST,application.submitted_at DESC,application.id"
+    Just "price_desc" -> pure "application.current_amount_minor DESC NULLS LAST,application.submitted_at DESC,application.id"
+    Just "reputation" -> pure "(reputation.value->>'ratingAvg')::numeric DESC NULLS LAST,(reputation.value->>'completedCount')::integer DESC NULLS LAST,application.submitted_at DESC,application.id"
+    Just _ -> throwError err400 {errBody="sort must be recent, price_asc, price_desc or reputation"}
+  jsonRows ("SELECT " <> offerProjectionSql "'author'" <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id CROSS JOIN LATERAL (" <> profileReputationSql "application.applicant_profile_id" <> ") reputation WHERE application.classified_id=? ORDER BY " <> orderBy) [toPersistValue classifiedId]
+
+-- Offers where the caller manages the offering profile (ADR 0132).
+listMyApplications user mStatus = do
+  let statusFilter = normalizeOptional mStatus
+  when (maybe False (`notElem` ["open","accepted","closed"]) statusFilter) $
+    throwError err400 {errBody="status must be open, accepted or closed"}
+  jsonRows ("SELECT " <> offerProjectionSql "'applicant'" <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id JOIN directory_profile_manager manager ON manager.profile_id=application.applicant_profile_id AND manager.account_party_id=? AND manager.active CROSS JOIN LATERAL (" <> profileReputationSql "classified.author_profile_id" <> ") reputation WHERE (?::text IS NULL OR (?::text='open' AND application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')) OR (?::text='accepted' AND application.status IN ('accepted','conversation_open','converted')) OR (?::text='closed' AND application.status IN ('rejected','withdrawn','expired'))) ORDER BY application.updated_at DESC,application.id")
+    [toPersistValue (auPartyId user),optionalText statusFilter,optionalText statusFilter,optionalText statusFilter,optionalText statusFilter]
+
+getApplication user applicationId = do
+  role <- applicationParticipantRole user applicationId
+  -- The role comes from applicationParticipantRole (a closed set), so it is
+  -- safe to interpolate as a SQL literal; the author sees the offerer's
+  -- reputation and the offerer sees the author's.
+  let roleLiteral = "'" <> role <> "'"
+      counterpartProfile = if role == "author" then "application.applicant_profile_id" else "classified.author_profile_id"
+  jsonOne err404 ("SELECT " <> offerProjectionSql roleLiteral <> "||jsonb_build_object('rounds',(SELECT coalesce(jsonb_agg(jsonb_build_object('roundNumber',round.round_number,'actorRole',round.actor_role,'kind',round.kind,'amountMinor',round.amount_minor,'currencyId',round.currency_id,'terms',round.terms,'message',round.message,'expiresAt',round.expires_at,'createdAt',round.created_at) ORDER BY round.round_number),'[]'::jsonb) FROM classified_offer_round round WHERE round.application_id=application.id)) FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id CROSS JOIN LATERAL (" <> profileReputationSql counterpartProfile <> ") reputation WHERE application.id=?")
+    [toPersistValue applicationId]
+
+-- Typed offer projection shared by every offer endpoint. The participant role
+-- is interpolated as a SQL literal or placeholder by the caller.
+offerProjectionSql :: Text -> Text
+offerProjectionSql roleSql =
+  "jsonb_build_object('id',application.id,'classifiedId',application.classified_id,'classified',jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'priceMode',classified.price_mode,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'offerDeadlineAt',classified.offer_deadline_at,'budget',CASE WHEN classified.budget_max_minor IS NULL AND classified.budget_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END),'applicantProfileId',application.applicant_profile_id,'applicantProfile',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind),'message',application.message,'portfolio',application.portfolio,'availability',application.availability_text,'currencyId',application.currency_id,'proposedAmountMinor',application.proposed_amount_minor,'currentAmountMinor',application.current_amount_minor,'acceptedAmountMinor',application.accepted_amount_minor,'currentRound',application.current_round,'lastActorRole',application.last_actor_role,'terms',application.terms,'offerExpiresAt',application.offer_expires_at,'status',CASE WHEN application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND application.offer_expires_at IS NOT NULL AND application.offer_expires_at<=now() THEN 'expired' ELSE application.status END,'rejectionReason',application.rejection_reason,'participantRole'," <> roleSql <> ",'reputation',reputation.value,'submittedAt',application.submitted_at,'updatedAt',application.updated_at,'acceptedAt',application.accepted_at,'version',application.version)"
+
+-- Verified-review reputation of a profile, from directory_review (Phase 3
+-- adds response metrics and badges on top of this).
+profileReputationSql :: Text -> Text
+profileReputationSql profileSql =
+  "SELECT jsonb_build_object('ratingAvg',round(avg(review.rating)::numeric,2),'ratingCount',count(review.id),'completedCount',(SELECT count(*) FROM directory_interaction interaction WHERE interaction.status='completed' AND (interaction.profile_a_id=" <> profileSql <> " OR interaction.profile_b_id=" <> profileSql <> "))) value FROM directory_review review WHERE review.subject_profile_id=" <> profileSql <> " AND review.status='published'"
 
 createApplication user classifiedId idempotency request@ApplicationCreateRequest
-  { applicantProfileId, message, portfolio, availability, proposedAmountMinor, currencyId } = do
+  { applicantProfileId, message, portfolio, availability, proposedAmountMinor, amountMinor, currencyId, terms, expiresAt } = do
   requireProfileCapability user applicantProfileId "contact"
   requireAdult user
   validatePrivateMessage 10 message
   requireJsonArray "portfolio" portfolio
-  when (maybe False (<0) proposedAmountMinor || (proposedAmountMinor/=Nothing && currencyId==Nothing)) $
-    throwError err400 {errBody="a non-negative proposal requires currencyId"}
+  let offeredAmount = amountMinor <|> proposedAmountMinor
+      termsValue = fromMaybe (object []) terms
+  requireJsonObject "terms" termsValue
+  when (maybe False (<0) offeredAmount || (offeredAmount/=Nothing && currencyId==Nothing)) $
+    throwError err400 {errBody="a non-negative amount requires currencyId"}
   applicationId <- reserveIdempotency user "classified.apply" idempotency request "application"
   existing <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_application WHERE id=?" [toPersistValue applicationId]
   if not (null existing) then applicationSummary user applicationId else do
     allowed <- jsonRows "SELECT to_jsonb(TRUE) FROM classified JOIN directory_profile author ON author.id=classified.author_profile_id JOIN directory_profile applicant ON applicant.id=? LEFT JOIN directory_contact_preference preference ON preference.profile_id=author.id WHERE classified.id=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now() AND classified.author_profile_id<>applicant.id AND applicant.completeness_score>=coalesce(preference.minimum_profile_completeness,0) AND coalesce(preference.allow_classified_applications,TRUE) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE (block.blocker_profile_id=classified.author_profile_id AND block.blocked_profile_id=applicant.id) OR (block.blocker_profile_id=applicant.id AND block.blocked_profile_id=classified.author_profile_id))" [toPersistValue applicantProfileId,toPersistValue classifiedId]
     when (null allowed) $ throwError err403 {errBody="this classified does not accept this application"}
+    -- ADR 0132: marketplace admission rules.
+    listing <- jsonOne err404 "SELECT jsonb_build_object('priceMode',price_mode,'budgetMaxMinor',budget_max_minor,'currencyId',currency_id,'slotsRemaining',slots_remaining,'offerDeadlineAt',offer_deadline_at,'expiresAt',expires_at,'derived',source_profile_id IS NOT NULL) FROM classified WHERE id=?" [toPersistValue classifiedId]
+    when (valueBool "derived" listing) $ throwError err409 {errBody="artist profile listings do not take offers; contact the profile or invite it to a classified"}
+    when (maybe True (<=0) (valueInt "slotsRemaining" listing)) $ throwError err409 {errBody="this classified has no slot left"}
+    now <- liftIO getCurrentTime
+    when (maybe False (<=now) (valueTime "offerDeadlineAt" listing)) $ throwError err409 {errBody="the offer deadline has passed"}
+    mode <- maybe (throwError err500) pure (parsePriceMode (fromMaybe "open" (valueText "priceMode" listing)))
+    let referenceAmount = valueInt64 "budgetMaxMinor" listing
+        referenceCurrency = valueUuid "currencyId" listing
+    unless (offerAmountAcceptable mode referenceAmount offeredAmount && (mode /= PriceFixed || currencyId == referenceCurrency)) $
+      throwError err409 {errBody="this classified has a fixed price; the offer must accept that exact amount and currency"}
+    duplicates <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_application WHERE classified_id=? AND applicant_profile_id=? AND status NOT IN ('rejected','withdrawn','expired')" [toPersistValue classifiedId,toPersistValue applicantProfileId]
+    unless (null duplicates) $ throwError err409 {errBody="this profile already has an active offer on this classified"}
+    let deadline = valueTime "offerDeadlineAt" listing <|> valueTime "expiresAt" listing
+        defaultExpiry = addUTCTime (7*24*60*60) now
+        offerExpiry = minimumTime (fromMaybe defaultExpiry expiresAt) deadline
+    when (offerExpiry <= now) $ throwError err400 {errBody="expiresAt must be in the future"}
     consumeRate user "application" 20
     let fingerprint = requestFingerprint request
-    runDB $ rawExecute "INSERT INTO classified_application(id,classified_id,applicant_profile_id,message,portfolio,availability_text,proposed_amount_minor,currency_id,status,idempotency_key,request_fingerprint) VALUES (?,?,?,?,?::jsonb,?,?,?,'submitted',?,?)"
-      [toPersistValue applicationId,toPersistValue classifiedId,toPersistValue applicantProfileId,PersistText (T.strip message),PersistText (decodeJsonText portfolio),optionalText availability,optionalInt64 proposedAmountMinor,optionalUuid currencyId,PersistText idempotency,PersistText fingerprint]
-    notifyClassifiedAuthor classifiedId applicationId "directory.application" "Nueva postulación" "Recibiste una postulación a tu anuncio."
+    runDB $ do
+      rawExecute "INSERT INTO classified_application(id,classified_id,applicant_profile_id,message,portfolio,availability_text,proposed_amount_minor,current_amount_minor,currency_id,terms,offer_expires_at,status,idempotency_key,request_fingerprint) VALUES (?,?,?,?,?::jsonb,?,?,?,?,?::jsonb,?,'submitted',?,?)"
+        [toPersistValue applicationId,toPersistValue classifiedId,toPersistValue applicantProfileId,PersistText (T.strip message),PersistText (decodeJsonText portfolio),optionalText availability,optionalInt64 offeredAmount,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),toPersistValue offerExpiry,PersistText idempotency,PersistText fingerprint]
+      rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,message,expires_at,created_by_party_id) VALUES (?,1,'applicant','initial',?,?,?::jsonb,?,?,?)"
+        [toPersistValue applicationId,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),PersistText (T.strip message),toPersistValue offerExpiry,toPersistValue (auPartyId user)]
+    notifyClassifiedAuthor classifiedId applicationId "marketplace.offer.new" "Nueva oferta" "Recibiste una oferta en tu anuncio."
     recordAuthenticatedEvent user "application_submitted" "application" (UUID.toText applicationId)
     applicationSummary user applicationId
 
-changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStatus} = do
+-- A counter-offer from either participant (ADR 0132). Alternation and the
+-- round limit come from TDF.Directory.Policy; the round and the offer's
+-- current state change in one transaction.
+counterOffer user applicationId idempotency request@OfferCounterRequest{amountMinor, currencyId, terms, message, expiresAt} = do
+  role <- applicationParticipantRole user applicationId
+  actor <- case role of
+    "author" -> pure ActorAuthor
+    "applicant" -> pure ActorApplicant
+    _ -> throwError err403 {errBody="only the classified author or the offerer may counter"}
+  requireAdult user
+  when (amountMinor < 0) $ throwError err400 {errBody="amountMinor must be non-negative"}
+  forM_ message (validatePrivateMessage 1)
+  let termsValue = fromMaybe (object []) terms
+  requireJsonObject "terms" termsValue
+  requireMarketplaceOffers
+  roundId <- reserveIdempotency user "offer.counter" idempotency request "offer_round"
+  replayed <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_offer_round WHERE id=?" [toPersistValue roundId]
+  if not (null replayed) then getApplication user applicationId else do
+    current <- jsonOne err404 "SELECT jsonb_build_object('status',application.status,'round',application.current_round,'lastActor',application.last_actor_role,'offerExpiresAt',application.offer_expires_at,'priceMode',classified.price_mode,'classifiedStatus',classified.status,'classifiedId',classified.id,'applicantProfileId',application.applicant_profile_id,'authorProfileId',classified.author_profile_id) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=?" [toPersistValue applicationId]
+    status <- maybe (throwError err409 {errBody="unknown current application state"}) pure (valueText "status" current >>= parseApplicationStatus)
+    now <- liftIO getCurrentTime
+    when (maybe False (<=now) (valueTime "offerExpiresAt" current) && applicationIsOpen status) $ do
+      runDB $ rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [toPersistValue applicationId]
+      throwError err409 {errBody="the offer expired before this counter"}
+    unless (valueText "classifiedStatus" current == Just "published") $ throwError err409 {errBody="the classified is no longer open"}
+    when (valueText "priceMode" current == Just "fixed") $ throwError err409 {errBody="fixed-price classifieds do not admit counter-offers"}
+    unless (counterAllowedFor status actor) $ throwError err409 {errBody="it is not this participant's turn to counter"}
+    let nextRound = fromMaybe 1 (valueInt "round" current) + 1
+    when (nextRound > maxNegotiationRounds) $ throwError err409 {errBody="negotiation round limit reached"}
+    lastActor <- case valueText "lastActor" current of
+      Just "author" -> pure ActorAuthor
+      Just "applicant" -> pure ActorApplicant
+      _ -> throwError err500
+    unless (nextRoundActor lastActor == actor) $ throwError err409 {errBody="negotiation must alternate between participants"}
+    let defaultExpiry = addUTCTime (7*24*60*60) now
+        roundExpiry = fromMaybe defaultExpiry expiresAt
+        newStatus = if actor == ActorAuthor then "countered_by_author" else "countered_by_applicant"
+        actorText = if actor == ActorAuthor then "author" else "applicant"
+    when (roundExpiry <= now) $ throwError err400 {errBody="expiresAt must be in the future"}
+    consumeRate user "application" 20
+    runDB $ do
+      rawExecute "INSERT INTO classified_offer_round(id,application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,message,expires_at,created_by_party_id) VALUES (?,?,?,?,'counter',?,?,?::jsonb,?,?,?)"
+        [toPersistValue roundId,toPersistValue applicationId,PersistInt64 (fromIntegral nextRound),PersistText actorText,PersistInt64 amountMinor,toPersistValue currencyId,PersistText (decodeJsonText termsValue),optionalText (T.strip <$> message),toPersistValue roundExpiry,toPersistValue (auPartyId user)]
+      rawExecute "UPDATE classified_application SET status=?,current_amount_minor=?,currency_id=?,current_round=?,last_actor_role=?,terms=CASE WHEN ?::jsonb='{}'::jsonb THEN terms ELSE ?::jsonb END,offer_expires_at=?,updated_at=now(),version=version+1 WHERE id=?"
+        [PersistText newStatus,PersistInt64 amountMinor,toPersistValue currencyId,PersistInt64 (fromIntegral nextRound),PersistText actorText,PersistText (decodeJsonText termsValue),PersistText (decodeJsonText termsValue),toPersistValue roundExpiry,toPersistValue applicationId]
+      rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'application.counter','application',?,?,?,?,jsonb_build_object('round',?::int,'amountMinor',?::bigint))"
+        [toPersistValue (auPartyId user),PersistText (UUID.toText applicationId),PersistText (applicationStatusText status),PersistText newStatus,PersistText ("application-counter-"<>UUID.toText applicationId),PersistInt64 (fromIntegral nextRound),PersistInt64 amountMinor]
+    let counterpart = if actor == ActorAuthor then valueUuid "applicantProfileId" current else valueUuid "authorProfileId" current
+    forM_ counterpart $ \profileIdValue -> notifyOfferParticipant profileIdValue applicationId "marketplace.offer.countered" "Contraoferta recibida" "La otra parte propuso un nuevo monto para la oferta."
+    recordAuthenticatedEvent user "offer_countered" "application" (UUID.toText applicationId)
+    getApplication user applicationId
+
+mergeObjects :: Value -> Value -> Value
+mergeObjects (Object left) (Object right) = Object (KeyMap.union right left)
+mergeObjects left _ = left
+
+minimumTime :: UTCTime -> Maybe UTCTime -> UTCTime
+minimumTime value Nothing = value
+minimumTime value (Just other) = min value other
+
+valueText :: Text -> Value -> Maybe Text
+valueText key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just (String value) -> Just value
+  _ -> Nothing
+valueText _ _ = Nothing
+
+valueBool :: Text -> Value -> Bool
+valueBool key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just (Bool value) -> value
+  _ -> False
+valueBool _ _ = False
+
+valueInt :: Text -> Value -> Maybe Int
+valueInt key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just (Number value) -> toBoundedInteger value
+  _ -> Nothing
+valueInt _ _ = Nothing
+
+valueInt64 :: Text -> Value -> Maybe Int64
+valueInt64 key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just (Number value) -> toBoundedInteger value
+  _ -> Nothing
+valueInt64 _ _ = Nothing
+
+valueTime :: Text -> Value -> Maybe UTCTime
+valueTime key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just value@(String _) -> case (Aeson.fromJSON value :: Aeson.Result UTCTime) of
+    Aeson.Success time -> Just time
+    _ -> Nothing
+  _ -> Nothing
+valueTime _ _ = Nothing
+
+applicationStatusText :: ApplicationStatus -> Text
+applicationStatusText status = case status of
+  ApplicationSubmitted -> "submitted"
+  ApplicationViewed -> "viewed"
+  ApplicationShortlisted -> "shortlisted"
+  ApplicationCounteredByAuthor -> "countered_by_author"
+  ApplicationCounteredByApplicant -> "countered_by_applicant"
+  ApplicationAccepted -> "accepted"
+  ApplicationRejected -> "rejected"
+  ApplicationWithdrawn -> "withdrawn"
+  ApplicationExpired -> "expired"
+  ApplicationConversationOpen -> "conversation_open"
+  ApplicationConverted -> "converted"
+
+changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStatus,reason=statusReason} = do
   visible <- applicationParticipantRole user applicationId
-  current <- jsonOne err404 "SELECT to_jsonb(status) FROM classified_application WHERE id=?" [toPersistValue applicationId]
-  oldStatus <- case current of String value -> pure value; _ -> throwError err500
+  current <- jsonOne err404 "SELECT jsonb_build_object('status',application.status,'offerExpiresAt',application.offer_expires_at,'classifiedId',classified.id,'classifiedStatus',classified.status,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'expiresAt',classified.expires_at,'applicantProfileId',application.applicant_profile_id,'authorProfileId',classified.author_profile_id,'currentAmountMinor',application.current_amount_minor) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=?" [toPersistValue applicationId]
+  oldStatus <- maybe (throwError err500) pure (valueText "status" current)
   from <- maybe (throwError err409 {errBody="unknown current application state"}) pure (parseApplicationStatus oldStatus)
   to <- maybe (throwError err400 {errBody="invalid target application state"}) pure (parseApplicationStatus newStatus)
-  let applicantAllowed=Set.fromList ["withdrawn","conversation_open"]
-      authorAllowed=Set.fromList ["viewed","shortlisted","accepted","rejected","conversation_open","converted"]
-  unless ((visible=="applicant" && newStatus `Set.member` applicantAllowed) || (visible=="author" && newStatus `Set.member` authorAllowed) || visible=="admin") $ throwError err403 {errBody="application transition is not allowed for this participant"}
+  when (to `elem` [ApplicationCounteredByAuthor, ApplicationCounteredByApplicant]) $
+    throwError err400 {errBody="counter-offers are recorded through the counter endpoint"}
+  now <- liftIO getCurrentTime
+  when (applicationIsOpen from && maybe False (<=now) (valueTime "offerExpiresAt" current) && to /= ApplicationExpired && visible /= "admin") $ do
+    runDB $ rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [toPersistValue applicationId]
+    throwError err409 {errBody="the offer expired before this transition"}
+  unless (participantTransitionAllowed visible from to) $ throwError err403 {errBody="application transition is not allowed for this participant"}
   unless (allowedApplicationTransition from to) $ throwError err409 {errBody="undeclared application transition"}
-  runDB $ rawExecute "UPDATE classified_application SET status=?,withdrawn_at=CASE WHEN ?='withdrawn' THEN now() ELSE withdrawn_at END,updated_at=now(),version=version+1 WHERE id=?" [PersistText newStatus,PersistText newStatus,toPersistValue applicationId]
+  classifiedId <- maybe (throwError err500) pure (valueUuid "classifiedId" current)
+  let slotsRemaining = fromMaybe 0 (valueInt "slotsRemaining" current)
+      slotsTotal = fromMaybe 1 (valueInt "slots" current)
+      actorText = if visible == "applicant" then "applicant" else "author"
+      consumesSlot = to == ApplicationAccepted && from /= ApplicationAccepted
+      releasesSlot = to == ApplicationWithdrawn && from `elem` [ApplicationAccepted, ApplicationConversationOpen]
+  when consumesSlot $ do
+    unless (valueText "classifiedStatus" current == Just "published") $ throwError err409 {errBody="the classified is no longer open"}
+    when (slotsAfterAccept slotsRemaining == Nothing) $ throwError err409 {errBody="this classified has no slot left"}
+  runDB $ do
+    rawExecute "UPDATE classified_application SET status=?,withdrawn_at=CASE WHEN ?='withdrawn' THEN now() ELSE withdrawn_at END,accepted_at=CASE WHEN ?='accepted' THEN now() ELSE accepted_at END,accepted_amount_minor=CASE WHEN ?='accepted' THEN current_amount_minor ELSE accepted_amount_minor END,rejection_reason=CASE WHEN ?='rejected' THEN 'author_decision' ELSE rejection_reason END,updated_at=now(),version=version+1 WHERE id=?"
+      [PersistText newStatus,PersistText newStatus,PersistText newStatus,PersistText newStatus,PersistText newStatus,toPersistValue applicationId]
+    rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'application.status','application',?,?,?,?,jsonb_build_object('reason',?::text,'participant',?::text))"
+      [toPersistValue (auPartyId user),PersistText (UUID.toText applicationId),PersistText oldStatus,PersistText newStatus,PersistText ("application-status-"<>UUID.toText applicationId),optionalText statusReason,PersistText visible]
+    when consumesSlot $ do
+      -- ADR 0132 I14: one slot per acceptance, never below zero. The accept
+      -- round closes the negotiation chain.
+      rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,created_by_party_id) SELECT id,least(current_round+1,10),?,'accept',current_amount_minor,currency_id,terms,? FROM classified_application WHERE id=? AND current_round<10 ON CONFLICT DO NOTHING"
+        [PersistText actorText,toPersistValue (auPartyId user),toPersistValue applicationId]
+      rawExecute "UPDATE classified_application SET current_round=least(current_round+1,10),last_actor_role=? WHERE id=?" [PersistText actorText,toPersistValue applicationId]
+      rawExecute "UPDATE classified SET slots_remaining=slots_remaining-1,updated_at=now(),version=version+1 WHERE id=? AND slots_remaining>0" [toPersistValue classifiedId]
+      remainingRows <- rawSql "SELECT slots_remaining FROM classified WHERE id=?" [toPersistValue classifiedId] :: SqlPersistT IO [Single Int]
+      let remaining = case remainingRows of
+            [Single value] -> value
+            _ -> 0
+      when (remaining == 0) $ do
+        rawExecute "UPDATE classified SET status='filled',closed_at=now() WHERE id=? AND status='published'" [toPersistValue classifiedId]
+        rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'classified.status','classified',?,'published','filled',?,jsonb_build_object('reason','slots_filled'))" [toPersistValue (auPartyId user),PersistText (UUID.toText classifiedId),PersistText ("classified-status-"<>UUID.toText classifiedId)]
+        closeOpenOffersDB user classifiedId "slots_filled"
+        rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,'marketplace.classified.filled','Anuncio cubierto','Tu anuncio cubrió todos sus cupos.','directory_classified',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText (UUID.toText classifiedId),optionalUuid (valueUuid "authorProfileId" current)]
+      refreshClassifiedDB classifiedId
+    when releasesSlot $ do
+      rawExecute "UPDATE classified SET slots_remaining=?,status=CASE WHEN status='filled' AND expires_at>now() THEN 'published' ELSE status END,closed_at=CASE WHEN status='filled' AND expires_at>now() THEN NULL ELSE closed_at END,updated_at=now(),version=version+1 WHERE id=?"
+        [PersistInt64 (fromIntegral (slotsAfterRelease slotsTotal slotsRemaining)),toPersistValue classifiedId]
+      refreshClassifiedDB classifiedId
+  let counterpart = if visible == "applicant" then valueUuid "authorProfileId" current else valueUuid "applicantProfileId" current
+      notify kind title body = forM_ counterpart $ \profileIdValue -> notifyOfferParticipant profileIdValue applicationId kind title body
+  case to of
+    ApplicationAccepted | consumesSlot -> notify "marketplace.offer.accepted" "Oferta aceptada" "La oferta fue aceptada. Ya pueden coordinar los detalles."
+    ApplicationRejected | from /= ApplicationRejected -> notify "marketplace.offer.rejected" "Oferta rechazada" "El autor del anuncio declinó la oferta."
+    ApplicationWithdrawn | from /= ApplicationWithdrawn -> notify "marketplace.offer.withdrawn" "Oferta retirada" "La otra parte retiró su oferta."
+    _ -> pure ()
+  when (newStatus == "accepted" && consumesSlot) $
+    recordAuthenticatedEvent user "offer_accepted" "application" (UUID.toText applicationId)
   when (newStatus == "conversation_open") $
     recordAuthenticatedEvent user "contact_accepted" "application" (UUID.toText applicationId)
   when (newStatus == "converted") $
     recordAuthenticatedEvent user "match_converted" "application" (UUID.toText applicationId)
   applicationSummary user applicationId
 
+parseApplicationStatus :: Text -> Maybe ApplicationStatus
 parseApplicationStatus value = lookup value
-  [("submitted",ApplicationSubmitted),("viewed",ApplicationViewed),("shortlisted",ApplicationShortlisted),("accepted",ApplicationAccepted),("rejected",ApplicationRejected),("withdrawn",ApplicationWithdrawn),("conversation_open",ApplicationConversationOpen),("converted",ApplicationConverted)]
+  [("submitted",ApplicationSubmitted),("viewed",ApplicationViewed),("shortlisted",ApplicationShortlisted),("countered_by_author",ApplicationCounteredByAuthor),("countered_by_applicant",ApplicationCounteredByApplicant),("accepted",ApplicationAccepted),("rejected",ApplicationRejected),("withdrawn",ApplicationWithdrawn),("expired",ApplicationExpired),("conversation_open",ApplicationConversationOpen),("converted",ApplicationConverted)]
 
-applicationSummary user applicationId = do
-  _ <- applicationParticipantRole user applicationId
-  jsonOne err404 "SELECT jsonb_build_object('id',id,'classifiedId',classified_id,'applicantProfileId',applicant_profile_id,'message',message,'portfolio',portfolio,'availability',availability_text,'proposedAmountMinor',proposed_amount_minor,'currencyId',currency_id,'status',status,'submittedAt',submitted_at,'version',version) FROM classified_application WHERE id=?" [toPersistValue applicationId]
+applicationSummary user applicationId = getApplication user applicationId
 
 applicationParticipantRole user applicationId = do
   roles <- jsonRows "SELECT to_jsonb(CASE WHEN applicant.account_party_id IS NOT NULL THEN 'applicant' WHEN author.account_party_id IS NOT NULL THEN 'author' ELSE 'none' END::text) FROM classified_application application JOIN classified ON classified.id=application.classified_id LEFT JOIN directory_profile_manager applicant ON applicant.profile_id=application.applicant_profile_id AND applicant.account_party_id=? AND applicant.active LEFT JOIN directory_profile_manager author ON author.profile_id=classified.author_profile_id AND author.account_party_id=? AND author.active WHERE application.id=?" [toPersistValue (auPartyId user),toPersistValue (auPartyId user),toPersistValue applicationId]
@@ -1379,6 +1644,33 @@ validateReportTarget kind identifier = do
   when (T.null (T.strip identifier) || T.length identifier>160) $
     throwError err400 {errBody="invalid report targetId"}
 
+-- ADR 0132: the marketplace offer flow (amounts, counters, slot accounting)
+-- ships behind the `marketplace.offers` runtime flag, read from the same
+-- revenue_feature_flag table as the other commerce gates. Merging code never
+-- enables it.
+marketplaceFeatureEnvironment :: IO Text
+marketplaceFeatureEnvironment = do
+  raw <- lookupEnv "APP_ENV"
+  pure $ case fmap (T.toLower . T.strip . T.pack) raw of
+    Just "production" -> "production"
+    Just "prod" -> "production"
+    Just "staging" -> "staging"
+    _ -> "sandbox"
+
+marketplaceFeatureEnabled :: Text -> AppM Bool
+marketplaceFeatureEnabled flag = do
+  environment <- liftIO marketplaceFeatureEnvironment
+  rows <- runDB (rawSql
+    "SELECT enabled FROM revenue_feature_flag WHERE flag_key=? AND environment=?"
+    [PersistText flag, PersistText environment] :: SqlPersistT IO [Single Bool])
+  pure (rows == [Single True])
+
+requireMarketplaceOffers :: AppM ()
+requireMarketplaceOffers = do
+  enabled <- marketplaceFeatureEnabled "marketplace.offers"
+  unless enabled $ throwError err503
+    { errBody = "Feature marketplace.offers is not enabled in this environment" }
+
 requireDirectoryAdmin :: AuthedUser -> AppM ()
 requireDirectoryAdmin user = unless (isDirectoryAdmin user) (throwError err403 {errBody="directory administration requires the Admin role and module"})
 
@@ -1533,6 +1825,8 @@ consumeRate user action maxCount = do
 
 notifyClassifiedAuthor classifiedId applicationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',?::text,FALSE,now() FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id AND manager.active AND manager.can_contact WHERE classified.id=?" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue applicationId,toPersistValue classifiedId]
 
+notifyOfferParticipant profileIdValue applicationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue applicationId,toPersistValue profileIdValue]
+
 notifyProfile profileIdValue invitationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_invitation',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue invitationId,toPersistValue profileIdValue]
 
 isDirectoryAdmin user = Admin `elem` auRoles user && hasModuleAccess ModuleAdmin user
@@ -1599,11 +1893,11 @@ validateContactContext user senderProfileIdValue targetProfileIdValue kind ident
 notificationContext :: AuthedUser -> Text -> UUID.UUID -> AppM Value
 notificationContext user kind ident = case kind of
   "application" -> do
-    role <- applicationParticipantRole user ident
-    unless (role == "author") $ throwError err404
-    jsonOne err404
-      "SELECT jsonb_build_object('id',a.id,'classifiedId',a.classified_id,'authorProfileId',c.author_profile_id,'title',c.title,'status',a.status,'message',a.message,'submittedAt',a.submitted_at,'applicantProfile',jsonb_build_object('id',p.id,'name',p.public_name,'slug',p.slug)) FROM classified_application a JOIN classified c ON c.id=a.classified_id JOIN directory_profile p ON p.id=a.applicant_profile_id WHERE a.id=?"
-      [toPersistValue ident]
+    -- ADR 0132: offer notifications reach both participants (new offer,
+    -- counter, acceptance, rejection), so either may open the context.
+    detail <- getApplication user ident
+    authorProfile <- jsonOne err404 "SELECT jsonb_build_object('authorProfileId',c.author_profile_id,'title',c.title) FROM classified_application a JOIN classified c ON c.id=a.classified_id WHERE a.id=?" [toPersistValue ident]
+    pure (mergeObjects detail authorProfile)
   "invitation" -> invitationSummary user ident
   "review" -> do
     visible <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_review r JOIN directory_profile subject ON subject.id=r.subject_profile_id JOIN directory_profile_manager m ON m.profile_id=coalesce(subject.canonical_profile_id,subject.id) WHERE r.id=? AND r.status='published' AND m.account_party_id=? AND m.active AND m.can_manage" [toPersistValue ident,toPersistValue (auPartyId user)]

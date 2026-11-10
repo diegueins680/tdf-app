@@ -212,9 +212,18 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const category = record(value['category']);
   const venue = record(value['venue']);
   const targetId = text(value['id']) ?? identifier;
+  const classifiedSlug = kind === 'classified' ? text(value['slug']) ?? identifier : undefined;
   const authenticatedAction = kind === 'classified'
-    ? `/mis-clasificados?apply=${encodeURIComponent(targetId)}`
+    ? `/mis-clasificados?apply=${encodeURIComponent(targetId)}&slug=${encodeURIComponent(classifiedSlug ?? identifier)}`
     : `/mis-clasificados?contact=${encodeURIComponent(targetId)}&contextKind=profile`;
+  // ADR 0132: marketplace signals of a classified (intent, price mode, slots, anonymous offer stats).
+  const intent = kind === 'classified' ? text(value['intent']) : undefined;
+  const priceMode = kind === 'classified' ? text(value['priceMode']) : undefined;
+  const slotsRemaining = kind === 'classified' ? number(value['slotsRemaining']) : undefined;
+  const slots = kind === 'classified' ? number(value['slots']) : undefined;
+  const offerStats = kind === 'classified' ? record(value['offerStats']) : undefined;
+  const offerDeadline = kind === 'classified' ? text(value['offerDeadlineAt']) : undefined;
+  const offersClosed = kind === 'classified' && (slotsRemaining === 0 || (offerDeadline ? new Date(offerDeadline) < new Date() : false));
   const invitationAction = `/mis-clasificados?invite=${encodeURIComponent(targetId)}`;
   const shouldResumeContact = kind === 'profile'
     && Boolean(session)
@@ -251,8 +260,11 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                   />
                   <Box>
                     <Stack direction="row" gap={1} flexWrap="wrap" mb={1}>
-                      <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? 'Clasificado musical' : kind === 'event' ? 'Evento' : 'Venue'} />
+                      <Chip color="primary" label={kind === 'profile' ? 'Perfil profesional' : kind === 'classified' ? (intent === 'offering' ? 'Ofrece' : intent === 'seeking' ? 'Busca' : 'Anuncio musical') : kind === 'event' ? 'Evento' : 'Venue'} />
                       {category && <Chip label={text(category['name']) ?? 'Oportunidad'} />}
+                      {priceMode && <Chip variant="outlined" label={priceMode === 'fixed' ? 'Precio fijo' : priceMode === 'suggested' ? 'Precio sugerido, negociable' : 'Precio abierto a ofertas'} />}
+                      {typeof slotsRemaining === 'number' && typeof slots === 'number' && <Chip variant="outlined" color={slotsRemaining === 0 ? 'default' : 'success'} label={slotsRemaining === 0 ? 'Cupos cubiertos' : `${slotsRemaining} de ${slots} cupo${slots === 1 ? '' : 's'} disponible${slotsRemaining === 1 ? '' : 's'}`} />}
+                      {offerStats && number(offerStats['count']) ? <Chip variant="outlined" label={`${number(offerStats['count'])} oferta${number(offerStats['count']) === 1 ? '' : 's'} recibida${number(offerStats['count']) === 1 ? '' : 's'}`} /> : null}
                       {eventCancelled && <Chip color="error" label={english ? 'Cancelled' : 'Cancelado'} />}
                     </Stack>
                     <Typography component="h1" variant="h2" fontWeight={900} sx={{ fontSize: { xs: '2.2rem', md: '3.7rem' } }}>{title}</Typography>
@@ -394,8 +406,9 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Alert>
               ) : (
                 <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
-                  <Typography variant="h5" fontWeight={800}>{kind === 'classified' ? '¿Te interesa esta oportunidad?' : '¿Quieres contactar este perfil?'}</Typography>
-                  <Typography color="text.secondary" mt={1}>TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.</Typography>
+                  <Typography variant="h5" fontWeight={800}>{kind === 'classified' ? (intent === 'offering' ? '¿Te interesa lo que ofrece?' : '¿Puedes cubrir lo que busca? Envía tu oferta') : '¿Quieres contactar este perfil?'}</Typography>
+                  <Typography color="text.secondary" mt={1}>{kind === 'classified' && !offersClosed ? 'Propón tu precio y condiciones; el autor compara las ofertas y elige. TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.' : 'TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.'}</Typography>
+                  {offersClosed && <Alert severity="info" sx={{ mt: 2 }}>Este anuncio ya no recibe ofertas{slotsRemaining === 0 ? ': cubrió sus cupos.' : ': cerró su fecha límite.'}</Alert>}
                   <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
                     <Button
                       component={RouterLink}
@@ -403,7 +416,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                       variant="contained"
                       startIcon={<LoginIcon />}
                     >
-                      {session ? 'Contactar desde uno de mis perfiles' : 'Ingresar para contactar'}
+                      {kind === 'classified' ? (session ? 'Enviar oferta desde uno de mis perfiles' : 'Ingresar para ofertar') : (session ? 'Contactar desde uno de mis perfiles' : 'Ingresar para contactar')}
                     </Button>
                     {kind === 'profile' && session && <Button component={RouterLink} to={invitationAction} variant="outlined" startIcon={<PersonAddAltIcon />}>Invitar a una oportunidad</Button>}
                   </Stack>

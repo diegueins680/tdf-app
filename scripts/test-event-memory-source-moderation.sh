@@ -30,8 +30,9 @@ const migrations=await Promise.all([...prefix,...prerequisites].map(async entry=
  const content=await expandMigrationIncludes({...entry,content:await fs.readFile(path.join(root,entry.path),'utf8')},p=>fs.readFile(path.join(root,p),'utf8'));
  return {...entry,content,checksum:createHash('sha256').update(content).digest('hex')};
 }));
-// The prefix ends before 2026-11-01_social_sync_account_delivery_designation (AUTHORITY-094).
-process.stdout.write(buildMigrationBatchSql(migrations,{sourceCommit:'0'.repeat(40),socialDesignationIncluded:false})+'\n');
+// The prefix ends before 2026-11-01_social_sync_account_delivery_designation (AUTHORITY-094)
+// and before 2026-11-08_marketplace_offers (ADR 0132).
+process.stdout.write(buildMigrationBatchSql(migrations,{sourceCommit:'0'.repeat(40),socialDesignationIncluded:false,marketplaceOffersIncluded:false})+'\n');
 JS
 tdf_test_psql -f "$batch" >/dev/null
 tdf_test_psql -f "$repo_root/tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql" >/dev/null

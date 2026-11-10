@@ -1,6 +1,7 @@
 import mobileApp from './mobileApp.en';
 import accountDeletion from './accountDeletion.en';
 import directorySearch from './directorySearch.en';
+import marketplace from './marketplace.en';
 import authEntry from './authEntry.en';
 const en = {
   app: mobileApp,
@@ -43,6 +44,7 @@ const en = {
   records: { videoUnavailable: 'Video unavailable at source', thumbnailUnavailable: 'Thumbnail unavailable', loadingThumbnail: 'Loading thumbnail' },
   authEntry,
   directorySearch,
+  marketplace,
   auditAccessibility: {
     loadingFeaturedArtists: 'Loading featured artists',
     loadingMarketplace: 'Loading marketplace products',

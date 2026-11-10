@@ -84,6 +84,7 @@ interface SearchUrlState {
   q: string;
   profileKind?: DirectorySearchQuery['profileKind'];
   entityType: DirectoryEntityType | 'artist' | 'all';
+  intent?: DirectorySearchQuery['intent'];
   cityId: string | null;
   professionId: string;
   serviceId: string;
@@ -104,6 +105,7 @@ const parseSearchUrl = (search: string): SearchUrlState => {
     entityType: requestedType !== null && requestedType !== 'all' && isEntityTypeKey(requestedType)
       ? (requestedType as DirectoryEntityType)
       : 'all',
+    intent: params.get('intent') === 'seeking' || params.get('intent') === 'offering' ? (params.get('intent') as DirectorySearchQuery['intent']) : undefined,
     cityId: params.get('cityId'),
     professionId: params.get('professionId') ?? '',
     serviceId: params.get('serviceId') ?? '',
@@ -120,6 +122,7 @@ const buildSearchUrl = (state: SearchUrlState, nearby: boolean) => {
   if (state.q) params.set('q', state.q);
   if (state.profileKind) params.set('profileKind', state.profileKind);
   if (state.entityType !== 'all') params.set('entityType', state.entityType);
+  if (state.intent) params.set('intent', state.intent);
   if (state.cityId && !nearby) params.set('cityId', state.cityId);
   if (state.professionId) params.set('professionId', state.professionId);
   if (state.serviceId) params.set('serviceId', state.serviceId);
@@ -222,6 +225,8 @@ export default function DirectorySearchPage() {
     q: query || undefined,
     profileKind: entityType === 'profile' || entityType === 'artist' ? urlState.profileKind : undefined,
     entityType: entityType === 'all' ? undefined : entityType,
+    // ADR 0132: the intent filter only applies to classifieds.
+    intent: entityType === 'classified' || entityType === 'all' ? urlState.intent : undefined,
     cityId: coordinates ? undefined : cityId || undefined,
     professionId: professionId || undefined,
     serviceId: serviceId || undefined,
@@ -455,6 +460,14 @@ export default function DirectorySearchPage() {
             </ToggleButtonGroup>
           </Stack>
 
+          {(entityType === 'classified' || entityType === 'all') && (
+            <ToggleButtonGroup exclusive size="small" value={urlState.intent ?? 'any'} onChange={(_, value: unknown) => { updateSearch({ intent: value === 'seeking' || value === 'offering' ? value : undefined, entityType: value === 'seeking' || value === 'offering' ? 'classified' : entityType }); }} aria-label={t('directorySearch.intentLabel')} data-testid="intent-filter">
+              <ToggleButton value="any">{t('directorySearch.intentAny')}</ToggleButton>
+              <ToggleButton value="seeking">{t('directorySearch.intentSeeking')}</ToggleButton>
+              <ToggleButton value="offering">{t('directorySearch.intentOffering')}</ToggleButton>
+            </ToggleButtonGroup>
+          )}
+
           {sponsored.length > 0 && (
             <Box component="section" aria-labelledby="sponsored-heading">
               <Typography id="sponsored-heading" variant="overline">{t('directorySearch.sponsoredPlural')}</Typography>
@@ -594,6 +607,7 @@ function ResultCard({
             <Box>
               <Stack direction="row" gap={1} alignItems="center" flexWrap="wrap">
                 <Chip size="small" label={t(ENTITY_LABELS[item.type])} />
+                {item.intent && <Chip size="small" color={item.intent === 'seeking' ? 'secondary' : 'info'} label={item.intent === 'seeking' ? t('directorySearch.intentSeeking') : t('directorySearch.intentOffering')} />}
                 {item.sponsored && (
                   <Chip
                     size="small"
