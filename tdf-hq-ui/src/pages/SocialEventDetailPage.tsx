@@ -28,6 +28,7 @@ import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { formatInEventTimeZone } from '../utils/dateTime';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import EventPreparationPanel from '../components/events/EventPreparationPanel';
+import EventLineupEditor from '../components/events/EventLineupEditor';
 import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicketPricing';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
@@ -49,8 +50,9 @@ const sessionChanged = () => new Error('Tu sesión cambió. Vuelve al evento ant
 
 export default function SocialEventDetailPage() {
   const { eventId = '' } = useParams();
-  const { search, pathname, hash } = useLocation();
+  const { search, pathname, hash, key: routeEntryKey } = useLocation();
   const captionInput = useRef<HTMLInputElement>(null);
+  const lastComposerFocus = useRef<string | null>(null);
   const requestedMoment = new URLSearchParams(search).get('moment');
   const focusedMomentRef = useRef<HTMLDivElement>(null);
   const lastFocusedMoment = useRef<string | null>(null);
@@ -200,12 +202,18 @@ export default function SocialEventDetailPage() {
 
   const event = eventQuery.data;
   const eventEnded = Boolean(event?.eventEnd && Date.parse(event.eventEnd) <= Date.now());
+  const composeFocusKey = event && session && new URLSearchParams(search).get('compose') === '1'
+    ? `${routeEntryKey}:${eventId}:${accountScope}` : null;
   useEffect(() => {
-    if (event && session && new URLSearchParams(search).get('compose') === '1') {
-      captionInput.current?.scrollIntoView?.({ block: 'center' });
-      captionInput.current?.focus();
-    }
-  }, [event, session, search]);
+    if (!composeFocusKey) { lastComposerFocus.current = null; return; }
+    const input = captionInput.current;
+    if (!composer.ready || !input || input.disabled || lastComposerFocus.current === composeFocusKey) return;
+    // A return intent focuses once for this account and navigation entry.
+    // Later session/event snapshots must not interrupt a menu or move a reader.
+    lastComposerFocus.current = composeFocusKey;
+    input.scrollIntoView?.({ block: 'center' });
+    input.focus();
+  }, [composeFocusKey, composer.ready]);
   const isOrganizer = Boolean(session?.partyId && event?.eventOrganizerPartyId && String(session.partyId) === String(event.eventOrganizerPartyId));
   const canShareTickets = ticketStorefrontPrerequisitesMet
     && storefrontQuery.data?.checkoutAvailable === true;
@@ -388,6 +396,7 @@ export default function SocialEventDetailPage() {
         )}
 
         {event && isOrganizer && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} />}
+        {event && isOrganizer && session?.partyId && <EventLineupEditor key={`lineup:${editorScope}`} event={event} ownerId={session.partyId} />}
         {eventEnded && memories}
         {event && <Card variant="outlined">
           <CardContent>

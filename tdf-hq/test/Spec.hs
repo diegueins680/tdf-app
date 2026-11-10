@@ -535,10 +535,12 @@ import TDF.Server.SocialEventsHandlers (
     validateInvitationStatusInput,
     validateInvitationStatusUpdateInput,
     validateEventArtistIds,
+    validateEventArtistFilter,
     validateArtistName,
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
     validateArtistProfileWriteAccess,
+    validateArtistProfilePartyChange,
     validateAuthenticatedPartyReference,
     validateTicketCheckInLookup,
     validateStoredTicketOrderStatus,
@@ -12515,6 +12517,25 @@ main = hspec $ do
             (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenreIds\":[\"11111111-1111-4111-8111-111111111111\"]}")
                 `shouldSatisfy` isRight
 
+    describe "validateArtistProfilePartyChange" $ do
+        let user roles = AuthedUser
+                { auPartyId = toSqlKey 7
+                , auRoles = roles
+                , auModules = modulesForRoles roles
+                , auApiTokenId = Nothing
+                , auSessionWitness = Nothing
+                }
+            owner = user [Artist]
+            admin = user [Admin]
+        it "keeps the stored party when an owner omits it or repeats it" $ do
+            validateArtistProfilePartyChange owner (Just "7") Nothing `shouldBe` Right (Just "7")
+            validateArtistProfilePartyChange owner (Just "7") (Just " 7 ") `shouldBe` Right (Just "7")
+        it "refuses an owner moving the profile to another party" $
+            fmap errHTTPCode (either Just (const Nothing) (validateArtistProfilePartyChange owner (Just "7") (Just "99")))
+                `shouldBe` Just 403
+        it "lets a strict administrator move a profile to another party" $
+            validateArtistProfilePartyChange admin (Just "7") (Just "99") `shouldBe` Right (Just "99")
+
     describe "validateArtistName" $ do
         it "trims canonical artist names before persistence" $
             validateArtistName "  Los Mentores  " `shouldBe` Right "Los Mentores"
@@ -12530,6 +12551,24 @@ main = hspec $ do
                                 ("Expected invalid artist name to be rejected, got " <> show value)
             assertInvalid "   " "artist name is required"
             assertInvalid "Los\nMentores" "artist name must not contain control characters"
+
+    describe "event discovery artist filter" $ do
+        it "preserves single IDs and deduplicates the OR set" $ do
+            fmap (map fromSqlKey) (validateEventArtistFilter (Just "42, 7,0042"))
+                `shouldBe` Right [7, 42]
+            fmap (map fromSqlKey) (validateEventArtistFilter (Just "42"))
+                `shouldBe` Right [42]
+            validateEventArtistFilter Nothing `shouldBe` Right []
+        it "rejects malformed, empty, negative and overflowing members" $
+            forM_ ["1,", "1,,2", "0", "-1", "1 OR 1=1", "9223372036854775808"] $ \raw ->
+                validateEventArtistFilter (Just raw) `shouldSatisfy` isLeft
+        it "bounds the submitted list before deduplication" $
+            validateEventArtistFilter (Just (Data.Text.intercalate "," (replicate 51 "1")))
+                `shouldSatisfy` isLeft
+        it "roundtrips a canonical singleton" $ QC.property $ \(QC.Positive value) ->
+            let key = (value :: Int64)
+            in fmap (map fromSqlKey) (validateEventArtistFilter (Just (Data.Text.pack (show key))))
+                == Right [key]
 
     describe "validateEventArtistIds" $ do
         let mkArtist rawArtistId =

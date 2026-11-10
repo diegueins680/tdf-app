@@ -6,6 +6,7 @@ license:            MIT
 author:             TDF Records (Diego Saá)
 maintainer:         tdf@example.com
 build-type:         Simple
+extra-source-files: sql/queries/social-event-city-match.sql
 
 executable tdf-hq-exe
   main-is:          Main.hs

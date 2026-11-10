@@ -92,6 +92,8 @@ jobs:
         run: python formal/payments/deposit_policy_arithmetic.py
       - name: Prove provider binding admission and conjunct necessity
         run: python formal/payments/provider_binding_admission.py
+      - name: Prove PlaceToPay query admission, exact minor units and guard necessity
+        run: python formal/payments/placetopay_query_admission.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15

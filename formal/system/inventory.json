@@ -27,6 +27,9 @@
     "e2e": [
       "e2e/integration/event-raci-browser.spec.mjs",
       "e2e/interactions/interactions.spec.mjs",
+      "e2e/torrent-audio/fixture-server.mjs",
+      "e2e/torrent-audio/setup.mjs",
+      "e2e/torrent-audio/streaming.spec.mjs",
       "e2e/web/account-deletion-rollout.spec.mjs",
       "e2e/web/account-deletion.spec.mjs",
       "e2e/web/analytics-privacy.spec.mjs",
@@ -44,6 +47,7 @@
       "e2e/web/directory-entry.spec.mjs",
       "e2e/web/directory-favorite-recovery.spec.mjs",
       "e2e/web/directory-language.spec.mjs",
+      "e2e/web/event-discovery-filters.spec.mjs",
       "e2e/web/event-memories.spec.mjs",
       "e2e/web/event-raci-editor.spec.mjs",
       "e2e/web/event-rsvp-sharing.spec.mjs",
@@ -237,12 +241,15 @@
       "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
       "scripts/__tests__/ticket-admission-model.test.mjs",
       "scripts/__tests__/ticket-page-preview.test.mjs",
+      "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
+      "scripts/__tests__/torrent-worker-routing.test.mjs",
       "scripts/__tests__/ui-validation-bundle.test.mjs",
       "scripts/__tests__/ui-worker-memory.test.mjs",
       "scripts/__tests__/ux-quality-audit.test.mjs",
       "scripts/__tests__/ux-review-real-browser.mjs",
       "scripts/__tests__/verification-evidence.test.mjs",
       "scripts/__tests__/video-campaign-access.test.mjs",
+      "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
       "scripts/ai-workflow-doctor.mjs",
       "scripts/archive/backfill-meta-inbox.sh",
       "scripts/archive/change-venue-to-domo.py",
@@ -260,6 +267,7 @@
       "scripts/baseline-studio-audit-staging-migrations.mjs",
       "scripts/build-catalog-decisions.mjs",
       "scripts/build-ddex-ern432-package.sh",
+      "scripts/build-torrent-audio-fixture.mjs",
       "scripts/build-ui-with-install.sh",
       "scripts/capture-feature-audit-visuals.mjs",
       "scripts/capture-music-directory-visuals.mjs",
@@ -523,6 +531,7 @@
       "scripts/test-distribution-product-seeds-migration.sh",
       "scripts/test-domo-deposit-policy-validator.sh",
       "scripts/test-domo-quote-checkout-runtime-migration.sh",
+      "scripts/test-event-discovery-postgres.mjs",
       "scripts/test-event-ingestion-boundaries.sh",
       "scripts/test-event-memories-http.py",
       "scripts/test-event-memories.sh",
@@ -654,6 +663,8 @@
       "scripts/test-verification-report.py",
       "scripts/test-verified-experience-reviews-migration.sh",
       "scripts/test-versioned-revenue-products-migration.sh",
+      "scripts/test-video-campaign-postgres.sh",
+      "scripts/test-weekly-platform-metrics.py",
       "scripts/test-whatsapp-consent.sh",
       "scripts/test-whatsapp-redelivery.sh",
       "scripts/test_mail_deliverability_monitor.py",
@@ -684,6 +695,7 @@
       "scripts/verify-simulator-health.sh",
       "scripts/verify-system-evidence.mjs",
       "scripts/verify-video-campaign-access.mjs",
+      "scripts/weekly-platform-metrics.py",
       "scripts/wrap-catalog-canonical-schema.mjs"
     ],
     "services": [
@@ -1046,6 +1058,10 @@
       "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
       "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
       "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
+      "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
+      "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
       "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
@@ -1375,6 +1391,7 @@
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+      "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.tsx",
       "tdf-hq-ui/src/pages/NotificationPage.tsx",
       "tdf-hq-ui/src/pages/OperationsControlCenterPage.partySelector.test.ts",
@@ -1426,6 +1443,7 @@
       "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
       "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventWorkspacePage.tsx",
+      "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
       "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
       "tdf-hq-ui/src/pages/SocialInboxPage.test.tsx",
@@ -1463,6 +1481,8 @@
       "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
       "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
       "tdf-hq-ui/src/pages/courseRegistrationFirstRunLabel.test.ts",
+      "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts",
+      "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
       "tdf-hq-ui/src/pages/inscripcion/InscripcionPage.tsx",
       "tdf-hq-ui/src/pages/internAuditPlanLogic.test.ts",
       "tdf-hq-ui/src/pages/internAuditPlanLogic.ts",
@@ -1556,6 +1576,8 @@
       "tdf-hq-ui/src/utils/checkoutStripe.ts",
       "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts",
       "tdf-hq-ui/src/utils/courseRegistrationErrors.ts",
+      "tdf-hq-ui/src/utils/csv.test.ts",
+      "tdf-hq-ui/src/utils/csv.ts",
       "tdf-hq-ui/src/utils/dateOnly.test.ts",
       "tdf-hq-ui/src/utils/dateOnly.ts",
       "tdf-hq-ui/src/utils/dateTime.test.ts",
@@ -1638,6 +1660,8 @@
       "tdf-hq-ui/src/utils/tidalAgent.ts",
       "tdf-hq-ui/src/utils/torrentAudio.test.ts",
       "tdf-hq-ui/src/utils/torrentAudio.ts",
+      "tdf-hq-ui/src/utils/torrentWorker.test.ts",
+      "tdf-hq-ui/src/utils/torrentWorker.ts",
       "tdf-hq-ui/src/utils/vcard.test.ts",
       "tdf-hq-ui/src/utils/vcard.ts",
       "tdf-hq-ui/src/utils/videoSource.test.ts",
@@ -2160,6 +2184,7 @@
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
+      "tdf-hq/sql/queries/social-event-city-match.sql",
       "tdf-hq/sql/test_admin_operations_control_center.sql",
       "tdf-hq/src/TDF/API.hs",
       "tdf-hq/src/TDF/API/Admin.hs",
@@ -3063,7 +3088,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7adbcaa1fdd69b2639c0f6a17d55b5cf38a37631b2499ef834f3789e658266e9",
+      "sha256": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3075,7 +3100,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "39b2ccbd0979cb2b542c65cefdf8886fb543a3b85f68a8e7d5eca90a12cc700b",
+      "sha256": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3130,6 +3155,24 @@
       "id": "SURFACE-b6a53fc19d550b31",
       "path": "e2e/interactions/interactions.spec.mjs",
       "sha256": "d3208c1857133ebf963798cfd25daaf733ef4b0d4d84e2d3075cfd18fd9bfab5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9529732e6a086200",
+      "path": "e2e/torrent-audio/fixture-server.mjs",
+      "sha256": "c97be99807b4ac3839329a7fe3d59c8444283f56875d294c6e22156fa572d201",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0fd84fd3fa162ef2",
+      "path": "e2e/torrent-audio/setup.mjs",
+      "sha256": "1e98a7c10e5e77d267cf8baa303675c0a240812e53adb3ad079e2fc1ef1d1875",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-69571580d9033bea",
+      "path": "e2e/torrent-audio/streaming.spec.mjs",
+      "sha256": "dc3a888ffef647471bc5eca9df69920369702710551cda427b65f2ad9b59be7d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3189,7 +3232,7 @@
     {
       "id": "SURFACE-36d988b722d46f36",
       "path": "e2e/web/chat-mobile-follow.spec.mjs",
-      "sha256": "bbfd13846523d055ec4abf7df54fb0f53c231b19c74b71e97c923c2708d8a16a",
+      "sha256": "f5ea13a3ebd693cb1fd5e71d58e977429b511f42f2a890bd2affb7efa72ad916",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3232,6 +3275,12 @@
       "id": "SURFACE-2d19f45e5f75f841",
       "path": "e2e/web/directory-language.spec.mjs",
       "sha256": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a759d468f3ebc8d5",
+      "path": "e2e/web/event-discovery-filters.spec.mjs",
+      "sha256": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3417,7 +3466,7 @@
     {
       "id": "SURFACE-014b25a6dd6c1298",
       "path": "e2e/web/webtorrent-browser.spec.mjs",
-      "sha256": "4902c5bcfe1153920315a5776b159ae231cdd2b94fe7d0b09a9d8afb7bed95fb",
+      "sha256": "6610f089d7b7c82b5c6460ed623cbc5413e250741162b48cf4e2de7ae14305d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3735,7 +3784,7 @@
     {
       "id": "SURFACE-3fd503193a846b72",
       "path": "scripts/__tests__/ci-pipeline.test.mjs",
-      "sha256": "881b8fa0370c349ee8bc734eec59b730f2103ad8b9dee267e63de0eab89da0c7",
+      "sha256": "2f4630b4a2e5bcf9011f84bb483577158a6f1162d8e632258f2b470ae8718e5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3801,7 +3850,7 @@
     {
       "id": "SURFACE-9344bbc594468ec5",
       "path": "scripts/__tests__/event-draft-plan.test.mjs",
-      "sha256": "e142a1d72ea77718de3999f3e8a3377ad52d56ef30af8f4138f4eeb53820d54f",
+      "sha256": "241bb7a8224dc46e0114da2a46ea85943de3130b20369b9343358fb64405ad1d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3999,7 +4048,7 @@
     {
       "id": "SURFACE-612200496f2d7139",
       "path": "scripts/__tests__/identity-http-runtime.mjs",
-      "sha256": "8bacd9e9b60276a5bca43018664b5618cd1ef09918f8b22e0003096523d3ce90",
+      "sha256": "67e453896cfdc6a2fc2a3c7a9e6299bee61dc5a1e7ead3c3720ce729431f2354",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4321,6 +4370,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-3caa203929eb68d3",
+      "path": "scripts/__tests__/torrent-fixture-lifecycle.test.mjs",
+      "sha256": "fd7a2afdb437fe48c4b91da21a53494c804efcf4692c8c326f0c8a1b7689a5e0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-07a85d4e48f23552",
+      "path": "scripts/__tests__/torrent-worker-routing.test.mjs",
+      "sha256": "39cf49236f79edeb7a9599dc07c37965cfe824725cb452a71c32ff7890fef784",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d6cb46e6ca8e56e0",
       "path": "scripts/__tests__/ui-validation-bundle.test.mjs",
       "sha256": "952e9c7fae5dc7697bc2b65c455db2545e59f6c99509cd74e57e422ff49e8e4e",
@@ -4354,6 +4415,12 @@
       "id": "SURFACE-767f37f563e0a8fa",
       "path": "scripts/__tests__/video-campaign-access.test.mjs",
       "sha256": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d854c1b43b7f1af6",
+      "path": "scripts/__tests__/video-campaign-postgres-runner.test.mjs",
+      "sha256": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4459,6 +4526,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-55794f66f248094a",
+      "path": "scripts/build-torrent-audio-fixture.mjs",
+      "sha256": "cdd56ca13a42d0c1a35b9a6e5db53e93ac7de5093385b8cccbcd3629e19aa104",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-3dfd6f173e84edf1",
       "path": "scripts/build-ui-with-install.sh",
       "sha256": "ddcb1d540344a821a712298aac26193da8086ecc521afe8626b00b98ffd65e2d",
@@ -4557,7 +4630,7 @@
     {
       "id": "SURFACE-fbfd163470f37a47",
       "path": "scripts/check-route-requirements.py",
-      "sha256": "8ff8f425dffcdda7e12d938ed019d638fca5efdb1649cda8e27d535784026730",
+      "sha256": "75aadc52982aba64747288b42a3e3574260a3cc75dd4b97243f4974bdcb758fe",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5205,7 +5278,7 @@
     {
       "id": "SURFACE-676b7216bda83497",
       "path": "scripts/prepare-event-draft.mjs",
-      "sha256": "ecb45725bfe81c59823cef0cb06afe63ab8136ee3c09651ea8019becd366c3c6",
+      "sha256": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5295,7 +5368,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "a294b53a8d4b6587c4fe5a53146ddf855cc147afcc5d9afb05f82a3c707df216",
+      "sha256": "cdab4c82a8de6969fb2e08fc1aff75c479b5d93a696d3e0272acc675716987e9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6037,6 +6110,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-20704f2f782006b7",
+      "path": "scripts/test-event-discovery-postgres.mjs",
+      "sha256": "45bab4bd40d7f7676b202ca619e9b46036abb54713ebcbb3ce4724b4c3b6a745",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c83ef025ca87e555",
       "path": "scripts/test-event-ingestion-boundaries.sh",
       "sha256": "af6508ef47a91f986f3cee51f85c97e1e8ae7e2fc1be2d40b706172ad838e4cc",
@@ -6657,7 +6736,7 @@
     {
       "id": "SURFACE-5067a6940763ffc3",
       "path": "scripts/test-route-requirements.py",
-      "sha256": "839d3c203611a68555d548c57d3fd3aa3d5cada6301635d84ab650e4ed7a5e4b",
+      "sha256": "661c482e4d0dfa7a7722e9ac102186d2074b2e9c24faad63a32bda3483c5d941",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6823,6 +6902,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-546136dfed4fd297",
+      "path": "scripts/test-video-campaign-postgres.sh",
+      "sha256": "0e6c93dc5d5784fcdd874459d282c32c3b9634f21cbf114b206af6cda08c948a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d0a29d547d2a49db",
+      "path": "scripts/test-weekly-platform-metrics.py",
+      "sha256": "27de8dd96d8f852d06cb352580144f9a4c988500b876015384f578b99d52d10b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-da68a6be269c4e94",
       "path": "scripts/test-whatsapp-consent.sh",
       "sha256": "34e27aa7bd681b59f320432bdfbd0c698dc5b8745b7ad7f6f01739d46a0fedde",
@@ -6981,7 +7072,7 @@
     {
       "id": "SURFACE-fa1f8b855944ecc5",
       "path": "scripts/verify-request-failures.py",
-      "sha256": "962304b68f710adb12c87a530fa4676da0aca761a4c60dbb4f6615b9b934d439",
+      "sha256": "148a72cd78517c9ad9b694a12f31cf556560205277037ae146a19bc4c1d26de0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7000,6 +7091,12 @@
       "id": "SURFACE-00216ea4e77a05b4",
       "path": "scripts/verify-video-campaign-access.mjs",
       "sha256": "0b6a82b0c2472d1735cbe9e0f84b2ecc1d513c3fa81b853bd2d7a932cea6ace7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-00fd92180a50abfd",
+      "path": "scripts/weekly-platform-metrics.py",
+      "sha256": "eb4989f17ff699f65c9a382b94afac31cd9599ff0b7cda517ce073dd69b1ba83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7461,7 +7558,7 @@
     {
       "id": "SURFACE-e5cf91b3e384faae",
       "path": "tdf-hq-ui/public/webtorrent-sw.min.js",
-      "sha256": "a2ac94c313e7c710c871d0bd89a1cb098970298d7019930db9776857523e1c74",
+      "sha256": "3ec29705ef26b6011113f31ca60d1b0726d2b58de1385277634345b70edeb024",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8427,13 +8524,13 @@
     {
       "id": "SURFACE-f2b48a740f534a82",
       "path": "tdf-hq-ui/src/api/socialEvents.test.ts",
-      "sha256": "d306604d54bc95a83026d8b170dd4bb59ab941b4f4edc66094fe8dd778074274",
+      "sha256": "b1c0eeb651f2935cbd49274db9eca8ccc368a20eef87af653a6583afa33e84e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "40dfc3c37ebb11f0cb8135042524ae4059b4507cf16b5345add14ea22349575c",
+      "sha256": "b48640eddc33d51a01abb1c18b7289c0a68d5b78504dc2471bd7884e55f53a3f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9015,7 +9112,7 @@
     {
       "id": "SURFACE-428957fe77018d21",
       "path": "tdf-hq-ui/src/components/StudioGallery.test.tsx",
-      "sha256": "fc58e06828af223b5bb382b87d7fb26f76240d058af7e699cf3cc1dbc3487af3",
+      "sha256": "4f8ca422f7722415c00ccd70540824b25ea3eb5af73f60b34ea53857fa446a48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9139,6 +9236,30 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-67b757b19f11e973",
+      "path": "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
+      "sha256": "7497a1d38c2e6e9a5327bd53405eb76d993fe3c7ea63ca70ed8f0965a29677cd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8817f81a71124ed7",
+      "path": "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
+      "sha256": "4923d21e7f78ebb08e20cd4091fdb19adb6492a3f74d6b1fa810f79be7a29bdd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fd09e79d1d37127d",
+      "path": "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
+      "sha256": "c2e431d781b24e39486495dcd188d81512280806a5c68e4577fe5c5d7d8dda5a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-9396233292cd60a3",
+      "path": "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
+      "sha256": "4dcf4793fb9ab956c0f72dc2591e090fd660ad8c9fe85bcfe9d6c601cca7791c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6d375a8bdcbe5d7c",
       "path": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "sha256": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
@@ -9237,13 +9358,13 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "1bc3ec362082c00106dcac5bcc8131cf15da631d8844e7e9b8823a3836089171",
+      "sha256": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "2eca95aa1fa92a54659053cfd91e0a0f686ee6a3dd34e1fbaf64dbbe85c24d90",
+      "sha256": "49003b106d8c25a66e4378611e2a9427d18d81128195ff3a56f3f3f4685ff187",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10527,13 +10648,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "56c4aff0100456653063d72ec6a392d08b0c0124cf3b123cd4cee07b9a8df4ba",
+      "sha256": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "616aa6312dcd76618f16cca64231e91b6c85844514ab1010013781dc099cf1bd",
+      "sha256": "6fa7990f5f6b0072eb10cbd811981fd23ddffa0615dc4a20badb8a8da9ec5d34",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11113,9 +11234,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-35214bb78cbc255a",
+      "path": "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
+      "sha256": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-ce5da75bdb773e8c",
       "path": "tdf-hq-ui/src/pages/NotFoundPage.tsx",
-      "sha256": "5dc0e948b325fa19bc385deeca497925a8846ed2f212d55a439b0032a00fe0d1",
+      "sha256": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11397,13 +11524,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "4aa48c983379b1aaabad90543eea2fd8510bf28a99aa0722c3b97d8282567fe7",
+      "sha256": "7e285d998e1c9683e82627ac0b237f1a17516ad231dd5757cf646616dceb9b4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "3417cb970648efc1d1634a24792e9b69aeb441d9d1eb76ea7de7e7b135ef6985",
+      "sha256": "1ee97a2e8651484032069c2ce3fd63439bbdb901b8356e2a354ad4dce7da378a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11419,15 +11546,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c4651b845e2e6ad1",
+      "path": "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
+      "sha256": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cc037b60c52e8931",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
-      "sha256": "4051b8cdcdfa4a34cee108553d86a1549971846d2a17287985deb73ce4ef4be3",
+      "sha256": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "bb4ae7f8482085191592cf9878f9ee547ae5f088c1f26c32486c77c28dc5f82c",
+      "sha256": "668a587375c5ef9cfdd3cfc31184d79af112684f54eb4a88271fc64d74993397",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11523,13 +11656,13 @@
     {
       "id": "SURFACE-d4bbd15313dd4547",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx",
-      "sha256": "d99e8047d20190ba92ca311e4616a1ba031508b7703b54022ab392bbc5e998b9",
+      "sha256": "c6cedd57956d15064bd06ef0ef34446c7b23649b97b4bab8e395ec23d55e5f5c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d8426c3557e41bc4",
       "path": "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx",
-      "sha256": "430333d10523c16fae08cd4c186c67251ae6c9bd7731e60caadd7e9d6f2c4496",
+      "sha256": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11638,6 +11771,18 @@
       "id": "SURFACE-63750719a03d72c2",
       "path": "tdf-hq-ui/src/pages/courseRegistrationFirstRunLabel.test.ts",
       "sha256": "672ddd5387f1118b6911b446a62815a9494cfdded2200967efde2a1141117aa5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6cbe7c311d07b3f3",
+      "path": "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts",
+      "sha256": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a310967cb09cdd87",
+      "path": "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts",
+      "sha256": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12199,6 +12344,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-03eaa56d694927b9",
+      "path": "tdf-hq-ui/src/utils/csv.test.ts",
+      "sha256": "4fb5e4404dd09e5883c0628b01d25235e6c5296a4c514ce7ca4b8e7e888809ba",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7f8a0a5efb475574",
+      "path": "tdf-hq-ui/src/utils/csv.ts",
+      "sha256": "321c70afb70e94a14be92453214b6897d854235ee93312e5c32aadbfb90052d0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-d2543ceda1770fa1",
       "path": "tdf-hq-ui/src/utils/dateOnly.test.ts",
       "sha256": "e5285b0f551aefa67661f1c7754b7240c52bd875c17fd556c0b97fc3a5a42772",
@@ -12261,13 +12418,13 @@
     {
       "id": "SURFACE-ff56e80d7cd555eb",
       "path": "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
-      "sha256": "9cb84e248c7926a530b61da8a3afb76320b793f03b996c00a1507ca5b460335e",
+      "sha256": "8e37da4bff606202bf681c4780ddc3cff0dfa412f587bc95b823c1a9f3d28f4d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a43bc2151acd2e54",
       "path": "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
-      "sha256": "bea9cf70026317f9a0dfccdb975d261f41761197c79254a366d3d17fb219a163",
+      "sha256": "cab8d6497924db12782d9e40959a4862b9b692fa67fb6414d4b3b32ec6f1c579",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12495,13 +12652,13 @@
     {
       "id": "SURFACE-a2fad7ff00e326b8",
       "path": "tdf-hq-ui/src/utils/merch.test.ts",
-      "sha256": "aa36c7718e348724f3c0e5a3a85ada4fa578847453f2f2f2ee6ced54c799b796",
+      "sha256": "7061e6d370f1b6e6437b0ec957e8b3d9f045799277906ddca6f10571cb86a6e8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-69214ab4dd4d9619",
       "path": "tdf-hq-ui/src/utils/merch.ts",
-      "sha256": "12e98763ecfb00e7992e7b6e5a8c4811c452d26865c62253cd37a58126571fe9",
+      "sha256": "b77f4e6d442647662a15729ebacce0aa165ae7b330dcb961bd8042a1b44e0faa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12687,7 +12844,19 @@
     {
       "id": "SURFACE-8b33a680532e58df",
       "path": "tdf-hq-ui/src/utils/torrentAudio.ts",
-      "sha256": "5b4f52673f78f897dfe9ef6f181758b10de3094baddbc86266719c500f3ff974",
+      "sha256": "ba3680f2a1b9d4dd35c2c1f3d7e34aa133c57a579f6055ce04f857437eb1c893",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ef656ea87001a97e",
+      "path": "tdf-hq-ui/src/utils/torrentWorker.test.ts",
+      "sha256": "f69e605ea3ccd42b61c794f23636f0d92dff7fa566840a5ab92e8c2770d06b2b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-75e645bc807e76c0",
+      "path": "tdf-hq-ui/src/utils/torrentWorker.ts",
+      "sha256": "191d976579abb09a50a49859d9531babc82ff845eff3ba24c200ae2ab79053bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12783,7 +12952,7 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "9d4b6b0747296ff98277153a7fa31ae5e75a14709a0900ffd3abf2588b20cf4f",
+      "sha256": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -15811,6 +15980,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-899edc9d6319a93c",
+      "path": "tdf-hq/sql/queries/social-event-city-match.sql",
+      "sha256": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1c1ef431782f3c8d",
       "path": "tdf-hq/sql/test_admin_operations_control_center.sql",
       "sha256": "639d37d4dd0ee56546d6547d13cf5675b80cc265ee1ed6943878efc5544311aa",
@@ -16107,7 +16282,7 @@
     {
       "id": "SURFACE-4893f1464484dd6a",
       "path": "tdf-hq/src/TDF/App/FailureBoundary.hs",
-      "sha256": "604d4d6670667d5da5c6a3e34c891dffaa0f7be05feef73671f56897fb41ac07",
+      "sha256": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16137,7 +16312,7 @@
     {
       "id": "SURFACE-4ffd2a595568d8de",
       "path": "tdf-hq/src/TDF/Auth.hs",
-      "sha256": "12ffa8f80b52e55e83362316012bbe322190e017485d8dc92e424fb3d40ca7e9",
+      "sha256": "b4ab83ee22c3ab93ce36b25baae4b162f54530413b81b6325b26dfa64dc7f0c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16677,7 +16852,7 @@
     {
       "id": "SURFACE-3d1a28f3fa60015b",
       "path": "tdf-hq/src/TDF/Handlers/InputList.hs",
-      "sha256": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
+      "sha256": "57565241bce5f077ef7703008e3dba09686952c804b5fee0910326f47cad42e3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16923,13 +17098,13 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "43e2d3af37007f738bac8c8a8af8f5333e809c7d70d05d943a870a2c377c88be",
+      "sha256": "581d9ae1ab8bd947487db7d8f89d7e62ff4a5c6ffdaa99c436b72e3f84ceefc3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5936156bf9727c52",
       "path": "tdf-hq/src/TDF/Server/Catalog.hs",
-      "sha256": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
+      "sha256": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17007,7 +17182,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "4051230476f98bb4be15d001553c7d0241e5978b3568140e8b5a546bcd98ed44",
+      "sha256": "feb330191f5b1146684ed7953ed957212d6b2aac155f829307c7305ea3444486",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17061,7 +17236,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "512078d56c654f9fcacf1e31884bdb270eef6501323c10bbf0c13159022f1ba0",
+      "sha256": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17073,7 +17248,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "e77a10316cbaee7320f4af31e96c8399faba4d87a7aefcfdb1e80dbda98a25b0",
+      "sha256": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17109,7 +17284,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "a5dcf135b5ebd9682a0029979bbe5468e5845e2fac662505a87a17db02a80a8e",
+      "sha256": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17127,7 +17302,7 @@
     {
       "id": "SURFACE-5cfb0ad2589bfb68",
       "path": "tdf-hq/src/TDF/ServerFanClub.hs",
-      "sha256": "b8b7bd51770c23e3bae6f0b3fafe2e06da70fc3a1992db1531910836fb774b35",
+      "sha256": "fd0030b5c216270bf2381982e7eec4202afc7a8607e4a581398723692a3cb461",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17175,7 +17350,7 @@
     {
       "id": "SURFACE-5a72b47f8b63ff19",
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
-      "sha256": "964189f5f5c8b06bbbbfca51d5ed4329e29d81d4f71012ad672343d1f6e7b319",
+      "sha256": "5cf8676925d3e588a3bfd0bc564377839d6aaf6c7256f9835be7664c171a40f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17355,7 +17530,7 @@
     {
       "id": "SURFACE-f9d35ff622573006",
       "path": "tdf-hq/src/TDF/Trials/Server.hs",
-      "sha256": "3d03e935ad1a83fe73ee42622d55b5eb3d8eb66e7bf858145c3bba74e71042c5",
+      "sha256": "4088b523b569cf66d035d80b81736d35ed41366bb67df4cd06fca6d16fb7ca9f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17379,7 +17554,7 @@
     {
       "id": "SURFACE-53869c6b64312cae",
       "path": "tdf-hq/src/TDF/VideoCampaigns.hs",
-      "sha256": "5bbd39fa374845831a3c8b898398730c9850bb7aa39d853718e7ef0749c0131c",
+      "sha256": "39e55365c71ec6bbaa77749048141519a192a112220a5ab1494229c427dbb25c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17421,7 +17596,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "7411a4621a4562d35b1a9652a91f6d88af9173ca9cfa7a4f38105560fac1a16b",
+      "sha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17499,7 +17674,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "80be4edb2ff1c92f6bbd28252df2b075531c13784032284dd106e9a069268f14",
+      "sha256": "e1a266bc079693bcae99423f9685f48abdaa9ec7f16112ec9cc7e5c5833c2573",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17547,7 +17722,7 @@
     {
       "id": "SURFACE-65f05df89af717ae",
       "path": "tdf-hq/test/TDF/Catalog/SecuritySpec.hs",
-      "sha256": "c66549c317fd933839f9fa28944bf30b636c2bd04ea7daa05f06d1163558a123",
+      "sha256": "d2d30b69518718f169d26a18dfa81c8f526fdf8b3c15294f6f6e30ee75cd9d48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17613,7 +17788,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "7e6a9ed3c904d29d54e0b38c9aba972b1086e45edc369101c29f65cfd5e9d989",
+      "sha256": "0f365325abbec6564548389a6c805ed9d1c600c339b854fbf0c88ecae5c3b78e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17739,7 +17914,7 @@
     {
       "id": "SURFACE-d7524ac1e833fed0",
       "path": "tdf-hq/test/TDF/FailureBoundarySpec.hs",
-      "sha256": "e801592676cb02774d7a6cbeb7b0f621f85009cabf9cda6838a4e9c022938167",
+      "sha256": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17823,7 +17998,7 @@
     {
       "id": "SURFACE-7e8c0b5502e595f0",
       "path": "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-      "sha256": "e04f6350a2e753356f043d5e961751969f33c7bf94d925881b235c73ee5b8a35",
+      "sha256": "989d6b49cef51ffb88eadee71cdfdbe5d172366aa94a9c26b956745c592a074b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17919,7 +18094,7 @@
     {
       "id": "SURFACE-9c08dc84fc4d951b",
       "path": "tdf-hq/test/TDF/ServerAdminSpec.hs",
-      "sha256": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
+      "sha256": "e7a0734ee48ad1e74fd70aae7b82928001c36512bc1de5f6aebaa2c80bc283b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17937,19 +18112,19 @@
     {
       "id": "SURFACE-fa6329758744ce4e",
       "path": "tdf-hq/test/TDF/ServerFanClubSpec.hs",
-      "sha256": "a0193d767b3a8a85862f7266233b84a8bdae45af9130a01555016371b87151e1",
+      "sha256": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c6b62f6ae6aecf86",
       "path": "tdf-hq/test/TDF/ServerProposalsSpec.hs",
-      "sha256": "b7577292f3fb4c0768b79e6e09b34cbe911e7b92a51492d866e21be417f66287",
+      "sha256": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "52ec1c55e972f115f2a59b3d53ac6e16fa24934b729eddd72da0a478bfbdf60c",
+      "sha256": "b923722adcc5bb09810b1df7cb3020d262ec6f09438d69904b5a56c318e8c4f3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17985,7 +18160,7 @@
     {
       "id": "SURFACE-0874fb5da2116211",
       "path": "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-      "sha256": "cf44ce65b86c21a325c39ed22b6959ee646f68c5a0d72f1c68ba6eb9427961ec",
+      "sha256": "09b751900fbcf2f2b7132cbe057e69c65b3d202a45351144bd4dc45d634707c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18039,13 +18214,13 @@
     {
       "id": "SURFACE-15bc343962df8561",
       "path": "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
-      "sha256": "f74652162b14f0fe4516da6cb4aa45806d75cd9eae289935b6fcd37f35f713bb",
+      "sha256": "42b2da69c834ae9d60c4d88e4573c06aedd68e14e0dd6b4579cef5da89fdd21b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7881cee644a10784",
       "path": "tdf-hq/test/TDF/VideoCampaignsSpec.hs",
-      "sha256": "42155b55d1006d29ea86e01661ec7597557fe4c13a918124f9fcf73d81aeb046",
+      "sha256": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21495,6 +21670,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/analytics/weekly-platform-metrics.md",
+      "sha256": "afdbf3589c89084874fdb3f265e4eaa2679596067f69ff8bf6f1e28d07dcfa71",
+      "authority": "inferred",
+      "authorityBasis": "Status: implemented offline preparation; disposable PostgreSQL 16 execution qualified.",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/architecture/artist-catalog-unification.md",
       "sha256": "16af46856dd8fb92bfdd7edc8b9df6d4a78d2a4aedc7e33c96f5f71145a76a19",
       "authority": "inferred",
@@ -21608,7 +21790,7 @@
     },
     {
       "path": "docs/artists/video-campaigns.md",
-      "sha256": "5866bd513e11117068b894b4ec804c9a29757a859c3c2ec5ee396ba0321b44c8",
+      "sha256": "af9afbc38c9e4744f9290f8f262f903f7a9a8112fc9bee20cacd1f02fb4b9113",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23225,7 +23407,7 @@
     },
     {
       "path": "docs/music-releases/listener-disposal-2026-10-27.md",
-      "sha256": "75410195417b54b345b6ebea8a0ad548d0a5467340d3d7995198983b6d6c418a",
+      "sha256": "617aa060e5dde63d6fcade23b5f2943729ec776374901090af291c2f96f189bd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -24492,7 +24674,7 @@
     },
     {
       "path": "formal/auth/README.md",
-      "sha256": "c371c5f49065c86d2d87266885308ab09b994d3ae935faebfbc53ba671249a48",
+      "sha256": "c8f5c10cc80177a9eddc1e9cc419b72cd313b5c01f28ee1d2a51709aefa7f7fa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -28825,7 +29007,7 @@
     },
     {
       "path": "formal/payments/README.md",
-      "sha256": "7c61d0016ed8bcb4d8e0096459ef238b3177c2557ed5a2f7f56fcdc50ef3617f",
+      "sha256": "cb00759287896999bf412b84e62ca5960af1a9bf66568d3eaae1a0792e57ec96",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29307,6 +29489,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/admin-routes.md",
+      "sha256": "465f2b97d5e1219c938cc145b160ac3dc3f07b17c76330d32c221e93d0f2d32d",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ads-storefront-routes.md",
+      "sha256": "5dc87afd9500ab3eabc7488fdb6749c9704ef5d3e29ceb9d3cf8e3fff040a4bc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/alloy-negative-controls.md",
       "sha256": "82327d41ea9dcdd88393ae906486060648ff92b4b217e250f3394add4d6d931b",
       "authority": "inferred",
@@ -29321,6 +29517,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/artists-assets-label-routes.md",
+      "sha256": "f9cf3fefc536bdab389ec9e109521219bed7461c65e5a6e5cc167ec29ebad104",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/assurance-report.md",
       "sha256": "1e4474ed41bc00682d9459c32c748d05f891fbe8950ef199463ce42f807bfbeb",
       "authority": "inferred",
@@ -29329,7 +29532,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -29377,6 +29580,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/bookings-routes.md",
+      "sha256": "d026999a03edf5a4b907823944c9b8cc4a606ae7f3455e8881fa9041d95df972",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/bookings.md",
       "sha256": "39a90741bfb9d3a0f6ff199680be4a03d7576aaa50e51ad89c72fbb12c4f8e81",
       "authority": "inferred",
@@ -29419,6 +29629,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/catalog-routes.md",
+      "sha256": "5a94455ac4b0d2e227e80a02231ff7b4012a4cd28d764875e096df3ad5b8612c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/checkout-arithmetic.md",
       "sha256": "e815c0a2aea29facf4cd1934d09d9708f4cdabe7bbbfda6293ce4185faf313e9",
       "authority": "inferred",
@@ -29447,6 +29664,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/commerce-integration-routes.md",
+      "sha256": "dfa332ed9aa0aeb94bcf4968fb498fa301ee1abd4d72f811ef12184a751ef1f2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/compiled-api-boundary.md",
       "sha256": "0985897fc3f1975c48fded4b7189b0098da0270a1d468d8631d127e5c585f79a",
       "authority": "inferred",
@@ -29456,6 +29680,13 @@
     {
       "path": "formal/system/container-cleanup-evidence.md",
       "sha256": "181744cbbb5ca91a21ed3b209d883e802906db9a0a4b8149d133127c98be9e0e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/content-ops-routes.md",
+      "sha256": "87c07696f03588953732a3e994505e5d3c15fcb6f0d16f2fc857a1288b7450df",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29475,8 +29706,22 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/csv-export-text.md",
+      "sha256": "4ab0b237a5b34b00d5a8b1e928f61bee534527f26f29839834b64fa1057df9f5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/datafast-merchant-metadata.md",
       "sha256": "fba22e8741f2d272a0c806cd7ec60b3859021d09035e47384a22ce7ce0f8ed73",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/ddex-radio-session-routes.md",
+      "sha256": "45ba9d90afd7f6f02f923a9afc739fdb095f26a538db726acbceeee44bbb5946",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29517,6 +29762,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/directory-routes.md",
+      "sha256": "37e746ab1cba9581303866c7c4c461e1ee2dca998ea44c3e022312ae71997a9e",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/drive-replay.md",
       "sha256": "ecc2a7fcedb1a178b68e7fcdfec2bbef4f2004e1fe5351032abeff7fa4d40b99",
       "authority": "inferred",
@@ -29531,8 +29783,29 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-discovery-filtering.md",
+      "sha256": "d52ea8766d0d60eea42122867d03d03ee77b711fc49faf0525f3fa0978bbe929",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/event-draft-review.md",
+      "sha256": "4c5a72407b69ea7ff08c9567d40423396ba9bd12f497e8667718c70cfad24525",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-finance-browser-precision.md",
       "sha256": "1fb729d2150589ce5074884f77f9747b5b79ca6ad717ba7e6c72c733e24a65c5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/event-finance-csv-currency.md",
+      "sha256": "f270b599cf5031e17511f22590e5dfa677507aa38f4d2f473171fa45a3226727",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29594,6 +29867,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/fans-routes.md",
+      "sha256": "2a08180ef0a7319766ce9e7754103cb1cce59e191789491755d6b2f1772881b2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/feedback-routes.md",
+      "sha256": "795101fe74ea45be8141145d8f53bf27bb802d798df76432f3a83705190afb8c",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/fixture-routing.md",
       "sha256": "d32d54490e8c2c32235c49367b5a75c054c7aa3f441801d6e7cf7ea72291cfbd",
       "authority": "inferred",
@@ -29623,7 +29910,7 @@
     },
     {
       "path": "formal/system/identity-lifecycle.md",
-      "sha256": "5378cc4acd30a387df0ac2884c97f0957ad04cf199430a47bf3df95f4283f440",
+      "sha256": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29631,6 +29918,13 @@
     {
       "path": "formal/system/identity-recovery.md",
       "sha256": "08ddf5bbeb66849b8383db3df14429d0ea43d8e3d193b25c6d81f0991cddfeea",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/identity-routes.md",
+      "sha256": "bdea222aff00ac3158b7d950392c05a16e7aa351ce10d8af391fe1456447c5b5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29645,6 +29939,13 @@
     {
       "path": "formal/system/interaction-write-budget.md",
       "sha256": "3b4d2a2df4c8a0faa2668efc68f8143414fd3bec96c772c765a1ae7ad3b688bc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/internships-routes.md",
+      "sha256": "ac4337ce6156ae772e99fb182ee6054a18625f223d2b8380e74fc4cb6a00fdda",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29804,6 +30105,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/marketplace-routes.md",
+      "sha256": "7c43cc4e1ce0cc21c9fc008da4f725e8e636c9330ac4dc68f1d8a170a98729d2",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/merch-routes.md",
+      "sha256": "2427cc5724aac5695ae59eab6cf4c2c9b2c65e0c54fc5831ddab607f2baf03fc",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/messaging.md",
       "sha256": "14053fa13d1ae86436bca5ce058214b70d948df136d3932abef033b28f292416",
       "authority": "inferred",
@@ -29930,6 +30245,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/music-routes.md",
+      "sha256": "5d273343d1b0430eb0a61284867f37c9ed42222aafed03acf7ff694264e42ad5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/music-source-projection.md",
       "sha256": "e4f9b3d7783a3df8ab2a0068d080a79f0dc798ac71d9e6bc283e9228c697b805",
       "authority": "inferred",
@@ -30016,6 +30338,13 @@
     {
       "path": "formal/system/operations-read-policy.md",
       "sha256": "d8db6a5b8149d6dafd1892702afdd6e61a10d4ba215b298c103a5ad92bf47a58",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/operations-routes.md",
+      "sha256": "552f4541703d792e2b75328b0df71d414e2ba1dfb1ec918bcbdd7233f6b3ca7d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30112,6 +30441,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/public-intake-routes.md",
+      "sha256": "2cfe5ec042426e0faf824cc199032bf9c06a591fb4b86d8dafd0751ea5fe4557",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/public-knowledge-retrieval.md",
       "sha256": "4a00570991ab6ad89525de51e2b5b2a77127116bd8743d1f6175f6d977047c4d",
       "authority": "inferred",
@@ -30176,7 +30512,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0dc044c51c0d6f73b5ddbd6b61be0d4499eb95030fce4cc6964ed4a26daa7d73",
+      "sha256": "be343a5b9befd649718e5e6fc9ebf6dc0a9c9e6fdc2b0e50b180a6e7ec22889c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -30205,6 +30541,20 @@
     {
       "path": "formal/system/session-query-isolation.md",
       "sha256": "2a3d72f757e9d8b5bde86bc778f0d1c9569b36c516771bb1699854d265806353",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/social-events-routes.md",
+      "sha256": "a7fd5548c765efdfe4d4838f8ad9ca4e4ec9daac92099ddcf45aa952ba2b8912",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/social-messaging-routes.md",
+      "sha256": "ecbef23c2dfa15bab11102bd84137abf788fdfbd14f89c28dbe8500be4a44a04",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30266,6 +30616,20 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/torrent-worker-control.md",
+      "sha256": "0ddba79a62ef9f2c47df490c2931abcbaa2bfa0676a5e2e52737f85d92b42c12",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/trials-routes.md",
+      "sha256": "d0b68c1fef821d59b326a0b43fd33c1b25259d712ca11e6e70c8bfe6a721a4ee",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/ui-fixture-boundaries.md",
       "sha256": "9c01ca66e0f5be626b294bd426a91f0d349f53833af30f96a4c6ada5be1cb11d",
       "authority": "inferred",
@@ -30302,7 +30666,7 @@
     },
     {
       "path": "formal/system/webtorrent-browser.md",
-      "sha256": "34b42c7ca0b8c05ea098fc60d6594fc590e567ff893a6b7eeec9085f7f59defb",
+      "sha256": "f7a82405326a5a53dfb429a9530ccc2153a37886be8ef18b6d441706b0ee649f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -35933,7 +36297,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -35964,7 +36328,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -35995,7 +36359,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -36026,7 +36390,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -36057,7 +36421,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -36088,7 +36452,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -36119,7 +36483,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -36150,7 +36514,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -36181,7 +36545,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -36212,7 +36576,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -36243,7 +36607,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -36274,7 +36638,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -36303,7 +36667,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -36332,7 +36696,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -36361,7 +36725,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -36390,7 +36754,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -36419,7 +36783,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -36448,7 +36812,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -36477,7 +36841,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -36506,7 +36870,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -36535,7 +36899,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "da11b7d34217fc489e8ee10fa8b87e8aba6987e1673281bf2a287d93b273f73d",
+      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",
@@ -36553,6 +36917,33 @@
             "ID": "F-22",
             "Sev.": "info",
             "Hallazgo": "El informe de garantía (`verification-report.py`) marcaba las obligaciones SMT de autorización y recuperación como `UNPROVEN` por \"Receipt source fingerprint mismatch\": sus recibos fijan el hash de `tdf-hq.cabal`, que esta rama cambia solo por registrar siete módulos nuevos. `Auth.hs`, `Models.hs`, `RecordsIngestion.hs`, `ServerAuth.hs`, el SQL de expiración y Stack/lock son idénticos a `main`. **Resuelto**: revisión de fuente añadida a ambos recibos según el procedimiento de `auth-predicates.md` y pin refrescado; el informe vuelve a demostrar las 11 obligaciones (`executionPassed: true`, release sigue `BLOCKED` por diseño)."
+          }
+        }
+      ],
+      "reconciliation": "unreviewed"
+    },
+    {
+      "id": "DECL-EVT-DISCOVERY-FILTER-001-4F697E6F",
+      "declaredId": "EVT-DISCOVERY-FILTER-001",
+      "statement": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results.",
+      "source": "formal/system/event-discovery-filtering.md",
+      "line": 9,
+      "sourceSha256": "d52ea8766d0d60eea42122867d03d03ee77b711fc49faf0525f3fa0978bbe929",
+      "status": "inferred",
+      "declarationColumns": {
+        "ID": "EVT-DISCOVERY-FILTER-001",
+        "Rule": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results."
+      },
+      "deliveryScope": "Authored domain declaration; source authority and current applicability require reconciliation.",
+      "verification": "open",
+      "gap": "Neither adjacent test claims nor a historical PASS establish current implementation conformance.",
+      "occurrences": [
+        {
+          "line": 9,
+          "statement": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results.",
+          "columns": {
+            "ID": "EVT-DISCOVERY-FILTER-001",
+            "Rule": "Apply authorized event visibility and city, performer, type, state and time restrictions before result pagination; selected performers use OR and independent filter categories use AND. Preserve canonical identities, explicit time controls and coherent page/calendar results."
           }
         }
       ],
