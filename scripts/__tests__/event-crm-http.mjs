@@ -79,6 +79,7 @@ for(const provider of ['cash','bank_transfer']){
  if(provider==='bank_transfer'){
   const selection=await request(`/public/events/7001/ticket-orders/${orderId}/bank-transfer`,{method:'POST',lookup:created.data.lookupToken});
   assert.equal(selection.status,200,'Existing bank-transfer selection must remain required');
+  check('reserved lead follows the extended bank-transfer hold expiry',sql(`SELECT l.stage='reserved' AND l.reservation_expires_at=greatest(r.hold_expires_at,r.manual_hold_expires_at) AND r.manual_hold_expires_at>r.hold_expires_at FROM event_crm_lead l JOIN event_ticket_checkout_runtime r ON r.order_id=l.order_id WHERE l.order_id=${orderId}`)==='t');
  }
  const claim={operation:'manual.submit',orderId,provider,reference:`TEST-${provider}-${orderId}`,occurredAt:new Date().toISOString(),amountMinor:2000};
  const submitted=await cmd(7104,claim);
@@ -117,6 +118,19 @@ const lastSeat=await Promise.all([0,1].map(n=>request('/public/events/7001/ticke
 check('two real checkouts competing for the last ticket retain exactly one place',lastSeat.filter(r=>r.status===201).length===1&&lastSeat.filter(r=>r.status===409).length===1&&sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='2');
 sql("SELECT event_ticket_checkout_expire_holds(clock_timestamp()+interval '31 hours',NULL,7001)");
 check('expiring the competing last-ticket hold returns only its own place',sql('SELECT quantity_sold FROM event_ticket_tier WHERE id=7001')==='1');
+// A refused review must keep the reconciliation exception it recorded.
+const lateOrder=await request('/public/events/7001/ticket-orders',{key:`crm-late-${randomUUID()}`,body:{tierId:7001,quantity:1,buyerName:'Pago tardío sintético',buyerEmail:'late-payment@example.invalid',termsAccepted:true}});
+assert.equal(lateOrder.status,201,'Canonical public checkout must create the late-payment order');
+const lateId=lateOrder.data.orderId;assert(Number.isSafeInteger(lateId));
+const lateClaim=await cmd(7104,{operation:'manual.submit',orderId:lateId,provider:'cash',reference:`TEST-late-${lateId}`,occurredAt:new Date().toISOString(),amountMinor:2000});
+assert.equal(lateClaim.status,200,'Late cash claim must be submitted while the hold is live');
+sql(`UPDATE event_ticket_checkout_runtime SET hold_expires_at=clock_timestamp()+interval '2 seconds' WHERE order_id=${lateId}`);
+await new Promise(resolve=>setTimeout(resolve,3000));
+const lateReview=await cmd(7107,{operation:'manual.review',orderId:lateId,provider:'cash',action:'approve',notes:'Synthetic approval after hold expiry'});
+check('refused review after hold expiry keeps its reconciliation exception and issues nothing',
+  lateReview.status===409&&lateReview.data.code==='manual_review_refused'&&
+  sql(`SELECT count(*) FROM commerce_reconciliation_exception WHERE exception_type='manual_payment_after_ticket_hold_expiry' AND internal_reference='${lateId}'`)==='1'&&
+  sql(`SELECT count(*) FROM event_ticket WHERE order_ref_id=${lateId}`)==='0');
 const member=race.find(r=>r.status===200).data.membershipId;
 await cmd(7101,{operation:'membership.revoke',membershipId:member});
 check('removing coordinator blocks subsequent reads exports and writes',

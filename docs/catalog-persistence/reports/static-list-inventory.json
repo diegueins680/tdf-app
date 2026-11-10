@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T06:26:45.737Z",
+  "generatedAt": "2026-11-10T13:02:10.721Z",
   "repositoryRoot": ".",
   "filesScanned": 2681,
   "candidateCount": 1422,
@@ -6013,7 +6013,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 901,
+      "consumerCount": 902,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6300,7 +6300,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 901,
+      "consumerCount": 902,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -8955,7 +8955,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1578,
+      "consumerCount": 1579,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -9135,6 +9135,7 @@
         "scripts/__tests__/directory-event-search-http.mjs",
         "scripts/__tests__/directory-saved-search-http.mjs",
         "scripts/__tests__/directory-search-plan-parity.mjs",
+        "scripts/__tests__/event-crm-http.mjs",
         "scripts/__tests__/event-preview.test.mjs",
         "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
         "scripts/__tests__/experiment-http-cleanup.test.mjs",
@@ -9161,8 +9162,7 @@
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
         "scripts/__tests__/payment-query-report-contract.test.mjs",
         "scripts/__tests__/persistent-uploads.test.mjs",
-        "scripts/__tests__/persona-test-program.test.mjs",
-        "scripts/__tests__/playwright-image.test.mjs"
+        "scripts/__tests__/persona-test-program.test.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -16559,7 +16559,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 913,
+      "consumerCount": 914,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17345,7 +17345,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 909,
+      "consumerCount": 910,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17635,7 +17635,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 909,
+      "consumerCount": 910,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -26235,7 +26235,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 983,
+      "consumerCount": 984,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -79975,7 +79975,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 933,
+      "consumerCount": 934,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",

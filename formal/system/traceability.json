@@ -18098,7 +18098,7 @@
     "scripts/__tests__/directory-search-plan-parity.mjs": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
     "scripts/__tests__/disposable-postgres-url.test.mjs": "c3695447a6453d7e46dcfaec5856ea0b3d33cab0f81fbaeb22dbdd5bd9bb524e",
     "scripts/__tests__/event-crm-browser.mjs": "5cb78bdb020d334b136dff44cd2c93f461798ab8a4b8094e6fec628a8cddc8f6",
-    "scripts/__tests__/event-crm-http.mjs": "e547f6b5c9501a4b8aee95a699447769d399403863f18713614a1f2c2d04cef3",
+    "scripts/__tests__/event-crm-http.mjs": "f72d62570d5ffd4bc4677ea9f61a8f22a7e536ace47a6d7c57fa12db662f0fd6",
     "scripts/__tests__/event-crm-model.test.mjs": "25cdfa9b65cbbfe2b6ce0e3159349fd5e14c612b440f3a9183ffc11908fd085a",
     "scripts/__tests__/event-memory-http-password.test.mjs": "55dd32c763209f2395cf81602859dac92de349887f9d8f543f6c9dc8544eb87d",
     "scripts/__tests__/event-operations-pluscal.test.mjs": "d42c8c4bed002de668d53c3b095c7c693671fcc775cf0de21da98e19bacd0be5",
@@ -19125,7 +19125,7 @@
     "tdf-hq/sql/2026-11-04_session_invoice_issue_rollback.sql": "e2ae1da6c06c7d68b8a17a1b20ebf1903be36adc0c64447d8eb319dd430f3000",
     "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql": "02185d6050fe65042d41f79e6b3ab26ea6c71fe3b8d47b298698cbf736d25407",
     "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
-    "tdf-hq/sql/2026-11-07_event_crm.sql": "9300936cc499037dcc85eda5e262bc5bd2b9ea65f1cb3ea35c2c598f87924145",
+    "tdf-hq/sql/2026-11-07_event_crm.sql": "c99a37407423f48dc8076fdb510401dfcd161566f98df2eb525b8e01f1f6b1bc",
     "tdf-hq/sql/2026-11-07_event_crm_rollback.sql": "3f88739c2b0f52226cafcebe8cd99352eb329b85f54e744d784ff670bf0f9a57",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
@@ -19197,7 +19197,7 @@
     "tdf-hq/src/TDF/Directory/Policy.hs": "d8b30f2fb422f4bc8c0a378400340025dfef1be1b0e05a9643f37e443ce9ce2c",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/CrmAPI.hs": "96ae7ff69602a1b45faf186ea001217ab2da8591b099919afd00560a398e0e5a",
-    "tdf-hq/src/TDF/EventOperations/CrmPayments.hs": "fed1944cd3f442974dd9690cdbeb3390412f791850c1121b422436375476636b",
+    "tdf-hq/src/TDF/EventOperations/CrmPayments.hs": "8a76e6919c14270581d78c4d7e724ff0732a7bdf2c8fcbcbfeec9190ca9a55c9",
     "tdf-hq/src/TDF/EventOperations/CrmServer.hs": "a95c86fa74604bf96c667e7ce935b550a7188b83bfbcff63d658e9ca88235417",
     "tdf-hq/src/TDF/FeatureRegistry.hs": "39cb48be49dff7b5a3bdf1134918917adebb45ca5edbc654f9da94e330169f14",
     "tdf-hq/src/TDF/Handlers/InputList.hs": "430fbc2940d98d2c10f0aefb540b4a579846ef39c5c720d1a2f34cfc01e10483",
@@ -36642,7 +36642,7 @@
     {
       "id": "SURFACE-add592fecc233fec",
       "path": "scripts/__tests__/event-crm-http.mjs",
-      "sha256": "e547f6b5c9501a4b8aee95a699447769d399403863f18713614a1f2c2d04cef3",
+      "sha256": "f72d62570d5ffd4bc4677ea9f61a8f22a7e536ace47a6d7c57fa12db662f0fd6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58215,7 +58215,7 @@
     {
       "id": "SURFACE-ceff638acf21ddb3",
       "path": "tdf-hq/sql/2026-11-07_event_crm.sql",
-      "sha256": "9300936cc499037dcc85eda5e262bc5bd2b9ea65f1cb3ea35c2c598f87924145",
+      "sha256": "c99a37407423f48dc8076fdb510401dfcd161566f98df2eb525b8e01f1f6b1bc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59864,7 +59864,7 @@
     {
       "id": "SURFACE-b0becbd5a7aa307a",
       "path": "tdf-hq/src/TDF/EventOperations/CrmPayments.hs",
-      "sha256": "fed1944cd3f442974dd9690cdbeb3390412f791850c1121b422436375476636b",
+      "sha256": "8a76e6919c14270581d78c4d7e724ff0732a7bdf2c8fcbcbfeec9190ca9a55c9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

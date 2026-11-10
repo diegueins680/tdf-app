@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.EventOperations.CrmPayments (manualCrmCommand) where
 
-import Control.Monad (void)
+import Control.Monad (void,when)
 import Control.Monad.IO.Class (liftIO)
 import Crypto.Hash (Digest,SHA256,hash)
 import Data.Aeson (Value(..),encode,object,(.=),(.:),withObject)
@@ -47,7 +47,13 @@ manualCrmCommand event actor key body = do
             else review orderId providerText details
           case result of
             Left code -> do
-              rawExecute "ROLLBACK TO SAVEPOINT event_crm_manual" []
+              -- A refused review already undoes its own payment-state changes
+              -- and deliberately keeps the reconciliation exception it records
+              -- (expired hold, order paid by another attempt). Rolling back
+              -- here would erase that record, so only a failed submission is
+              -- rolled back.
+              when (operation=="manual.submit") $
+                rawExecute "ROLLBACK TO SAVEPOINT event_crm_manual" []
               rawExecute "RELEASE SAVEPOINT event_crm_manual" []
               pure (Left code)
             Right outcome -> do

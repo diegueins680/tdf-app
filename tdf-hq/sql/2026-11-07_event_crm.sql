@@ -638,20 +638,25 @@ CREATE TRIGGER event_crm_bundle_order_guard BEFORE INSERT ON event_ticket_order
 -- Automatic projection only: payment/refund authority stays in the canonical
 -- commerce services. CRM stages cannot manufacture a sale or release inventory.
 CREATE OR REPLACE FUNCTION event_crm_sync_order() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE l event_crm_lead%ROWTYPE; target text;
+DECLARE l event_crm_lead%ROWTYPE; target text; hold_expiry timestamptz;
 BEGIN
   SELECT * INTO l FROM event_crm_lead WHERE order_id=NEW.order_id FOR UPDATE;
   IF NOT FOUND THEN RETURN NEW; END IF;
+  hold_expiry:=greatest(NEW.hold_expires_at,NEW.manual_hold_expires_at);
   target:=CASE WHEN NEW.payment_status IN ('paid','partially_refunded') AND NEW.fulfillment_status IN ('issued','transferred','checked_in') THEN 'paid'
     WHEN NEW.payment_status='refunded' THEN 'closed_lost'
     WHEN NEW.fulfillment_status IN ('cancelled','refunded','expired') THEN 'closed_lost'
     WHEN NEW.fulfillment_status='seat_held' AND greatest(NEW.hold_expires_at,NEW.manual_hold_expires_at)>clock_timestamp() THEN 'reserved'
     ELSE 'contacted' END;
   IF target IS DISTINCT FROM l.stage THEN
-    UPDATE event_crm_lead SET stage=target,reservation_expires_at=CASE WHEN target='reserved' THEN greatest(NEW.hold_expires_at,NEW.manual_hold_expires_at) END,
+    UPDATE event_crm_lead SET stage=target,reservation_expires_at=CASE WHEN target='reserved' THEN hold_expiry END,
       version=version+1,updated_at=clock_timestamp() WHERE id=l.id;
     INSERT INTO event_crm_audit(event_id,actor_id,actor_type,operation,subject_id,from_stage,to_stage)
       VALUES(l.event_id,NULL,'canonical_order','order.projection',l.id::text,l.stage,target);
+  ELSIF target='reserved' AND l.reservation_expires_at IS DISTINCT FROM hold_expiry THEN
+    -- The stage is unchanged but the canonical hold moved (e.g. a bank-transfer
+    -- extension): follow its expiry without recording a stage transition.
+    UPDATE event_crm_lead SET reservation_expires_at=hold_expiry,version=version+1,updated_at=clock_timestamp() WHERE id=l.id;
   END IF;
   RETURN NEW;
 END $$;

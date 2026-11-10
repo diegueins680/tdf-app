@@ -3882,7 +3882,7 @@
     {
       "id": "SURFACE-add592fecc233fec",
       "path": "scripts/__tests__/event-crm-http.mjs",
-      "sha256": "e547f6b5c9501a4b8aee95a699447769d399403863f18713614a1f2c2d04cef3",
+      "sha256": "f72d62570d5ffd4bc4677ea9f61a8f22a7e536ace47a6d7c57fa12db662f0fd6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16056,7 +16056,7 @@
     {
       "id": "SURFACE-ceff638acf21ddb3",
       "path": "tdf-hq/sql/2026-11-07_event_crm.sql",
-      "sha256": "9300936cc499037dcc85eda5e262bc5bd2b9ea65f1cb3ea35c2c598f87924145",
+      "sha256": "c99a37407423f48dc8076fdb510401dfcd161566f98df2eb525b8e01f1f6b1bc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16938,7 +16938,7 @@
     {
       "id": "SURFACE-b0becbd5a7aa307a",
       "path": "tdf-hq/src/TDF/EventOperations/CrmPayments.hs",
-      "sha256": "fed1944cd3f442974dd9690cdbeb3390412f791850c1121b422436375476636b",
+      "sha256": "8a76e6919c14270581d78c4d7e724ff0732a7bdf2c8fcbcbfeec9190ca9a55c9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
