@@ -73,6 +73,11 @@
  "routes": [
   {
    "method": "POST",
+   "path": "/integrations/event-watch/token",
+   "boundary": "credential-intake"
+  },
+  {
+   "method": "POST",
    "path": "/NotificacionPago",
    "boundary": "signed-provider-callback"
   },

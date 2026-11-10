@@ -346,7 +346,8 @@ loadAuthedUser token = do
 isAuthenticatableApiTokenLabel :: Maybe Text -> Bool
 isAuthenticatableApiTokenLabel Nothing = True
 isAuthenticatableApiTokenLabel (Just rawLabel) =
-  not ("password-reset:" `T.isPrefixOf` T.toLower (T.strip rawLabel))
+  let label = T.toLower (T.strip rawLabel)
+  in not (any (`T.isPrefixOf` label) ["password-reset:", "event-watch:"])
 
 -- | Interactive sessions are tokens minted by password, Google, or Apple login.
 -- They are the only tokens that must carry a server-side expiry; service and

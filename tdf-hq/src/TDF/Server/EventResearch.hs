@@ -14,6 +14,12 @@ module TDF.Server.EventResearch
     , materializationPublicationHoldSourceStatus
     , materializationVenueCountryMatches
     , materializationWorkflowStateCode
+    -- Shared transactional primitives for the isolated service-authenticated lane.
+    , createRunDb
+    , upsertCandidateDb
+    , candidateEntityToDTO
+    , materializeCandidateDb
+    , materializeServiceCandidateDb
     ) where
 
 import Control.Exception (SomeException, displayException, try)
@@ -399,6 +405,68 @@ materializeCandidateTransaction organizerPartyId candidateId materializationRunI
         Left serverError -> transactionUndo >> pure (Left serverError)
         Right response -> transactionSave >> pure (Right response)
 
+-- Administrative callers retain the original authority and execution order.
+-- The service variant is deliberately explicit; an audit Party shared by two
+-- clients is not a grant to either client's event namespace.
+data MaterializationAuthority
+    = AdministrativeMaterialization T.Text
+    | ServiceMaterialization T.Text T.Text
+
+materializationOrganizer :: MaterializationAuthority -> T.Text
+materializationOrganizer (AdministrativeMaterialization partyId) = partyId
+materializationOrganizer (ServiceMaterialization partyId _) = partyId
+
+serviceMaterializationDenied :: ServerError
+serviceMaterializationDenied =
+    err403{errBody = "Service materialization target requires operator review"}
+
+candidateNamespaceAllowed :: MaterializationAuthority -> EventResearchCandidate -> Bool
+candidateNamespaceAllowed (AdministrativeMaterialization _) _ = True
+candidateNamespaceAllowed (ServiceMaterialization _ provider) candidate =
+    eventResearchCandidateProvider candidate == provider
+
+withAuthorizedMaterializationTarget
+    :: MaterializationAuthority
+    -> SocialEventId
+    -> SqlPersistT IO (Either ServerError a)
+    -> SqlPersistT IO (Either ServerError a)
+withAuthorizedMaterializationTarget authority eventId =
+    withAuthorizedMaterializationReference authority eventId Nothing
+
+withAuthorizedMaterializationReference
+    :: MaterializationAuthority
+    -> SocialEventId
+    -> Maybe T.Text
+    -> SqlPersistT IO (Either ServerError a)
+    -> SqlPersistT IO (Either ServerError a)
+withAuthorizedMaterializationReference (AdministrativeMaterialization _) _ _ action = action
+withAuthorizedMaterializationReference (ServiceMaterialization partyId provider) eventId selectedReference action = do
+    -- Event -> namespace reference is the lock order. Holding one qualifying
+    -- reference FOR SHARE prevents deletion/rebinding of that authority until
+    -- the outer service transaction commits or rolls back.
+    events <- rawSql "SELECT ?? FROM social_event WHERE id=? FOR UPDATE" [toPersistValue eventId]
+    case events :: [Entity SocialEvent] of
+        [Entity _ event] | socialEventOrganizerPartyId event == Just partyId -> do
+            case selectedReference of
+                Nothing -> do
+                    references <- rawSql
+                        "SELECT id FROM external_event_ref WHERE event_id=? AND provider=? ORDER BY id LIMIT 1 FOR SHARE"
+                        [toPersistValue eventId, PersistText provider]
+                    case references :: [Single Int64] of
+                        [Single _] -> action
+                        _ -> pure (Left serviceMaterializationDenied)
+                Just externalId -> do
+                    -- This target was selected from an exact reference before
+                    -- acquiring the event lock. An alias in the same namespace
+                    -- cannot validate a stale/deleted/rebound selected mapping.
+                    references <- rawSql
+                        "SELECT event_id FROM external_event_ref WHERE provider=? AND external_id=? FOR SHARE"
+                        [PersistText provider, PersistText externalId]
+                    case references :: [Single Int64] of
+                        [Single currentEvent] | currentEvent == fromSqlKey eventId -> action
+                        _ -> pure (Left (conflict "the service event reference changed during materialization"))
+        _ -> pure (Left serviceMaterializationDenied)
+
 materializeCandidateDb
     :: T.Text
     -> EventResearchCandidateId
@@ -406,7 +474,28 @@ materializeCandidateDb
     -> EventResearchMaterializationRequestDTO
     -> UTCTime
     -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
-materializeCandidateDb organizerPartyId candidateId materializationRunId request now = do
+materializeCandidateDb organizerPartyId =
+    materializeCandidateWithAuthority (AdministrativeMaterialization organizerPartyId)
+
+materializeServiceCandidateDb
+    :: T.Text
+    -> T.Text
+    -> EventResearchCandidateId
+    -> EventResearchRunId
+    -> EventResearchMaterializationRequestDTO
+    -> UTCTime
+    -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
+materializeServiceCandidateDb organizerPartyId provider =
+    materializeCandidateWithAuthority (ServiceMaterialization organizerPartyId provider)
+
+materializeCandidateWithAuthority
+    :: MaterializationAuthority
+    -> EventResearchCandidateId
+    -> EventResearchRunId
+    -> EventResearchMaterializationRequestDTO
+    -> UTCTime
+    -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
+materializeCandidateWithAuthority authority candidateId materializationRunId request now = do
     controls <-
         rawSql
             "SELECT ?? FROM event_research_pilot_control WHERE control_key=? FOR UPDATE"
@@ -417,16 +506,19 @@ materializeCandidateDb organizerPartyId candidateId materializationRunId request
             lockedCandidateResult <- lockCandidateForMaterialization candidateId
             case lockedCandidateResult of
                 Left serverError -> pure (Left serverError)
-                Right candidateEntity@(Entity _ lockedCandidate) ->
-                    case eventResearchCandidateEventId lockedCandidate of
-                        Just eventId -> do
-                            suitable <- existingEventCanSatisfy request eventId
-                            if suitable
-                                then do
-                                    applyMaterializationPublicationIntent lockedCandidate request eventId
-                                    linkCandidateAndRespond candidateEntity materializationRunId eventId False now
-                                else pure (Left (conflict "the linked event does not satisfy the requested publication state"))
-                        Nothing -> materializeUnlinkedCandidate organizerPartyId (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
+                Right candidateEntity@(Entity _ lockedCandidate)
+                    | not (candidateNamespaceAllowed authority lockedCandidate) ->
+                        pure (Left serviceMaterializationDenied)
+                    | otherwise ->
+                        case eventResearchCandidateEventId lockedCandidate of
+                            Just eventId -> withAuthorizedMaterializationTarget authority eventId $ do
+                                suitable <- existingEventCanSatisfy request eventId
+                                if suitable
+                                    then do
+                                        applyMaterializationPublicationIntent lockedCandidate request eventId
+                                        linkCandidateAndRespond candidateEntity materializationRunId eventId False now
+                                    else pure (Left (conflict "the linked event does not satisfy the requested publication state"))
+                            Nothing -> materializeUnlinkedCandidate authority (eventResearchPilotControlApproved control) materializationRunId candidateEntity request now
         _ -> pure (Left err500{errBody = "Event research pilot control identity is ambiguous"})
 
 lockCandidateForMaterialization
@@ -464,14 +556,14 @@ lockCandidateForMaterialization candidateId = do
                         _ -> Left err500{errBody = "Event research candidate identity is ambiguous"}
 
 materializeUnlinkedCandidate
-    :: T.Text
+    :: MaterializationAuthority
     -> Bool
     -> EventResearchRunId
     -> Entity EventResearchCandidate
     -> EventResearchMaterializationRequestDTO
     -> UTCTime
     -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
-materializeUnlinkedCandidate organizerPartyId pilotApproved materializationRunId candidateEntity@(Entity _ candidate) request now = do
+materializeUnlinkedCandidate authority pilotApproved materializationRunId candidateEntity@(Entity _ candidate) request now = do
     runResult <- materializationRunCanWrite materializationRunId
     case runResult of
         Left serverError -> pure (Left serverError)
@@ -491,18 +583,19 @@ materializeUnlinkedCandidate organizerPartyId pilotApproved materializationRunId
                             case existingRef of
                                 Just (Entity _ ref) -> do
                                     let eventId = externalEventRefEventId ref
-                                    suitable <- existingEventCanSatisfy request eventId
-                                    if suitable
-                                        then do
-                                            artistsResult <- resolveMaterializationArtists candidate validated now
-                                            case artistsResult of
-                                                Left serverError -> pure (Left serverError)
-                                                Right artistIds -> do
-                                                    attachMaterializationArtists eventId artistIds
-                                                    applyMaterializationPublicationIntent candidate request eventId
-                                                    linkCandidateAndRespond candidateEntity materializationRunId eventId False now
-                                        else pure (Left (conflict "the existing provider event is not safely publishable"))
-                                Nothing -> createOrLinkMaterializedEvent organizerPartyId candidateEntity materializationRunId request validated now
+                                    withAuthorizedMaterializationReference authority eventId (Just (eventResearchCandidateExternalId candidate)) $ do
+                                        suitable <- existingEventCanSatisfy request eventId
+                                        if suitable
+                                            then do
+                                                artistsResult <- resolveMaterializationArtists candidate validated now
+                                                case artistsResult of
+                                                    Left serverError -> pure (Left serverError)
+                                                    Right artistIds -> do
+                                                        attachMaterializationArtists eventId artistIds
+                                                        applyMaterializationPublicationIntent candidate request eventId
+                                                        linkCandidateAndRespond candidateEntity materializationRunId eventId False now
+                                            else pure (Left (conflict "the existing provider event is not safely publishable"))
+                                Nothing -> createOrLinkMaterializedEvent authority candidateEntity materializationRunId request validated now
 
 materializationRunCanWrite :: EventResearchRunId -> SqlPersistT IO (Either ServerError ())
 materializationRunCanWrite runId = do
@@ -518,14 +611,14 @@ materializationRunCanWrite runId = do
         _ -> Left err500{errBody = "Event research materialization run identity is ambiguous"}
 
 createOrLinkMaterializedEvent
-    :: T.Text
+    :: MaterializationAuthority
     -> Entity EventResearchCandidate
     -> EventResearchRunId
     -> EventResearchMaterializationRequestDTO
     -> ValidatedMaterialization
     -> UTCTime
     -> SqlPersistT IO (Either ServerError EventResearchMaterializationDTO)
-createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candidate) materializationRunId request validated now = do
+createOrLinkMaterializedEvent authority candidateEntity@(Entity _ candidate) materializationRunId request validated now = do
     eventTypeResult <- resolveMaterializationEventType now validated.vmEventType
     case eventTypeResult of
         Left serverError -> pure (Left serverError)
@@ -533,18 +626,36 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
             workflowStateId <-
                 EventLifecycle.resolveActiveSocialEventStateId
                     (materializationWorkflowStateCode request.erMaterializationPublish validated.vmSourceStatus)
-            venueResult <- resolveMaterializationVenue candidate validated now
+            venueResult <- case authority of
+                AdministrativeMaterialization _ -> resolveMaterializationVenue candidate validated now
+                ServiceMaterialization _ _ -> resolveMaterializationVenueWithReference False candidate validated now
             case venueResult of
                 Left serverError -> pure (Left serverError)
                 Right venueId -> do
-                    artistsResult <- resolveMaterializationArtists candidate validated now
+                    -- Preserve the administrative resolver order exactly. The
+                    -- service must identify/authorize an existing target before
+                    -- any artist or external-reference mutation.
+                    artistsResult <- case authority of
+                        AdministrativeMaterialization _ -> fmap (fmap Just) (resolveMaterializationArtists candidate validated now)
+                        ServiceMaterialization _ _ -> pure (Right Nothing)
                     case artistsResult of
                         Left serverError -> pure (Left serverError)
-                        Right artistIds -> do
+                        Right cachedArtists -> do
+                            let withArtists action = do
+                                    reference <- recordServiceVenueReference authority candidate validated venueId now
+                                    case reference of
+                                        Left serverError -> pure (Left serverError)
+                                        Right () -> do
+                                            resolved <- case cachedArtists of
+                                                Just artistIds -> pure (Right artistIds)
+                                                Nothing -> resolveMaterializationArtists candidate validated now
+                                            case resolved of
+                                                Left serverError -> pure (Left serverError)
+                                                Right artistIds -> action artistIds
                             duplicateResult <- findMaterializationDuplicate candidate validated venueId
                             case duplicateResult of
                                 Left serverError -> pure (Left serverError)
-                                Right (Just eventId) -> do
+                                Right (Just eventId) -> withAuthorizedMaterializationTarget authority eventId $ do
                                     suitable <- existingEventCanSatisfy request eventId
                                     if not suitable
                                         then pure (Left (conflict "a matching event exists but has manual visibility or workflow state"))
@@ -557,18 +668,18 @@ createOrLinkMaterializedEvent organizerPartyId candidateEntity@(Entity _ candida
                                                     eventId
                                             if not identityStillMatches
                                                 then pure (Left (conflict "the matching event changed while materialization was starting"))
-                                                else do
+                                                else withArtists $ \artistIds -> do
                                                     attachMaterializationArtists eventId artistIds
                                                     insertedRef <- insertMaterializationEventRef candidate request validated eventId now
                                                     if insertedRef
                                                         then linkCandidateAndRespond candidateEntity materializationRunId eventId False now
                                                         else pure (Left (conflict "the provider event was materialized concurrently"))
-                                Right Nothing -> do
+                                Right Nothing -> withArtists $ \artistIds -> do
                                     let metadata = materializationEventMetadata candidate request validated
                                     eventId <-
                                         insert
                                             SocialEvent
-                                                { socialEventOrganizerPartyId = Just organizerPartyId
+                                                { socialEventOrganizerPartyId = Just (materializationOrganizer authority)
                                                 , socialEventTitle = eventResearchCandidateTitle candidate
                                                 , socialEventDescription = validated.vmDescription
                                                 , socialEventVenueId = Just venueId
@@ -612,7 +723,15 @@ resolveMaterializationVenue
     -> ValidatedMaterialization
     -> UTCTime
     -> SqlPersistT IO (Either ServerError VenueId)
-resolveMaterializationVenue candidate validated now = do
+resolveMaterializationVenue = resolveMaterializationVenueWithReference True
+
+resolveMaterializationVenueWithReference
+    :: Bool
+    -> EventResearchCandidate
+    -> ValidatedMaterialization
+    -> UTCTime
+    -> SqlPersistT IO (Either ServerError VenueId)
+resolveMaterializationVenueWithReference recordReference candidate validated now = do
     let provider = eventResearchCandidateProvider candidate
         externalId = researchEntityExternalId "venue" [validated.vmVenueName, validated.vmCity, eventResearchCandidateCountryCode candidate]
     existingRef <- getBy (UniqueExternalVenueRef provider externalId)
@@ -649,7 +768,9 @@ resolveMaterializationVenue candidate validated now = do
                         venues
             case matches of
                 [Entity venueId _] -> do
-                    _ <- insertUnique (ExternalVenueRef provider externalId venueId now)
+                    when recordReference $ do
+                        _ <- insertUnique (ExternalVenueRef provider externalId venueId now)
+                        pure ()
                     pure (Right venueId)
                 []
                     | not (null countryUnknownMatches) ->
@@ -679,9 +800,34 @@ resolveMaterializationVenue candidate validated now = do
                                     , venueCreatedAt = now
                                     , venueUpdatedAt = now
                                     }
-                        inserted <- insertUnique (ExternalVenueRef provider externalId venueId now)
-                        pure $ maybe (Left (conflict "venue identity was created concurrently")) (const (Right venueId)) inserted
+                        if recordReference
+                            then do
+                                inserted <- insertUnique (ExternalVenueRef provider externalId venueId now)
+                                pure $ maybe (Left (conflict "venue identity was created concurrently")) (const (Right venueId)) inserted
+                            else pure (Right venueId)
                 _ -> pure (Left (conflict "venue identity is ambiguous"))
+
+recordServiceVenueReference
+    :: MaterializationAuthority
+    -> EventResearchCandidate
+    -> ValidatedMaterialization
+    -> VenueId
+    -> UTCTime
+    -> SqlPersistT IO (Either ServerError ())
+recordServiceVenueReference (AdministrativeMaterialization _) _ _ _ _ = pure (Right ())
+recordServiceVenueReference (ServiceMaterialization _ provider) candidate validated venueId now = do
+    let externalId = researchEntityExternalId "venue" [validated.vmVenueName, validated.vmCity, eventResearchCandidateCountryCode candidate]
+    references <- rawSql
+        "SELECT ?? FROM external_venue_ref WHERE provider=? AND external_id=? FOR SHARE"
+        [PersistText provider, PersistText externalId]
+    case references :: [Entity ExternalVenueRef] of
+        [Entity _ ref]
+            | externalVenueRefVenueId ref == venueId -> pure (Right ())
+            | otherwise -> pure (Left (conflict "the service venue reference changed during materialization"))
+        [] -> do
+            inserted <- insertUnique (ExternalVenueRef provider externalId venueId now)
+            pure $ maybe (Left (conflict "venue identity was created concurrently")) (const (Right ())) inserted
+        _ -> pure (Left (conflict "service venue reference identity is ambiguous"))
 
 materializationVenueCountryMatches :: T.Text -> Maybe T.Text -> Bool
 materializationVenueCountryMatches candidateCountryCode =
