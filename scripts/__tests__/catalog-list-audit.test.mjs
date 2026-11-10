@@ -865,16 +865,42 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.ok(review, 'the desktop shell reviews need their exact branch review');
     assert.deepEqual(active.find(row => row.id === review.id), review);
   }
+  // The marketplace offers branch (ADR 0132, #719) adds seventeen value lists
+  // reviewed by the deterministic policy, extends the search page view-mode
+  // attribute list (successor of main's exact review 7393e5dd10ebe68ae3e2) and
+  // records a successor review of the 249-entry manifest whose exact
+  // predecessor is main's 248-entry review; the historical Apple view keeps
+  // the exact predecessors and leaves the new lists out.
+  const marketplaceReviewIds = ['3d30e49db2fefa10a623', '2471af5d3bf550aade51', '0365580729887c8f5ca7',
+    '0dc607f91bd630b1fb87', '4ed56a39eea6e4d4679d', 'aa6a65391d2c0611fdd8',
+    'b79670b0b1a1fbc1ee05', 'df679c5b2cb5d91be79e', 'ef5bffc43b9c0ff3a361', '39edb2a76ecef8cd6c57',
+    '2a350b9da29a2d080bd8', 'd776481beacf4f4a074f', '16393adee900667601af', '7207f087ef5f8e0b2158',
+    '3a7f374bb3b52ef8d34d', 'a9c6757fbe6f2868f4f2', '853a5f768e09d0c32259'];
+  for (const id of marketplaceReviewIds) {
+    const review = active.find(row => row.id === id);
+    assert.ok(review?.reviewed, `the marketplace offers review ${id} must be present and reviewed`);
+    assert.match(review.reviewMethod, /^deterministic-policy-v\d+$/);
+  }
+  const marketplaceManifestReview = active.find(row => row.id === '4dc5a2f26154a0f125db');
+  assert.equal(marketplaceManifestReview.evidence.valueCount, 249);
+  assert.equal(marketplaceManifestReview.previousDecision.id, 'a20e04bc426cc6383584');
+  const searchViewReview = active.find(row => row.id === '79bdbe2ae9b350e0d1da');
+  assert.equal(searchViewReview.reviewMethod, 'successor-of-reviewed-decisions');
+  assert.equal(searchViewReview.previousDecision.id, '7393e5dd10ebe68ae3e2');
+  const marketplaceSuccessors = new Map([
+    [marketplaceManifestReview.id, marketplaceManifestReview.previousDecision],
+    [searchViewReview.id, searchViewReview.previousDecision]]);
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
-    ...desktopReviews.map(row => row.id)]);
-  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id));
+    ...desktopReviews.map(row => row.id), ...marketplaceReviewIds]);
+  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id))
+    .map(row => marketplaceSuccessors.get(row.id) ?? row);
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);
   assert.equal(historicalAppleView.length, 1411);
   assert.deepEqual(historicalAppleView,
     await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1423);
+  assert.equal(active.length, 1423 + marketplaceReviewIds.length);
   const history = new Map();
   const visit = row => {
     if (!row) return;
@@ -887,12 +913,17 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.deepEqual(history.get(row.id), row);
   }
   const pointer = successors.find(row => row.name === 'migrations');
-  const tip = active.find(row => row.id === pointer.currentId);
+  const marketplaceTip = active.find(row => row.id === pointer.currentId);
+  assert.equal(marketplaceTip.evidence.valueCount, 249);
+  const tip = marketplaceTip.previousDecision;
   assert.equal(tip.evidence.valueCount, 248);
   assert.equal(historicalReview(tip, 247).previousDecision.id, '806180f5957fc4a7520f');
   assert.equal(tip.previousDecision.id, '4e282e4c258854caa655');
-  assert.equal(pointer.previousResolution.currentId, tip.previousDecision.id);
+  assert.equal(pointer.previousResolution.currentId, tip.id);
+  assert.equal(pointer.previousResolution.previousResolution.currentId, tip.previousDecision.id);
   assert.equal(integration.retirements.find(row => row.source.name === 'migrations').replacementId,
+    marketplaceTip.id);
+  assert.equal(integration.retirements.find(row => row.source.name === 'migrations').previousReplacementId,
     tip.id);
   const security = active.find(row => row.evidence?.file === 'tdf-hq/src/TDF/Catalog/Security.hs'
     && row.evidence?.name === 'expectedSecurityRoleAssignmentPolicyBindings');
