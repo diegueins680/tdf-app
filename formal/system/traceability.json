@@ -25238,7 +25238,8 @@
         "tdf-hq-ui/src/session/useSessionOwner.ts",
         "tdf-hq-ui/src/api/uploadQueue.ts",
         "tdf-hq-ui/src/session/recoverableDraft.ts",
-        "tdf-hq-ui/src/session/useOwnedTabDraft.ts"
+        "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
+        "tdf-mobile/src/api/accountStorage.ts"
       ],
       "tests": [
         "scripts/__tests__/content-storage-model.test.mjs",
@@ -25259,7 +25260,9 @@
         "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
         "scripts/__tests__/ci-pipeline.test.mjs",
         "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx"
+        "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx",
+        "tdf-mobile/src/api/accountStorage.test.ts",
+        "tdf-mobile/src/api/upload.compatibility.test.ts"
       ],
       "formalModels": [
         "scripts/content-storage-model.mjs"
@@ -28593,6 +28596,8 @@
     "tdf-mobile/scripts/tests/test_android_release.py": "9fe8727e8da7a4de515e663ce232bec40fae0bcc3bf9cc491bde36d1c8b3fab7",
     "tdf-mobile/scripts/tests/test_ios_signing.py": "ea2fefd30a92609167d3b003d8557107968db7e1a120b6b3391b28301d5e1888",
     "tdf-mobile/scripts/verify-ios-artifact.py": "c120f94d28040bc3bd4d39e5799b4d826b1426b4cb82a9fb6b58deeb9f5ee999",
+    "tdf-mobile/src/api/accountStorage.test.ts": "4a3d899b59a81cb207591cdc134396faba696cadf6f1161927006f83b2e4e45e",
+    "tdf-mobile/src/api/accountStorage.ts": "803a284094d3639df64a501a56f73b97d02b78c02fe03ddc65a801897b5eef49",
     "tdf-mobile/src/api/auth.ts": "aae4ac63fbf5d83207c05ed1caadea095ee86441ef6a74dcbf0d7730e9cc652f",
     "tdf-mobile/src/api/client.ts": "406ab62be2e1a562c231d0a3a296a4bd206bb483e91cd3d8a52aebffd1771312",
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
@@ -28601,6 +28606,7 @@
     "tdf-mobile/src/api/generated/types.ts": "c35c8f02c3cee9afb8b3bbc04c3a96bd31c1eb18af9397c128ced296ec5fdbb5",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
+    "tdf-mobile/src/api/upload.compatibility.test.ts": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
     "tdf-mobile/src/components/DirectoryPublicDetailScreen.tsx": "1b5151b36f9e6a2541484ba768b02ca9cbae7ccca221db95afb83bbd5acec338",
     "tdf-mobile/src/components/EventCard.tsx": "4eaba1e6a6ac76b67bbc7f5a6a8d24e0e14e81ebb0eb29041da70265dacd21a2",
@@ -44862,6 +44868,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-mobile/src/api/accountStorage.ts": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/content-storage-model.test.mjs": [
       {
         "requirement": "MEDIA-STORAGE-001",
@@ -44923,6 +44935,18 @@
       }
     ],
     "tdf-hq-ui/src/hooks/useGoogleDriveAuth.test.tsx": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/src/api/accountStorage.test.ts": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-mobile/src/api/upload.compatibility.test.ts": [
       {
         "requirement": "MEDIA-STORAGE-001",
         "relationship": "tests"
@@ -78917,14 +78941,24 @@
       "path": "tdf-mobile/src/api/accountStorage.test.ts",
       "sha256": "4a3d899b59a81cb207591cdc134396faba696cadf6f1161927006f83b2e4e45e",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STORAGE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-63d827763e05c996",
       "path": "tdf-mobile/src/api/accountStorage.ts",
       "sha256": "803a284094d3639df64a501a56f73b97d02b78c02fe03ddc65a801897b5eef49",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STORAGE-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c3ef7b9d8509d838",
@@ -79245,7 +79279,12 @@
       "path": "tdf-mobile/src/api/upload.compatibility.test.ts",
       "sha256": "21e4e097cea0449549484f2ba0ba09726585c58a5aa9c4cccbdddba8b00600ba",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STORAGE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ceac2e6abbe05738",
@@ -81818,8 +81857,6 @@
     "SURFACE-3469b2a00ddfcab0",
     "SURFACE-837d0ebca6fefd3b",
     "SURFACE-5755b7368095cc8f",
-    "SURFACE-e5d01bb1f3e3279e",
-    "SURFACE-63d827763e05c996",
     "SURFACE-c3ef7b9d8509d838",
     "SURFACE-e8c55bfb71a219d9",
     "SURFACE-befc4b8bb8e310b8",
@@ -81846,7 +81883,6 @@
     "SURFACE-7976405ee26783dd",
     "SURFACE-9742dd7e6fc15e5d",
     "SURFACE-4a29841c2910dae2",
-    "SURFACE-5bd8a24e27435925",
     "SURFACE-ceac2e6abbe05738",
     "SURFACE-44f0271f8adb8837",
     "SURFACE-88103f1d6fb89685",
@@ -83177,7 +83213,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5b89510bcaa83f8e29375040762cb686b15b907e499986cc31baa74e752a1199",
+      "sourceSha256": "ffb222adc837caa2cc55673ee135ce8ae1e4e1b7071dcd5e68abe2a008b717d3",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83205,7 +83241,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5b89510bcaa83f8e29375040762cb686b15b907e499986cc31baa74e752a1199",
+      "sourceSha256": "ffb222adc837caa2cc55673ee135ce8ae1e4e1b7071dcd5e68abe2a008b717d3",
       "definition": {
         "states": [
           "absent",
@@ -83235,7 +83271,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5b89510bcaa83f8e29375040762cb686b15b907e499986cc31baa74e752a1199",
+      "sourceSha256": "ffb222adc837caa2cc55673ee135ce8ae1e4e1b7071dcd5e68abe2a008b717d3",
       "definition": {
         "export": [
           "queued",
