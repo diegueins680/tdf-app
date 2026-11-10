@@ -1,0 +1,32 @@
+{
+  "requirement": "DEPLOY-READINESS-001",
+  "classification": "diagnostic-source-observation-not-final-conformance-pass",
+  "sourceRevision": "669ca45baf64518088b6ec37152f1283182b6c98",
+  "backendSha256": "6eb3a587ba091feb1b90f79caa10a96d8bb2417cb75b9f0c211171a67aa8ca22",
+  "witnessedLockedConnections": 10,
+  "poolClientsBefore": 10,
+  "disabledStatuses": [
+    503,
+    503,
+    503
+  ],
+  "restoredStatuses": [
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    503,
+    200
+  ],
+  "responsesMatchPublicBodies": true,
+  "ownedDatabaseDropped": true,
+  "completedAt": "2026-10-15T13:20:07.402728+00:00",
+  "finding": "Reenabling PostgreSQL connections did not revive seven remaining terminated idle pool connections. The first-probe200 oracle exceeded the normative contract; fresh probes eventually obtained a working connection.",
+  "limitations": [
+    "Controlled synthetic application-pool diagnostic; no production database modification.",
+    "Not a universal recovery-time guarantee or a final-candidate execution receipt.",
+    "Intervening Retry-After headers were not captured by the diagnostic. The canonical conformance oracle checks them strictly."
+  ]
+}
