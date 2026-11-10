@@ -28,6 +28,17 @@ reserveTicketInventory :: M.SocialEventId -> M.EventTicketTierId -> Int -> UTCTi
 reserveTicketInventory eventKey tierKey quantity now
   | quantity <= 0 || quantity > 100 = pure False
   | otherwise = do
+      tables <- rawSql "SELECT to_regclass('public.event_crm_control') IS NOT NULL" []
+        :: SqlPersistT IO [Single Bool]
+      blocked <- case tables of
+        [Single True] -> do
+          rows <- rawSql "SELECT EXISTS(SELECT 1 FROM event_crm_control WHERE event_id=? AND transport_required AND NOT combination_sales_enabled)"
+            [toPersistValue eventKey] :: SqlPersistT IO [Single Bool]
+          pure (rows /= [Single False])
+        _ -> pure False
+      if blocked then pure False else reserveCurrent
+  where
+    reserveCurrent = do
       events <- rawSql "SELECT ?? FROM social_event WHERE id=? FOR UPDATE" [toPersistValue eventKey]
       tiers <- rawSql "SELECT ?? FROM event_ticket_tier WHERE id=? AND event_id=? FOR UPDATE"
         [toPersistValue tierKey, toPersistValue eventKey]
