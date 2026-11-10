@@ -4314,7 +4314,9 @@
         "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
         "scripts/check-webhook-signatures.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/auth/meta_webhook_admission.py"
+      ],
       "critical": true,
       "status": "specified and implemented",
       "confidence": "High for the verifier function (properties) and for the structural presence of the verifier in all four Meta aliases (gate); HTTP-level denial execution per alias remains open.",
@@ -4328,7 +4330,7 @@
       "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
       "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
       "contract": "formal/system/meta-webhook-admission.md",
-      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures. Property tests over generated secrets, bodies and headers: acceptance exactly for the HMAC of the exact bytes (either hex case), 503 for a missing or blank secret regardless of header, 401 for missing, malformed or mismatching signatures and for any single-byte body change; only success, 401 or 503 are possible. A structural gate checks that every Meta signed-callback route is served by a function that calls the verifier before decoding the body.",
+      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures. Property tests over generated secrets, bodies and headers: acceptance exactly for the HMAC of the exact bytes (either hex case), 503 for a missing or blank secret regardless of header, 401 for missing, malformed or mismatching signatures and for any single-byte body change; only success, 401 or 503 are possible. A structural gate checks that every Meta signed-callback route is served by a function that calls the verifier before decoding the body. Z3 proof meta_webhook_admission.py (translation of verifyMetaWebhookSignature and parseMetaWebhookSignature pinned by the hash of those two functions; HMAC uninterpreted; admission exactly the conjunction of usable secret, well-formed header and digest equal to the HMAC of the exact body; 503 for an absent or blank secret; guard necessity checked).",
       "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
     },
     {
@@ -26497,7 +26499,7 @@
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
     ".github/workflows/ci.yml": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
-    ".github/workflows/event-operations-formal.yml": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
+    ".github/workflows/event-operations-formal.yml": "cd0a03c4bdeec315f0e28bb6373ba1f4dab05aeebfa7c6b4061b84877183e0c1",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -26558,6 +26560,7 @@
     "formal/auth/LogoutIntent.tla": "1b08e8a1073c5aa73236e42bac4e02dd9ebf5a64bbcf68729101eed15cf34445",
     "formal/auth/LogoutIntentLegacy.cfg": "a89e41350ca46b7e087f4dd3a99858ca54518951d98e653d858051591e788d4e",
     "formal/auth/SessionExpiry.tla": "bc8137a81818acbb2053db4492e7d12f1d07e776778011132b456d2497f94be5",
+    "formal/auth/meta_webhook_admission.py": "a97549ca7408a57529b348bb71cff0e28508d113edfdfcc231be2cd77c38b741",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
     "formal/event-operations/AccountDeletionAuthority.cfg": "e695391e19979540f19e946486a7ea6732f59b226337b06dd6341a2c0b37b75e",
@@ -33677,6 +33680,12 @@
       {
         "requirement": "AUTH-WEBHOOK-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/auth/meta_webhook_admission.py": [
+      {
+        "requirement": "AUTH-WEBHOOK-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/API/Drive.hs": [
@@ -45480,7 +45489,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
+      "sha256": "cd0a03c4bdeec315f0e28bb6373ba1f4dab05aeebfa7c6b4061b84877183e0c1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80909,7 +80918,6 @@
     "MKT-REPUTATION-001",
     "REC-DDEX-001",
     "PRIV-WEBHOOK-001",
-    "AUTH-WEBHOOK-001",
     "MEDIA-STREAM-001",
     "OPS-METRICS-001",
     "SYS-CI-001",
@@ -82103,7 +82111,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "be343a5b9befd649718e5e6fc9ebf6dc0a9c9e6fdc2b0e50b180a6e7ec22889c",
+      "sourceSha256": "b0d357b60dd796ccc82d1964a3a39c4705ed9726688587beac0d1db6193f2819",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -82131,7 +82139,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "be343a5b9befd649718e5e6fc9ebf6dc0a9c9e6fdc2b0e50b180a6e7ec22889c",
+      "sourceSha256": "b0d357b60dd796ccc82d1964a3a39c4705ed9726688587beac0d1db6193f2819",
       "definition": {
         "states": [
           "absent",
@@ -82161,7 +82169,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "be343a5b9befd649718e5e6fc9ebf6dc0a9c9e6fdc2b0e50b180a6e7ec22889c",
+      "sourceSha256": "b0d357b60dd796ccc82d1964a3a39c4705ed9726688587beac0d1db6193f2819",
       "definition": {
         "export": [
           "queued",

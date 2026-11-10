@@ -4313,7 +4313,9 @@
         "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
         "scripts/check-webhook-signatures.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/auth/meta_webhook_admission.py"
+      ],
       "critical": true,
       "status": "specified and implemented",
       "confidence": "High for the verifier function (properties) and for the structural presence of the verifier in all four Meta aliases (gate); HTTP-level denial execution per alias remains open.",
@@ -4327,7 +4329,7 @@
       "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
       "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
       "contract": "formal/system/meta-webhook-admission.md",
-      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures. Property tests over generated secrets, bodies and headers: acceptance exactly for the HMAC of the exact bytes (either hex case), 503 for a missing or blank secret regardless of header, 401 for missing, malformed or mismatching signatures and for any single-byte body change; only success, 401 or 503 are possible. A structural gate checks that every Meta signed-callback route is served by a function that calls the verifier before decoding the body.",
+      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures. Property tests over generated secrets, bodies and headers: acceptance exactly for the HMAC of the exact bytes (either hex case), 503 for a missing or blank secret regardless of header, 401 for missing, malformed or mismatching signatures and for any single-byte body change; only success, 401 or 503 are possible. A structural gate checks that every Meta signed-callback route is served by a function that calls the verifier before decoding the body. Z3 proof meta_webhook_admission.py (translation of verifyMetaWebhookSignature and parseMetaWebhookSignature pinned by the hash of those two functions; HMAC uninterpreted; admission exactly the conjunction of usable secret, well-formed header and digest equal to the HMAC of the exact body; 503 for an absent or blank secret; guard necessity checked).",
       "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
     },
     {
