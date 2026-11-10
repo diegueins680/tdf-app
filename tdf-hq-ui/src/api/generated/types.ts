@@ -6636,8 +6636,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Offers received on a classified (author only), sortable for comparison */
         get: operations["listClassifiedApplications"];
         put?: never;
+        /** Submit an offer (initial negotiation round) on a classified */
         post: operations["createClassifiedApplication"];
         delete?: never;
         options?: never;
@@ -6652,6 +6654,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Offers made through profiles the caller manages (ADR 0132) */
         get: operations["listMyApplications"];
         put?: never;
         post?: never;
@@ -6668,6 +6671,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** One offer with its full negotiation chain (participants and admins) */
         get: operations["getClassifiedApplication"];
         put?: never;
         post?: never;
@@ -6686,6 +6690,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Record a counter-offer round from the author or the offerer (ADR 0132) */
         post: operations["counterClassifiedApplication"];
         delete?: never;
         options?: never;
@@ -16237,7 +16242,6 @@ export interface components {
             /** Format: uuid */
             nextCursor?: string | null;
         };
-        /** @description Published, current, moderated classified. */
         /**
          * @description open: offers only; suggested: reference price, counters allowed; fixed: offers must accept the exact price
          * @enum {string}
@@ -16267,6 +16271,7 @@ export interface components {
             /** Format: uuid */
             currencyId?: string | null;
         };
+        /** @description Published, current, moderated classified. */
         PublicClassified: {
             /** Format: uuid */
             id: string;

@@ -8152,7 +8152,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "6e37f30bbf395f2ad598bdfda0967401487caabc1f2c8974eb1695f62a69a705",
+      "sha256": "a0f87b8733d58ec5434463ad284ff1df913cf004a748a584668593c2289e8a31",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13156,7 +13156,7 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "55ef1228e6904d2bbc9b073cbfb7e9015299c0ea30c6524ced7dd4f31cc70bfa",
+      "sha256": "cc02de79887a31e12f277430e1ea54e1053c8afb02aeb4d6ee4ed6049ca7bfd5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30932,7 +30932,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "55ef1228e6904d2bbc9b073cbfb7e9015299c0ea30c6524ced7dd4f31cc70bfa",
+      "sha256": "cc02de79887a31e12f277430e1ea54e1053c8afb02aeb4d6ee4ed6049ca7bfd5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

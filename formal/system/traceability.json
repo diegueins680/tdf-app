@@ -18607,7 +18607,7 @@
     "tdf-hq-ui/src/api/fans.ts": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "6e37f30bbf395f2ad598bdfda0967401487caabc1f2c8974eb1695f62a69a705",
+    "tdf-hq-ui/src/api/generated/types.ts": "a0f87b8733d58ec5434463ad284ff1df913cf004a748a584668593c2289e8a31",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "6ae18f71871c7dfcebff6c55180ecadb1791feb220e35e6c24009f59b2030799",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -19051,7 +19051,7 @@
     "tdf-hq/assets/feature-registry.json": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
     "tdf-hq/config/default.env.example": "8a477205e4dca468c32fbe2b5f7db4bce06e716898d17f4ee7df199d8038a888",
     "tdf-hq/docs/openapi/api.yaml": "83076d17a0b9f3e1b9f97b4e759b1774aa264bb04a091747299c520747973b50",
-    "tdf-hq/docs/openapi/directory.yaml": "55ef1228e6904d2bbc9b073cbfb7e9015299c0ea30c6524ced7dd4f31cc70bfa",
+    "tdf-hq/docs/openapi/directory.yaml": "cc02de79887a31e12f277430e1ea54e1053c8afb02aeb4d6ee4ed6049ca7bfd5",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
     "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
     "tdf-hq/docs/openapi/reviews.yaml": "3c05bc6db0ebdbe04b72feb910a3f51e9c8631873c4de9a22c7beb52bb41e411",
@@ -38079,7 +38079,7 @@
     {
       "id": "SURFACE-9306a961784ddefa",
       "path": "scripts/check-generated-api.mjs",
-      "sha256": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
+      "sha256": "7725e45fa91bbe2014005bef70385d318a0f2e91dac8b45b6d33d47d9f90c6e1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

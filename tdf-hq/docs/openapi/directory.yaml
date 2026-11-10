@@ -182,7 +182,7 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ApplicationCreate' } } } }
       responses:
         '201': { description: Idempotent offer, content: { application/json: { schema: { $ref: '#/components/schemas/ClassifiedApplication' } } } }
-        '409': { description: No slot left, offer deadline passed, fixed price not matched, derived listing, or an active offer already exists for this profile }
+        '409': { description: 'No slot left, offer deadline passed, fixed price not matched, derived listing, or an active offer already exists for this profile' }
   /directory/applications:
     get:
       tags: [Music classifieds]
@@ -191,7 +191,7 @@ paths:
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: status, in: query, schema: { type: string, enum: [open, accepted, closed] } }
-      responses: { '200': { description: Offers where the caller is the offerer, newest first, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ClassifiedApplication' } } } } } }
+      responses: { '200': { description: 'Offers where the caller is the offerer, newest first', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ClassifiedApplication' } } } } } }
   /directory/applications/{applicationId}:
     get:
       tags: [Music classifieds]
@@ -210,7 +210,7 @@ paths:
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OfferCounterRequest' } } } }
       responses:
         '201': { description: Updated offer with the new round, content: { application/json: { schema: { $ref: '#/components/schemas/ClassifiedApplication' } } } }
-        '409': { description: Not this participant's turn, offer closed or expired, fixed-price classified, or round limit reached }
+        '409': { description: "Not this participant's turn, offer closed or expired, fixed-price classified, or round limit reached" }
   /directory/applications/{applicationId}/status:
     patch:
       tags: [Music classifieds]
@@ -810,7 +810,7 @@ components:
         proposedAmountMinor: { type: integer, format: int64, minimum: 0, deprecated: true }
         currencyId: { type: string, format: uuid }
         terms: { $ref: '#/components/schemas/OfferTerms' }
-        expiresAt: { type: string, format: date-time, description: Offer validity; defaults to 7 days, capped by the classified offer deadline }
+        expiresAt: { type: string, format: date-time, description: 'Offer validity; defaults to 7 days, capped by the classified offer deadline' }
     ClassifiedIntent: { type: string, enum: [seeking, offering], description: 'seeking = busco (demand); offering = ofrezco (supply)' }
     PriceMode: { type: string, enum: [open, suggested, fixed], description: 'open: offers only; suggested: reference price, counters allowed; fixed: offers must accept the exact price' }
     OfferTerms:
