@@ -1,0 +1,60 @@
+{
+  "startedAt": "2026-10-26T06:54:17.603Z",
+  "expectedProtectedCommit": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "scope": "Production frontend/public reads only; no authentication, signup, follow, booking or other business mutation. All external traffic blocked. Directory503 scenario is injected; playback/providers/device/human comprehension excluded.",
+  "cases": [
+    {
+      "mode": "desktop",
+      "anonymousSession": true,
+      "rootWelcome": true,
+      "photoWidth": 640,
+      "welcomeBeforeSearch": true,
+      "noProfilingInputs": true,
+      "keyboardStudioServices": true,
+      "realPublishedRecordsVisible": true,
+      "feedCounts": {
+        "releases": 67,
+        "recordings": 33,
+        "sessions": 5
+      },
+      "directSearchPreserved": true,
+      "welcomeSurvivesInjectedDirectory503": true,
+      "injectedDirectory503Responses": 4,
+      "businessWrites": 0,
+      "pageErrors": [],
+      "blockedExternalRequests": 48,
+      "entryPath": "/assets/index-DCYgWaC1.js",
+      "entrySha256": "0be21b67aaf8f83e0450ba1fef4b27b6abee935b2b2b53fc77fd65ba4c18347c",
+      "embeddedProtectedCommit": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+      "passed": true
+    },
+    {
+      "mode": "Pixel7",
+      "anonymousSession": true,
+      "rootWelcome": true,
+      "photoWidth": 640,
+      "welcomeBeforeSearch": true,
+      "noProfilingInputs": true,
+      "keyboardStudioServices": true,
+      "realPublishedRecordsVisible": true,
+      "feedCounts": {
+        "releases": 67,
+        "recordings": 33,
+        "sessions": 5
+      },
+      "directSearchPreserved": true,
+      "welcomeSurvivesInjectedDirectory503": true,
+      "injectedDirectory503Responses": 4,
+      "businessWrites": 0,
+      "pageErrors": [],
+      "blockedExternalRequests": 42,
+      "entryPath": "/assets/index-DCYgWaC1.js",
+      "entrySha256": "0be21b67aaf8f83e0450ba1fef4b27b6abee935b2b2b53fc77fd65ba4c18347c",
+      "embeddedProtectedCommit": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+      "passed": true
+    }
+  ],
+  "status": "VERIFIED-production-welcome-public-navigation-only",
+  "browserClosed": true,
+  "finishedAt": "2026-10-26T06:54:45.664Z"
+}

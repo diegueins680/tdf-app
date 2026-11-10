@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-10-26T06:54:45.664Z",
+  "pullRequest": "https://github.com/diegueins680/tdf-app/pull/619",
+  "implementation": "Welcome before directory search, anonymous exploration links, explicit search labels and studio/services before signup.",
+  "states": {
+    "implemented": true,
+    "tested": true,
+    "merged": true,
+    "deployedWebObserved": true,
+    "verifiedInProductionAsScoped": true
+  },
+  "approvedSource": "b7453b08c995b553ced688c7d381355ed8faf9bc",
+  "protectedMerge": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+  "mergeParents": [
+    "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+    "b7453b08c995b553ced688c7d381355ed8faf9bc"
+  ],
+  "approvedTreeIdentical": true,
+  "mergeExecutedByThisAgent": false,
+  "existingProtectedMergeObservedWithoutRepeating": true,
+  "protection": {
+    "requiredChecks": 20,
+    "allRequiredChecksPassed": true,
+    "contextAppPolicyMatched": true,
+    "strict": true,
+    "adminsEnforced": true,
+    "dismissStaleReviews": true,
+    "conversationResolutionRequired": true,
+    "unresolvedThreads": 0,
+    "approvals": [
+      {
+        "reviewer": "tdfrecords",
+        "id": 5648075560,
+        "source": "b7453b08c995b553ced688c7d381355ed8faf9bc",
+        "submittedAt": "2026-10-26T06:18:07Z"
+      }
+    ]
+  },
+  "hostedUi": {
+    "head": "b7453b08c995b553ced688c7d381355ed8faf9bc",
+    "ciRun": 40278740189,
+    "uiJob": 121427283998,
+    "checkoutMergeRef": "514500703680862bbdcac264228becc7151abb9d",
+    "checkoutBase": "ed9eb9a1600f0a827e002bb2ab64a608f8352b2c",
+    "suiteCount": 304,
+    "testCount": 3437,
+    "conclusion": "success",
+    "initialGzipBytes": 335779,
+    "preloads": 5,
+    "rawLogSha256": "530642b4e030e27594dddd92e72169a1e85aeecb19f0e1fa4ced2d9ac5e16874",
+    "scope": "Actual hosted UI job; separate from local234/FCCnative and earlierB232full3416."
+  },
+  "hostedBrowser": {
+    "job": 121427284078,
+    "run": 40278740189,
+    "checkoutMergeRef": "514500703680862bbdcac264228becc7151abb9d",
+    "personasPassed": 552,
+    "existingDeclaredSkips": 22,
+    "rolloutPassed": 10,
+    "discoveryPassed": 25,
+    "rawLogSha256": "84617b37e96e058a668ab2fadc9a1fac9a5c29e106944aca1319eaa80cb4e85f"
+  },
+  "production": {
+    "startedAt": "2026-10-26T06:54:17.603Z",
+    "expectedProtectedCommit": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+    "scope": "Production frontend/public reads only; no authentication, signup, follow, booking or other business mutation. All external traffic blocked. Directory503 scenario is injected; playback/providers/device/human comprehension excluded.",
+    "cases": [
+      {
+        "mode": "desktop",
+        "anonymousSession": true,
+        "rootWelcome": true,
+        "photoWidth": 640,
+        "welcomeBeforeSearch": true,
+        "noProfilingInputs": true,
+        "keyboardStudioServices": true,
+        "realPublishedRecordsVisible": true,
+        "feedCounts": {
+          "releases": 67,
+          "recordings": 33,
+          "sessions": 5
+        },
+        "directSearchPreserved": true,
+        "welcomeSurvivesInjectedDirectory503": true,
+        "injectedDirectory503Responses": 4,
+        "businessWrites": 0,
+        "pageErrors": [],
+        "blockedExternalRequests": 48,
+        "entryPath": "/assets/index-DCYgWaC1.js",
+        "entrySha256": "0be21b67aaf8f83e0450ba1fef4b27b6abee935b2b2b53fc77fd65ba4c18347c",
+        "embeddedProtectedCommit": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+        "passed": true
+      },
+      {
+        "mode": "Pixel7",
+        "anonymousSession": true,
+        "rootWelcome": true,
+        "photoWidth": 640,
+        "welcomeBeforeSearch": true,
+        "noProfilingInputs": true,
+        "keyboardStudioServices": true,
+        "realPublishedRecordsVisible": true,
+        "feedCounts": {
+          "releases": 67,
+          "recordings": 33,
+          "sessions": 5
+        },
+        "directSearchPreserved": true,
+        "welcomeSurvivesInjectedDirectory503": true,
+        "injectedDirectory503Responses": 4,
+        "businessWrites": 0,
+        "pageErrors": [],
+        "blockedExternalRequests": 42,
+        "entryPath": "/assets/index-DCYgWaC1.js",
+        "entrySha256": "0be21b67aaf8f83e0450ba1fef4b27b6abee935b2b2b53fc77fd65ba4c18347c",
+        "embeddedProtectedCommit": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+        "passed": true
+      }
+    ],
+    "status": "VERIFIED-production-welcome-public-navigation-only",
+    "browserClosed": true,
+    "finishedAt": "2026-10-26T06:54:45.664Z"
+  },
+  "localCurrentCompositionEvidence": "reports/welcome-club-integration-2026-10-26.json",
+  "priorLocalFullUi": {
+    "source": "b232c21cccd317149924981faa015e5414b94b03",
+    "tests": 3416,
+    "suites": 303,
+    "scope": "Earlier source retained separately; not relabeled as b745 execution."
+  },
+  "backendDeploymentPerformed": false,
+  "productionBusinessWrites": 0,
+  "humanParticipants": 0,
+  "measuredActivationImprovement": null,
+  "retentionImprovement": null,
+  "externalProviderPlaybackTested": false,
+  "physicalAndroidDeviceTested": false,
+  "wholeSystemConformance": "PARTIAL/UNPROVEN; this is scoped feature and delivery evidence.",
+  "remaining": [
+    "Identified host portrait and authorized studio gallery/teaching clips/interior plan or VR",
+    "Human comprehension and activation/retention outcome validation"
+  ],
+  "evidenceDirectory": "reports/welcome-production-evidence-20261026",
+  "executedProductionObserverSha256": "28628496a61ec2035f0343f7912b3901e4b14489b85f934263a12f4df04c067b",
+  "publicationProcedure": "Observed normal protected main merge and automatic web publication, then checked actual public artifact and browser behavior. No manual web/backend deployment or security-control change."
+}

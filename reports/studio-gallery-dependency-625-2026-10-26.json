@@ -1,0 +1,51 @@
+{
+  "observedAt": "2026-10-26T22:04:46.221940+00:00",
+  "dependencyPR": 625,
+  "ownerPreparedCommit": "553e0562135072b556f49f31b04a2d568ad5dfe3",
+  "independentPreparedCommit": "06aaef213ebc8147f76bd11b44357f2d4e2630ed",
+  "protectedMain": "2e01bbe1263e8761fa2692bd951f828c01142449",
+  "sourcePRObservedHead": "723079c89cec4fff3eefa83f968226e2e4e5e8a5",
+  "exactCorrespondence": "All tracked files are byte-identical except generatedAt in the static inventory report; that JSON is otherwise structurally identical. This is not wholeGitTreeidentity.",
+  "foreignRequirements": 146,
+  "allMainNormativeFieldsUnchanged": true,
+  "authorityExtension": "Exact prior AUTH-ENTRY-002 implementation/test association extension, no normative behavior change.",
+  "strictCatalogCandidates": 1341,
+  "unreviewed": 0,
+  "stale": 0,
+  "catalogPredecessorControl": "1339main decisions exact; exactly2existing recovery successors preserve their exact approved objects and verify both original decisions against the immutable protectedBase blob/SHA256.",
+  "checks": {
+    "focusedRecoveryTests": 30,
+    "typecheck": "PASS",
+    "scopedLint": "PASS",
+    "specificationInventory": "PASS",
+    "specificationConformance": "PASS",
+    "mappedMaterialSurfaces": 7
+  },
+  "setupFailuresRetained": [
+    "Initial too-broad preservation lookup refused expected replaced classification IDs; corrected explicit predecessor/successor admission then passed.",
+    "Initial ESLint path assumed a nested CLI; hoisted root CLI was used successfully without source changes."
+  ],
+  "limits": [
+    "Private checks executed in independent prepared checkout; not claimed as executions on owner commit. Exact input correspondence is established separately.",
+    "No native API/PostgreSQL/browser recovery re-execution, backend build, source push, GitHub review, merge or deployment performed for625. Prior native receipts keep their original identities.",
+    "Owner checkout and remote source branch remained untouched. Fresh-head CI and independent review remain mandatory after publication."
+  ],
+  "handoff": "Owner may reuse the source-correspondence and scoped-check evidence; do not overwrite or rotate their prepared/published head. Gallery628sourcec219remains unchanged.",
+  "executionProvenance": {
+    "focusedTestsAndTypecheck": {
+      "checkoutHead": "723079c89cec4fff3eefa83f968226e2e4e5e8a5",
+      "workingTreeMergeHead": "2e01bbe1263e8761fa2692bd951f828c01142449",
+      "codeState": "Material inputs subsequently committed unchanged as06aa and independently compared to owner553e."
+    },
+    "scopedLintAndSourceAdmission": {
+      "checkoutHead": "06aaef213ebc8147f76bd11b44357f2d4e2630ed"
+    },
+    "galleryFullSuite": "3517tests belong to separate gallery preparation7fc9, not to this625proof."
+  },
+  "logSha256": {
+    "tdf-recovery-main2e-for-gallery-focused-20261026.log": "5e272de11bf52c0e789e07f095bea5f06b98beeb1bc636ef7c5862b67eb8cad0",
+    "tdf-recovery-main2e-for-gallery-types-20261026.log": "374272fbc00ca6ef6338ca1ef99d9719ba7935457fd2f5351dbcf271e42b5ed3",
+    "tdf-recovery-main2e-for-gallery-lint-final-20261026.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "purpose": "Independent check of625dependency only; owner branch remains untouched. Not approval, publication, new runtime qualification or transfer of gallery3517tests."
+}

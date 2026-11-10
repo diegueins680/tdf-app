@@ -1,0 +1,8 @@
+{
+  "failedActionStart": 711865.803,
+  "timeoutTeardownStart": 711937.429,
+  "millisecondsUntilTimeoutTeardown": 71.626,
+  "originalTestTimeoutMs": 30000,
+  "failure": "Entire-test deadline expired during last cart close action",
+  "interpretation": "Cumulative deadline exhaustion is observed; persistent product malfunction and underlying timing variance are not established/resolved by this receipt."
+}

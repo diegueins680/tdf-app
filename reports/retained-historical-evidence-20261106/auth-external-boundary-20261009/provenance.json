@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-06T07:31:44.225070+00:00",
+  "status": "Historical only; not current normative, implementation or deployment qualification",
+  "sourceBranch": "spec/auth-external-boundary-20261009",
+  "sourceCommit": "3a723c0719861addc14fc43e3007c387e4c663df",
+  "sourceMergeBase": "7831b697568746c240c6a3171a0b28e89afe194b",
+  "existingArchiveParent": "55b5a8a16354f90434c130f0cab01b5dbd743fb8",
+  "protectedMainContext": "7a41f893ee14b4346907e9d53b65c2aa54506cfb",
+  "originalPr": {
+    "number": 530,
+    "title": "Auth boundary evidence and feature registry fix (AUTH-CORS/WEBHOOK/RADIO/PUBLIC/REGISTRY/OPS-READ/ENTRY)",
+    "state": "closed",
+    "merged": false,
+    "merged_at": null,
+    "closed_at": "2026-10-25T08:26:54Z",
+    "updated_at": "2026-10-25T08:26:54Z"
+  },
+  "sourceCommitHistory": [
+    "3a723c0719861addc14fc43e3007c387e4c663df 2026-10-10T00:52:07-05:00 Record deployed evidence for COURSE-SUBJECT-001, MKT-REPUTATION-001 and PRIV-WHATSAPP-001",
+    "7dd1f68f2c0db30b5170f6fa7429dc5a8397d1cc 2026-10-10T00:47:47-05:00 Record signup entry evidence (AUTH-ENTRY-002)",
+    "8a40989c4a25a9b0f5b8cfaf7a2bd41259b0ee53 2026-10-09T20:34:03-05:00 Record operations read-scope conformance evidence (AUTH-OPS-READ-001)",
+    "54bfee46253538653876a48bc53ca5d19f6d2e62 2026-10-09T20:29:04-05:00 Register music release studio routes in the feature registry (AUTH-REGISTRY-001)",
+    "ca4bffdfcaf990f15c976a5df2bda910df1d94e9 2026-10-09T20:24:17-05:00 Record deployed radio presence and public route admission evidence (AUTH-RADIO-001, AUTH-PUBLIC-001)",
+    "98383925c98a59bccefda13cf424ae6a4163571a 2026-10-09T20:17:54-05:00 Record deployed CORS and Meta webhook boundary evidence (AUTH-CORS-001, AUTH-WEBHOOK-001)"
+  ],
+  "snapshotFiles": {
+    "formal/system/inventory.json": {
+      "historicalPath": "reports/retained-historical-evidence-20261106/auth-external-boundary-20261009/source-snapshots/formal/system/inventory.json",
+      "originalBlob": "30a01ab0046c349aac007ca479e487071ba3ff7b",
+      "sha256": "074a1b162c12385b141833db69a42c6e9576d576efb50a307bf499555eafd91d"
+    },
+    "formal/system/requirements.json": {
+      "historicalPath": "reports/retained-historical-evidence-20261106/auth-external-boundary-20261009/source-snapshots/formal/system/requirements.json",
+      "originalBlob": "6b771689d47d447d5e9594ae3a3608bd3eb3f858",
+      "sha256": "7e83f955250fa74c7448516f37141635b64e59253e48e26e897bb35e5f88076e"
+    },
+    "formal/system/traceability.json": {
+      "historicalPath": "reports/retained-historical-evidence-20261106/auth-external-boundary-20261009/source-snapshots/formal/system/traceability.json",
+      "originalBlob": "9888fa58be11aadfda4e6a307d6431f8783a3b0b",
+      "sha256": "62adf974b54f57b6954e1388c194298a762cf1a7893f7a638b2af5587220dfd9"
+    },
+    "tdf-hq/assets/feature-registry.json": {
+      "historicalPath": "reports/retained-historical-evidence-20261106/auth-external-boundary-20261009/source-snapshots/tdf-hq/assets/feature-registry.json",
+      "originalBlob": "a5962acd496ad35047717cb10497a37332c8bd18",
+      "sha256": "4ecca90f12aff4a50f8ef55a24acea596ef205f428781f3771cd1049e091326f"
+    }
+  },
+  "datedObservationScope": "Original October9/10 deployment observations and finite checks retain their original source, dates, limitations and failed/stale states. No observation is attributed to this archive or current code.",
+  "historicalRequirementObservations": {
+    "AUTH-CORS-001": {
+      "fieldsChangedFromBase": [
+        "conformance",
+        "evidence"
+      ],
+      "originalDatedValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Deployed preflight behavior and local mutation checks agree; CSRF defenses and other deployment environments remain outside this check."
+        },
+        "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): preflights from https://www.tdfrecords.net for GET and POST public ticket-order routes with x-order-lookup-token returned 200 with that exact origin and credentials; https://evil.example, a look-alike suffix origin, Origin null and an unlisted request header returned 400 with no Access-Control headers. scripts/verify-cors-boundary.py on main 7831b69: intended 33/33; controls production-classification-bypassed, implicit-preview-credentials and deletion-trailing-slash-bypass each failed (23, 3, 2)."
+      },
+      "currentMainValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Focused runtime and mutation checks pass on working source; final exact-SHA review, full gates and rollout remain."
+        },
+        "evidence": "scripts/verify-cors-boundary.py emits source-bound finite runtime receipts. October13 runtime configuration and two health-origin smoke observations are retained in formal/system/evidence/2026-10-13-runtime-controls/; they supersede the October4 allow-all observation for that instant."
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "AUTH-REGISTRY-001": {
+      "fieldsChangedFromBase": [
+        "ambiguity",
+        "conformance",
+        "evidence"
+      ],
+      "originalDatedValues": {
+        "ambiguity": [
+          "This correction does not establish authorization conformance for every feature in the registry.",
+          "scripts/audit-feature-registry.mjs runs only as npm run audit:features, not in CI, which let registry drift reach main."
+        ],
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Web registry matches served routes; the pinned Mobile generated registry predates the 2026-10-06 music registry entries and needs a TDF-mobile regeneration with the pin bump. The audit is not yet a CI gate."
+        },
+        "evidence": "2026-10-09 on main 7831b69: scripts/audit-feature-registry.mjs failed with 3 issues: the music release studio web routes /label/releases/nuevo and /label/releases/:releaseId/versions/:versionId were unregistered, and the generated mobile registry was stale. The routes are now aliases of label.releases (same Admin/StudioManager plus Admin-module predicates); the audit then reports only the stale mobile registry. Web featureRegistry tests 136/136."
+      },
+      "currentMainValues": {
+        "ambiguity": [
+          "This correction does not establish authorization conformance for every feature in the registry."
+        ],
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Targeted registry tests and route audit pass; full candidate and release correspondence pending."
+        },
+        "evidence": "tdf-hq-ui/src/features/featureRegistry.test.ts; scripts/audit-feature-registry.mjs"
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "AUTH-RADIO-001": {
+      "fieldsChangedFromBase": [
+        "evidence",
+        "conformance"
+      ],
+      "originalDatedValues": {
+        "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): GET /radio/presence/1 returned 401 without a token and with an invalid bearer token; no presence was exposed.",
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Deployed anonymous and invalid-token denial verified; an inactive-but-well-formed session and whole-domain authorization were not exercised."
+        }
+      },
+      "currentMainValues": {
+        "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+        }
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "COURSE-SUBJECT-001": {
+      "fieldsChangedFromBase": [
+        "evidence",
+        "conformance"
+      ],
+      "originalDatedValues": {
+        "evidence": "2026-10-10 deployed api.tdfrecords.net (backend 7ab3444): GET /trials/v1/subjects returned 200 with 3 subjects, none inactive; GET /trials/v1/subjects/catalog (with and without includeInactive=true) returned 401 anonymously. The booking conformance suite (619 checks, 0 failures, 2026-10-09) covers the per-role catalog cases.",
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Deployed public/protected split and runtime role checks pass; authenticated deployed catalog access was not exercised."
+        }
+      },
+      "currentMainValues": {
+        "evidence": "Exact candidate compiled-API observation and owned PostgreSQL HTTP result; source review alone is insufficient.",
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Scoped runtime regression exists; candidate execution and whole-domain reconciliation remain required."
+        }
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "MKT-REPUTATION-001": {
+      "fieldsChangedFromBase": [
+        "conformance",
+        "evidence"
+      ],
+      "originalDatedValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Deferred operations are absent from the deployed API and enumerated in api-availability.json; POST/PUT operations were not probed."
+        },
+        "evidence": "2026-10-10 deployed api.tdfrecords.net: all 12 deferred GET merchandise-reputation operations returned 404. compiled-api-surface and ci-pipeline tests 39/39 and scripts/test-specification-conformance.py passed on main 7831b69."
+      },
+      "currentMainValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Executable declaration controls exist; final rebuilt candidate and broader deferred-domain conformance remain outstanding."
+        },
+        "evidence": "Exact-source compiled availability receipt and Node/Python gate logs."
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "AUTH-WEBHOOK-001": {
+      "fieldsChangedFromBase": [
+        "conformance",
+        "evidence"
+      ],
+      "originalDatedValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Deployed rejection of unsigned and wrongly signed POSTs on all aliases verified; a validly signed delivery, replay and key rotation are not exercised."
+        },
+        "evidence": "2026-10-09 deployed api.tdfrecords.net (backend 7ab3444): POST {} to /facebook/webhook, /instagram/webhook, /webhooks/whatsapp and /hooks/whatsapp returned 401 both without X-Hub-Signature-256 and with an all-zero signature, so the secret is configured and enforced on every alias. APITypesSpec ran in the backend Hspec suite (3,918 examples, 0 failures) the same day."
+      },
+      "currentMainValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Shared guard, helper properties and HTTP fixtures require final compiled execution and deployment; no universal cryptographic or delivery proof."
+        },
+        "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "AUTH-OPS-READ-001": {
+      "fieldsChangedFromBase": [
+        "conformance",
+        "evidence"
+      ],
+      "originalDatedValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Runtime read-scope checks pass on the current operations source; no deployed authenticated check and no formal model of the grant union."
+        },
+        "evidence": "2026-10-09: scripts/test-booking-conformance.py on a disposable PG16 database with a backend binary whose TDF/Operations sources are identical to main 7831b69: 619 checks passed, 0 failed, including 188 operations checks (teacher/engineer metrics restricted to visible assigned items, hidden payment detail denied, manager financial totals retained, failure counts and lists scoped by branch and role, version/request races with one winner). Operations ModelSpec ran in the backend Hspec suite (3,918 examples, 0 failures)."
+      },
+      "currentMainValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Implementation and executable checks exist; exact combined candidate runtime and deployed correspondence are not yet established."
+        },
+        "evidence": "Source/binary hashes, actual HTTP and PostgreSQL fixture results, named bounded-model controls where mapped"
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "AUTH-PUBLIC-001": {
+      "fieldsChangedFromBase": [
+        "conformance",
+        "evidence"
+      ],
+      "originalDatedValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Admission gate, controls and sampled deployed denials pass and the debt register is now empty; handler enforcement of each registered capability is not mechanically verified."
+        },
+        "evidence": "2026-10-09 on main 7831b69: scripts/check-public-routes.py passed (180 routes, debt register empty, no known-debt boundary in use) and scripts/test-public-routes.py passed 1 positive and 14 negative controls. Deployed GETs without credentials on handler-session, capability-header and capability-path routes returned 400/401/404; GET /session returned null, the anonymous result its handler-session boundary allows."
+      },
+      "currentMainValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Admission gate, its controls and model, and the served denial sweep over every deny-boundary route pass; handler enforcement on records that only provider-backed intakes create rests on their own suites; no registered debt remains."
+        },
+        "evidence": "Gate output, fourteen negative controls, four model controls, the served denial sweep (90 routes, two probes each) and the PostgreSQL-backed booking conformance checks"
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "PRIV-WHATSAPP-001": {
+      "fieldsChangedFromBase": [
+        "evidence",
+        "conformance"
+      ],
+      "originalDatedValues": {
+        "evidence": "2026-10-10 deployed api.tdfrecords.net: GET /public/whatsapp/consent returned 410 with and without a phone query, so consent state is not disclosed. ServerSpec consent cases ran in the backend Hspec suite (3,918 examples, 0 failures). Production has no WhatsApp Cloud API configuration, so confirmation messaging is dormant; consent POSTs were not sent.",
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Retired lookup verified on the deployed API and handler logic tested locally; the pending-request, confirmation and opt-out writes were not exercised in production."
+        }
+      },
+      "currentMainValues": {
+        "evidence": "formal/system/whatsapp-consent.md; keyword, SQLite and PostgreSQL consent checks; real-backend harness for simultaneous requests, signed confirmation, one notice, redelivery and migrated non-unique history indexes. The historical constraint collision was reproduced before the additive index repair; fresh combined-candidate execution remains required.",
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Bounded model, unit and PostgreSQL tests pass on the candidate; not deployed, and production has no WhatsApp Cloud API configuration to exercise it."
+        }
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    },
+    "AUTH-ENTRY-002": {
+      "fieldsChangedFromBase": [
+        "conformance",
+        "evidence"
+      ],
+      "originalDatedValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Component, routing and cross-browser journeys pass on the current source; deployed signup and the counsel confirmation of clickwrap remain open."
+        },
+        "evidence": "2026-10-10 on main 7831b69: LoginPage, signupFields, loginRouting and RootLandingRedirect Jest 64/64 (including hostile return paths); e2e/web/auth-landing.spec.mjs 29/29 across Chromium, Firefox, WebKit, tablet, Android and iPhone projects with a synthetic API. No deployed signup was performed, to avoid creating real accounts."
+      },
+      "currentMainValues": {
+        "conformance": {
+          "classification": "PARTIAL",
+          "reason": "Component and browser tests pass; deployed smoke and legal confirmation pending."
+        },
+        "evidence": "LoginPage, signupFields and loginRouting tests; e2e auth-landing, persona-public and event-rsvp-sharing. Google decoder counterexample and correction are source-fragment TESTED, not a provider, HTTP, SQL or implementation/refinement proof; current evidence records source hashes and tool versions."
+      },
+      "allOtherOriginalNormFieldsUnchangedFromBase": true
+    }
+  },
+  "functionalAliasReconciliation": {
+    "featureId": "label.releases",
+    "aliases": [
+      "/label/releases/nuevo",
+      "/label/releases/:releaseId/versions/:versionId"
+    ],
+    "sourceFeatureObjectAlreadyExactCurrentMain": true,
+    "authorityAndPermissionPredicatesUnchangedBySource": true
+  },
+  "manualReconciliation": "After adding all four exact source snapshots and this provenance record, retain the four live JSON files exactly as existing archive/protected main. Preserve all129 prior evidence files and the existing archival README byte-for-byte. No current norm, registry permission or metadata is replaced by a historical observation.",
+  "currentScopeExclusions": "Old Mobile registry and audit-not-CI observations describe their historical instant. They are not current blockers or new authority. No current native/client, endpoint, cryptographic, recovery or production qualification is claimed.",
+  "noActiveWorkEvidence": {
+    "originalPrClosed": true,
+    "openPrRefs": 0,
+    "sourceBranchProtected": false,
+    "namedSourceDeployments": 0,
+    "executableMainBranchRefs": 0
+  }
+}

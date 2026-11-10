@@ -1,0 +1,143 @@
+{
+  "observedAt": "2026-10-27T00:49:19.948786+00:00",
+  "type": "Read-only production baseline verification, not feature deployment",
+  "observations": {
+    "base": "https://www.tdfrecords.net",
+    "scope": "Actual canonical production frontend and real anonymous GET health/session/public catalog only. Optional engineers/reviews and unknown reads use fixtures/refusals, all external and business writes blocked. No contact submission, booking, provider or recovery-outage test.",
+    "cases": [
+      {
+        "mode": "desktop-dark",
+        "observedAt": "2026-10-27T00:46:42.041Z",
+        "source": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+        "entry": "/assets/index-mg7HngOy.js",
+        "entrySha256": "68e593ea0e8d4864d210712eaae7c2136c385934a1752db8c718f9efe32030f5",
+        "catalogFormat": "canonical envelope",
+        "publicActiveServices": 11,
+        "catalogResponseSha256": "4f960271e57322960cffb377bf741fa22f1fe095d2fc3f831b2d3317575067b7",
+        "renderedOptionsMatch": true,
+        "serviceChoiceChanges": true,
+        "contactFieldsUntouched": true,
+        "anonymousSessionConfirmed": true,
+        "horizontalOverflow320": false,
+        "pageErrors": [],
+        "businessWrites": [],
+        "realReadResponses": [
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/session",
+            "status": 200
+          },
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/health",
+            "status": 200
+          },
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/services/catalog/public",
+            "status": 200
+          },
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/health",
+            "status": 200
+          },
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/services/catalog/public",
+            "status": 200
+          }
+        ],
+        "syntheticPaths": [
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/engineers",
+          "/engineers",
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/reviews/service_offering/86f8322f-c1d6-4b76-9158-32090d2885f2",
+          "/bookings/public/availability",
+          "/reviews/service_offering/671f74c4-6ecd-4094-80f4-60cbbfd8fe1e",
+          "/bookings/public/availability"
+        ],
+        "passed": true
+      },
+      {
+        "mode": "Pixel7-light",
+        "observedAt": "2026-10-27T00:46:44.442Z",
+        "source": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+        "entry": "/assets/index-mg7HngOy.js",
+        "entrySha256": "68e593ea0e8d4864d210712eaae7c2136c385934a1752db8c718f9efe32030f5",
+        "catalogFormat": "canonical envelope",
+        "publicActiveServices": 11,
+        "catalogResponseSha256": "4f960271e57322960cffb377bf741fa22f1fe095d2fc3f831b2d3317575067b7",
+        "renderedOptionsMatch": true,
+        "serviceChoiceChanges": true,
+        "contactFieldsUntouched": true,
+        "anonymousSessionConfirmed": true,
+        "horizontalOverflow320": false,
+        "pageErrors": [],
+        "businessWrites": [],
+        "realReadResponses": [
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/session",
+            "status": 200
+          },
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/health",
+            "status": 200
+          },
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/services/catalog/public",
+            "status": 200
+          },
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/health",
+            "status": 200
+          },
+          {
+            "host": "api.tdfrecords.net",
+            "path": "/services/catalog/public",
+            "status": 200
+          }
+        ],
+        "syntheticPaths": [
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/engineers",
+          "/engineers",
+          "/catalogs/batch",
+          "/catalogs/batch",
+          "/reviews/service_offering/86f8322f-c1d6-4b76-9158-32090d2885f2",
+          "/bookings/public/availability",
+          "/reviews/service_offering/671f74c4-6ecd-4094-80f4-60cbbfd8fe1e",
+          "/bookings/public/availability"
+        ],
+        "passed": true
+      }
+    ]
+  },
+  "limits": [
+    "Source63c56a is the currently published canonical frontend. Gallery628c219 and booking retry6369b6 remain unmerged; this is NOT production verification of those features.",
+    "Actual anonymous GET health/session/public catalog responses were allowed; optional engineers/reviews and unknown reads were fixtures/refusals. Real availability and engineering rosters were not verified.",
+    "All external traffic and business writes were blocked. Contact fields remained blank; no booking, account, payment, follow or provider request was submitted.",
+    "Shows eleven active public offerings, matching selector options and a client-side service change in two fresh contexts. Not production outage/retry, human task success, conversion or causal activation evidence."
+  ],
+  "sourceQueue": {
+    "main": "63c56aaf919a07e919a61280311be1dc809cd6fe",
+    "blockingPR": 626,
+    "latestObservedHead": "7bee8d45a3e54aa350fb810e722609ad3c608cca",
+    "status": "New main composition published by its owner; CI and independent review pending. Older a376 had579passes22skips1WebKitiPhonecarttimeout, not an identified source-policy runtime failure.",
+    "caution": "Private436f preparation includes a separate canonical-runner follow-up and is not a pure626candidate. Original626ownerworktreewasactivelymergingmain; no foreign source branch or files were modified."
+  },
+  "evidenceSha256": {
+    "reports/booking-live-catalog-evidence-20261026/results.json": "a22e36c89b60e674fa5e6710b779967c534ef25366c6ce76a0bf12cb079c769e",
+    "reports/booking-live-catalog-evidence-20261026/verify.mjs": "255c101eb27f88352e065ddad04aada5cdd40729f2f683c68f9e2e438d303378",
+    "reports/booking-live-catalog-evidence-20261026/catalog-mobile.png": "29c3260d251811b2c64d215da884868e30c7bb6e800cdb43ae9e9b5c214ff82e",
+    "reports/booking-live-catalog-evidence-20261026/catalog-desktop.png": "fabfc1686bc75843e6e284daac3b6ef5908f37f54047e3290d7ada885f90ef7a"
+  }
+}

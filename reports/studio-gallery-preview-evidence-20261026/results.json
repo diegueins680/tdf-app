@@ -1,0 +1,73 @@
+{
+  "observedAt": "2026-10-26T17:13:31.079Z",
+  "base": "https://fc0026d2.tdf-app.pages.dev",
+  "scope": "Actual Cloudflare preview static artifact; all business/session APIs synthetic, external requests blocked. Not production, human usability or provider verification.",
+  "cases": [
+    {
+      "mode": "desktop",
+      "source": "c219279b33ce13337f71ddee8d14171f5adfc069",
+      "entry": "/assets/index-bIvwe3Ae.js",
+      "entrySha256": "cba14f8d8aff80d9fff3b004e4aeec383d553c455e04255f04851aef1f4e6c46",
+      "thumbnailHashesVerified": [
+        "control-room",
+        "recording-room",
+        "instruments",
+        "mixing-detail",
+        "drum-session",
+        "studio-community"
+      ],
+      "initialEnlargedRequests": 0,
+      "syntheticImageFailures": 1,
+      "retryPassed": true,
+      "keyboardFocusPassed": true,
+      "overflow320": false,
+      "seriousCriticalAxeViolations": [],
+      "businessWrites": 0,
+      "pageErrors": [],
+      "blockedExternal": [
+        {
+          "host": "api.frankfurter.dev",
+          "type": "fetch"
+        },
+        {
+          "host": "api.frankfurter.dev",
+          "type": "fetch"
+        }
+      ],
+      "passed": true
+    },
+    {
+      "mode": "Pixel7",
+      "source": "c219279b33ce13337f71ddee8d14171f5adfc069",
+      "entry": "/assets/index-bIvwe3Ae.js",
+      "entrySha256": "cba14f8d8aff80d9fff3b004e4aeec383d553c455e04255f04851aef1f4e6c46",
+      "thumbnailHashesVerified": [
+        "control-room",
+        "recording-room",
+        "instruments",
+        "mixing-detail",
+        "drum-session",
+        "studio-community"
+      ],
+      "initialEnlargedRequests": 0,
+      "syntheticImageFailures": 1,
+      "retryPassed": true,
+      "keyboardFocusPassed": true,
+      "overflow320": false,
+      "seriousCriticalAxeViolations": [],
+      "businessWrites": 0,
+      "pageErrors": [],
+      "blockedExternal": [
+        {
+          "host": "api.frankfurter.dev",
+          "type": "fetch"
+        },
+        {
+          "host": "api.frankfurter.dev",
+          "type": "fetch"
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

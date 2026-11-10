@@ -1,0 +1,13 @@
+[
+  {
+    "observedAt": "2026-10-26T06:50:52.003011+00:00",
+    "expectedMerge": "a1238fbf6d98062904a4bd80d2f9df35ebc40706",
+    "entry": "/assets/index-DCYgWaC1.js",
+    "entrySha256": "0be21b67aaf8f83e0450ba1fef4b27b6abee935b2b2b53fc77fd65ba4c18347c",
+    "embeddedCommits": [
+      "a1238fbf6d98062904a4bd80d2f9df35ebc40706"
+    ],
+    "expectedPublished": true,
+    "scope": "Public read-only HTML/entry; not browser behavior or backend deployment."
+  }
+]

@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Historical source preservation only; not a current runtime, release gate, proof or deployment",
+  "sourceBranch": "diagnose/artist-gallery-webkit-20261027",
+  "sourceHead": "cc7042c12c67bbf0f82669f913be023568803bfe",
+  "sourceBase": "eecb54709b877ee13d6875557dea304d89f7b796",
+  "originalUniqueCommits": [
+    {
+      "sha": "3513b635d4fd109d2777e26af2afe9f757ef674d",
+      "purpose": "Add isolated historical paint diagnostic"
+    },
+    {
+      "sha": "cc7042c12c67bbf0f82669f913be023568803bfe",
+      "purpose": "Correct isolated diagnostic project filters"
+    }
+  ],
+  "previousArchive": "b891a3e69191f2d19bc313cf8256e76c30820aaa",
+  "currentMainAtAudit": "ccea8c487c9fcdc73a85a9583ee2d257f6ba41d4",
+  "mainGuardImplementation": "e1e56dc8abd6214c32f8105f81892691fc7b6b5c",
+  "mainGuardPath": "e2e/web/public-welcome.spec.mjs",
+  "originalPinnedOrigin": "https://0aa86ab2.tdf-app.pages.dev",
+  "originalPinnedTestSha256": "5102a2614b4f1ba3f9f94a8f65666e1610cfdb7172513ee8edf938028142c494",
+  "currentMainTestSha256": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
+  "files": [
+    {
+      "originalPath": ".github/workflows/artist-gallery-webkit-diagnostic.yml",
+      "archivedPath": "archives/retired-branches/gallery-webkit-20261027/source/.github/workflows/artist-gallery-webkit-diagnostic.yml",
+      "gitBlob": "2a505f4ed80136bced9cd342c48c4ca2046a8fbb",
+      "bytes": 993,
+      "sha256": "e39b40ba188d1f7329c01930c99c91fb255d646c42c2b3ec687f50d2f1b7a9d7",
+      "mode": "100644",
+      "activeWorkflowOrRuntimeLocation": false
+    },
+    {
+      "originalPath": "scripts/artist-gallery-webkit-paint-diagnostic.mjs",
+      "archivedPath": "archives/retired-branches/gallery-webkit-20261027/source/scripts/artist-gallery-webkit-paint-diagnostic.mjs",
+      "gitBlob": "61f87765470b9fb536b022bba431c1c1e98e7823",
+      "bytes": 6805,
+      "sha256": "1d3f435560dc2037e4e716b643f11eeb586d40445eed80c15698339f0e2f8daf",
+      "mode": "100644",
+      "activeWorkflowOrRuntimeLocation": false
+    }
+  ],
+  "historicalWorkflowRuns": [
+    {
+      "id": 40521417947,
+      "head": "3513b635d4fd109d2777e26af2afe9f757ef674d",
+      "createdAt": "2026-10-27T14:28:22Z",
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40521417947"
+    },
+    {
+      "id": 40523919096,
+      "head": "cc7042c12c67bbf0f82669f913be023568803bfe",
+      "createdAt": "2026-10-27T14:43:47Z",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/diegueins680/tdf-app/actions/runs/40523919096"
+    }
+  ],
+  "artifactCustody": "The branch contains source, not raw run artifacts. Current run artifact listings are empty; no missing original binary results or current execution are invented. API run status metadata is recorded.",
+  "operationalSafety": {
+    "noOpenPRSourceOrBaseReference": true,
+    "noActiveWorkflowRun": true,
+    "namedBranchDeploymentReferences": [],
+    "historicalCommitDeploymentRecords": [
+      {
+        "id": 7361598373,
+        "ref": "cc7042c12c67bbf0f82669f913be023568803bfe",
+        "sha": "cc7042c12c67bbf0f82669f913be023568803bfe",
+        "environment": "Preview",
+        "production_environment": false,
+        "created_at": "2026-10-27T14:45:14Z"
+      }
+    ],
+    "historicalCommitDeploymentPreserved": true,
+    "currentMainExecutableBranchLiteralReferences": [],
+    "releasesTargetMain": true,
+    "fourEnvironmentNamedBranchPolicies": null,
+    "noKnownRegisteredGalleryWorktree": true,
+    "unknownClonesNotExcluded": true
+  },
+  "retirementBoundary": "Source branch retirement is separate: only after reviewed normal archive publication, complete hash/tree/parent checks, fresh exact source ref and all operational guards. This private archive is not a deletion result.",
+  "noProductTestsOrBrowserProviderOperation": true
+}

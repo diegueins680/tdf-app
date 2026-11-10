@@ -1,0 +1,25 @@
+{
+  "userAuthorization": "User explicitly authorized publishing the nine-line mobile API contract adjustment and instructed continuation.",
+  "authorizationStatus": "GRANTED",
+  "technicalAccess": "BLOCKED",
+  "attemptedRepository": "diegueins680/TDF-mobile",
+  "writeResponse": {
+    "status": 403,
+    "message": "Resource not accessible by integration"
+  },
+  "installation": {
+    "id": 74714092,
+    "repositorySelection": "selected",
+    "accessibleRepositories": [
+      "diegueins680/tdf-app",
+      "diegueins680/trader"
+    ],
+    "requiredRepositoryMissing": "diegueins680/TDF-mobile",
+    "settingsUrl": "https://github.com/settings/installations/74714092"
+  },
+  "mobileSourceCommit": "88d583f32bd6ac398dc0c2d7d36ac310568acf3b",
+  "mobilePublished": false,
+  "rootPRUpdated": false,
+  "merge": "NOT_PERFORMED",
+  "deployment": "NOT_PERFORMED"
+}
