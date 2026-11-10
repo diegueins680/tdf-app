@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -20,7 +21,7 @@ require = q.require
 DOCKER = ['docker', '--host', 'unix:///var/run/docker.sock']
 LABEL = 'net.tdf.synthetic-quarantine'
 SERVER = r'''
-import json,socket,sys,threading
+import json,os,socket,sys,threading
 address=sys.argv[1]
 s=socket.socket(socket.AF_INET6 if ':' in address else socket.AF_INET,socket.SOCK_STREAM)
 s.bind((address,0));s.listen(16)
@@ -33,7 +34,20 @@ def echo(c):
    c.sendall(data)
  finally:c.close()
 while True:
- c,_=s.accept();threading.Thread(target=echo,args=(c,),daemon=True).start()
+ c,_=s.accept()
+ with open(sys.argv[2],'ab',buffering=0) as f:f.write(b'accepted\n');os.fsync(f.fileno())
+ threading.Thread(target=echo,args=(c,),daemon=True).start()
+'''
+CONTINUOUS = r'''
+import socket,sys,time
+address,port,path=sys.argv[1:]
+while True:
+ with open(path,'ab',buffering=0) as f:f.write(b'attempt\n')
+ try:
+  with socket.socket(socket.AF_INET6 if ':' in address else socket.AF_INET,socket.SOCK_STREAM) as s:
+   s.settimeout(.05);s.connect((address,int(port)))
+ except OSError:pass
+ time.sleep(.01)
 '''
 CLIENT = r'''
 import json,socket,sys
@@ -68,6 +82,8 @@ def main():
     run(DOCKER+['image', 'inspect', image])
     initial_volumes = sorted(run(DOCKER+['volume','ls','--quiet']).split())
     nonce = os.urandom(6).hex(); name = 'tdf-quarantine-'+nonce
+    audit = tempfile.TemporaryDirectory(prefix='tdf-quarantine-packets-')
+    receiver_files = []
     network = container = peer_container = None
     namespace = None; link = None; children = []; installed = False; assertions = 0
     def child(prefix, program, *args):
@@ -75,7 +91,8 @@ def main():
                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         children.append(process); return process
     def server(prefix, address):
-        process = child(prefix, SERVER, address)
+        path = Path(audit.name)/str(len(receiver_files));receiver_files.append(path)
+        process = child(prefix, SERVER, address, str(path))
         return json.loads(process.stdout.readline())['port']
     def client(prefix): return child(prefix, CLIENT)
     def request(process, operation, expected=True, **kwargs):
@@ -154,6 +171,46 @@ def main():
             new_incoming = client([])
             request(new_incoming,'connect',address=addresses[index],port=api_ports[index])
             request(new_incoming,'send')
+        ufw_checked = os.environ.get('TDF_QUARANTINE_TEST_UFW') == '1'
+        if ufw_checked:
+            require(run(['dpkg-query','-W','-f','${Version}','ufw'])=='0.36.2-6')
+            require('(nf_tables)' in run(['iptables','--version'])
+                    and '(nf_tables)' in run(['ip6tables','--version']))
+            require(run(['systemctl','is-active','ufw.service'])=='active')
+            require('MANAGE_BUILTINS=no' in Path('/etc/default/ufw').read_text().splitlines())
+            require(not any(os.access(Path('/etc/ufw')/name,os.X_OK) for name in ('before.init','after.init')))
+            def counts(paths):return [p.stat().st_size if p.exists() else 0 for p in paths]
+            providers=receiver_files[2:6]
+            require(len(providers)==4)
+            accepted=counts(providers)
+            attempts = [];continuous = []
+            for i,(address,port) in enumerate(zip((*host,*routed_addresses),(*host_ports,*routed_ports))):
+                path=Path(audit.name)/('attempts-'+str(i));attempts.append(path)
+                continuous.append(child(prefix,CONTINUOUS,address,str(port),str(path)))
+            time.sleep(.3)
+            require(all(value>=24 for value in counts(attempts)))
+            # Every successful accept, including one during an intermediate UFW
+            # rule update, remains in the host-owned receiver logs. Do not infer
+            # continuity merely from equal before/after policy snapshots.
+            for command in (['ufw','reload'],['systemctl','restart','ufw.service']):
+                before=counts(attempts)
+                run(command);time.sleep(.3)
+                require(all(p.poll() is None for p in children))
+                require(all(a>b for a,b in zip(counts(attempts),before)))
+                require(counts(providers)==accepted)
+                q.observe([bridge]);assertions+=1
+                for index in range(2):
+                    request(incoming[index],'send')
+                    db=client(prefix)
+                    request(db,'connect',address=db_addresses[index],port=db_ports[index])
+                    request(db,'send')
+                require(counts(providers)==accepted)
+            # Stop only these synthetic senders before the permissive negative
+            # control, which intentionally makes their destinations reachable.
+            for process in continuous:
+                process.terminate();process.wait(timeout=3)
+                children.remove(process)
+            require(counts(providers)==accepted)
         # A permissive replacement is a negative control: the same blocked
         # fresh provider probe must become reachable, and admission must reject.
         require(all(process.poll() is None for process in children))
@@ -178,8 +235,15 @@ def main():
             restored = client(prefix)
             request(restored,'connect',address=host[index],port=host_ports[index])
             request(restored,'send')
+        # UFW must not silently mask a missing routed denial either.
+        run(['nft','flush','chain','inet',q.TABLE,'routed'])
+        for index in range(2):
+            restored=client(prefix)
+            request(restored,'connect',address=routed_addresses[index],port=routed_ports[index])
+            request(restored,'send')
         print(json.dumps({'packetAssertions':assertions,'ipv4AndIpv6':True,
              'preExistingOutboundBlocked':True,'incomingRepliesPreserved':True,
+             'ufwReloadAndRestartRestricted':ufw_checked,
              'removedDenialNegativeDetected':True,'rebootQualified':False}))
     finally:
         for process in reversed(children):
@@ -204,6 +268,7 @@ def main():
             require(row['Id']==network and row['Labels'].get(LABEL)==nonce and not row['Containers'])
             run(DOCKER+['network','rm',network])
         require(sorted(run(DOCKER+['volume','ls','--quiet']).split()) == initial_volumes)
+        audit.cleanup()
 
 
 if __name__ == '__main__': main()
