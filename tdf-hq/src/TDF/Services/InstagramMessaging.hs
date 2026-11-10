@@ -3,10 +3,12 @@ module TDF.Services.InstagramMessaging
   ( sendInstagramText
   , sendInstagramTextWithContext
   , sendInstagramTextWithContextAndTag
+  , sendInstagramTextWithContextAndTagUsing
   , formatInstagramGraphHttpError
   ) where
 
-import           Control.Exception (SomeException, try)
+import           Control.Exception (SomeException)
+import qualified Control.Exception.Safe as Safe
 import           Data.Aeson (encode, object, (.=))
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
@@ -23,7 +25,7 @@ import qualified Data.Text.Encoding.Error as TEE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
 import           Network.HTTP.Client (Manager, Request(..), RequestBody(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
-import           TDF.DB (sharedTlsManager)
+import           TDF.Services.MessagingManager (sharedMessagingManager)
 import           Network.HTTP.Types.Header (hAuthorization)
 import           Network.HTTP.Types.Status (statusCode)
 
@@ -33,15 +35,8 @@ sendInstagramText :: AppConfig -> Text -> Text -> IO (Either Text Text)
 sendInstagramText cfg recipientId body =
   sendInstagramTextWithContext cfg Nothing Nothing recipientId body
 
-data InstagramAttemptSource = InstagramAttemptSource
-  { iasLabel     :: Text
-  , iasToken     :: Text
-  , iasAccountId :: Text
-  }
-
 data InstagramAttempt = InstagramAttempt
-  { iaLabel :: Text
-  , iaToken :: Text
+  { iaToken :: Text
   , iaUrl   :: Text
   }
 
@@ -50,16 +45,19 @@ sendInstagramTextWithContext cfg mTokenOverride mAccountIdOverride recipientId b
   sendInstagramTextWithContextAndTag cfg mTokenOverride mAccountIdOverride recipientId body Nothing
 
 sendInstagramTextWithContextAndTag :: AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> Maybe Text -> IO (Either Text Text)
-sendInstagramTextWithContextAndTag cfg mTokenOverride mAccountIdOverride recipientId body mTag =
+sendInstagramTextWithContextAndTag = sendInstagramTextWithContextAndTagUsing sharedMessagingManager
+
+sendInstagramTextWithContextAndTagUsing :: Manager -> AppConfig -> Maybe Text -> Maybe Text -> Text -> Text -> Maybe Text -> IO (Either Text Text)
+sendInstagramTextWithContextAndTagUsing manager cfg mTokenOverride mAccountIdOverride recipientId body mTag =
   case validateInstagramMessagePayload recipientId body of
     Left err -> pure (Left err)
     Right (cleanRecipientId, cleanBody) ->
-      case buildAttempts cfg mTokenOverride mAccountIdOverride of
+      case buildAttempt cfg mTokenOverride mAccountIdOverride of
         Left err ->
           pure (Left err)
-        Right attempts -> do
-          manager <- pure sharedTlsManager
-          runAttempts manager cleanRecipientId cleanBody attempts mTag []
+        Right attempt ->
+          sendToEndpoint manager (iaToken attempt) cleanRecipientId cleanBody
+            (iaUrl attempt) mTag
 
 nonEmptyText :: Text -> Maybe Text
 nonEmptyText raw =
@@ -109,47 +107,22 @@ validateInstagramMessageBody rawBody =
       | otherwise ->
           Right messageBody
 
-buildAttempts :: AppConfig -> Maybe Text -> Maybe Text -> Either Text [InstagramAttempt]
-buildAttempts cfg mTokenOverride mAccountIdOverride = do
-  base <-
-    either (Left . T.pack) Right $
-      normalizeConfiguredApiBaseUrl
-        "INSTAGRAM_MESSAGING_API_BASE"
-        (T.unpack (instagramMessagingApiBase cfg))
-  let mConfiguredSource = buildSourceQuiet
-        "configured fallback token"
-        "INSTAGRAM_MESSAGING_TOKEN"
-        "INSTAGRAM_MESSAGING_ACCOUNT_ID"
-        (instagramMessagingToken cfg)
-        (instagramMessagingAccountId cfg)
-  if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
-    then do
-      connectedSource <- buildSource
-        "connected asset token"
-        "Instagram connected asset token"
-        "Instagram connected asset account id"
-        mTokenOverride
-        mAccountIdOverride
-      pure (nubAttempts (sourceAttempts base connectedSource ++ maybe [] (sourceAttempts base) mConfiguredSource))
-    else do
-      source <- buildSource
-        "configured fallback token"
-        "INSTAGRAM_MESSAGING_TOKEN"
-        "INSTAGRAM_MESSAGING_ACCOUNT_ID"
-        (instagramMessagingToken cfg)
-        (instagramMessagingAccountId cfg)
-      pure (nubAttempts (sourceAttempts base source))
-  where
-    buildSource attemptLabel tokenLabel accountIdLabel mToken mAccountId =
-      InstagramAttemptSource attemptLabel
-        <$> validateInstagramBearerToken tokenLabel mToken
-        <*> validateInstagramAccountId accountIdLabel mAccountId
-
-    buildSourceQuiet attemptLabel tokenLabel accountIdLabel mToken mAccountId =
-      either (const Nothing) Just $
-        InstagramAttemptSource attemptLabel
-          <$> validateInstagramBearerToken tokenLabel mToken
-          <*> validateInstagramAccountId accountIdLabel mAccountId
+-- Select one authority before dispatch. A lost reply does not authorize a
+-- second POST to /me or to another configured account/token.
+buildAttempt :: AppConfig -> Maybe Text -> Maybe Text -> Either Text InstagramAttempt
+buildAttempt cfg mTokenOverride mAccountIdOverride = do
+  base <- either (Left . T.pack) Right $
+    normalizeConfiguredApiBaseUrl
+      "INSTAGRAM_MESSAGING_API_BASE" (T.unpack (instagramMessagingApiBase cfg))
+  (token, accountId) <-
+    if hasExplicitMessagingContext mTokenOverride mAccountIdOverride
+      then (,)
+        <$> validateInstagramBearerToken "Instagram connected asset token" mTokenOverride
+        <*> validateInstagramAccountId "Instagram connected asset account id" mAccountIdOverride
+      else (,)
+        <$> validateInstagramBearerToken "INSTAGRAM_MESSAGING_TOKEN" (instagramMessagingToken cfg)
+        <*> validateInstagramAccountId "INSTAGRAM_MESSAGING_ACCOUNT_ID" (instagramMessagingAccountId cfg)
+  pure (InstagramAttempt token (base <> "/" <> accountId <> "/messages"))
 
 validateInstagramBearerToken :: Text -> Maybe Text -> Either Text Text
 validateInstagramBearerToken label mRawToken =
@@ -191,32 +164,6 @@ hasExplicitMessagingContext :: Maybe Text -> Maybe Text -> Bool
 hasExplicitMessagingContext mTokenOverride mAccountIdOverride =
   isJust mTokenOverride || isJust mAccountIdOverride
 
-nubAttempts :: [InstagramAttempt] -> [InstagramAttempt]
-nubAttempts =
-  nubByText (\attempt -> iaLabel attempt <> "|" <> iaToken attempt <> "|" <> iaUrl attempt)
-
-nubByText :: (a -> Text) -> [a] -> [a]
-nubByText toKey = go []
-  where
-    go _ [] = []
-    go seen (x:xs) =
-      let key = toKey x
-      in if key `elem` seen
-        then go seen xs
-        else x : go (key : seen) xs
-
-sourceAttempts :: Text -> InstagramAttemptSource -> [InstagramAttempt]
-sourceAttempts base source =
-  [ InstagramAttempt
-      (iasLabel source)
-      (iasToken source)
-      (base <> "/" <> iasAccountId source <> "/messages")
-  , InstagramAttempt
-      (iasLabel source <> " (me fallback)")
-      (iasToken source)
-      (base <> "/me/messages")
-  ]
-
 invalidHeaderValueChar :: Char -> Bool
 invalidHeaderValueChar ch = isSpace ch || isControl ch
 
@@ -248,17 +195,6 @@ maxInstagramAccountIdChars = 128
 maxInstagramMessageBodyChars :: Int
 maxInstagramMessageBodyChars = 5000
 
-runAttempts :: Manager -> Text -> Text -> [InstagramAttempt] -> Maybe Text -> [Text] -> IO (Either Text Text)
-runAttempts _ _ _ [] _ [] = pure (Left "Instagram messaging failed without details")
-runAttempts _ _ _ [] _ errors = pure (Left (T.intercalate " | " (reverse errors)))
-runAttempts manager recipientId body (attempt:rest) mTag errors = do
-  result <- sendToEndpoint manager (iaToken attempt) recipientId body (iaUrl attempt) mTag
-  case result of
-    Right payload -> pure (Right payload)
-    Left err ->
-      let labelledError = "Send failed via " <> iaLabel attempt <> " at " <> iaUrl attempt <> ": " <> err
-      in runAttempts manager recipientId body rest mTag (labelledError : errors)
-
 sendToEndpoint
   :: Manager
   -> Text
@@ -268,9 +204,9 @@ sendToEndpoint
   -> Maybe Text
   -> IO (Either Text Text)
 sendToEndpoint manager token recipientId body urlTxt mTag = do
-  reqE <- try (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
+  reqE <- Safe.tryAny (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
   case reqE of
-    Left err -> pure (Left (T.pack (show err)))
+    Left _ -> pure (Left "Invalid Instagram messaging endpoint")
     Right req0 -> do
       let req = req0
             { method = "POST"
@@ -278,6 +214,8 @@ sendToEndpoint manager token recipientId body urlTxt mTag = do
                 [ ("Content-Type", "application/json")
                 , (hAuthorization, BS.pack ("Bearer " <> T.unpack token))
                 ]
+            , redirectCount = 0
+            , checkResponse = \_ _ -> pure ()
             , requestBody = RequestBodyLBS (encode payload)
             }
           payload = case mTag of
@@ -292,9 +230,9 @@ sendToEndpoint manager token recipientId body urlTxt mTag = do
               , "message" .= object [ "text" .= body ]
               , "messaging_type" .= ("RESPONSE" :: Text)
               ]
-      respE <- try (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
+      respE <- Safe.tryAny (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
       pure $ case respE of
-        Left err -> Left (T.pack (show err))
+        Left _ -> Left "Instagram delivery outcome unknown; automatic resend is not safe"
         Right resp ->
           let status = statusCode (responseStatus resp)
               bodyTxt = decodeInstagramGraphBody (responseBody resp)

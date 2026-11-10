@@ -135,6 +135,8 @@ import           TDF.Config
   , instagramAppToken
   , ticketmasterApiKey
   , eventLogisticsRecheckEnabled
+  , socialAutoReplyEnabled
+  , coursePaymentReminderEnabled
   , artistEnrichmentEnabled
   , artistEnrichmentAutoPublish
   , artistEnrichmentHourLocal
@@ -208,9 +210,12 @@ uniq = nub
 
 -- | Launch a background thread that sends payment reminders every day at 09:00 (server local time).
 startCoursePaymentReminderJob :: Env -> IO ()
-startCoursePaymentReminderJob env = do
-  void (forkIO (cronLoop env))
-  LogBuf.addLog LogBuf.LogInfo "[Cron][CoursePayment] Scheduled daily reminder at 09:00 local time."
+startCoursePaymentReminderJob env@Env{envConfig}
+  | not (coursePaymentReminderEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][CoursePayment] Disabled by configuration."
+  | otherwise = do
+      void (forkIO (cronLoop env))
+      LogBuf.addLog LogBuf.LogInfo "[Cron][CoursePayment] Scheduled daily reminder at 09:00 local time."
 
 cronLoop :: Env -> IO ()
 cronLoop env = forever $ do
@@ -932,7 +937,7 @@ sendCoursePaymentReminders Env{..} = do
               "skipped"
               (Just msg)
           else do
-            sendResult <- try
+            sendResult <- Safe.tryAny
               (EmailSvc.sendCoursePaymentReminder
                 emailSvc
                 nameTxt
@@ -1043,13 +1048,16 @@ recordCourseEmailEventIO pool rawSlug mRegId rawEmail mName rawEventType rawStat
 -- | Launch a background thread that sends auto replies for social inbox messages.
 -- Runs every 60s (near real-time), rather than once per day.
 startSocialAutoReplyJob :: Env -> IO ()
-startSocialAutoReplyJob env = do
-  void (forkIO (socialReplyLoop env))
-  LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] Scheduled replies every 60s."
+startSocialAutoReplyJob env@Env{envConfig}
+  | not (socialAutoReplyEnabled envConfig) =
+      LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] Disabled by configuration."
+  | otherwise = do
+      void (forkIO (socialReplyLoop env))
+      LogBuf.addLog LogBuf.LogInfo "[Cron][SocialAutoReply] Scheduled replies every 60s."
 
 socialReplyLoop :: Env -> IO ()
 socialReplyLoop env = forever $ do
-  result <- try (sendSocialAutoReplies env) :: IO (Either SomeException ())
+  result <- Safe.tryAny (sendSocialAutoReplies env) :: IO (Either SomeException ())
   case result of
     Left err -> do
       let msg = "[Cron][SocialAutoReply] Job failed: " <> T.pack (show err)
@@ -1061,7 +1069,7 @@ socialReplyLoop env = forever $ do
 
 sendSocialAutoReplies :: Env -> IO ()
 sendSocialAutoReplies env@Env{envPool, envConfig} = do
-  refreshAttempt <- try (ensureRagIndex envConfig envPool) :: IO (Either SomeException (Either Text Bool))
+  refreshAttempt <- Safe.tryAny (ensureRagIndex envConfig envPool) :: IO (Either SomeException (Either Text Bool))
   case refreshAttempt of
     Left err ->
       LogBuf.addLog LogBuf.LogWarning ("[Cron][SocialAutoReply] RAG refresh crashed: " <> T.pack (show err))

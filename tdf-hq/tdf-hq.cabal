@@ -119,6 +119,7 @@ executable tdf-hq-exe
     TDF.Commerce.StateMachine
     TDF.Config
     TDF.Cron
+    TDF.Services.MessagingManager
     TDF.Cors
     TDF.DB
     TDF.DB.ReputationConsent
@@ -471,6 +472,7 @@ test-suite tdf-hq-test
     TDF.Config
     TDF.Cors
     TDF.Cron
+    TDF.Services.MessagingManager
     TDF.Courses.Production
     TDF.DB
     TDF.DB.ReputationConsent
@@ -586,6 +588,7 @@ test-suite tdf-hq-test
     TDF.ServerSpec
     TDF.StartupResponseSpec
     TDF.ShutdownSpec
+    TDF.SocialTransportSpec
     TDF.ServerAdminSpec
     TDF.ServerProposalsSpec
     TDF.Social.FollowHandlerSpec

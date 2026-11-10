@@ -220,18 +220,20 @@ def exercise_database_recovery(archive, saved, db, actual_application=False, act
                 cleanup_adapter=cleanup.OriginalDisposableCleanup(journal,archive,cleanup_reservation)
                 cleanup_execute=cleanup.d.o.fence.execute
                 removal_calls=[]
+                expected_removals=[disposable_evidence['canary']]
+                if not disposable_evidence['databaseAlreadyAbsent']:expected_removals.append(disposable_evidence['database'])
                 def lose_final_removal_reply(command):
                     result=cleanup_execute(command)
                     if command[:len(DOCKER)+2]==DOCKER+['rm','--force']:
                         removal_calls.append(command[-1])
-                        if command[-1]==disposable_evidence['database']:
+                        if command[-1]==expected_removals[-1]:
                             raise TimeoutError('Synthetic lost final removal acknowledgement')
                     return result
                 with patch.object(cleanup.d.o.fence,'execute',side_effect=lose_final_removal_reply):
                     try:cleanup_adapter.recover()
                     except TimeoutError:pass
                     else:require(False)
-                require(removal_calls==[disposable_evidence['canary'],disposable_evidence['database']]
+                require(removal_calls==expected_removals
                         and journal.current()['pendingStage']=='remove-disposables'
                         and os.path.lexists(reservation.directory/cleanup.d.restore.PENDING_NAME))
                 try:cleanup_adapter.recover()
@@ -362,6 +364,8 @@ def main():
     nonce = os.urandom(16).hex()
     archive = Path('/opt/tdf')/('synthetic-fence-'+nonce)
     archive.mkdir(mode=0o700)
+    archive_stat=archive.stat()
+    normalize_empty_fixture(archive,(archive_stat.st_dev,archive_stat.st_ino))
     (archive/'journal').mkdir(mode=0o700)
     created_containers, created_networks, created_volumes, created_units = {}, [], [], []
     hashes = {w.SERVICE: hashlib.sha256(SERVICE.encode()).hexdigest(),

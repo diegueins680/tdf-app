@@ -18,7 +18,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import System.Environment (lookupEnv)
 import Network.HTTP.Client (Manager)
-import TDF.DB (sharedTlsManager)
+import TDF.Services.MessagingManager (sharedMessagingManager)
 import Database.PostgreSQL.Simple (Connection, execute, Only(..))
 
 import qualified TDF.Config as Config
@@ -48,7 +48,7 @@ data WhatsAppService = WhatsAppService
 
 mkWhatsAppService :: IO WhatsAppService
 mkWhatsAppService = do
-  mgr <- pure sharedTlsManager
+  mgr <- pure sharedMessagingManager
   cfg <- loadWhatsAppConfig
   pure $ WhatsAppService mgr cfg
 

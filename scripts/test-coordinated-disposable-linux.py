@@ -60,5 +60,13 @@ def prepare(f,archive,saved):
         f.run(f.DOCKER+['stop','--time','20',target])
         row=f.inspect(target)
         f.require(row['State']['Running'] is False and row['HostConfig']['RestartPolicy']=={'Name':'no','MaximumRetryCount':0})
+    missing_database=os.environ.get('TDF_TEST_DISPOSABLE_MISSING_DATABASE','0')=='1'
+    if missing_database:
+        # Owned fixture control: simulate an already removed dependency without
+        # starting the surviving stopped canary or weakening abort admission.
+        clone.inspect()
+        f.run(f.DOCKER+['rm','--force',clone.target])
+        f.require(clone.target not in f.run(f.DOCKER+['ps','--all','--quiet','--no-trunc']).split())
     return {'database':clone.target,'canary':application.target,'directory':str(directory),
-            'realCreationAndCanaryVerified':True,'normalCleanupInterruptionRetained':True}
+            'realCreationAndCanaryVerified':True,'normalCleanupInterruptionRetained':True,
+            'databaseAlreadyAbsent':missing_database}

@@ -99,6 +99,7 @@ class ConformanceControls(unittest.TestCase):
             'POST /ddex/import-plans/{}/commit', 'POST /ddex/exports',
             'GET /ddex/exports/{}/download', 'POST /marketplace/cart/{}/stripe/payment-intent',
             'POST /radio/transmissions', 'POST /social-events/events/{}/live-broadcasts',
+            'POST /contracts/{}/send',
         })
         requirements = json.loads((conformance.ROOT/'formal/system/requirements.json').read_text())['requirements']
         conformance.validate_response_status(policy, requirements)

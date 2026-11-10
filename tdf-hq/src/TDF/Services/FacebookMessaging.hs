@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module TDF.Services.FacebookMessaging
   ( sendFacebookText
+  , sendFacebookTextUsing
   , formatFacebookGraphHttpError
   ) where
 
-import           Control.Exception (SomeException, try)
+import           Control.Exception (SomeException)
+import qualified Control.Exception.Safe as Safe
 import           Data.Aeson (encode, object, (.=))
 import           Data.Char
   ( GeneralCategory(Format, LineSeparator, ParagraphSeparator)
@@ -19,26 +21,28 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Encoding.Error as TEE
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BL
-import           Network.HTTP.Client (Request(..), RequestBody(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
-import           TDF.DB (sharedTlsManager)
+import           Network.HTTP.Client (Manager, Request(..), RequestBody(..), Response, httpLbs, parseRequest, responseBody, responseStatus)
+import           TDF.Services.MessagingManager (sharedMessagingManager)
 import           Network.HTTP.Types.Header (hAuthorization)
 import           Network.HTTP.Types.Status (statusCode)
 
 import           TDF.Config (AppConfig(..), normalizeConfiguredApiBaseUrl)
 
 sendFacebookText :: AppConfig -> Text -> Text -> IO (Either Text Text)
-sendFacebookText cfg recipientId body =
+sendFacebookText = sendFacebookTextUsing sharedMessagingManager
+
+sendFacebookTextUsing :: Manager -> AppConfig -> Text -> Text -> IO (Either Text Text)
+sendFacebookTextUsing manager cfg recipientId body =
   case validateFacebookMessagePayload recipientId body of
     Left err -> pure (Left err)
     Right (cleanRecipientId, cleanBody) ->
       case validateFacebookMessagingContext cfg of
         Left err -> pure (Left err)
         Right (token, pageId, base) -> do
-          manager <- pure sharedTlsManager
           let urlTxt = base <> "/" <> pageId <> "/messages"
-          reqE <- try (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
+          reqE <- Safe.tryAny (parseRequest (T.unpack urlTxt)) :: IO (Either SomeException Request)
           case reqE of
-            Left err -> pure (Left (T.pack (show err)))
+            Left _ -> pure (Left "Invalid Facebook messaging endpoint")
             Right req0 -> do
               let payload = object
                     [ "recipient" .= object [ "id" .= cleanRecipientId ]
@@ -51,11 +55,13 @@ sendFacebookText cfg recipientId body =
                         [ ("Content-Type", "application/json")
                         , (hAuthorization, BS.pack ("Bearer " <> T.unpack token))
                         ]
+                    , redirectCount = 0
+                    , checkResponse = \_ _ -> pure ()
                     , requestBody = RequestBodyLBS (encode payload)
                     }
-              respE <- try (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
+              respE <- Safe.tryAny (httpLbs req manager) :: IO (Either SomeException (Response BL.ByteString))
               pure $ case respE of
-                Left err -> Left (T.pack (show err))
+                Left _ -> Left "Facebook delivery outcome unknown; automatic resend is not safe"
                 Right resp ->
                   let status = statusCode (responseStatus resp)
                       bodyTxt = decodeFacebookGraphBody (responseBody resp)
