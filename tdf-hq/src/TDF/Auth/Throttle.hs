@@ -24,6 +24,7 @@ module TDF.Auth.Throttle
   , authThrottleRetryAfterSeconds
   , authThrottleLockedOut
   , authThrottleOverLimit
+  , ensureAuthThrottleSchema
   , lockAuthThrottleSubject
   , readAuthThrottleCount
   , consumeAuthThrottle
@@ -83,6 +84,26 @@ authThrottleLockedOut scope recorded = recorded >= authThrottleLimit scope
 -- | A counter returned by consuming one unit: this request went past the limit.
 authThrottleOverLimit :: AuthThrottleScope -> Int -> Bool
 authThrottleOverLimit scope consumed = consumed > authThrottleLimit scope
+
+-- | Create the counter table when the backend migrates its own schema at
+-- startup (development, test fixtures). The statements are the ones of
+-- @sql/2026-11-10_auth_rate_limit.sql@ and are idempotent, so a database that
+-- already received that migration is left as it is.
+ensureAuthThrottleSchema :: SqlPersistT IO ()
+ensureAuthThrottleSchema = do
+  rawExecute
+    "CREATE TABLE IF NOT EXISTS auth_rate_limit (\
+    \  scope TEXT NOT NULL CHECK (scope IN ('login-failure', 'signup', 'password-reset')),\
+    \  subject_hash TEXT NOT NULL CHECK (subject_hash ~ '^[0-9a-f]{64}$'),\
+    \  window_started_at TIMESTAMPTZ NOT NULL,\
+    \  request_count INT NOT NULL CHECK (request_count > 0),\
+    \  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),\
+    \  PRIMARY KEY (scope, subject_hash, window_started_at)\
+    \)"
+    []
+  rawExecute
+    "CREATE INDEX IF NOT EXISTS auth_rate_limit_window_idx ON auth_rate_limit (window_started_at)"
+    []
 
 -- | Serialize every transaction that checks and counts one subject. The
 -- advisory lock is held to the end of the transaction, so concurrent attempts

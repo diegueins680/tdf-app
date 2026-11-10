@@ -22743,16 +22743,19 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
         "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "scripts/test-auth-throttle-http.sh",
+        "scripts/lib/auth_throttle_http.py"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the counters and the handler wiring are read from the code and exercised by the PostgreSQL HTTP suites, not by a dedicated test.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema).",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -26892,7 +26895,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
+    ".github/workflows/ci.yml": "be08cd8afaeaef40d4c4daea10a0ed47c7936ed2ee0e6ce53844d14bbb64b2b0",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/event-operations-formal.yml": "cd0a03c4bdeec315f0e28bb6373ba1f4dab05aeebfa7c6b4061b84877183e0c1",
@@ -27453,6 +27456,7 @@
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
     "scripts/interactions/test-http.sh": "087ac80166a5381eff9e60417685428c462721533324a7dd7c96cf6b7968a41a",
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
+    "scripts/lib/auth_throttle_http.py": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
     "scripts/lib/formal-methods-audit.mjs": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
@@ -27529,6 +27533,7 @@
     "scripts/test-artist-visibility-sql.py": "7027d2fadfedcebc9d7b367c3f17c425191c4e3186f0178939b01f72453941c0",
     "scripts/test-auth-predicates.py": "d84c51fe21419d6dc1ad6136be88b4231c4c53177c011be084444babb939c30b",
     "scripts/test-auth-recovery-migration.sh": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
+    "scripts/test-auth-throttle-http.sh": "0761f381914a6c11968049ab002d2b2b8d75c3e8b2cc0b4b8a0985d4df0dffab",
     "scripts/test-automatic-migrations-production-schema.sh": "a5e6a9437be4b0c0b4db2e466bd851b288f2003debc5d0aff30ddd5e80ef49dc",
     "scripts/test-backend-version-rebuild.py": "c95cb13bdd2552413078ce5a568d079251070ca2f150c52c1041f29d8aecbacc",
     "scripts/test-booking-conformance.py": "2d51aa2f20c498e3c00990c27a5b972d8dfe28593fb668ebd292587131e259dc",
@@ -28436,7 +28441,7 @@
     "tdf-hq/src/TDF/API/Radio.hs": "5c62e0f4a402225202217be3a8361991127ad1ac093fd0f4366789dd1723357f",
     "tdf-hq/src/TDF/API/SocialEventsAPI.hs": "2f0395f784b9600abf35a5b0eacce472c63f50c0ccfa55a6e7fec5189e560dd0",
     "tdf-hq/src/TDF/API/Types.hs": "ba7307954095d886ed25ad0f5062a4dad076149906cb824965c325afa0fda4b4",
-    "tdf-hq/src/TDF/App/Boot.hs": "4d28306ae9a5bd326061fc83320069a58b871c1eeb14b6a341d4e4a88ac0dfee",
+    "tdf-hq/src/TDF/App/Boot.hs": "c4c60bc92c8a1c91034bb028240a397e02b5ee2e08a87cda7fd6296f904fde47",
     "tdf-hq/src/TDF/App/FailureBoundary.hs": "158b961935c20e95aa6a43637e1ede2f078bb8ecb594de1d5f8abbf91764004f",
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
@@ -28445,7 +28450,7 @@
     "tdf-hq/src/TDF/Artists/Promotion.hs": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
     "tdf-hq/src/TDF/Auth.hs": "cbf9a2642b4e43acf65afc04812816703020981198d6e9cf8f090dac7e69b4fb",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
-    "tdf-hq/src/TDF/Auth/Throttle.hs": "43c2fccd547f547901a03845988a208f3315ac07b8951e35d08ed1c198f24151",
+    "tdf-hq/src/TDF/Auth/Throttle.hs": "462dd51867cf0f6634fc2450e7723e297721dbc4544775aa9d2fcbcf12eb0533",
     "tdf-hq/src/TDF/CMS/Models.hs": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
     "tdf-hq/src/TDF/Calendar/Models.hs": "ade52945cff1553e3e6e88edbd3a67457bda196364df216a62a8d1d69e8bcee8",
     "tdf-hq/src/TDF/Calendar/TokenCipher.hs": "926c4158eee01f8eaf46ee5786c4208da3dd2a62b9f99dd9bada1af87e8bf656",
@@ -35616,6 +35621,10 @@
       },
       {
         "requirement": "EVT-TICKET-INVOICE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
         "relationship": "implementation"
       },
       {
@@ -44507,6 +44516,18 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/test-auth-throttle-http.sh": [
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/lib/auth_throttle_http.py": [
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Social/RelationshipWrites.hs": [
       {
         "requirement": "SOCIAL-RELATIONSHIP-WRITES-001",
@@ -46366,7 +46387,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
+      "sha256": "be08cd8afaeaef40d4c4daea10a0ed47c7936ed2ee0e6ce53844d14bbb64b2b0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50193,6 +50214,18 @@
       ]
     },
     {
+      "id": "SURFACE-e51d4870cffa2db7",
+      "path": "scripts/lib/auth_throttle_http.py",
+      "sha256": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
       "sha256": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
@@ -52076,6 +52109,18 @@
         {
           "requirement": "SYS-VERIFY-004",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7abbe811f3de7af3",
+      "path": "scripts/test-auth-throttle-http.sh",
+      "sha256": "0761f381914a6c11968049ab002d2b2b8d75c3e8b2cc0b4b8a0985d4df0dffab",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -70905,7 +70950,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "4d28306ae9a5bd326061fc83320069a58b871c1eeb14b6a341d4e4a88ac0dfee",
+      "sha256": "c4c60bc92c8a1c91034bb028240a397e02b5ee2e08a87cda7fd6296f904fde47",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -70918,6 +70963,10 @@
         },
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "AUTH-CREDENTIAL-INTAKE-001",
           "relationship": "implementation"
         },
         {
@@ -71069,7 +71118,7 @@
     {
       "id": "SURFACE-fcdcb342b1a07142",
       "path": "tdf-hq/src/TDF/Auth/Throttle.hs",
-      "sha256": "43c2fccd547f547901a03845988a208f3315ac07b8951e35d08ed1c198f24151",
+      "sha256": "462dd51867cf0f6634fc2450e7723e297721dbc4544775aa9d2fcbcf12eb0533",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83890,7 +83939,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "13a9d25c81d3b40e88b1eeb72260d1d623f97a6024f7cde4289d2cb8c25d4a25",
+      "sourceSha256": "1309cbd2bf1bfccb009bc8c32d3ddf7af82f9a36a452537f4a7674852197bda4",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83918,7 +83967,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "13a9d25c81d3b40e88b1eeb72260d1d623f97a6024f7cde4289d2cb8c25d4a25",
+      "sourceSha256": "1309cbd2bf1bfccb009bc8c32d3ddf7af82f9a36a452537f4a7674852197bda4",
       "definition": {
         "states": [
           "absent",
@@ -83948,7 +83997,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "13a9d25c81d3b40e88b1eeb72260d1d623f97a6024f7cde4289d2cb8c25d4a25",
+      "sourceSha256": "1309cbd2bf1bfccb009bc8c32d3ddf7af82f9a36a452537f4a7674852197bda4",
       "definition": {
         "export": [
           "queued",

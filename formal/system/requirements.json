@@ -22742,16 +22742,19 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
         "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "scripts/test-auth-throttle-http.sh",
+        "scripts/lib/auth_throttle_http.py"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the counters and the handler wiring are read from the code and exercised by the PostgreSQL HTTP suites, not by a dedicated test.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema).",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
