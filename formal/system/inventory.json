@@ -13,6 +13,7 @@
       ".github/workflows/ci-safe-install.yml",
       ".github/workflows/ci.yml",
       ".github/workflows/datadog-synthetics.yml",
+      ".github/workflows/desktop.yml",
       ".github/workflows/event-operations-formal.yml",
       ".github/workflows/event-raci-browser.yml",
       ".github/workflows/interaction-verification.yml",
@@ -25,6 +26,12 @@
       ".gitmodules"
     ],
     "e2e": [
+      "e2e/desktop/helpers/api-fixture.mjs",
+      "e2e/desktop/helpers/shell.mjs",
+      "e2e/desktop/operations.spec.mjs",
+      "e2e/desktop/playback.spec.mjs",
+      "e2e/desktop/shell-session.spec.mjs",
+      "e2e/desktop/uploads.spec.mjs",
       "e2e/integration/event-raci-browser.spec.mjs",
       "e2e/interactions/interactions.spec.mjs",
       "e2e/torrent-audio/fixture-server.mjs",
@@ -758,6 +765,29 @@
       "streaming/docker-compose.streaming.yml",
       "streaming/mediamtx.yml"
     ],
+    "tdf-desktop": [
+      "tdf-desktop/channels/local.json",
+      "tdf-desktop/channels/production.json",
+      "tdf-desktop/electron-builder.config.cjs",
+      "tdf-desktop/package-lock.json",
+      "tdf-desktop/package.json",
+      "tdf-desktop/scripts/prepare-channel.cjs",
+      "tdf-desktop/scripts/signing.cjs",
+      "tdf-desktop/src/main/config.cjs",
+      "tdf-desktop/src/main/links.cjs",
+      "tdf-desktop/src/main/log.cjs",
+      "tdf-desktop/src/main/main.cjs",
+      "tdf-desktop/src/main/menu.cjs",
+      "tdf-desktop/src/main/playbackState.cjs",
+      "tdf-desktop/src/main/updater.cjs",
+      "tdf-desktop/src/preload/preload.cjs",
+      "tdf-desktop/test/config.test.cjs",
+      "tdf-desktop/test/links.test.cjs",
+      "tdf-desktop/test/playbackState.test.cjs",
+      "tdf-desktop/test/release-policy.test.cjs",
+      "tdf-desktop/test/signing.test.cjs",
+      "tdf-desktop/test/updater.test.cjs"
+    ],
     "tdf-hq-ui": [
       "tdf-hq-ui/.eslintrc.cjs",
       "tdf-hq-ui/Dockerfile.staging",
@@ -1123,6 +1153,8 @@
       "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts",
       "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx",
       "tdf-hq-ui/src/contexts/ToastContext.tsx",
+      "tdf-hq-ui/src/desktop/shell.test.ts",
+      "tdf-hq-ui/src/desktop/shell.ts",
       "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.test.ts",
       "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.ts",
       "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
@@ -1393,6 +1425,7 @@
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts",
       "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+      "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.tsx",
       "tdf-hq-ui/src/pages/NotificationPage.tsx",
@@ -1502,6 +1535,8 @@
       "tdf-hq-ui/src/player/analytics.test.ts",
       "tdf-hq-ui/src/player/analytics.ts",
       "tdf-hq-ui/src/player/assetAccess.ts",
+      "tdf-hq-ui/src/player/playbackSession.test.ts",
+      "tdf-hq-ui/src/player/playbackSession.ts",
       "tdf-hq-ui/src/player/publicMusicTrack.test.ts",
       "tdf-hq-ui/src/player/publicMusicTrack.ts",
       "tdf-hq-ui/src/player/queue.test.ts",
@@ -3109,6 +3144,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cc0ad60f02c62cee",
+      "path": ".github/workflows/desktop.yml",
+      "sha256": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
       "sha256": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
@@ -3154,6 +3195,42 @@
       "id": "SURFACE-fe7afb5c9c916e52",
       "path": ".gitmodules",
       "sha256": "559976056b82d99cd9c0e532a3df18644e1e9ea6f9e153c52c25999bcb8eb4ad",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2c54a02e428c0eca",
+      "path": "e2e/desktop/helpers/api-fixture.mjs",
+      "sha256": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0a67c30fc4273850",
+      "path": "e2e/desktop/helpers/shell.mjs",
+      "sha256": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7c5cb17cbae6fad9",
+      "path": "e2e/desktop/operations.spec.mjs",
+      "sha256": "2da328457d5d35bd1b889ad7888747cebfce0db948bf32abbe9c30b2bac5e725",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-24b0fd9f63025110",
+      "path": "e2e/desktop/playback.spec.mjs",
+      "sha256": "6d5b9689e14f381045c8116a16a5949c3a2d00f29ecd631413ed44a22917327d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-cc2ad01c6769392e",
+      "path": "e2e/desktop/shell-session.spec.mjs",
+      "sha256": "d9ba24c8a6ab259a3bb3c323aa88b7a45fca513a569fc678ca3650ad258014e1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4de935e9babfab27",
+      "path": "e2e/desktop/uploads.spec.mjs",
+      "sha256": "2174ad43cdb1cc6e318da1e9bb86a6dd438fef893f8f370a4c232fba1549ee95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3765,7 +3842,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a27042dedef0905645b75c59160e725c6db2f2225d3ba1d50eb31311767446a0",
+      "sha256": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5865,7 +5942,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "717ca96ab62100ea5bd349ad0365a0906461ea1d55e170c1b9e605b72c3404ab",
+      "sha256": "89b5afa51ac9efb2dd5a504b763bd0eddfc8503b592b9d929af7125126c2eb9b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7453,6 +7530,132 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-1119723ea28a74a9",
+      "path": "tdf-desktop/channels/local.json",
+      "sha256": "e3c51ea68810123c41038f0f2a0d945010e5e8b90af3b97703dcd64c659a6530",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0839da6115127b24",
+      "path": "tdf-desktop/channels/production.json",
+      "sha256": "90bb117814611f9fb4bf39f8d9ce542a6bcd1e95af6b8631f5fbfb4e3a524bfc",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e283f7607c87d86d",
+      "path": "tdf-desktop/electron-builder.config.cjs",
+      "sha256": "a669965872acd873bb1add55392e02f18011ef7e258602eec50833adfb23b923",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4fdd8318bfe62766",
+      "path": "tdf-desktop/package-lock.json",
+      "sha256": "d82fd2c876db15022230dfcf8cde475403b13f0e06ead2b3e93d3fd3e6c46e10",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e1a370d364959f55",
+      "path": "tdf-desktop/package.json",
+      "sha256": "5a035d04a11b993ddefc82bcc9e5d8f6f753d3456ab155819f3c04885599d4fe",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-39df5c4b339b5ada",
+      "path": "tdf-desktop/scripts/prepare-channel.cjs",
+      "sha256": "f5eb69f82883963b0b51ce645051975d5f17a266220ac3e6a7c23fae6b1d1320",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5afd256288b5aad6",
+      "path": "tdf-desktop/scripts/signing.cjs",
+      "sha256": "ab8215260ffd749af837d15b09d5f286caf88c1774d5db386bb019f07b4c16ea",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-83811d613ced9025",
+      "path": "tdf-desktop/src/main/config.cjs",
+      "sha256": "aa9cedb9ed37805b5992e9758c13ececf556a7ef9e0c5ee5a5b4cf32013e342d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b80e2418f31ebf79",
+      "path": "tdf-desktop/src/main/links.cjs",
+      "sha256": "2c6cf596e0dcc539794a7127616b0626047cadc171c05b40eb6b071981946532",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-02a3b5d6caa66e65",
+      "path": "tdf-desktop/src/main/log.cjs",
+      "sha256": "7ed5121374f342c6778ee2aaa585bdf8ad911501b784abe0a5c9c8936d26abed",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2233b8c59333ca18",
+      "path": "tdf-desktop/src/main/main.cjs",
+      "sha256": "90a793774e147ea6c52d6822e3ff8b658d5ddc45a1324c29d41a9d2676512fab",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2b4dffe8dbae9678",
+      "path": "tdf-desktop/src/main/menu.cjs",
+      "sha256": "8e816cc3b4ea94f4e49fc1b8044008da2610c09a226f7488b1fadb0c681739a3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-4ec8564b4d5b5374",
+      "path": "tdf-desktop/src/main/playbackState.cjs",
+      "sha256": "988a1451f782cd69f647bffbe278376133bc6dcf719eda05179db93f6704c5f3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d2a7bfe5d354ddf1",
+      "path": "tdf-desktop/src/main/updater.cjs",
+      "sha256": "cdeb2f1a565952981931a0e11bd376f8f99a228ff00b49b75fe772432f4abd92",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-32883b97af1b7fcb",
+      "path": "tdf-desktop/src/preload/preload.cjs",
+      "sha256": "d10a3ead12ed41a32692d1ab423932b48c2b4b8d4e17130663dfb1bded0fdf3f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-41798d2b651ffc66",
+      "path": "tdf-desktop/test/config.test.cjs",
+      "sha256": "5a333c052ec4e0a08edbb1cf6afcc009e24f48ea97fc2086af9e3f9bc1e24a8a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-593d47a6bfbd5083",
+      "path": "tdf-desktop/test/links.test.cjs",
+      "sha256": "cc0509aff2a28ea181772c0a5a6836cbaffda6175e8dd91113e66af19a5f3961",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f188e96dfeb44fd0",
+      "path": "tdf-desktop/test/playbackState.test.cjs",
+      "sha256": "4642e931cbad941bb137d6d7b0c6903a895c47168b1901e5e99cc3ac45cb5a79",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e0c8fe00799cba13",
+      "path": "tdf-desktop/test/release-policy.test.cjs",
+      "sha256": "43a770d79df0950ae28d192ae705505057538c218ec4f8f42881c71c3c975171",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dda85ea04f03ddf8",
+      "path": "tdf-desktop/test/signing.test.cjs",
+      "sha256": "c41014a2fad42e847525444fb739814efeaadcd7161f837feb872931024cda43",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-26b470a131ea24c8",
+      "path": "tdf-desktop/test/updater.test.cjs",
+      "sha256": "3095f2683586b420caa56ebd0263e17bc732b0f305321ea30bbf5dcd384a9f1c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-e678e87f09e1d641",
       "path": "tdf-hq-ui/.eslintrc.cjs",
       "sha256": "8ddb4987709838ad3e001a7b3959cc2e6e0b63d35684c2db3e066a7dd733dc9f",
@@ -8301,13 +8504,13 @@
     {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "07776593433c18bda040520d9416d4c4606bdf65802d50101af77c06eb87e9b0",
+      "sha256": "47713758df818e726e15f375146be25fa33a235d8885076821c8ca653dfd03ef",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a705d4292ecffee3",
       "path": "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
-      "sha256": "e5a48b23eb9974f54078b4095084a8f2419d193742aba76aee3f798fa85ed695",
+      "sha256": "8f3721fed84de4ad71f0f087f1f5dc25de44c6c170ad17a091915486d7deab40",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8991,7 +9194,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "0dee9eea31b4c0550c930568b3f9794f141d0d021e5d0f6aa9741efba97e2dac",
+      "sha256": "ecb3980cf1338692699e0d95e528fa6e5a629d644a1fdb09a81bda9be12c7084",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9637,6 +9840,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7ead9f40bbfdff1b",
+      "path": "tdf-hq-ui/src/desktop/shell.test.ts",
+      "sha256": "4a3ff436d1a4fc40424786499a45255e8e1b6b5c795408bcacbf17f874d55769",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5124f3b2ff0a37ab",
+      "path": "tdf-hq-ui/src/desktop/shell.ts",
+      "sha256": "72405a96082db143d40b8ccd906d87ad217956a8e095d9b5dd980991255494ae",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-97be8dda570dadfa",
       "path": "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.test.ts",
       "sha256": "4a733f3b466f016aa53164979552ceff81c812d5fc53745aa9fa829c9e6a1002",
@@ -10173,13 +10388,13 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "db8231f6f28f7b0827e057e9d9b150b5678de60b2ef4e55486443708023fd7f7",
+      "sha256": "6afb4e409b47382a4c428069f595a56df81b34966e267514c97c810f693a1c97",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "b918d1907be49f093999c63c94b79fd42dec140a67727c77c8c2753581ec84d4",
+      "sha256": "cff5e92c269d23cf5c6bb47108022b89840c4e39a661b2f8a585af631d6a8512",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11049,7 +11264,7 @@
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "58e1f9a2962556913c7540cf9db152866b824323007a5ba7b2eb3b49cf907a8b",
+      "sha256": "4341c1d35aebc39f660a5fc03d57d702a97fcc61e8851787bfb5833ac639b2a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11253,7 +11468,13 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "2548054414c5dc3168bef65f9f2022e76df210f947d5ce212b1add2881f57e00",
+      "sha256": "170361034fe56bbcae7deb08123fd3ed3cf3957bbbd27fdc0663023b40dd1c1c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6dc3d41d6d23778b",
+      "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
+      "sha256": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11883,7 +12104,7 @@
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "445adef24fefb118ba1c86ad94e77fd28a4435610bf0f5d5a32057567a2d046b",
+      "sha256": "b193d27880210aa51db0dc09417b378a38e84e3431576b320c974dfc99e3cb0c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11908,6 +12129,18 @@
       "id": "SURFACE-d6d70a73f7318a52",
       "path": "tdf-hq-ui/src/player/assetAccess.ts",
       "sha256": "a0da01ca4f664e57db6f1efcbcf5f6cb601c181679bd7d4c4d92b7c5c07c74d1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1ee40981a49b4078",
+      "path": "tdf-hq-ui/src/player/playbackSession.test.ts",
+      "sha256": "1746a3d439aac8777e16a48f350de923479e1113c555469e6bffef3c74c58416",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-ebd315c82a4189bf",
+      "path": "tdf-hq-ui/src/player/playbackSession.ts",
+      "sha256": "5536029f666790f34ceaf8ee8e587e99f8c9115c7dff0ef83198a7ae3e0230bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21300,7 +21533,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "590b2c2fcc4858c3b8c589a9e68d3b628c90773071a838cbbc0ab7c453a4b42a",
+      "sha256": "880c8152c76d92637fefe5a1cb874b9f1fdd01b16b5cdbc45773539cd1958a5e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21740,6 +21973,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/adr/0132-desktop-shell-electron.md",
+      "sha256": "deceb5ca0d5f425c7874daf296edddd8d7137e2fd8311713af354d16c1ae0d13",
+      "authority": "proposed",
+      "authorityBasis": "Status: proposed (implementación entregada en `tdf-desktop/`; la distribución pública requiere firma y aprobación del propietario del producto)",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/analytics.md",
       "sha256": "de97d1084db4ba906edc1d8bbea02efffd8fa0a5ab11d4f8115dbb3d720bc5a7",
       "authority": "inferred",
@@ -22059,6 +22299,20 @@
       "sha256": "97a2b6c3709e5d28e6543a5b2549ee9019bd7237a32eea81a5640f42e965704e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/desktop/README.md",
+      "sha256": "f56b600df4910c770e6ff8a0ca3961a4f7a48c83b20b2fc5427e1cc3c3da6899",
+      "authority": "inferred",
+      "authorityBasis": "Status: implemented for review (2026-11-08). Installed-platform acceptance on",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/desktop/verification-2026-11-08.md",
+      "sha256": "805472d2e0f24ec062a05ac2d79540076410b3ec7ca920cae6748c803a309460",
+      "authority": "inferred",
+      "authorityBasis": "Status: evidence for the first delivery stage. It distinguishes what ran on the",
       "kind": "requirement-candidate"
     },
     {
@@ -29553,7 +29807,7 @@
     },
     {
       "path": "formal/system/README.md",
-      "sha256": "f17d2e0a91caa999a1717b45d3b3548a58cc1bd2a38bcdef4226548454daab80",
+      "sha256": "aed83b7837f26b8f08eeca6144c7b1b32b3044cf6e8a186de88d8f90fa908215",
       "authority": "inferred",
       "authorityBasis": "Status: active reconciliation on consolidated main, 2026-10-13. **System-wide",
       "kind": "requirement-candidate"
@@ -29834,6 +30088,13 @@
     {
       "path": "formal/system/dependency-security.md",
       "sha256": "03daf0b423977b5c66861f129f7e4e745b875e55dfeba33e1e64f12523ac5cbe",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/desktop-shell.md",
+      "sha256": "8a994113c15a45e847403456c7b5e0d465266d707af4a35c972a2711b5139378",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30589,7 +30850,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "8b287a505c3d0fdaa87d0ac483db5d751275c610c8aea6f1ea8ff93f85ed009b",
+      "sha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32292,6 +32553,33 @@
       "statement": "A plain uniqueness constraint on `(scope, terms_version)` was rejected because it would forbid the legitimate same-text reuse above and force a new acceptance round for buyers whose terms did not change. Sending a content digest from the client was rejected as a larger contract change with no additional protection once the version is guaranteed to name one text.",
       "source": "docs/adr/0131-checkout-terms-version-identity.md#decision",
       "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0132-desktop-shell-electron:51d0993d2356",
+      "statement": "Construir TDF App Desktop como un shell Electron (`tdf-desktop/`) que aloja la aplicación web canónica en su origen de producción (`https://www.tdfrecords.net`) y comparte rutas, componentes, API y reglas de negocio sin duplicarlos.",
+      "source": "docs/adr/0132-desktop-shell-electron.md#decisión",
+      "status": "proposed",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0132-desktop-shell-electron:76d461886c7a",
+      "statement": "El shell no implementa lógica de negocio. Añade: ventana endurecida (sandbox, aislamiento de contexto, sin Node en la página), política de navegación que solo permite el origen autorizado y páginas internas empaquetadas, apertura de enlaces externos en el navegador del sistema, validación de enlaces profundos `tdf-desktop://open?path=/ruta` antes de navegar, puente mínimo `window.tdfDesktop` expuesto solo en el origen autorizado y verificado de nuevo en el proceso principal, menú nativo de reproducción conectado a la misma sesión de reproducción que la Media Session, canal de actualización del shell con descargas verificadas e instalación explícita, y paquetes de prueba marcados `UNSIGNED-TEST` cuando no hay credenciales de firma.",
+      "source": "docs/adr/0132-desktop-shell-electron.md#decisión",
+      "status": "proposed",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0132-desktop-shell-electron:93a95c6f5b56",
+      "statement": "La web incorpora una sesión de reproducción compartida (`tdf-hq-ui/src/player/playbackSession.ts`) para que el reproductor de lanzamientos y la radio compartan una única Media Session y los comandos del sistema actúen sobre el audio activo; añade zonas de arrastre, cancelación por archivo y reintento con la misma `Idempotency-Key` en el Studio de lanzamientos; reutiliza una sola `Idempotency-Key` por transición de ciclo de vida hasta que el servidor confirma; y oculta el inicio con Google dentro del shell porque Google Identity Services rechaza contextos embebidos.",
+      "source": "docs/adr/0132-desktop-shell-electron.md#decisión",
+      "status": "proposed",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
       "gap": "Per-clause implementation correspondence not discharged by inventory"

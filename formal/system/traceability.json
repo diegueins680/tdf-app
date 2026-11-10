@@ -8291,7 +8291,9 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "tdf-hq/test/TDF/MusicPublicationSpec.hs",
         "scripts/test-music-publication.sh",
-        "scripts/test-music-integration-rehearsal.mjs"
+        "scripts/test-music-integration-rehearsal.mjs",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
+        "e2e/desktop/uploads.spec.mjs"
       ],
       "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script; PostgreSQL spec of the schedulers (scripts/test-music-publication.sh); bounded TLC model of scheduled publication with four negative controls (formal/system/music-publication.md); bounded one-row withdrawal fairness model with a permanent failure and a starvation mutation control",
       "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); scheduler reproduction, spec and model results in formal/system/music-publication.md (2026-10-11); no production evidence (migrations not applied in production)",
@@ -26606,6 +26608,265 @@
       "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests. Injected-clock/fetch cache controls cover the 899/900 second boundary, withdrawn keys with fresh claims, stale failure/empty/cancel cooldown, concurrent refresh and clock rollback; these finite cases are not a universal revocation proof.",
       "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
       "contract": "tdf-hq/docs/openapi/api.yaml"
+    },
+    {
+      "id": "SYS-DESKTOP-001",
+      "title": "Desktop shell hosts only the authorized TDF origin with validated entry points",
+      "statement": "The Electron shell hosts the channel appOrigin in a sandboxed, context-isolated renderer without Node; exposes a frozen window.tdfDesktop bridge only on that origin and re-validates every IPC sender; classifies navigations and popups so only the hosted origin and bundled internal pages open inside the shell while http(s) destinations go to the system browser and other schemes are blocked; parses tdf-desktop://open deep links into safe in-app paths or rejects them before navigating; limits permissions to media, notifications, fullscreen, clipboard and speaker selection; labels unpackaged and unsigned builds; and offers no Google sign-in inside the shell.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "Every navigation, popup, deep link and IPC message is classified against appOrigin before any effect; rejected inputs are logged and inert.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Electron shell",
+        "states": [
+          "unpackaged-unsigned",
+          "packaged-unsigned-test",
+          "packaged-signed"
+        ]
+      },
+      "allowedTransitions": [
+        "hosted application loaded -> offline fallback -> retry -> hosted application loaded"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log (URLs recorded without query strings, fragments or credentials), smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-desktop/src/main/main.cjs",
+        "tdf-desktop/src/main/config.cjs",
+        "tdf-desktop/src/main/links.cjs",
+        "tdf-desktop/src/main/menu.cjs",
+        "tdf-desktop/src/main/log.cjs",
+        "tdf-desktop/src/preload/preload.cjs",
+        "tdf-desktop/channels/production.json",
+        "tdf-desktop/channels/local.json",
+        "tdf-hq-ui/src/desktop/shell.ts",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+      ],
+      "tests": [
+        "tdf-desktop/test/links.test.cjs",
+        "tdf-desktop/test/config.test.cjs",
+        "tdf-hq-ui/src/desktop/shell.test.ts",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "e2e/desktop/shell-session.spec.mjs",
+        "e2e/desktop/operations.spec.mjs",
+        "e2e/desktop/helpers/shell.mjs",
+        "e2e/desktop/helpers/api-fixture.mjs",
+        "playwright.desktop.config.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": true
+    },
+    {
+      "id": "SYS-DESKTOP-002",
+      "title": "Release player and radio share one system playback session",
+      "statement": "The web application keeps one ordered playback-owner registry: the owner that most recently started or selected audio installs its metadata and action handlers on the Media Session and reports to the desktop shell; passive updates never change the active owner; releasing the active owner restores the previous one; shell commands route to the active owner; the shell menu mirrors the last sanitized report.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "At any time at most one owner controls navigator.mediaSession and the shell menu, and it is the most recently activated owner still registered.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Electron shell",
+        "states": [
+          "unpackaged-unsigned",
+          "packaged-unsigned-test",
+          "packaged-signed"
+        ]
+      },
+      "allowedTransitions": [
+        "hosted application loaded -> offline fallback -> retry -> hosted application loaded"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log, smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-hq-ui/src/player/playbackSession.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-desktop/src/main/playbackState.cjs",
+        "tdf-desktop/src/main/menu.cjs",
+        "tdf-desktop/src/preload/preload.cjs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/playbackSession.test.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "tdf-desktop/test/playbackState.test.cjs",
+        "e2e/desktop/playback.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": false
+    },
+    {
+      "id": "SYS-DESKTOP-003",
+      "title": "Desktop installers, shell update channel and recovery are reproducible and fail closed",
+      "statement": "electron-builder produces DMG/ZIP (macOS x64, arm64) and NSIS (Windows x64, arm64) from one source commit with the validated channel embedded; signing and notarization run only when credentials exist, otherwise signing is explicitly disabled and artifacts carry UNSIGNED-TEST; electron-updater uses a generic feed, downloads only on user decision, verifies before installing and leaves the installed version on failure; unsigned or unpackaged builds disable updates; the workflow publishes to the feed only from a matching desktop-v<version> tag with signed artifacts and runs an installed smoke on both platforms.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "No unsigned or unverified package is ever installed or published; a failed update leaves the installed version runnable.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Shell updater",
+        "states": [
+          "disabled",
+          "idle",
+          "checking",
+          "available",
+          "downloading",
+          "downloaded",
+          "up-to-date",
+          "error"
+        ]
+      },
+      "allowedTransitions": [
+        "idle -> checking -> available -> downloading -> downloaded -> install on quit or on request",
+        "checking -> up-to-date",
+        "checking|downloading -> error -> idle (retry)"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log, smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-desktop/electron-builder.config.cjs",
+        "tdf-desktop/scripts/prepare-channel.cjs",
+        "tdf-desktop/scripts/signing.cjs",
+        "tdf-desktop/src/main/updater.cjs",
+        "tdf-desktop/package.json",
+        "tdf-desktop/package-lock.json",
+        ".github/workflows/desktop.yml"
+      ],
+      "tests": [
+        "tdf-desktop/test/updater.test.cjs",
+        "tdf-desktop/test/config.test.cjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-desktop/test/release-policy.test.cjs",
+        "tdf-desktop/test/signing.test.cjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": false
     }
   ],
   "sourceFingerprints": {
@@ -26618,6 +26879,7 @@
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
     ".github/workflows/ci.yml": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
+    ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/event-operations-formal.yml": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
@@ -26626,11 +26888,17 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "00bf8b14158c0d7d161d41c42dd1181523cdcc1f06f2aeb1f23e3e02d19215b6",
+    "docs/catalog-persistence/catalog-list-decisions.json": "15e68fab5c6e19ae285566596e6efb42878cbc7ac88e3b72310166bfa8fcc653",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
+    "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
+    "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
+    "e2e/desktop/operations.spec.mjs": "2da328457d5d35bd1b889ad7888747cebfce0db948bf32abbe9c30b2bac5e725",
+    "e2e/desktop/playback.spec.mjs": "6d5b9689e14f381045c8116a16a5949c3a2d00f29ecd631413ed44a22917327d",
+    "e2e/desktop/shell-session.spec.mjs": "d9ba24c8a6ab259a3bb3c323aa88b7a45fca513a569fc678ca3650ad258014e1",
+    "e2e/desktop/uploads.spec.mjs": "2174ad43cdb1cc6e318da1e9bb86a6dd438fef893f8f370a4c232fba1549ee95",
     "e2e/torrent-audio/fixture-server.mjs": "c97be99807b4ac3839329a7fe3d59c8444283f56875d294c6e22156fa572d201",
     "e2e/torrent-audio/setup.mjs": "1e98a7c10e5e77d267cf8baa303675c0a240812e53adb3ad079e2fc1ef1d1875",
     "e2e/torrent-audio/streaming.spec.mjs": "dc3a888ffef647471bc5eca9df69920369702710551cda427b65f2ad9b59be7d",
@@ -27032,6 +27300,7 @@
     "package-lock.json": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
     "package.json": "1bc10b69030ac6d05d41c5948ecc745783b5b00ee796a266d0bd5d14cb743073",
     "playwright.config.mjs": "37eb4ab6c22dc0a3f2e575361426a045ad760a32920fe4a3b36a1f50e660e71b",
+    "playwright.desktop.config.mjs": "74292833e979da0f81610adcedcddcfe6a7053cd5dfa6a34b36b2f1ddbddeb92",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
     "playwright.music-native.config.mjs": "097ce4df9e2759ec6c2d5bbbd352a8555b5aa3da606913e5121d2d3cc0f880fe",
     "playwright.torrent-audio.config.mjs": "1ee4d97fa640cc439eedd07660dd242774c9adad9de8ac614d40a26ea63f202b",
@@ -27045,7 +27314,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "a27042dedef0905645b75c59160e725c6db2f2225d3ba1d50eb31311767446a0",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -27233,7 +27502,7 @@
     "scripts/social/test-dm-writes.sh": "2f216b4a6d7537959a0ddc6aa4da52afc5a11828d852dc6a3c5d469702e9122a",
     "scripts/social/test-http.sh": "79cb3fc47fc8b191182fbe21dd8294acce64697796bdd12a753f7da7821ba457",
     "scripts/specification-conformance.py": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
-    "scripts/specification-inventory.py": "717ca96ab62100ea5bd349ad0365a0906461ea1d55e170c1b9e605b72c3404ab",
+    "scripts/specification-inventory.py": "89b5afa51ac9efb2dd5a504b763bd0eddfc8503b592b9d929af7125126c2eb9b",
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-api-token-session-expiry-migration.sh": "af72a6da6641bdb8ecd8ba35d70c9f2586ae3b5e056b42ad63dbd07bcdac7036",
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
@@ -27439,6 +27708,27 @@
     "services/campaign-platform/youtube_upload.py": "a7a0e513d0e607d88f8e87d39b6650224dc342fb5b5bee843ece578fee2c801f",
     "streaming/docker-compose.streaming.yml": "27a418566cfbaf8d10fd9da948aecc6bae2b3279b14e67013aae26492e33e249",
     "streaming/mediamtx.yml": "591ef29080a6a350f6ff58164af0af7b9814676ad3e213722c0c16911cddb6ba",
+    "tdf-desktop/channels/local.json": "e3c51ea68810123c41038f0f2a0d945010e5e8b90af3b97703dcd64c659a6530",
+    "tdf-desktop/channels/production.json": "90bb117814611f9fb4bf39f8d9ce542a6bcd1e95af6b8631f5fbfb4e3a524bfc",
+    "tdf-desktop/electron-builder.config.cjs": "a669965872acd873bb1add55392e02f18011ef7e258602eec50833adfb23b923",
+    "tdf-desktop/package-lock.json": "d82fd2c876db15022230dfcf8cde475403b13f0e06ead2b3e93d3fd3e6c46e10",
+    "tdf-desktop/package.json": "5a035d04a11b993ddefc82bcc9e5d8f6f753d3456ab155819f3c04885599d4fe",
+    "tdf-desktop/scripts/prepare-channel.cjs": "f5eb69f82883963b0b51ce645051975d5f17a266220ac3e6a7c23fae6b1d1320",
+    "tdf-desktop/scripts/signing.cjs": "ab8215260ffd749af837d15b09d5f286caf88c1774d5db386bb019f07b4c16ea",
+    "tdf-desktop/src/main/config.cjs": "aa9cedb9ed37805b5992e9758c13ececf556a7ef9e0c5ee5a5b4cf32013e342d",
+    "tdf-desktop/src/main/links.cjs": "2c6cf596e0dcc539794a7127616b0626047cadc171c05b40eb6b071981946532",
+    "tdf-desktop/src/main/log.cjs": "7ed5121374f342c6778ee2aaa585bdf8ad911501b784abe0a5c9c8936d26abed",
+    "tdf-desktop/src/main/main.cjs": "90a793774e147ea6c52d6822e3ff8b658d5ddc45a1324c29d41a9d2676512fab",
+    "tdf-desktop/src/main/menu.cjs": "8e816cc3b4ea94f4e49fc1b8044008da2610c09a226f7488b1fadb0c681739a3",
+    "tdf-desktop/src/main/playbackState.cjs": "988a1451f782cd69f647bffbe278376133bc6dcf719eda05179db93f6704c5f3",
+    "tdf-desktop/src/main/updater.cjs": "cdeb2f1a565952981931a0e11bd376f8f99a228ff00b49b75fe772432f4abd92",
+    "tdf-desktop/src/preload/preload.cjs": "d10a3ead12ed41a32692d1ab423932b48c2b4b8d4e17130663dfb1bded0fdf3f",
+    "tdf-desktop/test/config.test.cjs": "5a333c052ec4e0a08edbb1cf6afcc009e24f48ea97fc2086af9e3f9bc1e24a8a",
+    "tdf-desktop/test/links.test.cjs": "cc0509aff2a28ea181772c0a5a6836cbaffda6175e8dd91113e66af19a5f3961",
+    "tdf-desktop/test/playbackState.test.cjs": "4642e931cbad941bb137d6d7b0c6903a895c47168b1901e5e99cc3ac45cb5a79",
+    "tdf-desktop/test/release-policy.test.cjs": "43a770d79df0950ae28d192ae705505057538c218ec4f8f42881c71c3c975171",
+    "tdf-desktop/test/signing.test.cjs": "c41014a2fad42e847525444fb739814efeaadcd7161f837feb872931024cda43",
+    "tdf-desktop/test/updater.test.cjs": "3095f2683586b420caa56ebd0263e17bc732b0f305321ea30bbf5dcd384a9f1c",
     "tdf-hq-ui/browser-test/torrent-audio.html": "71327a943be3e23e4895beaceaa2ccfe1c8aff9cf89cb40da7dcd2b89ba6aca0",
     "tdf-hq-ui/e2e/storage-upload.html": "ae82c9fb53db6a8fbb03f1e883d374efcad8740009eb1fe9ee3b3b440d05c051",
     "tdf-hq-ui/e2e/storage-upload.tsx": "db97a876b5beb240476600ccdeff7e3dfaf0dc81a628379b43e0070d3a7cf082",
@@ -27516,8 +27806,8 @@
     "tdf-hq-ui/src/api/musicReleases.money.test.ts": "dd10351e9e57dd83732f10c0b53d02c15dcef75f5b90afccda8235d65ccf75fe",
     "tdf-hq-ui/src/api/musicReleases.pagination.test.ts": "e1b83d693a268efebd2121a899cf6fa422d39994895425abddb68054056b652e",
     "tdf-hq-ui/src/api/musicReleases.search.test.ts": "669c73a1f2882d218c8b1054f19512fbc1c9dd1aaed3cd9568b20597db2c9eda",
-    "tdf-hq-ui/src/api/musicReleases.ts": "07776593433c18bda040520d9416d4c4606bdf65802d50101af77c06eb87e9b0",
-    "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "e5a48b23eb9974f54078b4095084a8f2419d193742aba76aee3f798fa85ed695",
+    "tdf-hq-ui/src/api/musicReleases.ts": "47713758df818e726e15f375146be25fa33a235d8885076821c8ca653dfd03ef",
+    "tdf-hq-ui/src/api/musicReleases.upload.test.ts": "8f3721fed84de4ad71f0f087f1f5dc25de44c6c170ad17a091915486d7deab40",
     "tdf-hq-ui/src/api/musicStorageResponse.test.ts": "4d173a68d03907dd1106b079b472a92d6212b2938e8421b360cb78a315797b8f",
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
     "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
@@ -27566,7 +27856,7 @@
     "tdf-hq-ui/src/components/PublicBranding.tsx": "9ce84c4ecc6b7f3e427f814310d7e2baf2817c4237e10a980cadb89fa5661970",
     "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "0f61ba07e4d1c71af5f550af67ada13232f96b00104a7a6f353582991353db61",
-    "tdf-hq-ui/src/components/RadioWidget.tsx": "0dee9eea31b4c0550c930568b3f9794f141d0d021e5d0f6aa9741efba97e2dac",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "ecb3980cf1338692699e0d95e528fa6e5a629d644a1fdb09a81bda9be12c7084",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts": "abd98064a5b8ffa6da050af98f46ad63e2b4db64a59e5bc24f7d70d4986b5d25",
     "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts": "f2f2e641146ac3a31efdd826db24fcbb6dc490796ea6c975afdf2be56775c5b0",
     "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx": "37d1879a921ec638b250cb693f039b45167242e4373bfe0f09788da364636a4e",
@@ -27629,6 +27919,8 @@
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+    "tdf-hq-ui/src/desktop/shell.test.ts": "4a3ff436d1a4fc40424786499a45255e8e1b6b5c795408bcacbf17f874d55769",
+    "tdf-hq-ui/src/desktop/shell.ts": "72405a96082db143d40b8ccd906d87ad217956a8e095d9b5dd980991255494ae",
     "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
     "tdf-hq-ui/src/features/campaigns/videoAttribution.ts": "243066134ab5d8bd0d98f908dc0706d1a0cb999126e7d106337f34ce555adec5",
     "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts": "ea50012625c3e00735db60556e8400db0b697c859d029c8ce398376f1d44fba2",
@@ -27676,8 +27968,8 @@
     "tdf-hq-ui/src/i18n/index.ts": "53c26394ae54a6dd8fbfd91429e0300bf5b2d324d7e66f48179e283f7fc832e5",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
     "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
-    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "db8231f6f28f7b0827e057e9d9b150b5678de60b2ef4e55486443708023fd7f7",
-    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "b918d1907be49f093999c63c94b79fd42dec140a67727c77c8c2753581ec84d4",
+    "tdf-hq-ui/src/i18n/locales/authEntry.en.ts": "6afb4e409b47382a4c428069f595a56df81b34966e267514c97c810f693a1c97",
+    "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": "cff5e92c269d23cf5c6bb47108022b89840c4e39a661b2f8a585af631d6a8512",
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
@@ -27756,7 +28048,7 @@
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "71f1ed772a76a0fb6544caa20fb23bf87809972979b6401ba54e08da718f495b",
-    "tdf-hq-ui/src/pages/LoginPage.tsx": "58e1f9a2962556913c7540cf9db152866b824323007a5ba7b2eb3b49cf907a8b",
+    "tdf-hq-ui/src/pages/LoginPage.tsx": "4341c1d35aebc39f660a5fc03d57d702a97fcc61e8851787bfb5833ac639b2a3",
     "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx": "13a878136764e5afcddf99d85bee2abbe50904e681f33d7aa3f4eb83ac50eba4",
     "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx": "6299b5767030bb37f92082ae3f70da3d68262bb81a35fb11974492d14a5d3696",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "a84f06a4b102f43f604bbaeb42f2386b418e1845196d73cb9929bbe74999597f",
@@ -27774,7 +28066,8 @@
     "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "4dd4547567f2eeb1945a623bfeb3c57e36b78df60e2808410f7475a7005125fe",
     "tdf-hq-ui/src/pages/MusicReleaseStudioPage.test.ts": "26ae645bd78e98a19c1659bfad09c7a953aa8ae16bcc95632258380882285dde",
-    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "2548054414c5dc3168bef65f9f2022e76df210f947d5ce212b1add2881f57e00",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "170361034fe56bbcae7deb08123fd3ed3cf3957bbbd27fdc0663023b40dd1c1c",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
     "tdf-hq-ui/src/pages/NotFoundPage.test.tsx": "0bb182ef3da26e32894ee7ca9093cf1691afb78b7e6a3ec9129d4dc3f0fa97bc",
     "tdf-hq-ui/src/pages/NotFoundPage.tsx": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
     "tdf-hq-ui/src/pages/NotificationPage.tsx": "238197064a2439a50fc9cd7d075e511147d7852f46bc116e9ca82922b230d520",
@@ -27821,11 +28114,13 @@
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": "ef8f21d27fda31ce8fad31623a62845bb2dd8816ff333844ed50a33492103727",
     "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "1817116d31aaccdfe90c6603a68b7f79ec4de53231ec8dc4827801cc5ac978b6",
-    "tdf-hq-ui/src/player/PlayerProvider.tsx": "445adef24fefb118ba1c86ad94e77fd28a4435610bf0f5d5a32057567a2d046b",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "b193d27880210aa51db0dc09417b378a38e84e3431576b320c974dfc99e3cb0c",
     "tdf-hq-ui/src/player/PlayerShell.tsx": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
     "tdf-hq-ui/src/player/analytics.test.ts": "ea44642f88074faa812887cdbd611d6720eb77fbb8985c6ec681726673c65420",
     "tdf-hq-ui/src/player/analytics.ts": "004329c88a0e171892b21295bf6464d3922bb379ab9c09239f1566ce6356b169",
     "tdf-hq-ui/src/player/assetAccess.ts": "a0da01ca4f664e57db6f1efcbcf5f6cb601c181679bd7d4c4d92b7c5c07c74d1",
+    "tdf-hq-ui/src/player/playbackSession.test.ts": "1746a3d439aac8777e16a48f350de923479e1113c555469e6bffef3c74c58416",
+    "tdf-hq-ui/src/player/playbackSession.ts": "5536029f666790f34ceaf8ee8e587e99f8c9115c7dff0ef83198a7ae3e0230bd",
     "tdf-hq-ui/src/player/publicMusicTrack.test.ts": "d5b711ce4a179ea044776b1ceaded93815755ed140f505112013321b6131b4ad",
     "tdf-hq-ui/src/player/publicMusicTrack.ts": "e67236c3b1ff3b4dba7f49276b58ce0d943cdceaa6755defc09cd4c6671568cb",
     "tdf-hq-ui/src/player/queue.test.ts": "736c8b5550f3e3a8d7ad51e548e1fda55d6a899ee19058bf1d6f5fe4b6d9493e",
@@ -29916,6 +30211,10 @@
       {
         "requirement": "AUTH-LOGOUT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
       }
     ],
     "e2e/web/persona-public.spec.mjs": [
@@ -29963,6 +30262,10 @@
       },
       {
         "requirement": "AUTH-LOGOUT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-DESKTOP-001",
         "relationship": "tests"
       }
     ],
@@ -30187,6 +30490,10 @@
       },
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-DESKTOP-003",
         "relationship": "tests"
       }
     ],
@@ -30852,6 +31159,10 @@
       {
         "requirement": "AUTH-LOGOUT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": [
@@ -30877,6 +31188,10 @@
       },
       {
         "requirement": "AUTH-LOGOUT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-DESKTOP-001",
         "relationship": "implementation"
       }
     ],
@@ -38028,6 +38343,18 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/desktop/uploads.spec.mjs": [
+      {
+        "requirement": "MEDIA-MUSIC-RELEASE-001",
+        "relationship": "tests"
+      }
+    ],
     "formal/event-operations/MusicPublication.tla": [
       {
         "requirement": "MEDIA-MUSIC-RELEASE-001",
@@ -38664,6 +38991,10 @@
       {
         "requirement": "MEDIA-MUSIC-PRIVACY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/player/PlayerShell.tsx": [
@@ -38723,6 +39054,10 @@
       },
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-DESKTOP-002",
         "relationship": "implementation"
       }
     ],
@@ -38990,6 +39325,10 @@
       {
         "requirement": "MEDIA-MUSIC-PRIVACY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/player/analytics.test.ts": [
@@ -39167,6 +39506,10 @@
     "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PLAYER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-DESKTOP-002",
         "relationship": "tests"
       }
     ],
@@ -42295,6 +42638,10 @@
     "tdf-hq-ui/src/player/PlayerIdentity.test.tsx": [
       {
         "requirement": "MEDIA-MUSIC-PRIVACY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-DESKTOP-002",
         "relationship": "tests"
       }
     ],
@@ -45643,6 +45990,210 @@
         "requirement": "AUTH-APPLE-SIGNIN-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-desktop/src/main/main.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/src/main/config.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/src/main/links.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/src/main/menu.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/src/main/log.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/src/preload/preload.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/channels/production.json": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/channels/local.json": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/desktop/shell.ts": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/test/links.test.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-desktop/test/config.test.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/desktop/shell.test.ts": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/desktop/shell-session.spec.mjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/desktop/operations.spec.mjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/desktop/helpers/shell.mjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/desktop/helpers/api-fixture.mjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      }
+    ],
+    "playwright.desktop.config.mjs": [
+      {
+        "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/player/playbackSession.ts": [
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/src/main/playbackState.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/player/playbackSession.test.ts": [
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-desktop/test/playbackState.test.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/desktop/playback.spec.mjs": [
+      {
+        "requirement": "SYS-DESKTOP-002",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-desktop/electron-builder.config.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/scripts/prepare-channel.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/scripts/signing.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/src/main/updater.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/package.json": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/package-lock.json": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "implementation"
+      }
+    ],
+    ".github/workflows/desktop.yml": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-desktop/test/updater.test.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-desktop/test/release-policy.test.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-desktop/test/signing.test.cjs": [
+      {
+        "requirement": "SYS-DESKTOP-003",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -45843,6 +46394,18 @@
       ]
     },
     {
+      "id": "SURFACE-cc0ad60f02c62cee",
+      "path": ".github/workflows/desktop.yml",
+      "sha256": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
       "sha256": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
@@ -45954,6 +46517,78 @@
       "sha256": "559976056b82d99cd9c0e532a3df18644e1e9ea6f9e153c52c25999bcb8eb4ad",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-2c54a02e428c0eca",
+      "path": "e2e/desktop/helpers/api-fixture.mjs",
+      "sha256": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0a67c30fc4273850",
+      "path": "e2e/desktop/helpers/shell.mjs",
+      "sha256": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7c5cb17cbae6fad9",
+      "path": "e2e/desktop/operations.spec.mjs",
+      "sha256": "2da328457d5d35bd1b889ad7888747cebfce0db948bf32abbe9c30b2bac5e725",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-24b0fd9f63025110",
+      "path": "e2e/desktop/playback.spec.mjs",
+      "sha256": "6d5b9689e14f381045c8116a16a5949c3a2d00f29ecd631413ed44a22917327d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-cc2ad01c6769392e",
+      "path": "e2e/desktop/shell-session.spec.mjs",
+      "sha256": "d9ba24c8a6ab259a3bb3c323aa88b7a45fca513a569fc678ca3650ad258014e1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4de935e9babfab27",
+      "path": "e2e/desktop/uploads.spec.mjs",
+      "sha256": "2174ad43cdb1cc6e318da1e9bb86a6dd438fef893f8f370a4c232fba1549ee95",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b18780932504c8a1",
@@ -47203,7 +47838,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "a27042dedef0905645b75c59160e725c6db2f2225d3ba1d50eb31311767446a0",
+      "sha256": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47340,6 +47975,10 @@
         },
         {
           "requirement": "EVT-DISCOVERY-FILTER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-DESKTOP-003",
           "relationship": "tests"
         }
       ]
@@ -51153,7 +51792,7 @@
     {
       "id": "SURFACE-d18ca1829df72762",
       "path": "scripts/specification-inventory.py",
-      "sha256": "717ca96ab62100ea5bd349ad0365a0906461ea1d55e170c1b9e605b72c3404ab",
+      "sha256": "89b5afa51ac9efb2dd5a504b763bd0eddfc8503b592b9d929af7125126c2eb9b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54556,6 +55195,270 @@
       ]
     },
     {
+      "id": "SURFACE-1119723ea28a74a9",
+      "path": "tdf-desktop/channels/local.json",
+      "sha256": "e3c51ea68810123c41038f0f2a0d945010e5e8b90af3b97703dcd64c659a6530",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0839da6115127b24",
+      "path": "tdf-desktop/channels/production.json",
+      "sha256": "90bb117814611f9fb4bf39f8d9ce542a6bcd1e95af6b8631f5fbfb4e3a524bfc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e283f7607c87d86d",
+      "path": "tdf-desktop/electron-builder.config.cjs",
+      "sha256": "a669965872acd873bb1add55392e02f18011ef7e258602eec50833adfb23b923",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4fdd8318bfe62766",
+      "path": "tdf-desktop/package-lock.json",
+      "sha256": "d82fd2c876db15022230dfcf8cde475403b13f0e06ead2b3e93d3fd3e6c46e10",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e1a370d364959f55",
+      "path": "tdf-desktop/package.json",
+      "sha256": "5a035d04a11b993ddefc82bcc9e5d8f6f753d3456ab155819f3c04885599d4fe",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-39df5c4b339b5ada",
+      "path": "tdf-desktop/scripts/prepare-channel.cjs",
+      "sha256": "f5eb69f82883963b0b51ce645051975d5f17a266220ac3e6a7c23fae6b1d1320",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5afd256288b5aad6",
+      "path": "tdf-desktop/scripts/signing.cjs",
+      "sha256": "ab8215260ffd749af837d15b09d5f286caf88c1774d5db386bb019f07b4c16ea",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-83811d613ced9025",
+      "path": "tdf-desktop/src/main/config.cjs",
+      "sha256": "aa9cedb9ed37805b5992e9758c13ececf556a7ef9e0c5ee5a5b4cf32013e342d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b80e2418f31ebf79",
+      "path": "tdf-desktop/src/main/links.cjs",
+      "sha256": "2c6cf596e0dcc539794a7127616b0626047cadc171c05b40eb6b071981946532",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-02a3b5d6caa66e65",
+      "path": "tdf-desktop/src/main/log.cjs",
+      "sha256": "7ed5121374f342c6778ee2aaa585bdf8ad911501b784abe0a5c9c8936d26abed",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2233b8c59333ca18",
+      "path": "tdf-desktop/src/main/main.cjs",
+      "sha256": "90a793774e147ea6c52d6822e3ff8b658d5ddc45a1324c29d41a9d2676512fab",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2b4dffe8dbae9678",
+      "path": "tdf-desktop/src/main/menu.cjs",
+      "sha256": "8e816cc3b4ea94f4e49fc1b8044008da2610c09a226f7488b1fadb0c681739a3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-DESKTOP-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-4ec8564b4d5b5374",
+      "path": "tdf-desktop/src/main/playbackState.cjs",
+      "sha256": "988a1451f782cd69f647bffbe278376133bc6dcf719eda05179db93f6704c5f3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d2a7bfe5d354ddf1",
+      "path": "tdf-desktop/src/main/updater.cjs",
+      "sha256": "cdeb2f1a565952981931a0e11bd376f8f99a228ff00b49b75fe772432f4abd92",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-32883b97af1b7fcb",
+      "path": "tdf-desktop/src/preload/preload.cjs",
+      "sha256": "d10a3ead12ed41a32692d1ab423932b48c2b4b8d4e17130663dfb1bded0fdf3f",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-DESKTOP-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-41798d2b651ffc66",
+      "path": "tdf-desktop/test/config.test.cjs",
+      "sha256": "5a333c052ec4e0a08edbb1cf6afcc009e24f48ea97fc2086af9e3f9bc1e24a8a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-593d47a6bfbd5083",
+      "path": "tdf-desktop/test/links.test.cjs",
+      "sha256": "cc0509aff2a28ea181772c0a5a6836cbaffda6175e8dd91113e66af19a5f3961",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f188e96dfeb44fd0",
+      "path": "tdf-desktop/test/playbackState.test.cjs",
+      "sha256": "4642e931cbad941bb137d6d7b0c6903a895c47168b1901e5e99cc3ac45cb5a79",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e0c8fe00799cba13",
+      "path": "tdf-desktop/test/release-policy.test.cjs",
+      "sha256": "43a770d79df0950ae28d192ae705505057538c218ec4f8f42881c71c3c975171",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dda85ea04f03ddf8",
+      "path": "tdf-desktop/test/signing.test.cjs",
+      "sha256": "c41014a2fad42e847525444fb739814efeaadcd7161f837feb872931024cda43",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-26b470a131ea24c8",
+      "path": "tdf-desktop/test/updater.test.cjs",
+      "sha256": "3095f2683586b420caa56ebd0263e17bc732b0f305321ea30bbf5dcd384a9f1c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-003",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-e678e87f09e1d641",
       "path": "tdf-hq-ui/.eslintrc.cjs",
       "sha256": "8ddb4987709838ad3e001a7b3959cc2e6e0b63d35684c2db3e066a7dd733dc9f",
@@ -56060,7 +56963,7 @@
     {
       "id": "SURFACE-111a69931c7b0da3",
       "path": "tdf-hq-ui/src/api/musicReleases.ts",
-      "sha256": "07776593433c18bda040520d9416d4c4606bdf65802d50101af77c06eb87e9b0",
+      "sha256": "47713758df818e726e15f375146be25fa33a235d8885076821c8ca653dfd03ef",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56084,7 +56987,7 @@
     {
       "id": "SURFACE-a705d4292ecffee3",
       "path": "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
-      "sha256": "e5a48b23eb9974f54078b4095084a8f2419d193742aba76aee3f798fa85ed695",
+      "sha256": "8f3721fed84de4ad71f0f087f1f5dc25de44c6c170ad17a091915486d7deab40",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57227,7 +58130,7 @@
     {
       "id": "SURFACE-a1dac13c9010be34",
       "path": "tdf-hq-ui/src/components/RadioWidget.tsx",
-      "sha256": "0dee9eea31b4c0550c930568b3f9794f141d0d021e5d0f6aa9741efba97e2dac",
+      "sha256": "ecb3980cf1338692699e0d95e528fa6e5a629d644a1fdb09a81bda9be12c7084",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -57240,6 +58143,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-DESKTOP-002",
           "relationship": "implementation"
         }
       ]
@@ -57348,6 +58255,10 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-DESKTOP-002",
           "relationship": "tests"
         }
       ]
@@ -58400,6 +59311,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-7ead9f40bbfdff1b",
+      "path": "tdf-hq-ui/src/desktop/shell.test.ts",
+      "sha256": "4a3ff436d1a4fc40424786499a45255e8e1b6b5c795408bcacbf17f874d55769",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5124f3b2ff0a37ab",
+      "path": "tdf-hq-ui/src/desktop/shell.ts",
+      "sha256": "72405a96082db143d40b8ccd906d87ad217956a8e095d9b5dd980991255494ae",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-97be8dda570dadfa",
       "path": "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.test.ts",
       "sha256": "4a733f3b466f016aa53164979552ceff81c812d5fc53745aa9fa829c9e6a1002",
@@ -59332,7 +60267,7 @@
     {
       "id": "SURFACE-f53988d1fb48e7e5",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
-      "sha256": "db8231f6f28f7b0827e057e9d9b150b5678de60b2ef4e55486443708023fd7f7",
+      "sha256": "6afb4e409b47382a4c428069f595a56df81b34966e267514c97c810f693a1c97",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59357,6 +60292,10 @@
         },
         {
           "requirement": "AUTH-LOGOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-DESKTOP-001",
           "relationship": "implementation"
         }
       ]
@@ -59364,7 +60303,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "b918d1907be49f093999c63c94b79fd42dec140a67727c77c8c2753581ec84d4",
+      "sha256": "cff5e92c269d23cf5c6bb47108022b89840c4e39a661b2f8a585af631d6a8512",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59389,6 +60328,10 @@
         },
         {
           "requirement": "AUTH-LOGOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-DESKTOP-001",
           "relationship": "implementation"
         }
       ]
@@ -61124,13 +62067,17 @@
         {
           "requirement": "AUTH-LOGOUT-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-DESKTOP-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-f46d0ae001744f15",
       "path": "tdf-hq-ui/src/pages/LoginPage.tsx",
-      "sha256": "58e1f9a2962556913c7540cf9db152866b824323007a5ba7b2eb3b49cf907a8b",
+      "sha256": "4341c1d35aebc39f660a5fc03d57d702a97fcc61e8851787bfb5833ac639b2a3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61151,6 +62098,10 @@
         },
         {
           "requirement": "AUTH-LOGOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-DESKTOP-001",
           "relationship": "implementation"
         }
       ]
@@ -61514,7 +62465,7 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "2548054414c5dc3168bef65f9f2022e76df210f947d5ce212b1add2881f57e00",
+      "sha256": "170361034fe56bbcae7deb08123fd3ed3cf3957bbbd27fdc0663023b40dd1c1c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61532,6 +62483,18 @@
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6dc3d41d6d23778b",
+      "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
+      "sha256": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MEDIA-MUSIC-RELEASE-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -62618,6 +63581,10 @@
         {
           "requirement": "MEDIA-MUSIC-PRIVACY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-DESKTOP-002",
+          "relationship": "tests"
         }
       ]
     },
@@ -62634,13 +63601,17 @@
         {
           "requirement": "MEDIA-MUSIC-PRIVACY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "SYS-DESKTOP-002",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-dd1278b42a98d8db",
       "path": "tdf-hq-ui/src/player/PlayerProvider.tsx",
-      "sha256": "445adef24fefb118ba1c86ad94e77fd28a4435610bf0f5d5a32057567a2d046b",
+      "sha256": "b193d27880210aa51db0dc09417b378a38e84e3431576b320c974dfc99e3cb0c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62649,6 +63620,10 @@
         },
         {
           "requirement": "MEDIA-MUSIC-PRIVACY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-DESKTOP-002",
           "relationship": "implementation"
         }
       ]
@@ -62697,6 +63672,30 @@
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-PLAYER-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-1ee40981a49b4078",
+      "path": "tdf-hq-ui/src/player/playbackSession.test.ts",
+      "sha256": "1746a3d439aac8777e16a48f350de923479e1113c555469e6bffef3c74c58416",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-ebd315c82a4189bf",
+      "path": "tdf-hq-ui/src/player/playbackSession.ts",
+      "sha256": "5536029f666790f34ceaf8ee8e587e99f8c9115c7dff0ef83198a7ae3e0230bd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-DESKTOP-002",
           "relationship": "implementation"
         }
       ]
@@ -81620,7 +82619,8 @@
     "PAY-EVENT-REPORT-CURRENCY-001",
     "UI-EVENT-FINANCE-CSV-CURRENCY-001",
     "UI-CSV-STRING-PREFIX-001",
-    "AUTH-APPLE-SIGNIN-001"
+    "AUTH-APPLE-SIGNIN-001",
+    "SYS-DESKTOP-001"
   ],
   "stateMachines": [
     {
@@ -82737,7 +83737,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b287a505c3d0fdaa87d0ac483db5d751275c610c8aea6f1ea8ff93f85ed009b",
+      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -82765,7 +83765,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b287a505c3d0fdaa87d0ac483db5d751275c610c8aea6f1ea8ff93f85ed009b",
+      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
       "definition": {
         "states": [
           "absent",
@@ -82795,7 +83795,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8b287a505c3d0fdaa87d0ac483db5d751275c610c8aea6f1ea8ff93f85ed009b",
+      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
       "definition": {
         "export": [
           "queued",
@@ -105760,7 +106760,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 207,
+    "PARTIAL": 210,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

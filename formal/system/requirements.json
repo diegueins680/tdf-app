@@ -8290,7 +8290,9 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
         "tdf-hq/test/TDF/MusicPublicationSpec.hs",
         "scripts/test-music-publication.sh",
-        "scripts/test-music-integration-rehearsal.mjs"
+        "scripts/test-music-integration-rehearsal.mjs",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
+        "e2e/desktop/uploads.spec.mjs"
       ],
       "verification": "Haskell domain/content specs, SQL contract scripts against disposable PostgreSQL, API E2E script; PostgreSQL spec of the schedulers (scripts/test-music-publication.sh); bounded TLC model of scheduled publication with four negative controls (formal/system/music-publication.md); bounded one-row withdrawal fairness model with a permanent failure and a starvation mutation control",
       "evidence": "Local results recorded in docs/music-releases/deployment-and-verification.md (2026-09-16); scheduler reproduction, spec and model results in formal/system/music-publication.md (2026-10-11); no production evidence (migrations not applied in production)",
@@ -26605,6 +26607,265 @@
       "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests. Injected-clock/fetch cache controls cover the 899/900 second boundary, withdrawn keys with fresh claims, stale failure/empty/cancel cooldown, concurrent refresh and clock rollback; these finite cases are not a universal revocation proof.",
       "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
       "contract": "tdf-hq/docs/openapi/api.yaml"
+    },
+    {
+      "id": "SYS-DESKTOP-001",
+      "title": "Desktop shell hosts only the authorized TDF origin with validated entry points",
+      "statement": "The Electron shell hosts the channel appOrigin in a sandboxed, context-isolated renderer without Node; exposes a frozen window.tdfDesktop bridge only on that origin and re-validates every IPC sender; classifies navigations and popups so only the hosted origin and bundled internal pages open inside the shell while http(s) destinations go to the system browser and other schemes are blocked; parses tdf-desktop://open deep links into safe in-app paths or rejects them before navigating; limits permissions to media, notifications, fullscreen, clipboard and speaker selection; labels unpackaged and unsigned builds; and offers no Google sign-in inside the shell.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "Every navigation, popup, deep link and IPC message is classified against appOrigin before any effect; rejected inputs are logged and inert.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Electron shell",
+        "states": [
+          "unpackaged-unsigned",
+          "packaged-unsigned-test",
+          "packaged-signed"
+        ]
+      },
+      "allowedTransitions": [
+        "hosted application loaded -> offline fallback -> retry -> hosted application loaded"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log (URLs recorded without query strings, fragments or credentials), smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-desktop/src/main/main.cjs",
+        "tdf-desktop/src/main/config.cjs",
+        "tdf-desktop/src/main/links.cjs",
+        "tdf-desktop/src/main/menu.cjs",
+        "tdf-desktop/src/main/log.cjs",
+        "tdf-desktop/src/preload/preload.cjs",
+        "tdf-desktop/channels/production.json",
+        "tdf-desktop/channels/local.json",
+        "tdf-hq-ui/src/desktop/shell.ts",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts"
+      ],
+      "tests": [
+        "tdf-desktop/test/links.test.cjs",
+        "tdf-desktop/test/config.test.cjs",
+        "tdf-hq-ui/src/desktop/shell.test.ts",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "e2e/desktop/shell-session.spec.mjs",
+        "e2e/desktop/operations.spec.mjs",
+        "e2e/desktop/helpers/shell.mjs",
+        "e2e/desktop/helpers/api-fixture.mjs",
+        "playwright.desktop.config.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": true
+    },
+    {
+      "id": "SYS-DESKTOP-002",
+      "title": "Release player and radio share one system playback session",
+      "statement": "The web application keeps one ordered playback-owner registry: the owner that most recently started or selected audio installs its metadata and action handlers on the Media Session and reports to the desktop shell; passive updates never change the active owner; releasing the active owner restores the previous one; shell commands route to the active owner; the shell menu mirrors the last sanitized report.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "At any time at most one owner controls navigator.mediaSession and the shell menu, and it is the most recently activated owner still registered.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Electron shell",
+        "states": [
+          "unpackaged-unsigned",
+          "packaged-unsigned-test",
+          "packaged-signed"
+        ]
+      },
+      "allowedTransitions": [
+        "hosted application loaded -> offline fallback -> retry -> hosted application loaded"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log, smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-hq-ui/src/player/playbackSession.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-desktop/src/main/playbackState.cjs",
+        "tdf-desktop/src/main/menu.cjs",
+        "tdf-desktop/src/preload/preload.cjs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/playbackSession.test.ts",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/player/PlayerIdentity.test.tsx",
+        "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
+        "tdf-desktop/test/playbackState.test.cjs",
+        "e2e/desktop/playback.spec.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": false
+    },
+    {
+      "id": "SYS-DESKTOP-003",
+      "title": "Desktop installers, shell update channel and recovery are reproducible and fail closed",
+      "statement": "electron-builder produces DMG/ZIP (macOS x64, arm64) and NSIS (Windows x64, arm64) from one source commit with the validated channel embedded; signing and notarization run only when credentials exist, otherwise signing is explicitly disabled and artifacts carry UNSIGNED-TEST; electron-updater uses a generic feed, downloads only on user decision, verifies before installing and leaves the installed version on failure; unsigned or unpackaged builds disable updates; the workflow publishes to the feed only from a matching desktop-v<version> tag with signed artifacts and runs an installed smoke on both platforms.",
+      "domain": "SYS",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
+      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "property": "No unsigned or unverified package is ever installed or published; a failed update leaves the installed version runnable.",
+      "contract": "formal/system/desktop-shell.md",
+      "actors": [
+        "Desktop user (staff, artist, customer)",
+        "Operating system media controls",
+        "Release engineer"
+      ],
+      "preconditions": [
+        "tdf-desktop built from the same commit as the hosted web application; channel validated at startup."
+      ],
+      "inputs": [
+        "Channel configuration",
+        "Navigation and deep-link URLs",
+        "Playback reports and commands",
+        "Update feed metadata"
+      ],
+      "state": {
+        "boundary": "Shell updater",
+        "states": [
+          "disabled",
+          "idle",
+          "checking",
+          "available",
+          "downloading",
+          "downloaded",
+          "up-to-date",
+          "error"
+        ]
+      },
+      "allowedTransitions": [
+        "idle -> checking -> available -> downloading -> downloaded -> install on quit or on request",
+        "checking -> up-to-date",
+        "checking|downloading -> error -> idle (retry)"
+      ],
+      "forbiddenTransitions": [
+        "Node or Electron APIs reachable from the page",
+        "Navigation to a non-hosted origin inside the shell",
+        "Unsigned package published to the update feed"
+      ],
+      "effects": [
+        "Native window, menu and diagnostics log; no data changes outside the hosted application and TDF API."
+      ],
+      "authorization": "The shell grants nothing: identity, roles and modules come from the hosted application and the TDF API.",
+      "privacy": "No shell-side credential store; cookies and web storage stay in the OS-encrypted Chromium profile; logs exclude bodies and tokens.",
+      "concurrency": "Single-instance lock; one playback owner active at a time.",
+      "idempotency": "Shell retries reload the same hosted route; web write idempotency is owned by the hosted application.",
+      "failure": "Blocked navigation is logged; failed load shows the offline page; failed update leaves the installed version.",
+      "recovery": "Retry with backoff, manual retry, reinstall from desktop-v<version>, clear local data.",
+      "observability": "tdf-desktop.log, smoke receipts, About dialog diagnostics, workflow artifacts.",
+      "implementation": [
+        "tdf-desktop/electron-builder.config.cjs",
+        "tdf-desktop/scripts/prepare-channel.cjs",
+        "tdf-desktop/scripts/signing.cjs",
+        "tdf-desktop/src/main/updater.cjs",
+        "tdf-desktop/package.json",
+        "tdf-desktop/package-lock.json",
+        ".github/workflows/desktop.yml"
+      ],
+      "tests": [
+        "tdf-desktop/test/updater.test.cjs",
+        "tdf-desktop/test/config.test.cjs",
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-desktop/test/release-policy.test.cjs",
+        "tdf-desktop/test/signing.test.cjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "node --test unit tests, Jest unit tests and Linux Electron journeys (Playwright + Xvfb) against the production web build with a synthetic API; macOS/Windows installed smoke receipts from the Desktop app workflow.",
+      "evidence": "tdf-desktop/test, tdf-hq-ui Jest, e2e/desktop, .github/workflows/desktop.yml artifacts (desktop-electron-journeys, desktop-macos, desktop-windows).",
+      "confidence": "Linux Electron and unit evidence passes locally; installed macOS/Windows journeys and signed distribution pending.",
+      "ambiguity": [
+        "Operating-system media key delivery and Now Playing/SMTC rendering are not exercised in CI.",
+        "Signing, notarization and the live update feed are unverified until credentials exist."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented with Linux Electron and unit evidence; installed macOS/Windows acceptance and signed distribution pending."
+      },
+      "historicalStatus": null,
+      "critical": false
     }
   ]
 }
