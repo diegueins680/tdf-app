@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "1c63eb038ba230005ee77afbe081a0d98bf18b92",
+  "mobileRevision": "921502219387ce5e16b870d1628cee414b8b82d5",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -10150,6 +10150,7 @@
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/assets/feature-registry.json",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/directory.ts",
         "tdf-hq-ui/src/features/marketplace/offers.ts",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
@@ -19543,7 +19544,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "157a680d2edbd9895297be8adf4b70bedad1ae723a53482594970bb41efc84bb",
+    "tdf-mobile/src/api/generated/types.ts": "a0f87b8733d58ec5434463ad284ff1df913cf004a748a584668593c2289e8a31",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -20868,6 +20869,10 @@
       },
       {
         "requirement": "MKT-ARTIST-LISTING-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-DEMAND-OFFER-001",
         "relationship": "implementation"
       },
       {
@@ -44873,7 +44878,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "6e37f30bbf395f2ad598bdfda0967401487caabc1f2c8974eb1695f62a69a705",
+      "sha256": "a0f87b8733d58ec5434463ad284ff1df913cf004a748a584668593c2289e8a31",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54112,7 +54117,7 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "55ef1228e6904d2bbc9b073cbfb7e9015299c0ea30c6524ced7dd4f31cc70bfa",
+      "sha256": "cc02de79887a31e12f277430e1ea54e1053c8afb02aeb4d6ee4ed6049ca7bfd5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66111,7 +66116,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "157a680d2edbd9895297be8adf4b70bedad1ae723a53482594970bb41efc84bb",
+      "sha256": "a0f87b8733d58ec5434463ad284ff1df913cf004a748a584668593c2289e8a31",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66124,6 +66129,10 @@
         },
         {
           "requirement": "MKT-ARTIST-LISTING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-DEMAND-OFFER-001",
           "relationship": "implementation"
         },
         {
@@ -70228,7 +70237,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3c1d4590ec97e8cbf56d8afdf99876604d16a8271938a4837a1f0c3bb7db4c57",
+      "sourceSha256": "78f3ff7f9fd6e13a3a6b1d95460d4539e6ca46fc0c63cf34b0e3c8b4fbcb614b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70256,7 +70265,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3c1d4590ec97e8cbf56d8afdf99876604d16a8271938a4837a1f0c3bb7db4c57",
+      "sourceSha256": "78f3ff7f9fd6e13a3a6b1d95460d4539e6ca46fc0c63cf34b0e3c8b4fbcb614b",
       "definition": {
         "states": [
           "absent",
@@ -70286,7 +70295,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3c1d4590ec97e8cbf56d8afdf99876604d16a8271938a4837a1f0c3bb7db4c57",
+      "sourceSha256": "78f3ff7f9fd6e13a3a6b1d95460d4539e6ca46fc0c63cf34b0e3c8b4fbcb614b",
       "definition": {
         "export": [
           "queued",

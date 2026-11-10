@@ -10149,6 +10149,7 @@
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/assets/feature-registry.json",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/directory.ts",
         "tdf-hq-ui/src/features/marketplace/offers.ts",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
