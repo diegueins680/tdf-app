@@ -448,9 +448,16 @@ export default function CmsAdminPage() {
     }
   };
 
-  const liveUrl = hasSlugSelection
-    ? `${PUBLIC_BASE}${selectedContent?.publicRoute ?? `/${normalizedSlugFilter}`}${localeFilter ? `?locale=${encodeURIComponent(localeFilter)}` : ''}`
+  // A route may carry a fragment (e.g. /tdf#estudio); the locale query has to
+  // come before it, or the browser treats it as part of the fragment.
+  const liveRoute = selectedContent?.publicRoute ?? `/${normalizedSlugFilter}`;
+  const liveFragmentIndex = liveRoute.indexOf('#');
+  const livePath = liveFragmentIndex === -1 ? liveRoute : liveRoute.slice(0, liveFragmentIndex);
+  const liveFragment = liveFragmentIndex === -1 ? '' : liveRoute.slice(liveFragmentIndex);
+  const liveLocaleQuery = localeFilter
+    ? `${livePath.includes('?') ? '&' : '?'}locale=${encodeURIComponent(localeFilter)}`
     : '';
+  const liveUrl = hasSlugSelection ? `${PUBLIC_BASE}${livePath}${liveLocaleQuery}${liveFragment}` : '';
   const livePayloadPretty = useMemo(() => {
     if (!liveContent) return '';
     try {

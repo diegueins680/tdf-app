@@ -12378,7 +12378,8 @@
         "scripts/test-studio-gallery-migration.sh",
         "tdf-hq-ui/src/testFixtures/studioGallery.ts",
         "tdf-hq-ui/src/utils/studioGallery.test.ts",
-        "scripts/test-studio-gallery-runner-safety.py"
+        "scripts/test-studio-gallery-runner-safety.py",
+        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",

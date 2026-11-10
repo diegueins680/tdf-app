@@ -12379,7 +12379,8 @@
         "scripts/test-studio-gallery-migration.sh",
         "tdf-hq-ui/src/testFixtures/studioGallery.ts",
         "tdf-hq-ui/src/utils/studioGallery.test.ts",
-        "scripts/test-studio-gallery-runner-safety.py"
+        "scripts/test-studio-gallery-runner-safety.py",
+        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx"
       ],
       "formalModels": [],
       "verification": "Rendered route, URL continuity, outage and section-order regressions plus desktop/mobile browser and accessibility checks. No mathematical implementation proof claimed.",
@@ -18630,7 +18631,8 @@
     "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
     "tdf-hq-ui/src/pages/ChatPage.tsx": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
-    "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "0f056adf48a5498728b33e8b33824494ebdec69b929824574bf0696b385e1013",
+    "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "d622fef7389c1b0a43845de644befaa8312222e81c6c65ad58825e2f414a9f4b",
+    "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "7e14698cddb92d50a981f0899d4801a2832fcf56c6e83a7d042f66077cde2329",
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
@@ -19117,7 +19119,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "43e2d3af37007f738bac8c8a8af8f5333e809c7d70d05d943a870a2c377c88be",
+    "tdf-hq/src/TDF/Server.hs": "4eedc30f3e371c533ef4e05ec5dc9159250245dadf8c28bdd5ea66b6999d7571",
     "tdf-hq/src/TDF/Server/Catalog.hs": "e0dc3f9c4d6ecef2e6e502df2463d87c3d4a5d7e78e8f2e80bbabeb8d4dc07b6",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
@@ -19235,7 +19237,7 @@
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
     "tdf-hq/test/TDF/ServerAuthSpec.hs": "d532a0531a3a955465af0c621091b80cac5529834e6cee2ba969f50db7e7b96f",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
-    "tdf-hq/test/TDF/ServerSpec.hs": "911ee4acfb48e29b2684f996555cdfe4bc887ac60e76b216217d7938a2c9a1c3",
+    "tdf-hq/test/TDF/ServerSpec.hs": "fb98d894ea8f8adc3b1f6ca0f95b91b3b539335cdb0e7c721fb3d09684efed32",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
     "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs": "cf44ce65b86c21a325c39ed22b6959ee646f68c5a0d72f1c68ba6eb9427961ec",
@@ -31358,6 +31360,12 @@
       }
     ],
     "scripts/test-studio-gallery-runner-safety.py": [
+      {
+        "requirement": "UX-WELCOME-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": [
       {
         "requirement": "UX-WELCOME-001",
         "relationship": "tests"
@@ -48852,14 +48860,19 @@
     {
       "id": "SURFACE-10a1b2ad11b92606",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
-      "sha256": "e5c17de3ace0ccb44dc20fa2d166a0dadef24a25e5006fd40e65441f8379df17",
+      "sha256": "d622fef7389c1b0a43845de644befaa8312222e81c6c65ad58825e2f414a9f4b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9ec3af8f42eacde2",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-      "sha256": "0f056adf48a5498728b33e8b33824494ebdec69b929824574bf0696b385e1013",
+      "sha256": "7e14698cddb92d50a981f0899d4801a2832fcf56c6e83a7d042f66077cde2329",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60103,7 +60116,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "43e2d3af37007f738bac8c8a8af8f5333e809c7d70d05d943a870a2c377c88be",
+      "sha256": "4eedc30f3e371c533ef4e05ec5dc9159250245dadf8c28bdd5ea66b6999d7571",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62618,7 +62631,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "911ee4acfb48e29b2684f996555cdfe4bc887ac60e76b216217d7938a2c9a1c3",
+      "sha256": "fb98d894ea8f8adc3b1f6ca0f95b91b3b539335cdb0e7c721fb3d09684efed32",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67567,7 +67580,6 @@
     "SURFACE-cb26a654f47a190f",
     "SURFACE-57945788e4512e48",
     "SURFACE-7dcbd0bbd9154a13",
-    "SURFACE-10a1b2ad11b92606",
     "SURFACE-d5fb23b5eb7efa5e",
     "SURFACE-39fe3c9e56197ba9",
     "SURFACE-4863f94a96956295",
@@ -69763,7 +69775,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dd52656f5e32cdbb2327bbf342670da6192476ffbc3d4c8e8b102cc65364f1a1",
+      "sourceSha256": "073af8f084dc3385aed6c73245e1a73b6db11c4a41298c60b8b4eb5f559bb0b4",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -69791,7 +69803,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dd52656f5e32cdbb2327bbf342670da6192476ffbc3d4c8e8b102cc65364f1a1",
+      "sourceSha256": "073af8f084dc3385aed6c73245e1a73b6db11c4a41298c60b8b4eb5f559bb0b4",
       "definition": {
         "states": [
           "absent",
@@ -69821,7 +69833,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "dd52656f5e32cdbb2327bbf342670da6192476ffbc3d4c8e8b102cc65364f1a1",
+      "sourceSha256": "073af8f084dc3385aed6c73245e1a73b6db11c4a41298c60b8b4eb5f559bb0b4",
       "definition": {
         "export": [
           "queued",
