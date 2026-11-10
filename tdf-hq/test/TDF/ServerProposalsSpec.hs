@@ -25,11 +25,21 @@ import TDF.DB (Env (..))
 import TDF.Models (RoleEnum (..))
 import qualified TDF.ModelsExtra as ME
 import TDF.ServerProposals (proposalsServer)
+import TDF.Handlers.InputList (tectonicArguments, xelatexArguments)
 
 type ProposalTestM = ReaderT Env (ExceptT ServerError IO)
 
 spec :: Spec
-spec = describe "TDF.ServerProposals proposal versions" $ do
+spec = do
+  describe "proposal LaTeX compilation" $ do
+    it "never lets stored proposal LaTeX run shell commands" $ do
+      tectonicArguments "/tmp/x" "/tmp/x/p.tex" `shouldBe` ["-o", "/tmp/x", "/tmp/x/p.tex"]
+      xelatexArguments "p.tex" `shouldSatisfy` elem "-no-shell-escape"
+      xelatexArguments "p.tex" `shouldSatisfy` (not . any (`elem` ["-shell-escape", "--shell-escape"]))
+  proposalVersionSpec
+
+proposalVersionSpec :: Spec
+proposalVersionSpec = describe "TDF.ServerProposals proposal versions" $ do
   it "rejects malformed, nil, or non-canonical proposal ids before proposal lookups" $
     forM_
       [ "not-a-uuid"

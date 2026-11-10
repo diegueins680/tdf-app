@@ -40,7 +40,7 @@ import           Test.Hspec
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.API.CommerceOperations
-import           TDF.Auth (AuthedUser(..))
+import           TDF.Auth (AuthedUser(..), modulesForRoles)
 import           TDF.Models (RoleEnum(..))
 import qualified TDF.Server.CommerceOperations as Operations
 import           TDF.API.ProviderExecution (PaymentSessionCreateDTO(..), PaymentSessionDTO(..))
@@ -79,6 +79,7 @@ import qualified TDF.Ticketing.Transfer as Transfer
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
 import qualified TDF.Server.PaymentAvailability as Availability
 import qualified TDF.Server.ServiceStorefront as Storefront
+import           TDF.API.ServiceStorefrontTypes (ServiceStorefrontOrderUpdate(..))
 
 -- In-memory HTTP connection fixtures. These exercise the real HTTP executor,
 -- not a real provider, TLS handshake, socket, merchant account or sandbox.
@@ -418,6 +419,7 @@ spec = do
         reconciliationTransactionSpec
         fullDomainQuerySpec
         hostedServiceOrderSpec
+        adminServiceOrderUpdateSpec
         closedCheckoutEvidenceSpec
         captureReplaySpec
         ticketLedgerSpec
@@ -2712,6 +2714,38 @@ hostedServiceOrderSpec = describe "hosted service order reconciliation" $
             >>= (`shouldSatisfy` isLeft)
           runSqlPool (paymentSnapshot payment) pool `shouldReturn` financial
           serviceOrderSnapshot pool payment `shouldReturn` order
+
+-- The admin fulfillment update writes only its own fields in one conditional
+-- transaction: payment fields recorded by capture/reconciliation survive it.
+adminServiceOrderUpdateSpec :: SpecWith ConnectionPool
+adminServiceOrderUpdateSpec = describe "admin service order fulfillment update" $
+  it "keeps payment fields, normalizes the status and refuses payment states" $ \pool -> do
+    payment <- serviceOrderFixture pool Checkout.ProviderPlaceToPay
+    result <- parsedQuery payment Adapter.AdapterSucceeded
+    runSqlPool (Reconciliation.applyQueryResult payment result "admin-update-paid" notificationTime) pool
+      `shouldReturn` Right Reconciliation.ReconciliationProcessed
+    let orderNumber = Execution.bppDomainOrderId payment
+        paymentFields = runSqlPool (rawSql
+          "SELECT payment_provider,paid_at,checkout_id::text FROM service_storefront_order WHERE id=?::uuid"
+          [PersistText orderNumber]) pool :: IO [(Single Text, Single UTCTime, Single Text)]
+        admin = AuthedUser
+          { auPartyId = toSqlKey 1, auRoles = [Admin], auModules = modulesForRoles [Admin]
+          , auApiTokenId = Nothing, auSessionWitness = Nothing }
+        updateOrder request = case Storefront.serviceStorefrontAdminServer admin of
+          _list :<|> update :<|> _ -> runHandler (runReaderT (update orderNumber request)
+            Env { envPool = pool, envConfig = error "envConfig is unused by the admin order update" })
+    before <- paymentFields
+    updated <- updateOrder (ServiceStorefrontOrderUpdate (Just " In_Progress ") Nothing (Just " first pass "))
+    updated `shouldSatisfy` isRight
+    paymentFields `shouldReturn` before
+    runSqlPool (rawSql
+      "SELECT status,notes,(SELECT count(*) FROM service_storefront_order_status_change\
+      \ WHERE order_id=?::uuid AND status='in_progress') FROM service_storefront_order WHERE id=?::uuid"
+      (replicate 2 (PersistText orderNumber))) pool
+      `shouldReturn` [(Single ("in_progress" :: Text), Single (Just ("first pass" :: Text)), Single (1 :: Int64))]
+    refused <- updateOrder (ServiceStorefrontOrderUpdate (Just "paid") Nothing Nothing)
+    fmap errHTTPCode (either Just (const Nothing) refused) `shouldBe` Just 400
+    paymentFields `shouldReturn` before
 
 serviceOrderFixture :: ConnectionPool -> Checkout.PaymentProvider -> IO Execution.BoundProviderPayment
 serviceOrderFixture pool provider = do

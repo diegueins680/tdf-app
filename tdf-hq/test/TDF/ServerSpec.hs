@@ -82,7 +82,7 @@ import TDF.Auth
     )
 import TDF.Routes.Courses (CourseSessionIn (..), CourseSyllabusIn (..), UTMTags (..))
 import qualified TDF.Routes.Academy as Academy
-import Servant (err400, NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
+import Servant (err400, err409, NoContent(..), ServerError (errBody, errHTTPCode), err500, (:<|>) (..))
 import Servant.Multipart
     ( FileData (..)
     , FromMultipart (fromMultipart)
@@ -247,6 +247,9 @@ import TDF.Server
     , resolveMarketplaceOrderPaidAtForStatus
     , validateOptionalMarketplacePaymentProviderUpdate
     , validateMarketplaceStripeAdminUpdate
+    , publicBookingSqlConflict
+    , publicBookingTransactionFailure
+    , validatePublicManualPaymentSelection
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationStoredName
     , resolveCourseRegistrationAttachmentName
@@ -533,6 +536,7 @@ import TDF.Services.InstagramSync
     , buildUserMediaRequestUrl
     )
 import Test.Hspec
+import Database.PostgreSQL.Simple (SqlError (..), ExecStatus (FatalError))
 import Web.PathPieces (PathPiece, fromPathPiece, toPathPiece)
 
 mkUser :: [RoleEnum] -> AuthedUser
@@ -10151,6 +10155,52 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid "paid\npending"
             assertInvalid ("paypal_pending" <> T.singleton '\x202E')
             assertInvalid "refunded"
+
+        it "accepts the canonical checkout statuses mirrored onto a canonical order" $ do
+            resolveMarketplaceOrderPaidAtForStatus now "awaiting_payment" (Just "cancelled") Nothing Nothing
+                `shouldBe` Right Nothing
+            resolveMarketplaceOrderPaidAtForStatus now "processing" Nothing Nothing Nothing
+                `shouldBe` Right Nothing
+            validateMarketplaceOrderUpdateStatus (Just "awaiting_payment") `shouldSatisfy` isLeft
+
+    describe "validateRadioCatalogAccess" $ do
+        it "refuses accounts without any module grant and admits staff" $ do
+            either errHTTPCode (const 0) (Radio.validateRadioCatalogAccess (mkUser [Fan])) `shouldBe` 403
+            either errHTTPCode (const 0) (Radio.validateRadioCatalogAccess (mkUser [Promotor])) `shouldBe` 403
+            Radio.validateRadioCatalogAccess (mkUser [Reception]) `shouldBe` Right ()
+            Radio.validateRadioCatalogAccess (mkUser [Admin]) `shouldBe` Right ()
+        it "refuses incoherent role grants" $
+            either errHTTPCode (const 0) (Radio.validateRadioCatalogAccess (mkUser [Admin, Admin])) `shouldBe` 403
+
+    describe "publicBookingSqlConflict" $ do
+        it "maps calendar, lifecycle and serialization failures to 409 and leaves the rest" $ do
+            let withState st = SqlError st FatalError "" "" ""
+            fmap errHTTPCode (publicBookingSqlConflict (withState "23P01")) `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingSqlConflict (withState "23514")) `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingSqlConflict (withState "40001")) `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingSqlConflict (withState "40P01")) `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingSqlConflict (withState "23505")) `shouldBe` Nothing
+
+    describe "publicBookingTransactionFailure" $ do
+        it "returns a ServerError thrown inside the transaction as the response" $
+            fmap errHTTPCode (publicBookingTransactionFailure (toException (err409 :: ServerError)))
+                `shouldBe` Just 409
+        it "keeps the SQL conflict mapping and lets other exceptions propagate" $ do
+            fmap errHTTPCode (publicBookingTransactionFailure (toException (SqlError "40001" FatalError "" "" "")))
+                `shouldBe` Just 409
+            fmap errHTTPCode (publicBookingTransactionFailure (toException (userError "boom")))
+                `shouldBe` Nothing
+
+    describe "validatePublicManualPaymentSelection" $ do
+        it "refuses bank transfer on a paid deposit like the online rails do" $
+            either errHTTPCode (const 0) (validatePublicManualPaymentSelection "paid" "bank_transfer")
+                `shouldBe` 409
+        it "refuses other methods and a processing rail, and admits the rest" $ do
+            either errHTTPCode (const 0) (validatePublicManualPaymentSelection "awaiting_payment" "card")
+                `shouldBe` 400
+            either errHTTPCode (const 0) (validatePublicManualPaymentSelection "processing" "bank_transfer")
+                `shouldBe` 409
+            validatePublicManualPaymentSelection "awaiting_payment" " Bank_Transfer " `shouldBe` Right ()
 
     describe "validateOptionalMarketplacePaymentProviderUpdate" $ do
         it "distinguishes omitted provider updates, explicit clears, and normalized provider slugs" $ do
