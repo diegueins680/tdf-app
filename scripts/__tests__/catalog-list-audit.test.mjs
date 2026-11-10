@@ -822,14 +822,24 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   const offlineFixture = offlineMain.find(row => row.id === 'b3eadb9d52a262f5371f');
   assert.ok(offlineFixture, 'the offline currency fixture needs its exact protected-main review');
   assert.deepEqual(active.find(row => row.id === offlineFixture.id), offlineFixture);
-  const historicalAppleView = active.filter(row => row.id !== offlineFixture.id);
+  // Protected main later reviewed two route-specification lists (#710); keep
+  // their exact reviews and leave them out of the historical Apple view too.
+  const routeMain = await reviewedParent('b1614afd18b02e8cd0d46f71d798b7f38764bcec');
+  const routeReviews = ['afe675892f43a8a4de73', '6f876292d2fcb1dd7a86']
+    .map(id => routeMain.find(row => row.id === id));
+  for (const review of routeReviews) {
+    assert.ok(review, 'the route-specification reviews need their exact protected-main review');
+    assert.deepEqual(active.find(row => row.id === review.id), review);
+  }
+  const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id)]);
+  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id));
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);
   assert.equal(historicalAppleView.length, 1411);
   assert.deepEqual(historicalAppleView,
     await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1412);
+  assert.equal(active.length, 1414);
   const history = new Map();
   const visit = row => {
     if (!row) return;
@@ -838,7 +848,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     for (const branch of row.concurrentReviewHistory ?? []) visit(branch);
   };
   for (const row of active) visit(row);
-  for (const row of [...old, ...priorApple, ...currentMain, ...offlineMain]) {
+  for (const row of [...old, ...priorApple, ...currentMain, ...offlineMain, ...routeMain]) {
     assert.deepEqual(history.get(row.id), row);
   }
   const pointer = successors.find(row => row.name === 'migrations');
