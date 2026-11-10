@@ -10095,10 +10095,11 @@
         "Both participants are adults and pass the existing contact preferences and blocks"
       ],
       "inputs": [
-        "Classified create requests with slots, priceMode, offerDeadlineAt and terms",
-        "Offer create requests with amountMinor, currencyId, terms and expiresAt",
-        "Counter requests with amountMinor, currencyId, terms, message and expiresAt",
-        "Status transitions requested by either participant or an administrator"
+        "POST /directory/classifieds (classified create requests with slots, priceMode, offerDeadlineAt and terms)",
+        "POST /directory/classifieds/{classifiedId}/applications (offer create requests with amountMinor, currencyId, terms and expiresAt)",
+        "POST /directory/applications/{applicationId}/counter (counter requests with amountMinor, currencyId, terms, message and expiresAt)",
+        "PATCH /directory/applications/{applicationId}/status (status transitions requested by either participant or an administrator)",
+        "GET /directory/applications and GET /directory/applications/{applicationId} (participant-scoped reads)"
       ],
       "state": {
         "offer": "submitted, viewed, shortlisted, countered_by_author, countered_by_applicant, accepted, rejected, withdrawn, expired, conversation_open, converted",

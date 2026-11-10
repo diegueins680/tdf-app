@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 516,
-    "named": 14,
+    "total": 517,
+    "named": 18,
     "path-named": 1,
     "reviewed": 0,
-    "unspecified": 501,
-    "covered": 15
+    "unspecified": 498,
+    "covered": 19
   },
   "routes": [
     {
@@ -829,10 +829,20 @@
       "requirements": []
     },
     {
+      "method": "POST",
+      "path": "/directory/applications/{applicationId}/counter",
+      "basis": "named",
+      "requirements": [
+        "MKT-DEMAND-OFFER-001"
+      ]
+    },
+    {
       "method": "PATCH",
       "path": "/directory/applications/{applicationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-DEMAND-OFFER-001"
+      ]
     },
     {
       "method": "PUT",
@@ -849,14 +859,18 @@
     {
       "method": "POST",
       "path": "/directory/classifieds",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-DEMAND-OFFER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/classifieds/{classifiedId}/applications",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-DEMAND-OFFER-001"
+      ]
     },
     {
       "method": "PATCH",

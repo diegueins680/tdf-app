@@ -23211,7 +23211,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "863d1d273dd3cb2cfe5a6f3d16d2839fae609b54e32b24c04b3bff41df3b633c",
+      "sha256": "ffc75a8f78d7e20d70d5ad513d647161eb653bb61f5852fc65a4c171e51ceb37",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30519,7 +30519,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "40964b704f525acdaad4896021e777f2673ae5af8f82185c3189299fa9b79066",
+      "sha256": "3c1d4590ec97e8cbf56d8afdf99876604d16a8271938a4837a1f0c3bb7db4c57",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

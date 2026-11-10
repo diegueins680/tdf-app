@@ -10096,10 +10096,11 @@
         "Both participants are adults and pass the existing contact preferences and blocks"
       ],
       "inputs": [
-        "Classified create requests with slots, priceMode, offerDeadlineAt and terms",
-        "Offer create requests with amountMinor, currencyId, terms and expiresAt",
-        "Counter requests with amountMinor, currencyId, terms, message and expiresAt",
-        "Status transitions requested by either participant or an administrator"
+        "POST /directory/classifieds (classified create requests with slots, priceMode, offerDeadlineAt and terms)",
+        "POST /directory/classifieds/{classifiedId}/applications (offer create requests with amountMinor, currencyId, terms and expiresAt)",
+        "POST /directory/applications/{applicationId}/counter (counter requests with amountMinor, currencyId, terms, message and expiresAt)",
+        "PATCH /directory/applications/{applicationId}/status (status transitions requested by either participant or an administrator)",
+        "GET /directory/applications and GET /directory/applications/{applicationId} (participant-scoped reads)"
       ],
       "state": {
         "offer": "submitted, viewed, shortlisted, countered_by_author, countered_by_applicant, accepted, rejected, withdrawn, expired, conversation_open, converted",
@@ -18110,7 +18111,7 @@
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
     "formal/system/recovery-expiry-arithmetic.json": "682b8b5877fa37c094ffce47c75fe05d7048679570ded706b4c3660f047884e2",
-    "formal/system/route-requirements.json": "f7e7efb758551bef5ba4bdb743e04dbb46b525dc952fdca1b9be8eb5d74a5772",
+    "formal/system/route-requirements.json": "bb22a06cbe587697c31ca1f0ffc87d06c2929ffae2470f4b6452a927e35dce6a",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -70227,7 +70228,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "40964b704f525acdaad4896021e777f2673ae5af8f82185c3189299fa9b79066",
+      "sourceSha256": "3c1d4590ec97e8cbf56d8afdf99876604d16a8271938a4837a1f0c3bb7db4c57",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -70255,7 +70256,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "40964b704f525acdaad4896021e777f2673ae5af8f82185c3189299fa9b79066",
+      "sourceSha256": "3c1d4590ec97e8cbf56d8afdf99876604d16a8271938a4837a1f0c3bb7db4c57",
       "definition": {
         "states": [
           "absent",
@@ -70285,7 +70286,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "40964b704f525acdaad4896021e777f2673ae5af8f82185c3189299fa9b79066",
+      "sourceSha256": "3c1d4590ec97e8cbf56d8afdf99876604d16a8271938a4837a1f0c3bb7db4c57",
       "definition": {
         "export": [
           "queued",
