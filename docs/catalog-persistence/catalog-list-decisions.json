@@ -1,9 +1,11 @@
 {
   "schemaVersion": 1,
+  "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
+  "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
-    "preservedDecisions": 1254,
-    "reviewedByPolicy": 173,
-    "removedStaleDecisions": 2,
+    "preservedDecisions": 1257,
+    "reviewedByPolicy": 172,
+    "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
     "consolidatedMainRetirements": {
       "sourceMain": "fdac8e76523befee1603f49f6c7cf7d00762931b",
@@ -786,7 +788,7 @@
               "9abc4f655fdb20e98b03"
             ],
             "selectedHistoricalPreservedCount": 1206,
-            "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87\u219288 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
+            "retainedProtectedHistoricalEvidence": "The selected old branch changes only a discovery consumerCount87→88 on a preexisting migration entry. Preserve the protected decision and its historical evidence exactly; current discovery counts are regenerated in inventory, not promoted to normative review authority."
           }
         }
       },
@@ -7110,8 +7112,6 @@
       ]
     }
   },
-  "baselineRevision": "ce0c3bc19e2d9030e871480e9e93790940c9eb12",
-  "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "decisions": [
     {
       "id": "c3d1e41b543e7cbdaf00",
@@ -20480,7 +20480,7 @@
         "kind": "literal-union",
         "name": "OfferActor",
         "valueCount": 2,
-        "consumerCount": 25,
+        "consumerCount": 26,
         "exactDuplicateIds": [
           "2a350b9da29a2d080bd8"
         ],
@@ -21759,7 +21759,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 3,
-        "consumerCount": 24,
+        "consumerCount": 25,
         "exactDuplicateIds": [
           "ef5bffc43b9c0ff3a361"
         ],
@@ -21846,7 +21846,7 @@
         "kind": "jsx-option-values",
         "name": "JSX value attributes",
         "valueCount": 7,
-        "consumerCount": 6,
+        "consumerCount": 7,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -23042,7 +23042,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Offering an identification type the SRI does not accept would produce rejected invoices.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
@@ -25077,7 +25077,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Contract drift could let clients send identification types the SRI rejects.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/docs/openapi/api.yaml",
@@ -28650,7 +28650,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 97,
+        "consumerCount": 98,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -28814,7 +28814,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 87,
+        "consumerCount": 88,
         "exactDuplicateIds": [
           "9cea7e5ef61b0b6a9786"
         ],
@@ -28838,7 +28838,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 84,
+        "consumerCount": 85,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -28882,7 +28882,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 111,
+        "consumerCount": 112,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -29210,7 +29210,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 131,
+        "consumerCount": 132,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "fcc83a1bc147933d21b3"
@@ -30428,7 +30428,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 5,
-        "consumerCount": 228,
+        "consumerCount": 229,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -30625,7 +30625,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 13,
-        "consumerCount": 125,
+        "consumerCount": 126,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -30691,7 +30691,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 7,
-        "consumerCount": 103,
+        "consumerCount": 104,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -30858,7 +30858,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 6,
-        "consumerCount": 166,
+        "consumerCount": 167,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -31093,7 +31093,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 4,
-        "consumerCount": 83,
+        "consumerCount": 84,
         "exactDuplicateIds": [],
         "similarCandidateIds": [
           "ede13c91340393b6fa1c"
@@ -32383,7 +32383,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Adding document kinds without SRI document semantics could emit unsupported tax documents.",
-      "justification": "SRI document kinds handled by the invoice worker (factura and nota de cr\u00e9dito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
+      "justification": "SRI document kinds handled by the invoice worker (factura and nota de crédito), enforced by the commerce_tax_document CHECK; fixed by tax regulation, not an editable catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_credit_notes.sql",
@@ -32398,7 +32398,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Accepting unsupported identification types would store invoices that cannot be issued.",
-      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, c\u00e9dula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
+      "justification": "Identification types accepted by the SRI for invoice buyers (consumidor final, cédula, RUC, pasaporte); fixed by the tax authority and mapped to SRI codes in the invoice adapter, not an editable business catalog.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -32413,7 +32413,7 @@
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Mixing environments would send test invoices to production or the reverse.",
-      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producci\u00f3n; a closed technical domain.",
+      "justification": "Checkout environments mirror commerce_checkout_session environments and map to SRI pruebas/producción; a closed technical domain.",
       "reviewed": true,
       "evidence": {
         "file": "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
@@ -32870,7 +32870,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 7,
+        "consumerCount": 8,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -32892,7 +32892,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 25,
+        "consumerCount": 26,
         "exactDuplicateIds": [
           "aa6a65391d2c0611fdd8"
         ],
@@ -32945,7 +32945,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 2,
-        "consumerCount": 26,
+        "consumerCount": 27,
         "exactDuplicateIds": [
           "0dc607f91bd630b1fb87"
         ],
@@ -32969,7 +32969,7 @@
         "kind": "sql-check-values",
         "name": "CHECK IN",
         "valueCount": 3,
-        "consumerCount": 7,
+        "consumerCount": 8,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -33467,7 +33467,7 @@
         "kind": "haskell-sum-type",
         "name": "PriceMode",
         "valueCount": 3,
-        "consumerCount": 7,
+        "consumerCount": 8,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
@@ -34097,6 +34097,26 @@
       "reviewed": true
     },
     {
+      "id": "6f876292d2fcb1dd7a86",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The three values name the canonical checkout statuses the sync trigger mirrors onto a marketplace order; adding one changes the trigger and handler code, not business data.",
+      "justification": "canonicalMarketplaceOrderStatuses lets validateStoredMarketplaceOrderStatus accept holding, awaiting_payment and processing as a stored current status of a canonical order (PUT /marketplace/orders/{orderId}, MKT-OPS-ORDERS-001) while they stay refused as update targets. The values mirror commerce_checkout statuses written by trg_marketplace_sync_verified_checkout and are not user-selectable.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "formal-audit-phase3-20261107",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Server.hs",
+        "line": 19720,
+        "kind": "haskell-list",
+        "name": "canonicalMarketplaceOrderStatuses",
+        "valueCount": 3,
+        "requirement": "MKT-OPS-ORDERS-001"
+      }
+    },
+    {
       "id": "282b46a9f2d482e2e13a",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -34260,6 +34280,26 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "afe675892f43a8a4de73",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "The two constructors select which election window a handler checks; adding one changes handler code, not business data.",
+      "justification": "FanClubElectionPhase names the two election windows (candidacy, voting) that validateFanClubElectionPhase checks for POST .../candidacy and POST .../vote (COMMUNITY-CLUB-ELECTION-001). It mirrors the two timestamp pairs on FanClubElection and is not user-selectable or stored.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "formal-audit-phase3-20261107",
+      "evidence": {
+        "file": "tdf-hq/src/TDF/ServerFanClub.hs",
+        "line": 1887,
+        "kind": "haskell-sum-type",
+        "name": "FanClubElectionPhase",
+        "valueCount": 2,
+        "requirement": "COMMUNITY-CLUB-ELECTION-001"
+      }
     },
     {
       "id": "fb052da892b08e56e3d4",
@@ -36617,526 +36657,6 @@
           ]
         }
       ]
-    },
-    {
-      "id": "3ed309404add147a0fc2",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Changing these DTO serialization keys independently breaks campaign import, revision reconciliation and wire compatibility.",
-      "justification": "This is one typed VideoCampaign DTO instance assembled from a validated imported document, not a registry of editable campaign choices. Its six keys (id, artistId, revision, content, createdAt, updatedAt) are the existing wire shape. Campaign contents remain user data persisted by the scoped backend; no provider, publication action, grant or commercial catalog value is introduced.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
-        "line": 65
-      },
-      "reviewBatch": "video-campaign-import-2026-11-06",
-      "reviewMethod": "manual-boundary-review"
-    },
-    {
-      "id": "382d3969b992e260fde4",
-      "classification": "genuine-technical-constant",
-      "disposition": "explicit-allowlist",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Treating an inert capacity-test matrix as editable business data would obscure the fixed supported-channel coverage; the matrix must remain aligned with the existing SocialChannel union.",
-      "justification": "This options tuple is local to a Jest finite capacity regression and enumerates the existing Instagram/TikTok channel combinations. Its values only drive calls to the real generator in tests; it creates no runtime selector, catalog, provider connection, persisted value or publication. User-authored campaign pieces continue through the unchanged server 30-piece cap. The scanner cross-file consumer matches are lexical occurrences, not imports of this test-local tuple.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts",
-        "line": 100
-      },
-      "reviewBatch": "pr599-piece-cap-2026-11-06",
-      "reviewMethod": "manual-fixture-boundary-review"
-    },
-    {
-      "id": "7c4fd4b445f988d4bf38",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Treating this synthetic creator response as runtime privacy authority would bypass current provider options. The two values are confined to the controlled test response.",
-      "justification": "This test-only TikTok creator response supplies public/private protocol options to exercise an empty default, manual selection and paid-content restrictions in the actual JavaScript form. Production options are fetched from the creator API and revalidated before publication; this fixture neither defines a selectable business catalog nor grants publication authority.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-technical-review",
-      "reviewBatch": "campaign-tiktok-fixture-20261029",
-      "evidence": {
-        "file": "scripts/__tests__/campaign-tiktok-ui.test.mjs",
-        "line": 23,
-        "kind": "array",
-        "name": "privacy_level_options",
-        "valueCount": 2,
-        "consumerCount": 0
-      }
-    },
-    {
-      "id": "2511cbba2fc7279bc28a",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
-      "justification": "Reviewed all 78 transport method keys: getVenue reads the existing GET /social-events/venues/{id} endpoint so the events page can name venues referenced by loaded events that fall outside the bounded venue list page. The key is typed HTTP dispatch, not a selectable venue or business catalog; persisted Venue rows remain authoritative. The prior 77-method review is retained as previousDecision.",
-      "reviewed": true,
-      "reviewMethod": "successor-of-reviewed-decision",
-      "reviewBatch": "event-discovery-filtering-2026-11-04",
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/socialEvents.ts",
-        "line": 598,
-        "valueCount": 78
-      },
-      "previousDecision": {
-        "id": "afc970c544841f583bdc",
-        "classification": "genuine-technical-constant",
-        "disposition": "retain-in-code",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P3-retain",
-        "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
-        "justification": "Reviewed all 77 existing transport method keys: the two additions read existing authenticated social artist list/detail endpoints for canonical-ID autocomplete. These keys are typed HTTP dispatch, not selectable artist or business data. Persisted ArtistProfile and EventArtist rows remain authoritative. The complete prior 75-method review and its provenance are retained as previousDecision.",
-        "reviewed": true,
-        "reviewMethod": "successor-of-reviewed-decision",
-        "reviewBatch": "event-discovery-filtering-2026-11-04",
-        "evidence": {
-          "file": "tdf-hq-ui/src/api/socialEvents.ts",
-          "line": 598,
-          "valueCount": 77
-        },
-        "previousDecisions": [
-          {
-            "id": "561cffe910e93eef6dca",
-            "classification": "genuine-technical-constant",
-            "disposition": "retain-in-code",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P3-retain",
-            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-            "justification": "Typed API-client methods add author memory edits/deletion and public media upload; method names are transport mechanics and no selectable business catalog.",
-            "reviewed": true,
-            "reviewMethod": "successor-of-reviewed-decision",
-            "reviewBatch": "event-memories-2026-10-25",
-            "evidence": {
-              "file": "tdf-hq-ui/src/api/socialEvents.ts",
-              "line": 581
-            },
-            "mergedDecision": {
-              "id": "c69afb90768a2e78770a",
-              "classification": "genuine-technical-constant",
-              "disposition": "retain-in-code",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P3-retain",
-              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-              "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "ticket-tax-invoices-2026-10-06",
-              "evidence": {
-                "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                "line": 576
-              }
-            },
-            "previousDecision": {
-              "id": "620eb81ffe787eca6636",
-              "classification": "genuine-technical-constant",
-              "disposition": "retain-in-code",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P3-retain",
-              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-              "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "ticket-credit-notes-2026-10-06",
-              "evidence": {
-                "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                "line": 577
-              },
-              "mergedDecision": {
-                "id": "c69afb90768a2e78770a",
-                "classification": "genuine-technical-constant",
-                "disposition": "retain-in-code",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P3-retain",
-                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-                "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-                "reviewed": true,
-                "reviewMethod": "successor-of-reviewed-decision",
-                "reviewBatch": "ticket-tax-invoices-2026-10-06",
-                "evidence": {
-                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                  "line": 576
-                }
-              }
-            }
-          },
-          {
-            "id": "48cbf22770303d844cdc",
-            "classification": "genuine-technical-constant",
-            "disposition": "retain-in-code",
-            "specializedModel": "technical_constant_allowlist",
-            "priority": "P3-retain",
-            "risk": "Changing authenticated method dispatch can redirect commands or expose private transfer evidence; server event ownership and authorization remain authoritative.",
-            "justification": "SocialEventsAPI contains 72 typed transport methods after adding getManualPaymentReceipt for the existing event/order-scoped authenticated receipt read. The 71 previously reviewed method names are preserved. These keys dispatch implementation endpoints; they are not editable product choices, payment states or a persisted business catalog.",
-            "reviewed": true,
-            "reviewMethod": "successor-of-reviewed-decision",
-            "reviewBatch": "ticket-receipt-preview-2026-10-24",
-            "evidence": {
-              "file": "tdf-hq-ui/src/api/socialEvents.ts",
-              "line": 580
-            },
-            "mergedDecision": {
-              "id": "c69afb90768a2e78770a",
-              "classification": "genuine-technical-constant",
-              "disposition": "retain-in-code",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P3-retain",
-              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-              "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "ticket-tax-invoices-2026-10-06",
-              "evidence": {
-                "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                "line": 576
-              }
-            },
-            "previousDecision": {
-              "id": "620eb81ffe787eca6636",
-              "classification": "genuine-technical-constant",
-              "disposition": "retain-in-code",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P3-retain",
-              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-              "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "ticket-credit-notes-2026-10-06",
-              "evidence": {
-                "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                "line": 577
-              },
-              "mergedDecision": {
-                "id": "c69afb90768a2e78770a",
-                "classification": "genuine-technical-constant",
-                "disposition": "retain-in-code",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P3-retain",
-                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-                "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-                "reviewed": true,
-                "reviewMethod": "successor-of-reviewed-decision",
-                "reviewBatch": "ticket-tax-invoices-2026-10-06",
-                "evidence": {
-                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                  "line": 576
-                }
-              }
-            }
-          }
-        ],
-        "supersededReviews": [
-          {
-            "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
-            "sourceDecisionId": "48cbf22770303d844cdc",
-            "sourceDecisionSha256": "d0122e0027c1c7297c180b0448c75e7e36f9624693c402eba70a6e38d5625114",
-            "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-            "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
-            "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
-          }
-        ],
-        "previousDecision": {
-          "id": "34210b76e81fd04cffae",
-          "classification": "genuine-technical-constant",
-          "disposition": "retain-in-code",
-          "specializedModel": "technical_constant_allowlist",
-          "priority": "P3-retain",
-          "risk": "Incorrect typed method dispatch can redirect authenticated writes or expose private transfer evidence; server scope and ownership remain authoritative.",
-          "justification": "Reviewed the combined 75 transport methods: main adds the event/order-scoped receipt read, while memories add author edit/delete and event media upload. Both parent registries are preserved; method keys are implementation dispatch, not selectable business catalogs.",
-          "reviewed": true,
-          "reviewMethod": "combined-reviewed-parent-successor",
-          "reviewBatch": "event-memories-main-integration-2026-10-25",
-          "evidence": {
-            "file": "tdf-hq-ui/src/api/socialEvents.ts",
-            "line": 582,
-            "valueCount": 75
-          },
-          "previousDecisions": [
-            {
-              "id": "561cffe910e93eef6dca",
-              "classification": "genuine-technical-constant",
-              "disposition": "retain-in-code",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P3-retain",
-              "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-              "justification": "Typed API-client methods add author memory edits/deletion and public media upload; method names are transport mechanics and no selectable business catalog.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "event-memories-2026-10-25",
-              "evidence": {
-                "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                "line": 581
-              },
-              "mergedDecision": {
-                "id": "c69afb90768a2e78770a",
-                "classification": "genuine-technical-constant",
-                "disposition": "retain-in-code",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P3-retain",
-                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-                "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-                "reviewed": true,
-                "reviewMethod": "successor-of-reviewed-decision",
-                "reviewBatch": "ticket-tax-invoices-2026-10-06",
-                "evidence": {
-                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                  "line": 576
-                }
-              },
-              "previousDecision": {
-                "id": "620eb81ffe787eca6636",
-                "classification": "genuine-technical-constant",
-                "disposition": "retain-in-code",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P3-retain",
-                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-                "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
-                "reviewed": true,
-                "reviewMethod": "successor-of-reviewed-decision",
-                "reviewBatch": "ticket-credit-notes-2026-10-06",
-                "evidence": {
-                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                  "line": 577
-                },
-                "mergedDecision": {
-                  "id": "c69afb90768a2e78770a",
-                  "classification": "genuine-technical-constant",
-                  "disposition": "retain-in-code",
-                  "specializedModel": "technical_constant_allowlist",
-                  "priority": "P3-retain",
-                  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-                  "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-                  "reviewed": true,
-                  "reviewMethod": "successor-of-reviewed-decision",
-                  "reviewBatch": "ticket-tax-invoices-2026-10-06",
-                  "evidence": {
-                    "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                    "line": 576
-                  }
-                }
-              }
-            },
-            {
-              "id": "48cbf22770303d844cdc",
-              "classification": "genuine-technical-constant",
-              "disposition": "retain-in-code",
-              "specializedModel": "technical_constant_allowlist",
-              "priority": "P3-retain",
-              "risk": "Changing authenticated method dispatch can redirect commands or expose private transfer evidence; server event ownership and authorization remain authoritative.",
-              "justification": "SocialEventsAPI contains 72 typed transport methods after adding getManualPaymentReceipt for the existing event/order-scoped authenticated receipt read. The 71 previously reviewed method names are preserved. These keys dispatch implementation endpoints; they are not editable product choices, payment states or a persisted business catalog.",
-              "reviewed": true,
-              "reviewMethod": "successor-of-reviewed-decision",
-              "reviewBatch": "ticket-receipt-preview-2026-10-24",
-              "evidence": {
-                "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                "line": 580
-              },
-              "mergedDecision": {
-                "id": "c69afb90768a2e78770a",
-                "classification": "genuine-technical-constant",
-                "disposition": "retain-in-code",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P3-retain",
-                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-                "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-                "reviewed": true,
-                "reviewMethod": "successor-of-reviewed-decision",
-                "reviewBatch": "ticket-tax-invoices-2026-10-06",
-                "evidence": {
-                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                  "line": 576
-                }
-              },
-              "previousDecision": {
-                "id": "620eb81ffe787eca6636",
-                "classification": "genuine-technical-constant",
-                "disposition": "retain-in-code",
-                "specializedModel": "technical_constant_allowlist",
-                "priority": "P3-retain",
-                "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-                "justification": "Typed API-client method names are implementation mechanics; adding the bank-transfer refund completion call does not create a selectable or reportable domain value.",
-                "reviewed": true,
-                "reviewMethod": "successor-of-reviewed-decision",
-                "reviewBatch": "ticket-credit-notes-2026-10-06",
-                "evidence": {
-                  "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                  "line": 577
-                },
-                "mergedDecision": {
-                  "id": "c69afb90768a2e78770a",
-                  "classification": "genuine-technical-constant",
-                  "disposition": "retain-in-code",
-                  "specializedModel": "technical_constant_allowlist",
-                  "priority": "P3-retain",
-                  "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-                  "justification": "Typed API-client method names are implementation mechanics; adding staff invoice list and resend calls does not create a selectable or reportable domain value.",
-                  "reviewed": true,
-                  "reviewMethod": "successor-of-reviewed-decision",
-                  "reviewBatch": "ticket-tax-invoices-2026-10-06",
-                  "evidence": {
-                    "file": "tdf-hq-ui/src/api/socialEvents.ts",
-                    "line": 576
-                  }
-                }
-              }
-            }
-          ],
-          "supersededReviews": [
-            {
-              "sourceRevision": "78fa351b469c1d2031df3232204dd722ac480e3b",
-              "sourceDecisionId": "48cbf22770303d844cdc",
-              "sourceDecisionSha256": "d0122e0027c1c7297c180b0448c75e7e36f9624693c402eba70a6e38d5625114",
-              "sourceFile": "docs/catalog-persistence/catalog-list-decisions.json",
-              "sourceFileSha256": "d06b1a80f63eaebe219b75ac0cf46bcc827faf9ce94b5f7d99904c4446f11a56",
-              "reason": "Exact protected-parent decision retained in immutable Git; active candidate reflects combined memory source and keeps server authority unchanged."
-            }
-          ]
-        }
-      }
-    },
-    {
-      "id": "316d6dcae63ef10fc332",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-consumer",
-      "risk": "Changing the fixture can hide a canonical-identity or revoked-editor regression. Real artist and event authority remains in the database.",
-      "justification": "The literal event DTO is synthetic test input for the organizer lineup editor. Its keys describe the existing wire shape; it does not supply selectable event types, lifecycle values, or production event data.",
-      "reviewed": true,
-      "reviewMethod": "source-review-2026-11-04",
-      "reviewBatch": "event-discovery-filtering-2026-11-04",
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
-        "line": 13,
-        "name": "event",
-        "valueCount": 4
-      }
-    },
-    {
-      "id": "8c0a8faeba05ba1ac25f",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-consumer",
-      "risk": "Changing the fixture can hide a canonical-identity or revoked-editor regression. Real artist and event authority remains in the database.",
-      "justification": "The two synthetic canonical artist IDs are expected output in a lineup-write regression. This fixed pair tests that IDs 7 and 8 remain separate links; it is neither a production artist list nor an administrator-selectable catalog.",
-      "reviewed": true,
-      "reviewMethod": "source-review-2026-11-04",
-      "reviewBatch": "event-discovery-filtering-2026-11-04",
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
-        "line": 30,
-        "name": "eventArtists",
-        "valueCount": 2
-      }
-    },
-    {
-      "id": "1656a068e0a5b43edfe2",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-activation-verification",
-      "risk": "Removing or changing this synthetic event shape can conceal real-MUI artist lookup, controlled canonical lineup IDs, or authorized latest-event write regressions; it must not become production event authority.",
-      "justification": "This four-field SocialEventDTO object is synthetic test setup for the actual EventLineupEditor and EventArtistSelector. It supplies event21, a future date and an initially empty lineup while real MUI and React Query exercise typing, async hydration, selection beyond the first50, explicit clearing and original save guards. API writes are mocked; it creates no production event, permission, selectable event type or catalog value. The existing SocialEventDTO and server authorization remain canonical.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr704-real-mui-selector-regression-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/components/events/EventArtistSelector.test.tsx",
-        "line": 18,
-        "kind": "object-registry",
-        "name": "event",
-        "valueCount": 4,
-        "values": [
-          "eventId",
-          "eventTitle",
-          "eventStart",
-          "eventArtists"
-        ]
-      }
-    },
-    {
-      "id": "280d7c369a6f39bd4a13",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the synthetic event fixture could weaken the CSV row-unit and layout regression coverage.",
-      "justification": "Single complete synthetic SocialEventDTO fixture used only by actual CSV helper tests; fields are transport fixture shape, not selectable business values or a currency/event registry. Matches reviewed technical fixture precedents caafb621f3c699640707 and be74b101363c9d782b7d; production authorities remain unchanged.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/utils/eventFinanceCsv.test.ts",
-        "line": 29
-      },
-      "reviewBatch": "event-finance-csv-currency-2026-10-30",
-      "reviewMethod": "manual-source-review"
-    },
-    {
-      "id": "afe675892f43a8a4de73",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "The two constructors select which election window a handler checks; adding one changes handler code, not business data.",
-      "justification": "FanClubElectionPhase names the two election windows (candidacy, voting) that validateFanClubElectionPhase checks for POST .../candidacy and POST .../vote (COMMUNITY-CLUB-ELECTION-001). It mirrors the two timestamp pairs on FanClubElection and is not user-selectable or stored.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "formal-audit-phase3-20261107",
-      "evidence": {
-        "file": "tdf-hq/src/TDF/ServerFanClub.hs",
-        "line": 1887,
-        "kind": "haskell-sum-type",
-        "name": "FanClubElectionPhase",
-        "valueCount": 2,
-        "requirement": "COMMUNITY-CLUB-ELECTION-001"
-      }
-    },
-    {
-      "id": "6f876292d2fcb1dd7a86",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "The three values name the canonical checkout statuses the sync trigger mirrors onto a marketplace order; adding one changes the trigger and handler code, not business data.",
-      "justification": "canonicalMarketplaceOrderStatuses lets validateStoredMarketplaceOrderStatus accept holding, awaiting_payment and processing as a stored current status of a canonical order (PUT /marketplace/orders/{orderId}, MKT-OPS-ORDERS-001) while they stay refused as update targets. The values mirror commerce_checkout statuses written by trg_marketplace_sync_verified_checkout and are not user-selectable.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "formal-audit-phase3-20261107",
-      "evidence": {
-        "file": "tdf-hq/src/TDF/Server.hs",
-        "line": 19720,
-        "kind": "haskell-list",
-        "name": "canonicalMarketplaceOrderStatuses",
-        "valueCount": 3,
-        "requirement": "MKT-OPS-ORDERS-001"
-      }
-    },
-    {
-      "id": "b3eadb9d52a262f5371f",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Mistaking synthetic case labels for selectable currency authority would hide the boundary under test. These labels drive only finite negative assertions; no event or tier is imported.",
-      "justification": "The twelve object keys name deliberately missing, malformed, non-string and noncanonical currency test cases in the Node fixture. Each value is passed only to the offline validator and must be rejected even when all tiers match it. They are not ISO reference data, runtime currency options or a production business registry. The real validator checks three uppercase ASCII letters without claiming ISO membership; schema-two CLI imports remain forbidden and fixture fetch is blocked.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-technical-review",
-      "reviewBatch": "pr709-offline-currency-fixture-20261107",
-      "evidence": {
-        "file": "scripts/__tests__/event-draft-plan.test.mjs",
-        "line": 93,
-        "kind": "object-registry",
-        "name": "invalidReviewCurrencies",
-        "valueCount": 12,
-        "consumerCount": 86
-      }
     }
   ]
 }
