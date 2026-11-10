@@ -2,325 +2,440 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 516,
-    "named": 14,
-    "path-named": 1,
-    "reviewed": 0,
-    "unspecified": 501,
-    "covered": 15
+    "total": 517,
+    "named": 435,
+    "path-named": 0,
+    "reviewed": 82,
+    "unspecified": 0,
+    "covered": 517
   },
   "routes": [
     {
       "method": "POST",
       "path": "/NotificacionPago",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-HOSTED-NOTIFICATIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/academy/enroll",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ACADEMY-ACCOUNT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/academy/progress",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ACADEMY-ACCOUNT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/access-requests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-ACCESS-REQUEST-LIFECYCLE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/access-requests/{requestId}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-ACCESS-REQUEST-LIFECYCLE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/access-requests/{requestId}/decision",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-ACCESS-REQUEST-LIFECYCLE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/artists/{artistId}/rerun",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-ENRICH-001"
+      ],
+      "note": "OPS-ENRICH-001 specifies strict-admin enrichment runs, run keys and the external research lease that these handlers implement."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/identity-candidates",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ENRICH-IDENTITY-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/artists/enrichment/identity-candidates/{candidateId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-ENRICH-REVIEW-001"
+      ],
+      "note": "ART-ENRICH-REVIEW-001 specifies the strict-admin source, field-decision and identity review boundaries and their stale-value guards."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/media",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-PROFILE-MEDIA-001"
+      ],
+      "note": "ART-PROFILE-MEDIA-001 specifies strict-admin media and suggestion writes with hash idempotency and pending-only suggestion updates."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/runs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-ENRICH-001"
+      ],
+      "note": "OPS-ENRICH-001 specifies strict-admin enrichment runs, run keys and the external research lease that these handlers implement."
     },
     {
       "method": "PATCH",
       "path": "/admin/artists/enrichment/runs/{runId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-ENRICH-001"
+      ],
+      "note": "OPS-ENRICH-001 specifies strict-admin enrichment runs, run keys and the external research lease that these handlers implement."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/sources",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-ENRICH-REVIEW-001"
+      ],
+      "note": "ART-ENRICH-REVIEW-001 specifies the strict-admin source, field-decision and identity review boundaries and their stale-value guards."
     },
     {
       "method": "PATCH",
       "path": "/admin/artists/enrichment/suggestion-sets/{artistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-ENRICH-REVIEW-001"
+      ],
+      "note": "ART-ENRICH-REVIEW-001 specifies the strict-admin source, field-decision and identity review boundaries and their stale-value guards."
     },
     {
       "method": "POST",
       "path": "/admin/artists/enrichment/suggestions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-PROFILE-MEDIA-001"
+      ],
+      "note": "ART-PROFILE-MEDIA-001 specifies strict-admin media and suggestion writes with hash idempotency and pending-only suggestion updates."
     },
     {
       "method": "PATCH",
       "path": "/admin/artists/enrichment/suggestions/{suggestionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ART-ENRICH-REVIEW-001"
+      ],
+      "note": "ART-ENRICH-REVIEW-001 specifies the strict-admin source, field-decision and identity review boundaries and their stale-value guards."
     },
     {
       "method": "POST",
       "path": "/admin/artists/profiles",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/artists/profiles/{artistProfileId}/connect/onboarding-link",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/artists/releases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/artists/releases/{releaseId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/artists/{artistId}/promotions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/admin/artists/{artistId}/promotions/{promotionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/artists/{artistId}/promotions/{promotionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/brain/entries",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-BRAIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/brain/entries/{entryId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-BRAIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/commerce/provider-events/{eventId}/replay",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-PROVIDER-EVENT-REPLAY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/communications/email/registered-users",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-ADMIN-EMAIL-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/communications/whatsapp/{messageId}/resend",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-ADMIN-WHATSAPP-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/courses",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/notes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/courses/{slug}/registrations/{registrationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/domo/quotes/{quoteId}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/dropdowns/{category}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DATA-DROPDOWN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/dropdowns/{category}/{optionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DATA-DROPDOWN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/email-test",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-ADMIN-EMAIL-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/admin/logs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-ADMIN-MAINTENANCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/rag/refresh",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PRIV-RAG-002"
+      ],
+      "note": "PRIV-RAG-002 specifies the refresh: public course fields only, atomic replacement, previous index preserved on failure; ragRefreshHandler calls refreshRagIndex."
     },
     {
       "method": "PUT",
       "path": "/admin/records-ingestion/control",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REC-INGESTION-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/records-ingestion/runs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REC-INGESTION-ADMIN-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/records-ingestion/sources",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REC-INGESTION-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/seed",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-ADMIN-MAINTENANCE-001",
+        "OPS-SEED-ROUTES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/services/storefront/orders/{orderId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/services/storefront/orders/{orderId}/reconcile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/services/storefront/orders/{orderId}/refunds",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/services/storefront/packages",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/admin/services/storefront/packages/{packageId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
@@ -333,8 +448,10 @@
     {
       "method": "POST",
       "path": "/admin/services/storefront/refunds/{refundId}/reconcile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STOREFRONT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
@@ -347,82 +464,107 @@
     {
       "method": "POST",
       "path": "/admin/social/unhold",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-SOCIAL-UNHOLD-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/admin/users",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ID-ADMIN-USER-CREATE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/admin/users/{userId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ID-SESSION-001"
+      ],
+      "note": "ID-SESSION-001 specifies that disabling a credential or changing its password or username atomically invalidates its sessions, under strict Admin; updateUser does so under a row lock."
     },
     {
       "method": "POST",
       "path": "/admin/users/{userId}/communications/whatsapp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-ADMIN-WHATSAPP-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/ads",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/assist",
-      "basis": "path-named",
+      "basis": "named",
       "requirements": [
-        "AUTH-PUBLIC-001"
+        "AI-STAFF-ASSISTANTS-001"
       ]
     },
     {
       "method": "POST",
       "path": "/ads/automations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-AUTOMATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/automations/{automationId}/enroll",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-AUTOMATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/automations/{automationId}/enrollments/{enrollmentId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-AUTOMATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/automations/{automationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-AUTOMATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/campaigns",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/inquiry",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-PUBLIC-INQUIRY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ads/{adId}/examples",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ADS-ADMIN-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
@@ -443,302 +585,407 @@
     {
       "method": "POST",
       "path": "/artists/me/activate",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/artists/me/photo",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/artists/me/profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/artists/me/profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/artists/video-campaigns/{campaignKey}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-VIDEO-CAMPAIGN-001"
+      ],
+      "note": "MEDIA-VIDEO-CAMPAIGN-001 specifies compare-and-swap revisions, the artist, strict-admin or manager scope re-validated under session locks, verified conversions and the explicit feature command."
     },
     {
       "method": "POST",
       "path": "/artists/video-campaigns/{campaignKey}/conversion",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-VIDEO-CAMPAIGN-001"
+      ],
+      "note": "MEDIA-VIDEO-CAMPAIGN-001 specifies compare-and-swap revisions, the artist, strict-admin or manager scope re-validated under session locks, verified conversions and the explicit feature command."
     },
     {
       "method": "POST",
       "path": "/artists/video-campaigns/{campaignKey}/feature",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-VIDEO-CAMPAIGN-001"
+      ],
+      "note": "MEDIA-VIDEO-CAMPAIGN-001 specifies compare-and-swap revisions, the artist, strict-admin or manager scope re-validated under session locks, verified conversions and the explicit feature command."
     },
     {
       "method": "POST",
       "path": "/assets",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/assets/upload",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/assets/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/assets/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/assets/{id}/checkin",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-LOAN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/assets/{id}/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-LOAN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/assets/{id}/qr",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-ASSET-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bands",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CRM-PARTY-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-BOOK-001"
+      ],
+      "note": "AUTH-BOOK-001 and BOOK-CALENDAR-001 specify the staff routes: Scheduling admission, studio roles or the stored customer or engineer identity, a current-session fence, exclusion-backed calendar edits and 404 for foreign updates."
     },
     {
       "method": "POST",
       "path": "/bookings/public",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/manual-payment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/manual-payment/evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/bookings/public/orders/{bookingId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-PUBLIC-PAYMENT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/bookings/{bookingId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-BOOK-001"
+      ],
+      "note": "AUTH-BOOK-001 and BOOK-CALENDAR-001 specify the staff routes: Scheduling admission, studio roles or the stored customer or engineer identity, a current-session fence, exclusion-backed calendar edits and 404 for foreign updates."
     },
     {
       "method": "POST",
       "path": "/bookings/{bookingId}/manual-payment/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "BOOK-MANUAL-REVIEW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/calendar/v1/auth-url",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INTEG-GOOGLE-CALENDAR-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/calendar/v1/sync",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INTEG-GOOGLE-CALENDAR-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/calendar/v1/tokens",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INTEG-GOOGLE-CALENDAR-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/revisions/{revisionId}/approve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-REVISION-WORKFLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/revisions/{revisionId}/reject",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-REVISION-WORKFLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/revisions/{revisionId}/submit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-REVISION-WORKFLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/party-role-revisions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/revisions/{revisionId}/approve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/revisions/{revisionId}/reject",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/revisions/{revisionId}/submit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/security/role-permission-revisions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-SECURITY-GRANT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/{catalogCode}/import.csv",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-DIRECT-ITEM-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/catalog/{catalogCode}/items/{itemId}/activation",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-DIRECT-ITEM-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/{catalogCode}/merge",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-DIRECT-ITEM-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/{catalogCode}/reorder",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-DIRECT-ITEM-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/catalog/{catalogCode}/revisions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CAT-REVISION-WORKFLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/chat/threads/dm/{otherPartyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-CHAT-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/chat/threads/{threadId}/messages",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-CHAT-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/chatkit/sessions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/cms/admin/content",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CMS-CONTENT-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/cms/admin/content/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CMS-CONTENT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/cms/admin/content/{id}/publish",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CMS-CONTENT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/commerce/checkouts/{checkoutId}/payment-sessions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-HOSTED-SESSION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/commerce/provider-notifications/payphone",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-HOSTED-NOTIFICATIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/commerce/provider-notifications/placetopay",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-HOSTED-NOTIFICATIONS-001"
+      ]
     },
     {
       "method": "POST",
@@ -759,230 +1006,312 @@
     {
       "method": "POST",
       "path": "/ddex/documents",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "REC-DDEX-001"
+      ],
+      "note": "REC-DDEX-001 specifies private content-addressed intake and synchronous structural validation that commits one complete run with its issues and document state or nothing, never implying official approval."
     },
     {
       "method": "POST",
       "path": "/ddex/documents/{id}/import-plans",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ddex/documents/{id}/validation-runs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "REC-DDEX-001"
+      ],
+      "note": "REC-DDEX-001 specifies private content-addressed intake and synchronous structural validation that commits one complete run with its issues and document state or nothing, never implying official approval."
     },
     {
       "method": "POST",
       "path": "/ddex/exports",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/ddex/import-plans/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ddex/import-plans/{id}/commit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/ddex/partners",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DDEX-PARTNERS-PLANNING-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/admin/claims/{claimId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ID-CLAIM-REVIEW-001"
+      ],
+      "note": "ID-CLAIM-REVIEW-001 specifies Admin role and module, no self-review, serialized decisions with grants and audit, observational identical-state replay and terminal revocation."
     },
     {
       "method": "POST",
       "path": "/directory/admin/merges",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ADMIN-MODERATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/admin/moderation/{caseId}/decisions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ADMIN-MODERATION-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/admin/verifications/{verificationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ADMIN-MODERATION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/directory/age-assurance",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-AGE-ASSURANCE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/applications/{applicationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/directory/artist-claim-targets/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-SUBMISSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/claims",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "ID-ARTIST-CLAIM-001"
+      ],
+      "note": "ID-ARTIST-CLAIM-001 specifies that directory claim submission requires authentication and uses its actor-scoped idempotency receipt, with no grant changes until review."
     },
     {
       "method": "POST",
       "path": "/directory/classifieds",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-CLASSIFIEDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/classifieds/{classifiedId}/applications",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/classifieds/{classifiedId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-CLASSIFIEDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/contact",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/directory/favorites/{targetKind}/{targetId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-REVIEWS-FAVORITES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/directory/favorites/{targetKind}/{targetId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-REVIEWS-FAVORITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/invitations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/invitations/{invitationId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-ENGAGEMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/profiles",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-PROFILE-AUTHORING-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/directory/profiles/{profileId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-PROFILE-AUTHORING-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/directory/profiles/{profileId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-PROFILE-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/reports",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-SUBMISSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/reviews",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-REVIEWS-FAVORITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/directory/saved-searches",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "DIR-SAVED-SEARCH-001"
+      ],
+      "note": "DIR-SAVED-SEARCH-001 specifies rejection of unsafe filters, no persisted coordinates and preserved actor, request identity and query hashes."
     },
     {
       "method": "POST",
       "path": "/directory/verifications",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DIR-SUBMISSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/drive/token",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/drive/token/refresh",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/drive/upload",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/event-operations/events/{eventId}/tasks/{activityId}/complete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-OPERATIONS-COMMANDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/event-operations/events/{eventId}/tasks/{activityId}/raci/reassign",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-OPERATIONS-COMMANDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/event-operations/events/{eventId}/transitions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-OPERATIONS-COMMANDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/facebook/reply",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/facebook/webhook",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-WEBHOOK-001"
+      ],
+      "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
     },
     {
       "method": "POST",
@@ -995,242 +1324,325 @@
     {
       "method": "PUT",
       "path": "/fans/me/artist-profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-PROFILE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/elections",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-ELECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/elections/{electionId}/candidacy",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-ELECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/elections/{electionId}/vote",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-ELECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/events",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/inbox",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/inbox/{messageId}/reply",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/inbox/{messageId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/fans/me/clubs/{artistId}/member-profiles/me",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/delete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/hide",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/react",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/report",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-PARTICIPATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/memories/{memoryId}/unhide",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-POSTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/hide",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/pin",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/react",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-POSTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/unhide",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/clubs/{artistId}/posts/{postId}/unpin",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-CLUB-OFFICER-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/fans/me/follows/{artistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-FOLLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/follows/{artistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-FOLLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/notifications/read-all",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-NOTIFICATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/notifications/{notifId}/read",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-NOTIFICATION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/fans/me/profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-PROFILE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/fans/me/role-request",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COMMUNITY-FAN-PROFILE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "FEEDBACK-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/account-deletion",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PRIV-INTAKE-001"
+      ],
+      "note": "PRIV-INTAKE-001 specifies the reserved deletion marker: only a live matching session may submit it (origin proof, owner advisory lock, pending receipt reuse, privacy inbox) and administrator resolution is immutable, audited and re-validates role and module under locks."
     },
     {
       "method": "POST",
       "path": "/feedback/internal",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/account-deletion/{feedbackId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PRIV-INTAKE-001"
+      ],
+      "note": "PRIV-INTAKE-001 specifies the reserved deletion marker: only a live matching session may submit it (origin proof, owner advisory lock, pending receipt reuse, privacy inbox) and administrator resolution is immutable, audited and re-validates role and module under locks."
     },
     {
       "method": "PATCH",
       "path": "/feedback/internal/{reportId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/comments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-EVIDENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-EVIDENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/evidence-links",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-EVIDENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/retests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-EVIDENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/feedback/internal/{reportId}/submit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "QA-REPORT-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/hooks/whatsapp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-WEBHOOK-001"
+      ],
+      "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
     },
     {
       "method": "POST",
       "path": "/input-list/inventory/seed",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-SEED-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/input-list/sessions/seed",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-SEED-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
@@ -1243,164 +1655,219 @@
     {
       "method": "POST",
       "path": "/instagram/reply",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/instagram/webhook",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-WEBHOOK-001"
+      ],
+      "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
     },
     {
       "method": "PUT",
       "path": "/interactions/blocks/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOC-INTERACTION-WRITES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/interactions/preferences",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOC-INTERACTION-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/interactions/targets/{targetId}/commands",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOC-INTERACTION-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/audit-plans",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/audit-plans/{planId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/audit-plans/{planId}/activate",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/audit-plans/{planId}/cases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/audit-plans/{planId}/daily-summaries",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/internships/audit-plans/{planId}/final-summary",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/permissions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/permissions/{permissionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/profile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/projects",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/projects/{projectId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/tasks",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/internships/tasks/{taskId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/tasks/{taskId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/test-cases/{testCaseId}/executions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/test-executions/{executionId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-AUDIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/time-entries/clock-in",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/time-entries/clock-out",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/internships/todos",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/internships/todos/{todoId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/internships/todos/{todoId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-INTERN-SELF-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/invoices",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-LEGACY-RECORDS-001"
+      ]
     },
     {
       "method": "POST",
@@ -1413,644 +1880,891 @@
     {
       "method": "POST",
       "path": "/label/project-notes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/label/project-notes/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/label/project-notes/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/label/tracks",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/label/tracks/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/label/tracks/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LABEL-NOTES-TRACKS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/live-sessions/intake",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "LIVE-SESSION-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/login",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-CREDENTIAL-INTAKE-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/login/apple",
+      "basis": "named",
+      "requirements": [
+        "AUTH-APPLE-SIGNIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/login/google",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-CREDENTIAL-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-CART-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-CART-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/items",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-CART-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/cart/{cartId}/stripe/payment-intent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/marketplace/orders/{orderId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/customer-requests/{requestId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-REVIEWS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/deposit-settlements",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-REVIEWS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/deposit-settlements/{settlementId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-REVIEWS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/marketplace/orders/{orderId}/fulfillment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/manual-payment/evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-BUYER-REQUESTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/manual-payment/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-REVIEWS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/marketplace/orders/{orderId}/rental",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/orders/{orderId}/requests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-BUYER-REQUESTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/marketplace/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/marketplace/{listingId}/rental-terms",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-OPS-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/mcp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-PUBLIC-001"
+      ],
+      "note": "AUTH-PUBLIC-001 registers /mcp as public-diagnostic: JSON-RPC exposing only tdf_health_check, no database or external effect."
     },
     {
       "method": "PATCH",
       "path": "/merch/admin/issues/{issueId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-ADMIN-REVIEW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/orders/{orderId}/refunds",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-REFUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/products/{productId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-ADMIN-REVIEW-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/admin/refunds/{refundId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-REFUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/settlements",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-SETTLEMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/settlements/{settlementId}/payment-evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-SETTLEMENT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/admin/settlements/{settlementId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-SETTLEMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/admin/stores/{storeId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-ADMIN-REVIEW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/carts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-CART-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/carts/{cartId}/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-MERCH-CHECKOUT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/merch/carts/{cartId}/items",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-CART-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/merch/carts/{cartId}/items/{variantId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-CART-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/merch/favorites/{productId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-BUYER-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/merch/favorites/{productId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-BUYER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/orders/{orderId}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-BUYER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/orders/{orderId}/issues",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-BUYER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/applications",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/merch/seller/stores/{storeId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/issues/{issueId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/members",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/members/{memberId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/orders/{orderId}/fulfillment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-ORDERS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/policies",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/products",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/merch/seller/stores/{storeId}/products/{productId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/products/{productId}/images",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/products/{productId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/merch/seller/stores/{storeId}/shipping-zones",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-STORE-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/merch/seller/stores/{storeId}/variants/{variantId}/stock",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MKT-MERCH-SELLER-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/meta/backfill",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/ddex/parties",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REC-DDEX-REGISTRY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/downloads/free",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-DOWNLOAD-001"
+      ],
+      "note": "PAY-MUSIC-DOWNLOAD-001 specifies the shared downloadable-asset predicate, per-request counting under the entitlement row lock, 300-second URLs and revoked grants staying revoked."
     },
     {
       "method": "POST",
       "path": "/music/entitlements/{entitlementId}/download",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-DOWNLOAD-001"
+      ],
+      "note": "PAY-MUSIC-DOWNLOAD-001 specifies the shared downloadable-asset predicate, per-request counting under the entitlement row lock, 300-second URLs and revoked grants staying revoked."
     },
     {
       "method": "PUT",
       "path": "/music/favorites",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/music/favorites/{recordingId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/infringement-reports",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-INFRINGEMENT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/music/infringement-reports/{reportId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-INFRINGEMENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/me/playback-events",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-PLAYBACK-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/playback-events",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-PLAYBACK-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/playlists",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/music/playlists/{playlistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/music/playlists/{playlistId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/playlists/{playlistId}/items",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/music/playlists/{playlistId}/items/{itemId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/music/playlists/{playlistId}/items/{itemId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-COLLECTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/purchases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-PURCHASE-REPLAY-001"
+      ],
+      "note": "PAY-MUSIC-PURCHASE-REPLAY-001 specifies buyer-scoped keys bound to the offer, territory, terms and environment, with identical requests reusing the order."
     },
     {
       "method": "POST",
       "path": "/music/purchases/{purchaseId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-OUTCOME-001"
+      ],
+      "note": "PAY-MUSIC-OUTCOME-001 specifies attempt admission under the checkout lock (failed or closed checkouts deny creation and replay) and one entitlement per verified paid transition with replay creating no effect."
     },
     {
       "method": "POST",
       "path": "/music/purchases/{purchaseId}/datafast/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-OUTCOME-001"
+      ],
+      "note": "PAY-MUSIC-OUTCOME-001 specifies attempt admission under the checkout lock (failed or closed checkouts deny creation and replay) and one entitlement per verified paid transition with replay creating no effect."
     },
     {
       "method": "POST",
       "path": "/music/purchases/{purchaseId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-OUTCOME-001"
+      ],
+      "note": "PAY-MUSIC-OUTCOME-001 specifies attempt admission under the checkout lock (failed or closed checkouts deny creation and replay) and one entitlement per verified paid transition with replay creating no effect."
     },
     {
       "method": "POST",
       "path": "/music/purchases/{purchaseId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-MUSIC-OUTCOME-001"
+      ],
+      "note": "PAY-MUSIC-OUTCOME-001 specifies attempt admission under the checkout lock (failed or closed checkouts deny creation and replay) and one entitlement per verified paid transition with replay creating no effect."
     },
     {
       "method": "POST",
       "path": "/music/releases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/comments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/comments/{commentId}/resolve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/music/releases/{releaseId}/versions/{versionId}/content",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/corrections",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-RELEASE-001"
+      ],
+      "note": "MEDIA-MUSIC-RELEASE-001 specifies version transitions through music_valid_transition with frozen snapshots, and corrections idempotent per request key under row locks."
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/ddex-exports",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-DDEX-001"
+      ],
+      "note": "MEDIA-MUSIC-DDEX-001 specifies strict-admin export creation committing export and job atomically, serialized per actor/key and version, with natural-key uniqueness."
     },
     {
       "method": "PUT",
       "path": "/music/releases/{releaseId}/versions/{versionId}/draft",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/terms",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/transition",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-RELEASE-001"
+      ],
+      "note": "MEDIA-MUSIC-RELEASE-001 specifies version transitions through music_valid_transition with frozen snapshots, and corrections idempotent per request key under row locks."
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/uploads",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-ASSET-001"
+      ],
+      "note": "MEDIA-MUSIC-ASSET-001 specifies scoped SigV4 multipart uploads to quarantine, part evidence and idempotent confirmation creating the asset and one job per session."
     },
     {
       "method": "POST",
       "path": "/music/releases/{releaseId}/versions/{versionId}/validate",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-AUTHORING-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/music/uploads/{uploadId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-UPLOAD-SESSION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/music/uploads/{uploadId}/confirm",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-ASSET-001"
+      ],
+      "note": "MEDIA-MUSIC-ASSET-001 specifies scoped SigV4 multipart uploads to quarantine, part evidence and idempotent confirmation creating the asset and one job per session."
     },
     {
       "method": "PUT",
       "path": "/music/uploads/{uploadId}/parts/{partNumber}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-MUSIC-ASSET-001"
+      ],
+      "note": "MEDIA-MUSIC-ASSET-001 specifies scoped SigV4 multipart uploads to quarantine, part evidence and idempotent confirmation creating the asset and one job per session."
     },
     {
       "method": "PUT",
       "path": "/music/uploads/{uploadId}/provider",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-MUSIC-UPLOAD-SESSION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/navigation/preferences/{featureId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "NAV-PREFERENCES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/navigation/preferences/{featureId}/visit",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "NAV-PREFERENCES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/operations/approvals",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-APPROVAL-001"
+      ],
+      "note": "OPS-APPROVAL-001 specifies organization-scoped idempotency bound to requester, scope and payload, and decisions only on pending, unexpired requests by a different actor (handler and CHECK approver <> requester)."
     },
     {
       "method": "PATCH",
       "path": "/operations/approvals/{approvalId}/decision",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-APPROVAL-001"
+      ],
+      "note": "OPS-APPROVAL-001 specifies organization-scoped idempotency bound to requester, scope and payload, and decisions only on pending, unexpired requests by a different actor (handler and CHECK approver <> requester)."
     },
     {
       "method": "POST",
       "path": "/operations/integration-failures/{failureId}/replay",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-FAILURE-REPLAY-001"
+      ],
+      "note": "OPS-FAILURE-REPLAY-001 and OPS-AUX-WRITE-001 specify the replay: manager roles, the dead-lettered projection re-queued in the same transaction, nothing re-runnable is not admitted as retrying."
     },
     {
       "method": "POST",
       "path": "/operations/push-subscriptions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-AUX-WRITE-001"
+      ],
+      "note": "OPS-AUX-WRITE-001 specifies notes, saved views and push registration: session, role and scope re-validated under locks, result and audit committed together, 503 without the push key."
     },
     {
       "method": "POST",
       "path": "/operations/saved-views",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-AUX-WRITE-001"
+      ],
+      "note": "OPS-AUX-WRITE-001 specifies notes, saved views and push registration: session, role and scope re-validated under locks, result and audit committed together, 503 without the push key."
     },
     {
       "method": "POST",
       "path": "/operations/work-items",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-MANUAL-001"
+      ],
+      "note": "OPS-MANUAL-001 specifies manual creation: retry key bound to actor, scope and payload; only the server-keyed event is projected; receipt, item and evidence commit together."
     },
     {
       "method": "PATCH",
       "path": "/operations/work-items/{workItemId}/assignment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-COMMAND-001"
+      ],
+      "note": "OPS-COMMAND-001 specifies the four work-item commands: locked current version, re-validated session and role, timers and evidence committed atomically, 401/403/404/409/422 admission."
     },
     {
       "method": "POST",
       "path": "/operations/work-items/{workItemId}/notes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-AUX-WRITE-001"
+      ],
+      "note": "OPS-AUX-WRITE-001 specifies notes, saved views and push registration: session, role and scope re-validated under locks, result and audit committed together, 503 without the push key."
     },
     {
       "method": "PATCH",
       "path": "/operations/work-items/{workItemId}/priority",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-COMMAND-001"
+      ],
+      "note": "OPS-COMMAND-001 specifies the four work-item commands: locked current version, re-validated session and role, timers and evidence committed atomically, 401/403/404/409/422 admission."
     },
     {
       "method": "PATCH",
       "path": "/operations/work-items/{workItemId}/seen",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-COMMAND-001"
+      ],
+      "note": "OPS-COMMAND-001 specifies the four work-item commands: locked current version, re-validated session and role, timers and evidence committed atomically, 401/403/404/409/422 admission."
     },
     {
       "method": "PATCH",
       "path": "/operations/work-items/{workItemId}/transition",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "OPS-COMMAND-001"
+      ],
+      "note": "OPS-COMMAND-001 specifies the four work-item commands: locked current version, re-validated session and role, timers and evidence committed atomically, 401/403/404/409/422 admission."
     },
     {
       "method": "POST",
       "path": "/packages/purchases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-LEGACY-RECORDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/parties",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CRM-PARTY-INTAKE-001"
+      ]
     },
     {
       "method": "PUT",
@@ -2063,164 +2777,218 @@
     {
       "method": "POST",
       "path": "/password/change",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-PASSWORD-RECOVERY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/payments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-LEGACY-RECORDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/pipelines/{workflowId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PIPELINE-CARDS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/pipelines/{workflowId}/{cardId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PIPELINE-CARDS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/pipelines/{workflowId}/{cardId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PIPELINE-CARDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/proposals",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PROPOSAL-AUTHORING-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/proposals/{proposalId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PROPOSAL-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/proposals/{proposalId}/versions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PROPOSAL-AUTHORING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/assets/qr/{token}/checkin",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-QR-PUBLIC-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/assets/qr/{token}/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-QR-PUBLIC-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/assets/qr/{token}/upload",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "INV-QR-PUBLIC-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/courses/{slug}/registrations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-PUBLIC-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/courses/{slug}/registrations/{registrationId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-PUBLIC-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/courses/{slug}/registrations/{registrationId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-PUBLIC-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/courses/{slug}/registrations/{registrationId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "COURSE-PUBLIC-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/accept",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-DOMO-CANCEL-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/domo/quotes/{quoteId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "DOMO-PUBLIC-QUOTE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/bank-transfer",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/bank-transfer/evidence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/public/events/{eventId}/ticket-orders/{orderId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-PUBLIC-TICKET-CHECKOUT-001"
+      ]
     },
     {
       "method": "POST",
@@ -2241,170 +3009,229 @@
     {
       "method": "DELETE",
       "path": "/radio/presence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-PRESENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/presence",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-PRESENCE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/streams/active",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/streams/import",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/streams/now-playing",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/streams/refresh-metadata",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "RADIO-CATALOG-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/radio/transmissions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-STREAM-001"
+      ],
+      "note": "MEDIA-STREAM-001 specifies the 503 without persistence until a reviewed provider binding exists."
     },
     {
       "method": "POST",
       "path": "/receipts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-LEGACY-RECORDS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/referrals/claim",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "CRM-PARTY-INTAKE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/reputation/consents",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REP-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/reputation/preferences",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REP-SELF-SERVICE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/reviews",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "REVIEW-PUBLIC-SUBMIT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/rooms",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHED-ROOMS-SESSIONS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/rooms/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHED-ROOMS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/seed",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "OPS-SEED-ROUTES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/service-marketplace/ads",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SVCMKT-PROVIDER-ADS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/service-marketplace/ads/{adId}/slots",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SVCMKT-PROVIDER-ADS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/service-marketplace/bookings",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SYS-ESCROW-001"
+      ],
+      "note": "SYS-ESCROW-001 specifies the fail-closed 503 with no persistence and no handler IO until verified escrow exists."
     },
     {
       "method": "POST",
       "path": "/service-marketplace/bookings/{bookingId}/complete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SVCMKT-BOOKING-COMPLETE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/service-marketplace/bookings/{bookingId}/escrow/release",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SYS-ESCROW-002"
+      ],
+      "note": "SYS-ESCROW-002 specifies the fail-closed 503 for escrow release."
     },
     {
       "method": "POST",
       "path": "/services/storefront/order",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PUBLIC-ORDER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/datafast/checkout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/manual-payment",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/paypal/create",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/revision",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PUBLIC-ORDER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/order/{orderId}/stripe/payment-intent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PUBLIC-ORDER-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/paypal/capture",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYMENT-RAILS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/services/storefront/paypal/webhook",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "STORE-PAYPAL-WEBHOOK-001"
+      ]
     },
     {
       "method": "POST",
@@ -2417,356 +3244,489 @@
     {
       "method": "POST",
       "path": "/session/currency-conversions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-PREFERENCES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/session/experiments/{experimentId}/exposure",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-ONBOARDING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/session/logout",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-LOGOUT-001"
+      ],
+      "note": "AUTH-LOGOUT-001 is the web client contract; the server route deactivates every token presented in either header, answers 204 with a cleared cookie for any caller and is idempotent (handler-session)."
     },
     {
       "method": "POST",
       "path": "/session/onboarding/complete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-ONBOARDING-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/session/onboarding/intent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-ONBOARDING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/session/onboarding/reconcile",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-ONBOARDING-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/session/preferences",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SESSION-PREFERENCES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/sessions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHED-ROOMS-SESSIONS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/sessions/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHED-ROOMS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/signup",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-CREDENTIAL-INTAKE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-discovery/posts/{postId}/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/artists",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-PROFILE-WRITE-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/artists/{artistId}/follow",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-FOLLOW-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/artists/{artistId}/follow",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-FOLLOW-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/artists/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "ART-PROFILE-WRITE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/event-research/candidates",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/event-research/candidates/{candidateId}/materialize",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/event-research/pilot/approve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/event-research/runs",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/event-research/runs/{runId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/event-sources",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/event-sources/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RESEARCH-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-CREATE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/budget-lines",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-FINANCE-ENTRY-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/budget-lines/{lineId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "PAY-EVENT-REPORT-RANGE-001"
+      ],
+      "note": "PAY-EVENT-REPORT-RANGE-001 requires rejecting a budget-line edit with an unreportable actual before its first write; updateBudgetLine does so."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/finance-entries",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-FINANCE-ENTRY-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/finance-entries/{entryId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-FINANCE-ENTRY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/invitations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-INVITATION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/invitations/{invitationId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-INVITATION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/live-broadcasts",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-STREAM-001"
+      ],
+      "note": "MEDIA-STREAM-001 specifies native creation failing 503 without persistence, broadcaster-only end and the event/follower guards these handlers apply."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/end",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-STREAM-001"
+      ],
+      "note": "MEDIA-STREAM-001 specifies native creation failing 503 without persistence, broadcaster-only end and the event/follower guards these handlers apply."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/live-broadcasts/{broadcastId}/heartbeat",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "MEDIA-STREAM-001"
+      ],
+      "note": "MEDIA-STREAM-001 specifies native creation failing 503 without persistence, broadcaster-only end and the event/follower guards these handlers apply."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/activities",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/logistics/activities/{activityId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/logistics/activities/{activityId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/activities/{activityId}/verify-route",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/members",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/logistics/members/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/logistics/members/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/places",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/logistics/places/{placeId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/logistics/places/{placeId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/logistics/settings",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/logistics/verify-routes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-LOGISTICS-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/memory-invitations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-INVITATION-001"
+      ],
+      "note": "SOCIAL-EVENT-INVITATION-001 specifies the organizer campaign setting, recipient consent and opening attribution these SQL-backed handlers implement."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/memory-invitations/{deliveryId}/open",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-INVITATION-001"
+      ],
+      "note": "SOCIAL-EVENT-INVITATION-001 specifies the organizer campaign setting, recipient consent and opening attribution these SQL-backed handlers implement."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments/image",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments/media",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/moments/{momentId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/moments/{momentId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-MEMORY-001"
+      ],
+      "note": "SOCIAL-EVENT-MEMORY-001 specifies authorized memory publication, uploads and author-only edit/delete with optimistic timestamps, as these handlers do."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments/{momentId}/comments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-EVENT-INTERACTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/moments/{momentId}/reactions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-EVENT-INTERACTION-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/promo-codes",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TIER-PROMO-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/promo-codes/{codeId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TIER-PROMO-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/refunds/{refundId}/approve",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/refunds/{refundId}/bank-transfer-complete",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-MANUAL-001"
+      ],
+      "note": "EVT-TICKET-MANUAL-001 specifies staff verification with separation of duties, which this handler enforces (TicketManualPayments.decide / RefundStore)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/refunds/{refundId}/reject",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/rsvp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-RSVP-WITHDRAW-001"
+      ]
     },
     {
       "method": "PUT",
@@ -2779,362 +3739,495 @@
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/tax-documents/{documentId}/retry",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-OPS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-orders",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/manual-payment/review",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-MANUAL-001"
+      ],
+      "note": "EVT-TICKET-MANUAL-001 specifies staff verification with separation of duties, which this handler enforces (TicketManualPayments.decide / RefundStore)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/refund",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/ticket-orders/{orderId}/status",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/ticket-tiers",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TIER-PROMO-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{eventId}/ticket-tiers/{tierId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TIER-PROMO-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/tickets/check-in",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/tickets/{ticketId}/transfer",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/waitlist",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-WAITLIST-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{eventId}/waitlist/{entryId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-WAITLIST-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/events/{eventId}/waitlist/{entryId}/notify",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-WAITLIST-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social-events/events/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-OWNER-CLAIM-001"
+      ],
+      "note": "EVT-OWNER-CLAIM-001 specifies organizer-only editing, strict-administrator assignment on edit and administrative deletion, as editAccess / validateEventDeleteAccess apply."
     },
     {
       "method": "PUT",
       "path": "/social-events/events/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-OWNER-CLAIM-001"
+      ],
+      "note": "EVT-OWNER-CLAIM-001 specifies organizer-only editing, strict-administrator assignment on edit and administrative deletion, as editAccess / validateEventDeleteAccess apply."
     },
     {
       "method": "POST",
       "path": "/social-events/events/{id}/image",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-OWNER-CLAIM-001"
+      ],
+      "note": "EVT-OWNER-CLAIM-001 specifies organizer-only editing, strict-administrator assignment on edit and administrative deletion, as editAccess / validateEventDeleteAccess apply."
     },
     {
       "method": "PUT",
       "path": "/social-events/me/city-subscriptions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-CITY-SUBSCRIPTION-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/me/memory-invitations",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "SOCIAL-EVENT-INVITATION-001"
+      ],
+      "note": "SOCIAL-EVENT-INVITATION-001 specifies the organizer campaign setting, recipient consent and opening attribution these SQL-backed handlers implement."
     },
     {
       "method": "POST",
       "path": "/social-events/stripe/create-payment-intent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/stripe/webhook",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "PAY-STRIPE-WEBHOOK-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/ticket-transfers/{transferCode}/accept",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-TICKET-001"
+      ],
+      "note": "EVT-TICKET-001 specifies this handler's admission, inventory, transfer, refund-claim or legacy Stripe initialization rule (handler read 2026-11-07; see social-events-routes.md)."
     },
     {
       "method": "POST",
       "path": "/social-events/ticket-transfers/{transferCode}/cancel",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-TICKET-OPS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-events/venues",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-VENUE-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social-events/venues/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "EVT-VENUE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social-sync/social-sync/ingest",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-STAFF-TOOLS-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/social/friends/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social/friends/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/social/v2/preferences",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social/v2/relationships/{partyId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/social/vcard-exchange",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SOCIAL-RELATIONSHIP-WRITES-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/storage/files/{fileId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/storage/me/destination",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MEDIA-STORAGE-WRITES-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/tidal-agent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AI-STAFF-ASSISTANTS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/class-sessions",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-CLASS-SESSIONS-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/trials/v1/class-sessions/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-CLASS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/class-sessions/{id}/attend",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-CLASS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/interests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/purchases",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-CLASS-SESSIONS-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/signup",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/students",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/trials/v1/students/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/subjects",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-SUBJECT-ADMIN-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/trials/v1/subjects/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-SUBJECT-ADMIN-001"
+      ]
     },
     {
       "method": "PATCH",
       "path": "/trials/v1/subjects/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-SUBJECT-ADMIN-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/teachers/{id}/students",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/trials/v1/teachers/{id}/students/{studentId}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "PUT",
       "path": "/trials/v1/teachers/{id}/subjects",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TEACHER-STUDENT-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/trial-assignments",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TRIAL-SCHEDULING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/trial-availability",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TRIAL-SCHEDULING-001"
+      ]
     },
     {
       "method": "DELETE",
       "path": "/trials/v1/trial-availability/{id}",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TRIAL-SCHEDULING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/trial-requests",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-PUBLIC-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/trials/v1/trial-requests/{id}/assign",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "SCHOOL-TRIAL-SCHEDULING-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/v1/password-reset",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-PASSWORD-RECOVERY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/v1/password-reset/confirm",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-PASSWORD-RECOVERY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/v1/password/change",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-PASSWORD-RECOVERY-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/v1/signup",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "AUTH-CREDENTIAL-INTAKE-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/webhooks/whatsapp",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "reviewed",
+      "requirements": [
+        "AUTH-WEBHOOK-001"
+      ],
+      "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
     },
     {
       "method": "POST",
       "path": "/whatsapp/consent",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/whatsapp/operator-question",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/whatsapp/opt-out",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     },
     {
       "method": "POST",
       "path": "/whatsapp/reply",
-      "basis": "unspecified",
-      "requirements": []
+      "basis": "named",
+      "requirements": [
+        "MSG-STAFF-OUTBOUND-001"
+      ]
     }
   ]
 }
