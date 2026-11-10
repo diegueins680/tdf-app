@@ -14,5 +14,6 @@
   "stopOnNoChanges": false,
   "iterationDelaySeconds": 20,
   "allowPushToMain": false,
-  "pushBranch": "continuous-improvement/auto"
+  "pushBranch": "continuous-improvement/auto",
+  "rebaseBase": "continuous-improvement/auto"
 }

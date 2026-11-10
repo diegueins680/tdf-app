@@ -1,0 +1,74 @@
+- application:
+  - iframe [ref=e1]:
+    
+  - region
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e8]:
+        - heading "20261025_192210.mp4" [level=2] [ref=e20]
+        - generic [ref=e24]:
+          - button "Add shortcut" [ref=e25] [cursor=pointer]
+          - tooltip [ref=e31]: Add shortcut
+        - menubar "Menu bar" [ref=e33]:
+          - generic [ref=e34]:
+            - generic [ref=e35]:
+              - menuitem "File" [ref=e40] [cursor=pointer]
+              - menuitem "View" [ref=e46] [cursor=pointer]
+              - menuitem "Tools" [ref=e52] [cursor=pointer]
+              - menuitem "Help" [ref=e58] [cursor=pointer]
+            - generic:
+              - generic:
+                - generic:
+                  - generic:
+                    - tooltip: More
+        - generic [ref=e60]:
+          - button "Open with" [ref=e65] [cursor=pointer]
+          - generic [ref=e72]:
+            - button "Share. Anyone with the link. Anyone who has the link can access. No sign-in required." [ref=e73] [cursor=pointer]: Share
+            - button "Quick sharing actions" [ref=e75] [cursor=pointer]
+          - generic [ref=e79]:
+            - generic:
+              - button "Ask Gemini" [ref=e86] [cursor=pointer]
+              - tooltip [ref=e89]: Ask Gemini
+          - 'button "Google Account: Diego Saa (cuco.saa@gmail.com), Google membership" [ref=e95] [cursor=pointer]'
+      - generic [ref=e99]:
+        - generic [ref=e101]:
+          - generic [ref=e103]:
+            - button "Download" [ref=e104] [cursor=pointer]
+            - tooltip [ref=e110]: Download
+          - generic [ref=e112]:
+            - button "Details" [ref=e113] [cursor=pointer]
+            - tooltip [ref=e121]: Details
+        - generic [ref=e122]:
+          - generic [ref=e124]:
+            - button "Chapters" [ref=e126] [cursor=pointer]
+            - tooltip [ref=e133]: Chapters
+          - generic [ref=e135]:
+            - button "Transcript" [disabled] [ref=e137]
+            - tooltip [ref=e144]: Transcript
+        - toolbar [ref=e146]:
+          - button "Create an audio overview" [ref=e152] [cursor=pointer]
+        - generic [ref=e161]:
+          - button "Hide file header" [ref=e162] [cursor=pointer]
+          - tooltip [ref=e172]: Hide file header
+    - generic "Showing viewer." [ref=e173]:
+      - generic "Displaying 20261025_192210.mp4." [active]
+      - generic [ref=e174]:
+        - generic "Previous" [ref=e175]
+        - generic "Next" [ref=e176]
+        - main [ref=e177]:
+          - generic [ref=e178]:
+            - generic [ref=e180]:
+              - generic:
+                - generic:
+                  - list
+            - generic [ref=e181]:
+              - status "Loading" [ref=e183]
+              - generic [ref=e218]:
+                - generic "Preview image" [ref=e219] [cursor=pointer]:
+                  - generic [ref=e221]:
+                    - button "Play keyboard shortcut k" [ref=e222]
+                    - tooltip [ref=e232]: Play (k)
+                  - img "Preview image" [ref=e233]
+                - iframe [ref=e235]:
+                  

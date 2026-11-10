@@ -645,7 +645,7 @@ async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main') 
 
 export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
   const remoteName = config.pushRemote || 'origin';
-  const baseBranch = 'main';
+  const baseBranch = config.rebaseBase || 'main';
   const startedAt = new Date().toISOString();
 
   try {

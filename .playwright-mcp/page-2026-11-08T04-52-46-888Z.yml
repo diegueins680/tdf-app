@@ -1,0 +1,204 @@
+- generic [active] [ref=e1]:
+  - iframe [ref=e2]:
+    
+  - region
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - button "Skip to main content" [ref=e7] [cursor=pointer]
+      - button "Keyboard shortcuts" [ref=e11] [cursor=pointer]
+      - button "Accessibility feedback" [ref=e15] [cursor=pointer]
+    - banner [ref=e19]:
+      - generic [ref=e20]:
+        - link "Drive" [ref=e24] [cursor=pointer]:
+          - /url: https://drive.google.com/?tab=oo&authuser=0
+        - generic [ref=e27]:
+          - search [ref=e29]:
+            - table [ref=e31]:
+              - rowgroup [ref=e32]:
+                - row [ref=e33]:
+                  - cell [ref=e34]:
+                    - textbox "Search in Drive" [ref=e35]
+            - button "Advanced search" [ref=e36] [cursor=pointer]
+            - button "Search Google Drive" [ref=e39] [cursor=pointer]
+          - generic [ref=e43]:
+            - button "Support" [ref=e46] [cursor=pointer]
+            - button "Settings" [ref=e51] [cursor=pointer]
+            - generic [ref=e58]:
+              - generic:
+                - button "Ask Gemini" [ref=e65] [cursor=pointer]
+                - tooltip [ref=e68]: Ask Gemini
+            - generic [ref=e76]:
+              - link "Upgrade" [ref=e78] [cursor=pointer]
+              - tooltip [ref=e81]: Upgrade for premium features
+        - generic [ref=e82]:
+          - generic [ref=e83]:
+            - button "Google apps" [ref=e87] [cursor=pointer]
+            - 'button "Google Account: Diego Saa (cuco.saa@gmail.com), Google membership" [expanded] [ref=e93] [cursor=pointer]'
+          - iframe [ref=e549]:
+            - dialog "Account and settings" [ref=f18e6]:
+              - generic:
+                - button "Close" [active] [ref=f18e7] [cursor=pointer]
+                - tooltip [ref=f18e10]: Close
+              - generic [ref=f18e11]:
+                - generic: cuco.saa@gmail.com
+                - generic [ref=f18e13]:
+                  - generic [ref=f18e16]:
+                    - generic [ref=f18e18]:
+                      - button "Diego Saa, cuco.saa@gmail.com, AI Plus account. Collapse accounts list" [expanded] [ref=f18e19] [cursor=pointer]:
+                        - generic [ref=f18e20]:
+                          - generic [ref=f18e21]: Diego Saa
+                          - generic [ref=f18e22]: cuco.saa@gmail.com
+                          - generic [ref=f18e23]: Plus
+                      - link "Redirect to Personal Info page (opens a new tab)" [ref=f18e29] [cursor=pointer]:
+                        - /url: https://myaccount.google.com/personal-info?utm_source=OGB&utm_medium=act&hl=en&authuser=0
+                        - generic [ref=f18e30]:
+                          - img "Profile image" [ref=f18e32]
+                          - tooltip [ref=f18e41]: Redirect to Personal Info page (opens a new tab)
+                    - generic [ref=f18e42]:
+                      - link "Add another account (opens a new tab)" [ref=f18e44] [cursor=pointer]:
+                        - /url: https://accounts.google.com/AddSession?hl=en&continue=https://drive.google.com/drive/folders/1HbeTCeE9Glt8iqa9At9tNTkPQi09_M85&service=writely&ec=GAlAMQ&rip=1&authuser=0
+                        - generic [ref=f18e45]: Add another account
+                      - link "Sign out" [ref=f18e55] [cursor=pointer]:
+                        - /url: https://accounts.google.com/Logout?hl=en&continue=https://drive.google.com/drive/folders/1HbeTCeE9Glt8iqa9At9tNTkPQi09_M85&service=writely&timeStmp=1794113088&secTok=.AG5fkS-U4PaIwhi4Rx0qa4nvglnppvRlIg&ec=GAdAMQ&authuser=0
+                  - link "Manage your Google Account (opens a new tab)" [ref=f18e68] [cursor=pointer]:
+                    - /url: https://myaccount.google.com/?hl=en&authuser=0&utm_source=OGB&utm_medium=act&gar=WzUwXQ&sl=true
+                    - generic [ref=f18e69]:
+                      - generic [ref=f18e70]: Manage your Google Account
+                      - img "Google logo" [ref=f18e77]
+                  - generic [ref=f18e79]:
+                    - link "Upgrade to Google AI Pro (opens a new tab)" [ref=f18e83] [cursor=pointer]:
+                      - /url: https://one.google.com/ai?utm_source=drive&utm_medium=web&utm_campaign=account_menu_ai_upgrade_card&sc=OgIIBw&authuser=0&hl=en
+                      - generic [ref=f18e84]:
+                        - generic [ref=f18e85]: Upgrade to Google AI Pro
+                        - generic [ref=f18e89]: spark
+                    - link "31% of 2 TB used (opens a new tab)" [ref=f18e95] [cursor=pointer]:
+                      - /url: https://one.google.com/storage?utm_source=drive&utm_medium=web&utm_campaign=og_storage_card_normal&authuser=0&hl=en
+                      - generic [ref=f18e96]: 31% of 2 TB used
+                  - generic [ref=f18e108]:
+                    - link "Privacy Policy (opens a new tab)" [ref=f18e112] [cursor=pointer]:
+                      - /url: https://policies.google.com/privacy?hl=en&authuser=0
+                      - text: Privacy Policy
+                    - generic [ref=f18e115]:
+                      - text: ●
+                      - link "Terms of Service (opens a new tab)" [ref=f18e116] [cursor=pointer]:
+                        - /url: https://policies.google.com/terms?hl=en&authuser=0
+                        - text: Terms of Service
+    - button "New" [ref=e99] [cursor=pointer]
+    - navigation [ref=e110]:
+      - heading "Folders and views" [level=2] [ref=e111]
+      - tree "Folders and views" [ref=e112]:
+        - treeitem [ref=e113]:
+          - link "Home" [ref=e114] [cursor=pointer]:
+            - generic "Home" [ref=e132]
+          - group
+        - treeitem [ref=e133]:
+          - link "Projects" [ref=e134] [cursor=pointer]:
+            - generic "Projects" [ref=e146]
+          - group
+        - treeitem [ref=e147]:
+          - link "My Drive Collapsed" [ref=e148] [cursor=pointer]:
+            - generic "My Drive" [ref=e165]
+            - text: Collapsed
+        - treeitem [ref=e166]:
+          - link "Computers Collapsed" [ref=e167] [cursor=pointer]:
+            - generic "Computers" [ref=e186]
+            - text: Collapsed
+        - treeitem [ref=e187]:
+          - link "Items shared with me" [ref=e188] [cursor=pointer]:
+            - generic "Items shared with me" [ref=e207]: Shared with me
+          - group
+        - treeitem [ref=e208]:
+          - link "Recent items" [ref=e209] [cursor=pointer]:
+            - generic "Recent items" [ref=e228]: Recent
+          - group
+        - treeitem [ref=e229]:
+          - link "Starred items" [ref=e230] [cursor=pointer]:
+            - generic "Starred items" [ref=e244]: Starred
+          - group
+        - treeitem [ref=e245]:
+          - link "Spam" [ref=e246] [cursor=pointer]:
+            - generic "Spam" [ref=e263]
+          - group
+        - treeitem [ref=e264]:
+          - link "Trashed items" [ref=e265] [cursor=pointer]:
+            - generic "Trashed items" [ref=e283]: Trash
+          - group
+        - treeitem [ref=e284]:
+          - link "Storage" [ref=e285] [cursor=pointer]:
+            - generic "Storage" [ref=e301]
+          - group
+      - generic [ref=e306]:
+        - 'generic "Storage Summary: 639.86 GB of 2 TB used" [ref=e310] [cursor=pointer]': 639.86 GB of 2 TB used
+        - generic [ref=e314] [cursor=pointer]:
+          - text: Get more storage
+          - link "Get more storage" [ref=e315]:
+            - /url: https://drive.google.com/settings/storage?authuser=0&i=m&utm_source=drive&utm_medium=web&utm_campaign=g1_widget_normal#upgrade
+    - generic [ref=e318]:
+      - generic [ref=e324]:
+        - generic [ref=e327]:
+          - generic [ref=e329]:
+            - navigation [ref=e331]:
+              - heading "Folder Path" [ref=e332]
+              - list "Folder Path" [ref=e333]:
+                - listitem [ref=e334]:
+                  - link "Shared with me" [ref=e335] [cursor=pointer]
+                - listitem [ref=e338]:
+                  - link "VIDEOS/FOTOS" [ref=e339] [cursor=pointer]
+                - listitem [ref=e342]:
+                  - button "Diego Saa" [ref=e343] [cursor=pointer]
+            - button "Shared" [ref=e349] [cursor=pointer]
+          - toolbar [ref=e353]:
+            - generic [ref=e354]:
+              - radiogroup "List or Grid layout (⌥V then L)" [ref=e358]:
+                - generic [ref=e359]:
+                  - radio "List" [ref=e360] [cursor=pointer]
+                  - radio "Grid" [checked] [ref=e369] [cursor=pointer]
+              - button "View details (⌥V then D)" [ref=e378] [cursor=pointer]
+        - generic [ref=e386]:
+          - toolbar [ref=e388]:
+            - generic [ref=e393]:
+              - button "Ask Gemini" [ref=e394] [cursor=pointer]
+              - tooltip [ref=e396]: Ask Gemini
+          - generic [ref=e398]: No filters applied
+          - toolbar "Filters" [ref=e400]:
+            - generic [ref=e402]:
+              - button "Type" [ref=e403] [cursor=pointer]
+              - button "People" [ref=e409] [cursor=pointer]
+              - button "Modified" [ref=e415] [cursor=pointer]
+              - button "Source" [ref=e421] [cursor=pointer]
+      - main [ref=e428]:
+        - region [ref=e434]:
+          - generic [ref=e435]:
+            - grid [ref=e437]:
+              - generic [ref=e443]:
+                - 'button "Sort by: A to Z" [ref=e445] [cursor=pointer]':
+                  - generic [ref=e447]: Name
+                - tooltip [ref=e453]: "Sort by: A to Z"
+              - row [ref=e454]:
+                - gridcell "20261025_192210.mp4 Video More info (Option + →)" [ref=e455]:
+                  - generic [ref=e458]:
+                    - generic [ref=e469]: 20261025_192210.mp4
+                    - generic [ref=e473]:
+                      - button [ref=e474] [cursor=pointer]
+                      - tooltip [ref=e480]: More actions
+            - progressbar [ref=e487]
+      - generic:
+        - navigation
+    - generic [ref=e492]:
+      - complementary "Side panel" [ref=e493]:
+        - tablist [ref=e495]:
+          - tab "Calendar":
+            - generic [ref=e496] [cursor=pointer]
+          - tab "Keep":
+            - generic [ref=e497] [cursor=pointer]
+          - tab "Tasks":
+            - generic [ref=e498] [cursor=pointer]
+          - tab "Contacts":
+            - generic [ref=e499] [cursor=pointer]
+          - separator [disabled] [ref=e500]
+          - tab "Get Add-ons":
+            - generic [ref=e545] [cursor=pointer]
+      - generic:
+        - button "Hide side panel":
+          - generic [ref=e505] [cursor=pointer]
+  - region

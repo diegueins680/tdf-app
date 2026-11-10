@@ -1,0 +1,193 @@
+- generic [ref=e1]:
+  - iframe [ref=e2]:
+    
+  - region
+  - generic [ref=e4]:
+    - navigation [ref=e5]:
+      - button "Skip to main content" [ref=e7] [cursor=pointer]
+      - button "Keyboard shortcuts" [ref=e11] [cursor=pointer]
+      - button "Accessibility feedback" [ref=e15] [cursor=pointer]
+    - banner [ref=e19]:
+      - generic [ref=e20]:
+        - link "Drive" [ref=e24] [cursor=pointer]:
+          - /url: https://drive.google.com/?tab=oo&authuser=0
+        - generic [ref=e27]:
+          - search [ref=e29]:
+            - table [ref=e31]:
+              - rowgroup [ref=e32]:
+                - row [ref=e33]:
+                  - cell [ref=e34]:
+                    - textbox "Search in Drive" [ref=e35]
+            - button "Advanced search" [ref=e36] [cursor=pointer]
+            - button "Search Google Drive" [ref=e39] [cursor=pointer]
+          - generic [ref=e43]:
+            - button "Support" [ref=e46] [cursor=pointer]
+            - button "Settings" [ref=e51] [cursor=pointer]
+            - generic [ref=e58]:
+              - generic:
+                - button "Ask Gemini" [ref=e65] [cursor=pointer]
+                - tooltip [ref=e68]: Ask Gemini
+            - generic [ref=e76]:
+              - link "Upgrade" [ref=e78] [cursor=pointer]
+              - tooltip [ref=e81]: Upgrade for premium features
+        - generic [ref=e83]:
+          - button "Google apps" [ref=e87] [cursor=pointer]
+          - 'button "Google Account: Diego Saa (cuco.saa@gmail.com), Google membership" [ref=e93] [cursor=pointer]'
+    - button "New" [expanded] [ref=e99] [cursor=pointer]:
+      - menu "Folder menu" [active] [ref=e513]:
+        - generic [ref=e514]:
+          - menuitem "New folder ^C then F" [disabled] [ref=e515]:
+            - generic: New folder
+            - generic: ^C then F
+          - tooltip [ref=e516]: You don't have permission to create a new folder
+        - separator [ref=e517]
+        - generic [ref=e518]:
+          - menuitem "File upload ^C then U" [disabled] [ref=e519]:
+            - generic: File upload
+            - generic: ^C then U
+          - tooltip [ref=e520]: You don't have permission to upload
+        - generic [ref=e521]:
+          - menuitem "Folder upload ^C then I" [disabled] [ref=e522]:
+            - generic: Folder upload
+            - generic: ^C then I
+          - tooltip [ref=e523]: You don't have permission to upload
+        - separator [ref=e524]
+        - generic [ref=e525]:
+          - menuitem "New project" [disabled] [ref=e526]
+          - tooltip [ref=e527]: You don't have permission to create a new project
+        - separator [ref=e528]
+        - generic [ref=e529]:
+          - menuitem "Google Docs" [disabled] [ref=e530]
+          - tooltip [ref=e531]: You don't have permission to create a document
+        - generic [ref=e532]:
+          - menuitem "Google Sheets" [disabled] [ref=e533]
+          - tooltip [ref=e534]: You don't have permission to create a spreadsheet
+        - generic [ref=e535]:
+          - menuitem "Google Slides" [disabled] [ref=e536]
+          - tooltip [ref=e537]: You don't have permission to create a presentation
+        - generic [ref=e538]:
+          - menuitem "Google Vids" [disabled] [ref=e539]
+          - tooltip [ref=e540]: You don't have permission to create a Google Vids file
+        - generic [ref=e541]:
+          - menuitem "Google Forms" [disabled] [ref=e542]
+          - tooltip [ref=e543]: You don't have permission to create a form
+        - menuitem "More" [ref=e544]
+    - navigation [ref=e110]:
+      - heading "Folders and views" [level=2] [ref=e111]
+      - tree "Folders and views" [ref=e112]:
+        - treeitem [ref=e113]:
+          - link "Home" [ref=e114] [cursor=pointer]:
+            - generic "Home" [ref=e132]
+          - group
+        - treeitem [ref=e133]:
+          - link "Projects" [ref=e134] [cursor=pointer]:
+            - generic "Projects" [ref=e146]
+          - group
+        - treeitem [ref=e147]:
+          - link "My Drive Collapsed" [ref=e148] [cursor=pointer]:
+            - generic "My Drive" [ref=e165]
+            - text: Collapsed
+        - treeitem [ref=e166]:
+          - link "Computers Collapsed" [ref=e167] [cursor=pointer]:
+            - generic "Computers" [ref=e186]
+            - text: Collapsed
+        - treeitem [ref=e187]:
+          - link "Items shared with me" [ref=e188] [cursor=pointer]:
+            - generic "Items shared with me" [ref=e207]: Shared with me
+          - group
+        - treeitem [ref=e208]:
+          - link "Recent items" [ref=e209] [cursor=pointer]:
+            - generic "Recent items" [ref=e228]: Recent
+          - group
+        - treeitem [ref=e229]:
+          - link "Starred items" [ref=e230] [cursor=pointer]:
+            - generic "Starred items" [ref=e244]: Starred
+          - group
+        - treeitem [ref=e245]:
+          - link "Spam" [ref=e246] [cursor=pointer]:
+            - generic "Spam" [ref=e263]
+          - group
+        - treeitem [ref=e264]:
+          - link "Trashed items" [ref=e265] [cursor=pointer]:
+            - generic "Trashed items" [ref=e283]: Trash
+          - group
+        - treeitem [ref=e284]:
+          - link "Storage" [ref=e285] [cursor=pointer]:
+            - generic "Storage" [ref=e301]
+          - group
+      - generic [ref=e306]:
+        - 'generic "Storage Summary: 639.86 GB of 2 TB used" [ref=e310] [cursor=pointer]': 639.86 GB of 2 TB used
+        - generic [ref=e314] [cursor=pointer]:
+          - text: Get more storage
+          - link "Get more storage" [ref=e315]:
+            - /url: https://drive.google.com/settings/storage?authuser=0&i=m&utm_source=drive&utm_medium=web&utm_campaign=g1_widget_normal#upgrade
+    - generic [ref=e318]:
+      - generic [ref=e324]:
+        - generic [ref=e327]:
+          - generic [ref=e329]:
+            - navigation [ref=e331]:
+              - heading "Folder Path" [ref=e332]
+              - list "Folder Path" [ref=e333]:
+                - listitem [ref=e334]:
+                  - link "Shared with me" [ref=e335] [cursor=pointer]
+                - listitem [ref=e338]:
+                  - link "VIDEOS/FOTOS" [ref=e339] [cursor=pointer]
+                - listitem [ref=e342]:
+                  - button "Diego Saa" [ref=e343] [cursor=pointer]
+            - button "Shared" [ref=e349] [cursor=pointer]
+          - toolbar [ref=e353]:
+            - generic [ref=e354]:
+              - radiogroup "List or Grid layout (⌥V then L)" [ref=e358]:
+                - generic [ref=e359]:
+                  - radio "List" [ref=e360] [cursor=pointer]
+                  - radio "Grid" [checked] [ref=e369] [cursor=pointer]
+              - button "View details (⌥V then D)" [ref=e378] [cursor=pointer]
+        - generic [ref=e386]:
+          - toolbar [ref=e388]:
+            - generic [ref=e393]:
+              - button "Ask Gemini" [ref=e394] [cursor=pointer]
+              - tooltip [ref=e396]: Ask Gemini
+          - generic [ref=e398]: No filters applied
+          - toolbar "Filters" [ref=e400]:
+            - generic [ref=e402]:
+              - button "Type" [ref=e403] [cursor=pointer]
+              - button "People" [ref=e409] [cursor=pointer]
+              - button "Modified" [ref=e415] [cursor=pointer]
+              - button "Source" [ref=e421] [cursor=pointer]
+      - main [ref=e428]:
+        - region [ref=e434]:
+          - generic [ref=e435]:
+            - grid [ref=e437]:
+              - generic [ref=e443]:
+                - 'button "Sort by: A to Z" [ref=e445] [cursor=pointer]':
+                  - generic [ref=e447]: Name
+                - tooltip [ref=e453]: "Sort by: A to Z"
+              - row [ref=e454]:
+                - gridcell "20261025_192210.mp4 Video More info (Option + →)" [ref=e455]:
+                  - generic [ref=e458]:
+                    - generic [ref=e469]: 20261025_192210.mp4
+                    - generic [ref=e473]:
+                      - button [ref=e474] [cursor=pointer]
+                      - tooltip [ref=e480]: More actions
+            - progressbar [ref=e487]
+      - generic:
+        - navigation
+    - generic [ref=e492]:
+      - complementary "Side panel" [ref=e493]:
+        - tablist [ref=e495]:
+          - tab "Calendar":
+            - generic [ref=e496] [cursor=pointer]
+          - tab "Keep":
+            - generic [ref=e497] [cursor=pointer]
+          - tab "Tasks":
+            - generic [ref=e498] [cursor=pointer]
+          - tab "Contacts":
+            - generic [ref=e499] [cursor=pointer]
+          - separator [disabled] [ref=e500]
+          - tab "Get Add-ons":
+            - generic [ref=e545] [cursor=pointer]
+      - generic:
+        - button "Hide side panel":
+          - generic [ref=e505] [cursor=pointer]
+  - region
+  - generic [ref=e546]: You don't have permission to create a new folder
