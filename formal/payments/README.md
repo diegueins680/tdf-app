@@ -240,6 +240,25 @@ Without the `raised >= total` guard a 100% threshold admits a zero-balance depos
 without the share guard a deposit exceeds the share. Which policy version the
 callers load is covered by the course and Domo tests and triggers, not here.
 
+## PlaceToPay query admission (PAY-ADAPTER-BINDING-001)
+
+`placetopay_query_admission.py` (Z3 4.13.3, pinned) encodes `parseQuery`,
+`parseRequestPayment`, `validateTransaction`, `validateBindingParser` and
+`placeToPayStatus` from `tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs`
+over one session response with up to three transactions, and `decimalToMinor`
+/ `minorToDecimal` from `ProviderAdapter.hs` over the reals. It refuses to run
+when either file's sha256 changes. It proves that a successful parse binds the
+response to the locator and the stored expectation; that `Succeeded` needs an
+APPROVED session with exactly one present APPROVED, explicitly unreversed
+transaction whose original and settled amounts equal the expectation and every
+other present transaction REJECTED; that no-charge certainty needs every
+transaction REJECTED; that minor amounts round-trip exactly and sub-cent
+decimals are never admitted. Dropping the one-approved rule, the reversal
+evidence, the settled-amount check or the request-id check each breaks its
+proof (load-bearing). The QuickCheck properties in
+`ProviderAdapterBindingSpec` remain the evidence over the real parser; this
+proof is the pinned translation of the same rules.
+
 ## Provider binding admission (PAY-DOMAIN-BINDING-001)
 
 `provider_binding_admission.py` (Z3 4.13.3, pinned) encodes

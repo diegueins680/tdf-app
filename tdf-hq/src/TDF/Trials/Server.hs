@@ -1344,6 +1344,13 @@ privateTrialsServer user@AuthedUser{..} =
       unless (teacherKey == auPartyId || isSchoolStaff) $
         liftIO $ throwIO err403
 
+    partyIsTrialStudent :: PartyId -> AppM Bool
+    partyIsTrialStudent studentKey = do
+      hasRoleRow <- hasCanonicalPartyRole studentKey Student
+      hasLink <- recordExists [TeacherStudentStudentId ==. studentKey]
+      hasClass <- recordExists [ClassSessionStudentId ==. studentKey]
+      pure (hasRoleRow || hasLink || hasClass)
+
     teacherOwnsStudent :: PartyId -> PartyId -> AppM Bool
     teacherOwnsStudent teacherKey studentKey = do
       hasExplicit <- recordExists
@@ -1564,7 +1571,8 @@ privateTrialsServer user@AuthedUser{..} =
             { subjectName   = trimmed
             , subjectActive = isActive
             }
-      sid <- insert entityVal
+      mSid <- insertUnique entityVal
+      sid <- maybe (liftIO (throwIO subjectNameTaken)) pure mSid
       roomMap <- subjectRoomMap [sid]
       pure (subjectEntityToDTO roomMap (Entity sid entityVal))
 
@@ -1584,6 +1592,10 @@ privateTrialsServer user@AuthedUser{..} =
                 [ (SubjectName =.) <$> trimmed
                 , (SubjectActive =.) <$> active
                 ]
+          forM_ trimmed $ \newName -> do
+            taken <- getBy (UniqueSubjectName newName)
+            forM_ taken $ \(Entity otherId _) ->
+              when (otherId /= sid) $ liftIO (throwIO subjectNameTaken)
           unless (null updates) $ update sid updates
           fresh <- get sid
           case fresh of
@@ -2281,10 +2293,13 @@ privateTrialsServer user@AuthedUser{..} =
         Nothing -> liftIO $ throwIO err404
         Just _ -> pure ()
 
-      unless isSchoolStaff $ do
-        owns <- teacherOwnsStudent auPartyId studentKey
-        unless owns $
-          liftIO $ throwIO err403
+      -- Staff reach any party by id here, so the target must be a student:
+      -- it holds the Student role, or a teacher is linked to it, or it has
+      -- a class session. Before 2026-11-07 staff could edit the contact
+      -- details of any party, administrators included, through this route.
+      isStudentParty <- partyIsTrialStudent studentKey
+      owns <- if isSchoolStaff then pure False else teacherOwnsStudent auPartyId studentKey
+      either (liftIO . throwIO) pure (validateStudentUpdateTarget isSchoolStaff isStudentParty owns)
 
       nameUpdate <- case displayName of
         Nothing -> pure Nothing
@@ -2371,3 +2386,16 @@ trialsServer pool =
 
     authedPrivateServer :: AuthedUser -> ServerT PrivateTrialsAPI AppM
     authedPrivateServer user = privateTrialsServer user
+
+subjectNameTaken :: ServerError
+subjectNameTaken = err409 { errBody = "Ya existe una asignatura con ese nombre" }
+
+-- | Who may edit a student record through PATCH /trials/v1/students/{id}:
+-- staff may edit a party only when it is a student (role, teacher link or
+-- class session); a teacher may edit only students they own.
+validateStudentUpdateTarget :: Bool -> Bool -> Bool -> Either ServerError ()
+validateStudentUpdateTarget isStaff targetIsStudent actorOwnsStudent
+  | isStaff && targetIsStudent = Right ()
+  | isStaff = Left err404 { errBody = "Student not found" }
+  | actorOwnsStudent = Right ()
+  | otherwise = Left err403

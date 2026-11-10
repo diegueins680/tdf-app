@@ -71,6 +71,23 @@ spec = describe "music-purchase-postgresql" $ do
         other `shouldNotBe` first
         ordersOf pool offer `shouldReturn` 2
 
+      it "records a reconciliation exception when verified money is not admitted (PAY-CAPTURE-RECON-001)" $ \pool -> do
+        offer <- purchaseOffer pool
+        orderId <- order pool offer "music-fixture-not-admitted"
+        context <- purchaseContext pool offer orderId
+        -- The checkout expired before the provider answered COMPLETED.
+        runSqlPool (rawExecute
+          "UPDATE commerce_checkout_session SET status='expired', updated_at=NOW() WHERE id=?::uuid"
+          [toPersistValue (purchaseCheckoutId context)]) pool
+        paid <- pay pool offer orderId
+        paid `shouldSatisfy` either (const True) (const False)
+        rows <- runSqlPool (rawSql
+          "SELECT exception_type, status, expected_amount_minor FROM commerce_reconciliation_exception\
+          \ WHERE internal_reference=?" [toPersistValue (UUID.toText orderId)]) pool
+        rows `shouldBe` [(Single ("verified_payment_not_admitted" :: Text), Single ("open" :: Text),
+          Single (purchaseAmountMinor context))]
+        ordersOf pool offer `shouldReturn` 1
+
       it "preserves a published price outside the JavaScript integer range" $ \pool -> do
         offer <- offerWith pool "'purchase',TRUE,9007199254740993,'USD'"
         slug <- runSqlPool (rawSql "SELECT canonical_slug FROM music_release WHERE id=?::uuid"
