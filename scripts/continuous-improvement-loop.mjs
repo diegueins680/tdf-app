@@ -652,6 +652,13 @@ export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
     await execText('git', ['fetch', remoteName, '--prune'], repoRoot);
     const currentBranch = (await getCurrentBranch(repoRoot)) || baseBranch;
     if (currentBranch !== baseBranch) {
+      const localRef = await execText('git', ['rev-parse', '--verify', '--quiet', baseBranch], repoRoot).catch(() => ({ code: 1 }));
+      if (localRef.code !== 0) {
+        const remoteRef = await execText('git', ['ls-remote', '--exit-code', remoteName, baseBranch], repoRoot).catch(() => ({ code: 1 }));
+        if (remoteRef.code !== 0) {
+          await execText('git', ['branch', baseBranch], repoRoot);
+        }
+      }
       await execText('git', ['checkout', baseBranch], repoRoot);
     }
 
