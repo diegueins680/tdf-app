@@ -744,6 +744,26 @@ DECLARE
   enrichment_table TEXT;
   music_table TEXT;
 BEGIN
+  -- Historical selected prefixes do not claim Apple issuer support. A recorded
+  -- forward migration does: rollback keeps its ledger row, so verify the live
+  -- column and validated exact allowlist before starting the newer application.
+  IF to_regclass('public.tdf_schema_migration') IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM public.tdf_schema_migration
+      WHERE migration_id='2026-11-07_apple_provider_identity_issuer') THEN
+      IF NOT EXISTS (SELECT 1 FROM pg_attribute
+          WHERE attrelid=to_regclass('public.auth_provider_identity')
+            AND attname='issuer' AND attnum>0 AND NOT attisdropped
+            AND attnotnull AND atttypid='text'::regtype)
+        OR NOT EXISTS (SELECT 1 FROM pg_constraint
+          WHERE conrelid=to_regclass('public.auth_provider_identity')
+            AND conname='auth_provider_identity_issuer_check'
+            AND contype='c' AND convalidated AND conislocal
+            AND pg_get_constraintdef(oid)=
+              'CHECK ((issuer = ANY (ARRAY[''https://accounts.google.com''::text, ''https://appleid.apple.com''::text])))') THEN
+        RAISE EXCEPTION 'Recorded Apple issuer schema is missing or incompatible';
+      END IF;
+    END IF;
+  END IF;
   IF to_regclass('public.receipt_number_counter') IS NULL THEN
     RAISE EXCEPTION 'Receipt number allocation counter is missing';
   END IF;

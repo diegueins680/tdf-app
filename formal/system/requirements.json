@@ -3741,7 +3741,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -7789,7 +7789,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7889,7 +7889,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7901,7 +7901,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -9198,7 +9198,8 @@
         "tdf-hq/test/TDF/Auth/AccountNameSpec.hs",
         "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
         "scripts/verify-google-account-name.py",
-        "tdf-hq-ui/src/utils/inAppBrowser.test.ts"
+        "tdf-hq-ui/src/utils/inAppBrowser.test.ts",
+        "scripts/test-google-account-name-verifier.py"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -9658,7 +9659,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference. Artist priority admits only events with public-listable capability and public metadata, including for administrative viewers; management-only event fields are excluded from the card projection.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
       "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -10666,7 +10667,7 @@
         "classification": "PARTIAL",
         "reason": "Implemented, tested over HTTP and PostgreSQL and model-checked within bounds; not deployed."
       },
-      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure \u2026', 'operations worker \u2026', 'operations retried \u2026', 'operations migration \u2026'; formal/event-operations/OperationsFailureReplay.tla",
+      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
       "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
       "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
       "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
@@ -11022,7 +11023,7 @@
     {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
-      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image\u2019s temporary initialization socket server is insufficient.",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
       "domain": "SYS",
       "actors": [
         "CI fixture runner",
@@ -11172,7 +11173,7 @@
       "domain": "PAY",
       "critical": true,
       "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
-      "authority": "User audit sections 14\u201315 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
       "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
       "contract": "formal/system/music-purchase-replay.md",
       "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
@@ -11261,7 +11262,7 @@
       "critical": true,
       "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
       "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
-      "source": "User audit sections9\u201315 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "source": "User audit sections9–15 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
       "contract": "formal/system/music-money-wire.md",
       "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
       "actors": [
@@ -11375,7 +11376,7 @@
       "critical": false,
       "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
       "authority": "User audit validation and traceability requirements",
-      "source": "User audit sections9,24\u201325; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "source": "User audit sections9,24–25; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
       "contract": "formal/system/music-test-entrypoint.md",
       "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
       "actors": [
@@ -13654,8 +13655,8 @@
       "id": "BOOK-STUDIO-TIMEZONE-001",
       "title": "Public studio hours use Quito time independently of visitor preferences",
       "domain": "BOOK",
-      "statement": "The public studio booking page interprets 08:00\u201322:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
-      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00\u201322:00.",
+      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
+      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
       "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
       "contract": "formal/system/public-booking-timezone.md",
       "actors": [
@@ -26484,6 +26485,126 @@
         "classification": "PARTIAL",
         "reason": "The named offline validation and no-import boundaries are covered by finite controls; no whole contract, ticketing, money or server authorization proof is claimed."
       }
+    },
+    {
+      "id": "AUTH-APPLE-SIGNIN-001",
+      "title": "Sign in with Apple creates or resumes sessions only from verified Apple identity tokens",
+      "statement": "POST /login/apple verifies an Apple identity token (RS256 signature against Apple published keys, issuer, configured audiences, lifetime with 60 second skew, and nonce digest) before any database effect, then applies the same binding, linking and explicit-consent account creation rules as Google through auth_provider_identity.",
+      "authority": "App Store review guideline 4.8 rejection of TDF Mobile for offering Google login without Sign in with Apple (2026-10-13)",
+      "domain": "AUTH",
+      "actors": [
+        "Visitor",
+        "Returning user",
+        "Apple identity provider"
+      ],
+      "preconditions": [
+        "APPLE_SIGN_IN_AUDIENCES lists the iOS bundle id (default com.tdfrecords.app) and the Sign in with Apple capability is enabled for the App ID."
+      ],
+      "inputs": [
+        "Apple identity token",
+        "raw nonce",
+        "optional full name",
+        "createNewAccount, termsAccepted, termsVersion",
+        "optional linkAccount credentials"
+      ],
+      "state": {
+        "boundary": "POST /login/apple and auth_provider_identity",
+        "states": [
+          "unbound Apple subject",
+          "bound Apple subject",
+          "authenticated"
+        ]
+      },
+      "allowedTransitions": [
+        "bound Apple subject with valid token -> session",
+        "unbound subject with linkAccount password proof -> bound -> session",
+        "unbound subject with createNewAccount=true and current terms and a verified token email -> Customer/Fan account -> session"
+      ],
+      "forbiddenTransitions": [
+        "token with bad signature, issuer, audience, lifetime, nonce or algorithm yielding a session",
+        "account creation without explicit createNewAccount and current terms",
+        "account linking by email alone",
+        "account creation when the token carries no email"
+      ],
+      "effects": [
+        "Binds issuer https://appleid.apple.com and token sub to one credential under an advisory lock; records login_apple activity and account consent."
+      ],
+      "authorization": "Creation grants only the Customer role through the account.apple.customer automatic policy; linking requires existing credentials.",
+      "privacy": "Apple verified relay/contact email is stored as the private primary email; both Google and Apple use canonical initialAccountName when a provider name is absent, never an email as the public display-name fallback. Tokens and raw nonces are never logged.",
+      "concurrency": "Per issuer:subject advisory lock shared with Google; JWKS misses and stale known keys single-flight through a cancellation-safe lock. A usable successful key set is cached for strictly less than 900 seconds; a matching kid does not extend that lifetime. Each attempted fetch reserves a 60 second cooldown before I/O, including failed, empty, or canceled attempts. Mobile rollout availability is a public build-time switch; only literal true admits native loading, cached binding reuse, button display and provider entry.",
+      "idempotency": "Repeated login for a bound subject reuses the credential.",
+      "failure": "Invalid or expired token yields 401 with a generic message; unconfigured audiences yield 500; key fetch failure fails closed. The optional native Apple flow defaults unavailable until EXPO_PUBLIC_APPLE_SIGN_IN_ENABLED is exactly true; Google/password flows retain their existing behavior.",
+      "recovery": "After key retrieval failure, unusable responses or cancellation, stale known keys fail closed during the attempt cooldown; retry retrieval after the cooldown. Failed attempts never renew successful-cache lifetime. Fresh known keys remain usable while every token signature and claim is rechecked. A backward clock cannot make a future cache timestamp fresh. Users can use email and password or link an existing account. Once the issuer migration is recorded, production schema verification requires the live NOT NULL issuer column and exact validated Google/Apple constraint; an intentional legacy prefix without that migration makes no Apple-support claim.",
+      "observability": "login_apple auth activity and rejected-token warnings without token content.",
+      "source": "App Store Connect rejection notice relayed by the product owner",
+      "implementation": [
+        "tdf-hq/src/TDF/AppleSignIn.hs",
+        "tdf-hq/src/TDF/ServerAuth.hs",
+        "tdf-hq/src/TDF/Config.hs",
+        "tdf-hq/src/TDF/DTO.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Catalog/Integrity.hs",
+        "tdf-hq/src/TDF/Catalog/Security.hs",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq/sql/2026-10-13_apple_sign_in_policy.sql",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "scripts/production-migrations.json",
+        "tdf-mobile/app/auth.tsx",
+        "tdf-mobile/app.config.ts",
+        "tdf-mobile/app.json",
+        "tdf-mobile/ios/Podfile.lock",
+        "tdf-mobile/ios/TDFRecords/Info.plist",
+        "tdf-mobile/ios/TDFRecords/TDFRecords.entitlements",
+        "tdf-mobile/package-lock.json",
+        "tdf-mobile/package.json",
+        "tdf-mobile/scripts/ios-signing.py",
+        "tdf-mobile/scripts/verify-ios-artifact.py",
+        "tdf-mobile/src/api/auth.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-mobile/src/lib/appleSignIn.ts",
+        "tdf-mobile/src/lib/nativeAppleAuthentication.ts",
+        "tdf-mobile/src/localization/onboardingCopy.ts",
+        "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
+        "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql",
+        "tdf-mobile/.env.example",
+        "scripts/lib/production-release.mjs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/AppleSignInSpec.hs",
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs",
+        "tdf-mobile/__tests__/AuthScreen.test.tsx",
+        "tdf-mobile/__tests__/appleSignIn.test.ts",
+        "tdf-mobile/scripts/tests/test_ios_signing.py",
+        "scripts/verify-request-failures.py",
+        "scripts/verify-cors-boundary.py",
+        "tdf-hq/test/TDF/CredentialLifecycleSpec.hs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-mobile/__tests__/nativeAppleAuthentication.test.ts",
+        "scripts/__tests__/fixtures/apple-provider-issuer-schema-mutants.json"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Source-bound compiled verifier/request/session-window/DTO/configuration cases, owned PostgreSQL lifecycle/issuer controls, and compatible Mobile710unit/89focused/type/lint/release/Metro plus12signing tests. Production provider configuration and physical-device/capability checks remain unverified release validation; no whole-system proof.",
+      "ambiguity": [
+        "Services ID audiences for web are configurable but not exercised.",
+        "Successful key-set residence is bounded by the local 900 second cache policy, not instant provider revocation. Provider publication latency, fresh cached keys within that interval and already issued application sessions remain outside an immediate key-removal guarantee."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "PARTIAL: synthetic compiled verifier and owned-database lifecycle/issuer controls cover the enumerated boundary; no production Apple request, provisioning or physical-device acceptance was exercised."
+      },
+      "critical": true,
+      "property": "NoSessionWithoutVerifiedAppleToken and ExplicitConsentBeforeCreation",
+      "verification": "AppleSignInSpec negative controls (signature, issuer, audience, expiry, nonce, kid, alg=none), ServerAuthSpec input and consent tests, config tests. Injected-clock/fetch cache controls cover the 899/900 second boundary, withdrawn keys with fresh claims, stale failure/empty/cancel cooldown, concurrent refresh and clock rollback; these finite cases are not a universal revocation proof.",
+      "evidence": "tdf-hq-test AppleSignInSpec, ServerAuthSpec, Spec config cases.",
+      "contract": "tdf-hq/docs/openapi/api.yaml"
     }
   ]
 }
