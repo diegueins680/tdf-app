@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/ServerAuth.hs": "e0c36063d4dfe85c510e43bb6cbccf456f9fb8d678fcdd56b22fea961433b4d3",
+    "tdf-hq/src/TDF/ServerAuth.hs": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
@@ -604,8 +604,8 @@
       "reviewedAgainst": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
       "source": "tdf-hq/src/TDF/ServerAuth.hs",
       "previousSha256": "77df0fce250a9a6cade7d0da38b41674f5a8e1ce015b40ae58a4e4400df5f4a9",
-      "currentSha256": "e0c36063d4dfe85c510e43bb6cbccf456f9fb8d678fcdd56b22fea961433b4d3",
-      "change": "Password login refuses with 429 once the failures recorded for the identifier use up the window (TDF.Auth.Throttle) and counts each invalid-credential answer; runLogin checks the password before the active flag and answers a disabled account exactly like a wrong password; signup and password-reset requests consume a per-email counter, the reset route answering unchanged and issuing nothing past the limit. Adds the import, authThrottleRefusal and loginInvalidMessage.",
+      "currentSha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
+      "change": "Password login refuses with 429 once the failures recorded for the identifier use up the window (TDF.Auth.Throttle) and counts each invalid-credential answer, with the count check, runLogin and the count in one transaction under a per-identifier advisory lock; runLogin checks the password before the active flag and answers a disabled account exactly like a wrong password; signup and password-reset requests consume a per-email counter, the reset route answering unchanged and issuing nothing past the limit. Adds the import, authThrottleRefusal and loginInvalidMessage.",
       "semanticReview": "recoveryWindowValid, createPasswordResetToken, the recovery challenge insert and every expression the restricted translator reads are byte-identical to protected main; the edits are confined to login, runLogin, signup and the request half of passwordReset, plus one import and two new top-level helpers. No reset token is issued on a path that did not issue one before; past the limit strictly fewer are issued. The recovery expiry SQL, identity-lifecycle contract and Stack/lock are unchanged. Obligation claims, assumptions, translations and limitations are preserved. Fresh source-bound solver/replay/control execution remains required."
     }
   ]

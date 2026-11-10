@@ -16620,7 +16620,7 @@
     {
       "id": "SURFACE-fcdcb342b1a07142",
       "path": "tdf-hq/src/TDF/Auth/Throttle.hs",
-      "sha256": "2e1f163c4a7508c656c0e4929c2ed9671dea28d979b476e7264de0c54a49af26",
+      "sha256": "43c2fccd547f547901a03845988a208f3315ac07b8951e35d08ed1c198f24151",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16860,7 +16860,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "7d431209f0f362df9b000b57b78802fcee71768e885a4404e16adf23c8996963",
+      "sha256": "b01d52481cef28802bdfb167cef1f9f16ec705d6ea68c3c4d18327ff6cce82cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17598,7 +17598,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "e0c36063d4dfe85c510e43bb6cbccf456f9fb8d678fcdd56b22fea961433b4d3",
+      "sha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18102,7 +18102,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "91d02ff1e4fd44dac6632160b6cdc4d66d892134831ade23eb6b9dd2357af1a8",
+      "sha256": "2d9f758af68610173e633370bea4a08a00cb0703d6fa97602fa79c104e97b1f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30878,7 +30878,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c38585c204310bcea6147ca870b2677e5a49b87ba1f67e4b165e1900ed6d6c20",
+      "sha256": "13a9d25c81d3b40e88b1eeb72260d1d623f97a6024f7cde4289d2cb8c25d4a25",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

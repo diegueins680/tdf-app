@@ -1603,17 +1603,26 @@ login rawRequest = do
   Env pool cfg <- ask
   -- Temporary lockout: once the failures recorded for this identifier use up
   -- the window's limit, nothing is checked until the window ends.
+  -- The count check, the password check and the failure count run in one
+  -- transaction under a per-identifier advisory lock, so concurrent attempts
+  -- cannot all pass a count read before any of them recorded its failure.
   attemptedAt <- liftIO getCurrentTime
-  recordedFailures <- liftIO $ flip runSqlPool pool $
-    Throttle.readAuthThrottleCount Throttle.ThrottleLoginFailure username attemptedAt
-  when (Throttle.authThrottleLockedOut Throttle.ThrottleLoginFailure recordedFailures) $
-    throwError (authThrottleRefusal Throttle.ThrottleLoginFailure attemptedAt)
-  result <- liftIO $ flip runSqlPool pool (runLogin (sessionTokenTtlFromConfig cfg) username password)
+  outcome <- liftIO $ flip runSqlPool pool $ do
+    Throttle.lockAuthThrottleSubject Throttle.ThrottleLoginFailure username
+    recordedFailures <-
+      Throttle.readAuthThrottleCount Throttle.ThrottleLoginFailure username attemptedAt
+    if Throttle.authThrottleLockedOut Throttle.ThrottleLoginFailure recordedFailures
+      then pure Nothing
+      else do
+        attempt <- runLogin (sessionTokenTtlFromConfig cfg) username password
+        case attempt of
+          Left msg | msg == loginInvalidMessage ->
+            void (Throttle.consumeAuthThrottle Throttle.ThrottleLoginFailure username attemptedAt)
+          _ -> pure ()
+        pure (Just attempt)
+  result <- maybe (throwError (authThrottleRefusal Throttle.ThrottleLoginFailure attemptedAt)) pure outcome
   case result of
-    Left msg -> do
-      when (msg == loginInvalidMessage) $
-        void . liftIO . flip runSqlPool pool $
-          Throttle.consumeAuthThrottle Throttle.ThrottleLoginFailure username attemptedAt
+    Left msg ->
       throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right res -> do
       recordAuthActivity "login_password" res Nothing Nothing

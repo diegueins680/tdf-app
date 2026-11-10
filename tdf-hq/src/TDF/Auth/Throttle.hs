@@ -24,6 +24,7 @@ module TDF.Auth.Throttle
   , authThrottleRetryAfterSeconds
   , authThrottleLockedOut
   , authThrottleOverLimit
+  , lockAuthThrottleSubject
   , readAuthThrottleCount
   , consumeAuthThrottle
   ) where
@@ -82,6 +83,16 @@ authThrottleLockedOut scope recorded = recorded >= authThrottleLimit scope
 -- | A counter returned by consuming one unit: this request went past the limit.
 authThrottleOverLimit :: AuthThrottleScope -> Int -> Bool
 authThrottleOverLimit scope consumed = consumed > authThrottleLimit scope
+
+-- | Serialize every transaction that checks and counts one subject. The
+-- advisory lock is held to the end of the transaction, so concurrent attempts
+-- on one identifier run one after another, whether or not a credential row
+-- exists to lock.
+lockAuthThrottleSubject :: AuthThrottleScope -> Text -> SqlPersistT IO ()
+lockAuthThrottleSubject scope identifier = do
+  _ <- rawSql "SELECT pg_advisory_xact_lock(hashtextextended(?, 0))::text"
+         [toPersistValue (authThrottleSubject scope identifier)] :: SqlPersistT IO [Single Text]
+  pure ()
 
 readAuthThrottleCount :: AuthThrottleScope -> Text -> UTCTime -> SqlPersistT IO Int
 readAuthThrottleCount scope identifier now = do

@@ -133,10 +133,13 @@ queryAndApply fetch appliedAt Env{envPool} adapter payload payment now = do
         Right result -> do
           applied <- runSqlPool (applyQueryResult payment result
             (ProviderEvent.providerEventReferenceId (ProviderEvent.pepReference payload)) observedAt) envPool
-          -- A disposition returned by a committed application has recorded
-          -- whatever review it needs; a refused application has recorded nothing.
+          -- A committed dead letter recorded its own exception and a processed
+          -- event needs none. A refused application, and a payment the provider
+          -- still reports as pending or unknown, keep the binding: if the event
+          -- runs out of retries the worker records the review from it.
           pure $ either (\problem -> retry problem (Just payment))
-            (\disposition -> (resultFor disposition (Just payment)) { prrReview = Nothing }) applied
+            (\disposition -> (resultFor disposition (Just payment))
+              { prrReview = if disposition == ReconciliationRetry then Just payment else Nothing }) applied
 
 data QueryFailure = QueryUnsupported | QueryUnavailable | QueryBindingMismatch
 

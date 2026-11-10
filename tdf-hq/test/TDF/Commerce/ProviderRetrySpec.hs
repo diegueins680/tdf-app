@@ -3036,6 +3036,16 @@ reconciliationPipelineSpec = describe "persisted callback to authoritative query
           runSqlPool (Reconciliation.recordDeadLetterReview eventRef 1 payment notificationTime) pool
           reviewCount `shouldReturn` [Single 1]
 
+      it "keeps the bound payment for review while the provider reports the payment pending" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment Adapter.AdapterPending))) getCurrentTime
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          Reconciliation.prrReview outcome `shouldBe` Just payment
+
       it "does not add a second exception when the query mismatch already recorded one" $ \pool ->
         withNotificationEnvironment $ do
           payment <- reconciliationFixture pool provider

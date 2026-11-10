@@ -22694,7 +22694,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
       "source": "formal/system/identity-routes.md",
       "contract": "formal/system/identity-routes.md",
-      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once ten invalid-credential answers were recorded for the identifier in the current 15-minute window (auth_rate_limit, counted per normalized identifier whether or not the account exists), checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
+      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once ten invalid-credential answers were recorded for the identifier in the current 15-minute window (auth_rate_limit, counted per normalized identifier whether or not the account exists; the count check, the password check and the count run in one transaction under a per-identifier advisory lock, so concurrent attempts cannot pass the limit together), checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
       "actors": [
         "Anonymous visitor"
       ],
@@ -23622,7 +23622,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "PlaceToPay needs the feature flag (503), a body of at most 1 MiB (400) and a sha256 signature over requestId, status, date and the secret compared in constant time (401); the event is stored signature-verified with an encrypted payload. PayPhone callbacks (both paths) carry no signature: the adapter classifies them untrusted and query-required (400 otherwise), the store id must match (400) and the transaction ids must already match an immutable binding (404) before the event is stored untrusted; the worker queries the provider before admitting money (PAY-ADAPTER-BINDING-001). A bound event that ends as a dead letter without an exception of its own (refused admission, unsupported or unavailable query, exhausted retries) leaves one open provider_event_dead_letter reconciliation exception, written in the dead-letter transaction and only if the inbox row is a dead letter at that attempt.",
+      "property": "PlaceToPay needs the feature flag (503), a body of at most 1 MiB (400) and a sha256 signature over requestId, status, date and the secret compared in constant time (401); the event is stored signature-verified with an encrypted payload. PayPhone callbacks (both paths) carry no signature: the adapter classifies them untrusted and query-required (400 otherwise), the store id must match (400) and the transaction ids must already match an immutable binding (404) before the event is stored untrusted; the worker queries the provider before admitting money (PAY-ADAPTER-BINDING-001). A bound event that ends as a dead letter without an exception of its own (refused admission, unsupported or unavailable query, a payment the provider still reports pending or unknown when retries run out) leaves one open provider_event_dead_letter reconciliation exception, written in the dead-letter transaction and only if the inbox row is a dead letter at that attempt.",
       "actors": [
         "PlaceToPay",
         "PayPhone"
@@ -27282,7 +27282,7 @@
     "formal/system/public-routes.json": "cd5ce4ecf4944e61c4f2af25e76591ca9ae5717bb02efa218fe2b45a63561514",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "7de9686b6ed28a9f100f613b1744a02ec119c73d8a053cd304192a7be27fe059",
+    "formal/system/recovery-expiry-arithmetic.json": "f9f0371644b9310729d97e0802c563efc7562f8ded66253dd385c5893ed6ed07",
     "formal/system/route-requirements.json": "abd5231294bd51a6240602f4771d9be2597c1e614829c3a26b16a3f5e5fef441",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -28445,7 +28445,7 @@
     "tdf-hq/src/TDF/Artists/Promotion.hs": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
     "tdf-hq/src/TDF/Auth.hs": "cbf9a2642b4e43acf65afc04812816703020981198d6e9cf8f090dac7e69b4fb",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
-    "tdf-hq/src/TDF/Auth/Throttle.hs": "2e1f163c4a7508c656c0e4929c2ed9671dea28d979b476e7264de0c54a49af26",
+    "tdf-hq/src/TDF/Auth/Throttle.hs": "43c2fccd547f547901a03845988a208f3315ac07b8951e35d08ed1c198f24151",
     "tdf-hq/src/TDF/CMS/Models.hs": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
     "tdf-hq/src/TDF/Calendar/Models.hs": "ade52945cff1553e3e6e88edbd3a67457bda196364df216a62a8d1d69e8bcee8",
     "tdf-hq/src/TDF/Calendar/TokenCipher.hs": "926c4158eee01f8eaf46ee5786c4208da3dd2a62b9f99dd9bada1af87e8bf656",
@@ -28476,7 +28476,7 @@
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
     "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "edd3db953b7f89b6a79cce9fe5cddcc8711f13169a8558335fc40339634d085f",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
-    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "7d431209f0f362df9b000b57b78802fcee71768e885a4404e16adf23c8996963",
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "b01d52481cef28802bdfb167cef1f9f16ec705d6ea68c3c4d18327ff6cce82cb",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
@@ -28566,7 +28566,7 @@
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
-    "tdf-hq/src/TDF/ServerAuth.hs": "e0c36063d4dfe85c510e43bb6cbccf456f9fb8d678fcdd56b22fea961433b4d3",
+    "tdf-hq/src/TDF/ServerAuth.hs": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
     "tdf-hq/src/TDF/ServerExtra.hs": "fac511e58b2072a96962ad2e025ae6c34e568ec8593502a1c0b33e83e572100b",
     "tdf-hq/src/TDF/ServerFanClub.hs": "fd0030b5c216270bf2381982e7eec4202afc7a8607e4a581398723692a3cb461",
     "tdf-hq/src/TDF/ServerFeedback.hs": "b63cb0496c917a5dfa9f058cb13d2cd22a526054c89f8b1554de74c29ec9676c",
@@ -28625,7 +28625,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "91d02ff1e4fd44dac6632160b6cdc4d66d892134831ade23eb6b9dd2357af1a8",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "2d9f758af68610173e633370bea4a08a00cb0703d6fa97602fa79c104e97b1f1",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -71069,7 +71069,7 @@
     {
       "id": "SURFACE-fcdcb342b1a07142",
       "path": "tdf-hq/src/TDF/Auth/Throttle.hs",
-      "sha256": "2e1f163c4a7508c656c0e4929c2ed9671dea28d979b476e7264de0c54a49af26",
+      "sha256": "43c2fccd547f547901a03845988a208f3315ac07b8951e35d08ed1c198f24151",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71648,7 +71648,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "7d431209f0f362df9b000b57b78802fcee71768e885a4404e16adf23c8996963",
+      "sha256": "b01d52481cef28802bdfb167cef1f9f16ec705d6ea68c3c4d18327ff6cce82cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74071,7 +74071,7 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "e0c36063d4dfe85c510e43bb6cbccf456f9fb8d678fcdd56b22fea961433b4d3",
+      "sha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75438,7 +75438,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "91d02ff1e4fd44dac6632160b6cdc4d66d892134831ade23eb6b9dd2357af1a8",
+      "sha256": "2d9f758af68610173e633370bea4a08a00cb0703d6fa97602fa79c104e97b1f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83890,7 +83890,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c38585c204310bcea6147ca870b2677e5a49b87ba1f67e4b165e1900ed6d6c20",
+      "sourceSha256": "13a9d25c81d3b40e88b1eeb72260d1d623f97a6024f7cde4289d2cb8c25d4a25",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83918,7 +83918,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c38585c204310bcea6147ca870b2677e5a49b87ba1f67e4b165e1900ed6d6c20",
+      "sourceSha256": "13a9d25c81d3b40e88b1eeb72260d1d623f97a6024f7cde4289d2cb8c25d4a25",
       "definition": {
         "states": [
           "absent",
@@ -83948,7 +83948,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c38585c204310bcea6147ca870b2677e5a49b87ba1f67e4b165e1900ed6d6c20",
+      "sourceSha256": "13a9d25c81d3b40e88b1eeb72260d1d623f97a6024f7cde4289d2cb8c25d4a25",
       "definition": {
         "export": [
           "queued",
