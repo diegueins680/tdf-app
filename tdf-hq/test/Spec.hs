@@ -140,6 +140,7 @@ import qualified TDF.Artists.EnrichmentSpec as ArtistEnrichmentSpec
 import qualified TDF.CorsSpec as CorsSpec
 import qualified TDF.FailureBoundarySpec as FailureBoundarySpec
 import qualified TDF.ReadinessSpec as ReadinessSpec
+import qualified TDF.ShutdownSpec as ShutdownSpec
 import qualified TDF.Invoice.ReceiptSpec as ReceiptSpec
 import qualified TDF.Invoice.SessionIssueSpec as SessionIssueSpec
 import qualified TDF.Contracts.StoreSpec as ContractStoreSpec
@@ -919,6 +920,7 @@ main = hspec $ do
     GoogleProfileNameSpec.spec
     FailureBoundarySpec.spec
     ReadinessSpec.spec
+    ShutdownSpec.spec
     ReceiptSpec.spec
     SessionIssueSpec.spec
     ContractStoreSpec.spec

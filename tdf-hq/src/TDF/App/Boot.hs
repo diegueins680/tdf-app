@@ -7,8 +7,9 @@ module TDF.App.Boot
   , validateSeedDatabaseStartup
   ) where
 
-import Control.Concurrent (forkFinally, newEmptyMVar, putMVar, takeMVar, threadDelay)
-import Control.Exception (SomeException, throwIO, try)
+import Control.Concurrent (threadDelay)
+import Control.Exception (throwIO)
+import qualified Control.Exception.Safe as Safe
 import Control.Monad (forM, forM_, unless, when)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.ByteString.Char8 as BS
@@ -96,6 +97,8 @@ import TDF.Seed (seedAll, seededCredentialSeedingAllowed)
 import TDF.Server (mkApp)
 import TDF.MusicRelease.CredentialCache (musicCredentialCache)
 import TDF.App.StartupResponse (startupApp)
+import TDF.App.Shutdown (runManagedWarp)
+import TDF.App.StartupRetry (retryStartup)
 import TDF.App.FailureBoundary (requestExceptionBoundary, reportUnhandledException)
 import TDF.Trials.Models (migrateTrials)
 
@@ -165,19 +168,12 @@ runBootServer = do
         startTaxInvoiceWorker env
         startReputationWorker env
 
-  serverResult <- newEmptyMVar
-  _ <-
-    forkFinally
-      (Warp.runSettings warpSettings $ \req send -> do
-        app <- readIORef appRef
-        app req send)
-      (putMVar serverResult)
-
-  -- Keep initialization on the main thread so a failed migration or startup
-  -- registry check always terminates the process with a non-zero exit status.
-  -- Warp runs concurrently only to expose the bounded `starting` health state.
-  setupApp
-  takeMVar serverResult >>= either throwIO pure
+  -- A startup exception must terminate with failure. HTTP completion cancels
+  -- unfinished startup, so a stop while connecting to the database cannot wait
+  -- for all startup retries. Completed worker forks are outside HTTP drainage.
+  runManagedWarp warpSettings setupApp $ \req send -> do
+    app <- readIORef appRef
+    app req send
 
 validateSeedDatabaseStartup :: Bool -> [(String, String)] -> Either String ()
 validateSeedDatabaseStartup shouldSeed env
@@ -507,19 +503,16 @@ restoreLegacyPartyRoles roles = do
       Right () -> pure ()
 
 makePoolWithRetry :: Int -> BS.ByteString -> IO ConnectionPool
-makePoolWithRetry retries connStr = do
-  result <- try (makePool connStr) :: IO (Either SomeException ConnectionPool)
-  case result of
-    Right pool -> pure pool
-    Left err ->
-      if retries <= 0
-        then do
-          putStrLn "Failed to connect to database after retries. Crashing."
-          throwIO err
-        else do
-          putStrLn $ "DB connection failed, retrying... attempts left: " <> show retries
-          threadDelay (5 * 1000 * 1000)
-          makePoolWithRetry (retries - 1) connStr
+makePoolWithRetry retries connStr =
+  Safe.catchAny
+    (retryStartup retries beforeRetry (makePool connStr))
+    (\err -> do
+      putStrLn "Failed to connect to database after retries. Crashing."
+      throwIO err)
+  where
+    beforeRetry remaining = do
+      putStrLn $ "DB connection failed, retrying... attempts left: " <> show remaining
+      threadDelay (5 * 1000 * 1000)
 
 columnExists :: Text -> SqlPersistT IO Bool
 columnExists column = do
