@@ -1,0 +1,34 @@
+{
+  "scope": "Two sequential fresh syntheticPG17 clusters; encoding diagnosis only, no cold-copy/application/production recovery qualification",
+  "sourceReceipt": {
+    "startedAt": "2026-10-06T00:09:14.219353+00:00",
+    "completedAt": "2026-10-06T00:09:33.989733+00:00",
+    "exitCode": 0,
+    "sourceHashes": {
+      "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
+      "ops/hetzner/recovery-files.py": "92ed11224c45d44cb7f1a1f3751288f44a1f4c9611bfc31fa4da9d8ec90f2c37",
+      "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
+      "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
+      "scripts/__tests__/fixtures/production-schema-20260814.sql": "d8872748af4142954076cdbf587709d0115b4041837302530d273c8372d517cf",
+      "scripts/__tests__/fixtures/catalog-production-source-fixture.sql": "20d601eaf885eedf213e1110da3fa9489d19eed8629cd32f149e690fd947512c",
+      "batch.sql": "e5bce791e8650dd091bbbfbf8c57bb0d7e98b55d2aef692118889d3b5fa5a0c4"
+    },
+    "scope": "Two sequential new synthetic PG17 clusters only; no production data/container/volume accessed; migration diagnosis only, no application startup"
+  },
+  "results": [
+    {
+      "encoding": "SQL_ASCII",
+      "exitCode": 3,
+      "error": "conversion between UTF8 and SQL_ASCII is not supported"
+    },
+    {
+      "encoding": "UTF8",
+      "exitCode": 0
+    },
+    {
+      "encoding": "UTF8",
+      "replayPassed": true,
+      "ledgerCount": 181
+    }
+  ]
+}

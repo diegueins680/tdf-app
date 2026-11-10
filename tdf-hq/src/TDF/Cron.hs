@@ -13,6 +13,7 @@ module TDF.Cron
   , selectInstagramSyncAccessToken
   ) where
 
+import qualified Control.Exception.Safe as Safe
 import Web.PathPieces (toPathPiece)
 import           Control.Concurrent      (forkIO, threadDelay)
 import           Control.Exception
@@ -215,7 +216,7 @@ cronLoop :: Env -> IO ()
 cronLoop env = forever $ do
   target <- nextNineAMUtc
   waitUntil target
-  result <- try (sendCoursePaymentReminders env) :: IO (Either SomeException ())
+  result <- Safe.tryAny (sendCoursePaymentReminders env) :: IO (Either SomeException ())
   case result of
     Left err -> do
       let msg = "[Cron][CoursePayment] Job failed: " <> T.pack (show err)

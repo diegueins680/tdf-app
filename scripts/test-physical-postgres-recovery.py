@@ -6,7 +6,9 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+from contextlib import contextmanager
+from types import SimpleNamespace
 
 spec = importlib.util.spec_from_file_location('physical', Path(__file__).resolve().parent.parent/
                                             'ops/hetzner/physical-postgres-recovery.py')
@@ -15,6 +17,13 @@ CONTROL = 'pg_control version number: 1700\nDatabase system identifier: 12345\nD
 
 
 class PhysicalRecoveryTests(unittest.TestCase):
+    def test_disposable_never_restarts_or_auto_removes(self):
+        for policy in ({"Name":"always","MaximumRetryCount":0},{"Name":"unless-stopped","MaximumRetryCount":0},{"Name":"on-failure","MaximumRetryCount":3},{"Name":"no","MaximumRetryCount":1},None):
+            data=self.inspection();data["HostConfig"]["RestartPolicy"]=policy
+            with self.subTest(policy=policy),self.assertRaises(ValueError):self.clone.admit(data)
+        data=self.inspection();data["HostConfig"]["AutoRemove"]=True
+        with self.assertRaises(ValueError):self.clone.admit(data)
+
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(); self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name).resolve()
@@ -49,7 +58,7 @@ class PhysicalRecoveryTests(unittest.TestCase):
             'Config': {'Labels': {physical.restore.LABEL: self.clone.nonce}, 'Image': self.clone.image,
                        'User': '999:999', 'Entrypoint': ['/bin/sleep'], 'Cmd': ['600']},
             'NetworkSettings': {'Networks': {'none': {}}},
-            'HostConfig': {'NetworkMode': 'none', 'ReadonlyRootfs': True,
+            'HostConfig': {'RestartPolicy': {'Name':'no','MaximumRetryCount':0}, 'AutoRemove': False, 'NetworkMode': 'none', 'ReadonlyRootfs': True,
                 'Memory': physical.restore.MEMORY_LIMIT, 'MemorySwap': physical.restore.MEMORY_LIMIT,
                 'NanoCpus': 500000000, 'PidsLimit': 64, 'CapDrop': ['ALL'], 'IpcMode': 'private',
                 'SecurityOpt': ['no-new-privileges:true'], 'Tmpfs': {'/tmp': 'rw,nosuid,nodev,size=16777216'}},
@@ -57,6 +66,24 @@ class PhysicalRecoveryTests(unittest.TestCase):
                         'RW': True, 'Propagation': 'rprivate'},
                        {'Destination': physical.CONFIG, 'Type': 'bind', 'Source': str(self.clone.config),
                         'RW': False, 'Propagation': 'rprivate'}, {'Destination': '/tmp', 'Type': 'tmpfs'}]}
+
+    def test_durable_creation_failure_prevents_docker_dispatch(self):
+        self.clone.reservation_pid=os.getpid()
+        publisher=Mock(side_effect=ValueError('synthetic uncertain publication'))
+        self.clone.creation_records=SimpleNamespace(publish=publisher)
+        with patch.object(self.clone,'verify_prepared'),patch.object(physical.restore,'execute') as execute:
+            with self.assertRaises(ValueError):self.clone.start()
+        publisher.assert_called_once_with('physical-database',self.clone)
+        execute.assert_not_called();self.assertFalse(self.clone.creation_attempted)
+
+    def test_durable_record_precedes_uncertain_create_dispatch(self):
+        self.clone.reservation_pid=os.getpid();self.clone.prepared_manifest={}
+        events=[]
+        self.clone.creation_records=SimpleNamespace(publish=lambda role,obj:events.append('published'))
+        def lost(command):events.append('create');raise TimeoutError('synthetic lost creation reply')
+        with patch.object(self.clone,'verify_prepared'),patch.object(physical.restore,'execute',side_effect=lost):
+            with self.assertRaises(TimeoutError):self.clone.start()
+        self.assertEqual(events,['published','create']);self.assertTrue(self.clone.creation_attempted)
 
     def test_cold_cluster_identity_and_forced_stop_rejection(self):
         self.assertEqual(physical.control_identity(CONTROL, '12345')['majorVersion'], 17)
@@ -154,6 +181,167 @@ class PhysicalRecoveryTests(unittest.TestCase):
         with patch.object(physical.restore, 'execute') as execute, self.assertRaises(ValueError):
             self.clone.start()
         execute.assert_not_called()
+
+    def test_restored_application_copies_require_full_content_metadata_and_registration(self):
+        application = SimpleNamespace(database=self.clone, nonce=self.clone.nonce, directory=self.directory)
+        self.clone.reservation_pid = os.getpid(); self.clone.active_application = application
+        manifests = {}
+        actual_walk = physical.files.walk
+        observed_uid = 1000
+        def observe_test_owner(fd):
+            value = actual_walk(fd)
+            # Ordinary macOS accounts cannot chown1000. Only the root ownership
+            # observation is substituted; byte/metadata scans remain real. The
+            # Linux combined Docker fixture restores actual UID/GID1000 copies.
+            value['entries'][0].update(uid=observed_uid, gid=1000)
+            return value
+        for name in ('assets', 'uploads'):
+            path = self.directory/('canary-'+name); path.mkdir(mode=0o700)
+            (path/'sentinel').write_bytes(b'original synthetic content')
+            with physical.files.directory(str(path)) as fd:
+                manifests[name] = observe_test_owner(fd)
+        with patch.object(physical.files, 'walk', side_effect=observe_test_owner):
+            evidence = self.clone.admit_application_content(application, manifests)
+            self.assertEqual(set(evidence), {'assets', 'uploads'})
+            self.assertEqual(evidence['uploads']['bytes'], len(b'original synthetic content'))
+            path = self.directory/'canary-uploads'/'sentinel'
+            path.write_bytes(b'tampered synthetic content')
+            with self.assertRaises(ValueError): self.clone.admit_application_content(application, manifests)
+            path.write_bytes(b'original synthetic content')
+            original = next(row for row in manifests['uploads']['entries'] if row['path'] == 'sentinel')
+            os.utime(path, ns=(original['mtimeNs'], original['mtimeNs']))
+            self.clone.admit_application_content(application, manifests)
+            for change in (lambda m: m.pop('uploads'), lambda m: m.update(extra=manifests['assets'])):
+                invalid = copy.deepcopy(manifests); change(invalid)
+                with self.assertRaises(ValueError): self.clone.admit_application_content(application, invalid)
+            # Match the complete observed manifests so only the image-user
+            # ownership/permission policy can reject these controls.
+            observed_uid = 0
+            invalid = copy.deepcopy(manifests)
+            for manifest in invalid.values(): manifest['entries'][0]['uid'] = 0
+            with self.assertRaises(ValueError): self.clone.admit_application_content(application, invalid)
+            observed_uid = 1000
+            invalid = copy.deepcopy(manifests)
+            for name, manifest in invalid.items():
+                (self.directory/('canary-'+name)).chmod(0o500)
+                manifest['entries'][0]['mode'] = 0o500
+            try:
+                with self.assertRaises(ValueError): self.clone.admit_application_content(application, invalid)
+            finally:
+                for name in manifests: (self.directory/('canary-'+name)).chmod(0o700)
+            self.clone.admit_application_content(application, manifests)
+        self.clone.active_application = None
+        with patch.object(physical.files, 'walk') as scan:
+            with self.assertRaises(ValueError): self.clone.admit_application_content(application, manifests)
+        scan.assert_not_called()
+
+    @contextmanager
+    def reservation(self):
+        # Real permanent lock and pending marker; only Linux host inventory and
+        # resource readings are synthetic on developer hosts.
+        original_read = physical.Path.read_text
+        def read(path, *args, **kwargs):
+            return 'MemAvailable: 2097152 kB\n' if str(path) == '/proc/meminfo' else original_read(path, *args, **kwargs)
+        with patch.object(physical.restore, 'execute', return_value=''), \
+             patch.object(physical.Path, 'read_text', new=read), \
+             patch.object(physical.os, 'statvfs', return_value=SimpleNamespace(f_bavail=4*1024**3, f_frsize=1)):
+            with self.clone.reserved(): yield
+
+    def application(self, cleanup=None):
+        app = SimpleNamespace(database=self.clone, nonce=self.clone.nonce,
+              directory=self.clone.directory, target=None, creation_attempted=False, paused=False)
+        app.cleanup = Mock(side_effect=cleanup)
+        return app
+
+    def test_coordinated_reservation_uses_held_lock_and_closes_after_cleanup(self):
+        events=[]
+        def reserve(clone,fd):
+            self.assertIs(clone,self.clone)
+            self.assertEqual(os.fstat(fd).st_ino,(self.root/'restore-rehearsal.lock').stat().st_ino)
+            events.append('reserve')
+        self.clone.creation_records=SimpleNamespace(reserve=reserve,
+            release=lambda clone:events.append('release'),close=lambda:events.append('close'))
+        with patch.object(physical.restore,'reserve_creation') as legacy,patch.object(self.clone,'cleanup',side_effect=lambda:events.append('cleanup')):
+            with self.reservation():events.append('body')
+        legacy.assert_not_called()
+        self.assertEqual(events,['reserve','body','cleanup','release','close'])
+
+    def test_coordinated_reservation_closes_without_release_when_cleanup_fails(self):
+        records=SimpleNamespace(reserve=Mock(),release=Mock(),close=Mock())
+        self.clone.creation_records=records
+        with patch.object(self.clone,'cleanup',side_effect=ValueError('uncertain cleanup')):
+            with self.assertRaisesRegex(ValueError,'uncertain cleanup'):
+                with self.reservation():pass
+        records.release.assert_not_called();records.close.assert_called_once()
+
+    def test_application_dependency_is_registered_before_creation_and_removed_first(self):
+        order=[]; app=self.application(lambda: order.append('application'))
+        def database_cleanup():
+            order.append('database'); self.clone.target=None
+        with patch.object(self.clone, 'cleanup', side_effect=database_cleanup):
+            with self.reservation():
+                self.clone.target='3'*64
+                with self.clone.with_application(app):
+                    self.clone.require_application_owner(app)
+                    self.assertTrue((self.root/physical.restore.PENDING_NAME).exists())
+            self.assertEqual(order,['application','database'])
+        self.assertFalse((self.root/physical.restore.PENDING_NAME).exists())
+        self.assertIsNone(self.clone.active_application)
+        self.assertIsNone(self.clone.reservation_pid)
+
+    def test_failed_application_cleanup_preserves_database_and_durable_marker(self):
+        app=self.application(lambda: (_ for _ in ()).throw(ValueError('Synthetic uncertain removal')))
+        with patch.object(self.clone,'cleanup') as database_cleanup:
+            with self.assertRaises(ValueError):
+                with self.reservation():
+                    self.clone.target='3'*64
+                    with self.clone.with_application(app): pass
+            database_cleanup.assert_not_called()
+        self.assertEqual(self.clone.target,'3'*64)
+        self.assertIs(self.clone.active_application,app)
+        self.assertTrue((self.root/physical.restore.PENDING_NAME).exists())
+        self.assertIsNone(self.clone.reservation_pid)
+        with self.assertRaises(ValueError):
+            with self.reservation(): pass
+
+    def test_cleanup_return_without_removed_application_does_not_release_database(self):
+        app=self.application()
+        with patch.object(self.clone,'cleanup') as database_cleanup:
+            with self.assertRaises(ValueError):
+                with self.reservation():
+                    self.clone.target='3'*64
+                    with self.clone.with_application(app):
+                        app.creation_attempted=True
+            database_cleanup.assert_not_called()
+        self.assertTrue((self.root/physical.restore.PENDING_NAME).exists())
+
+    def test_application_failure_still_cleans_up_in_dependency_order(self):
+        app=self.application()
+        def database_cleanup(): self.clone.target=None
+        with patch.object(self.clone,'cleanup',side_effect=database_cleanup):
+            with self.assertRaisesRegex(RuntimeError,'Synthetic application failure'):
+                with self.reservation():
+                    self.clone.target='3'*64
+                    with self.clone.with_application(app):
+                        raise RuntimeError('Synthetic application failure')
+        app.cleanup.assert_called_once()
+        self.assertFalse((self.root/physical.restore.PENDING_NAME).exists())
+
+    def test_foreign_unregistered_and_already_started_application_rejected(self):
+        app=self.application()
+        with self.assertRaises(ValueError): self.clone.require_application_owner(app)
+        with self.reservation():
+            self.clone.target='3'*64
+            with self.assertRaises(ValueError): self.clone.require_application_owner(app)
+            for key, value in [('nonce','b'*32), ('database',object()), ('target','4'*64),
+                               ('creation_attempted',True), ('paused',True),
+                               ('directory',self.root/'foreign')]:
+                original=getattr(app,key);setattr(app,key,value)
+                with self.subTest(key=key),self.assertRaises(ValueError):
+                    with self.clone.with_application(app): pass
+                setattr(app,key,original)
+            self.clone.target=None  # no Docker creation occurred in this fixture
+        app.cleanup.assert_not_called()
 
     def test_command_has_no_initdb_or_original_configuration(self):
         self.prepared(); command = self.clone.create_command()

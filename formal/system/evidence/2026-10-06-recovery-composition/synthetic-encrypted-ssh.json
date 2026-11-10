@@ -1,0 +1,52 @@
+{
+  "revision": "5b558a9a4fcca2931a5c40b5c9656a531fe739de",
+  "mobileRevision": "76d19fc2da965d2050df4b94e77a1d080d2e0799",
+  "sourceWorktreeDirty": true,
+  "sourceUnchanged": true,
+  "startedAt": "2026-10-06T00:00:32.060409+00:00",
+  "completedAt": "2026-10-06T00:00:38.143682+00:00",
+  "sourceHashes": {
+    "ops/hetzner/recovery-files.py": "92ed11224c45d44cb7f1a1f3751288f44a1f4c9611bfc31fa4da9d8ec90f2c37",
+    "ops/hetzner/recovery-transfer.py": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
+    "ops/hetzner/recovery-envelope.py": "dd916295bcae2318cbe1e00af9c51e38cf40838993326e284614d0b09e0250fb",
+    "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
+    "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff"
+  },
+  "runnerSha256": "8daac0614090fa91ca0573b9e19fa297831cac58a60112d399d9e63cfccee07e",
+  "envelope": {
+    "bundleReceiptSha256": "67a5bc4592da0a0b4f4cd88a3fd6a480c2232ac53240bbfc8e7ca10c877e646f",
+    "ciphertext": {
+      "bytes": 1608264,
+      "sha256": "5ee9086bef38640a052a2309523307987cf35e96992712e5173990dbb298d4a9"
+    },
+    "kind": "synthetic-encrypted-bundle",
+    "nonce": "a2a143b948c24ca088a6c96217a39e13",
+    "plaintext": {
+      "bytes": 1607680,
+      "sha256": "e389dbd8bb85027392808c5936fee830b144c1340200dbf9aaf7cf3b9fc56e17"
+    },
+    "schemaVersion": 1
+  },
+  "transfer": {
+    "status": "ciphertext-retained-and-returned",
+    "schemaVersion": 1,
+    "nonce": "a2a143b948c24ca088a6c96217a39e13",
+    "bytes": 1608264,
+    "sha256": "5ee9086bef38640a052a2309523307987cf35e96992712e5173990dbb298d4a9",
+    "decrypted": false,
+    "restored": false
+  },
+  "replay": {
+    "schemaVersion": 1,
+    "kind": "synthetic-bundle-restored",
+    "nonce": "a2a143b948c24ca088a6c96217a39e13",
+    "bundleReceiptSha256": "67a5bc4592da0a0b4f4cd88a3fd6a480c2232ac53240bbfc8e7ca10c877e646f",
+    "components": 6,
+    "ciphertextTamperRejected": true,
+    "wrongReleaseRejected": true,
+    "syntheticSecretMatched": true,
+    "productionDataAccessed": false,
+    "productionDatabaseRecoveryVerified": false
+  },
+  "scope": "Synthetic complete file bundle, pinned age, SSH off-host retention/retrieval and exact metadata replay; no production data, real key custody or PostgreSQL recovery qualification"
+}

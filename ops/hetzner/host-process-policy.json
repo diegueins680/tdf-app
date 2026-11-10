@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Sampled 2026-10-06 under separately reviewed OS unit definitions. Executable fingerprints, including retained pre-update binaries, are observations rather than package or process-memory attestation. Trusted OS and privileged noncooperation are assumptions.",
+  "classes": [
+    {
+      "units": [],
+      "executable": "/usr/lib/systemd/systemd",
+      "executableSha256": "b472aadf808bef87c0eb203056a77cb64bd268b71b756306013a53de68a94173",
+      "invocation": "native-os"
+    },
+    {
+      "units": [],
+      "executable": "/usr/sbin/sshd",
+      "executableSha256": "f30333b455e6fe10536d544992ea3dfa87cc1d83b8af7945a815c86f8b4f6f6d",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "atd.service"
+      ],
+      "executable": "/usr/sbin/atd",
+      "executableSha256": "a7c6cd4f6795cded3e5192c7118e486a9b1204ff98133a2435d6aa39dd879afc",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "containerd.service"
+      ],
+      "executable": "/usr/bin/containerd",
+      "executableSha256": "69c4c734aba514436e60deae20f043dbbe7e215b0f4882b8fc3ead9529704990",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "containerd.service"
+      ],
+      "executable": "/usr/bin/containerd-shim-runc-v2",
+      "executableSha256": "956c1924e98d8d74ca09a39a9a19f8e442924f976f0d409bf4b4a3534c133b11",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "cron.service"
+      ],
+      "executable": "/usr/sbin/cron",
+      "executableSha256": "6bd8593640af2413bce259fa0affc18dbf149892756ebe805bf316624f8b590f",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "dbus.service"
+      ],
+      "executable": "/usr/bin/dbus-daemon",
+      "executableSha256": "8c479f1fcddfd6693c736ce541da0955f6752834bdeeef4b928e27f5e974c247",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "docker.service"
+      ],
+      "executable": "/usr/bin/docker-proxy",
+      "executableSha256": "98272bbbd6c1c35bd27d0d089252c710107f5334125cd37eb22d5415a077ae09",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "docker.service"
+      ],
+      "executable": "/usr/bin/dockerd",
+      "executableSha256": "237b0603cc24496c74433aeb32d70a16931ae7e015f183b8f3c7c7db83c72a5f",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "getty@tty1.service"
+      ],
+      "executable": "/usr/sbin/agetty (deleted)",
+      "executableSha256": "f115c88e3c6c48365df996252b05228726636316340a5aa17f41f9f88777c3c9",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "multipathd.service"
+      ],
+      "executable": "/usr/sbin/multipathd",
+      "executableSha256": "ce0e8e17791e20e0f99379f8fa5efdbcdf7805936429c169719764398ef84576",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "polkit.service"
+      ],
+      "executable": "/usr/lib/polkit-1/polkitd",
+      "executableSha256": "d3a58cd0876cf538dbb8fd3858bfb7e6b1c3337229ebc5905c1c19c6b8a82915",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "qemu-guest-agent.service"
+      ],
+      "executable": "/usr/sbin/qemu-ga",
+      "executableSha256": "5360c90d3500d375083437ca872dd0be704bfb38f996595a803d874e837b5e68",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "rsyslog.service"
+      ],
+      "executable": "/usr/sbin/rsyslogd",
+      "executableSha256": "07f705c2e00f085a0f5830b0a3840d418c3d6facf6aa6dfe1c62678e06437b62",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "serial-getty@ttyS0.service"
+      ],
+      "executable": "/usr/sbin/agetty (deleted)",
+      "executableSha256": "f115c88e3c6c48365df996252b05228726636316340a5aa17f41f9f88777c3c9",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "ssh.service"
+      ],
+      "executable": "/usr/sbin/sshd",
+      "executableSha256": "f30333b455e6fe10536d544992ea3dfa87cc1d83b8af7945a815c86f8b4f6f6d",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "systemd-journald.service"
+      ],
+      "executable": "/usr/lib/systemd/systemd-journald",
+      "executableSha256": "08aa4dd20cf4dce4a1319de0dc5f6bb7922fdce05c66e881854f26dd4fc412d3",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "systemd-logind.service"
+      ],
+      "executable": "/usr/lib/systemd/systemd-logind",
+      "executableSha256": "d42f40ebc337f67db3e5c1a1a83ae5480d7c8964f81530358454f74fd43fb1a7",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "systemd-networkd.service"
+      ],
+      "executable": "/usr/lib/systemd/systemd-networkd",
+      "executableSha256": "12e65fbae70b7cf17a84299c5323eb0735309c2891d3caea321a4ad2093f8c19",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "systemd-resolved.service"
+      ],
+      "executable": "/usr/lib/systemd/systemd-resolved",
+      "executableSha256": "5e694042ba4bad6c29584334eeb5b06c6abdab17a84d96718dd286e41bff322d",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "systemd-timesyncd.service"
+      ],
+      "executable": "/usr/lib/systemd/systemd-timesyncd",
+      "executableSha256": "cbf92a41ffb29efd75daebf8a1a1dd4d0c078d2f3c50f0fc7e9e35715eefb7cd",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "systemd-udevd.service"
+      ],
+      "executable": "/usr/bin/udevadm",
+      "executableSha256": "74c3c46c0fe33e98bb633028363363c4553c42e1bf9f05cbbc469220e2e34a76",
+      "invocation": "native-os"
+    },
+    {
+      "units": [
+        "unattended-upgrades.service"
+      ],
+      "executable": "/usr/bin/python3.12 (deleted)",
+      "executableSha256": "a92f0f95e883390c7256b2e441484aac06b1002dbe1d924141a77c8d82f96223",
+      "invocation": "unattended-shutdown-waiter",
+      "scriptSha256": "8fbf4e278c4ad457e82cc05586631b1a0550dd9d10892a70487ef74c623066e0"
+    },
+    {
+      "units": [
+        "user@0.service"
+      ],
+      "executable": "/usr/lib/systemd/systemd",
+      "executableSha256": "b472aadf808bef87c0eb203056a77cb64bd268b71b756306013a53de68a94173",
+      "invocation": "root-user-manager"
+    },
+    {
+      "units": [
+        "user@0.service"
+      ],
+      "executable": "/usr/lib/systemd/systemd-executor",
+      "executableSha256": "b8424efa6f861031c04310fd7bfe485330bb74f53edae341803ffe3f487fd044",
+      "invocation": "root-user-pam-helper"
+    }
+  ]
+}

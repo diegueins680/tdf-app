@@ -1,0 +1,17 @@
+{
+  "revision": "4f329368b786e9ebcbba084ae292233a3d0af147",
+  "sourceWorktreeDirty": false,
+  "startedAt": "2026-10-05T23:49:19.143818+00:00",
+  "finishedAt": "2026-10-05T23:49:24.926643+00:00",
+  "exitCode": 0,
+  "scope": "New synthetic 64MiB container writable layer only; no production data/container/volume access",
+  "sourceHashes": {
+    "ops/hetzner/physical-postgres-recovery.py": "f9020c48d99f43097708bdd1c9376240d938ca6804c828d01ef70bedbe86f3f4",
+    "ops/hetzner/recovery-files.py": "92ed11224c45d44cb7f1a1f3751288f44a1f4c9611bfc31fa4da9d8ec90f2c37",
+    "ops/hetzner/rehearse-postgres-restore.py": "66d134bd4510328d824375cfd72c25a89380b7c1360e0b00ca295bef78d6af7a",
+    "scripts/test-physical-postgres-docker.py": "45ec2870f000ad08842dc5820de550159ba89dd03fe54d17869a7e80c7695e7a",
+    "ops/hetzner/stopped-application-storage.py": "5072c12f9d3c8584af02d3c54da8855713436205d64dad75465ff4c146bcc8ad",
+    "scripts/test-stopped-application-docker.py": "abaf791d2221077d8e05546d627df041409237d725d1b8a14f32dbeb6c87f167"
+  },
+  "sourceUnchanged": true
+}

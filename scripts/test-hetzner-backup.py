@@ -96,7 +96,7 @@ class BackupTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             pidfile = root/'child.pid'
-            child = "import os,time,pathlib; pathlib.Path(%r).write_text(str(os.getpid())); time.sleep(30)" % str(pidfile)
+            child = 'import os,time,pathlib;p=pathlib.Path(%r);t=p.with_suffix(".pending");t.write_text(str(os.getpid()));t.rename(p);time.sleep(30)' % str(pidfile)
             parent = ('import importlib.util,pathlib\n'
                 + 's=importlib.util.spec_from_file_location("backup",%r); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)\n' % str(ROOT/'ops/hetzner/backup-postgres.py')
                 + 'm.observe=lambda: %r\n' % SOURCE

@@ -1,0 +1,12 @@
+{
+  "startedAt": "2026-10-05T23:57:13.575933+00:00",
+  "finishedAt": "2026-10-05T23:57:16.674108+00:00",
+  "exitCode": 0,
+  "scope": "Synthetic temporary files, dynamic unprivileged user, private network/tmp, read-only system/home; no production data or application access",
+  "sourceHashes": {
+    "ops/hetzner/recovery-files.py": "92ed11224c45d44cb7f1a1f3751288f44a1f4c9611bfc31fa4da9d8ec90f2c37",
+    "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
+    "scripts/test-coordinated-recovery-bundle.py": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5"
+  },
+  "sourceUnchanged": true
+}

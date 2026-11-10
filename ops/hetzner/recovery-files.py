@@ -154,9 +154,22 @@ def capture(source, destination):
     The caller must reject nested mounts and establish an actual writer fence;
     sampled file identities cannot prove absence of concurrent privileged writers.
     """
+    with directory(source) as source_fd:
+        return capture_directory_fd(source_fd, destination)
+
+
+def capture_directory_fd(source_fd, destination):
+    """Capture a caller-owned directory handle, retaining its exact mounted tree.
+
+    The caller authenticates/pins this handle and fences writers. This permits a
+    stopped container's retained mount namespace without pathname re-resolution.
+    It grants no authority to choose a production source or stop a container.
+    """
+    require(type(source_fd) is int and source_fd >= 0)
+    require(stat.S_ISDIR(os.fstat(source_fd).st_mode))
     destination = PurePosixPath(destination)
     name_parts(destination.name)
-    with directory(source) as source_fd, directory(str(destination.parent), private=True) as parent:
+    with directory(str(destination.parent), private=True) as parent:
         output = os.open(destination.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
                          0o600, dir_fd=parent)
         with os.fdopen(output, 'wb') as handle:

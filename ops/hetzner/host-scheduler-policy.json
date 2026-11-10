@@ -1,0 +1,657 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Observed 2026-10-06; all recorded cron/unit fragments match installed package checksums. This is a reviewed OS trust boundary, not proof of package behavior or arbitrary process exclusion.",
+  "scheduledFiles": [
+    {
+      "path": "/etc/cron.d/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "bytes": 102
+    },
+    {
+      "path": "/etc/cron.d/e2scrub_all",
+      "sha256": "d4df081b982b23e66cac7102f9d91032f296caf13031991d90af44ee6cbf6e3b",
+      "bytes": 201
+    },
+    {
+      "path": "/etc/cron.d/sysstat",
+      "sha256": "47a67deba0d029d43209e6e512399543a945172f2a640021a6c21422a66adb1a",
+      "bytes": 396
+    },
+    {
+      "path": "/etc/cron.daily/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "bytes": 102
+    },
+    {
+      "path": "/etc/cron.daily/apport",
+      "sha256": "ece406240beddfd8d262a9f0f2ffd5aa40cae4bf5401e7641db3ae1aca737a39",
+      "bytes": 376
+    },
+    {
+      "path": "/etc/cron.daily/apt-compat",
+      "sha256": "1983c659b042b1ec26127e7874954d83cd97eb8dcfd03238a7d2031ea0182fbe",
+      "bytes": 1478
+    },
+    {
+      "path": "/etc/cron.daily/dpkg",
+      "sha256": "9f2fdd4b4e7706dda74e8e443e1e1da0fbbb19c62a58e230e90d648b69177c35",
+      "bytes": 123
+    },
+    {
+      "path": "/etc/cron.daily/logrotate",
+      "sha256": "12b36ff7068d3932f428e6eba07cbc9b9b2f7f7d37756d86ce13ddfcc6cd875f",
+      "bytes": 377
+    },
+    {
+      "path": "/etc/cron.daily/man-db",
+      "sha256": "8436d3109f24a1a4e221e765c42b3cc34a455bd30478ad3a09d793c736a8a2e7",
+      "bytes": 1395
+    },
+    {
+      "path": "/etc/cron.daily/sysstat",
+      "sha256": "bf4e40f5cbe6a073dbd2b7148a8f4c574e33729426d44b0ef852d78f12c8a0c9",
+      "bytes": 518
+    },
+    {
+      "path": "/etc/cron.hourly/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "bytes": 102
+    },
+    {
+      "path": "/etc/cron.monthly/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "bytes": 102
+    },
+    {
+      "path": "/etc/cron.weekly/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "bytes": 102
+    },
+    {
+      "path": "/etc/cron.weekly/man-db",
+      "sha256": "292aa5e844ae053ede690e31806c0a1f0451789555b3655a1a93221f7df4bfd5",
+      "bytes": 1055
+    },
+    {
+      "path": "/etc/cron.yearly/.placeholder",
+      "sha256": "49674d9b1bd433cdb58f30497f6c441dc823de549160eef5c1acec4c20786810",
+      "bytes": 102
+    },
+    {
+      "path": "/etc/crontab",
+      "sha256": "ffb48ad57868ed639fad049d11ef4b9bcdd3d2d3e556754ce69b4d6b016969a3",
+      "bytes": 1136
+    }
+  ],
+  "units": {
+    "apport-autoreport.service": {
+      "unit": "apport-autoreport.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/apport-autoreport.service",
+        "sha256": "9be72b6a5ce373fc3c4580cbe3901703a6cb47fff0bde3d2c29fb82d69160b73",
+        "bytes": 249
+      },
+      "dropIns": []
+    },
+    "apport-autoreport.timer": {
+      "unit": "apport-autoreport.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/apport-autoreport.timer",
+        "sha256": "72e4700854d2c3babee612f6dda7c1c61caf37878b7adf9663ddbcbbc3e4c9c5",
+        "bytes": 216
+      },
+      "dropIns": []
+    },
+    "apt-daily-upgrade.service": {
+      "unit": "apt-daily-upgrade.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/apt-daily-upgrade.service",
+        "sha256": "da0651537cad0ed384291bd50c0bbc3268e6c625626ec9344150de4e8db3925e",
+        "bytes": 389
+      },
+      "dropIns": []
+    },
+    "apt-daily-upgrade.timer": {
+      "unit": "apt-daily-upgrade.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/apt-daily-upgrade.timer",
+        "sha256": "b804d7bab8eb41202384f9270e25d5383346ace8b3d7c4f5029c150638d77bcd",
+        "bytes": 184
+      },
+      "dropIns": []
+    },
+    "apt-daily.service": {
+      "unit": "apt-daily.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/apt-daily.service",
+        "sha256": "90f87047f4ea2f261f9117d02870de8719f808b911bb1808bf039ff3c162e5e9",
+        "bytes": 326
+      },
+      "dropIns": []
+    },
+    "apt-daily.timer": {
+      "unit": "apt-daily.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/apt-daily.timer",
+        "sha256": "0075e974af4e3a94757e219ba50ccb8348d4d1a8834d938f6cc9b1f4fd1db4e5",
+        "bytes": 156
+      },
+      "dropIns": []
+    },
+    "atd.service": {
+      "unit": "atd.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/atd.service",
+        "sha256": "fb5daf3517548dd679191ce7e8688af4fc796720ae3549b40c3d38d9f31bca64",
+        "bytes": 347
+      },
+      "dropIns": []
+    },
+    "containerd.service": {
+      "unit": "containerd.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/containerd.service",
+        "sha256": "bd1effcf6d9cd564c232b631b353b2758f174160e3d8c078a792363b59f113d0",
+        "bytes": 1242
+      },
+      "dropIns": []
+    },
+    "cron.service": {
+      "unit": "cron.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/cron.service",
+        "sha256": "bbcd656457d22e12d8983ed0c253b5bd8cc6b12308fd16d9324400040de68e6f",
+        "bytes": 339
+      },
+      "dropIns": []
+    },
+    "dbus.service": {
+      "unit": "dbus.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/dbus.service",
+        "sha256": "bf7ec47644997441174ef6aac992d34cc46b9d2d7b8dc2feba7074d719fdbef1",
+        "bytes": 528
+      },
+      "dropIns": []
+    },
+    "docker.service": {
+      "unit": "docker.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/docker.service",
+        "sha256": "2e35580df3c26dc898440289f4abad013fbd62722f00c93f994dba002e468873",
+        "bytes": 1701
+      },
+      "dropIns": []
+    },
+    "dpkg-db-backup.service": {
+      "unit": "dpkg-db-backup.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/dpkg-db-backup.service",
+        "sha256": "85249c5a74e9c47bf39d34e78612f0a0fe56cb8b35145482b40f8f73f08b2d5c",
+        "bytes": 147
+      },
+      "dropIns": []
+    },
+    "dpkg-db-backup.timer": {
+      "unit": "dpkg-db-backup.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/dpkg-db-backup.timer",
+        "sha256": "2e0dd766329313bfabd86b1acbd40069510afcfef3935cdea010168b503afde1",
+        "bytes": 154
+      },
+      "dropIns": []
+    },
+    "e2scrub_all.service": {
+      "unit": "e2scrub_all.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/e2scrub_all.service",
+        "sha256": "59a0a04718fcd5e608c9291d41ff378cd531debfa2e6d539add1b716c958a128",
+        "bytes": 297
+      },
+      "dropIns": []
+    },
+    "e2scrub_all.timer": {
+      "unit": "e2scrub_all.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/e2scrub_all.timer",
+        "sha256": "23f20fb6edc9fd54bf4754ef4311f88cba45ba65c6aecfa1885e8fb99531c211",
+        "bytes": 251
+      },
+      "dropIns": []
+    },
+    "fstrim.service": {
+      "unit": "fstrim.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/fstrim.service",
+        "sha256": "9d5ab55ca0f12257edd33d154e5dc523ddea4d5f2525557cbf96e30b97deab56",
+        "bytes": 477
+      },
+      "dropIns": []
+    },
+    "fstrim.timer": {
+      "unit": "fstrim.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/fstrim.timer",
+        "sha256": "699161252ffaa35a0272aae055e51332df694ff4d28c39f8b666d47ecced3397",
+        "bytes": 283
+      },
+      "dropIns": []
+    },
+    "getty@tty1.service": {
+      "unit": "getty@tty1.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/getty@.service",
+        "sha256": "6aa3ee077105e9af6979d4be40126af8db7ac402e8600b29390b8e7ff7505684",
+        "bytes": 2054
+      },
+      "dropIns": []
+    },
+    "logrotate.service": {
+      "unit": "logrotate.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/logrotate.service",
+        "sha256": "cc5c35e740bce405c1177903f675e8beb471c2fba394732eaf8100e4e9a5e0fb",
+        "bytes": 870
+      },
+      "dropIns": []
+    },
+    "logrotate.timer": {
+      "unit": "logrotate.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/logrotate.timer",
+        "sha256": "42f723dc5d90247a5fda11a3358d1a67eccceed856192b2264aa222d6aa240f4",
+        "bytes": 191
+      },
+      "dropIns": []
+    },
+    "man-db.service": {
+      "unit": "man-db.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/man-db.service",
+        "sha256": "c2d010471cf2733569410185944d7b065268a974bf5b986f188a026172b9c69f",
+        "bytes": 600
+      },
+      "dropIns": []
+    },
+    "man-db.timer": {
+      "unit": "man-db.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/man-db.timer",
+        "sha256": "3a3a1ca2ab2c92fe74bae1257e4c666e5dd0a31f441221dfa809bc0cf6540774",
+        "bytes": 171
+      },
+      "dropIns": []
+    },
+    "motd-news.service": {
+      "unit": "motd-news.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/motd-news.service",
+        "sha256": "b39d6da1bf420221beedb50b2d65f82ce5932c0ec9dba4f5dee5fcad874d6a37",
+        "bytes": 173
+      },
+      "dropIns": []
+    },
+    "motd-news.timer": {
+      "unit": "motd-news.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/motd-news.timer",
+        "sha256": "f18dbd0f64344440d7d6e8f1ff302d26fe383921be2a3f13948a8e2e2545ee58",
+        "bytes": 161
+      },
+      "dropIns": []
+    },
+    "multipathd.service": {
+      "unit": "multipathd.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/multipathd.service",
+        "sha256": "0397471e7913c74a3e005e03c833ebf3f1ec83b998210fa32094f5de21a07cd1",
+        "bytes": 742
+      },
+      "dropIns": []
+    },
+    "polkit.service": {
+      "unit": "polkit.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/polkit.service",
+        "sha256": "91ff4555bc6c94a6adc8dfb425bb3d4ba1e05decb815d3476dd6a9b5401430dc",
+        "bytes": 748
+      },
+      "dropIns": []
+    },
+    "qemu-guest-agent.service": {
+      "unit": "qemu-guest-agent.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/qemu-guest-agent.service",
+        "sha256": "fb4fbdbf513be055bd6cabb974aee312dba0e900402ce0404941ea2e979c9cef",
+        "bytes": 229
+      },
+      "dropIns": []
+    },
+    "rsyslog.service": {
+      "unit": "rsyslog.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/rsyslog.service",
+        "sha256": "2728f43f3e86d6eb2480d6cbc38a977e185b369c3733351459f40a9fc7581b2c",
+        "bytes": 890
+      },
+      "dropIns": []
+    },
+    "serial-getty@ttyS0.service": {
+      "unit": "serial-getty@ttyS0.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/serial-getty@.service",
+        "sha256": "b3ecf20475ea1648da95ea1f30eabcf53eaab2d1bd782478d492b850cf6d0dbf",
+        "bytes": 1571
+      },
+      "dropIns": []
+    },
+    "snapd.snap-repair.service": {
+      "unit": "snapd.snap-repair.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/snapd.snap-repair.service",
+        "sha256": "c7a40c203c7c0656ebec216f506d84bca05ccd035b3bc7be31cd9f3e71d037bb",
+        "bytes": 476
+      },
+      "dropIns": []
+    },
+    "snapd.snap-repair.timer": {
+      "unit": "snapd.snap-repair.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/snapd.snap-repair.timer",
+        "sha256": "0b9917717923d7e3b086c0dc6873f8df59589c26e8de32749125a1ca76036480",
+        "bytes": 330
+      },
+      "dropIns": []
+    },
+    "ssh.service": {
+      "unit": "ssh.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/ssh.service",
+        "sha256": "35b2858970feb78e985900b33ba8cb84249dfadbf296155e5639cafcf1dd40a3",
+        "bytes": 538
+      },
+      "dropIns": []
+    },
+    "sysstat-collect.service": {
+      "unit": "sysstat-collect.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/sysstat-collect.service",
+        "sha256": "94f24387c197affe7ee536eaa9980835a2351b229812cfdb6ab5ff2dabe942f5",
+        "bytes": 392
+      },
+      "dropIns": []
+    },
+    "sysstat-collect.timer": {
+      "unit": "sysstat-collect.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/sysstat-collect.timer",
+        "sha256": "241a0094bc117bdbd71e79a3ca1f88920cebac98084aaef89fdb7ac3c72d810b",
+        "bytes": 325
+      },
+      "dropIns": []
+    },
+    "sysstat-summary.service": {
+      "unit": "sysstat-summary.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/sysstat-summary.service",
+        "sha256": "8a153538a8b92e3780011027e5557ee53e178227ba73ac79bad094c9fdda8059",
+        "bytes": 372
+      },
+      "dropIns": []
+    },
+    "sysstat-summary.timer": {
+      "unit": "sysstat-summary.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/sysstat-summary.timer",
+        "sha256": "7ff4be8583010655cbde8820e190b8d4329bfce85a0edecddf5e89995b970745",
+        "bytes": 356
+      },
+      "dropIns": []
+    },
+    "systemd-journald.service": {
+      "unit": "systemd-journald.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/systemd-journald.service",
+        "sha256": "99389b0e3329dad0828df1600cdd31ec271bcc3403bc014018903c5705ec68ef",
+        "bytes": 2449
+      },
+      "dropIns": [
+        {
+          "path": "/usr/lib/systemd/system/systemd-journald.service.d/nice.conf",
+          "sha256": "200fa6d390295aba030295ff1bd0d37090c9bb1903641d6d6df1d439592ac5a4",
+          "bytes": 81
+        }
+      ]
+    },
+    "systemd-logind.service": {
+      "unit": "systemd-logind.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/systemd-logind.service",
+        "sha256": "528b9c24a93c52385a7c678dd4136f5f316d3ec82e21134dc3be1d2c12fda234",
+        "bytes": 2037
+      },
+      "dropIns": [
+        {
+          "path": "/usr/lib/systemd/system/systemd-logind.service.d/dbus.conf",
+          "sha256": "2325a2f34185f01f8ca3dc3c77f6e3676cdc08d0f5023db65f4fb19987d31367",
+          "bytes": 371
+        }
+      ]
+    },
+    "systemd-networkd.service": {
+      "unit": "systemd-networkd.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/systemd-networkd.service",
+        "sha256": "38ab8b44491353e11502b1eab3a8e67cd1845845397ae09db36e211a6d8bfce7",
+        "bytes": 2428
+      },
+      "dropIns": []
+    },
+    "systemd-resolved.service": {
+      "unit": "systemd-resolved.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/systemd-resolved.service",
+        "sha256": "db42a5af326aa171d320a3f18f5137c74025f84bf9fa2e58c5c9db335926c432",
+        "bytes": 1898
+      },
+      "dropIns": []
+    },
+    "systemd-timesyncd.service": {
+      "unit": "systemd-timesyncd.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/systemd-timesyncd.service",
+        "sha256": "f7e5b08e61f52c3fd8fc9d3f96668cc12109499a3e4eb74f0e91cf068e7e063a",
+        "bytes": 1768
+      },
+      "dropIns": []
+    },
+    "systemd-tmpfiles-clean.service": {
+      "unit": "systemd-tmpfiles-clean.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/systemd-tmpfiles-clean.service",
+        "sha256": "91c07d7c7e13eae3dfe5c475eea3df4dc12f93d00b3b6c0b4e6f3f50e8f6cccf",
+        "bytes": 747
+      },
+      "dropIns": []
+    },
+    "systemd-tmpfiles-clean.timer": {
+      "unit": "systemd-tmpfiles-clean.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/systemd-tmpfiles-clean.timer",
+        "sha256": "5d0d5e43fba69a001527d4ef354971c9a089b64d7d88973f2c190f7d80b25c61",
+        "bytes": 539
+      },
+      "dropIns": []
+    },
+    "systemd-udevd.service": {
+      "unit": "systemd-udevd.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/systemd-udevd.service",
+        "sha256": "49c9c1189ff6f112a9907dc1bf01f6fa7e0a7ca74b3a2420874561bbd8a8727d",
+        "bytes": 1324
+      },
+      "dropIns": [
+        {
+          "path": "/usr/lib/systemd/system/systemd-udevd.service.d/hc-utils.conf",
+          "sha256": "c01bb0628b4ba4f48544be4195175eb43d762858e960e44d0b1ed1d13a619dd3",
+          "bytes": 44
+        },
+        {
+          "path": "/usr/lib/systemd/system/systemd-udevd.service.d/syscall-architecture.conf",
+          "sha256": "12cee2f58288f5b89b28d2f56ef29f6b13c58edad7d3c723ecb6cb0702f236e3",
+          "bytes": 251
+        }
+      ]
+    },
+    "ua-timer.service": {
+      "unit": "ua-timer.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/ua-timer.service",
+        "sha256": "2bebcb43a4e48724223e58caa0e412e67b58992d916adf72a8a7ca20a34cb551",
+        "bytes": 640
+      },
+      "dropIns": []
+    },
+    "ua-timer.timer": {
+      "unit": "ua-timer.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/ua-timer.timer",
+        "sha256": "298cb263192451d1db12687202a5db3d849f2335db8bec0fc8d99a89f5897175",
+        "bytes": 322
+      },
+      "dropIns": []
+    },
+    "unattended-upgrades.service": {
+      "unit": "unattended-upgrades.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/unattended-upgrades.service",
+        "sha256": "642331d3861bcc5e41342b9b93ad96b1852447d5b10533b9b2988531cfd2860a",
+        "bytes": 377
+      },
+      "dropIns": []
+    },
+    "update-notifier-download.service": {
+      "unit": "update-notifier-download.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/update-notifier-download.service",
+        "sha256": "02d1056d34c6b222d96dce8afcf752d7745ecbc76ca0912e96a44910519cf9ab",
+        "bytes": 240
+      },
+      "dropIns": []
+    },
+    "update-notifier-download.timer": {
+      "unit": "update-notifier-download.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/update-notifier-download.timer",
+        "sha256": "78f01ff5be8b01eee4c438d6a7971dcb9f34687cb75bd0d61f754eb5eb42ad22",
+        "bytes": 268
+      },
+      "dropIns": []
+    },
+    "update-notifier-motd.service": {
+      "unit": "update-notifier-motd.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/update-notifier-motd.service",
+        "sha256": "bf11e51d49360c2df12678ee8a2df445a20c12cc4402eb4e291b8edd8ed6924b",
+        "bytes": 251
+      },
+      "dropIns": []
+    },
+    "update-notifier-motd.timer": {
+      "unit": "update-notifier-motd.timer",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/update-notifier-motd.timer",
+        "sha256": "7e5fa1f167ad72cf1bd0421d72ca3017ccb5a62f98d91ec3f9e25efd46c2a9ef",
+        "bytes": 301
+      },
+      "dropIns": []
+    },
+    "user@0.service": {
+      "unit": "user@0.service",
+      "fragment": {
+        "path": "/usr/lib/systemd/system/user@.service",
+        "sha256": "1855974fab4af1fcba640201e87b1142118c043916df6b8d9e7868773a900cc9",
+        "bytes": 834
+      },
+      "dropIns": [
+        {
+          "path": "/usr/lib/systemd/system/user@0.service.d/10-login-barrier.conf",
+          "sha256": "8871be748b7deb5aa26786504b1c6fad4cdda548161869f586e3bb2cfb11476f",
+          "bytes": 548
+        },
+        {
+          "path": "/usr/lib/systemd/system/user@.service.d/timeout.conf",
+          "sha256": "597eac16d8d7a289bb16aeeb01be0191d0c90beca4c6e0dba0f0c2d7c4e0ea81",
+          "bytes": 125
+        }
+      ]
+    }
+  },
+  "runningServices": [
+    "atd.service",
+    "containerd.service",
+    "cron.service",
+    "dbus.service",
+    "docker.service",
+    "getty@tty1.service",
+    "multipathd.service",
+    "polkit.service",
+    "qemu-guest-agent.service",
+    "rsyslog.service",
+    "serial-getty@ttyS0.service",
+    "ssh.service",
+    "systemd-journald.service",
+    "systemd-logind.service",
+    "systemd-networkd.service",
+    "systemd-resolved.service",
+    "systemd-timesyncd.service",
+    "systemd-udevd.service",
+    "unattended-upgrades.service",
+    "user@0.service"
+  ],
+  "timers": [
+    "apport-autoreport.timer",
+    "apt-daily-upgrade.timer",
+    "apt-daily.timer",
+    "dpkg-db-backup.timer",
+    "e2scrub_all.timer",
+    "fstrim.timer",
+    "logrotate.timer",
+    "man-db.timer",
+    "motd-news.timer",
+    "snapd.snap-repair.timer",
+    "sysstat-collect.timer",
+    "sysstat-summary.timer",
+    "systemd-tmpfiles-clean.timer",
+    "ua-timer.timer",
+    "update-notifier-download.timer",
+    "update-notifier-motd.timer"
+  ],
+  "userManagers": {
+    "user@0.service": {
+      "timers": [
+        "launchpadlib-cache-clean.timer"
+      ],
+      "units": {
+        "launchpadlib-cache-clean.timer": {
+          "unit": "launchpadlib-cache-clean.timer",
+          "fragment": {
+            "path": "/usr/lib/systemd/user/launchpadlib-cache-clean.timer",
+            "sha256": "2aad5faceba1104670893ac332fcd3702d148d6ee32420019bcdf76d184d34d1",
+            "bytes": 144
+          },
+          "dropIns": []
+        },
+        "launchpadlib-cache-clean.service": {
+          "unit": "launchpadlib-cache-clean.service",
+          "fragment": {
+            "path": "/usr/lib/systemd/user/launchpadlib-cache-clean.service",
+            "sha256": "b4a9993161957a3f588140417080cbaec2f03e3b0d19abf3f15d94e1cb4a9063",
+            "bytes": 232
+          },
+          "dropIns": []
+        }
+      }
+    }
+  }
+}

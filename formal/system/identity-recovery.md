@@ -67,3 +67,16 @@ importable classification helpers remain covered by these non-mutating tests.
 Current Hetzner source/ledger preparation is documented in
 [`ops/hetzner/README.md`](../../ops/hetzner/README.md) and does not authorize execution.
 No migrations, identity merges, receipt deletion, or production cleanup are part of this repair.
+
+## Executable identity retention checks
+
+The PostgreSQL runners `scripts/test-provider-identity.sh`,
+`scripts/test-live-intake-identity.sh`, `scripts/test-course-identity.sh` and
+`scripts/test-trial-identity.sh` create disposable fixture databases, apply the
+applicable schema, invoke the corresponding `TDF.*IdentitySpec` tests and require
+rollback to reject removal of established provider bindings or accepted request
+receipts. These are supporting checks for `SYS-RELEASE-001`: they exercise writer
+behavior and retention independently of the release ancestry predicate. They do
+not establish that an arbitrary descendant preserves every identity invariant,
+or that production recovery has occurred. Use the Stack-selected profile for all
+of these runners so CI can reuse the compiled backend without changing semantics.

@@ -81,6 +81,16 @@
       "sources": [
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
       ]
+    },
+    {
+      "id": "POST /contracts/{}/send",
+      "requirement": "DATA-CONTRACT-001",
+      "compiledStatus": 200,
+      "unavailableStatus": 503,
+      "reason": "No contract delivery implementation exists; validated existing documents return unavailable without claiming delivery.",
+      "sources": [
+        "tdf-hq/src/TDF/Contracts/Server.hs"
+      ]
     }
   ]
 }

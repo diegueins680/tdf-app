@@ -66,3 +66,55 @@ identity independently of the production host, encrypt, copy off-host, fetch tho
 same bytes back and restore them into isolated targets. A temporary synthetic
 identity and local successful decryption do not establish key custody, retention,
 availability, off-host recovery or release eligibility.
+
+
+## Durable ciphertext transfer and retrieval
+
+`ops/hetzner/recovery-transfer.py` provides the byte-channel portion of the
+coordinator. The caller must authenticate both endpoints, own the pipe/socket
+descriptors exclusively, and bind the supplied digest/size to its trusted
+ciphertext receipt. The module cannot identify a remote machine, encrypt data,
+select a destination, establish key custody or authorize production access.
+Only ciphertext belongs on this interface; the byte-level tests deliberately
+use synthetic opaque bytes and do not claim cryptographic recovery.
+
+Every frame binds the operation nonce, exact integer size, SHA256 and protocol
+phase. Canonical byte comparison rejects alternate JSON encodings, duplicate
+fields, booleans/floats in place of integers and unexpected fields. Sources must
+be private, owned single-link regular files under non-symlink directories. The
+sender checks original bytes before sending, then rechecks transmitted bytes,
+inode identity and the named path. The receiver creates an exclusive mode0600
+file, hashes the entire stream, fsyncs file and directory, then reopens and hashes
+that same named inode. Only then can it send the retained bytes back. The
+originator verifies that retrieved file against its original trusted receipt;
+no peer-supplied replacement hash can authorize completion.
+
+Channel IO is nonblocking under one absolute deadline (at most300seconds).
+A supervising process must separately bound potentially stalled filesystem IO;
+this library cannot impose a hard deadline on a kernel fsync. Failed or truncated
+transfers may retain private partial files. Retrying requires a new admitted
+output path; neither an old partial file nor a duplicate nonce is implicitly
+resumed. Lost final acknowledgement can leave verified bytes without a completed
+receiver receipt. The release journal must retain that uncertainty, never replay
+an external effect merely because a connection closed.
+
+`python3 scripts/test-recovery-transfer.py` runs local real-file/socket controls
+for full round trip, phase/nonce/digest/count/type rejection, malformed headers,
+truncation, corruption, private output, path/hardlink admission, source changes,
+fsync/read-back failure, silent peers and backpressure. CI requires these without
+an external service. The separate opt-in command is:
+
+```sh
+python3 scripts/test-recovery-transfer-ssh.py \
+  --identity-file /absolute/private/operator-ssh-key \
+  --output-directory /absolute/existing/private/evidence-directory
+```
+
+That synthetic4MiB rehearsal pins the existing canonical SSH target and host
+trust, and uses a transient Linux DynamicUser with private network/tmp and
+protected system/home. It reads no production data or keys. It retains the local
+synthetic copy and source-qualified receipt. A passing result proves the tested
+transport path, not production backup, key independence, long-term durability,
+restored application data or deployment eligibility. Honest fsync/storage, the
+trusted Python/policy process and no concurrent privileged inode mutation remain
+environment assumptions; there is no formal filesystem or network proof.
