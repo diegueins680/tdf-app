@@ -10142,6 +10142,7 @@
         "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql",
         "scripts/production-migrations.json",
         "scripts/lib/production-release.mjs",
+        "scripts/test-event-memory-source-moderation.sh",
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
@@ -10173,7 +10174,8 @@
         "tdf-hq-ui/src/features/marketplace/offers.test.ts",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "e2e/web/marketplace-negotiation.spec.mjs",
-        "scripts/__tests__/catalog-list-audit.test.mjs"
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/production-release.test.mjs"
       ],
       "formalModels": [
         "docs/music-directory/formal-model.yaml"
