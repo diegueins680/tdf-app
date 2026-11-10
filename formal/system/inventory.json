@@ -5336,7 +5336,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "b4b40f427e0d440ff0d3c54ecfeed00086cb857501627cd6a2684c277a058360",
+      "sha256": "8065d18c72907e6fcd0013f96dbab1fcb66491741dd1645771bc9670ab2af246",
       "semanticConformance": "not-established-by-discovery"
     },
     {

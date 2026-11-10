@@ -1253,6 +1253,11 @@
       "id": "2026-11-06_video_campaign_identity_references",
       "path": "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
       "introducedBy": "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
+    },
+    {
+      "id": "2026-11-10_auth_rate_limit",
+      "path": "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+      "introducedBy": "a96562115a8f5036e9182a9e43d2e468b31cc05b"
     }
   ]
 }
