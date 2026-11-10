@@ -19420,7 +19420,7 @@
     "tdf-hq/test/TDF/ReadinessSpec.hs": "0adb461cbd4a97585d68188117c817d279704c5fbab04d34c04ea4ea679b4cb1",
     "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs": "c1e56db036f4c22d0eeb9b54216cd7178071a03a60f27f3609308432f438d53b",
     "tdf-hq/test/TDF/ServerAdminSpec.hs": "666b225933f3daae11962cb68f9fa7a050328851082d890c4b4d03c116feb812",
-    "tdf-hq/test/TDF/ServerAuthSpec.hs": "0baf3843ba86340025b43bcd1ba1503ea7d52a7dc78635f7a271a6d89d4936e3",
+    "tdf-hq/test/TDF/ServerAuthSpec.hs": "4fa9818a84fa8ed5d501148df24115264975081c9dd5f903340305d75c19bab8",
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
     "tdf-hq/test/TDF/ServerSpec.hs": "b7762fb0b1a613e8ec72dae3a063ff295b1b3d322956dd33f44b3730146ccdf4",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
@@ -63027,7 +63027,7 @@
     {
       "id": "SURFACE-7c37a9a53d010234",
       "path": "tdf-hq/test/TDF/ServerAuthSpec.hs",
-      "sha256": "0baf3843ba86340025b43bcd1ba1503ea7d52a7dc78635f7a271a6d89d4936e3",
+      "sha256": "4fa9818a84fa8ed5d501148df24115264975081c9dd5f903340305d75c19bab8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
