@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 516,
+    "total": 518,
     "named": 434,
     "path-named": 0,
     "reviewed": 82,
-    "unspecified": 0,
+    "unspecified": 2,
     "covered": 516
   },
   "routes": [
@@ -1668,6 +1668,18 @@
         "AUTH-WEBHOOK-001"
       ],
       "note": "AUTH-WEBHOOK-001 specifies the Meta signature check before any effect (503 unconfigured, 401 invalid); MSG-WHATSAPP-REDELIVERY-001 and MSG-META-REDELIVERY-001 specify store-once redelivery and PRIV-WEBHOOK-001 the logging."
+    },
+    {
+      "method": "PUT",
+      "path": "/integrations/event-watch/import",
+      "basis": "unspecified",
+      "requirements": []
+    },
+    {
+      "method": "POST",
+      "path": "/integrations/event-watch/token",
+      "basis": "unspecified",
+      "requirements": []
     },
     {
       "method": "PUT",
