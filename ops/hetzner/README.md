@@ -43,6 +43,39 @@ changed sources invalidate the observation rather than receiving a passing recei
 Observations are sequential, not an atomic fleet snapshot. Missing flags retain
 unknown effective defaults. A successful observation is **not release readiness**.
 
+Rejected inspections report only a fixed stage/check code, such as
+`container-api: compose-files` or `container-api: immutable-image`. The launcher
+accepts only the exact allowlisted failure protocol and never forwards SSH,
+Docker, SQL, HTTP or exception text. Rejection creates no partial runtime receipt
+and cannot be used for release preparation. Correct the independently verified
+deployment configuration through the reviewed recovery lane before retrying;
+do not relax the canonical identity checks to obtain a passing receipt.
+
+### Release engineering checkpoint, 10 November 2026
+
+The public API returned healthy database status and backend revision
+`4dac175d42616b5b2f4a3e8faebb83692cd2e6b0`. Fresh read-only Docker observation
+found the API running with both `/opt/tdf/production/compose.yaml` and
+`/opt/tdf-mail/api-smtp-image-override.yaml`; its configured image was a local
+image ID rather than a repository-qualified immutable reference. The database
+and edge retained their single canonical Compose file and immutable references.
+These are sequential diagnostics, not a passing collector receipt or image
+provenance qualification. The unchanged canonical collector rejects the API's
+Compose-file identity before reading the database inventory.
+
+Recovery work must first preserve and review the SMTP override's behavior and
+image provenance, then qualify the intended canonical configuration through the
+guarded coordinator. Do not remove the override or recreate production merely
+to satisfy observation. Draft PR #495 still lacks current-main integration,
+independent storage/key-custody acceptance and complete coordinated recovery.
+No shutdown, migration, configuration repair or deployment was performed for
+this checkpoint.
+
+Diego confirmed that independent backup storage and recovery-key custody do not
+yet exist. The [setup requirements](recovery-custody-setup.md) define the operator
+inputs, access model, key handling and acceptance sequence needed before either
+can qualify the coordinator. No account or key was provisioned.
+
 The collector reports both presence and absence for the known backend boolean
 controls, including invoice/notification/reconciliation workers, privacy,
 SMTP TLS, the synthetic-persona seed switch, the trusted edge-country header control
