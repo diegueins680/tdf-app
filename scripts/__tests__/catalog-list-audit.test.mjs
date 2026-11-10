@@ -844,7 +844,13 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   }
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
     ...desktopReviews.map(row => row.id)]);
-  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id));
+  // The auth_rate_limit migration (owner decisions of 2026-11-10) succeeds the
+  // manifest review and adds two reviews; the historical view is the exact
+  // parent set once those are set aside and the manifest tip is stepped back.
+  const authRateLimitReviews = new Set(['f37745d92e494e02fcba', 'a95cbb8b9256407889ea']);
+  const historicalAppleView = active
+    .filter(row => !laterMainIds.has(row.id) && !authRateLimitReviews.has(row.id))
+    .map(row => (row.id === 'e2d0d745a89475e9798a' ? row.previousDecision : row));
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);
