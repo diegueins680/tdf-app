@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T08:07:41.419Z",
+  "generatedAt": "2026-11-10T13:08:14.132Z",
   "repositoryRoot": ".",
   "filesScanned": 2661,
   "candidateCount": 1412,
@@ -4499,7 +4499,7 @@
       "lines": [
         566
       ],
-      "consumerCount": 283,
+      "consumerCount": 284,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -4625,6 +4625,7 @@
         "scripts/__tests__/experiment-http-runtime.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/music-track-search-model.test.mjs",
         "scripts/__tests__/navigation-http-runtime.mjs",
         "scripts/__tests__/production-entrypoint.test.mjs",
@@ -4662,8 +4663,7 @@
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-event-memories-http.py",
         "scripts/test-event-memory-signup-browser.mjs",
-        "scripts/test-event-memory-source-browser.mjs",
-        "scripts/test-isolated-application-canary.py"
+        "scripts/test-event-memory-source-browser.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/drive.ts",
@@ -5665,7 +5665,7 @@
       "lines": [
         82
       ],
-      "consumerCount": 147,
+      "consumerCount": 148,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -5789,6 +5789,7 @@
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/retired-messaging-refresher.test.mjs",
         "scripts/archive/backfill-meta-inbox.sh",
         "scripts/artist-enrichment.mjs",
@@ -25675,7 +25676,7 @@
       "lines": [
         17
       ],
-      "consumerCount": 97,
+      "consumerCount": 98,
       "backendConsumers": [
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -25772,6 +25773,7 @@
       "automationConsumers": [
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/diagnose-social.mjs",
         "scripts/interactions/test-api.py",
@@ -25841,7 +25843,7 @@
       "lines": [
         129
       ],
-      "consumerCount": 161,
+      "consumerCount": 162,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -25958,6 +25960,7 @@
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
@@ -26349,7 +26352,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 106,
+      "consumerCount": 107,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
         "tdf-hq/sql/2026-09-18_notification_navigation.sql",
@@ -26435,6 +26438,7 @@
         "tdf-mobile/src/features/interactions/DiscussionScreen.tsx"
       ],
       "automationConsumers": [
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/onboarding-real-browser.mjs",
         "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
         "scripts/artist-enrichment.mjs",
@@ -39198,7 +39202,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 274,
+      "consumerCount": 275,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -39347,6 +39351,7 @@
         "scripts/__tests__/event-raci-browser-runner.test.mjs",
         "scripts/__tests__/fixtures/event-report.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/music-test-database.test.mjs",
         "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
@@ -39376,8 +39381,7 @@
         "scripts/lib/identity-reconciliation.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/music-playback-identity-probe.mjs",
-        "scripts/lib/production-release.mjs",
-        "scripts/lib/sri-invoice.mjs"
+        "scripts/lib/production-release.mjs"
       ],
       "apiAndIntegrationConsumers": [
         ".github/workflows/refresh-instagram-token.yml",
@@ -39461,7 +39465,7 @@
       "lines": [
         2
       ],
-      "consumerCount": 74,
+      "consumerCount": 75,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
@@ -39537,6 +39541,7 @@
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/diagnose-social.mjs",
         "scripts/interactions/test-api.py",
@@ -39595,7 +39600,7 @@
       "lines": [
         39
       ],
-      "consumerCount": 85,
+      "consumerCount": 86,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -39678,6 +39683,7 @@
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/diagnose-social.mjs",
         "scripts/interactions/test-api.py",
@@ -44717,7 +44723,7 @@
       "lines": [
         5
       ],
-      "consumerCount": 95,
+      "consumerCount": 96,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -44806,6 +44812,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
         "scripts/lib/music_money_conformance.py",
@@ -44865,7 +44872,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 80,
+      "consumerCount": 81,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -44938,6 +44945,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
@@ -45001,7 +45009,7 @@
       "lines": [
         12
       ],
-      "consumerCount": 80,
+      "consumerCount": 81,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -45074,6 +45082,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
@@ -54918,7 +54927,7 @@
       "lines": [
         1116
       ],
-      "consumerCount": 126,
+      "consumerCount": 127,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -55035,6 +55044,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-event-memories-http.py",
@@ -61262,7 +61272,7 @@
       "lines": [
         32
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
@@ -61337,6 +61347,7 @@
       "automationConsumers": [
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/diagnose-social.mjs",
         "scripts/interactions/test-api.py",
@@ -72952,7 +72963,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "eventArtists",
-      "line": 146,
+      "line": 187,
       "values": [
         "{artistId=999, artistPartyId=55, artistName=Synthetic Artist}",
         "{artistId=1000, artistName=Unlinked Artist}"
@@ -72960,7 +72971,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        146
+        187
       ],
       "consumerCount": 33,
       "backendConsumers": [
@@ -73028,7 +73039,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 259,
+      "line": 266,
       "values": [
         "media",
         "audio",
@@ -73037,7 +73048,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        259
+        266
       ],
       "consumerCount": 35,
       "backendConsumers": [
@@ -74355,7 +74366,7 @@
         239,
         480
       ],
-      "consumerCount": 161,
+      "consumerCount": 162,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -74472,6 +74483,7 @@
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/catalog-production-source-fixture.sql",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/__tests__/operations-worker-tick-postgres.mjs",
@@ -79029,7 +79041,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
@@ -79104,6 +79116,7 @@
       "automationConsumers": [
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/diagnose-social.mjs",
         "scripts/interactions/test-api.py",
@@ -83630,7 +83643,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -83739,6 +83752,7 @@
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/hetzner-preparation.test.mjs",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/music-track-search-model.test.mjs",
         "scripts/content-storage-model.mjs",
@@ -87335,7 +87349,7 @@
       "lines": [
         3447
       ],
-      "consumerCount": 273,
+      "consumerCount": 274,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -87486,6 +87500,7 @@
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
         "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
         "scripts/__tests__/fixtures/provider-retry-ledger-base.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/mobile-distribution-expiry.test.mjs",
         "scripts/__tests__/native-resolver-lock.test.mjs",
@@ -87526,8 +87541,7 @@
         "scripts/test-music-release-api-e2e.sh",
         "scripts/test-music-release-platform-migration.sh",
         "scripts/test-music-release-worker-runtime.mjs",
-        "scripts/test-music-track-search.mjs",
-        "scripts/test-physical-postgres-docker.py"
+        "scripts/test-music-track-search.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -132066,7 +132080,7 @@
       "lines": [
         466
       ],
-      "consumerCount": 111,
+      "consumerCount": 112,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -132163,6 +132177,7 @@
       "automationConsumers": [
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/build-catalog-decisions.mjs",
         "scripts/catalog-list-audit.mjs",
@@ -139259,7 +139274,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 228,
+      "consumerCount": 229,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -139378,6 +139393,7 @@
         "scripts/__tests__/compiled-api-surface.test.mjs",
         "scripts/__tests__/directory-saved-search-http.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/music-track-search-model.test.mjs",
         "scripts/__tests__/startup-gates-postgres.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
@@ -139422,8 +139438,7 @@
         "scripts/test-notification-alert-context.mjs",
         "scripts/test-player-session-model.mjs",
         "scripts/test-provider-identity.sh",
-        "scripts/test-state-machines.py",
-        "scripts/test-studio-internship-audit-api-e2e.mjs"
+        "scripts/test-state-machines.py"
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -141356,7 +141371,7 @@
       "lines": [
         210
       ],
-      "consumerCount": 165,
+      "consumerCount": 166,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -141459,6 +141474,7 @@
       "automationConsumers": [
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/__tests__/ticket-admission-model.test.mjs",
@@ -151836,7 +151852,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 80,
+      "consumerCount": 81,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -151909,6 +151925,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/lib/music-api-s3-probe.mjs",
@@ -151966,7 +151983,7 @@
       "lines": [
         20
       ],
-      "consumerCount": 28,
+      "consumerCount": 29,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
         "tdf-hq/sql/2026-09-18_notification_navigation.sql",
@@ -151996,6 +152013,7 @@
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
       "automationConsumers": [
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/artist-enrichment.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -152039,7 +152057,7 @@
       "lines": [
         21
       ],
-      "consumerCount": 74,
+      "consumerCount": 75,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
@@ -152114,6 +152132,7 @@
         "scripts/__tests__/campaign-tiktok-ui.test.mjs",
         "scripts/__tests__/diagnose-social.test.mjs",
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/catalog-list-audit.mjs",
         "scripts/diagnose-social.mjs",
@@ -159437,7 +159456,7 @@
       "lines": [
         6261
       ],
-      "consumerCount": 126,
+      "consumerCount": 127,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2025-11-16_leads_whatsapp.sql",
@@ -159553,6 +159572,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/lib/whatsapp_consent_conformance.py",
         "scripts/persona-test-program.mjs",
         "scripts/test-event-memories-http.py",

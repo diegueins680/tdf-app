@@ -142,6 +142,47 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('keeps the chosen input focused when the current account snapshot refreshes after returning to compose', async () => {
+    activeSession = { partyId: 9 };
+    const entry = '/social/eventos/121?compose=1#momentos';
+    const view = renderPage(entry);
+    const caption = await screen.findByRole('textbox', { name: 'Describe tu publicación' });
+    await waitFor(() => expect((caption as HTMLTextAreaElement).disabled).toBe(false));
+    const media = screen.getByRole('textbox', { name: 'Enlace de imagen o video' });
+    act(() => { media.focus(); });
+    expect(document.activeElement).toBe(media);
+    activeSession = { partyId: 9 };
+    view.rerender(<QueryClientProvider client={view.queryClient}><MemoryRouter initialEntries={[entry]}>
+      <Routes><Route path="/social/eventos/:eventId" element={<SocialEventDetailPage />} /></Routes>
+    </MemoryRouter></QueryClientProvider>);
+    expect(document.activeElement).toBe(media);
+    view.unmount();
+  });
+
+  it('keeps a user-selected input and draft when the same event refreshes after returning to compose', async () => {
+    activeSession = { partyId: 9 };
+    const view = renderPage('/social/eventos/121?compose=1#momentos');
+    const caption = await screen.findByRole('textbox', { name: 'Describe tu publicación' });
+    await waitFor(() => expect((caption as HTMLTextAreaElement).disabled).toBe(false));
+    fireEvent.change(caption, { target: { value: 'Borrador que sigo preparando' } });
+    const media = screen.getByRole('textbox', { name: 'Enlace de imagen o video' });
+    act(() => { media.focus(); });
+    getEventMock.mockResolvedValue({ ...eventFixture, eventDescription: 'Información actualizada del mismo evento' });
+    await act(async () => { await view.queryClient.refetchQueries({ type: 'active' }); });
+    expect((caption as HTMLTextAreaElement).value).toBe('Borrador que sigo preparando');
+    expect(document.activeElement).toBe(media);
+    view.unmount();
+  });
+
+  it('focuses the requested composer when its owned draft first becomes ready', async () => {
+    activeSession = { partyId: 9 };
+    const view = renderPage('/social/eventos/121?compose=1#momentos');
+    const caption = await screen.findByRole('textbox', { name: 'Describe tu publicación' });
+    await waitFor(() => expect((caption as HTMLTextAreaElement).disabled).toBe(false));
+    await waitFor(() => expect(document.activeElement).toBe(caption));
+    view.unmount();
+  });
+
   it('links artists by the existing canonical Party identity without treating a social artist ID as a Party', async () => {
     getEventMock.mockResolvedValue({ ...eventFixture, eventArtists: [
       { artistId: '999', artistPartyId: '55', artistName: 'Synthetic Artist' },
