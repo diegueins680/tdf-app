@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-08T08:07:46.544Z",
+  "generatedAt": "2026-11-10T15:04:24.834Z",
   "repositoryRoot": ".",
   "filesScanned": 2680,
   "candidateCount": 1417,
@@ -23255,7 +23255,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 131,
+      "consumerCount": 132,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -23327,6 +23327,7 @@
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
@@ -144816,7 +144817,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -144889,6 +144890,7 @@
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
@@ -161896,7 +161898,7 @@
       "lines": [
         926
       ],
-      "consumerCount": 131,
+      "consumerCount": 132,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -161969,6 +161971,7 @@
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
         "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.tsx",

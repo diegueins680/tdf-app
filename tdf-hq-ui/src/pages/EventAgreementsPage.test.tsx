@@ -81,6 +81,53 @@ it('blocks producer approval and sending until budget and scope are complete', a
   expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Enviar al artista' }).disabled).toBe(true);
   expect(screen.queryByRole('button', { name: 'Revisar aceptación' })).toBeNull();
 });
+it('keeps an unsaved proposal revision when a newer version is saved elsewhere and blocks saving until reconciled', async () => {
+  session = { partyId: 1 }; const value = workspaceFixture(true); value.agreements[0]!.state = 'changes_requested';
+  read.mockResolvedValue(value);
+  const { client } = setup(); await screen.findByText('Synthetic event plan');
+  fireEvent.click(screen.getByRole('tab', { name: 'Acuerdos (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Preparar nueva versión' }));
+  const body = () => screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Texto íntegro del acuerdo' });
+  fireEvent.change(body(), { target: { value: 'Unsaved contractual text' } });
+  const save = () => screen.getByRole<HTMLButtonElement>('button', { name: 'Guardar borrador de propuesta' });
+  expect(save().disabled).toBe(false);
+
+  const next = workspaceFixture(true); const moved = next.agreements[0]!; moved.state = 'changes_requested';
+  const first = moved.versions[0]!;
+  moved.versions.push({ ...first, version: 2, document_hash: 'c'.repeat(64), content: { ...first.content, body: 'Server text saved in another tab' } });
+  moved.current_version = 2;
+  read.mockResolvedValue(next);
+  await act(async () => { client.setQueryData(['event-workspace', '216', 1, getAuthSessionEpoch()], next); });
+
+  expect(body().value).toBe('Unsaved contractual text');
+  await screen.findByText(/Se guardó la versión 2 mientras editabas la versión 1/);
+  expect(save().disabled).toBe(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Conservar mis cambios' }));
+  expect(body().value).toBe('Unsaved contractual text');
+  expect(save().disabled).toBe(false);
+  fireEvent.click(save());
+  await waitFor(() => expect(command).toHaveBeenCalledTimes(1));
+  expect(command).toHaveBeenCalledWith('216', expect.objectContaining({ action: 'agreement.revise', version: 2, hash: 'c'.repeat(64), content: expect.objectContaining({ body: 'Unsaved contractual text' }) }));
+});
+it('lets the organizer discard an unsaved proposal revision in favour of the newer saved version', async () => {
+  session = { partyId: 1 }; const value = workspaceFixture(true); value.agreements[0]!.state = 'changes_requested';
+  read.mockResolvedValue(value);
+  const { client } = setup(); await screen.findByText('Synthetic event plan');
+  fireEvent.click(screen.getByRole('tab', { name: 'Acuerdos (1)' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Preparar nueva versión' }));
+  const body = () => screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Texto íntegro del acuerdo' });
+  fireEvent.change(body(), { target: { value: 'Unsaved contractual text' } });
+  const next = workspaceFixture(true); const moved = next.agreements[0]!; moved.state = 'changes_requested';
+  const first = moved.versions[0]!;
+  moved.versions.push({ ...first, version: 2, document_hash: 'c'.repeat(64), content: { ...first.content, body: 'Server text saved in another tab' } });
+  moved.current_version = 2;
+  read.mockResolvedValue(next);
+  await act(async () => { client.setQueryData(['event-workspace', '216', 1, getAuthSessionEpoch()], next); });
+  fireEvent.click(await screen.findByRole('button', { name: 'Descartar mis cambios' }));
+  await waitFor(() => expect(body().value).toBe('Server text saved in another tab'));
+  expect(screen.queryByText(/mientras editabas/)).toBeNull();
+  expect(command).not.toHaveBeenCalled();
+});
 it('preserves decimal input and sends exact cents when saving the plan', async () => {
   session = { partyId: 1 }; read.mockResolvedValue(workspaceFixture(true));
   setup(); await screen.findByText('Synthetic event plan');

@@ -199,10 +199,29 @@ function PlanEditor({ state, ownerId, eventId, busy, save }: { state: EventWorks
   </Stack></CardContent></Card>;
 }
 
-function AgreementEditor({ ownerId, scope, busy, initial = emptyAgreement, create }: { ownerId: number | null; scope: string; busy: boolean; initial?: AgreementContent; create: (content: AgreementContent) => Promise<unknown> }) {
+function AgreementEditor({ ownerId, scope, busy, initial = emptyAgreement, baseVersion, create }: { ownerId: number | null; scope: string; busy: boolean; initial?: AgreementContent; baseVersion?: number; create: (content: AgreementContent) => Promise<unknown> }) {
   const draft = useOwnedSessionDraft({ ownerId, scope, baseline: initial, empty: emptyAgreement });
   const [saved, setSaved] = useState(false);
-  const edit = (key: keyof AgreementContent, value: string | string[]) => { setSaved(false); draft.setDraft((old) => ({ ...old, [key]: value })); };
+  // The draft belongs to the account and agreement, not to one server version:
+  // unsaved text survives a newer version saved elsewhere, and saving waits
+  // until the organizer reconciles or discards it.
+  const [dirty, setDirty] = useState(false);
+  const [startedFrom, setStartedFrom] = useState(baseVersion);
+  const saving = useRef(false);
+  useEffect(() => {
+    if (!dirty || saving.current) setStartedFrom(baseVersion);
+  }, [baseVersion, dirty]);
+  const conflict = dirty && baseVersion !== undefined && startedFrom !== undefined && startedFrom !== baseVersion;
+  const edit = (key: keyof AgreementContent, value: string | string[]) => { setSaved(false); setDirty(true); draft.setDraft((old) => ({ ...old, [key]: value })); };
+  const discard = () => { draft.setDraft(initial); draft.acknowledgeSave(initial); setDirty(false); setSaved(false); };
+  const save = () => {
+    const submitted = draft.draft;
+    saving.current = true;
+    void create({ title: submitted.title, body: submitted.body, recipientLegalName: submitted.recipientLegalName, pendingFields: lines(submitted.pendingFields.join('\n')) })
+      .then(() => { draft.acknowledgeSave(submitted); setDirty(false); setSaved(true); })
+      .catch(() => undefined)
+      .finally(() => { saving.current = false; });
+  };
   return <Card variant="outlined"><CardContent><Stack spacing={1.5}>
     <Typography component="h3" variant="h6">{initial === emptyAgreement ? 'Preparar nuevo acuerdo' : 'Preparar nueva propuesta'}</Typography>
     <TextField label="Título del acuerdo" value={draft.draft.title} onChange={(e) => edit('title', e.target.value)} />
@@ -210,7 +229,11 @@ function AgreementEditor({ ownerId, scope, busy, initial = emptyAgreement, creat
     <TextField label="Texto íntegro del acuerdo" multiline minRows={10} value={draft.draft.body} onChange={(e) => edit('body', e.target.value)} />
     <TextField label="Campos contractuales pendientes (uno por línea)" multiline minRows={3} value={draft.draft.pendingFields.join('\n')} onChange={(e) => edit('pendingFields', e.target.value.split('\n'))} />
     <Typography variant="body2">Se incorporará una copia de la versión actual del plan como anexo. Guardar un borrador conserva sus pendientes; su envío requiere completar y aprobar el documento y el presupuesto.</Typography>
-    <Button variant="contained" disabled={busy || saved || !draft.ready || !draft.draft.title.trim() || !draft.draft.body.trim() || !draft.draft.recipientLegalName.trim()} onClick={() => { void create({ title: draft.draft.title, body: draft.draft.body, recipientLegalName: draft.draft.recipientLegalName, pendingFields: lines(draft.draft.pendingFields.join('\n')) }).then(() => setSaved(true)).catch(() => undefined); }}>Guardar borrador de propuesta</Button>
+    {conflict && <Alert severity="warning" action={<Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+      <Button color="inherit" size="small" onClick={() => setStartedFrom(baseVersion)}>Conservar mis cambios</Button>
+      <Button color="inherit" size="small" onClick={discard}>Descartar mis cambios</Button>
+    </Stack>}>Se guardó la versión {baseVersion} mientras editabas la versión {startedFrom}. Tus cambios sin guardar siguen aquí: revísalos contra la versión actual y elige conservarlos o descartarlos antes de guardar.</Alert>}
+    <Button variant="contained" disabled={busy || saved || conflict || !draft.ready || !draft.draft.title.trim() || !draft.draft.body.trim() || !draft.draft.recipientLegalName.trim()} onClick={save}>Guardar borrador de propuesta</Button>
     {saved && <Alert severity="success">Borrador guardado.</Alert>}
   </Stack></CardContent></Card>;
 }
@@ -258,7 +281,7 @@ function AgreementCard({ agreement, owner, busy, readUnavailable, command, downl
     </>}
     <Comments items={agreement.actions} history />
     <CommentBox label="Comentario sobre el acuerdo" busy={busy || !current} submit={(text) => act('comment', { comment: text })} />
-    {owner && current && ['draft', 'changes_requested', 'rejected', 'withdrawn'].includes(agreement.state) && <Accordion><AccordionSummary>Preparar nueva versión</AccordionSummary><AccordionDetails><AgreementEditor ownerId={ownerId} scope={`${eventId}:${agreement.id}:${latest.version}`} initial={latest.content} busy={busy} create={(content) => act('revise', { content })} /></AccordionDetails></Accordion>}
+    {owner && current && ['draft', 'changes_requested', 'rejected', 'withdrawn'].includes(agreement.state) && <Accordion><AccordionSummary>Preparar nueva versión</AccordionSummary><AccordionDetails><AgreementEditor ownerId={ownerId} scope={`${eventId}:${agreement.id}:revision`} initial={latest.content} baseVersion={latest.version} busy={busy} create={(content) => act('revise', { content })} /></AccordionDetails></Accordion>}
     {owner && agreement.state === 'accepted' && <AgreementEditor ownerId={ownerId} scope={`${eventId}:${agreement.id}:amendment`} busy={busy} initial={{ ...latest.content, title: `Anexo a ${latest.content.title}` }} create={(content) => command({ action: 'agreement.create', version: 0, parentId: agreement.id, content: { title: content.title, body: content.body, recipientLegalName: content.recipientLegalName, pendingFields: content.pendingFields } })} />}
     <Dialog open={acceptOpen && canAccept && reviewedCurrent && !readUnavailable} onClose={() => { if (!busy) setAcceptOpen(false); }} fullWidth aria-labelledby={`accept-${agreement.id}`}>
       <DialogTitle id={`accept-${agreement.id}`}>Aceptar acuerdo v{latest.version}</DialogTitle>

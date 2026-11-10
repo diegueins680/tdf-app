@@ -18856,8 +18856,8 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "6fa7990f5f6b0072eb10cbd811981fd23ddffa0615dc4a20badb8a8da9ec5d34",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
-    "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx": "52864e0bc5d784a27203de1da4afd70acb68c1dee189c10e98c4acfa5fcb4957",
-    "tdf-hq-ui/src/pages/EventAgreementsPage.tsx": "91e1e57d5848545ca24a6182a0f35c36bf891725f83a9e0597b6d84305000381",
+    "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx": "c39487fcff49a50c2298e6e44b78acf147f8f1c6fcf9926307857afca5c44e63",
+    "tdf-hq-ui/src/pages/EventAgreementsPage.tsx": "5a269c85e72d1a7e8726f4fa0b9febf70fad9f10927afea8afbc3be83219b0cc",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
@@ -49762,7 +49762,7 @@
     {
       "id": "SURFACE-fac74da10964b761",
       "path": "tdf-hq-ui/src/pages/EventAgreementsPage.test.tsx",
-      "sha256": "52864e0bc5d784a27203de1da4afd70acb68c1dee189c10e98c4acfa5fcb4957",
+      "sha256": "c39487fcff49a50c2298e6e44b78acf147f8f1c6fcf9926307857afca5c44e63",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49774,7 +49774,7 @@
     {
       "id": "SURFACE-0e855839df1ec21d",
       "path": "tdf-hq-ui/src/pages/EventAgreementsPage.tsx",
-      "sha256": "91e1e57d5848545ca24a6182a0f35c36bf891725f83a9e0597b6d84305000381",
+      "sha256": "5a269c85e72d1a7e8726f4fa0b9febf70fad9f10927afea8afbc3be83219b0cc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
