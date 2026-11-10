@@ -480,7 +480,7 @@ components:
         sponsorDisclosure: { type: string, nullable: true }
         effectiveAt: { type: string, format: date-time, nullable: true }
         expiresAt: { type: string, format: date-time, nullable: true }
-        intent: { allOf: [{ $ref: '#/components/schemas/ClassifiedIntent' }], nullable: true, description: Present on classifieds (ADR 0132) }
+        intent: { type: string, enum: [seeking, offering], nullable: true, description: Present on classifieds (ADR 0132) }
         sourceProfile:
           type: object
           nullable: true
@@ -792,7 +792,7 @@ components:
         serviceOfferingId: { type: string, format: uuid }
         serviceAdId: { type: integer, format: int64 }
         expiresAt: { type: string, format: date-time }
-        slots: { type: integer, minimum: 1, maximum: 100, default: 1, description: 'ADR 0132: how many offers may be accepted' }
+        slots: { type: integer, minimum: 1, maximum: 100, description: 'ADR 0132: how many offers may be accepted (default 1)' }
         priceMode: { $ref: '#/components/schemas/PriceMode' }
         offerDeadlineAt: { type: string, format: date-time, description: Last moment to submit offers; defaults to expiresAt }
         terms: { $ref: '#/components/schemas/OfferTerms' }
@@ -860,7 +860,6 @@ components:
     ClassifiedApplication:
       type: object
       description: Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on the detail endpoint.
-      additionalProperties: true
       required: [id, classifiedId, applicantProfileId, applicantProfile, message, status, currentRound, lastActorRole, participantRole, submittedAt, version]
       properties:
         id: { type: string, format: uuid }
@@ -880,7 +879,7 @@ components:
         terms: { $ref: '#/components/schemas/OfferTerms' }
         offerExpiresAt: { type: string, format: date-time, nullable: true }
         status: { type: string, enum: [submitted, viewed, shortlisted, countered_by_author, countered_by_applicant, accepted, rejected, withdrawn, expired, conversation_open, converted] }
-        rejectionReason: { type: string, nullable: true, enum: [author_decision, slots_filled, classified_closed, null] }
+        rejectionReason: { type: string, enum: [author_decision, slots_filled, classified_closed], nullable: true }
         participantRole: { type: string, enum: [author, applicant, admin] }
         reputation: { $ref: '#/components/schemas/OfferReputation' }
         rounds: { type: array, items: { $ref: '#/components/schemas/OfferRound' } }

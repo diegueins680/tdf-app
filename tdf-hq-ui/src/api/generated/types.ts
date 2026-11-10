@@ -15982,6 +15982,11 @@ export interface components {
                 relationship: components["schemas"]["SocialV2State"];
             }[];
         };
+        /**
+         * @description seeking = busco (demand); offering = ofrezco (supply)
+         * @enum {string}
+         */
+        ClassifiedIntent: "seeking" | "offering";
         /** @enum {string} */
         DirectoryEntityType: "profile" | "classified" | "event" | "venue";
         /** @description Safe public location; exact residential address and private coordinates are structurally absent. */
@@ -16031,8 +16036,11 @@ export interface components {
             effectiveAt?: string | null;
             /** Format: date-time */
             expiresAt?: string | null;
-            /** @description Present on classifieds (ADR 0132) */
-            intent?: components["schemas"]["ClassifiedIntent"] | null;
+            /**
+             * @description Present on classifieds (ADR 0132)
+             * @enum {string|null}
+             */
+            intent?: "seeking" | "offering" | null;
             /** @description Present on listings derived automatically from a public artist profile; links back to that canonical profile. */
             sourceProfile?: {
                 /** Format: uuid */
@@ -16230,6 +16238,35 @@ export interface components {
             nextCursor?: string | null;
         };
         /** @description Published, current, moderated classified. */
+        /**
+         * @description open: offers only; suggested: reference price, counters allowed; fixed: offers must accept the exact price
+         * @enum {string}
+         */
+        PriceMode: "open" | "suggested" | "fixed";
+        /** @description Structured terms proposed or agreed; free-form keys allowed, these are the known ones. */
+        OfferTerms: {
+            durationMinutes?: number;
+            capacity?: number;
+            equipmentProvided?: string;
+            equipmentRequired?: string;
+            /** @description Textual place (never an exact private address) */
+            placeLabel?: string;
+            timezone?: string;
+            paymentNotes?: string;
+            recurrence?: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description Anonymous aggregate visible to everyone; the range appears only with at least three offers (I20). */
+        OfferStats: {
+            count: number;
+            /** Format: int64 */
+            minMinor?: number | null;
+            /** Format: int64 */
+            maxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+        };
         PublicClassified: {
             /** Format: uuid */
             id: string;
@@ -16490,6 +16527,15 @@ export interface components {
             status: string;
             reason?: string;
         };
+        OfferBudget: {
+            /** Format: int64 */
+            minMinor?: number | null;
+            /** Format: int64 */
+            maxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            negotiable?: boolean;
+        } | null;
         ManagedClassified: {
             /** Format: uuid */
             id: string;
@@ -16555,11 +16601,8 @@ export interface components {
             serviceAdId?: number;
             /** Format: date-time */
             expiresAt?: string;
-            /**
-             * @description ADR 0132: how many offers may be accepted
-             * @default 1
-             */
-            slots: number;
+            /** @description ADR 0132: how many offers may be accepted (default 1) */
+            slots?: number;
             priceMode?: components["schemas"]["PriceMode"];
             /**
              * Format: date-time
@@ -16568,73 +16611,11 @@ export interface components {
             offerDeadlineAt?: string;
             terms?: components["schemas"]["OfferTerms"];
         };
-        /** @description An offer on a classified. amountMinor is the offered price (proposedAmountMinor is its legacy alias and still accepted). */
-        ApplicationCreate: {
-            /** Format: uuid */
-            applicantProfileId: string;
-            message: string;
-            portfolio: {
-                [key: string]: unknown;
-            }[];
-            availability?: string;
-            /** Format: int64 */
-            amountMinor?: number;
-            /**
-             * Format: int64
-             * @deprecated
-             */
-            proposedAmountMinor?: number;
-            /** Format: uuid */
-            currencyId?: string;
-            terms?: components["schemas"]["OfferTerms"];
-            /**
-             * Format: date-time
-             * @description Offer validity; defaults to 7 days, capped by the classified offer deadline
-             */
-            expiresAt?: string;
-        };
-        /**
-         * @description seeking = busco (demand); offering = ofrezco (supply)
-         * @enum {string}
-         */
-        ClassifiedIntent: "seeking" | "offering";
-        /**
-         * @description open: offers only; suggested: reference price, counters allowed; fixed: offers must accept the exact price
-         * @enum {string}
-         */
-        PriceMode: "open" | "suggested" | "fixed";
-        /** @description Structured terms proposed or agreed; free-form keys allowed, these are the known ones. */
-        OfferTerms: {
-            durationMinutes?: number;
-            capacity?: number;
-            equipmentProvided?: string;
-            equipmentRequired?: string;
-            /** @description Textual place (never an exact private address) */
-            placeLabel?: string;
-            timezone?: string;
-            paymentNotes?: string;
-            recurrence?: string;
-            [key: string]: unknown;
-        };
-        OfferBudget: {
-            /** Format: int64 */
-            minMinor?: number | null;
-            /** Format: int64 */
-            maxMinor?: number | null;
-            /** Format: uuid */
-            currencyId?: string | null;
-            negotiable?: boolean;
+        OfferReputation: {
+            ratingAvg?: number | null;
+            ratingCount?: number;
+            completedCount?: number;
         } | null;
-        /** @description Anonymous aggregate visible to everyone; the range appears only with at least three offers (I20). */
-        OfferStats: {
-            count: number;
-            /** Format: int64 */
-            minMinor?: number | null;
-            /** Format: int64 */
-            maxMinor?: number | null;
-            /** Format: uuid */
-            currencyId?: string | null;
-        };
         OfferRound: {
             roundNumber: number;
             /** @enum {string} */
@@ -16652,21 +16633,6 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
-        OfferCounterRequest: {
-            /** Format: int64 */
-            amountMinor: number;
-            /** Format: uuid */
-            currencyId: string;
-            terms?: components["schemas"]["OfferTerms"];
-            message?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-        };
-        OfferReputation: {
-            ratingAvg?: number | null;
-            ratingCount?: number;
-            completedCount?: number;
-        } | null;
         /** @description Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on the detail endpoint. */
         ClassifiedApplication: {
             /** Format: uuid */
@@ -16687,6 +16653,7 @@ export interface components {
                 /** Format: date-time */
                 offerDeadlineAt?: string | null;
                 budget?: components["schemas"]["OfferBudget"];
+            } & {
                 [key: string]: unknown;
             };
             /** Format: uuid */
@@ -16739,7 +16706,41 @@ export interface components {
             acceptedAt?: string | null;
             /** Format: int64 */
             version: number;
-            [key: string]: unknown;
+        };
+        /** @description An offer on a classified. amountMinor is the offered price (proposedAmountMinor is its legacy alias and still accepted). */
+        ApplicationCreate: {
+            /** Format: uuid */
+            applicantProfileId: string;
+            message: string;
+            portfolio: {
+                [key: string]: unknown;
+            }[];
+            availability?: string;
+            /** Format: int64 */
+            amountMinor?: number;
+            /**
+             * Format: int64
+             * @deprecated
+             */
+            proposedAmountMinor?: number;
+            /** Format: uuid */
+            currencyId?: string;
+            terms?: components["schemas"]["OfferTerms"];
+            /**
+             * Format: date-time
+             * @description Offer validity; defaults to 7 days, capped by the classified offer deadline
+             */
+            expiresAt?: string;
+        };
+        OfferCounterRequest: {
+            /** Format: int64 */
+            amountMinor: number;
+            /** Format: uuid */
+            currencyId: string;
+            terms?: components["schemas"]["OfferTerms"];
+            message?: string;
+            /** Format: date-time */
+            expiresAt?: string;
         };
         DirectoryClassifiedReference: {
             /** Format: uuid */

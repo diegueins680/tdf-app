@@ -50,7 +50,7 @@ it('lets the author accept, counter, shortlist or reject a fresh offer and shows
 it('records a counter-offer round with the amount in minor units', async () => {
   show(base);
   fireEvent.click(screen.getByRole('button', { name: 'marketplace.offer.counter' }));
-  fireEvent.change(screen.getByLabelText('marketplace.offer.amount'), { target: { value: '1250' } });
+  fireEvent.change(screen.getByLabelText(/marketplace\.offer\.amount/), { target: { value: '1250' } });
   counterOffer.mockResolvedValue({ ...base, status: 'countered_by_author', currentAmountMinor: 125000 });
   fireEvent.click(screen.getByRole('button', { name: 'marketplace.offer.sendCounter' }));
   await waitFor(() => expect(counterOffer).toHaveBeenCalledWith('offer-1', { amountMinor: 125000, currencyId: 'usd', message: undefined }));
