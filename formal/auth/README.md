@@ -63,3 +63,29 @@ It does not encode the stronger issued-at lower bound or malformed-window denial
 of the complete runtime predicate introduced in PR #690. The separate source-derived
 authorization/recovery projections also do not establish that full helper or
 whole-session refinement; native and PostgreSQL witnesses keep their own identities.
+
+## Meta webhook admission (`AUTH-WEBHOOK-001`)
+
+`meta_webhook_admission.py` (Z3 4.13.3, pinned) encodes
+`verifyMetaWebhookSignature` and `parseMetaWebhookSignature` of
+`tdf-hq/src/TDF/API/Types.hs` as a decision over the configured secret, the
+`X-Hub-Signature-256` header and the raw body. It refuses to run when the text
+of those two functions changes (the pin is the hash of that region, not of the
+module).
+
+| Obligation | Result |
+|---|---|
+| Admission needs a present, nonblank secret, a header passing all four syntactic guards and a digest equal to HMAC(secret, exact body) | proved (UNSAT of the negation) |
+| Admission is exactly that conjunction | proved |
+| An absent or blank secret answers 503 whatever the header says | proved |
+| With a usable secret the only refusal is 401; admit, 401 and 503 are exhaustive | proved |
+| An admitted header is refused for a body or secret whose HMAC differs | proved |
+| Admit, 401 and 503 each reachable (non-vacuity) | witnesses found |
+| Dropping the blank-secret check, any syntactic guard or the digest comparison | each breaks at least one proof |
+
+HMAC-SHA256 is an uninterpreted function: the model states which digest the
+verifier demands, not that the digest is unforgeable, and it does not cover the
+constant-time comparison, provider replay or key rotation. That every Meta
+callback route calls the verifier before decoding is the structural gate
+`scripts/check-webhook-signatures.py`; behaviour of the real function is the
+QuickCheck suite `tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs`.

@@ -345,6 +345,7 @@
       "scripts/interactions/test-native.py",
       "scripts/interactions/test-schema.sh",
       "scripts/lib/alloy-controls.mjs",
+      "scripts/lib/auth_throttle_http.py",
       "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
@@ -514,6 +515,7 @@
       "scripts/test-artist-visibility-sql.py",
       "scripts/test-auth-predicates.py",
       "scripts/test-auth-recovery-migration.sh",
+      "scripts/test-auth-throttle-http.sh",
       "scripts/test-automatic-migrations-production-schema.sh",
       "scripts/test-backend-version-rebuild.py",
       "scripts/test-booking-conformance.py",
@@ -2221,6 +2223,8 @@
       "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
       "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql",
       "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
+      "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+      "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -2282,8 +2286,10 @@
       "tdf-hq/src/TDF/Artists/Promotion.hs",
       "tdf-hq/src/TDF/Auth.hs",
       "tdf-hq/src/TDF/Auth/AccountName.hs",
+      "tdf-hq/src/TDF/Auth/Throttle.hs",
       "tdf-hq/src/TDF/CMS/Models.hs",
       "tdf-hq/src/TDF/Calendar/Models.hs",
+      "tdf-hq/src/TDF/Calendar/TokenCipher.hs",
       "tdf-hq/src/TDF/CampaignAutomation.hs",
       "tdf-hq/src/TDF/Catalog/CountryReferenceSeed.hs",
       "tdf-hq/src/TDF/Catalog/DB.hs",
@@ -3134,7 +3140,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
+      "sha256": "be08cd8afaeaef40d4c4daea10a0ed47c7936ed2ee0e6ce53844d14bbb64b2b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3152,7 +3158,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "49834f6f94bb01eb2b439d70d12f7742fe77a05306ea8e916486e59ab4ac8056",
+      "sha256": "cd0a03c4bdeec315f0e28bb6373ba1f4dab05aeebfa7c6b4061b84877183e0c1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3842,7 +3848,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
+      "sha256": "ee6e5c9faedc196b9c67b01834d0806d075a25a6eda76f9d180ddc766ae79da9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5040,6 +5046,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e51d4870cffa2db7",
+      "path": "scripts/lib/auth_throttle_http.py",
+      "sha256": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-33d3dc767fe336d3",
       "path": "scripts/lib/compiled-api-surface.mjs",
       "sha256": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
@@ -5426,7 +5438,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "3c2d171b9e55a6594aaa497d95e7fd56b8ebe2b54194de6cea22f5a5b8becca9",
+      "sha256": "073527ae21d0a4409f16b0bb0985c50e3d55dfd692e2e18736350edf37875ded",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6051,6 +6063,12 @@
       "id": "SURFACE-2b91f113b39e2bf6",
       "path": "scripts/test-auth-recovery-migration.sh",
       "sha256": "af61a328f292fc2afa97bbe58bdd3ea7d25719ac998552bd6a034e16c7bb523d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7abbe811f3de7af3",
+      "path": "scripts/test-auth-throttle-http.sh",
+      "sha256": "0761f381914a6c11968049ab002d2b2b8d75c3e8b2cc0b4b8a0985d4df0dffab",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6764,7 +6782,7 @@
     {
       "id": "SURFACE-e6df847c7de6b4ac",
       "path": "scripts/test-public-routes.py",
-      "sha256": "125a90f4db7a8cc41265c9fcd82d4a8f1d5461b343b176c1f5087cf68cf3a092",
+      "sha256": "fc959608bfb70097b378625bbc914645db7f87237fa7df536b851a967607f4fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16236,6 +16254,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-31c7d0747e8a3118",
+      "path": "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+      "sha256": "278f16a38d411fbf41cbb0068f2588f93f9ba710c3026830c9307f2a2108d7c5",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f1c80d1e17711b59",
+      "path": "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql",
+      "sha256": "c5e0cf83c9179be4d56e75767f0274e2e94d50ab73a3b3deee93a3af6cd5f149",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -16268,7 +16298,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "423e3156ab7e386197f584aa654ff9b972dd71d5dbba7e243aa0d88de8ba7c00",
+      "sha256": "14f98ec436c46f5eed2df814ca140ea1125b93a7ac3bcc4ff6f160861a2233ec",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16550,7 +16580,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "4d28306ae9a5bd326061fc83320069a58b871c1eeb14b6a341d4e4a88ac0dfee",
+      "sha256": "c4c60bc92c8a1c91034bb028240a397e02b5ee2e08a87cda7fd6296f904fde47",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16602,6 +16632,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-fcdcb342b1a07142",
+      "path": "tdf-hq/src/TDF/Auth/Throttle.hs",
+      "sha256": "462dd51867cf0f6634fc2450e7723e297721dbc4544775aa9d2fcbcf12eb0533",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8c41b16bda1eb6d1",
       "path": "tdf-hq/src/TDF/CMS/Models.hs",
       "sha256": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
@@ -16614,9 +16650,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-57235d95566bd74b",
+      "path": "tdf-hq/src/TDF/Calendar/TokenCipher.hs",
+      "sha256": "926c4158eee01f8eaf46ee5786c4208da3dd2a62b9f99dd9bada1af87e8bf656",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "3fe6ca1b35f39a2b43d4280295b1b337cb02612d642d47ab811f47be3101ce8f",
+      "sha256": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16820,7 +16862,7 @@
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "ed7e4240362edafb3cb90524c148832e6880cf89f62a6ea3120add7c0dfc0016",
+      "sha256": "edd3db953b7f89b6a79cce9fe5cddcc8711f13169a8558335fc40339634d085f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16832,7 +16874,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "6791d94fd7808fd13c8e371122d3f082c7668f78a9ae660297019d0032d0b7c9",
+      "sha256": "b01d52481cef28802bdfb167cef1f9f16ec705d6ea68c3c4d18327ff6cce82cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17378,7 +17420,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "15768a3ab48b31a7dc9059d54d157af1993690feea8e452bd826bd991af4b0cc",
+      "sha256": "e763088f9f6b12314a36b103f5b76cdb1b888c27fd34aca37d8624aecaa03c2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17528,7 +17570,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+      "sha256": "d1234048a5dbef693b73cb16a2688d3245a530d96216fecc7e541cbabf51bb77",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17570,13 +17612,13 @@
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "77df0fce250a9a6cade7d0da38b41674f5a8e1ce015b40ae58a4e4400df5f4a9",
+      "sha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b1e5f7033f3bdc7c",
       "path": "tdf-hq/src/TDF/ServerExtra.hs",
-      "sha256": "a602375a16e0480187d5ca9385ab554625096c2ba2f45ef5ef57e71d41150dd2",
+      "sha256": "fac511e58b2072a96962ad2e025ae6c34e568ec8593502a1c0b33e83e572100b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17630,7 +17672,7 @@
     {
       "id": "SURFACE-5a72b47f8b63ff19",
       "path": "tdf-hq/src/TDF/ServerRadio.hs",
-      "sha256": "5cf8676925d3e588a3bfd0bc564377839d6aaf6c7256f9835be7664c171a40f6",
+      "sha256": "c7e8c81810d6f08ea2e513b6b120c4d8e167e87a7738acd765411e4d13f0329c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17876,7 +17918,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
+      "sha256": "c0dcf0903d9b4cdab0a5365cbc0ff413c7dd13d9a38470cd791a62e591d9d0b2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17954,7 +17996,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+      "sha256": "b588191dc2ccf7cc74b81d0be415f29b14b51dc710b7ea9357ca25cee4b448d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18074,7 +18116,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "0f365325abbec6564548389a6c805ed9d1c600c339b854fbf0c88ecae5c3b78e",
+      "sha256": "2d9f758af68610173e633370bea4a08a00cb0703d6fa97602fa79c104e97b1f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18392,7 +18434,7 @@
     {
       "id": "SURFACE-fd889b176c72565e",
       "path": "tdf-hq/test/TDF/ServerExtraSpec.hs",
-      "sha256": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
+      "sha256": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18410,7 +18452,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "43e056a87d4c0d606100a8b59884efb3155cd959e2b6d4b2b90d4aafe8d2e87a",
+      "sha256": "46bae510adc8431a7c1e69bf6475df604bd8bf32e4c5b8b504b15e236fc478b9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -25005,7 +25047,7 @@
     },
     {
       "path": "formal/auth/README.md",
-      "sha256": "c8f5c10cc80177a9eddc1e9cc419b72cd313b5c01f28ee1d2a51709aefa7f7fa",
+      "sha256": "08c05fb0e3913420a59793b8360d37de714becc3a4cd0974fa40f40d825dce8d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29828,7 +29870,7 @@
     },
     {
       "path": "formal/system/ads-storefront-routes.md",
-      "sha256": "5dc87afd9500ab3eabc7488fdb6749c9704ef5d3e29ceb9d3cf8e3fff040a4bc",
+      "sha256": "58377c99ccc920dee9f6e22eea6874f915240a60790a597247112994c0a5d8ca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29849,7 +29891,7 @@
     },
     {
       "path": "formal/system/artists-assets-label-routes.md",
-      "sha256": "f9cf3fefc536bdab389ec9e109521219bed7461c65e5a6e5cc167ec29ebad104",
+      "sha256": "7f9b6886b39fc8cc3f08031795b97f5a6fad44a082f4cbfe19fdb99f42b3b51d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -29863,7 +29905,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -29996,7 +30038,7 @@
     },
     {
       "path": "formal/system/commerce-integration-routes.md",
-      "sha256": "dfa332ed9aa0aeb94bcf4968fb498fa301ee1abd4d72f811ef12184a751ef1f2",
+      "sha256": "bd9f6e171801a42db72d6fa91439569fa27ada6c4acf229b3df02df885fb4892",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30017,7 +30059,7 @@
     },
     {
       "path": "formal/system/content-ops-routes.md",
-      "sha256": "87c07696f03588953732a3e994505e5d3c15fcb6f0d16f2fc857a1288b7450df",
+      "sha256": "b121a878ed00330f8a52f8c51dcc54ae9b0201a88d4a8b975540faae9d2f7c19",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30052,7 +30094,7 @@
     },
     {
       "path": "formal/system/ddex-radio-session-routes.md",
-      "sha256": "45ba9d90afd7f6f02f923a9afc739fdb095f26a538db726acbceeee44bbb5946",
+      "sha256": "b41efaf6a9ccecca712c4e26c66d8a266d2db5ba36678aeeb5275157ef0541f3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30262,7 +30304,7 @@
     },
     {
       "path": "formal/system/identity-routes.md",
-      "sha256": "bdea222aff00ac3158b7d950392c05a16e7aa351ce10d8af391fe1456447c5b5",
+      "sha256": "2b3c4317eb31e1a923ba43d34a4305eab245314966372ae02390492cf05126a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30850,7 +30892,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sha256": "1309cbd2bf1bfccb009bc8c32d3ddf7af82f9a36a452537f4a7674852197bda4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -30885,14 +30927,14 @@
     },
     {
       "path": "formal/system/social-events-routes.md",
-      "sha256": "a7fd5548c765efdfe4d4838f8ad9ca4e4ec9daac92099ddcf45aa952ba2b8912",
+      "sha256": "2bb01afbe1e6e1010bc80923dcc5e57bd36174958020aace78ffef1594054ab3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
       "path": "formal/system/social-messaging-routes.md",
-      "sha256": "ecbef23c2dfa15bab11102bd84137abf788fdfbd14f89c28dbe8500be4a44a04",
+      "sha256": "019aa7af6d2bf2d89fb6bf9cff16850af98cea8558afd148a19c1f6242f192e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31221,7 +31263,7 @@
     },
     {
       "path": "tdf-hq/README.md",
-      "sha256": "366e60af3bde6003ff8671c2bde692ac51c5c9e3b4e844cb2780a2cc2f302d37",
+      "sha256": "fd655ea779a8c408d0c7c6aef4d9712cf3f359c014305b81c26ff03b433681bd",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -36662,7 +36704,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -36693,7 +36735,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -36724,7 +36766,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -36755,7 +36797,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -36786,7 +36828,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -36817,7 +36859,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -36848,7 +36890,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -36879,7 +36921,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -36910,7 +36952,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -36941,7 +36983,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -36972,7 +37014,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -37003,7 +37045,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -37032,7 +37074,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -37061,7 +37103,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -37090,7 +37132,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -37119,7 +37161,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -37148,7 +37190,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -37177,7 +37219,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -37206,7 +37248,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -37235,7 +37277,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -37264,7 +37306,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "0255ae4aa88acfe94a3143b521f622e8f43bb9778b0a06688f4d6495e87f3ab1",
+      "sourceSha256": "fe21d71f7113eb4397334fb95f59a205a1400511049306620d3ec4529203c31e",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",

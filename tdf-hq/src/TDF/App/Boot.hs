@@ -64,6 +64,7 @@ import TDF.Ticketing.Confirmation (startTicketConfirmationWorker)
 import TDF.Invoice.Datil (startTaxInvoiceWorker)
 import TDF.Cors (corsPolicy)
 import TDF.CampaignAutomation (startCampaignAutomationJob)
+import qualified TDF.Auth.Throttle as Throttle
 import qualified TDF.CMS.Models as CMS
 import qualified TDF.Catalog.Models as Catalog
 import TDF.Catalog.Integrity (applyCatalogIntegrity)
@@ -280,6 +281,8 @@ runAllMigrations cfg = do
   syncRegionalDeploymentEnablement cfg
   ensureBrainTagsArray
   runMigration migrateTrials
+  -- The login, signup and reset throttles read this table on every request.
+  Throttle.ensureAuthThrottleSchema
   ensureInternationalColumns
   restoreLegacyPartyRoles legacyRoles
   validateSecurityRegistry

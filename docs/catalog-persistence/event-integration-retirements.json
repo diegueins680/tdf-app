@@ -697,17 +697,17 @@
         "kind": "json-array",
         "name": "migrations"
       },
-      "replacementId": "a20e04bc426cc6383584",
-      "reason": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver.",
-      "previousReplacementId": "4e282e4c258854caa655",
+      "replacementId": "e2d0d745a89475e9798a",
+      "reason": "Preserve every one of the 248 parent manifest objects and all applied SQL bytes; append only 2026-11-10_auth_rate_limit, introduced at a96562115a8f5036e9182a9e43d2e468b31cc05b, which creates the auth_rate_limit counter table (scope, subject hash, window, count) used by the login, signup and password-reset throttles (AUTH-CREDENTIAL-INTAKE-001, AUTH-PASSWORD-RECOVERY-001). It alters no existing table and its rollback drops only that table. Hosted apply/replay of the full batch remains required; no deployment, activation or whole-system proof waiver.",
+      "previousReplacementId": "a20e04bc426cc6383584",
       "currentResolution": {
-        "id": "a20e04bc426cc6383584",
-        "valueCount": 248,
+        "id": "e2d0d745a89475e9798a",
+        "valueCount": 249,
         "sourceParents": [
-          "7c1525edf0f02fe53f985c24862940b91c11cdfa",
-          "f615c862b1a7d50406cc0506d21d7650e607fa5f"
+          "a96562115a8f5036e9182a9e43d2e468b31cc05b",
+          "083d1c6e1d0c709ea14b621782ff9faa3d60d572"
         ],
-        "justification": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver."
+        "justification": "Preserve every one of the 248 parent manifest objects and all applied SQL bytes; append only 2026-11-10_auth_rate_limit, introduced at a96562115a8f5036e9182a9e43d2e468b31cc05b, which creates the auth_rate_limit counter table (scope, subject hash, window, count) used by the login, signup and password-reset throttles (AUTH-CREDENTIAL-INTAKE-001, AUTH-PASSWORD-RECOVERY-001). It alters no existing table and its rollback drops only that table. Hosted apply/replay of the full batch remains required; no deployment, activation or whole-system proof waiver."
       },
       "change": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
       "sourceReviewReferences": [
@@ -864,17 +864,18 @@
         "255ec943da9a86e36cc7",
         "be0b1503a04f9fa295ee",
         "969410f2f45854cc54fc",
-        "806180f5957fc4a7520f"
+        "806180f5957fc4a7520f",
+        "a20e04bc426cc6383584"
       ],
-      "previousReason": "Preserve the complete 237-entry manifest reviewed as ef3b8933 (canonical sha256 1e19a24e6587150801c11e822a15eae4b26ab30ddc2184a5cdb0f68968e5653e) byte for byte and append only 2026-11-04_session_invoice_issue, which creates session_invoice_issue: one reservation per (session, idempotency key) taken before a session invoice is created or an SRI document is issued, so a retried or doubled POST /invoices/{sessionId}/generate replays its answer instead of issuing a duplicate legal invoice (PAY-INVOICE-ISSUE-001). The table is new and empty; no existing row changes. The entire 237-entry review graph is preserved by canonical hash. This 238-entry technical execution-registry classification grants no production execution, permission or release waiver; fresh CI on the current head, independent review and protected integration remain required.",
+      "previousReason": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver.",
       "previousCurrentResolution": {
-        "id": "806180f5957fc4a7520f",
-        "valueCount": 246,
+        "id": "a20e04bc426cc6383584",
+        "valueCount": 248,
         "sourceParents": [
-          "7ab198f88f70ce7f27f0e97c34089d4145ce6929",
-          "09fd7babb92e45c1da1b9e5017de53b6378b4f7c"
+          "7c1525edf0f02fe53f985c24862940b91c11cdfa",
+          "f615c862b1a7d50406cc0506d21d7650e607fa5f"
         ],
-        "justification": "Preserve the entire 245-entry manifest and its complete review graph unchanged; append only the forward video campaign Party-reference registry and archive guards introduced at09fd7babb92e45c1da1b9e5017de53b6378b4f7c. Preserve the original draft-video SQL byte for byte. No seed, identity merge, campaign activation, deployment or release waiver."
+        "justification": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver."
       },
       "previousResolution": {
         "originalDecision": {
@@ -893,17 +894,17 @@
           "kind": "json-array",
           "name": "migrations"
         },
-        "replacementId": "4e282e4c258854caa655",
-        "reason": "Preserve every object and SQL byte of the protected246-entry manifest and its complete review graph; append only the original Apple customer-account policy migration with its original introduction ancestor. Actual isolated247apply/replay/schema and incompatible-role rejection are recorded. This execution registry grants no production deployment, activation, or release waiver.",
-        "previousReplacementId": "969410f2f45854cc54fc",
+        "replacementId": "a20e04bc426cc6383584",
+        "reason": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver.",
+        "previousReplacementId": "4e282e4c258854caa655",
         "currentResolution": {
-          "id": "4e282e4c258854caa655",
-          "valueCount": 247,
+          "id": "a20e04bc426cc6383584",
+          "valueCount": 248,
           "sourceParents": [
-            "e7ec452787e15f09deda4c4328ec6a8c1cece727",
+            "7c1525edf0f02fe53f985c24862940b91c11cdfa",
             "f615c862b1a7d50406cc0506d21d7650e607fa5f"
           ],
-          "justification": "Preserve every object and SQL byte of the protected246-entry manifest and its complete review graph; append only the original Apple customer-account policy migration with its original introduction ancestor. Actual isolated247apply/replay/schema and incompatible-role rejection are recorded. This execution registry grants no production deployment, activation, or release waiver."
+          "justification": "Preserve every247 parent manifest object and all applied SQL bytes; append only the exact Google/Apple issuer allowlist migration introduced at7c1525edf0f02fe53f985c24862940b91c11cdfa. Actual owned248apply/replay/schema, same8credential lifecycle cases, issuer/null/duplicate rejection, known-shape rejection and data-preserving rollback refusal are source-bound. No deployment, activation or whole-system proof waiver."
         },
         "change": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
         "sourceReviewReferences": [

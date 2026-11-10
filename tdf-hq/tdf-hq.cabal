@@ -227,6 +227,8 @@ executable tdf-hq-exe
     TDF.Trials.Seed
     TDF.Trials.Server
     TDF.Calendar.Models
+    TDF.Calendar.TokenCipher
+    TDF.Auth.Throttle
     TDF.CMS.Models
       TDF.Catalog.Models
       TDF.Catalog.CountryReferenceSeed
