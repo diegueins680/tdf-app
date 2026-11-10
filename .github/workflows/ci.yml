@@ -227,6 +227,16 @@ jobs:
             TDF_QUARANTINE_TEST_IMAGE=pgvector/pgvector@sha256:3e8b3adfd27b5707128f60956f62a793c3c9326ea8cfaf0eab7adccb5d700b21 \
             python3 scripts/test-outbound-quarantine-linux.py
 
+      - name: Build and verify the music worker runtime image without publication
+        if: needs.changes.outputs.backend == 'true'
+        timeout-minutes: 30
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: |
+          tdf_worker_test_image="tdf-music-worker:ci-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          docker build --file tdf-hq/Dockerfile.music-worker --tag "$tdf_worker_test_image" .
+          node scripts/test-music-worker-image.mjs "$tdf_worker_test_image"
+
   ui-quality:
     needs: changes
     if: needs.changes.outputs.ui == 'true'
@@ -437,6 +447,26 @@ jobs:
       - name: Install backend verification dependencies
         run: npm ci --ignore-scripts
 
+      - name: Verify native session import correction and identity replay
+        run: sh scripts/test-native-session-import.sh
+
+      - name: Verify music worker recovery, fencing and DDEX diagnostics
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
+        run: |
+          node --test scripts/__tests__/music-test-database.test.mjs
+          node --test scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs
+          run_music_worker_runtime_gate() {
+            local music_worker_baseline_status=0
+            MUSIC_WORKER_STOP_DIAGNOSTICS=false npm run test:music-worker-runtime || music_worker_baseline_status=$?
+            if [ "$music_worker_baseline_status" -ne 0 ]; then
+              printf '%s\n' 'Untraced music-worker runtime failed; collecting optional shutdown diagnostics.' || true
+              MUSIC_WORKER_STOP_DIAGNOSTICS=true npm run test:music-worker-runtime || true
+            fi
+            return "$music_worker_baseline_status"
+          }
+          run_music_worker_runtime_gate
+
       - name: Restore immutable Stack dependencies
         uses: actions/cache@v6
         with:
@@ -456,14 +486,6 @@ jobs:
       - name: Build and test backend once
         run: bash scripts/quality-backend.sh
 
-      - name: Verify music worker recovery, fencing and DDEX diagnostics
-        env:
-          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
-        run: |
-          node --test scripts/__tests__/music-test-database.test.mjs
-          node --test scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs
-          npm run test:music-worker-runtime
-
       - name: Verify authorized music catalog recording search
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_search_test
@@ -473,6 +495,19 @@ jobs:
         env:
           TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_worker_test
         run: node scripts/test-music-source-projection.mjs
+
+      - name: Verify artist featured-track persistence and public selection
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_featured_test
+        run: node scripts/test-artist-featured-track.mjs
+
+      - name: Verify media health suppression and restoration
+        env:
+          TDF_MUSIC_WORKER_TEST_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_music_health_test
+        run: node scripts/test-music-media-health.mjs
+
+      - name: Verify bounded SSRF-safe media probes
+        run: python3 scripts/test-music-media-health.py
 
       - name: Verify authorized recording search and metadata boundaries
         env:

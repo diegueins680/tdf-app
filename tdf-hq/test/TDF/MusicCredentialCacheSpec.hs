@@ -9,7 +9,7 @@ import qualified Data.ByteString.Lazy as BL
 import Data.IORef (modifyIORef', newIORef, readIORef, writeIORef)
 import Data.Text (Text)
 import Network.HTTP.Types
-  ( Method, Status, hCacheControl, status200, status201, status400, status401
+  ( Method, Status, hCacheControl, methodGet, methodHead, status200, status201, status400, status401
   , status403, status404, status409, status429, status500, status503
   )
 import Network.HTTP.Types.URI (decodePathSegments)
@@ -32,6 +32,7 @@ import TDF.MusicRelease.CredentialCache (musicCredentialCache)
 credentialRoutes :: [(Method, [Text])]
 credentialRoutes =
   [ assetRoute
+  , ("GET", ["music", "legacy", "release-id:spotify", "access"])
   , ("POST", ["music", "entitlements", "entitlement-id", "download"])
   , ("POST", ["music", "downloads", "free"])
   , ("POST", ["music", "releases", "release-id", "versions", "version-id", "uploads"])
@@ -94,10 +95,19 @@ publicRouter = serve (Proxy :: Proxy MusicReleasePublicAPI)
     :<|> (\_ _ -> pure Null)
     :<|> (\_ _ -> pure (object ["url" .= ("https://storage.example.test/test" :: Text)]))
     :<|> (\_ _ -> pure NoContent)
-    :<|> (\_ _ _ _ -> pure (noHeader [])))
+    :<|> (\_ _ _ _ -> pure (noHeader []))
+    :<|> (\_ _ -> pure (noHeader Null))
+    :<|> (\_ -> pure (noHeader Null)))
 
 spec :: Spec
 spec = describe "music credential cache boundary" $ do
+  it "protects legacy access errors and HEAD while leaving ordinary metadata caching alone" $
+    forM_ [methodGet, methodHead] $ \method ->
+      forM_ [status200, status404, status503] $ \status -> do
+        response <- capture (musicCredentialCache (upstream status))
+          (requestFor (method, ["music", "legacy", "1:spotify", "access"]))
+        cacheHeaders response `shouldBe` ["private, no-store"]
+        responseStatus response `shouldBe` status
   forM_ (credentialRoutes <> readRoutes) $ \route ->
     it ("protects credential operation " <> show route) $ do
       original <- capture (upstream status201) (requestFor route)

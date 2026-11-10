@@ -10,6 +10,7 @@ async function fixture(page, baseURL, distribution = config) {
     const request = route.request(), url = new URL(request.url());
     if (!['fetch','xhr'].includes(request.resourceType())) return url.origin === origin ? route.continue() : route.abort();
     const path = url.pathname.replace(/^\/api(?=\/)/, '');
+    if (path === '/records/feed') return route.fulfill({ json: { locale: 'es', revision: 0, collections: [], releases: [], recordings: [], sessions: [] } });
     if (path === '/mobile-distribution.json') return route.fulfill({ json: distribution });
     if (path === '/session') return route.fulfill({ status: 401, json: {} });
     if (path === '/feedback' && request.method() === 'POST') { submissions.push(request.postData()); return route.fulfill({ status: 204 }); }
@@ -62,11 +63,13 @@ for (const width of [390, 834, 1280]) {
   });
 }
 test('Dismissed mobile promotion stays dismissed @critical',async({page,baseURL})=>{
+  const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await fixture(page,baseURL); await page.addInitScript(()=>Object.defineProperty(navigator,'userAgent',{value:'Android',configurable:true}));
   await page.goto('/records');
   const banner=page.getByRole('complementary',{name:'TDF Mobile'}).filter({has:page.getByRole('button',{name:'Ahora no'})});
   await banner.getByRole('button',{name:'Ahora no'}).click(); await page.reload();
   await expect(page.getByRole('button',{name:'Ahora no'})).toHaveCount(0);
+  expect(errors).toEqual([]);
 });
 
 

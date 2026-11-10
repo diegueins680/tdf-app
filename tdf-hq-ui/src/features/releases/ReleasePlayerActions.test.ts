@@ -1,12 +1,13 @@
 import { jest } from '@jest/globals';
 import type { ArtistReleaseDTO } from '../../api/types';
-import {
+jest.unstable_mockModule('../../config/artistMediaRecoveryRollout', () => ({ isArtistMediaRecoveryEnabled: () => true }));
+const {
   buildReleaseStreamUpdatePayload,
   dispatchReleaseToRadio,
   getReleasePlaybackUrls,
   resolveReleaseAudioUrl,
   resolveReleasePlaybackAction,
-} from './ReleasePlayerActions';
+} = await import('./ReleasePlayerActions');
 
 const FIXTURE_ARTIST_ID = 7;
 const FIXTURE_RELEASE_ID = 42;
@@ -233,4 +234,10 @@ describe('Drive native delivery URL contract', () => {
     const url = 'https://drive.google.com/uc?export=download&id=synthetic&resourcekey=example';
     expect(resolveReleasePlaybackAction(release(), { 42: url })).toEqual({ kind: 'native', url });
   });
+});
+
+it.each(['http://media.example/audio.mp3', '/uploads/authorized.mp3', 'media.example/audio.mp3', '//media.example/audio.mp3'])('authorizes the stored legacy source for browser URL %s', (url) => {
+  const dispatchEvent = jest.fn();
+  dispatchReleaseToRadio(release({ arSpotifyUrl: url }), url, { dispatchEvent });
+  expect((dispatchEvent.mock.calls[0]?.[0] as CustomEvent).detail.track.sources[0].legacySourceId).toBe('42:spotify');
 });

@@ -35,4 +35,18 @@ describe('Records API', () => {
 
     expect(getMock).toHaveBeenCalledWith('/records/feed?locale=es%20EC');
   });
+
+  it('forwards the original abort signal without replacing it', async () => {
+    const controller = new AbortController();
+    getMock.mockResolvedValueOnce({});
+
+    await Records.getFeed('en', controller.signal);
+
+    expect(getMock).toHaveBeenCalledWith('/records/feed?locale=en', { signal: controller.signal });
+    const options = getMock.mock.calls[0]?.[1] as RequestInit;
+    expect(options.signal).toBe(controller.signal);
+    expect(options.signal?.aborted).toBe(false);
+    controller.abort();
+    expect(options.signal?.aborted).toBe(true);
+  });
 });

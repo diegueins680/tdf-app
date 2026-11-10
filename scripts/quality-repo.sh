@@ -21,6 +21,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-google-account-name-verifi
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-privacy-request-ledger.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-requirement-declarations.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-new-specification-surfaces.py"
+PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-prepare-native-session.py"
 PYTHONDONTWRITEBYTECODE=1 python3 "$ROOT/scripts/test-public-route-denial.py"
 node --test "$ROOT/scripts/__tests__/compiled-api-surface.test.mjs"
 node --test "$ROOT/scripts/__tests__/music-track-search-model.test.mjs"

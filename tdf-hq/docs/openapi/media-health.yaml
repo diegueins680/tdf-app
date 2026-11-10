@@ -1,0 +1,83 @@
+paths:
+  /music/legacy/{sourceId}/access:
+    get:
+      operationId: getPublicLegacyMediaAccess
+      security: []
+      parameters:
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Current public source; private files keep their existing access controls
+          headers:
+            Cache-Control: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, mediaType, sourceVersion]
+                properties:
+                  url: { type: string }
+                  mediaType: { type: string }
+                  sourceVersion: { type: string }
+        '404': { description: Missing, hidden artist, removed source or confirmed invalid media }
+  /music/media-health:
+    get:
+      operationId: listOwnMusicMediaHealth
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500, default: 100 } }
+        - name: afterKind
+          in: query
+          required: false
+          description: Last returned source kind; must be paired with afterId
+          schema: { $ref: '#/components/schemas/MusicMediaSourceKind' }
+        - { name: afterId, in: query, required: false, description: Last returned source ID; must be paired with afterKind, schema: { type: string, minLength: 1, maxLength: 128 } }
+      responses:
+        '200':
+          description: One bounded page of current owner/team sources; administrators may traverse all sources. Stable source-kind/ID ordering; pass the last returned identity as cursor when the page fills the requested limit. Every page rechecks current permission. A page sequence is not a database snapshot.
+          headers:
+            Cache-Control: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MusicMediaHealth' }
+        '401': { description: Authentication required }
+        '400': { description: 'Invalid limit, incomplete cursor or unsupported source kind' }
+  /music/media-health/{sourceKind}/{sourceId}/revalidate:
+    post:
+      operationId: revalidateOwnMusicMedia
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: sourceKind, in: path, required: true, schema: { $ref: '#/components/schemas/MusicMediaSourceKind' } }
+        - { name: sourceId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Revalidation queued without clearing an existing invalid verdict
+          headers:
+            Cache-Control: { schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [queued]
+                properties: { queued: { type: boolean } }
+        '401': { description: Authentication required }
+        '404': { description: Source missing or caller cannot manage its artist }
+components:
+  schemas:
+    MusicMediaSourceKind:
+      type: string
+      enum: [asset, legacy]
+    MusicMediaHealth:
+      type: object
+      required: [sourceKind, sourceId, sourceVersion, artistPartyId, status, reason, checkedAt, nextCheckAt]
+      properties:
+        sourceKind: { $ref: '#/components/schemas/MusicMediaSourceKind' }
+        sourceId: { type: string }
+        sourceVersion: { type: string }
+        artistPartyId: { type: integer, format: int64 }
+        status: { type: string, enum: [pending, valid, temporary, invalid] }
+        reason: { type: string, nullable: true }
+        checkedAt: { type: string, format: date-time, nullable: true }
+        nextCheckAt: { type: string, format: date-time }

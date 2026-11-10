@@ -564,6 +564,103 @@ assert.equal(publicRelease.tracks.length, 1);
 const coverAccess = await request(`/music/assets/${coverDisplayAssetId}/access`, { country: 'EC' });
 assert.match(coverAccess.url, /^https:\/\/127\.0\.0\.1:\d+\/music-e2e-derivative\//);
 const streamAccess = await request(`/music/assets/${streamAssetId}/access`, { country: 'EC' });
+// Exercise actual HTTP authentication and owner/team boundaries, not only SQL.
+await request('/music/media-health', { expected: 401 });
+const healthPath = `/music/media-health/asset/${streamAssetId}/revalidate`;
+await request(healthPath, { method: 'POST', expected: 401 });
+await request(healthPath, { token: outsider.token, method: 'POST', expected: 404 });
+assert.equal((await request(healthPath, { token: artist.token, method: 'POST' })).queued, true);
+assert.equal((await request(healthPath, { token: member.token, method: 'POST' })).queued, true);
+const ownerHealth = await request('/music/media-health', { token: artist.token });
+assert.ok(ownerHealth.some((item) => item.sourceId === streamAssetId));
+assert.ok(!(await request('/music/media-health', { token: outsider.token })).some((item) => item.sourceId === streamAssetId));
+assert.ok((await request('/music/media-health', { token: admin.token })).some((item) => item.sourceId === streamAssetId));
+for (const row of ownerHealth) {
+  assert.deepEqual(Object.keys(row).sort(), ['artistPartyId','checkedAt','nextCheckAt','reason','sourceId','sourceKind','sourceVersion','status'].sort());
+}
+// More than the old500-source cap: every identity must be reachable without disclosure after revocation.
+sql(`INSERT INTO artist_release(artist_party_id,title,spotify_url,created_at)
+ SELECT ${artist.partyId},'Health page '||i,'https://media.example/health-page-'||i||'.mp3',NOW()
+ FROM generate_series(1,501) i;`);
+const expectedHealthKeys=sql(`SELECT source_kind||':'||source_id FROM music_media_source
+ WHERE artist_party_id=${artist.partyId} ORDER BY source_kind COLLATE "C",source_id COLLATE "C"`).split('\n');
+assert.ok(expectedHealthKeys.length>500);
+const healthPageUrl=last=>'/music/media-health?'+new URLSearchParams({limit:'100',...(last?{afterKind:last.sourceKind,afterId:last.sourceId}:{})});
+const firstHealthPage=await request(healthPageUrl(),{token:artist.token});
+assert.equal(firstHealthPage.length,100,'Health queries must honor bounded page size');
+const memberHealthPage=await request(healthPageUrl(),{token:member.token});
+assert.equal(memberHealthPage.length,100);
+try {
+ sql(`UPDATE artist_release_team_member SET revoked_at=NOW() WHERE artist_party_id=${artist.partyId} AND member_party_id=${member.partyId}`);
+ const revokedPage=await request(healthPageUrl(memberHealthPage.at(-1)),{token:member.token});
+ assert.ok(revokedPage.every(row=>!expectedHealthKeys.includes(row.sourceKind+':'+row.sourceId)),'Every page rechecks team permission');
+} finally {
+ sql(`UPDATE artist_release_team_member SET revoked_at=NULL WHERE artist_party_id=${artist.partyId} AND member_party_id=${member.partyId}`);
+}
+const pagedHealthKeys=[]; let healthPage=firstHealthPage;
+for(let pages=0;pages<20;pages++) {
+ pagedHealthKeys.push(...healthPage.map(row=>row.sourceKind+':'+row.sourceId));
+ if(healthPage.length<100)break;
+ healthPage=await request(healthPageUrl(healthPage.at(-1)),{token:artist.token});
+}
+assert.deepEqual(pagedHealthKeys,expectedHealthKeys,'All owner identities are reachable once and in stable cursor order');
+assert.equal(new Set(pagedHealthKeys).size,pagedHealthKeys.length);
+for(const query of ['limit=0','limit=501','afterKind=asset','afterId=source','afterKind=unknown&afterId=source','afterKind=asset&afterId=']) {
+ await request('/music/media-health?'+query,{token:artist.token,expected:400});
+}
+console.log('PASS HTTP health pagination: >500 sources, page bounds, stable complete traversal and revoked team isolation');
+const healthClaim = (kind = 'asset', identity = streamAssetId) => {
+  const token = randomUUID();
+  sql(`UPDATE music_media_health SET next_check_at=NOW()+interval '1 day',lease_token=NULL,lease_until=NULL;
+    UPDATE music_media_health SET next_check_at=NOW()-interval '1 second' WHERE source_kind='${kind}' AND source_id='${identity}';
+    SELECT music_media_claim('${token}');`);
+  return token;
+};
+let healthToken = healthClaim();
+sql(`SELECT music_media_observe('${healthToken}','permanent','missing');
+  UPDATE music_media_health SET first_failure_at=NOW()-interval '31 minutes' WHERE source_kind='asset' AND source_id='${streamAssetId}';`);
+healthToken = healthClaim();
+sql(`SELECT music_media_observe('${healthToken}','permanent','missing');`);
+await request(`/music/assets/${streamAssetId}/access`, { country: 'EC', expected: 404 });
+assert.equal((await request(healthPath, { token: artist.token, method: 'POST' })).queued, true);
+await request(`/music/assets/${streamAssetId}/access`, { country: 'EC', expected: 404 });
+healthToken = healthClaim();
+sql(`SELECT music_media_observe('${healthToken}','valid','decodable');`);
+await request(`/music/assets/${streamAssetId}/access`, { country: 'EC' });
+const featuredLegacySource=sql(`SELECT source_id FROM music_media_source WHERE source_kind='legacy' AND artist_party_id=${artist.partyId} ORDER BY source_id LIMIT 1`);
+const featuredLegacyId=Number(featuredLegacySource.split(':')[0]);
+await request('/music/me/featured-track',{token:artist.token,method:'PUT',json:{artistPartyId:artist.partyId,recordingId:null,legacyReleaseId:featuredLegacyId}});
+assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available,true);
+healthToken=healthClaim('legacy',featuredLegacySource);
+sql(`SELECT music_media_observe('${healthToken}','permanent','missing'); UPDATE music_media_health SET first_failure_at=NOW()-interval '31 minutes' WHERE source_kind='legacy' AND source_id='${featuredLegacySource}'`);
+healthToken=healthClaim('legacy',featuredLegacySource);sql(`SELECT music_media_observe('${healthToken}','permanent','missing')`);
+const unavailableFeatured=await request(`/music/artists/${artist.partyId}/featured-track`);
+assert.equal(unavailableFeatured.available,false);assert.equal(unavailableFeatured.legacyReleaseId,null);
+assert.equal((await request('/music/me/featured-track',{token:artist.token})).legacyReleaseId,featuredLegacyId);
+await request('/music/me/featured-track',{token:artist.token,method:'PUT',expected:400,json:{artistPartyId:artist.partyId,recordingId:null,legacyReleaseId:featuredLegacyId}});
+healthToken=healthClaim('legacy',featuredLegacySource);sql(`SELECT music_media_observe('${healthToken}','valid','decodable')`);
+assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available,true);
+console.log('PASS HTTP featured health: invalid reference hidden, owner preference retained, invalid reselection denied and successful validation restored');
+
+const legacyGrantPath = `/music/legacy/${encodeURIComponent(featuredLegacySource)}/access`;
+assert.equal((await request(legacyGrantPath)).sourceVersion,
+  sql(`SELECT source_version FROM music_media_source WHERE source_kind='legacy' AND source_id='${featuredLegacySource}'`));
+const visibilityProfileId = sql(`INSERT INTO directory_profile(subject_party_id,profile_kind,public_name,slug,profile_status,visibility,moderation_status)
+ VALUES (${artist.partyId},'artist','Music visibility fixture','music-visibility-${artist.partyId}','published','public','allowed') RETURNING id`);
+try {
+  assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available, true);
+  sql(`UPDATE directory_profile SET visibility='private' WHERE id='${visibilityProfileId}'`);
+  await request(legacyGrantPath, { expected: 404 });
+  await request(`/music/artists/${artist.partyId}/featured-track`, { expected: 404 });
+  assert.equal((await request('/music/me/featured-track', { token: artist.token })).legacyReleaseId, featuredLegacyId);
+} finally {
+  sql(`UPDATE directory_profile SET visibility='public' WHERE id='${visibilityProfileId}'`);
+}
+assert.equal((await request(`/music/artists/${artist.partyId}/featured-track`)).available, true);
+await request(legacyGrantPath);
+console.log('PASS HTTP artist withdrawal: legacy grant and featured reference denied, owner preference retained, publication restored');
+
+console.log('PASS HTTP media health: session, owner/team/admin isolation, sanitized diagnostics, suppression, queued revalidation and restoration');
 if (realS3) {
   for (const [id, access] of [[coverDisplayAssetId, coverAccess], [streamAssetId, streamAccess]]) {
     await assertStoredAsset(access.url, realAssets.assets.find((asset) => asset.id === id).sha256);

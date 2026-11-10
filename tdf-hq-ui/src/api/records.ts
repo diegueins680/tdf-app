@@ -10,5 +10,8 @@ export type RecordsSessionDTO = components['schemas']['RecordsSession'];
 export type RecordsFeedDTO = components['schemas']['RecordsFeed'];
 
 export const Records = {
-  getFeed: (locale = 'es') => get<RecordsFeedDTO>(`/records/feed?locale=${encodeURIComponent(locale)}`),
+  getFeed: (locale = 'es', signal?: AbortSignal) => {
+    const path = `/records/feed?locale=${encodeURIComponent(locale)}`;
+    return signal ? get<RecordsFeedDTO>(path, { signal }) : get<RecordsFeedDTO>(path);
+  },
 };

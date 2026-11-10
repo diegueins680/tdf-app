@@ -3,7 +3,7 @@
 set -eu
 test "$(id -u)" = 1000
 test "$(uname -s)" = Linux
-for tool in bash curl ffmpeg ffprobe jq shasum psql perl xmllint zip unzip; do
+for tool in bash curl ffmpeg ffprobe jq shasum psql perl xmllint zip unzip python3; do
   command -v "$tool" >/dev/null
 done
 ffmpeg -version | sed -n '1p'
@@ -19,6 +19,10 @@ if /app/tdf-ddex-render > /tmp/renderer.log 2>&1; then
 fi
 grep -q '^Usage: tdf-ddex-render ' /tmp/renderer.log
 echo 'PASS Linux dependencies, non-root user and linked Haskell renderer'
+
+# Import the actual health module without invoking its CLI, DNS or HTTP.
+python3 -I -B -c "import runpy; runpy.run_path('/app/scripts/music-media-health.py', run_name='tdf_music_health_import_check')"
+echo 'PASS final-image media health imports as worker with no network or writable root'
 
 ffmpeg -nostdin -v error -f lavfi \
   -i 'sine=frequency=440:sample_rate=48000:duration=3' \
