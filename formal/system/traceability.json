@@ -26959,6 +26959,86 @@
       "evidence": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx; tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx; tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx; tdf-hq/test/Spec.hs; tdf-hq/test/TDF/ServerSpec.hs"
     },
     {
+      "id": "UX-FORM-ACTIONS-001",
+      "title": "Form commit actions follow the last field and remain visible in open editors",
+      "statement": "Editable web forms place Save, Update, or the equivalent commit action after their last field. Open course registration and CMS editors retain a visible action whose enabled state follows their existing save prerequisites.",
+      "domain": "UX",
+      "authority": "Product owner directive on 2026-11-10, with commit, push, merge and continuation authorized on 2026-11-11.",
+      "source": "User request to place Save or Update after the latest form field; PR #731.",
+      "property": "A user finishing the final field can continue to the commit action without returning to the form header.",
+      "contract": "formal/system/form-actions.md",
+      "actors": [
+        "Signed-in form editor"
+      ],
+      "preconditions": [
+        "The user has opened an editable form under the existing account and permission rules."
+      ],
+      "inputs": [
+        "Form fields, including expanded optional fields",
+        "Save or Update command",
+        "Keyboard focus traversal"
+      ],
+      "state": {
+        "boundary": "Form action layout and existing enabled state",
+        "states": [
+          "unready",
+          "editable",
+          "saving",
+          "saved",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "unready -> editable when existing prerequisites are met",
+        "editable -> saving through the footer action",
+        "saving -> saved or failed through the existing save handler",
+        "failed -> editable for correction or retry"
+      ],
+      "forbiddenTransitions": [
+        "An open course or CMS editor hides its save action because prerequisites are unmet.",
+        "Moving the action enables a save that existing validation, ownership or pending-state restrictions reject."
+      ],
+      "effects": [
+        "The existing persistence handler receives the current form draft."
+      ],
+      "authorization": "Existing account ownership, role, catalog and readiness checks govern writes.",
+      "privacy": "Existing save payloads and visibility rules govern submitted fields.",
+      "concurrency": "Existing pending mutation and account-baseline checks govern concurrent or late saves.",
+      "idempotency": "The layout change uses the existing single action and save handler.",
+      "failure": "Existing errors and current edits remain available for correction.",
+      "recovery": "Existing draft recovery and retry behavior remain available.",
+      "observability": "Existing saving, success and error feedback communicates save state.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
+        "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "719 targeted component tests, TypeScript, changed-file lint and browser geometry, keyboard traversal and synthetic payment/profile submissions at 390px and 1440px.",
+      "evidence": "PR #731 and its six targeted test suites; local browser fixture execution.",
+      "confidence": "The exercised form flows and viewport sizes have local test evidence.",
+      "ambiguity": [
+        "Full production form coverage requires deployed verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component and browser checks cover the edited flows. Hosted final-candidate checks and deployment remain pending."
+      },
+      "critical": false
+    },
+    {
       "id": "SYS-ARCH-BOUNDARY-001",
       "title": "Module dependencies follow declared layers and existing violations can only shrink",
       "statement": "Backend and web modules belong to declared ordered layers and may import only their own or lower layers. No module may exceed the declared size limit. Violations that predate the rule are listed individually; the repository check rejects any unlisted violation, any listed violation that no longer exists, growth of a listed file past its ceiling, and a ceiling left more than the declared headroom above a file that has shrunk.",
@@ -28101,6 +28181,7 @@
     "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx": "08ee7bc678eafa92b7b188ce770e91f90c5f418447c024553101e2555961fda2",
     "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx": "c12556996684edd36b7dc736ae88cbc2153a3b7b47a095078dbcce9d025e3dba",
     "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx": "9d09b7acdcb9bd3c0d83e5115bd01eac89b32b0f2d133e884c0797f4a5ca9b5d",
+    "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx": "c85106ee5581576c6d5d54c5c1b479e91725210b516bd334ad8569c11733e4f0",
     "tdf-hq-ui/src/features/fans/artistAudience.test.ts": "7a159ad02adc92895af13a68e7af525b61b90337d74a2dd3d43aa9c972cec6c2",
     "tdf-hq-ui/src/features/fans/artistAudience.ts": "cfc29f38e81930764756ed66badd00da723f8b62b1ada9a46a04031f34207b95",
     "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts": "782a11f3d42cf616f73e42f872468efabd2b40ee902a5d66a9fc7cb449b98db4",
@@ -28171,13 +28252,16 @@
     "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx": "e3b22e86857e5a41608cb7fbaeb5dad9b91084165b084d4653fcd4d95250ccc9",
     "tdf-hq-ui/src/pages/ChatPage.tsx": "7e1384c2582230276df3cfa8f746381182952b28494c8c60527abc4635c1b4bb",
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
+    "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
+    "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "6831b62ffe21dd05ea9a07edfb1a36785ed1aa7996ebf41ad488ace7a30e5daa",
-    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
+    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
+    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "d48c1b8f09a778fae561feae57637ac5c8793a26add0ad6669fc6b762dbd3616",
@@ -28197,8 +28281,8 @@
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
     "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
-    "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "a31ff6de689d1b9b31fe6b240d709d047d42783ca82b1322ccdf9e0193786b83",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "f6b70b9d6aac26552d0dba732452989b37f14582d0163a3b86615dcacb4a8ed3",
+    "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
     "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx": "edceff3b6fe2336ec1b234dbc421fb13a559fbbc56e1156321bb899dcf25ad39",
     "tdf-hq-ui/src/pages/InstagramConnectPage.tsx": "c1e3000474b70b1cfa4a4e41f521762b406d1faaf2ac42966aff9c9df2b87fcf",
     "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx": "3fe5deb295874a99afc50f97d06742fad56c75a7c9a810f3fef5da66d5f4ccc1",
@@ -28244,8 +28328,8 @@
     "tdf-hq-ui/src/pages/PartiesPage.test.tsx": "5bba8b4c6a78c2e8b0aec62770715249a87ffd05e86c649ef83f11c78abdbac8",
     "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts": "4941936bcbb954b17033773cc792520831a6219dd23009d834fcab18318de87d",
-    "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
-    "tdf-hq-ui/src/pages/PaymentsPage.tsx": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
+    "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": "b015233958f9b3684f93c132236f99a9378f980ea3c66de9ffe3eeb6d71112c5",
+    "tdf-hq-ui/src/pages/PaymentsPage.tsx": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "aec2259be898d0b415f4e1a4f46fb7ecd229abca07b08b5295653c65f145e951",
@@ -39455,6 +39539,10 @@
       {
         "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": [
@@ -39620,6 +39708,10 @@
       },
       {
         "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "tests"
       }
     ],
@@ -42029,6 +42121,10 @@
       {
         "requirement": "COMMUNITY-PROFILE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": [
@@ -42043,11 +42139,19 @@
       {
         "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx": [
       {
         "requirement": "COMMUNITY-PROFILE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "tests"
       }
     ],
@@ -43731,6 +43835,10 @@
       {
         "requirement": "MEDIA-STORAGE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": [
@@ -45199,6 +45307,10 @@
       {
         "requirement": "MEDIA-STORAGE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/uploadQueue.ts": [
@@ -45264,6 +45376,10 @@
     "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": [
       {
         "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "tests"
       }
     ],
@@ -46470,6 +46586,30 @@
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": [
       {
         "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/CmsAdminPage.tsx": [
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx": [
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": [
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": [
+      {
+        "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "tests"
       }
     ],
@@ -59905,6 +60045,10 @@
         {
           "requirement": "COMMUNITY-PROFILE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -59916,6 +60060,10 @@
       "requirements": [
         {
           "requirement": "COMMUNITY-PROFILE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
           "relationship": "implementation"
         }
       ]
@@ -59932,7 +60080,12 @@
       "path": "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx",
       "sha256": "c85106ee5581576c6d5d54c5c1b479e91725210b516bd334ad8569c11733e4f0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-f6a6f1b8864f9350",
@@ -61395,16 +61548,26 @@
     {
       "id": "SURFACE-10a1b2ad11b92606",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
-      "sha256": "e5c17de3ace0ccb44dc20fa2d166a0dadef24a25e5006fd40e65441f8379df17",
+      "sha256": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-9ec3af8f42eacde2",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-      "sha256": "bef2c4c9f0eda00c82706ee017e1c3936bbb9b2f584f5fcd9cbb18df26ce3328",
+      "sha256": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-78d796fee86d9367",
@@ -61557,14 +61720,19 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "879899e9e196b72e8e80b10aab2a8786caeb1c84f586919ee4b1d359e45be581",
+      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
+      "sha256": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61573,6 +61741,10 @@
         },
         {
           "requirement": "MEDIA-STORAGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
           "relationship": "implementation"
         }
       ]
@@ -61971,6 +62143,10 @@
         {
           "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -61993,7 +62169,7 @@
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "a31ff6de689d1b9b31fe6b240d709d047d42783ca82b1322ccdf9e0193786b83",
+      "sha256": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62007,13 +62183,17 @@
         {
           "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "f6b70b9d6aac26552d0dba732452989b37f14582d0163a3b86615dcacb4a8ed3",
+      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62066,6 +62246,10 @@
         },
         {
           "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
           "relationship": "implementation"
         }
       ]
@@ -63038,11 +63222,15 @@
     {
       "id": "SURFACE-6e21d53461f37190",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
-      "sha256": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
+      "sha256": "b015233958f9b3684f93c132236f99a9378f980ea3c66de9ffe3eeb6d71112c5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-STORAGE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
           "relationship": "tests"
         }
       ]
@@ -63050,11 +63238,15 @@
     {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
+      "sha256": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-STORAGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-FORM-ACTIONS-001",
           "relationship": "implementation"
         }
       ]
@@ -81952,7 +82144,6 @@
     "SURFACE-eb7bcfe002ea638f",
     "SURFACE-aafae2b28717530f",
     "SURFACE-2a073b8f5ad461e7",
-    "SURFACE-682703a388e35ed4",
     "SURFACE-7c87c5ab9df1f3ac",
     "SURFACE-f0b1d4c69d524f12",
     "SURFACE-32ac407e77c4e6e8",
@@ -82007,8 +82198,6 @@
     "SURFACE-cb26a654f47a190f",
     "SURFACE-57945788e4512e48",
     "SURFACE-7dcbd0bbd9154a13",
-    "SURFACE-10a1b2ad11b92606",
-    "SURFACE-9ec3af8f42eacde2",
     "SURFACE-d5fb23b5eb7efa5e",
     "SURFACE-39fe3c9e56197ba9",
     "SURFACE-4863f94a96956295",
@@ -82017,7 +82206,6 @@
     "SURFACE-d380d4ada9543610",
     "SURFACE-86468d4e75140c87",
     "SURFACE-ba081a4837547871",
-    "SURFACE-b584e0770511a16a",
     "SURFACE-8bf82e65fbe7190d",
     "SURFACE-857a51643aefc9ce",
     "SURFACE-cc7e604a9ece48cd",
@@ -84195,7 +84383,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8e3afc90a6448897a7ba277e8fca3484e6f9f7910aec2f6e9670cbe90484ba63",
+      "sourceSha256": "629117239f36607cb9bb4270a83b8771ba7646c8daa29344b1d4ef51ceff8679",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -84223,7 +84411,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8e3afc90a6448897a7ba277e8fca3484e6f9f7910aec2f6e9670cbe90484ba63",
+      "sourceSha256": "629117239f36607cb9bb4270a83b8771ba7646c8daa29344b1d4ef51ceff8679",
       "definition": {
         "states": [
           "absent",
@@ -84253,7 +84441,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "8e3afc90a6448897a7ba277e8fca3484e6f9f7910aec2f6e9670cbe90484ba63",
+      "sourceSha256": "629117239f36607cb9bb4270a83b8771ba7646c8daa29344b1d4ef51ceff8679",
       "definition": {
         "export": [
           "queued",
@@ -107218,7 +107406,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 212,
+    "PARTIAL": 213,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
