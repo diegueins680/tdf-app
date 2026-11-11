@@ -3386,7 +3386,7 @@
     {
       "id": "SURFACE-78670b2c15a18002",
       "path": "e2e/web/event-rsvp-sharing.spec.mjs",
-      "sha256": "0242cccb20a773275817de10f62cdf97e57991d7af0081e72374da13116f3f7c",
+      "sha256": "e07304575c03673108657d8fd53c579da2d22d6f951dd65da0d311ed44d3570d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3494,7 +3494,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "a952f782c0b72cd74bbb969bc94fb50c0d5e9e2df8ba919ba0e37ff5f68da373",
+      "sha256": "3fea873cbd7ec5fb2d0a0953e331abde68600eba66d1bafe8ccb9cdf459ca269",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7844,7 +7844,7 @@
     {
       "id": "SURFACE-5869f030ade79029",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
-      "sha256": "eea41ee4da52535f1d128bd2c45e0b6485ea18c4f054e8742e4ef4f9be1ae9e8",
+      "sha256": "205cd4ebacf67f48da978914e77c6ca5c5a0dac6a24b26c557865df5dc587bb1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7856,7 +7856,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "fadf97208a75c130fed562398204e5c3939332258cf74fffb0ca1e6bfb673de7",
+      "sha256": "200dcef2bab6d9918301c6070f282e41c4899d67a6354dd0f4aebf6d47030ad6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9164,13 +9164,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "4b9296a2ad7857c49ea55bf81e19feb1e67b02ce10799036343a29d475e38a3b",
+      "sha256": "51718c7b3043d3ad696e55e29b814a87fa38284cadab3ad2d5461d00d2026d67",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "0e1c03419c3c2d7b9d80f702bd3d7e1710b7307c234ee894b7ad44d36e350f70",
+      "sha256": "2b4bd11ee5514dfacd265619aa7e3b08c72b30606cdb7d4a8b2f4cbaef16f529",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9302,13 +9302,13 @@
     {
       "id": "SURFACE-52ded61d23ac18e9",
       "path": "tdf-hq-ui/src/components/SidebarNav.test.tsx",
-      "sha256": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
+      "sha256": "3ba305e1e63721c38752e2d42d5ec4c9f0348d3655289f6d5d2ad30823c33e48",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-eacab29ef41a9481",
       "path": "tdf-hq-ui/src/components/SidebarNav.tsx",
-      "sha256": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
+      "sha256": "35655e87e05a2f8060fcb4a63aa1c9983882848c4d194944720cb07e90e48a37",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9542,13 +9542,13 @@
     {
       "id": "SURFACE-9b8b12c0260a498e",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
-      "sha256": "6c32a1bcd29848c4e256414e4d982d569e61f2c2c27553de8b7942e3951e2460",
+      "sha256": "525dcf7c57fd9a89f028945287e147139a0adbfcf5d0106fa89fd9190f658f25",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-      "sha256": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
+      "sha256": "acb502b58dd253f237d5555f617e4e0060044e0071296abe509c4e4207e1440a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9584,7 +9584,7 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
+      "sha256": "2c62c20d9eeaa12213e2906ae57e04944b335fd5db98e6386c4ed83027e87d27",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9680,13 +9680,13 @@
     {
       "id": "SURFACE-3b9b0b0c805d8c24",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
-      "sha256": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
+      "sha256": "229c4f4440ef9d8d3331438de59f6e804e0ad866bb49f1276a96c1074e6e3999",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
+      "sha256": "1bf31e2e59cf29123984e2bd3601c3213fe76b0813d0ed839a7c7277baa5e849",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10394,7 +10394,7 @@
     {
       "id": "SURFACE-5f4d9e37c1aca5da",
       "path": "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
-      "sha256": "dc92b0fc164c1daeb17e9c2a928b4d8cac5f385ac126ddb170f3cc89e7d4b873",
+      "sha256": "6f64ffa44c78e3f66719ed5e6462ad187dd6b29abb29c198a435c938afb10343",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10532,13 +10532,13 @@
     {
       "id": "SURFACE-f3ed014e95930721",
       "path": "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
-      "sha256": "6db6ff370e4f3d207168fdd7be610ac28c6e4a6f9f6da7e3930e9154aba2f2e6",
+      "sha256": "c49d0625d45bed53423b5f045994fdf7aa5987e6a964e3d58ac05fb89879258e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-53c8ba4f1cec8bc4",
       "path": "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
-      "sha256": "379838b2ea4d5df4024ff3dde1e95d252a75c92dfc225b37ad6ee54328c8153a",
+      "sha256": "c5a7e0153a29ee54a559b697b539338320cf9812803c5cccab460c0599378094",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10808,7 +10808,7 @@
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "6831b62ffe21dd05ea9a07edfb1a36785ed1aa7996ebf41ad488ace7a30e5daa",
+      "sha256": "bc0a34345baa664cecfa185d1a4051b80772607349f1c61a3866ff8098e4074e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10916,7 +10916,7 @@
     {
       "id": "SURFACE-8f336ec91c101452",
       "path": "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-      "sha256": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
+      "sha256": "edc51fcd5cd15ae3959a12ea047bbf40cd2e755b223caa13ed589ab96aa5fdbf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11306,7 +11306,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "a84f06a4b102f43f604bbaeb42f2386b418e1845196d73cb9929bbe74999597f",
+      "sha256": "50b975bfc4e5a484cfc7014eb376bfe58c82a851e62d403a687a8eab02a64fd0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11564,31 +11564,31 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
+      "sha256": "ce6ad9db314d718c18736bbd51652b4bc666c9d8df7cc028b482e21c877f25af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "20c0190c2ab33e01a2c5b6875815e72c369eb498fcb1f4c811f2abe5b5b73086",
+      "sha256": "cd5515ffdf95e8a621791d1b89648d8de171600c9d6292bce8dfc015f0e4b194",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-841726035def3268",
       "path": "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
-      "sha256": "3c282865ccb25f17391c5240f456968f93e357bd60382f42feefa95d916ae4ef",
+      "sha256": "212b909b23793400907c09696153136b452038d6c8a0f7d48853c01cb09e75f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "b4f3a88682342ff356f94d72aa6d1459ffea4ec2a5058712b84d2bb056d55db0",
+      "sha256": "a2ac886749b8c332947c02dc4314277ef91a7e2c0b7b06991a26930b62609ca0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "f25bbcd45b034cb10ee1db65dd707dba5f02f4a420e23571066f1501ff93c3ee",
+      "sha256": "3b8ee10be42d1d794f75a5ce6e51e0eb5b9495a2e142a4cbf68216b39a25e4dd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
