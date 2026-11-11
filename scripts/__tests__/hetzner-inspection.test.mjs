@@ -47,6 +47,38 @@ test('inspector pins SSH target and suppresses raw failed-command output', t => 
   assert.equal(readFileSync(input, 'utf8'), readFileSync(path.join(root, 'ops/hetzner/inspect-runtime.py'), 'utf8'));
 });
 
+test('inspection failure protocol admits only complete fixed codes and never creates a receipt', t => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'tdf-inspection-failure-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const output = path.join(dir, 'receipt.json');
+  const secret = 'SYNTHETIC_SECRET_MUST_NOT_LEAK';
+  writeFileSync(path.join(dir, 'ssh'), '#!/bin/sh\ncat >/dev/null\nprintf "%s" "$FAILURE" >&2\nprintf "%s" "$PARTIAL"\nexit "$STATUS"\n', { mode: 0o700 });
+  const valid = 'TDF_INSPECTION_REJECTED container-api compose-files\n';
+  const cases = [
+    { failure: valid, status: '1', partial: '', diagnostic: true },
+    { failure: 'TDF_INSPECTION_REJECTED container-api immutable-image\n', status: '1', partial: '', diagnostic: true },
+    { failure: valid, status: '255', partial: '' },
+    { failure: valid, status: '1', partial: secret },
+    { failure: valid + secret, status: '1', partial: '' },
+    { failure: 'TDF_INSPECTION_REJECTED ' + secret + ' compose-files\n', status: '1', partial: '' },
+    { failure: 'TDF_INSPECTION_REJECTED container-api ' + secret + '\n', status: '1', partial: '' },
+    { failure: 'TDF_INSPECTION_REJECTED container-api compose-files\n\n', status: '1', partial: '' },
+    { failure: secret.repeat(20), status: '1', partial: '' },
+  ];
+  for (const value of cases) {
+    const result = spawnSync(process.execPath, [path.join(root, 'scripts/inspect-hetzner-production.mjs'),
+      '--identity-file', path.join(dir, 'synthetic-key'), '--output', output], {
+      encoding: 'utf8', env: { PATH: `${dir}:${process.env.PATH}`, FAILURE: value.failure,
+        PARTIAL: value.partial, STATUS: value.status },
+    });
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(existsSync(output), false);
+    assert.doesNotMatch(result.stderr, new RegExp(secret));
+    assert.equal(result.stderr.includes('inspection rejected at'), Boolean(value.diagnostic), result.stderr);
+  }
+});
+
 for (const changeDuringRead of [false, true]) {
   test(`inspection ${changeDuringRead ? 'rejects changing' : 'records stable'} source provenance`, t => {
     const dir = mkdtempSync(path.join(tmpdir(), 'tdf-inspection-provenance-'));

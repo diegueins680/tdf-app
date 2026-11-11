@@ -5,6 +5,42 @@ import re
 import subprocess
 import sys
 import urllib.request
+from contextlib import contextmanager
+
+# Fixed vocabulary only: never interpolate runtime values or exception messages
+# into a failed observation. A rejection is not a runtime receipt.
+FAILURE_STAGES = {'container-api', 'container-db', 'container-edge',
+                  'database-storage', 'database-inventory', 'database-feature-flags',
+                  'public-backend', 'database-summary', 'inspection'}
+FAILURE_CHECKS = {'data-boundary', 'operation-failed', 'command-failed',
+                  'compose-project', 'compose-service', 'compose-directory',
+                  'compose-files', 'container-id', 'image-id', 'immutable-image',
+                  'networks', 'database-volume'}
+
+
+class InspectionRejected(ValueError):
+    def __init__(self, check='data-boundary', stage='inspection'):
+        self.check = check if check in FAILURE_CHECKS else 'data-boundary'
+        self.stage = stage if stage in FAILURE_STAGES else 'inspection'
+        super().__init__('Unexpected production inspection boundary')
+
+
+@contextmanager
+def boundary(stage):
+    try:
+        yield
+    except Exception as error:
+        check = error.check if isinstance(error, InspectionRejected) else 'operation-failed'
+        raise InspectionRejected(check, stage) from None
+
+
+def failure_marker(error):
+    if not isinstance(error, InspectionRejected):
+        error = InspectionRejected('operation-failed')
+    # Validate again rather than trusting mutable exception attributes.
+    stage = error.stage if error.stage in FAILURE_STAGES else 'inspection'
+    check = error.check if error.check in FAILURE_CHECKS else 'data-boundary'
+    return 'TDF_INSPECTION_REJECTED ' + stage + ' ' + check
 
 DOCKER = ['env', '-u', 'DOCKER_HOST', '-u', 'DOCKER_CONTEXT', '-u', 'DOCKER_TLS_VERIFY',
           '-u', 'DOCKER_CERT_PATH', 'docker', '--host', 'unix:///var/run/docker.sock']
@@ -45,16 +81,16 @@ BOOLEAN_KEYS = CORS_BOOLEAN_KEYS | {
 }
 
 
-def require(condition):
+def require(condition, check='data-boundary'):
     if not condition:
-        raise ValueError('Unexpected production inspection boundary')
+        raise InspectionRejected(check)
 
 
 def capture(command, input=None):
     result = subprocess.run(command, input=input, text=True, capture_output=True, timeout=45,
                             env=COMMAND_ENV)
     # Never forward process stderr: Docker/psql errors can include configuration.
-    require(result.returncode == 0 and len(result.stdout) <= 4 * 1024 * 1024)
+    require(result.returncode == 0 and len(result.stdout) <= 4 * 1024 * 1024, 'command-failed')
     return result.stdout
 
 
@@ -74,26 +110,26 @@ def boolean(value, *, cors=False):
 
 def summarize_container(service, container):
     labels = container['Config']['Labels']
-    require(labels.get('com.docker.compose.project') == PROJECT)
-    require(labels.get('com.docker.compose.service') == service)
-    require(labels.get('com.docker.compose.project.working_dir') == DIRECTORY)
-    require(labels.get('com.docker.compose.project.config_files') == DIRECTORY + '/compose.yaml')
-    require(re.fullmatch(r'[a-f0-9]{64}', container['Id']))
-    require(re.fullmatch(r'sha256:[a-f0-9]{64}', container['Image']))
+    require(labels.get('com.docker.compose.project') == PROJECT, 'compose-project')
+    require(labels.get('com.docker.compose.service') == service, 'compose-service')
+    require(labels.get('com.docker.compose.project.working_dir') == DIRECTORY, 'compose-directory')
+    require(labels.get('com.docker.compose.project.config_files') == DIRECTORY + '/compose.yaml', 'compose-files')
+    require(re.fullmatch(r'[a-f0-9]{64}', container['Id']), 'container-id')
+    require(re.fullmatch(r'sha256:[a-f0-9]{64}', container['Image']), 'image-id')
     image = container['Config']['Image']
-    require(isinstance(image, str) and re.fullmatch(r'[a-zA-Z0-9./_-]+@sha256:[a-f0-9]{64}', image))
+    require(isinstance(image, str) and re.fullmatch(r'[a-zA-Z0-9./_-]+@sha256:[a-f0-9]{64}', image), 'immutable-image')
     result = {'containerId': container['Id'], 'imageId': container['Image'], 'image': image,
               'running': container['State']['Running'],
               'health': token(container['State'].get('Health', {}).get('Status', 'not-configured'))}
     require(isinstance(result['running'], bool))
     networks = container['NetworkSettings']['Networks']
-    require(set(networks) <= {PROJECT + '_database', PROJECT + '_outbound'})
+    require(set(networks) <= {PROJECT + '_database', PROJECT + '_outbound'}, 'networks')
     result['networks'] = sorted(networks)
     if service == 'db':
-        require(set(networks) == {PROJECT + '_database'})
+        require(set(networks) == {PROJECT + '_database'}, 'networks')
         require(not any(container['NetworkSettings'].get('Ports', {}).values()))
         mounts = [m for m in container['Mounts'] if m['Destination'] == '/var/lib/postgresql/data']
-        require(len(mounts) == 1 and mounts[0]['Type'] == 'volume' and mounts[0]['Name'] == VOLUME)
+        require(len(mounts) == 1 and mounts[0]['Type'] == 'volume' and mounts[0]['Name'] == VOLUME, 'database-volume')
         require(not any(m['Destination'].startswith(DATA_DIRECTORY + '/') for m in container['Mounts']))
         settings = {}
         for entry in container['Config']['Env']:
@@ -103,7 +139,7 @@ def summarize_container(service, container):
         require(settings.get('PGDATA') == DATA_DIRECTORY)
         result['volume'] = VOLUME
     if service == 'api':
-        require(set(networks) == {PROJECT + '_database', PROJECT + '_outbound'})
+        require(set(networks) == {PROJECT + '_database', PROJECT + '_outbound'}, 'networks')
         upload_mounts = [mount for mount in container['Mounts'] if mount['Destination'] == '/app/uploads']
         result['privateUploads'] = {
             'target': '/app/uploads',
@@ -251,23 +287,30 @@ def optional_event_flags(container_id):
 def inspect():
     containers = {}
     for service in ('api', 'db', 'edge'):
-        ids = capture(DOCKER + ['ps', '--all', '--quiet', '--no-trunc',
-                       '--filter', 'label=com.docker.compose.project=' + PROJECT,
-                       '--filter', 'label=com.docker.compose.service=' + service]).split()
-        require(len(ids) == 1 and re.fullmatch(r'[a-f0-9]{64}', ids[0]))
-        values = json.loads(capture(DOCKER + ['inspect', ids[0]]))
-        require(len(values) == 1)
-        containers[service] = summarize_container(service, values[0])
-    verify_storage(containers['db']['containerId'])
-    data = json.loads(capture(database_command(containers['db']['containerId']), input=SQL))
-    data['eventOperationFlags'] = optional_event_flags(containers['db']['containerId'])
-    with urllib.request.urlopen('https://api.tdfrecords.net/version', timeout=15) as response:
-        require(response.status == 200)
-        public = json.loads(response.read(4096))
-    require(public['name'] == 'tdf-hq' and re.fullmatch(r'[a-f0-9]{40}', public['commit']))
-    require(re.fullmatch(r'[0-9]+(?:\.[0-9]+){2,3}', public['version']))
+        with boundary('container-' + service):
+            ids = capture(DOCKER + ['ps', '--all', '--quiet', '--no-trunc',
+                           '--filter', 'label=com.docker.compose.project=' + PROJECT,
+                           '--filter', 'label=com.docker.compose.service=' + service]).split()
+            require(len(ids) == 1 and re.fullmatch(r'[a-f0-9]{64}', ids[0]), 'container-id')
+            values = json.loads(capture(DOCKER + ['inspect', ids[0]]))
+            require(len(values) == 1)
+            containers[service] = summarize_container(service, values[0])
+    with boundary('database-storage'):
+        verify_storage(containers['db']['containerId'])
+    with boundary('database-inventory'):
+        data = json.loads(capture(database_command(containers['db']['containerId']), input=SQL))
+    with boundary('database-feature-flags'):
+        data['eventOperationFlags'] = optional_event_flags(containers['db']['containerId'])
+    with boundary('public-backend'):
+        with urllib.request.urlopen('https://api.tdfrecords.net/version', timeout=15) as response:
+            require(response.status == 200)
+            public = json.loads(response.read(4096))
+        require(public['name'] == 'tdf-hq' and re.fullmatch(r'[a-f0-9]{40}', public['commit']))
+        require(re.fullmatch(r'[0-9]+(?:\.[0-9]+){2,3}', public['version']))
+    with boundary('database-summary'):
+        database = summarize_database(data)
     return {'schemaVersion': 1, 'project': PROJECT, 'directory': DIRECTORY,
-            'containers': containers, 'database': summarize_database(data),
+            'containers': containers, 'database': database,
             'publicBackend': {k: public[k] for k in ('name', 'commit', 'version')},
             'limitations': ['Read-only observation, not deployment eligibility or approval.',
                            'Observations are sequential, not an atomic fleet snapshot.',
@@ -279,7 +322,7 @@ def inspect():
 if __name__ == '__main__':
     try:
         print(json.dumps(inspect(), sort_keys=True))
-    except Exception:
+    except Exception as error:
         # No raw subprocess errors, env, credentials, SQL data or request payloads.
-        print('Hetzner inspection failed a read-only identity or data boundary; no runtime output emitted.', file=sys.stderr)
+        print(failure_marker(error), file=sys.stderr)
         sys.exit(1)
