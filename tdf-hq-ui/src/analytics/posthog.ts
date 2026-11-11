@@ -224,6 +224,9 @@ export function getAnalyticsClient(): AnalyticsClient {
     advanced_disable_flags: true,
     before_send: (event) => {
       if (event === null) return null;
+      // Event-team bearer links and private CRM never emit analytics.
+      if (window.location.pathname === "/event-team/accept"
+        || /^\/social\/eventos\/[^/]+\/crm\/?$/.test(window.location.pathname)) return null;
       const projectToken = event.properties?.['token'];
       event.properties = sanitizeAnalyticsProperties(event.properties ?? {});
       // The SDK attaches initial URLs/referrers outside event.properties, and

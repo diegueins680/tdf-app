@@ -1,0 +1,90 @@
+{
+  "scope": "Synthetic isolated local validation only. No real contacts, invitations, payments, publication or provider calls.",
+  "integratedMain": "d0b10b60d93cb379ac57b204e1d4137cd22dc5ba",
+  "postgresql": {
+    "checks": 44,
+    "migrationApplyReplay": true,
+    "emptyRollback": true,
+    "populatedRollbackRefuses": true,
+    "concurrentAcceptances": true,
+    "withdrawalReadCommittedAndRepeatableReadBarriers": true
+  },
+  "httpAndBrowser": {
+    "checks": 50,
+    "actualAuthenticatedServer": true,
+    "actualCanonicalCheckout": true,
+    "cashAndBankReconciliation": true,
+    "refundAndRetry": true,
+    "lastTicketConcurrentOneWinner": true,
+    "mobileViewport": "390x844",
+    "desktopViewport": "1440x1000",
+    "horizontalOverflow": false,
+    "externalProviderCalls": 0
+  },
+  "webUnit": {
+    "passed": 51,
+    "suites": 4
+  },
+  "backendHspec": {
+    "examples": 4304,
+    "failures": 0,
+    "pending": 23
+  },
+  "boundedPolicyModel": {
+    "tests": 9,
+    "unsafeControlsDetected": 8,
+    "universalOrRefinementProof": false
+  },
+  "migration": {
+    "introducedBy": "6c547cf046e4b194dd950084034dac44d60591ac",
+    "sha256": "9300936cc499037dcc85eda5e262bc5bd2b9ea65f1cb3ea35c2c598f87924145",
+    "preservedMainPrefixEntries": 246,
+    "defaultOff": true
+  },
+  "restrictions": [
+    "Joint ticket/outbound/return checkout not implemented or enabled; simultaneous bundle attempts are rejected.",
+    "A real SMTP delivery and registration with the intended recipient remain unverified.",
+    "Private pilot needs canonical event/organizer identity and confirmed transport capacities.",
+    "Device validation uses an emulated mobile browser, not physical-device/native app qualification.",
+    "Hosted CI and independent review remain separate from these local results."
+  ],
+  "implementationHashes": {
+    "scripts/__tests__/event-crm-browser.mjs": "5cb78bdb020d334b136dff44cd2c93f461798ab8a4b8094e6fec628a8cddc8f6",
+    "scripts/__tests__/event-crm-http.mjs": "e547f6b5c9501a4b8aee95a699447769d399403863f18713614a1f2c2d04cef3",
+    "scripts/__tests__/event-crm-model.test.mjs": "25cdfa9b65cbbfe2b6ce0e3159349fd5e14c612b440f3a9183ffc11908fd085a",
+    "scripts/test-event-crm-http.py": "df051826cf5350edd1699eb8233cdcb21bb7961b58b706bd54856b8e0a040bf0",
+    "scripts/test-event-crm.py": "30ba94b2eed489dbba992c604c5edc63a4682ffdb23a534ee80999110840cf21",
+    "tdf-hq-ui/src/__tests__/analytics.test.ts": "b50d9dbaee5f25d5687adcb943f4044980638bc8cef5a9a082ae4b9659ed46d4",
+    "tdf-hq-ui/src/analytics/posthog.ts": "298d3e0f88e58e97831fca797e6c9cef218b5f63722d6dbf4f541dff6e6f5815",
+    "tdf-hq-ui/src/api/eventCrm.test.ts": "34cc55248bcb9e88a01be335a481b6dc542e471baf238fdb7391fa9b2744d0fe",
+    "tdf-hq-ui/src/api/eventCrm.ts": "04c6e1c6d31e9ac7d16107d1c0c80322c2b068fac71d9dfe15d35a33a7025fc7",
+    "tdf-hq-ui/src/api/generated/types.ts": "26a52296cbfe58283b1328b531e233d144f4f1437d26849157a77addfeae09e4",
+    "tdf-hq-ui/src/pages/EventCrmPage.tsx": "f75d670657e1bd64cd05e2252e9d6f5019832d1a26c781fa6dccf3677406b5ba",
+    "tdf-hq-ui/src/pages/EventTeamInvitationPage.test.tsx": "2214bb53774781baa3c54d9ac34ae2f15d55ae117914d42c390af34f4d527d73",
+    "tdf-hq-ui/src/pages/EventTeamInvitationPage.tsx": "8a624903f88a822d96fc0d8e234b3912f737081ac90475f3983c88b44f3d742f",
+    "tdf-hq-ui/src/pages/LoginPage.tsx": "a0f05116ab0c11952669b0ba9f28577a5a18802ae428148d298eeffe23bf197a",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "5d3b3948465603419f920fa67ef502e9fbdb83222674be5b540eabe85381f3db",
+    "tdf-hq-ui/src/routes/protectedRoutes.tsx": "16bd73ab34958e9e77eec3a5e56b16f93dfd1797580b78613e8e10f9de461fc1",
+    "tdf-hq-ui/src/routes/publicRoutes.tsx": "b84317064a7f119962bc3b393c0b3714365c51685521012beda23c60405bcce5",
+    "tdf-hq-ui/src/utils/videoSource.ts": "a44070a5f50b51e9aeca671885711a162e607e209b482216b4132f428220ccd2",
+    "tdf-hq/docs/openapi/api.yaml": "a51ce7dc9a53d834f260a838216092a122d9085e5e11a579f1c3263504f0962c",
+    "tdf-hq/docs/openapi/event-crm.yaml": "12c60f690f98c2eaeb40bb70b366f50cee2aede8356b11ff742722020dfd62d8",
+    "tdf-hq/sql/2026-11-07_event_crm.sql": "9300936cc499037dcc85eda5e262bc5bd2b9ea65f1cb3ea35c2c598f87924145",
+    "tdf-hq/sql/2026-11-07_event_crm_rollback.sql": "3f88739c2b0f52226cafcebe8cd99352eb329b85f54e744d784ff670bf0f9a57",
+    "tdf-hq/src/TDF/API.hs": "2ad24d910e7e66f7581b904ba1492f0d12f3e56606717333de1f97787a20a797",
+    "tdf-hq/src/TDF/EventOperations/CrmAPI.hs": "96ae7ff69602a1b45faf186ea001217ab2da8591b099919afd00560a398e0e5a",
+    "tdf-hq/src/TDF/EventOperations/CrmPayments.hs": "fed1944cd3f442974dd9690cdbeb3390412f791850c1121b422436375476636b",
+    "tdf-hq/src/TDF/EventOperations/CrmServer.hs": "a95c86fa74604bf96c667e7ce935b550a7188b83bfbcff63d658e9ca88235417",
+    "tdf-hq/src/TDF/Server.hs": "0fabf8ad2f2bda8d2f0ae3b67564a2e9b6e915f7a7bf6a2a295e7dcd20462230",
+    "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "d976841ce9c820a403d9b6f11bc20e1c22c9c7a0f52f7866a2d5ec2e15535ee7",
+    "tdf-hq/src/TDF/Ticketing/Inventory.hs": "778135f59c2a76f2568eef95b9a93cc4d6810b78250cb563c396c7b51d7a4adf",
+    "tdf-hq/test/EventCrmHttpMain.hs": "5a61789fb9252eb2c4da4f3902a867bddf0f2cb6abafdb4365bd8b1d7c8baec7",
+    "tdf-hq/test/integration/event_crm_fixture.sql": "11149ce4e6f6a6f5eab2dab60b982623d4df728611de2866e8ad72782fe94280",
+    "tdf-hq/test/integration/event_crm_http_fixture.sql": "82350398a7d509b8d09eebaf52461727d5be7f2299a82087669fa04e4b3c23a6"
+  },
+  "mobileContract": {
+    "commit": "c22a80d8c31e2a066ec1ee9f6e413b806ba0fd97",
+    "generatedClientByteIdenticalToWeb": true,
+    "nativeBehaviorChanged": false
+  }
+}

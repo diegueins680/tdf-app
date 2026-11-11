@@ -2581,6 +2581,89 @@
       }
     },
     {
+      "id": "social.event.team-invitation",
+      "parentId": "social.event.detail",
+      "webRoute": "/event-team/accept",
+      "routeType": "technical",
+      "classification": "technical-route",
+      "label": {
+        "es": "Invitación privada al evento",
+        "en": "Private event invitation"
+      },
+      "synonyms": {
+        "es": [],
+        "en": []
+      },
+      "keywords": ["event", "team", "invitation"],
+      "description": {
+        "es": "Permite abrir una invitación privada y aceptarla desde la cuenta destinataria.",
+        "en": "Opens a private invitation that only the invited account can accept."
+      },
+      "icon": "event",
+      "breadcrumb": [
+        "social",
+        "social.events",
+        "social.event.detail"
+      ],
+      "requiredAuth": "optional",
+      "recordScope": "verified-event-invitation-recipient",
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "accessRequestEligible": false,
+      "technical": true,
+      "searchable": false,
+      "safeLockedDisclosure": false,
+      "mobilePresentation": {
+        "kind": "security-concealed",
+        "destination": null,
+        "documentedException": "The private acceptance flow opens directly in the web client."
+      }
+    },
+    {
+      "id": "social.event.crm",
+      "parentId": "social.event.detail",
+      "webRoute": "/social/eventos/:eventId/crm",
+      "routeType": "contextual",
+      "classification": "record-detail-contextual-action",
+      "label": {
+        "es": "CRM del evento",
+        "en": "Event CRM"
+      },
+      "synonyms": {
+        "es": [],
+        "en": []
+      },
+      "keywords": ["event", "crm"],
+      "description": {
+        "es": "Gestiona el seguimiento y las ventas según los permisos de este evento.",
+        "en": "Tracks follow-ups and sales within the permissions granted for this event."
+      },
+      "icon": "event",
+      "breadcrumb": [
+        "social",
+        "social.events",
+        "social.event.detail"
+      ],
+      "recordScope": "active-event-crm-membership-or-owner",
+      "permissions": {
+        "view": {
+          "recordScope": "active-event-crm-membership-or-owner"
+        }
+      },
+      "favoriteEligible": false,
+      "pinEligible": false,
+      "recentBehavior": "none",
+      "accessRequestEligible": false,
+      "searchable": false,
+      "safeLockedDisclosure": false,
+      "mobilePresentation": {
+        "kind": "security-concealed",
+        "destination": null,
+        "documentedException": "The event-scoped CRM management interface is web-only."
+      }
+    },
+    {
       "id": "social.event.logistics",
       "parentId": "social.event.detail",
       "webRoute": "/social/eventos/:eventId/logistica",

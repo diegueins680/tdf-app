@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582"
+    "tdf-hq/tdf-hq.cabal": "5e54b3bcb27abdc94c47842d813020bc2cc5a971ba9709e3c4ee173a2221c27f"
   },
   "obligations": [
     {
@@ -557,6 +557,24 @@
         "notGitHubApproval": true
       },
       "qualification": "Fresh source-bound3authorization+4recovery obligations, SMT replay and16verifier controls required. No full Apple/JWKS/provider/nonce/Google/privacy or whole-handler refinement proof; inherited known-key freshness limitation remains. Current combined whole runtime/HTTP/PG/paired-Mobile-main integration still needs fresh mandatory hosted qualification."
+    },
+    {
+      "reviewedAgainst": "6b1a261ed7f5be898177e9dbd1caf2d7109edb71",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "e4afce0bef5ab7d7c743bb893bab20bfc91841e4de5cf6a53b2273d86df1e0ca",
+      "currentSha256": "7ca9d1a3868d8d727563ab8365f65991982d5a65c649724fa4168427202963e6",
+      "change": "Register only existing Source83f EventOperations.CrmAPI, CrmPayments and CrmServer exposed modules during normal protectedMain9df composition.",
+      "semanticReview": "Independent Root exact-context review reverses only those three literal registrations to reproduce whole protected Main Cabal. All other controlled Auth/Recovery sources, dependency lists, resolver/lock, language flags, primitive predicates, recovery expressions and claims are byte-exact Main. New modules are byte-exact existing Source83f. All previous context histories and the actual pre-review UNPROVEN failure are retained.",
+      "qualification": "Build-context correspondence only. Does not prove CRM authorization, financial lifecycle, HTTP/SQL/concurrency or whole-system refinement; fresh conditional executions and controls, hosted checks and current independent review remain required."
+    },
+    {
+      "reviewedAgainst": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
+      "currentSha256": "5e54b3bcb27abdc94c47842d813020bc2cc5a971ba9709e3c4ee173a2221c27f",
+      "change": "Register the three existing Event CRM library modules.",
+      "semanticReview": "Removing only the CrmAPI, CrmPayments and CrmServer exposed-module declarations reproduces the protected main Cabal file byte for byte. All other reviewed sources have the protected main hashes.",
+      "qualification": "Build-context correspondence. Conditional solver checks must be rerun for this composition."
     }
   ]
 }

@@ -84,6 +84,7 @@ import           TDF.API.Directory (DirectoryPublicAPI, DirectoryProtectedAPI)
 import           TDF.API.Reviews (ReviewsPublicAPI, ReviewsProtectedAPI)
 import           TDF.Operations.API (OperationsAPI)
 import           TDF.EventOperations.API (EventOperationsAPI)
+import           TDF.EventOperations.CrmAPI (EventCrmAPI)
 
 -- Compiler-derived API syntax, not a claim about handler authorization or JSON
 -- instance behavior. No custom parser of Haskell source or catch-all route rule.
@@ -657,6 +658,7 @@ type ProtectedAPI =
   :<|> MerchProtectedAPI
   :<|> OperationsAPI
   :<|> EventOperationsAPI
+  :<|> EventCrmAPI
   :<|> CommerceOperationsAPI
   :<|> ReviewsProtectedAPI
   :<|> MusicReleaseProtectedAPI

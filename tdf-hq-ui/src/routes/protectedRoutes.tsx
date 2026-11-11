@@ -85,6 +85,7 @@ const ServiceTypesPage = lazy(() => import('../pages/ServiceTypesPage'));
 const SocialEventsPage = lazy(() => import('../pages/SocialEventsPage'));
 const CollaborativeEventCreatorPage = lazy(() => import('../pages/CollaborativeEventCreatorPage'));
 const EventLogisticsPage = lazy(() => import('../pages/EventLogisticsPage'));
+const EventCrmPage = lazy(() => import('../pages/EventCrmPage'));
 const RecentlyDiscoveredEventsPage = lazy(() => import('../pages/RecentlyDiscoveredEventsPage'));
 const SocialInboxPage = lazy(() => import('../pages/SocialInboxPage'));
 const SocialPageView = lazy(() => import('../pages/SocialPage'));
@@ -140,6 +141,7 @@ export function renderProtectedRoutes() {
         <Route path="/social/eventos" element={<SocialEventsPage />} />
         <Route path="/social/eventos/nuevo" element={<CollaborativeEventCreatorPage />} />
         <Route path="/social/eventos/:eventId/logistica" element={<EventLogisticsPage />} />
+        <Route path="/social/eventos/:eventId/crm" element={<EventCrmPage />} />
         <Route path="/social/eventos-descubiertos" element={<RecentlyDiscoveredEventsPage />} />
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/docs" element={<DocsPage />} />

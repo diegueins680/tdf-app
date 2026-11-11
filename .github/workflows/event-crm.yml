@@ -1,0 +1,45 @@
+name: Event CRM isolated PostgreSQL
+on:
+  pull_request:
+    paths:
+      - 'tdf-hq/**'
+      - 'tdf-hq-ui/src/**'
+      - 'scripts/*event-crm*'
+      - 'scripts/__tests__/*event-crm*'
+      - 'formal/event-operations/event-crm-model.mjs'
+      - '.github/workflows/event-crm.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  postgres-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Bounded policy and unsafe controls
+        run: node --test scripts/__tests__/event-crm-model.test.mjs
+      - name: Real PostgreSQL migration, invitation, import and lock-barrier tests
+        env:
+          TDF_EVENT_CRM_TEST_USER: postgres
+          TDF_EVENT_CRM_TEST_PASSWORD: postgres
+          TDF_EVENT_CRM_TEST_REPORT: ${{ runner.temp }}/event-crm-postgres.json
+        run: python3 scripts/test-event-crm.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: event-crm-synthetic-postgres
+          path: ${{ runner.temp }}/event-crm-postgres.json
+          retention-days: 7

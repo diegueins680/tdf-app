@@ -169,7 +169,7 @@ const loadGoogleScript = () => {
   return googleScriptPromise;
 };
 
-export default function LoginPage() {
+export default function LoginPage({ onAuthenticated }: { onAuthenticated?: () => void } = {}) {
   const { t, i18n } = useTranslation();
   const servicePreparingMessage = t('authEntry.servicePreparing');
   const [identifier, setIdentifier] = useState('');
@@ -458,7 +458,8 @@ export default function LoginPage() {
         );
       }
       captureGrowthEvent(analytics, 'login_completed', { route: '/login', method: 'password' });
-      navigate(targetPath, { replace: true });
+      if (onAuthenticated) onAuthenticated();
+      else navigate(targetPath, { replace: true });
     } catch (error) {
       captureGrowthEvent(analytics, 'login_failed', { route: '/login', method: 'password' });
       setFormError(authErrorMessage(error, t, 'authEntry.loginError'));
@@ -588,7 +589,8 @@ export default function LoginPage() {
         });
         setSignupDialogOpen(false);
         setSignupFeedback(null);
-        navigate(googleTargetPath, { replace: true, ...(googleCreatedAccount ? { state: { mobileInvitation: true } } : {}) });
+        if (onAuthenticated) onAuthenticated();
+        else navigate(googleTargetPath, { replace: true, ...(googleCreatedAccount ? { state: { mobileInvitation: true } } : {}) });
       } catch (err) {
         setGoogleCreating(false);
         if (!creatingAccount && isGoogleSignupConsentRequiredError(err)) {
@@ -613,7 +615,7 @@ export default function LoginPage() {
         setGoogleStatus(null);
       }
     },
-    [analytics, claimArtistId, googleLoginMutation, login, navigate, redirectPath, rememberDevice, requestedIntent, resolveAuthenticatedSession, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, t],
+    [analytics, claimArtistId, googleLoginMutation, login, navigate, onAuthenticated, redirectPath, rememberDevice, requestedIntent, resolveAuthenticatedSession, servicePreparing, servicePreparingMessage, signupDialogOpen, signupIntent, t],
   );
 
   useEffect(() => {
@@ -855,7 +857,8 @@ export default function LoginPage() {
         intent: signupIntent ?? 'general',
         destination: targetPath.split('?')[0],
       });
-      navigate(targetPath, { replace: true, state: { mobileInvitation: true } });
+      if (onAuthenticated) onAuthenticated();
+      else navigate(targetPath, { replace: true, state: { mobileInvitation: true } });
     } catch (err) {
       captureGrowthEvent(analytics, 'signup_failed', { route: '/login', method: 'password', intent: signupIntent ?? 'general' });
       setSignupFeedback({
@@ -934,6 +937,7 @@ export default function LoginPage() {
   }
 
   if (session) {
+    if (onAuthenticated) return null;
     const landing = resolvePostAuthPath(requestedIntent, session.roles ?? [], session.modules, redirectPath);
     return <Navigate to={landing} replace />;
   }

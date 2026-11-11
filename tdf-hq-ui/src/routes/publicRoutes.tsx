@@ -32,6 +32,7 @@ const InstagramCallbackPage = lazy(() => import('../pages/InstagramCallbackPage'
 const InventoryScanPage = lazy(() => import('../pages/InventoryScanPage'));
 const LiveSessionPublicPage = lazy(() => import('../pages/LiveSessionPublicPage'));
 const LoginPage = lazy(() => import('../pages/LoginPage'));
+const EventTeamInvitationPage = lazy(() => import('../pages/EventTeamInvitationPage'));
 const MarketplaceOrderTrackingPage = lazy(() => import('../pages/MarketplaceOrderTrackingPage'));
 const MarketplacePage = lazy(() => import('../pages/MarketplacePage'));
 const MerchReputationPage = lazy(() => import('../pages/MerchReputationPage'));
@@ -97,6 +98,7 @@ export function renderPublicRoutes() {
   return (
     <>
       <Route path="/" element={<RootLandingRedirect />} />
+      <Route path="/event-team/accept" element={<EventTeamInvitationPage />} />
       <Route path="/instagram" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/ig" element={<Navigate to="/tdf?utm_source=instagram&utm_medium=social&utm_campaign=instagram_profile" replace />} />
       <Route path="/tdf" element={<PublicBranding><TdfPlatformPage /></PublicBranding>} />

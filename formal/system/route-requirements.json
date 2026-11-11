@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 517,
+    "total": 521,
     "named": 435,
     "path-named": 0,
-    "reviewed": 82,
+    "reviewed": 86,
     "unspecified": 0,
-    "covered": 517
+    "covered": 521
   },
   "routes": [
     {
@@ -1271,6 +1271,42 @@
       "requirements": [
         "MEDIA-STORAGE-WRITES-001"
       ]
+    },
+    {
+      "method": "POST",
+      "path": "/event-crm/email/confirm",
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-CRM-001"
+      ],
+      "note": "Confirm ownership of the invited email with the challenge bound to the current account."
+    },
+    {
+      "method": "POST",
+      "path": "/event-crm/email/request",
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-CRM-001"
+      ],
+      "note": "Request the email ownership challenge required to redeem an address-bound invitation."
+    },
+    {
+      "method": "POST",
+      "path": "/event-crm/events/{eventId}/commands",
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-CRM-001"
+      ],
+      "note": "Execute event-scoped CRM writes subject to current membership and the command permission."
+    },
+    {
+      "method": "POST",
+      "path": "/event-crm/invitations",
+      "basis": "reviewed",
+      "requirements": [
+        "EVT-CRM-001"
+      ],
+      "note": "Redeem a one-use event invitation after checking the intended account or verified email."
     },
     {
       "method": "POST",

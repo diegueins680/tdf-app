@@ -48241,6 +48241,708 @@
       },
       {
         "ordinal": 815,
+        "path": "/event-crm/events/{eventId}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "stage",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          },
+          {
+            "in": "query",
+            "name": "responsibleId",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "overdue",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "GHC.Types",
+              "name": "Bool"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [
+                {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [],
+                          "module": "Servant.API.Modifiers",
+                          "name": "Optional"
+                        },
+                        {
+                          "args": [
+                            {
+                              "args": [],
+                              "module": "Servant.API.Modifiers",
+                              "name": "Strict"
+                            },
+                            {
+                              "args": [],
+                              "module": "GHC.Types",
+                              "name": "'[]"
+                            }
+                          ],
+                          "module": "GHC.Types",
+                          "name": "':"
+                        }
+                      ],
+                      "module": "GHC.Types",
+                      "name": "':"
+                    },
+                    {
+                      "args": [],
+                      "module": "GHC.TypeLits",
+                      "name": "\"Cache-Control\""
+                    },
+                    {
+                      "args": [],
+                      "module": "Data.Text.Internal",
+                      "name": "Text"
+                    }
+                  ],
+                  "module": "Servant.API.Header",
+                  "name": "Header'"
+                },
+                {
+                  "args": [],
+                  "module": "GHC.Types",
+                  "name": "'[]"
+                }
+              ],
+              "module": "GHC.Types",
+              "name": "':"
+            },
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "Servant.API.ResponseHeaders",
+          "name": "Headers"
+        }
+      },
+      {
+        "ordinal": 816,
+        "path": "/event-crm/events/{eventId}/commands",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.UUID.Types.Internal",
+              "name": "UUID"
+            }
+          }
+        ],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [
+                {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [],
+                          "module": "Servant.API.Modifiers",
+                          "name": "Optional"
+                        },
+                        {
+                          "args": [
+                            {
+                              "args": [],
+                              "module": "Servant.API.Modifiers",
+                              "name": "Strict"
+                            },
+                            {
+                              "args": [],
+                              "module": "GHC.Types",
+                              "name": "'[]"
+                            }
+                          ],
+                          "module": "GHC.Types",
+                          "name": "':"
+                        }
+                      ],
+                      "module": "GHC.Types",
+                      "name": "':"
+                    },
+                    {
+                      "args": [],
+                      "module": "GHC.TypeLits",
+                      "name": "\"Cache-Control\""
+                    },
+                    {
+                      "args": [],
+                      "module": "Data.Text.Internal",
+                      "name": "Text"
+                    }
+                  ],
+                  "module": "Servant.API.Header",
+                  "name": "Header'"
+                },
+                {
+                  "args": [],
+                  "module": "GHC.Types",
+                  "name": "'[]"
+                }
+              ],
+              "module": "GHC.Types",
+              "name": "':"
+            },
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "Servant.API.ResponseHeaders",
+          "name": "Headers"
+        }
+      },
+      {
+        "ordinal": 817,
+        "path": "/event-crm/events/{eventId}/export",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "GHC.Internal.Int",
+              "name": "Int64"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [
+                {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [],
+                          "module": "Servant.API.Modifiers",
+                          "name": "Optional"
+                        },
+                        {
+                          "args": [
+                            {
+                              "args": [],
+                              "module": "Servant.API.Modifiers",
+                              "name": "Strict"
+                            },
+                            {
+                              "args": [],
+                              "module": "GHC.Types",
+                              "name": "'[]"
+                            }
+                          ],
+                          "module": "GHC.Types",
+                          "name": "':"
+                        }
+                      ],
+                      "module": "GHC.Types",
+                      "name": "':"
+                    },
+                    {
+                      "args": [],
+                      "module": "GHC.TypeLits",
+                      "name": "\"Cache-Control\""
+                    },
+                    {
+                      "args": [],
+                      "module": "Data.Text.Internal",
+                      "name": "Text"
+                    }
+                  ],
+                  "module": "Servant.API.Header",
+                  "name": "Header'"
+                },
+                {
+                  "args": [],
+                  "module": "GHC.Types",
+                  "name": "'[]"
+                }
+              ],
+              "module": "GHC.Types",
+              "name": "':"
+            },
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "Servant.API.ResponseHeaders",
+          "name": "Headers"
+        }
+      },
+      {
+        "ordinal": 818,
+        "path": "/event-crm/invitations",
+        "parameters": [],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.EventOperations.CrmAPI",
+              "name": "InviteToken"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [
+                {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [],
+                          "module": "Servant.API.Modifiers",
+                          "name": "Optional"
+                        },
+                        {
+                          "args": [
+                            {
+                              "args": [],
+                              "module": "Servant.API.Modifiers",
+                              "name": "Strict"
+                            },
+                            {
+                              "args": [],
+                              "module": "GHC.Types",
+                              "name": "'[]"
+                            }
+                          ],
+                          "module": "GHC.Types",
+                          "name": "':"
+                        }
+                      ],
+                      "module": "GHC.Types",
+                      "name": "':"
+                    },
+                    {
+                      "args": [],
+                      "module": "GHC.TypeLits",
+                      "name": "\"Cache-Control\""
+                    },
+                    {
+                      "args": [],
+                      "module": "Data.Text.Internal",
+                      "name": "Text"
+                    }
+                  ],
+                  "module": "Servant.API.Header",
+                  "name": "Header'"
+                },
+                {
+                  "args": [],
+                  "module": "GHC.Types",
+                  "name": "'[]"
+                }
+              ],
+              "module": "GHC.Types",
+              "name": "':"
+            },
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "Servant.API.ResponseHeaders",
+          "name": "Headers"
+        }
+      },
+      {
+        "ordinal": 819,
+        "path": "/event-crm/email/request",
+        "parameters": [],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [
+                {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [],
+                          "module": "Servant.API.Modifiers",
+                          "name": "Optional"
+                        },
+                        {
+                          "args": [
+                            {
+                              "args": [],
+                              "module": "Servant.API.Modifiers",
+                              "name": "Strict"
+                            },
+                            {
+                              "args": [],
+                              "module": "GHC.Types",
+                              "name": "'[]"
+                            }
+                          ],
+                          "module": "GHC.Types",
+                          "name": "':"
+                        }
+                      ],
+                      "module": "GHC.Types",
+                      "name": "':"
+                    },
+                    {
+                      "args": [],
+                      "module": "GHC.TypeLits",
+                      "name": "\"Cache-Control\""
+                    },
+                    {
+                      "args": [],
+                      "module": "Data.Text.Internal",
+                      "name": "Text"
+                    }
+                  ],
+                  "module": "Servant.API.Header",
+                  "name": "Header'"
+                },
+                {
+                  "args": [],
+                  "module": "GHC.Types",
+                  "name": "'[]"
+                }
+              ],
+              "module": "GHC.Types",
+              "name": "':"
+            },
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "Servant.API.ResponseHeaders",
+          "name": "Headers"
+        }
+      },
+      {
+        "ordinal": 820,
+        "path": "/event-crm/email/confirm",
+        "parameters": [],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.EventOperations.CrmAPI",
+              "name": "EmailProof"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [
+                {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [],
+                          "module": "Servant.API.Modifiers",
+                          "name": "Optional"
+                        },
+                        {
+                          "args": [
+                            {
+                              "args": [],
+                              "module": "Servant.API.Modifiers",
+                              "name": "Strict"
+                            },
+                            {
+                              "args": [],
+                              "module": "GHC.Types",
+                              "name": "'[]"
+                            }
+                          ],
+                          "module": "GHC.Types",
+                          "name": "':"
+                        }
+                      ],
+                      "module": "GHC.Types",
+                      "name": "':"
+                    },
+                    {
+                      "args": [],
+                      "module": "GHC.TypeLits",
+                      "name": "\"Cache-Control\""
+                    },
+                    {
+                      "args": [],
+                      "module": "Data.Text.Internal",
+                      "name": "Text"
+                    }
+                  ],
+                  "module": "Servant.API.Header",
+                  "name": "Header'"
+                },
+                {
+                  "args": [],
+                  "module": "GHC.Types",
+                  "name": "'[]"
+                }
+              ],
+              "module": "GHC.Types",
+              "name": "':"
+            },
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "Servant.API.ResponseHeaders",
+          "name": "Headers"
+        }
+      },
+      {
+        "ordinal": 821,
         "path": "/admin/commerce/overview",
         "parameters": [],
         "bodies": [],
@@ -48264,7 +48966,7 @@
         }
       },
       {
-        "ordinal": 816,
+        "ordinal": 822,
         "path": "/admin/commerce/provider-events",
         "parameters": [
           {
@@ -48358,7 +49060,7 @@
         }
       },
       {
-        "ordinal": 817,
+        "ordinal": 823,
         "path": "/admin/commerce/provider-events/{eventId}/replay",
         "parameters": [
           {
@@ -48420,7 +49122,7 @@
         }
       },
       {
-        "ordinal": 818,
+        "ordinal": 824,
         "path": "/admin/commerce/provider-queries",
         "parameters": [
           {
@@ -48589,7 +49291,7 @@
         }
       },
       {
-        "ordinal": 819,
+        "ordinal": 825,
         "path": "/admin/commerce/reconciliation-exceptions",
         "parameters": [
           {
@@ -48779,7 +49481,7 @@
         }
       },
       {
-        "ordinal": 820,
+        "ordinal": 826,
         "path": "/reviews/eligibility",
         "parameters": [
           {
@@ -48852,7 +49554,7 @@
         }
       },
       {
-        "ordinal": 821,
+        "ordinal": 827,
         "path": "/reviews",
         "parameters": [
           {
@@ -48925,7 +49627,7 @@
         }
       },
       {
-        "ordinal": 822,
+        "ordinal": 828,
         "path": "/reputation/preferences",
         "parameters": [
           {
@@ -48971,7 +49673,7 @@
         }
       },
       {
-        "ordinal": 823,
+        "ordinal": 829,
         "path": "/reputation/preferences",
         "parameters": [
           {
@@ -49044,7 +49746,7 @@
         }
       },
       {
-        "ordinal": 824,
+        "ordinal": 830,
         "path": "/reputation/consents",
         "parameters": [],
         "bodies": [],
@@ -49074,7 +49776,7 @@
         }
       },
       {
-        "ordinal": 825,
+        "ordinal": 831,
         "path": "/reputation/consents",
         "parameters": [],
         "bodies": [
@@ -49137,7 +49839,7 @@
         }
       },
       {
-        "ordinal": 826,
+        "ordinal": 832,
         "path": "/music/studio/releases",
         "parameters": [
           {
@@ -49189,7 +49891,7 @@
         }
       },
       {
-        "ordinal": 827,
+        "ordinal": 833,
         "path": "/music/releases",
         "parameters": [
           {
@@ -49262,7 +49964,7 @@
         }
       },
       {
-        "ordinal": 828,
+        "ordinal": 834,
         "path": "/music/releases/{releaseId}/versions/{versionId}",
         "parameters": [
           {
@@ -49307,7 +50009,7 @@
         }
       },
       {
-        "ordinal": 829,
+        "ordinal": 835,
         "path": "/music/releases/{releaseId}/versions/{versionId}/corrections",
         "parameters": [
           {
@@ -49373,7 +50075,7 @@
         }
       },
       {
-        "ordinal": 830,
+        "ordinal": 836,
         "path": "/music/releases/{releaseId}/versions/{versionId}/draft",
         "parameters": [
           {
@@ -49445,7 +50147,7 @@
         }
       },
       {
-        "ordinal": 831,
+        "ordinal": 837,
         "path": "/music/releases/{releaseId}/versions/{versionId}/content",
         "parameters": [
           {
@@ -49517,7 +50219,7 @@
         }
       },
       {
-        "ordinal": 832,
+        "ordinal": 838,
         "path": "/music/releases/{releaseId}/versions/{versionId}/terms",
         "parameters": [
           {
@@ -49589,7 +50291,7 @@
         }
       },
       {
-        "ordinal": 833,
+        "ordinal": 839,
         "path": "/music/releases/{releaseId}/versions/{versionId}/validate",
         "parameters": [
           {
@@ -49634,7 +50336,7 @@
         }
       },
       {
-        "ordinal": 834,
+        "ordinal": 840,
         "path": "/music/releases/{releaseId}/versions/{versionId}/transition",
         "parameters": [
           {
@@ -49727,7 +50429,7 @@
         }
       },
       {
-        "ordinal": 835,
+        "ordinal": 841,
         "path": "/music/releases/{releaseId}/versions/{versionId}/comments",
         "parameters": [
           {
@@ -49799,7 +50501,7 @@
         }
       },
       {
-        "ordinal": 836,
+        "ordinal": 842,
         "path": "/music/releases/{releaseId}/versions/{versionId}/comments/{commentId}/resolve",
         "parameters": [
           {
@@ -49854,7 +50556,7 @@
         }
       },
       {
-        "ordinal": 837,
+        "ordinal": 843,
         "path": "/music/releases/{releaseId}/versions/{versionId}/uploads",
         "parameters": [
           {
@@ -49947,7 +50649,7 @@
         }
       },
       {
-        "ordinal": 838,
+        "ordinal": 844,
         "path": "/music/uploads/{uploadId}/provider",
         "parameters": [
           {
@@ -50009,7 +50711,7 @@
         }
       },
       {
-        "ordinal": 839,
+        "ordinal": 845,
         "path": "/music/uploads/{uploadId}/parts/{partNumber}",
         "parameters": [
           {
@@ -50054,7 +50756,7 @@
         }
       },
       {
-        "ordinal": 840,
+        "ordinal": 846,
         "path": "/music/uploads/{uploadId}/parts/{partNumber}",
         "parameters": [
           {
@@ -50126,7 +50828,7 @@
         }
       },
       {
-        "ordinal": 841,
+        "ordinal": 847,
         "path": "/music/uploads/{uploadId}/completion",
         "parameters": [
           {
@@ -50161,7 +50863,7 @@
         }
       },
       {
-        "ordinal": 842,
+        "ordinal": 848,
         "path": "/music/uploads/{uploadId}/confirm",
         "parameters": [
           {
@@ -50223,7 +50925,7 @@
         }
       },
       {
-        "ordinal": 843,
+        "ordinal": 849,
         "path": "/music/uploads/{uploadId}",
         "parameters": [
           {
@@ -50258,7 +50960,7 @@
         }
       },
       {
-        "ordinal": 844,
+        "ordinal": 850,
         "path": "/music/favorites",
         "parameters": [
           {
@@ -50310,7 +51012,7 @@
         }
       },
       {
-        "ordinal": 845,
+        "ordinal": 851,
         "path": "/music/favorites",
         "parameters": [
           {
@@ -50383,7 +51085,7 @@
         }
       },
       {
-        "ordinal": 846,
+        "ordinal": 852,
         "path": "/music/favorites/{recordingId}",
         "parameters": [
           {
@@ -50418,7 +51120,7 @@
         }
       },
       {
-        "ordinal": 847,
+        "ordinal": 853,
         "path": "/music/playlists",
         "parameters": [
           {
@@ -50470,7 +51172,7 @@
         }
       },
       {
-        "ordinal": 848,
+        "ordinal": 854,
         "path": "/music/playlists",
         "parameters": [],
         "bodies": [
@@ -50521,7 +51223,7 @@
         }
       },
       {
-        "ordinal": 849,
+        "ordinal": 855,
         "path": "/music/playlists/{playlistId}",
         "parameters": [
           {
@@ -50583,7 +51285,7 @@
         }
       },
       {
-        "ordinal": 850,
+        "ordinal": 856,
         "path": "/music/playlists/{playlistId}",
         "parameters": [
           {
@@ -50618,7 +51320,7 @@
         }
       },
       {
-        "ordinal": 851,
+        "ordinal": 857,
         "path": "/music/playlists/{playlistId}/items",
         "parameters": [
           {
@@ -50701,7 +51403,7 @@
         }
       },
       {
-        "ordinal": 852,
+        "ordinal": 858,
         "path": "/music/playlists/{playlistId}/items/{itemId}",
         "parameters": [
           {
@@ -50773,7 +51475,7 @@
         }
       },
       {
-        "ordinal": 853,
+        "ordinal": 859,
         "path": "/music/playlists/{playlistId}/items/{itemId}",
         "parameters": [
           {
@@ -50818,7 +51520,7 @@
         }
       },
       {
-        "ordinal": 854,
+        "ordinal": 860,
         "path": "/music/me/playback-events",
         "parameters": [
           {
@@ -50891,7 +51593,7 @@
         }
       },
       {
-        "ordinal": 855,
+        "ordinal": 861,
         "path": "/music/history",
         "parameters": [
           {
@@ -50943,7 +51645,7 @@
         }
       },
       {
-        "ordinal": 856,
+        "ordinal": 862,
         "path": "/music/infringement-reports",
         "parameters": [
           {
@@ -51016,7 +51718,7 @@
         }
       },
       {
-        "ordinal": 857,
+        "ordinal": 863,
         "path": "/music/infringement-reports",
         "parameters": [
           {
@@ -51068,7 +51770,7 @@
         }
       },
       {
-        "ordinal": 858,
+        "ordinal": 864,
         "path": "/music/infringement-reports/{reportId}",
         "parameters": [
           {
@@ -51130,7 +51832,7 @@
         }
       },
       {
-        "ordinal": 859,
+        "ordinal": 865,
         "path": "/music/analytics/releases/{releaseId}",
         "parameters": [
           {
@@ -51207,7 +51909,7 @@
         }
       },
       {
-        "ordinal": 860,
+        "ordinal": 866,
         "path": "/music/purchases",
         "parameters": [
           {
@@ -51301,7 +52003,7 @@
         }
       },
       {
-        "ordinal": 861,
+        "ordinal": 867,
         "path": "/music/purchases",
         "parameters": [],
         "bodies": [],
@@ -51331,7 +52033,7 @@
         }
       },
       {
-        "ordinal": 862,
+        "ordinal": 868,
         "path": "/music/purchases/{purchaseId}/datafast/checkout",
         "parameters": [
           {
@@ -51387,7 +52089,7 @@
         }
       },
       {
-        "ordinal": 863,
+        "ordinal": 869,
         "path": "/music/purchases/{purchaseId}/datafast/status",
         "parameters": [
           {
@@ -51470,7 +52172,7 @@
         }
       },
       {
-        "ordinal": 864,
+        "ordinal": 870,
         "path": "/music/purchases/{purchaseId}/paypal/create",
         "parameters": [
           {
@@ -51526,7 +52228,7 @@
         }
       },
       {
-        "ordinal": 865,
+        "ordinal": 871,
         "path": "/music/purchases/{purchaseId}/paypal/capture",
         "parameters": [
           {
@@ -51609,7 +52311,7 @@
         }
       },
       {
-        "ordinal": 866,
+        "ordinal": 872,
         "path": "/music/entitlements",
         "parameters": [],
         "bodies": [],
@@ -51639,7 +52341,7 @@
         }
       },
       {
-        "ordinal": 867,
+        "ordinal": 873,
         "path": "/music/entitlements/{entitlementId}/download",
         "parameters": [
           {
@@ -51701,7 +52403,7 @@
         }
       },
       {
-        "ordinal": 868,
+        "ordinal": 874,
         "path": "/music/downloads/free",
         "parameters": [
           {
@@ -51774,7 +52476,7 @@
         }
       },
       {
-        "ordinal": 869,
+        "ordinal": 875,
         "path": "/music/ddex/parties",
         "parameters": [],
         "bodies": [],
@@ -51804,7 +52506,7 @@
         }
       },
       {
-        "ordinal": 870,
+        "ordinal": 876,
         "path": "/music/ddex/parties",
         "parameters": [],
         "bodies": [
@@ -51855,7 +52557,7 @@
         }
       },
       {
-        "ordinal": 871,
+        "ordinal": 877,
         "path": "/music/releases/{releaseId}/versions/{versionId}/ddex-exports",
         "parameters": [
           {
@@ -51906,7 +52608,7 @@
         }
       },
       {
-        "ordinal": 872,
+        "ordinal": 878,
         "path": "/music/releases/{releaseId}/versions/{versionId}/ddex-exports",
         "parameters": [
           {
@@ -51999,7 +52701,7 @@
         }
       },
       {
-        "ordinal": 873,
+        "ordinal": 879,
         "path": "/music/ddex/exports/{exportId}/download",
         "parameters": [
           {
@@ -52034,7 +52736,7 @@
         }
       },
       {
-        "ordinal": 874,
+        "ordinal": 880,
         "path": "/interactions/targets/{kind}/{entityKey}",
         "parameters": [
           {
@@ -52139,7 +52841,7 @@
         }
       },
       {
-        "ordinal": 875,
+        "ordinal": 881,
         "path": "/interactions/targets/{kind}/{entityKey}/comments",
         "parameters": [
           {
@@ -52328,7 +53030,7 @@
         }
       },
       {
-        "ordinal": 876,
+        "ordinal": 882,
         "path": "/interactions/targets/{kind}/{entityKey}/comments/{commentId}",
         "parameters": [
           {
@@ -52443,7 +53145,7 @@
         }
       },
       {
-        "ordinal": 877,
+        "ordinal": 883,
         "path": "/interactions/targets/{kind}/{entityKey}/reactors",
         "parameters": [
           {
@@ -52590,7 +53292,7 @@
         }
       },
       {
-        "ordinal": 878,
+        "ordinal": 884,
         "path": "/interactions/targets/{targetId}/commands",
         "parameters": [
           {
@@ -52712,7 +53414,7 @@
         }
       },
       {
-        "ordinal": 879,
+        "ordinal": 885,
         "path": "/interactions/resolve/{destinationKind}/{destinationId}",
         "parameters": [
           {
@@ -52817,7 +53519,7 @@
         }
       },
       {
-        "ordinal": 880,
+        "ordinal": 886,
         "path": "/interactions/blocks/{partyId}",
         "parameters": [
           {
@@ -52912,7 +53614,7 @@
         }
       },
       {
-        "ordinal": 881,
+        "ordinal": 887,
         "path": "/interactions/blocks/{partyId}",
         "parameters": [
           {
@@ -53034,7 +53736,7 @@
         }
       },
       {
-        "ordinal": 882,
+        "ordinal": 888,
         "path": "/interactions/blocked-accounts",
         "parameters": [
           {
@@ -53161,7 +53863,7 @@
         }
       },
       {
-        "ordinal": 883,
+        "ordinal": 889,
         "path": "/interactions/reports",
         "parameters": [
           {
@@ -53309,7 +54011,7 @@
         }
       },
       {
-        "ordinal": 884,
+        "ordinal": 890,
         "path": "/interactions/preferences",
         "parameters": [],
         "bodies": [],
@@ -53393,7 +54095,7 @@
         }
       },
       {
-        "ordinal": 885,
+        "ordinal": 891,
         "path": "/interactions/preferences",
         "parameters": [],
         "bodies": [
@@ -53504,7 +54206,7 @@
         }
       },
       {
-        "ordinal": 886,
+        "ordinal": 892,
         "path": "/interactions/moderation/{targetId}",
         "parameters": [
           {
@@ -53641,7 +54343,7 @@
         }
       },
       {
-        "ordinal": 887,
+        "ordinal": 893,
         "path": "/marketplace",
         "parameters": [],
         "bodies": [],
@@ -53669,7 +54371,7 @@
         }
       },
       {
-        "ordinal": 888,
+        "ordinal": 894,
         "path": "/marketplace/{id}",
         "parameters": [
           {
@@ -53702,7 +54404,7 @@
         }
       },
       {
-        "ordinal": 889,
+        "ordinal": 895,
         "path": "/marketplace/cart",
         "parameters": [],
         "bodies": [],
@@ -53724,7 +54426,7 @@
         }
       },
       {
-        "ordinal": 890,
+        "ordinal": 896,
         "path": "/marketplace/cart/{cartId}",
         "parameters": [
           {
@@ -53757,7 +54459,7 @@
         }
       },
       {
-        "ordinal": 891,
+        "ordinal": 897,
         "path": "/marketplace/cart/{cartId}/items",
         "parameters": [
           {
@@ -53817,7 +54519,7 @@
         }
       },
       {
-        "ordinal": 892,
+        "ordinal": 898,
         "path": "/marketplace/cart/{cartId}/checkout",
         "parameters": [
           {
@@ -53898,7 +54600,7 @@
         }
       },
       {
-        "ordinal": 893,
+        "ordinal": 899,
         "path": "/marketplace/cart/{cartId}/stripe/payment-intent",
         "parameters": [
           {
@@ -53979,7 +54681,7 @@
         }
       },
       {
-        "ordinal": 894,
+        "ordinal": 900,
         "path": "/marketplace/cart/{cartId}/datafast/checkout",
         "parameters": [
           {
@@ -54060,7 +54762,7 @@
         }
       },
       {
-        "ordinal": 895,
+        "ordinal": 901,
         "path": "/marketplace/datafast/status",
         "parameters": [
           {
@@ -54146,7 +54848,7 @@
         }
       },
       {
-        "ordinal": 896,
+        "ordinal": 902,
         "path": "/marketplace/cart/{cartId}/paypal/create",
         "parameters": [
           {
@@ -54227,7 +54929,7 @@
         }
       },
       {
-        "ordinal": 897,
+        "ordinal": 903,
         "path": "/marketplace/paypal/capture",
         "parameters": [
           {
@@ -54298,7 +55000,7 @@
         }
       },
       {
-        "ordinal": 898,
+        "ordinal": 904,
         "path": "/marketplace/orders/{orderId}",
         "parameters": [
           {
@@ -54352,7 +55054,7 @@
         }
       },
       {
-        "ordinal": 899,
+        "ordinal": 905,
         "path": "/marketplace/orders/{orderId}/manual-payment/evidence",
         "parameters": [
           {
@@ -54433,7 +55135,7 @@
         }
       },
       {
-        "ordinal": 900,
+        "ordinal": 906,
         "path": "/marketplace/orders/{orderId}/requests",
         "parameters": [
           {
@@ -54493,7 +55195,7 @@
         }
       },
       {
-        "ordinal": 901,
+        "ordinal": 907,
         "path": "/marketplace/orders/{orderId}/requests",
         "parameters": [
           {
@@ -54595,7 +55297,7 @@
         }
       },
       {
-        "ordinal": 902,
+        "ordinal": 908,
         "path": "/rooms/public",
         "parameters": [],
         "bodies": [],
@@ -54623,7 +55325,7 @@
         }
       },
       {
-        "ordinal": 903,
+        "ordinal": 909,
         "path": "/services/catalog/public",
         "parameters": [
           {
@@ -54748,7 +55450,7 @@
         }
       },
       {
-        "ordinal": 904,
+        "ordinal": 910,
         "path": "/services/storefront",
         "parameters": [],
         "bodies": [],
@@ -54776,7 +55478,7 @@
         }
       },
       {
-        "ordinal": 905,
+        "ordinal": 911,
         "path": "/services/storefront/{packageId}",
         "parameters": [
           {
@@ -54809,7 +55511,7 @@
         }
       },
       {
-        "ordinal": 906,
+        "ordinal": 912,
         "path": "/services/storefront/order",
         "parameters": [
           {
@@ -54880,7 +55582,7 @@
         }
       },
       {
-        "ordinal": 907,
+        "ordinal": 913,
         "path": "/services/storefront/order/{orderId}",
         "parameters": [
           {
@@ -54934,7 +55636,7 @@
         }
       },
       {
-        "ordinal": 908,
+        "ordinal": 914,
         "path": "/services/storefront/order/{orderId}/stripe/payment-intent",
         "parameters": [
           {
@@ -54988,7 +55690,7 @@
         }
       },
       {
-        "ordinal": 909,
+        "ordinal": 915,
         "path": "/services/storefront/order/{orderId}/datafast/checkout",
         "parameters": [
           {
@@ -55042,7 +55744,7 @@
         }
       },
       {
-        "ordinal": 910,
+        "ordinal": 916,
         "path": "/services/storefront/datafast/status",
         "parameters": [
           {
@@ -55128,7 +55830,7 @@
         }
       },
       {
-        "ordinal": 911,
+        "ordinal": 917,
         "path": "/services/storefront/order/{orderId}/paypal/create",
         "parameters": [
           {
@@ -55182,7 +55884,7 @@
         }
       },
       {
-        "ordinal": 912,
+        "ordinal": 918,
         "path": "/services/storefront/paypal/capture",
         "parameters": [
           {
@@ -55253,7 +55955,7 @@
         }
       },
       {
-        "ordinal": 913,
+        "ordinal": 919,
         "path": "/services/storefront/paypal/webhook",
         "parameters": [
           {
@@ -55408,7 +56110,7 @@
         }
       },
       {
-        "ordinal": 914,
+        "ordinal": 920,
         "path": "/services/storefront/order/{orderId}/manual-payment",
         "parameters": [
           {
@@ -55489,7 +56191,7 @@
         }
       },
       {
-        "ordinal": 915,
+        "ordinal": 921,
         "path": "/services/storefront/order/{orderId}/revision",
         "parameters": [
           {
@@ -55570,7 +56272,7 @@
         }
       },
       {
-        "ordinal": 916,
+        "ordinal": 922,
         "path": "/engineers",
         "parameters": [],
         "bodies": [],
@@ -55598,7 +56300,7 @@
         }
       },
       {
-        "ordinal": 917,
+        "ordinal": 923,
         "path": "/bookings/public/availability",
         "parameters": [
           {
@@ -55669,7 +56371,7 @@
         }
       },
       {
-        "ordinal": 918,
+        "ordinal": 924,
         "path": "/bookings/public",
         "parameters": [
           {
@@ -55740,7 +56442,7 @@
         }
       },
       {
-        "ordinal": 919,
+        "ordinal": 925,
         "path": "/bookings/public/checkout",
         "parameters": [
           {
@@ -55811,7 +56513,7 @@
         }
       },
       {
-        "ordinal": 920,
+        "ordinal": 926,
         "path": "/bookings/public/orders/{bookingId}",
         "parameters": [
           {
@@ -55865,7 +56567,7 @@
         }
       },
       {
-        "ordinal": 921,
+        "ordinal": 927,
         "path": "/bookings/public/orders/{bookingId}/datafast/checkout",
         "parameters": [
           {
@@ -55919,7 +56621,7 @@
         }
       },
       {
-        "ordinal": 922,
+        "ordinal": 928,
         "path": "/bookings/public/orders/{bookingId}/datafast/status",
         "parameters": [
           {
@@ -55989,7 +56691,7 @@
         }
       },
       {
-        "ordinal": 923,
+        "ordinal": 929,
         "path": "/bookings/public/orders/{bookingId}/paypal/create",
         "parameters": [
           {
@@ -56043,7 +56745,7 @@
         }
       },
       {
-        "ordinal": 924,
+        "ordinal": 930,
         "path": "/bookings/public/orders/{bookingId}/paypal/capture",
         "parameters": [
           {
@@ -56124,7 +56826,7 @@
         }
       },
       {
-        "ordinal": 925,
+        "ordinal": 931,
         "path": "/bookings/public/orders/{bookingId}/manual-payment",
         "parameters": [
           {
@@ -56205,7 +56907,7 @@
         }
       },
       {
-        "ordinal": 926,
+        "ordinal": 932,
         "path": "/bookings/public/orders/{bookingId}/manual-payment/evidence",
         "parameters": [
           {
@@ -56286,7 +56988,7 @@
         }
       },
       {
-        "ordinal": 929,
+        "ordinal": 935,
         "path": "/social-events/stripe/webhook",
         "parameters": [
           {
@@ -56359,7 +57061,7 @@
     ],
     "rawMounts": [
       {
-        "ordinal": 927,
+        "ordinal": 933,
         "path": "/inventory",
         "parameters": [],
         "bodies": [],
@@ -56367,7 +57069,7 @@
         "internalInputs": []
       },
       {
-        "ordinal": 928,
+        "ordinal": 934,
         "path": "/assets/serve",
         "parameters": [],
         "bodies": [],

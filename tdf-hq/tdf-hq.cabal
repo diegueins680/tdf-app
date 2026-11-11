@@ -172,6 +172,9 @@ library
     TDF.Email.Service
     TDF.FeatureRegistry
     TDF.EventOperations.API
+    TDF.EventOperations.CrmAPI
+    TDF.EventOperations.CrmPayments
+    TDF.EventOperations.CrmServer
     TDF.EventOperations.DatabaseBoundary
     TDF.EventOperations.Server
     TDF.EventOperations.Types
