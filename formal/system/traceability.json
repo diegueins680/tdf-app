@@ -27389,7 +27389,7 @@
     "formal/system/public-routes.json": "a4d7b6030e4064c05306227ecad526339a3b2442d5360f6e1eb8cbb864110d84",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "2c1f465ecdb6dcafd24748ce0c791ecc3ba9dca12a7ced5cb4992df1b1e8854c",
+    "formal/system/recovery-expiry-arithmetic.json": "0ee2cdc4ef46cf48846150c55f4fffd296aa496e609df675976b1b1cb339bbe4",
     "formal/system/route-requirements.json": "6c27d633449648bcdbf9bd090a64803df894c35c48869e761226acfc1ec14f71",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -28825,7 +28825,7 @@
     "tdf-hq/test/integration/event_raci_browser_fixture.sql": "f0e500d4ffecc8adb3628ad6106c396be0a847798e22e3d6b34b19f5b390a2b7",
     "tdf-hq/test/integration/interactions/notification-properties.sql": "65d0697ff1ba05a77d8d79d3120e24877c49c23c1b8a45de778096e39adb2d91",
     "tdf-hq/test/integration/ledger_posting_balance.sql": "bfca6e8574bf541195a3ea583eebe9b44205d7299ab96e71fd8276eb194d169e",
-    "tdf-hq/test/integration/ticket_admission_fixture.sql": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
+    "tdf-hq/test/integration/ticket_admission_fixture.sql": "4cd26b93877763562a62a3e193b3818ffe6f77554c27e5dc6e5d0f1fc9490b4a",
     "tdf-hq/test/integration/ticket_confirmation_delivery.sql": "9a6222ff1d4c604e263da81d9da92d6a42a6ab2b78384b0c7e5a83bd6cb6e46d",
     "tdf-hq/test/integration/ticket_confirmation_worker_fixture.sql": "e2579621708c05e80a699c2de280a033ca57ba0ba9767a037656d4a3857a7527",
     "tdf-hq/test/integration/ticket_inclusive_tax.sql": "dc597f4ee6c1f58e1ffb8436c7005921118a321f9c23eada0a660385d9461a93",
@@ -77927,7 +77927,7 @@
     {
       "id": "SURFACE-2a3469a3736ce761",
       "path": "tdf-hq/test/integration/ticket_admission_fixture.sql",
-      "sha256": "a356a81110a7fcfb69fb11ef677989b99740f78c5883d7180e9fb8e5b5366399",
+      "sha256": "4cd26b93877763562a62a3e193b3818ffe6f77554c27e5dc6e5d0f1fc9490b4a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
