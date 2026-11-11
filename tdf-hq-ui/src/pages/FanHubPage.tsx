@@ -84,6 +84,7 @@ import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard'
 import { useTranslation } from 'react-i18next';
 import { RADIO_TAKEOVER_EVENT } from '../player/types';
 import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
+import MyEventsPanel from '../components/events/MyEventsPanel';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const EMPTY_ARTIST_DRAFT: ArtistProfileUpsert = {
@@ -1349,6 +1350,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+        {viewerId != null && !sessionLoading && <MyEventsPanel partyId={viewerId} />}
         {!focusArtist && <CommunityDiscovery />}
         {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
         {onboarding.loadError && (
