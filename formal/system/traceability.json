@@ -26871,7 +26871,7 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish from one map in the booking form, the teacher portal and studio orders; an unknown status is shown as received.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
       "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14, 16 and 18",
@@ -26941,7 +26941,6 @@
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-        "tdf-hq-ui/src/pages/OrdersPage.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
@@ -28201,7 +28200,6 @@
     "tdf-hq-ui/src/pages/NotFoundPage.tsx": "1bfa74b3ea1565ef9e00e494bd10ce3154c88ccbfe9508a2e9f77e016e34b7c7",
     "tdf-hq-ui/src/pages/NotificationPage.tsx": "238197064a2439a50fc9cd7d075e511147d7852f46bc116e9ca82922b230d520",
     "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx": "2e5c039ff3331a7cb62d05244fed5fc13e0a24c37e20e9b62d556a883eea1848",
-    "tdf-hq-ui/src/pages/OrdersPage.tsx": "f9db7f8feda6985e881b2321c985655bfc90ab1d8c9c55c0705a163f760fcd72",
     "tdf-hq-ui/src/pages/PartiesPage.test.tsx": "5bba8b4c6a78c2e8b0aec62770715249a87ffd05e86c649ef83f11c78abdbac8",
     "tdf-hq-ui/src/pages/PartiesPage.tsx": "7d384990d5d954c9f9fe1d4f6909359a763442597df0c6853e1d9165eb947d60",
     "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts": "4941936bcbb954b17033773cc792520831a6219dd23009d834fcab18318de87d",
@@ -28309,7 +28307,7 @@
     "tdf-hq-ui/src/utils/authErrorMessage.test.ts": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
     "tdf-hq-ui/src/utils/authErrorMessage.ts": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
     "tdf-hq-ui/src/utils/bookingStatusLabel.test.ts": "9b7bd1063d143f9c60a2d987a6b13f391ca91bfdc96c72cb24aac4a173622d5e",
-    "tdf-hq-ui/src/utils/bookingStatusLabel.ts": "03370bbd840dc2d43dba73c8cb2d42cc54d9530979b228680dd298fbf3b36f45",
+    "tdf-hq-ui/src/utils/bookingStatusLabel.ts": "a5a6f91535a85037ea32b30656cc239acbedca437708bb440637c61d0b20b74d",
     "tdf-hq-ui/src/utils/bottomDock.test.tsx": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
     "tdf-hq-ui/src/utils/bottomDock.ts": "9191d50ba61638b5025ee27bdff3bed3b02a049cd348a0535a401cf691102f0c",
     "tdf-hq-ui/src/utils/checkoutStripe.ts": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
@@ -46483,12 +46481,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/pages/OrdersPage.tsx": [
-      {
-        "requirement": "UX-COGLOAD-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -63068,14 +63060,9 @@
     {
       "id": "SURFACE-554106b9be846d52",
       "path": "tdf-hq-ui/src/pages/OrdersPage.tsx",
-      "sha256": "f9db7f8feda6985e881b2321c985655bfc90ab1d8c9c55c0705a163f760fcd72",
+      "sha256": "07628d2cb0effc1d3b712599ee3d1536737fedabfe168e3b6f970d5cb8d364de",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "UX-COGLOAD-001",
-          "relationship": "implementation"
-        }
-      ]
+      "requirements": []
     },
     {
       "id": "SURFACE-ca6a42a035d60724",
@@ -65093,7 +65080,7 @@
     {
       "id": "SURFACE-e48fbe673a0c14b1",
       "path": "tdf-hq-ui/src/utils/bookingStatusLabel.ts",
-      "sha256": "03370bbd840dc2d43dba73c8cb2d42cc54d9530979b228680dd298fbf3b36f45",
+      "sha256": "a5a6f91535a85037ea32b30656cc239acbedca437708bb440637c61d0b20b74d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82189,6 +82176,7 @@
     "SURFACE-41fac70eecbac758",
     "SURFACE-64a084fb5047842b",
     "SURFACE-fc080c7e7b9e5e76",
+    "SURFACE-554106b9be846d52",
     "SURFACE-0e999cb8927f4583",
     "SURFACE-254fb45706913119",
     "SURFACE-69678f180f18c65b",
@@ -84311,7 +84299,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f41e53ce9473c00a2b692edb198b52eae8c39f0a8db7e605a6461b0fc1607a3b",
+      "sourceSha256": "fb0de24d68db0a8b46cc171753d972e4c64c215ef2832e80901c97b9a1801e47",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -84339,7 +84327,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f41e53ce9473c00a2b692edb198b52eae8c39f0a8db7e605a6461b0fc1607a3b",
+      "sourceSha256": "fb0de24d68db0a8b46cc171753d972e4c64c215ef2832e80901c97b9a1801e47",
       "definition": {
         "states": [
           "absent",
@@ -84369,7 +84357,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f41e53ce9473c00a2b692edb198b52eae8c39f0a8db7e605a6461b0fc1607a3b",
+      "sourceSha256": "fb0de24d68db0a8b46cc171753d972e4c64c215ef2832e80901c97b9a1801e47",
       "definition": {
         "export": [
           "queued",

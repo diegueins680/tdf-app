@@ -1,4 +1,4 @@
-/** Spanish names for the booking statuses the API reports in English. */
+/** Spanish names for the booking statuses the API reports in English; the same labels studio orders (OrdersPage) show. */
 export const BOOKING_STATUS_LABELS = {
   Tentative: 'Tentativa',
   Confirmed: 'Confirmada',
