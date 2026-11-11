@@ -12,7 +12,7 @@ BEGIN
     PERFORM tdf_ingest_public_video(source,run,payload);
     RAISE EXCEPTION 'TEST: stopped ingestion accepted';
   EXCEPTION WHEN raise_exception THEN IF SQLERRM LIKE 'TEST:%' THEN RAISE; END IF; END;
-  UPDATE records_ingestion_control SET enabled=true;
+  UPDATE records_ingestion_control SET enabled=true WHERE singleton;
   result:=tdf_ingest_public_video(source,run,payload);
   IF result<>'created' THEN RAISE EXCEPTION 'TEST: not created: %',result; END IF;
   IF NOT EXISTS(SELECT 1 FROM recording r JOIN collection_recording c ON c.recording_id=r.id WHERE r.code='youtube-recording-testVIDEO01' AND r.active AND c.sort_order<0) THEN RAISE EXCEPTION 'TEST: public membership missing'; END IF;
