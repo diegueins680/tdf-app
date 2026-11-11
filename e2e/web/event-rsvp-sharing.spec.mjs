@@ -180,7 +180,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await expect(page.getByRole('heading', { name: event.title })).toBeVisible();
   await page.getByText(/Cargando conversación…|No se pudo cargar la conversación\./).scrollIntoViewIfNeeded();
   await expect(page.getByText('No se pudo cargar la conversación.')).toBeVisible();
-  await page.getByRole('button', { name: 'Voy' }).dblclick();
+  await page.getByRole('button', { name: 'Voy', exact: true }).dblclick();
 
   await expect(page).toHaveURL(/\/login\?.*signup=1.*redirect=%2Feventos%2F42/);
   const signup = page.getByRole('dialog', { name: /crear cuenta/i });
@@ -193,7 +193,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await expect(page).toHaveURL(/\/eventos\/42$/);
   await expect.poll(() => api.getState().upsertCount).toBe(1);
   expect(api.getState().bodies).toEqual([{ rsvpStatus: 'accepted', rsvpShowOnProfile: true }]);
-  await expect(page.getByRole('button', { name: 'Voy' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Voy', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('section[aria-labelledby="event-rsvp-title-42"]')).toHaveAttribute('aria-busy', 'false');
   await expectNoSeriousAxeViolations(page, testInfo, 'event-rsvp-axe.json');
   await page.screenshot({ path: testInfo.outputPath('web-rsvp-event.png'), fullPage: true });
@@ -232,7 +232,7 @@ test('private events do not enumerate and cancelled public events disable RSVP a
   }));
   await page.goto('/eventos/43');
   await expect(page.getByText('Los eventos cancelados no aceptan nuevas respuestas.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Voy' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Voy', exact: true })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Compartir' })).toBeDisabled();
 });
 
