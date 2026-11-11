@@ -61,6 +61,7 @@ import { deriveSignupDisplayName, validateSignupFields } from '../utils/signupFi
 import { reportClientError } from '../analytics/errorReporting';
 import { env } from '../utils/env';
 import { InAppBrowserNotice, useInAppBrowser } from '../components/InAppBrowserNotice';
+import { isDesktopShell } from '../desktop/shell';
 import { persistOnboardingIntentWithRetry } from '../session/onboardingIntentRecovery';
 
 const ACCOUNT_TERMS_VERSION = 'tdf-account-terms-v1';
@@ -206,6 +207,9 @@ export default function LoginPage({ onAuthenticated }: { onAuthenticated?: () =>
   // Social in-app browsers (Instagram, Facebook…) cannot complete Google
   // Sign-In with passkeys, so there we offer the system browser instead.
   const inAppBrowser = useInAppBrowser();
+  // Google Identity Services rejects embedded shells; the desktop app signs in
+  // with TDF credentials only (see tdf-desktop/docs/limitations).
+  const desktopShell = isDesktopShell();
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleSignupButtonRef = useRef<HTMLDivElement | null>(null);
   const identifierInputRef = useRef<HTMLInputElement | null>(null);
@@ -650,7 +654,7 @@ export default function LoginPage({ onAuthenticated }: { onAuthenticated?: () =>
   }, [signupDialogOpen]);
 
   useEffect(() => {
-    if (!googleClientId) return;
+    if (!googleClientId || desktopShell) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -702,7 +706,7 @@ export default function LoginPage({ onAuthenticated }: { onAuthenticated?: () =>
     return () => {
       cancelled = true;
     };
-  }, [googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, t]);
+  }, [desktopShell, googleButtonWidth, googleClientId, handleGoogleCredential, isMobile, signupDialogOpen, t]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -1082,10 +1086,15 @@ export default function LoginPage({ onAuthenticated }: { onAuthenticated?: () =>
                   </Alert>
                 )}
 
-                {googleClientId && !servicePreparing && inAppBrowser && (
+                {googleClientId && desktopShell && (
+                  <Alert severity="info" data-testid="google-desktop-unavailable">
+                    {t('authEntry.googleDesktopUnavailable')}
+                  </Alert>
+                )}
+                {googleClientId && !servicePreparing && !desktopShell && inAppBrowser && (
                   <InAppBrowserNotice host={inAppBrowser} context="login" />
                 )}
-                {googleClientId && !servicePreparing && !inAppBrowser && (
+                {googleClientId && !servicePreparing && !desktopShell && !inAppBrowser && (
                   <Stack spacing={1} alignItems="center">
                     <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
                       {t('authEntry.googleContinue')}
@@ -1117,7 +1126,7 @@ export default function LoginPage({ onAuthenticated }: { onAuthenticated?: () =>
                     )}
                   </Stack>
                 )}
-                {googleClientId && servicePreparing && (
+                {googleClientId && servicePreparing && !desktopShell && (
                   <Alert severity="info">
                     {t('authEntry.googleWaiting')}
                   </Alert>
@@ -1556,10 +1565,15 @@ export default function LoginPage({ onAuthenticated }: { onAuthenticated?: () =>
                 {t('authEntry.claimReviewAfterSignup')}
               </Alert>
             )}
-            {googleClientId && claimArtistId === null && inAppBrowser && (
+            {googleClientId && claimArtistId === null && desktopShell && (
+              <Alert severity="info">
+                {t('authEntry.googleDesktopUnavailable')}
+              </Alert>
+            )}
+            {googleClientId && claimArtistId === null && !desktopShell && inAppBrowser && (
               <InAppBrowserNotice host={inAppBrowser} context="signup" />
             )}
-            {googleClientId && claimArtistId === null && !inAppBrowser && (
+            {googleClientId && claimArtistId === null && !desktopShell && !inAppBrowser && (
               <Stack spacing={1} alignItems="center">
                 <Typography variant="body2" color="text.secondary">
                   {t('authEntry.googleCreateEnter')}

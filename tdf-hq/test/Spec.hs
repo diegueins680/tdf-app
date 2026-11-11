@@ -540,6 +540,7 @@ import TDF.Server.SocialEventsHandlers (
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
     validateArtistProfileWriteAccess,
+    validateArtistProfilePartyChange,
     validateAuthenticatedPartyReference,
     validateTicketCheckInLookup,
     validateStoredTicketOrderStatus,
@@ -594,6 +595,8 @@ import TDF.Config
       facebookMessagingApiBase,
       facebookMessagingPageId,
       googleClientId,
+      appleSignInAudiences,
+      appleSignInJwksUrl,
       instagramAppToken,
       instagramGraphBase,
       instagramMessagingApiBase,
@@ -638,6 +641,7 @@ import TDF.Seed
     , syntheticPersonaPassword
     , syntheticPersonaSeedingAllowed
     )
+import qualified TDF.AppleSignInSpec as AppleSignInSpec
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
@@ -5433,6 +5437,30 @@ main = hspec $ do
                 $ do
                     cfg <- loadConfig
                     googleClientId cfg `shouldBe` Nothing
+
+        it "defaults and normalizes Sign in with Apple audiences and JWKS URL" $ do
+            withEnvOverrides [] $ do
+                cfg <- loadConfig
+                appleSignInAudiences cfg `shouldBe` Just ["com.tdfrecords.app"]
+                appleSignInJwksUrl cfg `shouldBe` "https://appleid.apple.com/auth/keys"
+            withEnvOverrides
+                [ ("APPLE_SIGN_IN_AUDIENCES", Just " com.tdfrecords.app , com.tdfrecords.web,com.tdfrecords.app ")
+                , ("APPLE_SIGN_IN_JWKS_URL", Just " https://example.test/keys ") ]
+                $ do
+                    cfg <- loadConfig
+                    appleSignInAudiences cfg `shouldBe` Just ["com.tdfrecords.app", "com.tdfrecords.web"]
+                    appleSignInJwksUrl cfg `shouldBe` "https://example.test/keys"
+            withEnvOverrides [ ("APPLE_SIGN_IN_AUDIENCES", Just "disabled") ] $ do
+                cfg <- loadConfig
+                appleSignInAudiences cfg `shouldBe` Nothing
+
+        it "rejects malformed Apple Sign in settings" $ do
+            let assertInvalid name value expected =
+                    withEnvOverrides [ (name, Just value) ] $
+                        loadConfig `shouldThrow` \err -> expected `isInfixOf` show (err :: IOException)
+            assertInvalid "APPLE_SIGN_IN_AUDIENCES" "com.tdf/app" "must not contain path"
+            assertInvalid "APPLE_SIGN_IN_AUDIENCES" "com.tdf app" "ASCII letters"
+            assertInvalid "APPLE_SIGN_IN_JWKS_URL" "http://example.test/keys" "absolute https URL"
 
         it "rejects malformed Google client ids before Google login verification fallback" $ do
             let assertInvalid rawClientId expectedMessage =
@@ -12516,6 +12544,25 @@ main = hspec $ do
             (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenreIds\":[\"11111111-1111-4111-8111-111111111111\"]}")
                 `shouldSatisfy` isRight
 
+    describe "validateArtistProfilePartyChange" $ do
+        let user roles = AuthedUser
+                { auPartyId = toSqlKey 7
+                , auRoles = roles
+                , auModules = modulesForRoles roles
+                , auApiTokenId = Nothing
+                , auSessionWitness = Nothing
+                }
+            owner = user [Artist]
+            admin = user [Admin]
+        it "keeps the stored party when an owner omits it or repeats it" $ do
+            validateArtistProfilePartyChange owner (Just "7") Nothing `shouldBe` Right (Just "7")
+            validateArtistProfilePartyChange owner (Just "7") (Just " 7 ") `shouldBe` Right (Just "7")
+        it "refuses an owner moving the profile to another party" $
+            fmap errHTTPCode (either Just (const Nothing) (validateArtistProfilePartyChange owner (Just "7") (Just "99")))
+                `shouldBe` Just 403
+        it "lets a strict administrator move a profile to another party" $
+            validateArtistProfilePartyChange admin (Just "7") (Just "99") `shouldBe` Right (Just "99")
+
     describe "validateArtistName" $ do
         it "trims canonical artist names before persistence" $
             validateArtistName "  Los Mentores  " `shouldBe` Right "Los Mentores"
@@ -18049,6 +18096,7 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    AppleSignInSpec.spec
     OperationsInboundCaptureSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec

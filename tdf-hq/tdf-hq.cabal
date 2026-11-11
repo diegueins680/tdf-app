@@ -87,6 +87,7 @@ library
     TDF.Artists.Promotion
     TDF.Artists.Enrichment
     TDF.Auth
+    TDF.AppleSignIn
     TDF.VideoCampaigns
     TDF.Auth.AccountName
     TDF.CampaignAutomation
@@ -441,6 +442,7 @@ test-suite tdf-hq-test
     TDF.Commerce.RefundRecoverySpec
     TDF.Server.PaymentAuditSpec
     TDF.ServerAuthSpec
+    TDF.AppleSignInSpec
     TDF.ServerExtraSpec
     TDF.ServerFanClubSpec
     TDF.ServerSpec
