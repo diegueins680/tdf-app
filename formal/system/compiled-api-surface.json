@@ -29104,7 +29104,7 @@
             },
             {
               "args": [],
-              "module": "TDF.Server.TicketPaymentReceipt",
+              "module": "TDF.DTO.TicketPaymentReceipt",
               "name": "TicketPaymentReceipt"
             }
           ],
