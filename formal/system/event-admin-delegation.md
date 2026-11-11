@@ -91,10 +91,8 @@ In particular issuing and revoking invitations, removing administrators,
 promotional codes, refund requests and decisions, manual payment review, tax
 documents, order status changes, waitlist, budget and finance entries remain
 with the organizer, and no event deletion, RSVP management or memory
-moderation check was widened. The transfer handlers accept a delegated administrator, but the
-transfer module and the transfer listing query still require the current
-holder or the stored organizer, so a delegated administrator cannot transfer
-or list transfers of a ticket they do not hold.
+moderation check was widened. Ticket transfers are not delegated: creating a transfer of, or listing the
+transfers of, a ticket the caller does not hold requires the stored organizer.
 
 ## Courtesy tickets
 
@@ -109,12 +107,13 @@ One ticket per unit is issued and, as for any issued order, the ticket
 confirmation is sent to the guest email when one was given. No checkout,
 payment intent, invoice or promotional code is involved.
 
-Because the shared reservation also requires the tier to be active and inside
-its sale window, a courtesy issue on an inactive tier or outside the window is
-refused with the same 409 "Not enough tickets available". Courtesy issuance
-has no per-event or per-administrator cap beyond tier and event capacity and
-writes no separate audit row; the order metadata is the record of who issued
-it.
+The tier must be active and inside its sales window: otherwise the request is
+refused with 409 "Courtesy tickets need an active ticket tier inside its sales
+window", distinct from the 409 "Not enough tickets available" of an inventory
+refusal. Courtesy issuance has no idempotency key (a repeated request issues
+another order), no per-event or per-administrator cap beyond tier and event
+capacity, and writes no separate audit row; the order metadata is the record
+of who issued it.
 
 ## Concurrency
 
@@ -158,8 +157,8 @@ not stop the one request already in flight.
 - 404: event missing or hidden; invitation or administrator not found on this
   event; any unusable invitation link; ticket tier not on this event.
 - 409: pending-invitation limit reached; revoking an accepted invitation;
-  organizer accepting their own link; a courtesy issue the inventory
-  reservation refuses (capacity, inactive tier or closed sale window).
+  organizer accepting their own link; a courtesy issue on an inactive tier
+  or outside its sales window; not enough tickets for a courtesy issue.
 
 A failed request writes nothing. There is no automatic retry; the web client
 keeps the token and offers a retry after a transient failure.
@@ -172,12 +171,14 @@ disposable database: organizer-only issue and digest-only storage; acceptance
 and its idempotence; binding to one account, one event and the issuer's
 authority; eight accounts racing for one link; revocation and removal;
 logistics, courtesy issuance, capacity refusal and admission by a delegated
-administrator. Web tests cover the client calls, the organizer and delegated
+administrator. The hosted workflow runs that script in
+`.github/workflows/ci.yml` after the organizer runner. Web tests cover the client calls, the organizer and delegated
 views, the invitation panel and the fragment handling.
 
 Not established: a bounded model; per-route tests for each existing operation
 a delegated administrator now passes (event edit, image upload, tier writes,
-order and ticket listing, QR) beyond reading the code; expiry at the exact
+order and ticket listing, QR) beyond reading the code; a test of the courtesy
+sales-window refusal; expiry at the exact
 boundary; the OpenAPI document and the Mobile client, which do not describe
 these routes; notification of the organizer when a link is accepted; and
-whether courtesy issuance should bypass sale windows or have its own quota.
+whether courtesy issuance should have its own quota or finance reporting.
