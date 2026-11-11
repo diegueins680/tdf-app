@@ -2939,7 +2939,10 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         -- A strict administrator may edit an event without an organizer and is
         -- assigned as its organizer together with the accepted edit, under
         -- the event lock; a refused edit assigns nobody.
-        delegatedAdmin <- isDelegatedEventAdmin eventKey
+        -- Asked only when the caller is not the organizer of an organized event.
+        delegatedAdmin <- case cleanMaybeText (socialEventOrganizerPartyId existing) of
+            Just owner | owner /= currentPartyId -> isDelegatedEventAdmin eventKey
+            _ -> pure False
         let editAccess row = case cleanMaybeText (socialEventOrganizerPartyId row) of
                 Just owner
                     | owner == currentPartyId || delegatedAdmin -> Right False
@@ -3108,7 +3111,11 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                             if any (externalEventRefIsSuppressed . entityVal) refs
                                 then pure (Left err404{errBody = "Event not found"})
                                 else
-                                  delegatedEventAdminExists eventKey currentPartyId >>= \delegatedAdmin ->
+                                  ( case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
+                                        Just owner | owner /= currentPartyId ->
+                                            delegatedEventAdminExists eventKey currentPartyId
+                                        _ -> pure False
+                                  ) >>= \delegatedAdmin ->
                                     case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
                                         Just owner
                                             | owner /= currentPartyId && not delegatedAdmin ->
