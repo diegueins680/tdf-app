@@ -1294,7 +1294,7 @@ function CourseCheckoutCard({
           {paymentError && <Alert severity="warning">{paymentError}</Alert>}
           {checkout.checkoutAvailable && !paid && checkout.paymentMethods.length === 0 && (
             <Alert severity="info" variant="outlined">
-              No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.
+              Todavía no hay un método de pago en línea para esta orden. La reserva no equivale a pago.
             </Alert>
           )}
           <Stack spacing={1.5}>

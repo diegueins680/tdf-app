@@ -127,6 +127,15 @@ describe('ArtistInvitationLinksPanel', () => {
         revokeButtons[0]?.click();
         await flushPromises();
       });
+      // Revoking is confirmed by name before anything is sent.
+      expect(revokeMock).not.toHaveBeenCalled();
+      const dialog = document.body.querySelector('[role="dialog"]');
+      expect(dialog?.textContent).toContain(invitation().inviteeLabel);
+      const confirmButton = Array.from(dialog?.querySelectorAll('button') ?? []).find((b) => b.textContent === 'Revocar enlace');
+      await act(async () => {
+        confirmButton?.click();
+        await flushPromises();
+      });
       expect(revokeMock).toHaveBeenCalledWith(3);
     } finally {
       await view.cleanup();

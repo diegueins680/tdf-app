@@ -8,10 +8,12 @@
  * - If no key is configured, exposes a no-op client so the rest of the
  *   app never crashes on missing env (preview deploys, local dev, etc).
  * - Session recording is disabled by default (privacy-first).
+ * - The SDK loads on demand; if its file cannot be fetched the app keeps
+ *   working and events are dropped.
  *
  * See: docs/analytics.md
  */
-import posthog from 'posthog-js';
+import type { PostHog } from 'posthog-js';
 import { env } from '../utils/env';
 import { logger } from '../utils/logger';
 
@@ -31,6 +33,7 @@ export interface AnalyticsClient {
 }
 
 let cachedClient: AnalyticsClient | null = null;
+let pendingSdk: Promise<unknown> | null = null;
 
 const REDACTED_QUERY_VALUE = '[REDACTED]';
 // Only acquisition metadata is needed from URL queries. New private navigation
@@ -211,7 +214,13 @@ export function getAnalyticsClient(): AnalyticsClient {
     return cachedClient;
   }
 
-  posthog.init(key, {
+  // The SDK is a separate file loaded on demand: when it cannot be fetched
+  // (network failure, content blocker) the app keeps working and events are
+  // dropped. Calls made while it loads run in order once it is ready, and
+  // their properties are sanitized at call time, before they wait.
+  const sdk: Promise<PostHog | null> = import('posthog-js').then((module) => {
+    const posthog = module.default;
+    posthog.init(key, {
     api_host: host,
     autocapture: false,
     capture_pageview: true,
@@ -234,34 +243,49 @@ export function getAnalyticsClient(): AnalyticsClient {
       if (projectToken === key) event.properties['token'] = projectToken;
       return event;
     },
+    });
+    return posthog;
+  }).catch(() => {
+    logAnalyticsFailure('load');
+    return null;
   });
+  pendingSdk = sdk;
+  const withSdk = (operation: string, run: (posthog: PostHog) => void): void => {
+    void sdk.then((posthog) => {
+      if (!posthog) return;
+      try {
+        run(posthog);
+      } catch {
+        logAnalyticsFailure(operation);
+      }
+    });
+  };
 
   cachedClient = {
     ready: true,
     capture: (event, properties) => {
       try {
-        posthog.capture(event, sanitizedOptionalProperties(properties));
+        const sanitized = sanitizedOptionalProperties(properties);
+        withSdk('capture', (posthog) => { posthog.capture(event, sanitized); });
       } catch {
         logAnalyticsFailure('capture');
       }
     },
     identify: (distinctId, properties) => {
       try {
-        posthog.identify(distinctId, sanitizedOptionalProperties(properties));
+        const sanitized = sanitizedOptionalProperties(properties);
+        withSdk('identify', (posthog) => { posthog.identify(distinctId, sanitized); });
       } catch {
         logAnalyticsFailure('identify');
       }
     },
     reset: () => {
-      try {
-        posthog.reset();
-      } catch {
-        logAnalyticsFailure('reset');
-      }
+      withSdk('reset', (posthog) => { posthog.reset(); });
     },
     page: (name, properties) => {
       try {
-        posthog.capture('$pageview', sanitizeAnalyticsProperties({ ...properties, name }));
+        const sanitized = sanitizeAnalyticsProperties({ ...properties, name });
+        withSdk('page', (posthog) => { posthog.capture('$pageview', sanitized); });
       } catch {
         logAnalyticsFailure('page');
       }
@@ -274,4 +298,11 @@ export function getAnalyticsClient(): AnalyticsClient {
 /** Test-only. */
 export function __resetAnalyticsForTests(): void {
   cachedClient = null;
+  pendingSdk = null;
+}
+
+/** Test-only: resolves once the SDK has loaded and every queued call has run. */
+export async function __analyticsSettledForTests(): Promise<void> {
+  await pendingSdk;
+  await Promise.resolve();
 }

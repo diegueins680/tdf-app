@@ -382,13 +382,13 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   await refundPolicy.click();
   await expect(page.getByText('Reembolso total.')).toBeVisible();
   await page.getByLabel('Nombre completo').fill('Elena Paredes');
-  await page.getByLabel('Email').fill('per-01.elena@persona.test');
+  await page.getByLabel('Correo').fill('per-01.elena@persona.test');
   await page.getByLabel(/Acepto los términos versionados/).check();
-  await page.getByRole('button', { name: 'Retener entradas y revisar total' }).click();
+  await page.getByRole('button', { name: 'Continuar al pago' }).click();
 
   await expect(page).toHaveURL(/\/eventos\/41\/orden\/91$/);
   await expect(page.getByText(/La orden no está pagada/)).toBeVisible();
-  await expect(page.getByText(/No hay un proveedor real habilitado/)).toBeVisible();
+  await expect(page.getByText(/no hay un método de pago en línea/)).toBeVisible();
   await expect(page.getByText(/Total:.*25[,.]50/)).toBeVisible();
   expect(checkoutRequest).toMatchObject({
     tierId: 8, quantity: 1, buyerName: 'Elena Paredes',
@@ -625,7 +625,7 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
     'href',
     `/login?redirect=${encodedBookingEntry}&signup=1`,
   );
-  await expect(page.getByText(/crear una cuenta es opcional/i).first()).toBeVisible();
+  await expect(page.getByText(/no necesitas cuenta/i).first()).toBeVisible();
   await expect(page.getByText(/crearemos tu acceso automáticamente/i)).toHaveCount(0);
   const fullNameInput = page.getByLabel('Nombre completo');
   await expect(fullNameInput).toBeVisible();

@@ -77,7 +77,7 @@ describe('ProviderPaymentReturnPage', () => {
       returnPath: '/other-order', createdAt: Date.now() });
     getMock.mockResolvedValue(session('succeeded', false));
     renderPage(`/pagos/retorno?tdf_checkout=${checkoutId}`);
-    await screen.findByText(/servidor verificó el pago/);
+    await screen.findByText(/Pago confirmado/);
     expect(getMock).toHaveBeenCalledWith(checkoutId, attemptId, 'secure-checkout-lookup-token');
     expect(screen.getByRole('link', { name: 'Volver a la orden' }).getAttribute('href')).toBe('/orden');
   });
@@ -88,7 +88,7 @@ describe('ProviderPaymentReturnPage', () => {
       provider: 'placetopay', paymentMethod: 'card', lookupToken: 'other-private-lookup',
       returnPath: '/other-order', createdAt: Date.now() });
     renderPage(`/pagos/retorno${query}`);
-    expect(screen.getByText(/no tiene la capacidad privada/)).toBeTruthy();
+    expect(screen.getByText(/no podemos consultar el pago/)).toBeTruthy();
     expect(getMock).not.toHaveBeenCalled();
   });
 
@@ -108,7 +108,7 @@ describe('ProviderPaymentReturnPage', () => {
     getMock.mockResolvedValue(session('confirmed_no_charge', true));
     renderPage();
 
-    await screen.findByText(/confirmó que no se completó un cobro/);
+    await screen.findByText(/No se realizó ningún cobro/);
     fireEvent.click(screen.getByRole('link', { name: 'Volver a la orden' }));
 
     expect(await screen.findByText('Orden')).toBeTruthy();
@@ -134,7 +134,7 @@ describe('ProviderPaymentReturnPage', () => {
     getMock.mockResolvedValue({ ...session('confirmed_no_charge', true), provider: 'payphone' });
     renderPage();
 
-    await screen.findByText(/confirmó que no se completó un cobro/);
+    await screen.findByText(/No se realizó ningún cobro/);
     expect(screen.queryByText(/rechazado|cancelaste|rechazo del banco/i)).toBeNull();
     fireEvent.click(screen.getByRole('link', { name: 'Volver a la orden' }));
 

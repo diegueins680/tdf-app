@@ -55,6 +55,8 @@ import {
   type ServiceStorefrontPackageDTO,
 } from '../api/serviceStorefront';
 import { loadAvailableCheckoutMethods } from '../api/paymentCapabilities';
+import { useSession } from '../session/SessionContext';
+import { sessionContactDefaults } from '../session/sessionContactDefaults';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
 import HostedProviderCheckout from '../components/payments/HostedProviderCheckout';
 
@@ -158,7 +160,12 @@ export default function MixingMasteringPage() {
   const [serviceFilter, setServiceFilter] = useState<ServiceFilter>('all');
   const [selectedPackage, setSelectedPackage] = useState<ServicePackage | null>(null);
   const [currentStep, setCurrentStep] = useState<OrderStep>('select');
-  const [formData, setFormData] = useState<OrderFormData>(initialFormData);
+  // A signed-in visitor does not retype what the account already knows.
+  const { session } = useSession();
+  const [formData, setFormData] = useState<OrderFormData>(() => {
+    const known = sessionContactDefaults(session);
+    return { ...initialFormData, buyerName: known.name, buyerEmail: known.email };
+  });
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [lookupToken, setLookupToken] = useState<string | null>(null);
   const [confirmedOrder, setConfirmedOrder] = useState<ServiceStorefrontOrderDTO | null>(null);

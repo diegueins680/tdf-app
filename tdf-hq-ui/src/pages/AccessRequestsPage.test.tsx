@@ -177,6 +177,15 @@ describe('internal access request flow', () => {
     }
   });
 
+  it('offers a feature picker instead of an error when a new request has no target', async () => {
+    const view = await renderPage('/solicitudes-acceso/nueva');
+    try {
+      expect(view.container.textContent).toContain('¿A qué función necesitas acceso?');
+      expect(view.container.textContent).not.toContain('El destino solicitado no existe');
+      expect(view.container.querySelector('[role="combobox"]')).not.toBeNull();
+    } finally { await view.cleanup(); }
+  });
+
   it('submits the exact locked feature action without broad role data in telemetry', async () => {
     createMock.mockResolvedValue(buildRequest());
     const view = await renderPage('/solicitudes-acceso/nueva?feature=label.ddex.inbox&action=import');

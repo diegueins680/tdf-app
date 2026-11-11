@@ -54,6 +54,13 @@ export function createAppTheme(mode: PaletteMode) {
       button: { textTransform: 'none', fontWeight: 600, letterSpacing: '0.01em' },
     },
     components: {
+      // Field help is a sentence to read, not a label: keep it in sentence case.
+      // The caption style stays uppercase for short labels.
+      MuiFormHelperText: {
+        styleOverrides: {
+          root: { textTransform: 'none', letterSpacing: 'normal', fontWeight: 400 },
+        },
+      },
       MuiAlert: {
         styleOverrides: {
           root: { '@media (max-width: 599.95px)': { flexWrap: 'wrap' } },

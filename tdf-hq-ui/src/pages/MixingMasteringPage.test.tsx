@@ -76,6 +76,12 @@ jest.unstable_mockModule('../api/serviceStorefront', () => ({
   },
 }));
 
+let sessionMock: { displayName?: string; username?: string } | null = null;
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  useSession: () => ({ session: sessionMock, loading: false }),
+  getStoredSessionToken: () => null,
+  getActiveSession: () => sessionMock,
+}));
 jest.unstable_mockModule('../api/paymentCapabilities', () => ({
   loadAvailableCheckoutMethods: loadAvailableCheckoutMethodsMock,
 }));
@@ -117,6 +123,15 @@ describe('MixingMasteringPage commercial truthfulness', () => {
       bankTransfer: true,
     });
     window.sessionStorage.clear();
+    sessionMock = null;
+  });
+
+  it('starts the contact step from what a signed-in account already knows', async () => {
+    sessionMock = { displayName: 'Elena Paredes', username: 'elena@example.com' };
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Seleccionar' }, { timeout: 15_000 }));
+    expect(screen.getByRole<HTMLInputElement>('textbox', { name: /Tu nombre/ }).value).toBe('Elena Paredes');
+    expect(screen.getByRole<HTMLInputElement>('textbox', { name: /Email/ }).value).toBe('elena@example.com');
   });
 
   it('does not fabricate an order or show success after the API fails', async () => {

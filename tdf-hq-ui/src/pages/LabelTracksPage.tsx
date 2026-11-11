@@ -26,6 +26,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Label } from '../api/label';
 import type { LabelTrackDTO } from '../api/types';
 import { SessionGate } from '../components/SessionGate';
+import ConfirmDialog from '../components/ConfirmDialog';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
@@ -103,12 +104,15 @@ export default function LabelTracksPage() {
     },
   });
 
+  // Deleting a track cannot be undone, so it is confirmed by name first.
+  const [pendingDelete, setPendingDelete] = useState<{ id: string; title: string } | null>(null);
   const deleteMutation = useMutation({
     mutationFn: (id: string) => Label.deleteTrack(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['label-tracks', ownerKey] });
       setToast('Eliminado');
     },
+    onSettled: () => setPendingDelete(null),
   });
 
   useEffect(() => {
@@ -479,7 +483,7 @@ export default function LabelTracksPage() {
                       </Stack>
                       <IconButton
                         size="small"
-                        onClick={() => deleteMutation.mutate(track.ltId)}
+                        onClick={() => setPendingDelete({ id: track.ltId, title: track.ltTitle })}
                         aria-label={`Eliminar track ${track.ltTitle}`}
                       >
                         <DeleteIcon fontSize="small" />
@@ -535,6 +539,16 @@ export default function LabelTracksPage() {
             {toast}
           </Alert>
         </Snackbar>
+        <ConfirmDialog
+          open={pendingDelete !== null}
+          onClose={() => setPendingDelete(null)}
+          onConfirm={() => { if (pendingDelete) deleteMutation.mutate(pendingDelete.id); }}
+          title="¿Eliminar este track?"
+          description={`Se eliminará «${pendingDelete?.title ?? ''}». No se puede deshacer.`}
+          confirmLabel="Eliminar"
+          severity="danger"
+          confirming={deleteMutation.isPending}
+        />
       </Stack>
     </SessionGate>
   );

@@ -33,6 +33,7 @@ jest.unstable_mockModule('../utils/logger', () => ({
 }));
 
 const {
+  __analyticsSettledForTests,
   __resetAnalyticsForTests,
   getAnalyticsClient,
   redactSensitiveQueryValues,
@@ -80,7 +81,7 @@ describe('analytics/posthog (web)', () => {
     __resetAnalyticsForTests();
   });
 
-  test('returns a no-op client when no key is configured', () => {
+  test('returns a no-op client when no key is configured', async () => {
     const noopAnalyticsClient = getAnalyticsClient();
     expect(noopAnalyticsClient.ready).toBe(false);
     noopAnalyticsClient.capture('rsvp_created', { eventId: analyticsFixtureIds.noKeyEventId });
@@ -96,9 +97,10 @@ describe('analytics/posthog (web)', () => {
     );
   });
 
-  test('disables the SDK request path that bypasses event sanitization', () => {
+  test('disables the SDK request path that bypasses event sanitization', async () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     expect(getAnalyticsClient().ready).toBe(true);
+    await __analyticsSettledForTests();
     // advanced_disable_feature_flags only changes evaluation, not transmission.
     expect(initMock.mock.calls[0]?.[1]).toEqual(expect.objectContaining({
       advanced_disable_flags: true,
@@ -128,6 +130,7 @@ describe('analytics/posthog (web)', () => {
       });
       await new Promise((resolve) => setTimeout(resolve, 0));
       expect(captureException).not.toHaveBeenCalled();
+      await __analyticsSettledForTests();
       expect(captureMock).toHaveBeenCalledTimes(2);
       const beforeSend = (initMock.mock.calls[0]?.[1] as {
         before_send: (event: { properties: Record<string, unknown> }) => unknown;
@@ -150,10 +153,11 @@ describe('analytics/posthog (web)', () => {
     }
   });
 
-  test('forwards calls to PostHog when a key is configured', () => {
+  test('forwards calls to PostHog when a key is configured', async () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const configuredAnalyticsClient = getAnalyticsClient();
     expect(configuredAnalyticsClient.ready).toBe(true);
+    await __analyticsSettledForTests();
     expect(initMock).toHaveBeenCalledTimes(1);
 
     configuredAnalyticsClient.capture('rsvp_created', {
@@ -163,6 +167,7 @@ describe('analytics/posthog (web)', () => {
     configuredAnalyticsClient.identify(analyticsFixtureIds.identifiedUserId, { username: 'aria' });
     configuredAnalyticsClient.page('Home');
     configuredAnalyticsClient.reset();
+    await __analyticsSettledForTests();
 
     expect(captureMock).toHaveBeenCalledWith('rsvp_created', {
       eventId: analyticsFixtureIds.forwardedEventId,
@@ -173,7 +178,7 @@ describe('analytics/posthog (web)', () => {
     expect(resetMock).toHaveBeenCalled();
   });
 
-  test('redacts credentials while preserving PostHog\'s required project token', () => {
+  test('redacts credentials while preserving PostHog\'s required project token', async () => {
     const secret = 'reset-secret-sentinel';
     const source = `https://tdf.test/reset?token=${secret}&redirect=%2Ffans`;
     const sanitizedUrl = redactSensitiveQueryValues(source);
@@ -196,6 +201,7 @@ describe('analytics/posthog (web)', () => {
 
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     getAnalyticsClient();
+    await __analyticsSettledForTests();
     const initOptions = initMock.mock.calls[0]?.[1] as {
       autocapture?: boolean;
       before_send?: (event: { properties: Record<string, unknown> }) => {
@@ -219,7 +225,7 @@ describe('analytics/posthog (web)', () => {
     expect(outgoingWithApplicationToken?.properties).not.toHaveProperty('token');
   });
 
-  test('masks ticket credentials and buyer data in SDK and explicit properties', () => {
+  test('masks ticket credentials and buyer data in SDK and explicit properties', async () => {
     const sentinel = 'PRIVATE-TICKET-SENTINEL';
     const properties = sanitizeAnalyticsProperties({
       event_id: 141,
@@ -244,9 +250,10 @@ describe('analytics/posthog (web)', () => {
       .toBe('https://tdf.test/eventos/141?utm_source=artist');
   });
 
-  test('sanitizes SDK initial and identify person-property envelopes before sending', () => {
+  test('sanitizes SDK initial and identify person-property envelopes before sending', async () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     getAnalyticsClient();
+    await __analyticsSettledForTests();
     interface Event {
       event: string;
       properties: Record<string, unknown>;
@@ -274,7 +281,7 @@ describe('analytics/posthog (web)', () => {
     expect(initOptions.before_send(null)).toBeNull();
   });
 
-  test('masks camel-case credentials, fragments and nested redirect URLs', () => {
+  test('masks camel-case credentials, fragments and nested redirect URLs', async () => {
     const sentinel = 'PRIVATE-LOOKUP-SENTINEL';
     let redirect = `/eventos/141?lookupToken=${sentinel}&buyerEmail=${sentinel}`;
     for (let index = 0; index < 5; index += 1) redirect = `/return?next=${encodeURIComponent(redirect)}`;
@@ -285,7 +292,7 @@ describe('analytics/posthog (web)', () => {
     }
   });
 
-  test('redacts every payment return route including encoded and case variants', () => {
+  test('redacts every payment return route including encoded and case variants', async () => {
     const sentinel = 'PRIVATE-PROVIDER-RESOURCE';
     for (const path of ['/marketplace/pago-datafast', '/mezcla-mastering/pago-datafast',
       '/pagos/retorno/', '/PAGOS/RETORNO', '/marketplace/%70ago-datafast',
@@ -297,7 +304,7 @@ describe('analytics/posthog (web)', () => {
     }
   });
 
-  test('keeps configured private navigation identifiers out of automatic pageviews', () => {
+  test('keeps configured private navigation identifiers out of automatic pageviews', async () => {
     const sentinel = 'PRIVATE-ROUTE-CAPABILITY';
     const privateParam = /^(?:orderId|orderNumber|registrationId|bookingId|quoteId|token|notificationId|partyId|reportId|taskId|planId|destinationId|id)$/;
     let checked = 0;
@@ -321,7 +328,7 @@ describe('analytics/posthog (web)', () => {
       .not.toContain(sentinel);
   });
 
-  test('masks arbitrary navigation queries while retaining reviewed attribution parameters', () => {
+  test('masks arbitrary navigation queries while retaining reviewed attribution parameters', async () => {
     const sentinel = 'PRIVATE-NOTIFICATION-IDENTIFIER';
     for (const key of ['application', 'invitation', 'review', 'alert', 'request', 'futurePrivateKey']) {
       const value = redactSensitiveQueryValues(`https://tdf.test/mis-clasificados?${key}=${sentinel}&utm_source=artist&ref=partner&referral_code=artist-code`);
@@ -334,14 +341,14 @@ describe('analytics/posthog (web)', () => {
     expect(new URL(campaign).searchParams.get('utm_campaign')).toBe('#release');
   });
 
-  test('preserves ordinary fragment-like campaign names outside URL values', () => {
+  test('preserves ordinary fragment-like campaign names outside URL values', async () => {
     expect(sanitizeAnalyticsProperties({ attribution_campaign: '#release' }))
       .toEqual({ attribution_campaign: '#release' });
     expect(redactSensitiveQueryValues('https://tdf.test/eventos/141#private-token'))
       .not.toContain('private-token');
   });
 
-  test('preserves question-mark campaign labels while masking relative URL properties', () => {
+  test('preserves question-mark campaign labels while masking relative URL properties', async () => {
     const properties = sanitizeAnalyticsProperties({
       attribution_campaign: 'fall?sale',
       $initial_utm_campaign: 'fall?sale',
@@ -354,7 +361,7 @@ describe('analytics/posthog (web)', () => {
     expect(JSON.stringify(properties)).not.toContain('PRIVATE-RELATIVE-TOKEN');
   });
 
-  test('does not reinterpret scheme-like scalar labels as custom URL schemes', () => {
+  test('does not reinterpret scheme-like scalar labels as custom URL schemes', async () => {
     for (const campaign of ['launch:fall?sale', 'instagram:stories#launch']) {
       const properties = sanitizeAnalyticsProperties({
         attribution_campaign: campaign,
@@ -372,7 +379,7 @@ describe('analytics/posthog (web)', () => {
     expect(JSON.stringify(privateLinks)).not.toContain('PRIVATE-CUSTOM-URI');
   });
 
-  test('logs PostHog failures through the app logger', () => {
+  test('logs PostHog failures through the app logger', async () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const resilientAnalyticsClient = getAnalyticsClient();
     const captureError = new Error('capture failed');
@@ -400,6 +407,7 @@ describe('analytics/posthog (web)', () => {
       resilientAnalyticsClient.identify(analyticsFixtureIds.identifiedUserId);
       resilientAnalyticsClient.reset();
       resilientAnalyticsClient.page('Home');
+      await __analyticsSettledForTests();
 
       expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] capture failed');
       expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] identify failed');
@@ -411,10 +419,28 @@ describe('analytics/posthog (web)', () => {
     }
   });
 
-  test('memoizes the client across calls', () => {
+  test('keeps working and drops events when the SDK cannot start', async () => {
+    testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
+    initMock.mockImplementationOnce(() => {
+      throw new Error('blocked');
+    });
+    const client = getAnalyticsClient();
+    expect(() => {
+      client.capture('rsvp_created', { eventId: analyticsFixtureIds.forwardedEventId });
+      client.page('Home');
+      client.reset();
+    }).not.toThrow();
+    await __analyticsSettledForTests();
+    expect(loggerWarnMock).toHaveBeenCalledWith('[analytics] load failed');
+    expect(captureMock).not.toHaveBeenCalled();
+    expect(resetMock).not.toHaveBeenCalled();
+  });
+
+  test('memoizes the client across calls', async () => {
     testWindow.__ENV__ = { VITE_POSTHOG_KEY: 'phc_unit_test' };
     const firstAnalyticsClient = getAnalyticsClient();
     const secondAnalyticsClient = getAnalyticsClient();
+    await __analyticsSettledForTests();
     expect(firstAnalyticsClient).toBe(secondAnalyticsClient);
     expect(initMock).toHaveBeenCalledTimes(1);
   });
