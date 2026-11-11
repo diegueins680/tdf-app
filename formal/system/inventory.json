@@ -1096,6 +1096,8 @@
       "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
       "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
       "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
       "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
@@ -1110,6 +1112,8 @@
       "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
       "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+      "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+      "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
       "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
       "tdf-hq-ui/src/components/events/TicketPricePreview.tsx",
       "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
@@ -1305,6 +1309,7 @@
       "tdf-hq-ui/src/pages/ClassesPage.tsx",
       "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
       "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
+      "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
       "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
       "tdf-hq-ui/src/pages/CommerceHubPage.test.tsx",
       "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
@@ -1631,6 +1636,7 @@
       "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
       "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
       "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+      "tdf-hq-ui/src/utils/eventLineup.ts",
       "tdf-hq-ui/src/utils/eventRsvpIntent.test.ts",
       "tdf-hq-ui/src/utils/eventRsvpIntent.ts",
       "tdf-hq-ui/src/utils/eventSharing.test.ts",
@@ -9500,6 +9506,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-84df4c94cbe62081",
+      "path": "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+      "sha256": "c42c351d53eea188ae1b0f43552144caf3a88ac0cd19286cfff6f85abc3c52a3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-85610c4675bfa874",
+      "path": "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+      "sha256": "683f169bc7412f408cac5ee1f7b6e04d715f7382ec8e56721ddc7d6da8f32b11",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6d375a8bdcbe5d7c",
       "path": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "sha256": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
@@ -9581,6 +9599,18 @@
       "id": "SURFACE-32b83043961bf6cd",
       "path": "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
       "sha256": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a17dfa34ef337c89",
+      "path": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+      "sha256": "65f904a6cf8e33ce7401154167a2ae697e6603beedc52e7fbe1dbe4bdcb7746d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-07395d7f84adf446",
+      "path": "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
+      "sha256": "239e397d3fafdbf8176572370f759a4d15be707791a9fc0cac4d0793521a1272",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10432,13 +10462,13 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "02a8564ad6079993d42e0837b6b6880c9f77c54dd99ee7952be6c60514460e08",
+      "sha256": "72138a6a422a066872b065b3c73a584f3d4b7841c4f48a4dc78957557a362e55",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "bc8f467f4a10a129ab45e4e630fd676547fc5516f3c96e008c8dff0e8e468a2c",
+      "sha256": "c5c9e26d858ff16701ed4eb29c5ed63e2b2a6ac4468b0841c1c862c829927bb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10754,9 +10784,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-78d796fee86d9367",
+      "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
+      "sha256": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
+      "sha256": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11008,31 +11044,31 @@
     {
       "id": "SURFACE-843ecd90497b82eb",
       "path": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-      "sha256": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
+      "sha256": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8e582de4b6234f44",
       "path": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-      "sha256": "b4eaf012b687c6fc0ae4d60d667b661e346b15323ba0e7baad282f49452fcd91",
+      "sha256": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d536aa30411edce",
       "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-      "sha256": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
+      "sha256": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "ed81c8122a6debedadbc37dd221096ea424f4c6f482bcb05ee96562704f28b7c",
+      "sha256": "a31ff6de689d1b9b31fe6b240d709d047d42783ca82b1322ccdf9e0193786b83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "4d2ecce58a6883d9c9b48bd837e17578c3e5385d8e1f8630df49f097bf2a7767",
+      "sha256": "f6b70b9d6aac26552d0dba732452989b37f14582d0163a3b86615dcacb4a8ed3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12016,13 +12052,13 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "8d256dd500d12005e1f9d18b238407ae20fa9374ae6d6e7a9b9c5bf998174e03",
+      "sha256": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
+      "sha256": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12707,6 +12743,12 @@
       "id": "SURFACE-92990a3989bb72d1",
       "path": "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
       "sha256": "c0a08330089af232d3919c68237e36e61e9f241f98c2706d1e653b233e30c4ed",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-994f6a0e134f3424",
+      "path": "tdf-hq-ui/src/utils/eventLineup.ts",
+      "sha256": "8738e19e2da553851c892d5411c188f19bafd7646b1e831399bfb93e0cb35e3c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17542,7 +17584,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+      "sha256": "a3c11c32b3920caa2aadc86420f2d40aa8e4cd430e4ef05a85072042becfd29b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17968,7 +18010,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+      "sha256": "c7761c1efaa1b76bf212cad48ce0b9e3024c37b4d8d38a521f07737d0220bcb6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18424,7 +18466,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "43e056a87d4c0d606100a8b59884efb3155cd959e2b6d4b2b90d4aafe8d2e87a",
+      "sha256": "20f2bb1c2b63db2329867c127be97ee51f941d4ac394ae58f9fcf7b81e96bc38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30142,6 +30184,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-creation-entry.md",
+      "sha256": "2967fc0680609a0f8fc7d925c184aaec076a051188f9cb531da666959945f016",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-discovery-filtering.md",
       "sha256": "d52ea8766d0d60eea42122867d03d03ee77b711fc49faf0525f3fa0978bbe929",
       "authority": "inferred",
@@ -30871,7 +30920,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ce7fbc0ea50da7a2f74f619e4cbbbc0bd2fb0412443fd458fb8f77d511a0e3d4",
+      "sha256": "8e3afc90a6448897a7ba277e8fca3484e6f9f7910aec2f6e9670cbe90484ba63",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
