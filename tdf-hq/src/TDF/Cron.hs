@@ -113,15 +113,16 @@ import           TDF.Services.EventLogisticsRoutes
   )
 import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.Routes.Courses      (CourseMetadata(..))
-import           TDF.Server              ( buildLandingUrl
-                                         , loadAdExamples
-                                         , runRagChatWithStatus
+import           TDF.Courses.Metadata    ( buildLandingUrl
                                          , courseMetadataFor
                                          , toCourseMetadata
                                          , normalizeSlug
                                          , productionCourseSlug
                                          , productionCoursePrice
                                          , productionCourseCapacity
+                                         )
+import           TDF.Services.LlmChat    ( loadAdExamples
+                                         , runRagChatWithStatus
                                          )
 import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials

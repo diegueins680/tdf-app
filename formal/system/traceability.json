@@ -26915,7 +26915,9 @@
       "implementation": [
         "scripts/check-architecture-boundaries.mjs",
         "scripts/quality-repo.sh",
-        "package.json"
+        "package.json",
+        "tdf-hq/src/TDF/Courses/Metadata.hs",
+        "tdf-hq/src/TDF/Services/LlmChat.hs"
       ],
       "tests": [
         "scripts/__tests__/architecture-boundaries.test.mjs"
@@ -27335,7 +27337,7 @@
     "formal/system/public-routes.json": "a4d7b6030e4064c05306227ecad526339a3b2442d5360f6e1eb8cbb864110d84",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "2c1f465ecdb6dcafd24748ce0c791ecc3ba9dca12a7ced5cb4992df1b1e8854c",
+    "formal/system/recovery-expiry-arithmetic.json": "9982dab8acb9103ec4a618d742e625b52c08e13b7572e4e40ef123f87f6daba0",
     "formal/system/route-requirements.json": "abd5231294bd51a6240602f4771d9be2597c1e614829c3a26b16a3f5e5fef441",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -28539,9 +28541,10 @@
     "tdf-hq/src/TDF/Contracts/Types.hs": "cd59c25f047739b58e8e6b0373b858e212665705dbd9f0ca2c2ced7c56b36a20",
     "tdf-hq/src/TDF/Cors.hs": "8158b24d4ae4ed922e4ac26e0e72e35a382091a5ba8f549c2d90ac3ec121330b",
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
+    "tdf-hq/src/TDF/Courses/Metadata.hs": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
-    "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "d084222b9da081d89cfb4f80dc7442e6be0fe3f54873c547c96a77a3f1003af2",
-    "tdf-hq/src/TDF/Cron.hs": "49728135c1299ac19d712709832349c1e3a405f66c58c3f4baf1a272dc5ae804",
+    "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
+    "tdf-hq/src/TDF/Cron.hs": "74692f8cd6294d02c8b5b121e3fc0a2089fabbcde9cbdef781e17d090071192d",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
@@ -28586,7 +28589,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "15768a3ab48b31a7dc9059d54d157af1993690feea8e452bd826bd991af4b0cc",
+    "tdf-hq/src/TDF/Server.hs": "20c61efe1097ea4635893d28423e81e488140b7b50873b2a0f9e7580825a7c57",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
@@ -28628,6 +28631,7 @@
     "tdf-hq/src/TDF/ServerProposals.hs": "1a2a6c39e8ea7ad9b4154f7164fd19141b39acab00dc533b4ff79e3c81dbe65b",
     "tdf-hq/src/TDF/ServerRadio.hs": "5cf8676925d3e588a3bfd0bc564377839d6aaf6c7256f9835be7664c171a40f6",
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": "2bb64ea8ae2173a5b9d6893291d58969816d91013b1a6fca28dc513178518da3",
+    "tdf-hq/src/TDF/Services/LlmChat.hs": "9c2a181eb58e95a0e66ab55afc0c66f50ff5e2b04a5b7917c52ca844e6c1785b",
     "tdf-hq/src/TDF/Services/RecordsIngestion.hs": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
     "tdf-hq/src/TDF/Social/AccountOwnership.hs": "f1e76d1e92b76da281dab0e0a0fecd2589ae3f10deb097bb64efc2391556f0de",
@@ -28650,7 +28654,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
+    "tdf-hq/tdf-hq.cabal": "1aad469cbec710307f0513e7b11abe40698d134899eeab062113adb8397e133a",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -28658,7 +28662,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+    "tdf-hq/test/Spec.hs": "6a336ddb2d2ab91fe5c154f049c5026b1b3b55bdaba95529918ce8c32266ce7d",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -28726,7 +28730,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "43e056a87d4c0d606100a8b59884efb3155cd959e2b6d4b2b90d4aafe8d2e87a",
+    "tdf-hq/test/TDF/ServerSpec.hs": "72729622254e61959af01586a42d19cbde47ac8ad4bbd54eb693650f237f2247",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -46275,6 +46279,18 @@
       }
     ],
     "scripts/check-architecture-boundaries.mjs": [
+      {
+        "requirement": "SYS-ARCH-BOUNDARY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Courses/Metadata.hs": [
+      {
+        "requirement": "SYS-ARCH-BOUNDARY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Services/LlmChat.hs": [
       {
         "requirement": "SYS-ARCH-BOUNDARY-001",
         "relationship": "implementation"
@@ -71861,6 +71877,18 @@
       ]
     },
     {
+      "id": "SURFACE-134c9ddb3c32afae",
+      "path": "tdf-hq/src/TDF/Courses/Metadata.hs",
+      "sha256": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-ARCH-BOUNDARY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-b5ed9df91b31bc61",
       "path": "tdf-hq/src/TDF/Courses/Production.hs",
       "sha256": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
@@ -71879,7 +71907,7 @@
     {
       "id": "SURFACE-6585884b25e4a8d9",
       "path": "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
-      "sha256": "d084222b9da081d89cfb4f80dc7442e6be0fe3f54873c547c96a77a3f1003af2",
+      "sha256": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71895,7 +71923,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "49728135c1299ac19d712709832349c1e3a405f66c58c3f4baf1a272dc5ae804",
+      "sha256": "74692f8cd6294d02c8b5b121e3fc0a2089fabbcde9cbdef781e17d090071192d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72905,7 +72933,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "15768a3ab48b31a7dc9059d54d157af1993690feea8e452bd826bd991af4b0cc",
+      "sha256": "20c61efe1097ea4635893d28423e81e488140b7b50873b2a0f9e7580825a7c57",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74380,6 +74408,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-e60c666298519425",
+      "path": "tdf-hq/src/TDF/Services/LlmChat.hs",
+      "sha256": "9c2a181eb58e95a0e66ab55afc0c66f50ff5e2b04a5b7917c52ca844e6c1785b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-ARCH-BOUNDARY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9aa25107f33c9fd3",
       "path": "tdf-hq/src/TDF/Services/RecordsIngestion.hs",
       "sha256": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
@@ -74806,7 +74846,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
+      "sha256": "1aad469cbec710307f0513e7b11abe40698d134899eeab062113adb8397e133a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74989,7 +75029,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+      "sha256": "6a336ddb2d2ab91fe5c154f049c5026b1b3b55bdaba95529918ce8c32266ce7d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76413,7 +76453,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "43e056a87d4c0d606100a8b59884efb3155cd959e2b6d4b2b90d4aafe8d2e87a",
+      "sha256": "72729622254e61959af01586a42d19cbde47ac8ad4bbd54eb693650f237f2247",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83860,7 +83900,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ce7fbc0ea50da7a2f74f619e4cbbbc0bd2fb0412443fd458fb8f77d511a0e3d4",
+      "sourceSha256": "20a559a56da46eca9d81847ce22c57482d477d6ccdfb072d3679a5481e885d18",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83888,7 +83928,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ce7fbc0ea50da7a2f74f619e4cbbbc0bd2fb0412443fd458fb8f77d511a0e3d4",
+      "sourceSha256": "20a559a56da46eca9d81847ce22c57482d477d6ccdfb072d3679a5481e885d18",
       "definition": {
         "states": [
           "absent",
@@ -83918,7 +83958,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ce7fbc0ea50da7a2f74f619e4cbbbc0bd2fb0412443fd458fb8f77d511a0e3d4",
+      "sourceSha256": "20a559a56da46eca9d81847ce22c57482d477d6ccdfb072d3679a5481e885d18",
       "definition": {
         "export": [
           "queued",
