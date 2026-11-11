@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Autocomplete, Button, Chip, Stack, TextField } from '@mui/material';
 
@@ -37,6 +37,11 @@ export default function EventLineupPicker({ value, onChange, label = 'Artistas q
   const { session } = useSession();
   const [input, setInput] = useState('');
   const [search, setSearch] = useState('');
+  // Typed name shared by several listed artists: the user must pick which one.
+  const [ambiguous, setAmbiguous] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  // Set while an ambiguous Enter is handled, so the list stays open to choose from.
+  const keepOpen = useRef(false);
   useEffect(() => {
     const timer = window.setTimeout(() => setSearch(input.trim()), 300);
     return () => window.clearTimeout(timer);
@@ -60,6 +65,12 @@ export default function EventLineupPicker({ value, onChange, label = 'Artistas q
         options={options}
         value={[...value]}
         inputValue={input}
+        open={open}
+        onOpen={() => setOpen(true)}
+        onClose={() => {
+          if (!keepOpen.current) setOpen(false);
+          keepOpen.current = false;
+        }}
         loading={optionsQuery.isFetching}
         disabled={!session}
         filterOptions={(found) => {
@@ -74,16 +85,28 @@ export default function EventLineupPicker({ value, onChange, label = 'Artistas q
         isOptionEqualToValue={sameArtist}
         getOptionDisabled={() => full}
         onInputChange={(_event, next, reason) => {
-          if (reason !== 'reset') setInput(next);
+          // Selections clear the text in onChange, which may also keep it.
+          if (reason !== 'input' && reason !== 'clear') return;
+          setInput(next);
+          setAmbiguous(null);
+          keepOpen.current = false;
         }}
         onChange={(_event, selected) => {
-          onChange(normalizeLineup(selected.map((entry): EventLineupArtistDraft => {
-            if (typeof entry !== 'string') return { artistId: entry.artistId, artistName: entry.artistName };
-            // Enter on free text: prefer a listed artist with that exact name.
-            return options.find((option) => nameKey(option.artistName) === nameKey(entry))
-              ?? { artistId: null, artistName: entry };
+          let homonym: string | null = null;
+          onChange(normalizeLineup(selected.flatMap((entry): EventLineupArtistDraft[] => {
+            if (typeof entry !== 'string') return [{ artistId: entry.artistId, artistName: entry.artistName }];
+            // Enter on free text: link the listed artist with that exact name,
+            // but never guess between several artists who share it.
+            const matches = options.filter((option) => nameKey(option.artistName) === nameKey(entry));
+            if (matches.length > 1) {
+              homonym = entry.trim();
+              return [];
+            }
+            return [matches[0] ?? { artistId: null, artistName: entry }];
           })));
-          setInput('');
+          setAmbiguous(homonym);
+          keepOpen.current = homonym !== null;
+          if (homonym === null) setInput('');
         }}
         renderOption={(props, option) => {
           const { key, ...rest } = props;
@@ -112,11 +135,14 @@ export default function EventLineupPicker({ value, onChange, label = 'Artistas q
             {...params}
             label={label}
             placeholder="Busca o escribe un nombre"
+            error={ambiguous !== null}
             helperText={!session
               ? 'Inicia sesión para buscar artistas'
-              : full
-                ? `Máximo ${MAX_EVENT_ARTISTS} artistas por evento.`
-                : '¿No está en la plataforma? Escribe su nombre y presiona Enter: lo creamos junto con el evento.'}
+              : ambiguous !== null
+                ? `Hay más de un artista llamado «${ambiguous}». Elige el correcto en la lista.`
+                : full
+                  ? `Máximo ${MAX_EVENT_ARTISTS} artistas por evento.`
+                  : '¿No está en la plataforma? Escribe su nombre y presiona Enter: lo creamos junto con el evento.'}
           />
         )}
         sx={{ '& .MuiChip-root': { maxWidth: '100%' } }}

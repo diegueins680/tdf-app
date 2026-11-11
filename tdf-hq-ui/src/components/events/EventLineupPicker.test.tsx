@@ -77,6 +77,22 @@ describe('EventLineupPicker', () => {
     await waitFor(() => expect(lineup()).toEqual([{ artistId: '7', artistName: 'Vera' }]));
   });
 
+  it('asks which artist is meant when several share the typed name', async () => {
+    listArtists.mockResolvedValue([{ artistId: '7', artistName: 'Vera' }, { artistId: '9', artistName: 'VERA' }]);
+    render(<Harness />);
+    const input = type('vera');
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(await screen.findByText('Hay más de un artista llamado «vera». Elige el correcto en la lista.')).toBeTruthy();
+    expect(lineup()).toEqual([]);
+    expect((input as HTMLInputElement).value).toBe('vera');
+
+    fireEvent.click(screen.getByRole('option', { name: 'VERA' }));
+    expect(lineup()).toEqual([{ artistId: '9', artistName: 'VERA' }]);
+    expect(screen.queryByText(/Hay más de un artista/)).toBeNull();
+  });
+
   it('still accepts a new name when the artist search fails', async () => {
     listArtists.mockRejectedValue(new Error('offline'));
     render(<Harness />);
