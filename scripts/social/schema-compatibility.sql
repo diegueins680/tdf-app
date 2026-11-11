@@ -11,7 +11,7 @@ INSERT INTO fan_club_post(id,club_id,fan_party_id,title,content,created_at) VALU
 DO $$ BEGIN ASSERT social_v2_me(900000001)->>'error'='disabled'; ASSERT social_v2_lock_fan_effects(); END $$;
 INSERT INTO chat_thread(id,dm_party_a,dm_party_b,created_at,updated_at) VALUES(900000001,900000001,900000002,now(),now());
 INSERT INTO chat_message(thread_id,sender_party_id,body,created_at) VALUES(900000001,900000001,'Synthetic legacy DM',now());
-UPDATE social_v2_runtime SET enabled=true;
+UPDATE social_v2_runtime SET enabled=true WHERE singleton=true;
 SELECT social_v2_publish_batch(); -- Commit before reads, as the HTTP handler does.
 DO $$ BEGIN
   ASSERT jsonb_array_length(social_v2_feed(900000001,NULL,20)->'items')=2;
