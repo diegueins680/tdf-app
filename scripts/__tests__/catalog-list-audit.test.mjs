@@ -843,7 +843,12 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   }
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
     ...desktopReviews.map(row => row.id)]);
-  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id));
+  // The PayPal webhook domain types moved unchanged to TDF.Commerce.PaypalWebhook
+  // (ADR 0133); the historical view sees the exact review its successor carries.
+  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
+  assert.equal(movedPaypalDomains.previousDecision.id, 'a43462622b60606b37d9');
+  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id))
+    .map(row => (row === movedPaypalDomains ? row.previousDecision : row));
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);

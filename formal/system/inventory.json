@@ -2312,6 +2312,7 @@
       "tdf-hq/src/TDF/Commerce/Money.hs",
       "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
       "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+      "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
@@ -2482,6 +2483,7 @@
       "tdf-hq/src/TDF/Ticketing/Admission.hs",
       "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
       "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+      "tdf-hq/src/TDF/Ticketing/Issuance.hs",
       "tdf-hq/src/TDF/Ticketing/Refund.hs",
       "tdf-hq/src/TDF/Ticketing/Transfer.hs",
       "tdf-hq/src/TDF/Trials/API.hs",
@@ -3853,7 +3855,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
+      "sha256": "6497033d18cb85b3cbe6295212b9377a0be49dfed9a26dc486823d0a9b14b771",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16787,6 +16789,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4c930baf69b931a2",
+      "path": "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+      "sha256": "c12568bfac60b5734339eeec886cb23c0fe010a4d75df7f5d779480807805518",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1f329e23e5aba24d",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "sha256": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
@@ -16837,7 +16845,7 @@
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "ed7e4240362edafb3cb90524c148832e6880cf89f62a6ea3120add7c0dfc0016",
+      "sha256": "8906fd51a3be191ec487088c9ed71db1d0c327b5582c8dcd6412c1c7d9defe05",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17527,7 +17535,7 @@
     {
       "id": "SURFACE-8bea15f709688422",
       "path": "tdf-hq/src/TDF/Server/ProviderTransport.hs",
-      "sha256": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
+      "sha256": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17545,7 +17553,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
+      "sha256": "ad338e7fb54bcf415d0b2a87f653a2855ab0f0f92219a09c1c22125ab02b7d19",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17557,7 +17565,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+      "sha256": "e0af31d181bdabdeea2017f700ed76ee6b16f3c304f3074e18b648679b6e3b96",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17807,6 +17815,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-43aa8fca8f095e2e",
+      "path": "tdf-hq/src/TDF/Ticketing/Issuance.hs",
+      "sha256": "398c68514db13ca6c396a3b160cdf10d9b0524c48acb10e7c21032d15e5e25b7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-cf5c4df379b4411b",
       "path": "tdf-hq/src/TDF/Ticketing/Refund.hs",
       "sha256": "fffa6d4c96c372218fa827af114cacdcc43d6ac9aa2c84bfc5e1552a9e72dc29",
@@ -17911,7 +17925,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "9255e1687eabfd29a15d6f3c7f3b4694cd16c0fa87b5c4192fa87054301765c2",
+      "sha256": "1ffd313e21bf02f46ebd7d1cd2dfe21cbddae646f74c181fbca3129b26ddced5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22016,7 +22030,7 @@
     },
     {
       "path": "docs/adr/0133-enforced-module-boundaries.md",
-      "sha256": "50b67c82272114235388dccc7df9d007e184d933391eab05f6ee2b1cc83307ee",
+      "sha256": "6f122493423c35d3f5b9c282183840b63cf4bbeb1b131edeb481b0fa33ea1bf6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30892,7 +30906,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "60771bc995b9de56730fe390aaf2defc7e0f9fa557b5a4a079715513b4d65655",
+      "sha256": "520b38ca533611010ea6cb85862c09247178c07280135d575169f2934d402134",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

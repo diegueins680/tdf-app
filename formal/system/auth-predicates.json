@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "9255e1687eabfd29a15d6f3c7f3b4694cd16c0fa87b5c4192fa87054301765c2"
+    "tdf-hq/tdf-hq.cabal": "1ffd313e21bf02f46ebd7d1cd2dfe21cbddae646f74c181fbca3129b26ddced5"
   },
   "obligations": [
     {
@@ -574,6 +574,15 @@
       "currentSha256": "9255e1687eabfd29a15d6f3c7f3b4694cd16c0fa87b5c4192fa87054301765c2",
       "change": "Add TDF.DTO.TicketPaymentReceipt to the library exposed-modules list only; removing that exact line reproduces the previously reviewed Cabal manifest byte for byte.",
       "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The module holds the TicketPaymentReceipt wire type and its JSON instances moved verbatim out of TDF.Server.TicketPaymentReceipt, which re-exports it; it imports no authorization or recovery module and introduces no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+      "previousSha256": "9255e1687eabfd29a15d6f3c7f3b4694cd16c0fa87b5c4192fa87054301765c2",
+      "currentSha256": "1ffd313e21bf02f46ebd7d1cd2dfe21cbddae646f74c181fbca3129b26ddced5",
+      "change": "Add TDF.Commerce.PaypalWebhook and TDF.Ticketing.Issuance to the library exposed-modules list only; removing those exact two lines reproduces the previously reviewed Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The modules hold PayPal webhook processing moved verbatim out of TDF.Server.ServiceStorefront and paid-order ticket issuance moved verbatim out of TDF.Server.SocialEventsHandlers; they import no authorization or recovery module and introduce no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
     }
   ]

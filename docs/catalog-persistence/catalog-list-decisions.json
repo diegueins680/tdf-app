@@ -22595,14 +22595,30 @@
       "reviewed": true
     },
     {
-      "id": "a43462622b60606b37d9",
+      "id": "f562d95dce39e81da4af",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The same six PayPal webhook domain types, unchanged in value and order, moved verbatim with paypalWebhookDomainTypes from TDF.Server.ServiceStorefront to TDF.Commerce.PaypalWebhook; the reviewed classification and disposition are unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+        "line": 269
+      },
+      "reviewBatch": "paypal-webhook-domain-module-2026-11-10",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "a43462622b60606b37d9",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "domain-specific catalog table selected during consumer refactor",
+        "priority": "P2-domain",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "fb1005d3b1d035e17581",
