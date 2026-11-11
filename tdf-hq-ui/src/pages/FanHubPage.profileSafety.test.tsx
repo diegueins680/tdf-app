@@ -14,6 +14,8 @@ const updateFanProfile = jest.fn<(payload: FanProfileUpdate) => Promise<FanProfi
 let session: SessionUser | null;
 let onUploadComplete: ((files: { publicUrl: string; name: string }[]) => void) | undefined;
 
+// The events panel has its own suite; here it would only add unrelated requests.
+jest.unstable_mockModule('../components/events/MyEventsPanel', () => ({ default: () => null }));
 jest.unstable_mockModule('../session/SessionContext', () => ({
   useSession: () => ({ session, loading: false }),
   getActiveSession: () => session,

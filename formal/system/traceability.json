@@ -26869,6 +26869,95 @@
       "critical": false
     },
     {
+      "id": "EVT-CREATE-ENTRY-001",
+      "title": "Event creation and management on the signed-in home, art first, artists by name",
+      "statement": "A confirmed session reaches event creation and management from the top of its home; creation starts with the event art, and a lineup may name an artist who is not on the platform, who is then created with the event.",
+      "domain": "EVT",
+      "critical": false,
+      "actors": [
+        "Event organizer",
+        "Artist",
+        "Signed-in member"
+      ],
+      "preconditions": [
+        "An authenticated session confirmed by the server; existing event authorization remains authoritative.",
+        "The image endpoint attaches art to an existing event; the event list returns the organizer of each event."
+      ],
+      "inputs": [
+        "Session party",
+        "Event art file",
+        "Lineup entries: artist identifier or artist name"
+      ],
+      "state": {
+        "boundary": "formal/system/event-creation-entry.md"
+      },
+      "allowedTransitions": [
+        "Signed-in home to event creation or event management",
+        "Create event, then save named artists, then upload art; each later step is retryable",
+        "Named artist to the single stored profile with that name, or to a new profile without an owning party"
+      ],
+      "forbiddenTransitions": [
+        "Show the panel to a guest or before session hydration completes",
+        "Drop a lineup entry that has neither identifier nor name",
+        "Guess between several stored artists with the same name",
+        "Create artists or an event when the lineup is refused",
+        "Lose a created event because art or named artists were refused",
+        "Grant organizer permissions through this change"
+      ],
+      "effects": [
+        "Preview up to three upcoming events organized by the viewer",
+        "Create artist profiles named in a lineup",
+        "Attach the chosen art to the created event"
+      ],
+      "authorization": "Event creation, update and image upload keep their existing checks. A named artist is created only as part of an event write its author is already allowed to make.",
+      "privacy": "The panel shows only events the event list already returns to the viewer. A created artist profile holds a name and no party.",
+      "concurrency": "Name resolution and profile creation run inside the event write transaction; the update path holds the event lock. Concurrent writes naming the same new artist may create duplicates, which later resolve to an explicit 409.",
+      "idempotency": "Retrying named artists reuses the profile created or matched by name; retrying art uploads the retained file again.",
+      "failure": "Invalid art is refused before creation. A refused upload or lineup keeps the event and reports the reason. A failed event list keeps both home actions.",
+      "recovery": "Retry the art or the named artists from the created-event screen, or complete them later from the event.",
+      "observability": "Created-event screen states art and artist outcomes; the home panel distinguishes loading, empty, failed and listed states.",
+      "source": "Owner request 2026-11-10: event creation and management as a main feature of the artists' and other users' home; art file picker first when creating an event; create an artist by writing the name when not on the platform.",
+      "contract": "formal/system/event-creation-entry.md",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "React regression tests for the panel, picker, creator and hub mount; Haskell unit and SQLite tests for lineup validation and resolution. No end-to-end run against a deployed backend.",
+      "ambiguity": [
+        "The home preview is bounded by the first 500 upcoming events until the event list gains an organizer filter.",
+        "Claiming a name-only artist profile by the artist is not defined here.",
+        "The file dialog cannot open without a user gesture; 'first' means first on the page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "UI tests and typecheck run locally; backend tests run in CI; deployed behavior requires a backend release."
+      },
+      "authority": "approved",
+      "property": "Home actions never depend on data; no lineup entry is dropped or guessed; a refused lineup writes nothing; a created event survives refused art or names.",
+      "verification": "React regressions against the real components; Haskell tests of validation and of plan/materialize over SQLite, including the ambiguous-name refusal with no writes.",
+      "evidence": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx; tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx; tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx; tdf-hq/test/Spec.hs; tdf-hq/test/TDF/ServerSpec.hs"
+    },
+    {
       "id": "UX-FORM-ACTIONS-001",
       "title": "Form commit actions follow the last field and remain visible in open editors",
       "statement": "Editable web forms place Save, Update, or the equivalent commit action after their last field. Open course registration and CMS editors retain a visible action whose enabled state follows their existing save prerequisites.",
@@ -27967,6 +28056,8 @@
     "tdf-hq-ui/src/components/events/EventArtistSelector.tsx": "4923d21e7f78ebb08e20cd4091fdb19adb6492a3f74d6b1fa810f79be7a29bdd",
     "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx": "c2e431d781b24e39486495dcd188d81512280806a5c68e4577fe5c5d7d8dda5a",
     "tdf-hq-ui/src/components/events/EventLineupEditor.tsx": "4dcf4793fb9ab956c0f72dc2591e090fd660ad8c9fe85bcfe9d6c601cca7791c",
+    "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx": "c42c351d53eea188ae1b0f43552144caf3a88ac0cd19286cfff6f85abc3c52a3",
+    "tdf-hq-ui/src/components/events/EventLineupPicker.tsx": "d46ee8da797b9ee156e745c1760b887f73d9e23a8fb754a9080c45b1403a22f2",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": "203eedfc586f7f845e59cfd8afc5103f62aa2d3d63183fe55a1fb25f801e1769",
     "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx": "5dd9f8a14fe6bfbe8177e939bb927c8ece0a78756919e0a3d264fef5ca670079",
@@ -27978,6 +28069,8 @@
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
+    "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx": "65f904a6cf8e33ce7401154167a2ae697e6603beedc52e7fbe1dbe4bdcb7746d",
+    "tdf-hq-ui/src/components/events/MyEventsPanel.tsx": "239e397d3fafdbf8176572370f759a4d15be707791a9fc0cac4d0793521a1272",
     "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx": "e2e493ac45bdff3c02d9ecf97d71c43f879984079009bda1cdc9582542022ee7",
     "tdf-hq-ui/src/components/events/TicketPricePreview.tsx": "168852f9c75ee621dbc6c673d26d1b48443c85c45fd75f0ec86c1375b425b5e1",
     "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
@@ -28054,8 +28147,8 @@
     "tdf-hq-ui/src/i18n/locales/de.ts": "ae6b0143ec94fd56d9a3a6d555bf49ffca9c2d5c7fa659c00f313d6f6e60bf3e",
     "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
     "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
-    "tdf-hq-ui/src/i18n/locales/en.ts": "02a8564ad6079993d42e0837b6b6880c9f77c54dd99ee7952be6c60514460e08",
-    "tdf-hq-ui/src/i18n/locales/es.ts": "bc8f467f4a10a129ab45e4e630fd676547fc5516f3c96e008c8dff0e8e468a2c",
+    "tdf-hq-ui/src/i18n/locales/en.ts": "72138a6a422a066872b065b3c73a584f3d4b7841c4f48a4dc78957557a362e55",
+    "tdf-hq-ui/src/i18n/locales/es.ts": "c5c9e26d858ff16701ed4eb29c5ed63e2b2a6ac4468b0841c1c862c829927bb0",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
     "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
     "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
@@ -28086,7 +28179,8 @@
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
@@ -28109,11 +28203,11 @@
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
     "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
     "tdf-hq-ui/src/pages/FanClubPage.tsx": "546c843c331c1c3fa6cde2e5ed8aec89c573b79ea428c45fa098f83dd1b2b6c7",
-    "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
-    "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "b4eaf012b687c6fc0ae4d60d667b661e346b15323ba0e7baad282f49452fcd91",
-    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
-    "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "85a3cc97ea9ed89feb58b9a179638dee034fc9012a505d9056e3e0eaa0102297",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "fe3a6b855ee6c4a1b9f4b6b07d05209282a3b0dc5ecf0a8861bc41f5a60436e8",
+    "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
+    "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
+    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
+    "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
     "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx": "edceff3b6fe2336ec1b234dbc421fb13a559fbbc56e1156321bb899dcf25ad39",
     "tdf-hq-ui/src/pages/InstagramConnectPage.tsx": "c1e3000474b70b1cfa4a4e41f521762b406d1faaf2ac42966aff9c9df2b87fcf",
     "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx": "3fe5deb295874a99afc50f97d06742fad56c75a7c9a810f3fef5da66d5f4ccc1",
@@ -28191,8 +28285,8 @@
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "d04c9014faf40d54ff34bfdcba72bb77e5812e13437a2b10bdd4d9f97863d891",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "d3a2149f3bdde2e710a920fca3d2dc43e3085615c54b4c3685502bc894f5d7bb",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "8d256dd500d12005e1f9d18b238407ae20fa9374ae6d6e7a9b9c5bf998174e03",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "42ff489805d71cbb787115658eb05436544110bc22fd58558cf6c64061d2c7af",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
@@ -28623,7 +28717,7 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "a3c11c32b3920caa2aadc86420f2d40aa8e4cd430e4ef05a85072042becfd29b",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
@@ -28671,7 +28765,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+    "tdf-hq/test/Spec.hs": "c7761c1efaa1b76bf212cad48ce0b9e3024c37b4d8d38a521f07737d0220bcb6",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -28739,7 +28833,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "3a4193d5e79218b8b7ed68870f7724f0180f845d3ef5b3d16e8849566934188c",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "43e056a87d4c0d606100a8b59884efb3155cd959e2b6d4b2b90d4aafe8d2e87a",
+    "tdf-hq/test/TDF/ServerSpec.hs": "20f2bb1c2b63db2329867c127be97ee51f941d4ac394ae58f9fcf7b81e96bc38",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -30272,6 +30366,10 @@
       },
       {
         "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "tests"
       }
     ],
@@ -31814,6 +31912,10 @@
       },
       {
         "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "tests"
       }
     ],
@@ -34659,6 +34761,10 @@
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/lib/liveBroadcastsRepository.ts": [
@@ -35093,6 +35199,10 @@
       {
         "requirement": "ART-VIDEO-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/es.ts": [
@@ -35114,6 +35224,10 @@
       },
       {
         "requirement": "ART-VIDEO-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "implementation"
       }
     ],
@@ -39339,6 +39453,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "implementation"
       }
@@ -39489,6 +39607,10 @@
       {
         "requirement": "COMM-FOLLOW-RECOVERY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": [
@@ -39498,6 +39620,10 @@
       },
       {
         "requirement": "DISCOVERY-NAV-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "tests"
       },
       {
@@ -41927,6 +42053,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "UX-FORM-ACTIONS-001",
         "relationship": "tests"
       }
@@ -42280,6 +42410,10 @@
     "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": [
       {
         "requirement": "MEDIA-MUSIC-LEGACY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "tests"
       }
     ],
@@ -44775,11 +44909,19 @@
       {
         "requirement": "EVT-PLANNING-UX-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": [
       {
         "requirement": "EVT-PLANNING-UX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "implementation"
       }
     ],
@@ -44816,6 +44958,10 @@
     "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": [
       {
         "requirement": "EVT-PLANNING-UX-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "tests"
       }
     ],
@@ -46308,6 +46454,36 @@
     "tdf-desktop/test/signing.test.cjs": [
       {
         "requirement": "SYS-DESKTOP-003",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/MyEventsPanel.tsx": [
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventLineupPicker.tsx": [
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx": [
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx": [
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": [
+      {
+        "requirement": "EVT-CREATE-ENTRY-001",
         "relationship": "tests"
       }
     ],
@@ -58826,6 +59002,30 @@
       ]
     },
     {
+      "id": "SURFACE-84df4c94cbe62081",
+      "path": "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+      "sha256": "c42c351d53eea188ae1b0f43552144caf3a88ac0cd19286cfff6f85abc3c52a3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-85610c4675bfa874",
+      "path": "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+      "sha256": "d46ee8da797b9ee156e745c1760b887f73d9e23a8fb754a9080c45b1403a22f2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-6d375a8bdcbe5d7c",
       "path": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "sha256": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
@@ -58994,6 +59194,30 @@
       "requirements": [
         {
           "requirement": "EVT-TICKET-INVOICE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-a17dfa34ef337c89",
+      "path": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+      "sha256": "65f904a6cf8e33ce7401154167a2ae697e6603beedc52e7fbe1dbe4bdcb7746d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-07395d7f84adf446",
+      "path": "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
+      "sha256": "239e397d3fafdbf8176572370f759a4d15be707791a9fc0cac4d0793521a1272",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "implementation"
         }
       ]
@@ -60552,7 +60776,7 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "02a8564ad6079993d42e0837b6b6880c9f77c54dd99ee7952be6c60514460e08",
+      "sha256": "72138a6a422a066872b065b3c73a584f3d4b7841c4f48a4dc78957557a362e55",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60573,6 +60797,10 @@
         },
         {
           "requirement": "ART-VIDEO-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "implementation"
         }
       ]
@@ -60580,7 +60808,7 @@
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "bc8f467f4a10a129ab45e4e630fd676547fc5516f3c96e008c8dff0e8e468a2c",
+      "sha256": "c5c9e26d858ff16701ed4eb29c5ed63e2b2a6ac4468b0841c1c862c829927bb0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60601,6 +60829,10 @@
         },
         {
           "requirement": "ART-VIDEO-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "implementation"
         }
       ]
@@ -61188,13 +61420,29 @@
       ]
     },
     {
+      "id": "SURFACE-78d796fee86d9367",
+      "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
+      "sha256": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
+      "sha256": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "implementation"
         }
       ]
@@ -61707,7 +61955,7 @@
     {
       "id": "SURFACE-843ecd90497b82eb",
       "path": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-      "sha256": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
+      "sha256": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61721,13 +61969,17 @@
         {
           "requirement": "COMM-FOLLOW-RECOVERY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-8e582de4b6234f44",
       "path": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-      "sha256": "b4eaf012b687c6fc0ae4d60d667b661e346b15323ba0e7baad282f49452fcd91",
+      "sha256": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61739,6 +61991,10 @@
           "relationship": "tests"
         },
         {
+          "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "tests"
+        },
+        {
           "requirement": "UX-FORM-ACTIONS-001",
           "relationship": "tests"
         }
@@ -61747,11 +62003,15 @@
     {
       "id": "SURFACE-3d536aa30411edce",
       "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-      "sha256": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
+      "sha256": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-MUSIC-LEGACY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "tests"
         }
       ]
@@ -61759,7 +62019,7 @@
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "85a3cc97ea9ed89feb58b9a179638dee034fc9012a505d9056e3e0eaa0102297",
+      "sha256": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61771,6 +62031,10 @@
           "relationship": "tests"
         },
         {
+          "requirement": "EVT-CREATE-ENTRY-001",
+          "relationship": "tests"
+        },
+        {
           "requirement": "UX-FORM-ACTIONS-001",
           "relationship": "tests"
         }
@@ -61779,7 +62043,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "fe3a6b855ee6c4a1b9f4b6b07d05209282a3b0dc5ecf0a8861bc41f5a60436e8",
+      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61828,6 +62092,10 @@
         },
         {
           "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "implementation"
         },
         {
@@ -63633,11 +63901,15 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "8d256dd500d12005e1f9d18b238407ae20fa9374ae6d6e7a9b9c5bf998174e03",
+      "sha256": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "tests"
         }
       ]
@@ -63645,11 +63917,15 @@
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
+      "sha256": "42ff489805d71cbb787115658eb05436544110bc22fd58558cf6c64061d2c7af",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "implementation"
         }
       ]
@@ -73849,7 +74125,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+      "sha256": "a3c11c32b3920caa2aadc86420f2d40aa8e4cd430e4ef05a85072042becfd29b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73982,6 +74258,10 @@
         },
         {
           "requirement": "EVT-DISCOVERY-FILTER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "implementation"
         }
       ]
@@ -75058,7 +75338,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+      "sha256": "c7761c1efaa1b76bf212cad48ce0b9e3024c37b4d8d38a521f07737d0220bcb6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75183,6 +75463,10 @@
         },
         {
           "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "tests"
         }
       ]
@@ -76482,7 +76766,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "43e056a87d4c0d606100a8b59884efb3155cd959e2b6d4b2b90d4aafe8d2e87a",
+      "sha256": "20f2bb1c2b63db2329867c127be97ee51f941d4ac394ae58f9fcf7b81e96bc38",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76675,6 +76959,10 @@
         },
         {
           "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-CREATE-ENTRY-001",
           "relationship": "tests"
         }
       ]
@@ -83925,7 +84213,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "36359d669066761df2c2630399de637d13bbca295dea0108bc3188c27a8acdc6",
+      "sourceSha256": "21ac4e9e529c47bdd44c345e1dbc02c467778e3a46ba97cc6c86820a3b3706eb",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83953,7 +84241,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "36359d669066761df2c2630399de637d13bbca295dea0108bc3188c27a8acdc6",
+      "sourceSha256": "21ac4e9e529c47bdd44c345e1dbc02c467778e3a46ba97cc6c86820a3b3706eb",
       "definition": {
         "states": [
           "absent",
@@ -83983,7 +84271,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "36359d669066761df2c2630399de637d13bbca295dea0108bc3188c27a8acdc6",
+      "sourceSha256": "21ac4e9e529c47bdd44c345e1dbc02c467778e3a46ba97cc6c86820a3b3706eb",
       "definition": {
         "export": [
           "queued",
@@ -106948,7 +107236,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 211,
+    "PARTIAL": 212,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
