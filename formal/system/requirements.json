@@ -25454,6 +25454,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/api/inventory.upload.test.ts",
         "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
         "tdf-hq-ui/src/api/uploadQueue.test.ts",
         "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
