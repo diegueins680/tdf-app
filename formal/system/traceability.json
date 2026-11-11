@@ -28122,7 +28122,7 @@
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "1fe509c9b97544f9f3b91d45db26ba6b28cfdc852cdb34a8c91eb4563c8a5658",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "c6764eac10b9737ae1915ae8fec11c8740030147c6b865fea1215b15fff414f0",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "6afc7056024885823b4223d9675e08777c3e7e6f0b1c4d34a4de989559eebcb3",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "baa45007379c0b28089c26b8bc196028b5a003440932d90aae94ed1a7c938c5b",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "6fa7990f5f6b0072eb10cbd811981fd23ddffa0615dc4a20badb8a8da9ec5d34",
@@ -28269,7 +28269,7 @@
     "tdf-hq-ui/src/session/useSessionOwner.ts": "5d95885c49fe3980687031db118bfe03714cb317d5bb749c791f322abe44ef5d",
     "tdf-hq-ui/src/styles/navigation.css": "772cc716f647a8ae280e4c2f8f0bb0756cd2dd436e744a30b15c952ac0fa18cd",
     "tdf-hq-ui/src/theme/AppThemeProvider.tsx": "840ccaf4c10eab5b8f5bbd570f65687c82332fbcdbc4d7e6e7804732e78d0a1a",
-    "tdf-hq-ui/src/theme/appTheme.ts": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
+    "tdf-hq-ui/src/theme/appTheme.ts": "2188f8047fca3dd21d14486fc2572afcacb2054d180993bdf32870573f548a52",
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
     "tdf-hq-ui/src/utils/accessControl.test.ts": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
     "tdf-hq-ui/src/utils/accessControl.ts": "4550fd019b3553b00074186bf7e1614e9209c97cb4c94c5a485cb1ea102536c2",
@@ -61589,7 +61589,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "6afc7056024885823b4223d9675e08777c3e7e6f0b1c4d34a4de989559eebcb3",
+      "sha256": "baa45007379c0b28089c26b8bc196028b5a003440932d90aae94ed1a7c938c5b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64693,7 +64693,7 @@
     {
       "id": "SURFACE-43521ec903ecc0c7",
       "path": "tdf-hq-ui/src/theme/appTheme.ts",
-      "sha256": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
+      "sha256": "2188f8047fca3dd21d14486fc2572afcacb2054d180993bdf32870573f548a52",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

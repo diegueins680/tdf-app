@@ -10874,7 +10874,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "6afc7056024885823b4223d9675e08777c3e7e6f0b1c4d34a4de989559eebcb3",
+      "sha256": "baa45007379c0b28089c26b8bc196028b5a003440932d90aae94ed1a7c938c5b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12446,7 +12446,7 @@
     {
       "id": "SURFACE-43521ec903ecc0c7",
       "path": "tdf-hq-ui/src/theme/appTheme.ts",
-      "sha256": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
+      "sha256": "2188f8047fca3dd21d14486fc2572afcacb2054d180993bdf32870573f548a52",
       "semanticConformance": "not-established-by-discovery"
     },
     {
