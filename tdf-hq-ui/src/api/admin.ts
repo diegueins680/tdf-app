@@ -1,5 +1,6 @@
 import { get, post, put, del, patch, API_BASE_URL } from './client';
 import { buildAuthorizationHeader } from './authHeader';
+import { saveArtistProfileMedia } from './artistProfileMedia';
 import type {
   ArtistProfileDTO,
   ArtistProfileUpsert,
@@ -167,7 +168,7 @@ export const Admin = {
     }),
   listArtistProfiles: () => get<ArtistProfileDTO[]>('/admin/artists/profiles'),
   upsertArtistProfile: (payload: ArtistProfileUpsert) =>
-    post<ArtistProfileDTO>('/admin/artists/profiles', payload),
+    saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/admin/artists/profiles', prepared)),
   listArtistPromoSlots: (artistId: number, day: string) =>
     get<ArtistPromoSlotDTO[]>(`/admin/artists/${encodeURIComponent(String(artistId))}/promotions${buildArtistPromoDayQuery(day)}`),
   createArtistPromoSlot: (artistId: number, payload: ArtistPromoSlotUpsert) =>

@@ -7,7 +7,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   Dialog,
   DialogActions,
@@ -32,9 +31,9 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import ArtistCoverPreview from '../components/ArtistCoverPreview';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -303,7 +302,6 @@ export default function LabelArtistsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [banner, setBanner] = useState<BannerState | null>(null);
   const [heroImageFileName, setHeroImageFileName] = useState('');
-  const [heroImageError, setHeroImageError] = useState<string | null>(null);
   const [promotionArtistId, setPromotionArtistId] = useState<number | null>(null);
   const [promotionDay, setPromotionDay] = useState(() => todayInTimezone(timezone));
   const [promotionForm, setPromotionForm] = useState<PromotionFormState>(buildEmptyPromotionForm);
@@ -449,33 +447,6 @@ export default function LabelArtistsPage() {
   const showArtistRefresh = hasArtistProfiles || Boolean(artistsQuery.error);
   const showQuickNotesCard = hasArtistProfiles;
   const showFirstArtistSetup = !artistsQuery.isLoading && !artistsQuery.error && !hasArtistProfiles;
-
-  const handleHeroImageFileChange = (file: File | null) => {
-    if (!file) {
-      setForm((prev) => ({ ...prev, heroImageUrl: '' }));
-      setHeroImageFileName('');
-      return;
-    }
-    const maxBytes = 6 * 1024 * 1024;
-    if (file.size > maxBytes) {
-      setHeroImageError('El archivo supera 6 MB. Usa una imagen más liviana.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        const dataUrl = reader.result;
-        setForm((prev) => ({ ...prev, heroImageUrl: dataUrl }));
-        setHeroImageFileName(file.name);
-        setHeroImageError(null);
-      } else {
-        setHeroImageError('No pudimos leer la imagen seleccionada.');
-        setForm((prev) => ({ ...prev, heroImageUrl: '' }));
-      }
-    };
-    reader.onerror = () => setHeroImageError('No pudimos leer la imagen seleccionada.');
-    reader.readAsDataURL(file);
-  };
 
   const upsertMutation = useMutation({
     mutationFn: async (payload: { draft: ArtistFormState; originalDisplayName: string; isCurrentOwner: () => boolean }) => {
@@ -628,7 +599,6 @@ export default function LabelArtistsPage() {
     setFormError(null);
     setDialogOpen(true);
     setHeroImageFileName('');
-    setHeroImageError(null);
   };
 
   const handleEdit = (artist: ArtistProfileDTO) => {
@@ -637,7 +607,6 @@ export default function LabelArtistsPage() {
     setForm(formFromArtist(artist));
     setFormError(null);
     setDialogOpen(true);
-    setHeroImageError(null);
   };
 
   const handleCloseDialog = () => {
@@ -1298,15 +1267,6 @@ export default function LabelArtistsPage() {
                 Imagen principal
               </Typography>
               <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems="center">
-                <Button component="label" startIcon={<UploadFileIcon />} variant="outlined">
-                  Seleccionar imagen
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => handleHeroImageFileChange(e.target.files?.[0] ?? null)}
-                  />
-                </Button>
                 {heroImageFileName && (
                   <Typography variant="body2" color="text.secondary">
                     {heroImageFileName}
@@ -1322,18 +1282,7 @@ export default function LabelArtistsPage() {
                   </Button>
                 )}
               </Stack>
-              {form.heroImageUrl && (
-                <Card
-                  variant="outlined"
-                  sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
-                >
-                  <CardMedia component="img" height="180" image={form.heroImageUrl} alt="Vista previa" />
-                </Card>
-              )}
-              {heroImageError && <Alert severity="warning">{heroImageError}</Alert>}
-              <Typography variant="caption" color="text.secondary">
-                Se guardará embebida (data URL). Usa imágenes livianas (&lt; 6 MB).
-              </Typography>
+              <ArtistCoverPreview url={form.heroImageUrl} />
             </Stack>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
               <TextField

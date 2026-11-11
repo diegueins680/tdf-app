@@ -1,3 +1,5 @@
+import { normalizeArtistImageUrl } from './artistImage';
+
 export const ARTIST_GLOBAL_FALLBACK = '/artist-fallback.svg';
 
 // The light-theme primary/secondary shades in theme/appTheme.ts, all with white text.
@@ -48,7 +50,7 @@ export const ARTIST_HERO_FALLBACKS = {
 } as const satisfies Readonly<Record<string, string>>;
 
 export function getArtistHeroImage(apHeroImageUrl: string | null | undefined, apSlug: string | null | undefined, artistName?: string | null): string {
-  const persistedImage = apHeroImageUrl?.trim();
+  const persistedImage = normalizeArtistImageUrl(apHeroImageUrl);
   if (persistedImage && !isArtistPlaceholderImage(persistedImage)) return persistedImage;
 
   const normalizedSlug = apSlug?.trim().toLowerCase() ?? '';

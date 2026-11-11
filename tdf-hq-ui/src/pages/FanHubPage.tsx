@@ -17,7 +17,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   CircularProgress,
   Dialog,
@@ -44,6 +43,8 @@ import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import LaunchIcon from '@mui/icons-material/Launch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import ArtistCoverPreview from '../components/ArtistCoverPreview';
+import { artistImageUrlError } from '../utils/artistImage';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { ArtistProfileUpsert } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
@@ -1721,6 +1722,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         />
                         <TextField
                           label="URL de portada (opcional)"
+                          error={Boolean(artistImageUrlError(artistDraft.apuHeroImageUrl))}
+                          helperText={artistImageUrlError(artistDraft.apuHeroImageUrl) ?? 'Enlace público a una imagen o archivo de Drive.'}
                           placeholder="https://"
                           value={artistDraft.apuHeroImageUrl ?? ''}
                           onChange={(event) => {
@@ -1754,14 +1757,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             </Typography>
                           )}
                         </Stack>
-                        {artistDraft.apuHeroImageUrl && (
-                          <Card
-                            variant="outlined"
-                            sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
-                          >
-                            <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
-                          </Card>
-                        )}
+                        <ArtistCoverPreview url={artistDraft.apuHeroImageUrl} />
                         <Typography variant="caption" color="text.secondary">
                           Guardamos sólo enlaces hospedados (Drive/CDN) para que el perfil cargue rápido.
                         </Typography>

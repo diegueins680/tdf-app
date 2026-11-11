@@ -852,6 +852,8 @@
       "tdf-hq-ui/src/api/artistEnrichment.test.ts",
       "tdf-hq-ui/src/api/artistEnrichment.ts",
       "tdf-hq-ui/src/api/artistInvitations.ts",
+      "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+      "tdf-hq-ui/src/api/artistProfileMedia.ts",
       "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
       "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
       "tdf-hq-ui/src/api/auth.test.ts",
@@ -1000,6 +1002,8 @@
       "tdf-hq-ui/src/components/ApiStatusChip.tsx",
       "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
       "tdf-hq-ui/src/components/ArtistClaimPanel.tsx",
+      "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+      "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
       "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
       "tdf-hq-ui/src/components/ArtistFansList.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
@@ -1599,6 +1603,7 @@
       "tdf-hq-ui/src/utils/artistFollowIntent.ts",
       "tdf-hq-ui/src/utils/artistIdentity.test.ts",
       "tdf-hq-ui/src/utils/artistIdentity.ts",
+      "tdf-hq-ui/src/utils/artistImage.ts",
       "tdf-hq-ui/src/utils/artistProfileContent.test.ts",
       "tdf-hq-ui/src/utils/artistProfileContent.ts",
       "tdf-hq-ui/src/utils/assertNever.ts",
@@ -7994,7 +7999,7 @@
     {
       "id": "SURFACE-c708f44fd07aaecc",
       "path": "tdf-hq-ui/src/api/admin.ts",
-      "sha256": "aa46977058c668c63545c17d7fdaa2eacceef4e9dfb0df1feb77f37b08cafe35",
+      "sha256": "9b26bb7f8e33117de2a27b53df49e8470b12d303ac70c2f89fa4a0eeb26c97d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8031,6 +8036,18 @@
       "id": "SURFACE-ca0fcabe86de92f8",
       "path": "tdf-hq-ui/src/api/artistInvitations.ts",
       "sha256": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dfed9ffddc3aa569",
+      "path": "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+      "sha256": "a06306c44afc8d30c7f423fca08d86c11d573eb6c85ae99894514419af0ea279",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f78816ba807d3b45",
+      "path": "tdf-hq-ui/src/api/artistProfileMedia.ts",
+      "sha256": "4e578ebd799086d2da0f9fb343ab6355fd4aff5a4ccf364b1fa9b5678271a5a3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8318,13 +8335,13 @@
     {
       "id": "SURFACE-743e4202864493ee",
       "path": "tdf-hq-ui/src/api/fans.test.ts",
-      "sha256": "1d36c8a5f648dd3f44b7389181786dc3b603fa350570c898a091f9bf70bbd425",
+      "sha256": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ffd1f7d4f06774cf",
       "path": "tdf-hq-ui/src/api/fans.ts",
-      "sha256": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
+      "sha256": "251665e8d072decac333a04aaf3daf9357b3ffd4340c8c557407e644d30f3577",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8922,6 +8939,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8e1723edf220f689",
+      "path": "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+      "sha256": "06395a1892e95b4d05a90098e954daca051517b77ceb7e17fd5826abc37534ba",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-84d1edb4b5f2be7f",
+      "path": "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
+      "sha256": "7ec230fec58cd0bf78d13c45f79e1293d273ae38307944c58ef6802f7110554d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fe345132afa3a68e",
       "path": "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
       "sha256": "bd3dab4df6469191bc1cdc53c951410c01fd9cf98bd874b1b55c3c88f8d92e8c",
@@ -9290,13 +9319,13 @@
     {
       "id": "SURFACE-2d575081440ad9a8",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-      "sha256": "395baf4498cd3ce0065391a637b58da3f3f56113b5141c75c3c0bef73bda3032",
+      "sha256": "2754bee7969922a337c1ccffb3eb1b4340db5e1fb0af7d9279b2a515024b0727",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a64f86cb6be0afe2",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-      "sha256": "6b84cf452d35810cd5fc3d2117dabb518ed9babe6cba469ee3796f8a8ea24c83",
+      "sha256": "838931701186526df03dfc9aae547e3204a54ca8ea89be384978a746501dd057",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11018,7 +11047,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "4d2ecce58a6883d9c9b48bd837e17578c3e5385d8e1f8630df49f097bf2a7767",
+      "sha256": "33ffabf1d0303b0b7d7610971fbcded71bc11e7feb5ef9cd7623fbb5a8b37072",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11174,7 +11203,7 @@
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+      "sha256": "1c58c3703dee1244ec8adacbf98e639131383db61278701e4e9d80153a9586d9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12488,13 +12517,13 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
+      "sha256": "182d9e6e1ddc113d0c319c0489d7905063dbb768bfecac8fef2834918abab395",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
+      "sha256": "5e393b22956bcdb21436edf08a3ed567d7bb9b9d1023d2711c3c17e5e3bbc63b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12513,6 +12542,12 @@
       "id": "SURFACE-b2be3c4bb9adc022",
       "path": "tdf-hq-ui/src/utils/artistIdentity.ts",
       "sha256": "e037a5ceb7a7c8377575666d7d0e3a540a3c714da8324f17b85521c96e047a4d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-12770ceb2b42cba4",
+      "path": "tdf-hq-ui/src/utils/artistImage.ts",
+      "sha256": "d4d5b2e77247f434e0bb07d1cddf46ecd10022160933e7b3e9722e8c52795845",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22016,7 +22051,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "8da89361a61a7404f93547ddf4937c5ee0f0813eab7d807ac068e0119ebd3b6e",
+      "sha256": "8cb30c509bd51f19ff35ab1ff5d10e0c9b97419656fdb1814e5f14a4170a447f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30850,7 +30885,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sha256": "cbacd03b5e9d660d68d20ad28fea9fb1e0f0736d809beb47388894db626f780d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

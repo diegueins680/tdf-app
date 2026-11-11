@@ -5,6 +5,8 @@ import { VideoWatch } from '../utils/videoWatch';
 import { getAnalyticsClient } from '../analytics/posthog';
 import { videoAttribution } from '../features/campaigns/videoAttribution';
 import { safeVideoUrl } from '../features/campaigns/videoCampaign';
+import { normalizeArtistImageUrl } from '../utils/artistImage';
+import { isProviderPlaceholder } from '../features/records/resolveRecordThumbnail';
 
 export function sessionVideoTarget(value: string): { kind: 'iframe' | 'video' | 'link'; url: string } | null {
   if (!value || !safeVideoUrl(value)) return null;
@@ -43,6 +45,14 @@ function Player({ url, title, poster, analyticsContext, trackPublicPlayback = fa
   const source = resolveVideoSource(url) ?? (target?.kind === 'iframe' ? { provider: 'drive', src: target.url, url, vertical: false } : null);
   const [open, setOpen] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [failedPosters, setFailedPosters] = useState<string[]>([]);
+  const youtubeId = source?.provider === 'youtube' ? new URL(source.src).pathname.split('/').at(-1) : null;
+  const posterCandidates = [
+    ...(youtubeId ? [`https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`, `https://i.ytimg.com/vi/${youtubeId}/mqdefault.jpg`] : []),
+    normalizeArtistImageUrl(poster),
+  ];
+  const previewPoster = posterCandidates.find((candidate): candidate is string => Boolean(candidate) && !failedPosters.includes(candidate!));
+  const rejectPoster = (image: string) => setFailedPosters(previous => previous.includes(image) ? previous : [...previous, image]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const watch = useRef(new VideoWatch());
   const lastSent = useRef(0);
@@ -70,9 +80,14 @@ function Player({ url, title, poster, analyticsContext, trackPublicPlayback = fa
   return <Stack spacing={1.5}>
     <Box sx={{ bgcolor: '#090909', borderRadius: 2, overflow: 'hidden', width: '100%', maxWidth: source.vertical ? 460 : undefined, mx: 'auto' }}>
       {!open ? <Box sx={{ position: 'relative', aspectRatio: source.vertical ? '9/16' : '16/9', minHeight: 210, display: 'grid', placeItems: 'center' }}>
-        {poster && <Box component="img" src={poster} alt="" loading="lazy" sx={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'contain', opacity: 0.65 }} />}
+        {previewPoster && <Box component="img" key={previewPoster} src={previewPoster} alt={`Vista previa de ${title}`} loading="lazy"
+          onError={() => rejectPoster(previewPoster)}
+          onLoad={event => { if (isProviderPlaceholder(previewPoster, event.currentTarget.naturalWidth, event.currentTarget.naturalHeight)) rejectPoster(previewPoster); }}
+          sx={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'contain', opacity: 0.85 }} />}
+        {!previewPoster && source.provider === 'file' && <Box component="video" src={source.src} preload="metadata" muted playsInline aria-label={`Vista previa de ${title}`}
+          sx={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'contain' }} />}
         <Button variant="contained" onClick={() => { capture('tdf_video_player_opened'); setOpen(true); }} sx={{ zIndex: 1 }}>Ver video aquí</Button>
-      </Box> : source.provider === 'file' ? <Box component="video" ref={videoRef} controls playsInline preload="metadata" poster={poster ?? undefined} aria-label={title} src={source.src}
+      </Box> : source.provider === 'file' ? <Box component="video" ref={videoRef} controls playsInline preload="metadata" poster={previewPoster} aria-label={title} src={source.src}
         onPlay={() => { if (trackPublicPlayback) getAnalyticsClient().capture('video_campaign_play_started', { ...videoAttribution(window.location.search), player: 'file' }); }}
         onPlaying={event => { watch.current.start(event.currentTarget.currentTime, performance.now()); if (!started.current) { started.current = true; capture('tdf_video_play_started'); } }}
         onSeeking={() => watch.current.stop()}
