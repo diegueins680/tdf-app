@@ -86,10 +86,14 @@ imports, 17 oversized files. Suggested order, each as its own small change:
    `TDF.Courses.Metadata -> TDF.Routes.Courses`, because the course transfer
    types are declared beside the route definitions. It is listed; retiring it
    means moving those types under `TDF.DTO`.
-2. `TDF.Commerce.ProviderEventWorker -> TDF.Server.ServiceStorefront`: move
-   PayPal webhook parsing and processing under `TDF.Commerce`.
-3. `TicketPaymentReceipt`: move the response type out of the handler module so
-   the route contract stops importing delivery.
+2. Done: PayPal webhook parsing and processing moved to
+   `TDF.Commerce.PaypalWebhook`, and the paid-order ticket issuance it calls
+   moved from `TDF.Server.SocialEventsHandlers` to `TDF.Ticketing.Issuance`.
+   No background or domain module imports an HTTP handler module any more, and
+   `TDF.Server.ServiceStorefront` is back under the size limit.
+3. Done: the `TicketPaymentReceipt` wire type moved to
+   `TDF.DTO.TicketPaymentReceipt`; the handler module re-exports it. The route
+   contract no longer imports HTTP delivery.
 4. Web `api -> session`: move `logoutIntent` and `authEvents` below `api`; they
    are storage and event primitives, not session UI.
 5. Web `features/featureRegistry.ts`: it is static registry data used from

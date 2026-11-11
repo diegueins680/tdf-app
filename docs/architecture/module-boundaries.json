@@ -52,16 +52,13 @@
         }
       ],
       "knownViolations": [
-        "TDF.API.SocialEventsAPI -> TDF.Server.TicketPaymentReceipt",
         "TDF.Artists.Enrichment -> TDF.API.Admin",
         "TDF.Catalog.DB -> TDF.API.DDEX",
-        "TDF.Commerce.ProviderEventWorker -> TDF.Server.ServiceStorefront",
         "TDF.ContentStorage -> TDF.API.ContentStorage",
         "TDF.Courses.Metadata -> TDF.Routes.Courses",
         "TDF.Cron -> TDF.API.Admin",
         "TDF.Cron -> TDF.Routes.Courses",
         "TDF.MusicRelease.ContentValidation -> TDF.API.MusicRelease",
-        "TDF.Routes.EventTickets -> TDF.Server.TicketPaymentReceipt",
         "TDF.Social.Chat -> TDF.API.Chat"
       ],
       "sizeBudget": {
@@ -71,8 +68,7 @@
           "tdf-hq/src/TDF/API/Types.hs": 2900,
           "tdf-hq/src/TDF/Server.hs": 21300,
           "tdf-hq/src/TDF/Server/Catalog.hs": 3300,
-          "tdf-hq/src/TDF/Server/ServiceStorefront.hs": 3100,
-          "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": 11000,
+          "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": 10900,
           "tdf-hq/src/TDF/ServerAuth.hs": 3000,
           "tdf-hq/src/TDF/ServerExtra.hs": 5400,
           "tdf-hq/src/TDF/Services/EventDiscovery.hs": 3200

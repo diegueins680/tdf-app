@@ -57,7 +57,7 @@ import Servant.Multipart (
  )
 import System.FilePath (takeExtension)
 
-import TDF.Server.TicketPaymentReceipt (TicketPaymentReceipt)
+import TDF.DTO.TicketPaymentReceipt (TicketPaymentReceipt)
 
 import TDF.API.EventResearchAPI (EventResearchRoutes)
 import TDF.Contracts.EventWorkspaceAPI (EventWorkspaceAPI)

@@ -95,6 +95,7 @@ executable tdf-hq-exe
     TDF.Commerce.DomoQuotes
     TDF.Commerce.EventTickets
     TDF.Ticketing.Admission
+    TDF.Ticketing.Issuance
     TDF.Ticketing.Refund
     TDF.Ticketing.Confirmation
     TDF.Ticketing.Inventory
@@ -107,6 +108,7 @@ executable tdf-hq-exe
     TDF.Commerce.ServiceBookings
     TDF.Commerce.PaymentIntentStore
     TDF.Commerce.PaymentRuntimeStore
+    TDF.Commerce.PaypalWebhook
     TDF.Commerce.ProviderEventStore
     TDF.Commerce.ProviderEventWorker
     TDF.Commerce.ProviderCapabilities
@@ -134,6 +136,7 @@ executable tdf-hq-exe
     TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
+    TDF.DTO.TicketPaymentReceipt
     TDF.Distribution.StateMachine
     TDF.Email
     TDF.Email.Headers
