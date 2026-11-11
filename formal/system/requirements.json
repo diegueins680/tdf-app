@@ -26866,6 +26866,110 @@
       },
       "historicalStatus": null,
       "critical": false
+    },
+    {
+      "id": "UX-COGLOAD-001",
+      "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy.",
+      "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
+      "domain": "UX",
+      "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14, 16 and 18",
+      "contract": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+      "actors": [
+        "Anonymous visitor",
+        "Ticket buyer",
+        "Signed-in user",
+        "Staff user"
+      ],
+      "preconditions": [
+        "Existing public route, session, checkout and access-control contracts"
+      ],
+      "inputs": [
+        "Current pathname",
+        "Session roles, modules and feature flags",
+        "Public event storefront and checkout reads"
+      ],
+      "state": {
+        "shell": [
+          "standard",
+          "focused purchase"
+        ],
+        "sidebarEntry": [
+          "listed",
+          "search only",
+          "absent"
+        ]
+      },
+      "allowedTransitions": [
+        "standard -> focused purchase on ticket checkout, ticket order and payment return routes",
+        "search only -> listed while the destination is open or matches the menu search"
+      ],
+      "forbiddenTransitions": [
+        "Consent wording, fee disclosure or payment confirmation steps removed or weakened",
+        "A registered standalone feature absent from the sidebar data",
+        "A locked group shown to a viewer who cannot use any of its entries",
+        "A payment presented as completed before confirmation"
+      ],
+      "effects": [
+        "Presentation and copy only; no new writes, endpoints or permissions"
+      ],
+      "authorization": "Unchanged. Sidebar visibility continues to use canAccessPath; hiding an entry grants or removes no access.",
+      "privacy": "Name and email prefill read only the viewer's own session. No new data is collected or sent.",
+      "concurrency": "Unchanged; existing checkout idempotency and payment safety locks are preserved.",
+      "idempotency": "Unchanged; the checkout request fingerprint and idempotency key logic is preserved.",
+      "failure": "Existing failure states remain, reworded in plain language with the same meaning.",
+      "recovery": "Existing retry, status refresh and support paths remain available from the focused shell.",
+      "observability": "Existing funnel events are unchanged; no measured conversion effect is claimed.",
+      "property": "BuyActionFirst; FocusedPurchaseShell; SafetyMeaningPreserved; NoLockedGroups; SearchOnlyRespectsGlobalMenu",
+      "implementation": [
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+      ],
+      "tests": [
+        "e2e/web/event-rsvp-sharing.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Component and page regressions for each changed surface. No mathematical implementation proof claimed.",
+      "evidence": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+      "status": "specified and implemented",
+      "critical": false,
+      "openQuestions": [
+        "No usage data weights these changes; human comprehension and conversion effects are unmeasured.",
+        "Footer, sign-in, booking and sidebar changes were not measured in a browser."
+      ],
+      "confidence": "Heuristic audit with before/after measurements on the event page and ticket checkout only.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused web implementation of the audit's quick wins; mobile, backend-dependent and structural plan items remain separate obligations."
+      }
     }
   ]
 }

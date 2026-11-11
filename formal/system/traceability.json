@@ -26867,6 +26867,110 @@
       },
       "historicalStatus": null,
       "critical": false
+    },
+    {
+      "id": "UX-COGLOAD-001",
+      "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy.",
+      "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
+      "domain": "UX",
+      "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14, 16 and 18",
+      "contract": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+      "actors": [
+        "Anonymous visitor",
+        "Ticket buyer",
+        "Signed-in user",
+        "Staff user"
+      ],
+      "preconditions": [
+        "Existing public route, session, checkout and access-control contracts"
+      ],
+      "inputs": [
+        "Current pathname",
+        "Session roles, modules and feature flags",
+        "Public event storefront and checkout reads"
+      ],
+      "state": {
+        "shell": [
+          "standard",
+          "focused purchase"
+        ],
+        "sidebarEntry": [
+          "listed",
+          "search only",
+          "absent"
+        ]
+      },
+      "allowedTransitions": [
+        "standard -> focused purchase on ticket checkout, ticket order and payment return routes",
+        "search only -> listed while the destination is open or matches the menu search"
+      ],
+      "forbiddenTransitions": [
+        "Consent wording, fee disclosure or payment confirmation steps removed or weakened",
+        "A registered standalone feature absent from the sidebar data",
+        "A locked group shown to a viewer who cannot use any of its entries",
+        "A payment presented as completed before confirmation"
+      ],
+      "effects": [
+        "Presentation and copy only; no new writes, endpoints or permissions"
+      ],
+      "authorization": "Unchanged. Sidebar visibility continues to use canAccessPath; hiding an entry grants or removes no access.",
+      "privacy": "Name and email prefill read only the viewer's own session. No new data is collected or sent.",
+      "concurrency": "Unchanged; existing checkout idempotency and payment safety locks are preserved.",
+      "idempotency": "Unchanged; the checkout request fingerprint and idempotency key logic is preserved.",
+      "failure": "Existing failure states remain, reworded in plain language with the same meaning.",
+      "recovery": "Existing retry, status refresh and support paths remain available from the focused shell.",
+      "observability": "Existing funnel events are unchanged; no measured conversion effect is claimed.",
+      "property": "BuyActionFirst; FocusedPurchaseShell; SafetyMeaningPreserved; NoLockedGroups; SearchOnlyRespectsGlobalMenu",
+      "implementation": [
+        "tdf-hq-ui/src/components/PublicBranding.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
+        "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx"
+      ],
+      "tests": [
+        "e2e/web/event-rsvp-sharing.spec.mjs",
+        "e2e/web/persona-public.spec.mjs",
+        "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+        "tdf-hq-ui/src/components/SidebarNav.test.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.test.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Component and page regressions for each changed surface. No mathematical implementation proof claimed.",
+      "evidence": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
+      "status": "specified and implemented",
+      "critical": false,
+      "openQuestions": [
+        "No usage data weights these changes; human comprehension and conversion effects are unmeasured.",
+        "Footer, sign-in, booking and sidebar changes were not measured in a browser."
+      ],
+      "confidence": "Heuristic audit with before/after measurements on the event page and ticket checkout only.",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Focused web implementation of the audit's quick wins; mobile, backend-dependent and structural plan items remain separate obligations."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -27754,6 +27858,7 @@
     "tdf-hq-ui/src/App.tsx": "02d7a46c7c7593eade15f1b2bd79d6b43b2da13d8e583316a9997c9eb1ef7749",
     "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
+    "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx": "205cd4ebacf67f48da978914e77c6ca5c5a0dac6a24b26c557865df5dc587bb1",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "071a79c856bdcb95bf106e6be8ed39b9afd2e4ba686d44cbe158640f7bb29e49",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "200dcef2bab6d9918301c6070f282e41c4899d67a6354dd0f4aebf6d47030ad6",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
@@ -27896,6 +28001,7 @@
     "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx": "b7cce2b5b45e93c2d66004eb3ea41754c965f1a78bf555bab59db440a1369c24",
     "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
+    "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx": "525dcf7c57fd9a89f028945287e147139a0adbfcf5d0106fa89fd9190f658f25",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "acb502b58dd253f237d5555f617e4e0060044e0071296abe509c4e4207e1440a",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
     "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx": "e2e493ac45bdff3c02d9ecf97d71c43f879984079009bda1cdc9582542022ee7",
@@ -28079,6 +28185,7 @@
     "tdf-hq-ui/src/pages/PaymentsPage.tsx": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "ce6ad9db314d718c18736bbd51652b4bc666c9d8df7cc028b482e21c877f25af",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "cd5515ffdf95e8a621791d1b89648d8de171600c9d6292bce8dfc015f0e4b194",
+    "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "212b909b23793400907c09696153136b452038d6c8a0f7d48853c01cb09e75f4",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "a2ac886749b8c332947c02dc4314277ef91a7e2c0b7b06991a26930b62609ca0",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "3b8ee10be42d1d794f75a5ce6e51e0eb5b9495a2e142a4cbf68216b39a25e4dd",
     "tdf-hq-ui/src/pages/PublicProfilePage.tsx": "231a90d2da08b7eb5049818d418372a6c05d9069b9b874e8cf37c28824e17164",
@@ -30215,6 +30322,10 @@
       {
         "requirement": "SYS-DESKTOP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "e2e/web/persona-public.spec.mjs": [
@@ -30241,6 +30352,10 @@
       {
         "requirement": "UX-WELCOME-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": [
@@ -30266,6 +30381,10 @@
       },
       {
         "requirement": "SYS-DESKTOP-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -31163,6 +31282,10 @@
       {
         "requirement": "SYS-DESKTOP-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/authEntry.es.ts": [
@@ -31192,6 +31315,10 @@
       },
       {
         "requirement": "SYS-DESKTOP-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
       }
     ],
@@ -32415,11 +32542,19 @@
       {
         "requirement": "PAY-RECOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": [
       {
         "requirement": "PAY-RECOVERY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
       }
     ],
@@ -32451,11 +32586,19 @@
       {
         "requirement": "PAY-RECOVERY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": [
       {
         "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -34835,6 +34978,10 @@
       {
         "requirement": "WEB-CONTENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Routes/EventTickets.hs": [
@@ -35098,6 +35245,10 @@
       },
       {
         "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -35816,6 +35967,10 @@
       },
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
       }
     ],
@@ -36787,6 +36942,10 @@
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "e2e/web/mobile-program.spec.mjs": [
@@ -36986,6 +37145,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
       }
     ],
@@ -37374,6 +37537,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -39125,6 +39292,10 @@
       {
         "requirement": "NAV-MENU-COVERAGE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/notificationTarget.ts": [
@@ -39669,6 +39840,10 @@
       {
         "requirement": "WEB-CONTENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/test/TDF/Catalog/SecuritySpec.hs": [
@@ -39728,6 +39903,10 @@
       },
       {
         "requirement": "AUTH-ACCESS-PROVISION-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -39913,6 +40092,10 @@
       {
         "requirement": "AUTH-ENTRY-002",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/routes/RootLandingRedirect.test.tsx": [
@@ -40009,6 +40192,10 @@
       {
         "requirement": "MEDIA-STORAGE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": [
@@ -40060,6 +40247,10 @@
       },
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
       }
     ],
@@ -40151,6 +40342,10 @@
       {
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": [
@@ -40198,6 +40393,10 @@
       },
       {
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -40405,6 +40604,10 @@
       {
         "requirement": "EVT-DISCOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/api/artistUpcomingEvents.ts": [
@@ -40420,6 +40623,10 @@
       },
       {
         "requirement": "EVT-DISCOVERY-FILTER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -41911,6 +42118,10 @@
       {
         "requirement": "NAV-MENU-COVERAGE-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/sql/2026-10-25_directory_saved_search_parity.sql": [
@@ -43246,6 +43457,10 @@
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": [
       {
         "requirement": "PAY-DOMO-CANCEL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
       }
     ],
@@ -46194,6 +46409,24 @@
         "requirement": "SYS-DESKTOP-003",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -46903,6 +47136,10 @@
         {
           "requirement": "AUTH-ENTRY-002",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -47122,6 +47359,10 @@
         },
         {
           "requirement": "UX-WELCOME-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -55803,7 +56044,12 @@
       "path": "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
       "sha256": "205cd4ebacf67f48da978914e77c6ca5c5a0dac6a24b26c557865df5dc587bb1",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-822b40e105c55487",
@@ -55821,6 +56067,10 @@
         },
         {
           "requirement": "BOOK-STUDIO-TIMEZONE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -55853,6 +56103,10 @@
         },
         {
           "requirement": "LEGAL-DISCLOSURE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -58057,6 +58311,10 @@
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -58092,6 +58350,10 @@
         },
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -58359,6 +58621,10 @@
         {
           "requirement": "NAV-MENU-COVERAGE-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -58378,6 +58644,10 @@
         },
         {
           "requirement": "NAV-MENU-COVERAGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -58818,7 +59088,12 @@
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
       "sha256": "525dcf7c57fd9a89f028945287e147139a0adbfcf5d0106fa89fd9190f658f25",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
@@ -58828,6 +59103,10 @@
       "requirements": [
         {
           "requirement": "EVT-DISCOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -58894,6 +59173,10 @@
         },
         {
           "requirement": "EVT-DISCOVERY-FILTER-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -59072,6 +59355,10 @@
         {
           "requirement": "PAY-RECOVERY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -59083,6 +59370,10 @@
       "requirements": [
         {
           "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -60297,6 +60588,10 @@
         {
           "requirement": "SYS-DESKTOP-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -60332,6 +60627,10 @@
         },
         {
           "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -60637,6 +60936,10 @@
         {
           "requirement": "AUTH-ACCESS-PROVISION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -60656,6 +60959,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -61146,6 +61453,10 @@
         {
           "requirement": "WEB-CONTENT-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -61263,6 +61574,10 @@
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -61290,6 +61605,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -61407,6 +61726,10 @@
       "requirements": [
         {
           "requirement": "PAY-DOMO-CANCEL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -62071,6 +62394,10 @@
         {
           "requirement": "SYS-DESKTOP-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -62102,6 +62429,10 @@
         },
         {
           "requirement": "SYS-DESKTOP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -62178,6 +62509,10 @@
         },
         {
           "requirement": "MEDIA-STORAGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -62650,6 +62985,10 @@
         {
           "requirement": "PAY-RECOVERY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -62662,6 +63001,10 @@
         {
           "requirement": "PAY-RECOVERY-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -62670,7 +63013,12 @@
       "path": "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
       "sha256": "212b909b23793400907c09696153136b452038d6c8a0f7d48853c01cb09e75f4",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7efdc216a8d713ee",
@@ -62688,6 +63036,10 @@
         },
         {
           "requirement": "BOOK-STUDIO-TIMEZONE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -62724,6 +63076,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -81317,7 +81673,6 @@
     "SURFACE-fda7ca9bc5b40d7a",
     "SURFACE-87906dc2685f005a",
     "SURFACE-3c93d16568d6200e",
-    "SURFACE-5869f030ade79029",
     "SURFACE-df437d6ae3884110",
     "SURFACE-27c2e340baf13c46",
     "SURFACE-056e006eae5d1a35",
@@ -81458,7 +81813,6 @@
     "SURFACE-6628113be1d1b41f",
     "SURFACE-ae65f170b258f02b",
     "SURFACE-615a78e009691805",
-    "SURFACE-9b8b12c0260a498e",
     "SURFACE-151891803a9e4745",
     "SURFACE-f29c4e265dd61680",
     "SURFACE-6c08dcce1c9676c9",
@@ -81614,7 +81968,6 @@
     "SURFACE-fc080c7e7b9e5e76",
     "SURFACE-554106b9be846d52",
     "SURFACE-0e999cb8927f4583",
-    "SURFACE-841726035def3268",
     "SURFACE-254fb45706913119",
     "SURFACE-69678f180f18c65b",
     "SURFACE-899553a57a354dd7",
@@ -83737,7 +84090,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "6adb138eb44c96f89f852ac4097a9f620f91672803f9b9418c19ec2cdc8de65b",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83765,7 +84118,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "6adb138eb44c96f89f852ac4097a9f620f91672803f9b9418c19ec2cdc8de65b",
       "definition": {
         "states": [
           "absent",
@@ -83795,7 +84148,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "6adb138eb44c96f89f852ac4097a9f620f91672803f9b9418c19ec2cdc8de65b",
       "definition": {
         "export": [
           "queued",
@@ -106760,7 +107113,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 210,
+    "PARTIAL": 211,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
