@@ -128,6 +128,8 @@ export default function PublicEventTicketsPage() {
   const orderStale = lookupFailed || paymentUnconfirmed;
   const flaggedOrder = useRef<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Quantity problems are shown on the quantity field, not in the general alert.
+  const [quantityError, setQuantityError] = useState<string | null>(null);
   const [lookupRevision, setLookupRevision] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const liveLookup = useRef<{ eventId: number; orderId: number; token: string } | null>(null);
@@ -270,16 +272,17 @@ export default function PublicEventTicketsPage() {
     const selectedQuantity = Number(quantity);
     if (!Number.isSafeInteger(selectedTierId) || selectedTierId <= 0
         || !Number.isSafeInteger(selectedQuantity) || selectedQuantity <= 0) {
-      setMessage(english ? 'Choose a valid ticket and quantity.' : 'Elige una entrada y cantidad válidas.');
+      setQuantityError(english ? 'Choose a valid ticket and quantity.' : 'Elige una entrada y cantidad válidas.');
       return;
     }
     const maximumQuantity = storefront.data.policy?.maxTicketsPerOrder ?? 100;
     if (selectedQuantity > maximumQuantity) {
-      setMessage(english
+      setQuantityError(english
         ? `You can buy up to ${maximumQuantity} tickets per order.`
         : `Puedes comprar hasta ${maximumQuantity} entradas por orden.`);
       return;
     }
+    setQuantityError(null);
     const payload: PublicEventTicketCheckoutRequest = {
       tierId: selectedTierId,
       quantity: selectedQuantity,
@@ -617,7 +620,8 @@ export default function PublicEventTicketsPage() {
                       ))}
                     </TextField>
                   )}
-                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => setQuantity(event.target.value)}
+                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => { setQuantity(event.target.value); setQuantityError(null); }}
+                    error={Boolean(quantityError)}
                     inputProps={{ min: 1, max: quantityLimit, step: 1, style: { textAlign: 'center' } }}
                     sx={{ maxWidth: 220 }}
                     InputProps={{
@@ -636,9 +640,9 @@ export default function PublicEventTicketsPage() {
                         </InputAdornment>
                       ),
                     }}
-                    helperText={english
+                    helperText={quantityError ?? (english
                       ? `Up to ${storefront.data.policy?.maxTicketsPerOrder ?? 100} tickets per order.`
-                      : `Hasta ${storefront.data.policy?.maxTicketsPerOrder ?? 100} entradas por orden.`}
+                      : `Hasta ${storefront.data.policy?.maxTicketsPerOrder ?? 100} entradas por orden.`)}
                   />
                   {subtotalLabel && (
                     <Typography aria-live="polite" data-testid="ticket-subtotal">
