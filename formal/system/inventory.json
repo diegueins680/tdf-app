@@ -10759,13 +10759,13 @@
     {
       "id": "SURFACE-10a1b2ad11b92606",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
-      "sha256": "e5c17de3ace0ccb44dc20fa2d166a0dadef24a25e5006fd40e65441f8379df17",
+      "sha256": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9ec3af8f42eacde2",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-      "sha256": "bef2c4c9f0eda00c82706ee017e1c3936bbb9b2f584f5fcd9cbb18df26ce3328",
+      "sha256": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10855,13 +10855,13 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "879899e9e196b72e8e80b10aab2a8786caeb1c84f586919ee4b1d359e45be581",
+      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
+      "sha256": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11047,13 +11047,13 @@
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "a31ff6de689d1b9b31fe6b240d709d047d42783ca82b1322ccdf9e0193786b83",
+      "sha256": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "f6b70b9d6aac26552d0dba732452989b37f14582d0163a3b86615dcacb4a8ed3",
+      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11587,13 +11587,13 @@
     {
       "id": "SURFACE-6e21d53461f37190",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
-      "sha256": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
+      "sha256": "b015233958f9b3684f93c132236f99a9378f980ea3c66de9ffe3eeb6d71112c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
+      "sha256": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30275,6 +30275,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/form-actions.md",
+      "sha256": "b1d4b9a8dc94f8ecde735ef83a6a0089ef4030fc10a4b3015e3f43b408af39e1",
+      "authority": "inferred",
+      "authorityBasis": "Status: accepted by product owner on 2026-11-10.",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/history-2026-09-20.md",
       "sha256": "90cac67147210c90fbb604934c5f6a998d936396d70fec554c235187554d4d53",
       "authority": "historical",
@@ -30892,7 +30899,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6818368531024878ade4a0ba872ac81fccfd725c4e9e64db08932b49f5a393ed",
+      "sha256": "21ac4e9e529c47bdd44c345e1dbc02c467778e3a46ba97cc6c86820a3b3706eb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
