@@ -110,13 +110,15 @@ psql_test -c "DO \$\$ BEGIN ASSERT NOT (SELECT enabled FROM social_v2_runtime); 
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/fixture.sql"
 psql_test < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_test < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
-# Shadow the runtime table without its singleton CHECK to verify both fixtures
-# enable only the singleton, leaving an unrelated sentinel row disabled.
+# Shadow fixture tables without singleton CHECKs to verify updates leave
+# unrelated sentinel rows unchanged.
 {
   cat <<'SQL'
 BEGIN;
 CREATE TEMP TABLE social_v2_runtime(singleton boolean PRIMARY KEY,enabled boolean NOT NULL DEFAULT false);
 INSERT INTO social_v2_runtime(singleton) VALUES(true),(false);
+CREATE TEMP TABLE social_schema_preserved(singleton boolean PRIMARY KEY,publications jsonb,commands jsonb);
+INSERT INTO social_schema_preserved VALUES(true,'[]','[]'),(false,'[]','[]');
 SQL
   python3 - "$TDF_SOCIAL_ROOT/scripts/social/read-model-tests.sql" "$TDF_SOCIAL_ROOT/scripts/social/schema-compatibility.sql" <<'PY'
 import sys
@@ -127,11 +129,23 @@ for fixture in sys.argv[1:]:
     assert updates, f'Missing runtime update in {fixture}'
     for update in updates:
         print(update)
+snapshot_updates = [line for line in Path(sys.argv[2]).read_text().splitlines()
+                    if line.startswith('UPDATE social_schema_preserved ')]
+assert snapshot_updates, 'Missing preserved snapshot update'
+for update in snapshot_updates:
+    print(update)
 PY
   cat <<'SQL'
 DO $$ BEGIN
   ASSERT (SELECT enabled FROM social_v2_runtime WHERE singleton=true), 'social fixtures did not enable singleton';
   ASSERT NOT (SELECT enabled FROM social_v2_runtime WHERE singleton=false), 'social fixtures enabled non-singleton';
+  ASSERT (SELECT publications FROM social_schema_preserved WHERE singleton=true)
+    IS NOT DISTINCT FROM (SELECT jsonb_agg(to_jsonb(p) ORDER BY position) FROM social_v2_publication p),
+    'social fixture did not refresh preserved snapshot';
+  ASSERT (SELECT publications='[]'::jsonb AND commands='[]'::jsonb FROM social_schema_preserved WHERE singleton=false),
+    'social fixture updated non-singleton snapshot';
+  ASSERT (SELECT commands='[]'::jsonb FROM social_schema_preserved WHERE singleton=true),
+    'social fixture changed preserved commands';
 END $$;
 ROLLBACK;
 SQL
