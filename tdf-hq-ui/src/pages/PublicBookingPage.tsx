@@ -328,7 +328,7 @@ export default function PublicBookingPage() {
   const bookingReturnPath = `${location.pathname}${location.search}${location.hash}`;
   const loginPath = buildLoginRedirectPath(bookingReturnPath);
   const signupPath = `${loginPath}&signup=1`;
-  const { session, logout } = useSession();
+  const { session } = useSession();
   const isMobile = useMediaQuery('(max-width:600px)');
   const appliedServiceQuery = useRef(false);
   const appliedStoredProfile = useRef(false);
@@ -1568,7 +1568,8 @@ export default function PublicBookingPage() {
                         Seguir esta orden
                       </Button>
                     )}
-                    <Button variant="contained" size="medium" onClick={resetForm}>
+                    {/* While the deposit is unpaid, paying it is the one primary action. */}
+                    <Button variant={checkoutSuccess && !depositPaid ? 'text' : 'contained'} size="medium" onClick={resetForm}>
                       Crear otra reserva
                     </Button>
                     <Button
@@ -1806,6 +1807,7 @@ export default function PublicBookingPage() {
                   <Chip key={label} label={label} size="small" variant="outlined" />
                 ))}
               </Stack>
+              {!session && (
               <Card
                 variant="outlined"
                 sx={{
@@ -1836,19 +1838,11 @@ export default function PublicBookingPage() {
                       <Button size="small" variant="text" component={RouterLink} to={signupPath}>
                         Crear cuenta
                       </Button>
-                      {session && (
-                        <Chip
-                          label={`Conectado como ${session.displayName}`}
-                          color="primary"
-                          onDelete={logout}
-                          variant="outlined"
-                          sx={{ borderRadius: 999 }}
-                        />
-                      )}
                     </Stack>
                   </Stack>
                 </CardContent>
               </Card>
+              )}
             </Stack>
 
             <Grid container spacing={2}>
@@ -1997,7 +1991,18 @@ export default function PublicBookingPage() {
 
                       {activeStep === 1 && (
                         <>
-                          {serviceField}
+                          {/* The service is chosen once, in step 1; here it is shown with a way back. */}
+                          <Grid item xs={12}>
+                            <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
+                              <Typography variant="body2" color="text.secondary">
+                                Servicio: <strong>{form.serviceType || 'Sin elegir'}</strong>
+                                {estimatePriceLabel ? ` · ${estimatePriceLabel}` : ''}
+                              </Typography>
+                              <Button size="small" variant="text" disabled={formDisabled} onClick={() => setActiveStep(0)}>
+                                Cambiar
+                              </Button>
+                            </Stack>
+                          </Grid>
                           <Grid item xs={12} sm={7}>
                             <TextField
                               label="Fecha y hora"

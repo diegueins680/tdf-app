@@ -387,6 +387,20 @@ describe('canonical public event authentication fallback', () => {
     expect(link.getAttribute('href')).toBe('/eventos/141/entradas');
   });
 
+  it('states the lowest in-stock price beside the buy button and drops the profile contact panel on events', async () => {
+    profileMock.mockResolvedValueOnce(event);
+    storefrontMock.mockResolvedValueOnce({ eventId: 141, checkoutAvailable: true, policy: {}, unavailableReason: null, tiers: [
+      { tierId: 1, unitPriceMinor: 1000, currency: 'USD', remaining: 0 },
+      { tierId: 2, unitPriceMinor: 3500, currency: 'USD', remaining: 4 },
+      { tierId: 3, unitPriceMinor: 2000, currency: 'USD', remaining: 9 },
+    ] });
+    renderPage('/eventos/141');
+    await screen.findByRole('link', { name: 'Ver entradas' });
+    expect(screen.getByText(/^(Desde|From) .*20[,.]00/)).toBeTruthy();
+    expect(screen.queryByText('¿Quieres contactar este perfil?')).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Ingresar para contactar' })).toBeNull();
+  });
+
   it('explains a closed storefront in Spanish instead of exposing the raw server reason', async () => {
     profileMock.mockResolvedValueOnce(event);
     storefrontMock.mockResolvedValueOnce({ eventId: 141, checkoutAvailable: false, tiers: [], policy: null, unavailableReason: 'Ticket inventory is currently exhausted' });

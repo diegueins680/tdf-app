@@ -969,11 +969,6 @@ export default function LoginPage() {
                   <Typography variant="h5" fontWeight={700}>
                     {t('authEntry.signIn')}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: 'rgba(248,250,252,0.82)' }}>
-                    {isWideLayout
-                      ? t('authEntry.loginIntroWide')
-                      : t('authEntry.loginIntroNarrow')}
-                  </Typography>
                 </Stack>
 
                 <Stack spacing={2.25}>
@@ -987,7 +982,6 @@ export default function LoginPage() {
                       fullWidth
                       autoComplete="username"
                       inputProps={{ autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
-                      helperText={t('authEntry.identifierHint')}
                       sx={textFieldSx}
                     />
 
@@ -1073,9 +1067,6 @@ export default function LoginPage() {
                   }
                   label={t('authEntry.rememberDevice')}
                 />
-                <Typography variant="caption" sx={{ color: 'rgba(248,250,252,0.7)' }}>
-                  {t('authEntry.rememberHint')}
-                </Typography>
 
                 {formError && <Alert severity="warning">{formError}</Alert>}
 
@@ -1109,16 +1100,6 @@ export default function LoginPage() {
                     >
                       {t('authEntry.exploreGuest')}
                     </Button>
-                    {!isWideLayout && (
-                      <Button
-                        variant="text"
-                        size="small"
-                        onClick={() => setShowOnboardingCards(true)}
-                        sx={{ textTransform: 'none', alignSelf: 'flex-start', px: 0 }}
-                      >
-                        {t('authEntry.showQuickStarts')}
-                      </Button>
-                    )}
                   </Stack>
                 </Stack>
 
@@ -1133,16 +1114,6 @@ export default function LoginPage() {
                       sx={{ cursor: 'pointer', p: 0 }}
                     >
                       {t('authEntry.recover')}</Link>
-                  </Typography>
-                  <Typography variant="body2">
-                    {t('authEntry.trialQuestion')}{' '}
-                    <Link component={RouterLink} to="/trials" underline="hover">
-                      {t('authEntry.requestTrial')}</Link>
-                  </Typography>
-                  <Typography variant="body2">
-                    {t('authEntry.musicQuestion')}{' '}
-                    <Link component={RouterLink} to="/fans" underline="hover">
-                      {t('authEntry.communityLink')}</Link>
                   </Typography>
                 </Stack>
               </Stack>

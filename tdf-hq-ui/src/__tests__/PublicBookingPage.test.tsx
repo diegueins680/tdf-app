@@ -223,8 +223,10 @@ jest.unstable_mockModule('../api/engineers', () => ({
   },
 }));
 
+let bookingSession: { username: string; displayName: string; roles: string[]; partyId: number } | null = null;
+
 jest.unstable_mockModule('../session/SessionContext', () => ({
-  useSession: () => ({ session: null, logout: logoutMock }),
+  useSession: () => ({ session: bookingSession, logout: logoutMock }),
   getStoredSessionToken: () => null,
 }));
 
@@ -1047,4 +1049,15 @@ describe('PublicBookingPage', () => {
       consoleErrorSpy.mockRestore();
     }
   });
+});
+
+it('skips the optional account card for a visitor who is already signed in', async () => {
+  bookingSession = { username: 'ana@example.com', displayName: 'Ana', roles: ['customer'], partyId: 9 };
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  const { cleanup } = await renderPage(container);
+  try {
+    expect(container.textContent).not.toContain('¿Ya tienes cuenta?');
+    expect(Array.from(container.querySelectorAll('a')).some((link) => link.textContent?.trim() === 'Iniciar sesión')).toBe(false);
+  } finally { bookingSession = null; await cleanup(); document.body.removeChild(container); }
 });
