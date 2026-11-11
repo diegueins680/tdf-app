@@ -180,6 +180,16 @@ describe('HostedProviderCheckout', () => {
     expect(createMock).toHaveBeenCalledTimes(1);
   });
 
+  it('asks for the PayPhone number only after that wallet is chosen', async () => {
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']}
+      initialBuyerPhone="991234567" />);
+    const wallet = await screen.findByRole('button', { name: /PayPhone/ });
+    expect(screen.queryByRole('textbox', { name: 'Número PayPhone' })).toBeNull();
+    fireEvent.click(wallet);
+    expect(await screen.findByRole('textbox', { name: 'Número PayPhone' })).toBeTruthy();
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
   it('keeps the original PayPhone contact frozen during exact recovery', async () => {
     const key = seedPending(true);
     createMock.mockResolvedValue({ ...succeeded, provider: 'payphone' });

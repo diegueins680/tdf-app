@@ -188,6 +188,7 @@ export default function HostedProviderCheckout({
   const [error, setError] = useState<string | null>(null);
   const [buyerCountryCode, setBuyerCountryCode] = useState('593');
   const [buyerPhone, setBuyerPhone] = useState(() => digitsOnly(initialBuyerPhone ?? ''));
+  const [payphoneRequested, setPayphoneRequested] = useState(false);
   const recoveryScope = checkout?.checkoutId ?? pendingReturnPathPrefix ?? '';
   const recoveryScopeRef = useRef(recoveryScope);
   recoveryScopeRef.current = recoveryScope;
@@ -489,6 +490,10 @@ export default function HostedProviderCheckout({
     setError(null);
   };
 
+  // PayPhone's number fields appear once that wallet is chosen, or when an
+  // earlier PayPhone attempt is being recovered.
+  const payphoneFieldsVisible = payphoneRequested || selected?.provider === 'payphone'
+    || pendingCreation?.provider === 'payphone' || session?.provider === 'payphone';
   const copy = session ? stateCopy(session, english) : null;
   const existingRedirect = session?.provider === 'placetopay'
     ? safePlaceToPayRedirect(session.redirectUrl)
@@ -499,7 +504,7 @@ export default function HostedProviderCheckout({
       <Typography variant="subtitle2" fontWeight={800}>
         {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
       </Typography>
-      {methods.some((method) => method.provider === 'payphone') && (
+      {payphoneFieldsVisible && methods.some((method) => method.provider === 'payphone') && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <TextField
             size="small"
@@ -530,7 +535,11 @@ export default function HostedProviderCheckout({
               key={method.label}
               variant={method.provider === 'placetopay' ? 'contained' : 'outlined'}
               disabled={disabled || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
-              onClick={() => void startPayment(method)}
+              onClick={() => {
+                // The first tap on PayPhone only asks for the wallet number.
+                if (method.provider === 'payphone' && !payphoneFieldsVisible) { setPayphoneRequested(true); return; }
+                void startPayment(method);
+              }}
             >
               {busy && isSelected ? <CircularProgress size={20} color="inherit" /> : methodCopy(method.label, english)}
             </Button>
