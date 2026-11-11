@@ -1,6 +1,7 @@
+import ArtistProfileLink from '../../components/ArtistProfileLink';
 import ArtistProfileImage from '../../components/ArtistProfileImage';
 import MarkdownText from '../../components/MarkdownText';
-import { Card, CardContent, Grid, Stack, Typography } from '@mui/material';
+import { Card, CardActionArea, CardContent, Grid, Stack, Typography } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import type { FanClubDTO } from '../../api/types';
 import LazyPaginatedList from '../../components/LazyPaginatedList';
@@ -26,11 +27,7 @@ export function FanClubPreview({
             {visibleClubs.map((club) => (
               <Grid item xs={12} md={4} key={club.fcId}>
                 <Card
-                  component={RouterLink}
-                  to={`/fans/clubs/${club.fcArtistId}`}
                   sx={{
-                    textDecoration: 'none',
-                    color: 'inherit',
                     display: 'flex',
                     flexDirection: 'column',
                     height: '100%',
@@ -38,26 +35,30 @@ export function FanClubPreview({
                     '&:hover': { transform: 'translateY(-2px)', boxShadow: 3 },
                   }}
                 >
-                  <ArtistProfileImage artistName={club.fcName.replace(/^Club de Fans de /i, '')}
-                    imageUrl={club.fcArtistImageUrl} alt={club.fcName} width={640} height={160}
-                    sx={{ width: '100%' }} />
-                  <CardContent sx={{ flex: 1 }}>
-                    <Stack spacing={1}>
-                      <Typography variant="h6" fontWeight={700}>
-                        {club.fcName}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {club.fcFollowerCount} seguidores
-                      </Typography>
-                      {club.fcDescription && (
-                        <MarkdownText disableLinks inline variant="body2" color="text.secondary">
-                          {club.fcDescription.length > 100
-                            ? `${club.fcDescription.slice(0, 100)}…`
-                            : club.fcDescription}
-                        </MarkdownText>
-                      )}
-                    </Stack>
-                  </CardContent>
+                  <ArtistProfileLink partyId={club.fcArtistId} sx={{ display: 'block' }}>
+                    <ArtistProfileImage artistName={club.fcName.replace(/^Club de Fans de /i, '')}
+                      imageUrl={club.fcArtistImageUrl} alt={club.fcName} width={640} height={160}
+                      sx={{ width: '100%' }} />
+                  </ArtistProfileLink>
+                  <CardActionArea component={RouterLink} to={`/fans/clubs/${club.fcArtistId}`} sx={{ flex: 1, alignItems: 'stretch' }}>
+                    <CardContent>
+                      <Stack spacing={1}>
+                        <Typography variant="h6" fontWeight={700}>
+                          {club.fcName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {club.fcFollowerCount} seguidores
+                        </Typography>
+                        {club.fcDescription && (
+                          <MarkdownText disableLinks inline variant="body2" color="text.secondary">
+                            {club.fcDescription.length > 100
+                              ? `${club.fcDescription.slice(0, 100)}…`
+                              : club.fcDescription}
+                          </MarkdownText>
+                        )}
+                      </Stack>
+                    </CardContent>
+                  </CardActionArea>
                 </Card>
               </Grid>
             ))}

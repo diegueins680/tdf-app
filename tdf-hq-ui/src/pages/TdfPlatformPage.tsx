@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import {
   Alert,
   Box,
@@ -339,9 +340,6 @@ const artistSummaryFor = (artist: ArtistProfileDTO) => {
   return 'Perfil activo dentro de la comunidad TDF.';
 };
 
-const artistPathFor = (artist: ArtistProfileDTO) =>
-  artist.apSlug ? `/artista/${artist.apSlug}` : `/artista/${artist.apArtistId}`;
-
 function Eyebrow({ children }: { children: string }) {
   return (
     <Chip
@@ -538,20 +536,22 @@ function ArtistCarousel({
             color: COLOR_TEXT_MUTED,
           }}
         >
-          <ArtistProfileImage
-            artistName={artist.apDisplayName}
-            imageUrl={artistImageFor(artist, index, recordsImages)}
-            alt={`Imagen de ${artist.apDisplayName}`}
-            width={640}
-            height={ARTIST_CARD_IMAGE_HEIGHT_PX}
-            sx={{
-              width: '100%',
-              height: ARTIST_CARD_IMAGE_HEIGHT_PX,
-              objectFit: 'cover',
-              display: 'block',
-              bgcolor: COLOR_ARTIST_IMAGE_FALLBACK,
-            }}
-          />
+          <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug} sx={{ display: 'block' }}>
+            <ArtistProfileImage
+              artistName={artist.apDisplayName}
+              imageUrl={artistImageFor(artist, index, recordsImages)}
+              alt={`Imagen de ${artist.apDisplayName}`}
+              width={640}
+              height={ARTIST_CARD_IMAGE_HEIGHT_PX}
+              sx={{
+                width: '100%',
+                height: ARTIST_CARD_IMAGE_HEIGHT_PX,
+                objectFit: 'cover',
+                display: 'block',
+                bgcolor: COLOR_ARTIST_IMAGE_FALLBACK,
+              }}
+            />
+          </ArtistProfileLink>
           <CardContent>
             <Stack spacing={1.5}>
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
@@ -567,7 +567,9 @@ function ArtistCarousel({
                 />
               </Stack>
               <Typography component="h3" variant="h5" sx={{ fontWeight: FONT_WEIGHT_CARD_HEADING }}>
-                {artist.apDisplayName}
+                <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug}>
+                  {artist.apDisplayName}
+                </ArtistProfileLink>
               </Typography>
               <Typography
                 variant="body2"
@@ -582,15 +584,9 @@ function ArtistCarousel({
               >
                 {artistSummaryFor(artist)}
               </Typography>
-              <Button
-                disabled={false}
-                component={RouterLink}
-                to={artistPathFor(artist)}
-                variant="text"
-                sx={{ alignSelf: 'flex-start', color: COLOR_TDF_GOLD_LIGHT, textTransform: 'none' }}
-              >
+              <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug} sx={{ alignSelf: 'flex-start', color: COLOR_TDF_GOLD_LIGHT }}>
                 {profileAction}
-              </Button>
+              </ArtistProfileLink>
             </Stack>
           </CardContent>
         </Card>

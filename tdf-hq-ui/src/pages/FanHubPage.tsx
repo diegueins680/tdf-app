@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
@@ -1270,10 +1271,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             >
                               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
-                                  <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={artist.apHeroImageUrl} slug={artist.apSlug} width={40} height={40} sx={{ borderRadius: '50%' }} />
+                                  <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug} sx={{ display: 'block' }}>
+                                    <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={artist.apHeroImageUrl} slug={artist.apSlug} width={40} height={40} sx={{ borderRadius: '50%' }} />
+                                  </ArtistProfileLink>
                                   <Box>
                                     <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                                      {artist.apDisplayName}
+                                      <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug}>
+                                        {artist.apDisplayName}
+                                      </ArtistProfileLink>
                                     </Typography>
                                     {artist.apCity && (
                                       <Typography variant="caption" color="text.secondary">
@@ -1963,15 +1968,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             <Typography variant="h6" gutterBottom>Recomendados para ti</Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap">
               {suggestedArtists.map((artist) => (
-                <Chip
-                  key={`sug-${artist.apArtistId}`}
-                  label={artist.apDisplayName}
-                  onClick={() => {
-                    const anchor = document.getElementById(`artist-${artist.apArtistId}`);
-                    anchor?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}
-                  variant="outlined"
-                />
+                <ArtistProfileLink key={artist.apArtistId} partyId={artist.apArtistId} slug={artist.apSlug}>
+                  <Chip label={artist.apDisplayName} variant="outlined" />
+                </ArtistProfileLink>
               ))}
             </Stack>
           </Card>
@@ -2080,7 +2079,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   onClick={() => { if (artistProfilePath) navigate(artistProfilePath); }}
                 >
                   {displayHeroImage && (
-                    <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={displayHeroImage} width={640} height={220} sx={{ width: '100%' }} />
+                    <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug} sx={{ display: 'block' }}>
+                      <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={displayHeroImage} width={640} height={220} sx={{ width: '100%' }} />
+                    </ArtistProfileLink>
                   )}
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack
@@ -2094,11 +2095,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} flexWrap="wrap">
                           <Typography
                             variant="h5"
-                            component={RouterLink}
-                            to={artistProfilePath ?? '/fans'}
-                            sx={{ overflowWrap: 'anywhere', minWidth: 0, color: 'inherit' }}
+                            sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
                           >
-                            {artist.apDisplayName}
+                            <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug}>
+                              {artist.apDisplayName}
+                            </ArtistProfileLink>
                           </Typography>
                           <Chip label={`${artist.apFollowerCount} fans`} size="small" />
                         </Stack>
