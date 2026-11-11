@@ -102,3 +102,25 @@ If you change prompts, agent docs, or loop behavior:
 2. Update `.github/copilot-instructions.md` if the change affects Copilot context.
 3. Keep `README.md`, `DEVELOPMENT.md`, and `CONTRIBUTING.md` aligned.
 4. Re-run `npm run ai:doctor`.
+
+## Branch ownership of the continuous improvement loop
+
+The loop's branch sweep (`reconcileNonMainBranchesOntoMain` in
+`scripts/continuous-improvement-loop.mjs`) touches only branches the loop
+created:
+
+- It merges and prunes branches under `continuous-improvement-loop/` and under
+  any namespace listed in the config option `reconcileBranchPrefixes`
+  (for example `["loop-experiments/"]`). A bare, wildcard or slash-less entry
+  is refused.
+- Every other branch is left alone: it is not merged into the loop's base and
+  its local and remote refs are never deleted. Deleting the head of an open
+  pull request closes it unmerged.
+- A merge that conflicts is aborted. The loop never resolves a conflict by
+  keeping its own copy of a file, because that records a merge that dropped
+  the branch's changes. Skipped branches are reported as
+  `conflictSkippedBranches` in the sweep summary.
+
+Background: on 2026-11-10 and 2026-11-11 the previous sweep absorbed every
+non-main branch, closed 24 pull requests by deleting their heads, and
+discarded changes to 258 files through keep-ours conflict resolution.
