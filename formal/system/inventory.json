@@ -3799,7 +3799,7 @@
     {
       "id": "SURFACE-c16934793233bcac",
       "path": "scripts/__tests__/architecture-boundaries.test.mjs",
-      "sha256": "bd52e508cbb51a17d9b2e709b80abca05c5e957aab9800aa42eba7ee85e4e173",
+      "sha256": "536a8b583458acc1dcf511caf2ca9ea307eaea3d58ef39a5235f7cd61ab62cb6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4675,7 +4675,7 @@
     {
       "id": "SURFACE-350c1e59d110e860",
       "path": "scripts/check-architecture-boundaries.mjs",
-      "sha256": "0e171ee0aa27749916666bc07ef2fb345a57ec1dfebdc87f6a36fecda705eb2e",
+      "sha256": "df09ec947a2854c0c1dd97f9f41e60a6da7373551453d461fae9c4def69056fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22016,7 +22016,7 @@
     },
     {
       "path": "docs/adr/0133-enforced-module-boundaries.md",
-      "sha256": "50b67c82272114235388dccc7df9d007e184d933391eab05f6ee2b1cc83307ee",
+      "sha256": "0277ad8f5d05d01045519c248b08cba24eb50af77743a3b864449203c3597859",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -32654,8 +32654,8 @@
       "gap": "Per-clause implementation correspondence not discharged by inventory"
     },
     {
-      "id": "0133-enforced-module-boundaries:57510d3e49e8",
-      "statement": "Type-only TypeScript imports are not edges: the compiler erases them, so they cannot create a load-order or bundle dependency. Test files are not scanned.",
+      "id": "0133-enforced-module-boundaries:3e1e933fab6e",
+      "statement": "`import type` and `export type` declarations are not edges: the compiler erases them, so they cannot create a load-order or bundle dependency. An inline `import { type A }` is an edge, because `verbatimModuleSyntax` keeps the module import. Test files are not scanned.",
       "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
       "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",

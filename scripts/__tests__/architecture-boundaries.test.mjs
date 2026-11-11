@@ -78,7 +78,7 @@ test('Haskell imports cover qualified, safe, package and source forms only at li
   assert.deepEqual(haskellImports(source), ['TDF.Auth', 'TDF.Config', 'TDF.Cycle', 'TDF.DTO', 'TDF.Models']);
 });
 
-test('TypeScript runtime imports exclude erased type-only imports', () => {
+test('TypeScript runtime imports exclude only whole-declaration type imports', () => {
   const source = [
     "import type { A } from './types';",
     "import { type B, type C } from './moreTypes';",
@@ -92,7 +92,7 @@ test('TypeScript runtime imports exclude erased type-only imports', () => {
     "const text = \"import x from './inString'\";",
   ].join('\n');
   assert.deepEqual(typescriptRuntimeImports(ts, 'module.ts', source), [
-    './default', './lazy', './mixed', './namespace', './reexport', './sideEffect',
+    './default', './lazy', './mixed', './moreTypes', './namespace', './reexport', './sideEffect',
   ]);
 });
 
