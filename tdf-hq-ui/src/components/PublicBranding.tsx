@@ -125,6 +125,10 @@ export default function PublicBranding({
     return { label: 'WhatsApp', kind: 'external', value: STUDIO_WHATSAPP_URL };
   }, [contextualLoginPath, location.pathname, t]);
 
+  // A signed-in visitor has no use for actions that only lead to the login page.
+  const hideFooterAction = (action: FooterAction) =>
+    Boolean(session) && action.kind === 'route' && action.value.startsWith('/login');
+
   useEffect(() => {
     const referrer = typeof document === 'undefined' ? '' : document.referrer;
     if (hasInstagramTrafficSignal({ search: location.search, referrer })) {
@@ -357,7 +361,7 @@ export default function PublicBranding({
                 {t('authEntry.footerHelp')}
               </Typography>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {footerPrimaryAction.kind === 'external' ? (
+                {hideFooterAction(footerPrimaryAction) ? null : footerPrimaryAction.kind === 'external' ? (
                   <Button
                     size="small"
                     variant="contained"
@@ -380,7 +384,7 @@ export default function PublicBranding({
                     {footerPrimaryAction.label}
                   </Button>
                 )}
-                {footerSecondaryAction.kind === 'external' ? (
+                {hideFooterAction(footerSecondaryAction) ? null : footerSecondaryAction.kind === 'external' ? (
                   <Button
                     size="small"
                     variant="outlined"
@@ -405,74 +409,15 @@ export default function PublicBranding({
                 )}
               </Stack>
             </Stack>
-            <Stack component="nav" aria-label={t('authEntry.exploreTdf')} spacing={0.75}>
-              <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.35 }}>
-                {t('authEntry.explore')}
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {PUBLIC_NAV_ITEMS.map((item) => (
-                  <Button
-                    key={item.to}
-                    size="small"
-                    component={RouterLink}
-                    {...navItemProps(item)}
-                    aria-current={isActiveNavItem(item.to) ? 'page' : undefined}
-                    sx={{
-                      textTransform: 'none',
-                      color: isActiveNavItem(item.to) ? 'text.primary' : 'text.secondary',
-                      bgcolor: isActiveNavItem(item.to) ? 'action.selected' : 'transparent',
-                      px: 1.5,
-                      fontWeight: isActiveNavItem(item.to) ? 700 : 500,
-                      '&:hover': {
-                        bgcolor: isActiveNavItem(item.to) ? 'action.selected' : 'action.hover',
-                      },
-                    }}
-                  >
-                    {t(item.label)}
-                  </Button>
-                ))}
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  to="/feedback"
-                  sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
-                >
-                  {t('authEntry.feedback')}
-                </Button>
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  to="/donar"
-                  sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
-                >
-                  {t('authEntry.donate')}
-                </Button>
-              </Stack>
-            </Stack>
-            <Stack spacing={0.75}>
-              <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.35 }}>
-                {t('authEntry.messageSettings')}
-              </Typography>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  to="/whatsapp/consentimiento"
-                  sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
-                >
-                  {t('authEntry.whatsappConsent')}
-                </Button>
-                <Button
-                  size="small"
-                  component={RouterLink}
-                  to="/whatsapp/ok"
-                  sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
-                >
-                  {t('authEntry.whatsappConfirmation')}
-                </Button>
-              </Stack>
-            </Stack>
-            {showLoginButton && (
+            <Button
+              size="small"
+              component={RouterLink}
+              to="/whatsapp/consentimiento"
+              sx={{ textTransform: 'none', color: 'text.secondary', px: 1.5 }}
+            >
+              {t('authEntry.whatsappPreferences')}
+            </Button>
+            {showLoginButton && !session && (
               <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
