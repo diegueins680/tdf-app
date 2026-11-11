@@ -1606,6 +1606,8 @@
       "tdf-hq-ui/src/utils/assertNever.ts",
       "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
       "tdf-hq-ui/src/utils/authErrorMessage.ts",
+      "tdf-hq-ui/src/utils/bookingStatusLabel.test.ts",
+      "tdf-hq-ui/src/utils/bookingStatusLabel.ts",
       "tdf-hq-ui/src/utils/bottomDock.test.tsx",
       "tdf-hq-ui/src/utils/bottomDock.ts",
       "tdf-hq-ui/src/utils/chatReadState.test.ts",
@@ -10654,7 +10656,7 @@
     {
       "id": "SURFACE-e7e38d2c86b603f3",
       "path": "tdf-hq-ui/src/pages/BookingsPage.tsx",
-      "sha256": "7311d318764bbfa2532d239613494c4ef1d59ddc2e3c5c53cd02e2eff403fa5c",
+      "sha256": "dc3a4317facda6348143f4737aab325a71044edf6182308dd028a22ced3ba693",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11524,7 +11526,7 @@
     {
       "id": "SURFACE-554106b9be846d52",
       "path": "tdf-hq-ui/src/pages/OrdersPage.tsx",
-      "sha256": "07628d2cb0effc1d3b712599ee3d1536737fedabfe168e3b6f970d5cb8d364de",
+      "sha256": "f9db7f8feda6985e881b2321c985655bfc90ab1d8c9c55c0705a163f760fcd72",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11866,7 +11868,7 @@
     {
       "id": "SURFACE-42ebeaafc13e0e5c",
       "path": "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
-      "sha256": "2168bd3444ad51fbdddc632505656649f337bf8bf46d378f8469f9ba809f3c5c",
+      "sha256": "bd6b1b8c0510f54d06b90a5575933a5bb1cb8c0eca5f11884d2252a5c6cacd60",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12557,6 +12559,18 @@
       "id": "SURFACE-3b725d897439a2a6",
       "path": "tdf-hq-ui/src/utils/authErrorMessage.ts",
       "sha256": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-92f50127fc1c505c",
+      "path": "tdf-hq-ui/src/utils/bookingStatusLabel.test.ts",
+      "sha256": "9b7bd1063d143f9c60a2d987a6b13f391ca91bfdc96c72cb24aac4a173622d5e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e48fbe673a0c14b1",
+      "path": "tdf-hq-ui/src/utils/bookingStatusLabel.ts",
+      "sha256": "03370bbd840dc2d43dba73c8cb2d42cc54d9530979b228680dd298fbf3b36f45",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30864,7 +30878,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b84f1d087636bae18fa3d4729a683637c5cf96bd572997050c63cda45810ce4b",
+      "sha256": "f41e53ce9473c00a2b692edb198b52eae8c39f0a8db7e605a6461b0fc1607a3b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

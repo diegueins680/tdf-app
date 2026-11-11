@@ -38,16 +38,17 @@ import { Bookings, type BookingUpdatePayload } from '../api/bookings';
 import type { BookingDTO, BookingResourceDTO } from '../api/types';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import PageShell, { SkeletonCards } from '../components/PageShell';
+import { BOOKING_STATUS_LABELS, type BookingStatusValue } from '../utils/bookingStatusLabel';
 
-type StatusValue = 'Tentative' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled' | 'NoShow';
+type StatusValue = BookingStatusValue;
 
 const STATUS_VARIANTS: { value: StatusValue; label: string; color: ChipProps['color'] }[] = [
-  { value: 'Tentative', label: 'Tentativa', color: 'default' },
-  { value: 'Confirmed', label: 'Confirmada', color: 'primary' },
-  { value: 'InProgress', label: 'En preparación', color: 'info' },
-  { value: 'Completed', label: 'Completada', color: 'success' },
-  { value: 'Cancelled', label: 'Cancelada', color: 'default' },
-  { value: 'NoShow', label: 'No asistencia', color: 'warning' },
+  { value: 'Tentative', label: BOOKING_STATUS_LABELS.Tentative, color: 'default' },
+  { value: 'Confirmed', label: BOOKING_STATUS_LABELS.Confirmed, color: 'primary' },
+  { value: 'InProgress', label: BOOKING_STATUS_LABELS.InProgress, color: 'info' },
+  { value: 'Completed', label: BOOKING_STATUS_LABELS.Completed, color: 'success' },
+  { value: 'Cancelled', label: BOOKING_STATUS_LABELS.Cancelled, color: 'default' },
+  { value: 'NoShow', label: BOOKING_STATUS_LABELS.NoShow, color: 'warning' },
 ];
 const STATUS_VALUES: StatusValue[] = STATUS_VARIANTS.map((item) => item.value);
 const isStatusValue = (value: string): value is StatusValue =>
