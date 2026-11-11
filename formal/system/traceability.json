@@ -27476,7 +27476,7 @@
     "scripts/build-torrent-audio-fixture.mjs": "cdd56ca13a42d0c1a35b9a6e5db53e93ac7de5093385b8cccbcd3629e19aa104",
     "scripts/check-admin-guards.py": "6b44713f4518a4bee3cb8c6aa8b309cc2b66e71dc3716b0facc5cb0bdfeacf8b",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
-    "scripts/check-architecture-boundaries.mjs": "80d2653f3b99ac6bb842798b3ffbfcdaca952513024d517b047d3d3d447e23ea",
+    "scripts/check-architecture-boundaries.mjs": "0e171ee0aa27749916666bc07ef2fb345a57ec1dfebdc87f6a36fecda705eb2e",
     "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
@@ -49596,7 +49596,7 @@
     {
       "id": "SURFACE-350c1e59d110e860",
       "path": "scripts/check-architecture-boundaries.mjs",
-      "sha256": "80d2653f3b99ac6bb842798b3ffbfcdaca952513024d517b047d3d3d447e23ea",
+      "sha256": "0e171ee0aa27749916666bc07ef2fb345a57ec1dfebdc87f6a36fecda705eb2e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

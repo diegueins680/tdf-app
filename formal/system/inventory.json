@@ -4672,7 +4672,7 @@
     {
       "id": "SURFACE-350c1e59d110e860",
       "path": "scripts/check-architecture-boundaries.mjs",
-      "sha256": "80d2653f3b99ac6bb842798b3ffbfcdaca952513024d517b047d3d3d447e23ea",
+      "sha256": "0e171ee0aa27749916666bc07ef2fb345a57ec1dfebdc87f6a36fecda705eb2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -120,17 +120,13 @@ function collectHaskellModules(root, system) {
   return modules;
 }
 
-const TYPESCRIPT_EXTENSIONS = ['.ts', '.tsx'];
+const TYPESCRIPT_SOURCE = /\.tsx?$/;
 
 function resolveTypescriptTarget(known, fromName, specifier) {
   if (!specifier.startsWith('.')) return null;
   const base = posix.normalize(posix.join(posix.dirname(fromName), specifier));
   if (base.startsWith('..')) return null;
-  const candidates = [
-    base,
-    ...TYPESCRIPT_EXTENSIONS.map((extension) => base + extension),
-    ...TYPESCRIPT_EXTENSIONS.map((extension) => `${base}/index${extension}`),
-  ];
+  const candidates = [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`];
   return candidates.find((candidate) => known.has(candidate)) ?? null;
 }
 
@@ -141,7 +137,7 @@ function collectTypescriptModules(root, system, ts) {
   for (const sourceRoot of system.sourceRoots) {
     const absoluteRoot = resolve(root, sourceRoot);
     for (const pathname of walkFiles(absoluteRoot)) {
-      if (!TYPESCRIPT_EXTENSIONS.includes(extname(pathname)) || pathname.endsWith('.d.ts')) continue;
+      if (!TYPESCRIPT_SOURCE.test(pathname) || pathname.endsWith('.d.ts')) continue;
       const name = toPosix(relative(absoluteRoot, pathname));
       if (matchesAny(excluded, name)) continue;
       const source = readFileSync(pathname, 'utf8');
@@ -278,18 +274,20 @@ export function checkSystem(root, name, system, ts) {
 // ---------------------------------------------------------------------------
 
 function parseArgs(argv) {
-  const options = { root: DEFAULT_ROOT, config: null, report: false };
+  let root = DEFAULT_ROOT;
+  let config = DEFAULT_CONFIG;
+  let report = false;
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === '--root') options.root = resolve(argv[++index]);
-    else if (arg === '--config') options.config = argv[++index];
-    else if (arg === '--report') options.report = true;
+    if (arg === '--root') root = resolve(argv[++index]);
+    else if (arg === '--config') config = argv[++index];
+    else if (arg === '--report') report = true;
     else if (arg === '--help') {
       process.stdout.write('Usage: node scripts/check-architecture-boundaries.mjs [--root PATH] [--config PATH] [--report]\n');
       process.exit(0);
     } else throw new Error(`Unknown argument: ${arg}`);
   }
-  return options;
+  return [root, config, report];
 }
 
 async function loadTypescript(config) {
@@ -299,13 +297,12 @@ async function loadTypescript(config) {
 }
 
 async function main() {
-  const options = parseArgs(process.argv.slice(2));
-  const configPath = resolve(options.root, options.config ?? DEFAULT_CONFIG);
-  const config = JSON.parse(readFileSync(configPath, 'utf8'));
-  if (!statSync(options.root).isDirectory()) throw new Error(`Not a directory: ${options.root}`);
+  const [root, configPath, report] = parseArgs(process.argv.slice(2));
+  const config = JSON.parse(readFileSync(resolve(root, configPath), 'utf8'));
+  if (!statSync(root).isDirectory()) throw new Error(`Not a directory: ${root}`);
   const ts = await loadTypescript(config);
-  const results = Object.entries(config.systems).map(([name, system]) => checkSystem(options.root, name, system, ts));
-  if (options.report) {
+  const results = Object.entries(config.systems).map(([name, system]) => checkSystem(root, name, system, ts));
+  if (report) {
     process.stdout.write(`${JSON.stringify(results, null, 2)}\n`);
     return;
   }
