@@ -28269,8 +28269,8 @@
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "7e285d998e1c9683e82627ac0b237f1a17516ad231dd5757cf646616dceb9b4b",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "1ee97a2e8651484032069c2ce3fd63439bbdb901b8356e2a354ad4dce7da378a",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "271aa4a3d8747258679cb7de078d02e2ac2a49be6361168dd74bcadf88f92b3b",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "2f2b8400b190d6ff5a0d770c1bae2c243aceba051b888e1e1acd5f7d4fc6e6ae",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "668a587375c5ef9cfdd3cfc31184d79af112684f54eb4a88271fc64d74993397",
@@ -63460,7 +63460,7 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "7e285d998e1c9683e82627ac0b237f1a17516ad231dd5757cf646616dceb9b4b",
+      "sha256": "271aa4a3d8747258679cb7de078d02e2ac2a49be6361168dd74bcadf88f92b3b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63488,7 +63488,7 @@
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "1ee97a2e8651484032069c2ce3fd63439bbdb901b8356e2a354ad4dce7da378a",
+      "sha256": "2f2b8400b190d6ff5a0d770c1bae2c243aceba051b888e1e1acd5f7d4fc6e6ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
