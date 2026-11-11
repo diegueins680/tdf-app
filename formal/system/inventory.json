@@ -3145,7 +3145,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "c8f7fda711e4476bb974fad237a472600ad48f6a0068ccfa5309dc7a447edbd7",
+      "sha256": "0846ce9afb0497305310cd9b66fb394d9b614ed24ecafb4ef2a1970968e589cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17599,7 +17599,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "1ecba6250f9da347215955bdc35fd05306931538fadce76dfec955a5a22bc95d",
+      "sha256": "81a8cc21e5d7850467e33c4ff06d1d9e643495a54d348cc2d655c29d74ed3d33",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30199,7 +30199,7 @@
     },
     {
       "path": "formal/system/event-admin-delegation.md",
-      "sha256": "14e0fd73055fed36be77ba05bc40bd5f28faef25a2c8b860368a3c060f360956",
+      "sha256": "b7891cf10282c872076ff132981d621282f78ad19024016987d4f0e5a27a4c7c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30934,7 +30934,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ab421625f23dd6f853d1795438959d642ffd113488716311969edcae8207a2f5",
+      "sha256": "1e76ad7e21f0e105c59c162807acc318bb2884a3b90edc1d05667918fdf1e19d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
