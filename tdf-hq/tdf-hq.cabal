@@ -138,6 +138,7 @@ library
     TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
+    TDF.DTO.TicketPaymentReceipt
     TDF.Distribution.StateMachine
     TDF.Email
     TDF.Email.Headers

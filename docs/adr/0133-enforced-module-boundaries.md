@@ -88,8 +88,9 @@ imports, 17 oversized files. Suggested order, each as its own small change:
    means moving those types under `TDF.DTO`.
 2. `TDF.Commerce.ProviderEventWorker -> TDF.Server.ServiceStorefront`: move
    PayPal webhook parsing and processing under `TDF.Commerce`.
-3. `TicketPaymentReceipt`: move the response type out of the handler module so
-   the route contract stops importing delivery.
+3. Done: the `TicketPaymentReceipt` wire type moved to
+   `TDF.DTO.TicketPaymentReceipt`; the handler module re-exports it. The route
+   contract no longer imports HTTP delivery.
 4. Web `api -> session`: move `logoutIntent` and `authEvents` below `api`; they
    are storage and event primitives, not session UI.
 5. Web `features/featureRegistry.ts`: it is static registry data used from
