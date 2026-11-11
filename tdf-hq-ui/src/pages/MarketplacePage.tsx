@@ -88,6 +88,7 @@ import CreditCardIcon from '@mui/icons-material/CreditCard';
 import { Inventory } from '../api/inventory';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import { useSession } from '../session/SessionContext';
+import { sessionContactDefaults } from '../session/sessionContactDefaults';
 import { buildPublicContentUrl, type DriveFileInfo } from '../services/googleDrive';
 import { buildAccessibleModuleSet } from '../utils/accessControl';
 import { assertNever } from '../utils/assertNever';
@@ -516,8 +517,10 @@ export default function MarketplacePage() {
   const [purpose, setPurpose] = useState<'all' | 'rent' | 'sale'>(initialViewState.purpose);
   const [condition, setCondition] = useState<string>(initialViewState.condition);
   const [sort, setSort] = useState<'relevance' | 'price-asc' | 'price-desc' | 'title-asc'>(initialViewState.sort);
-  const [buyerName, setBuyerName] = useState(initialBuyerSnapshot.name ?? '');
-  const [buyerEmail, setBuyerEmail] = useState(initialBuyerSnapshot.email ?? '');
+  // Contact saved on this device wins; otherwise a signed-in buyer starts from
+  // what the account already knows.
+  const [buyerName, setBuyerName] = useState(() => (hasBuyerInfo(initialBuyerSnapshot) ? initialBuyerSnapshot.name ?? '' : sessionContactDefaults(session).name));
+  const [buyerEmail, setBuyerEmail] = useState(() => (hasBuyerInfo(initialBuyerSnapshot) ? initialBuyerSnapshot.email ?? '' : sessionContactDefaults(session).email));
   const [buyerPhone, setBuyerPhone] = useState(initialBuyerSnapshot.phone ?? '');
   const [contactPref, setContactPref] = useState<'email' | 'phone'>(initialBuyerSnapshot.pref ?? 'email');
   const [savedBuyerSnapshot, setSavedBuyerSnapshot] = useState<SavedBuyer | null>(

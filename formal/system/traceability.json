@@ -26871,7 +26871,7 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
       "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14, 16 and 18",
@@ -26935,11 +26935,14 @@
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/TrialsPage.tsx",
+        "tdf-hq-ui/src/session/sessionContactDefaults.ts"
       ],
       "tests": [
         "e2e/web/event-rsvp-sharing.spec.mjs",
@@ -26947,6 +26950,7 @@
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
@@ -26955,7 +26959,9 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
-        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx"
+        "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+        "tdf-hq-ui/src/session/sessionContactDefaults.test.ts"
       ],
       "formalModels": [],
       "verification": "Component and page regressions for each changed surface. No mathematical implementation proof claimed.",
@@ -27025,7 +27031,7 @@
     "e2e/web/directory-language.spec.mjs": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
     "e2e/web/event-discovery-filters.spec.mjs": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
     "e2e/web/event-memories.spec.mjs": "197d325765bbd6268167b65c1da217c9b960568b39d99bc92fd356871812e9d0",
-    "e2e/web/event-rsvp-sharing.spec.mjs": "e07304575c03673108657d8fd53c579da2d22d6f951dd65da0d311ed44d3570d",
+    "e2e/web/event-rsvp-sharing.spec.mjs": "403731138e164c280b6965d4a383a8f516625640d8ffcafb68d2abf5b8ba0f61",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
     "e2e/web/helpers/campaign-accessibility.mjs": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
     "e2e/web/helpers/thumbnail-failure-diagnostics.mjs": "d40191d4771616880144a3c0ebd629b16f25dac26cc82552187c277fdb53d755",
@@ -27039,7 +27045,7 @@
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
     "e2e/web/music-search-native.spec.mjs": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
-    "e2e/web/persona-public.spec.mjs": "3fea873cbd7ec5fb2d0a0953e331abde68600eba66d1bafe8ccb9cdf459ca269",
+    "e2e/web/persona-public.spec.mjs": "8990a45ed65af6a3301ba7fd60839cf2f4845ac1da8e29d19ed281066199183b",
     "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
     "e2e/web/radio-navigation.spec.mjs": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
     "e2e/web/records-thumbnails.spec.mjs": "53bff5d1d66f9ee34b8d177f04c1aa0d53e42129bb230d4774a0fe15970b2821",
@@ -27862,6 +27868,7 @@
     "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx": "205cd4ebacf67f48da978914e77c6ca5c5a0dac6a24b26c557865df5dc587bb1",
     "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "8d75c374021fa06eec1e414ad70d64189431571438c8d6abb7eb536aa70f8095",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "200dcef2bab6d9918301c6070f282e41c4899d67a6354dd0f4aebf6d47030ad6",
+    "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx": "b27a208c02d62cc6013968ee4971b7729c46e6300aae35fad89576b6371b906b",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "c56a20ab2521faed8bfd6e435636898248694c6ba0d75ce2ea66514aca688bc8",
@@ -28158,11 +28165,13 @@
     "tdf-hq-ui/src/pages/LoginPage.tsx": "bfb5cdbd81ea3a7f1efd62aab1c68f9d654f06e167e915b8482931f067f31021",
     "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx": "13a878136764e5afcddf99d85bee2abbe50904e681f33d7aa3f4eb83ac50eba4",
     "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx": "6299b5767030bb37f92082ae3f70da3d68262bb81a35fb11974492d14a5d3696",
-    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "50b975bfc4e5a484cfc7014eb376bfe58c82a851e62d403a687a8eab02a64fd0",
+    "tdf-hq-ui/src/pages/MarketplacePage.tsx": "8435855126f94456a4916ef4b4ef2d22af2c659ca586540ec382e31fdfc86c99",
     "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx": "e5f7a21499794c798916c4f05ab53f15aa44a7f1ee46265e913e1db03317c5d0",
     "tdf-hq-ui/src/pages/MerchProductPage.tsx": "f4f2d80c1035cf622424164999ab3e81ec37d184e5cd34304eb1eb592e1e35b3",
     "tdf-hq-ui/src/pages/MerchReputationPage.tsx": "ef4c88e1640e18c84679d7968ce7eea06fc2b60d9df2e58787a8139c8726b359",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "e257cb0a49e7a7773fc26e24fa9f5f93fb7a68167fca821228f344fa4ced8aa4",
+    "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
+    "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": "fae59158de75bb6d333511ea3daa3bef5f28c9057ec4674b632a131cd622353f",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
     "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx": "b914809cea81f9ff7b4c6f02d95cf01813ae506779335e9113c50d04393c76a9",
     "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
@@ -28188,7 +28197,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "cd5515ffdf95e8a621791d1b89648d8de171600c9d6292bce8dfc015f0e4b194",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "212b909b23793400907c09696153136b452038d6c8a0f7d48853c01cb09e75f4",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "7a97976630f9c31e03b88f50738661406c8efb81d58ebbac34b199739d879d0f",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "3b8ee10be42d1d794f75a5ce6e51e0eb5b9495a2e142a4cbf68216b39a25e4dd",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "23d150cf246fee625f0495395663782bb1ca7e7982cb3fd873464a5ea0aefa57",
     "tdf-hq-ui/src/pages/PublicProfilePage.tsx": "231a90d2da08b7eb5049818d418372a6c05d9069b9b874e8cf37c28824e17164",
     "tdf-hq-ui/src/pages/PublicReputationRightsPage.tsx": "f6de05dae2322ea92e05066bf94073a68dcaa1c437c10b1e9524dfb98867268f",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
@@ -28211,6 +28220,7 @@
     "tdf-hq-ui/src/pages/TeacherPortalPage.tsx": "2168bd3444ad51fbdddc632505656649f337bf8bf46d378f8469f9ba809f3c5c",
     "tdf-hq-ui/src/pages/TeachersPage.tsx": "3e918fcca8925bad9bea67a9efc0ca945b611fae395a6a2c49e737c8db51fe86",
     "tdf-hq-ui/src/pages/TrialLessonsPage.tsx": "4eefae7511a9e5a78e7d111e4b9543d3e97caadfc041eeffe98da75ef6178033",
+    "tdf-hq-ui/src/pages/TrialsPage.tsx": "7fed11537de4c53134cfc85c273f14e030dd7bb2e17ad5ae7abb44f520ba4f16",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx": "c6cedd57956d15064bd06ef0ef34446c7b23649b97b4bab8e395ec23d55e5f5c",
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "d04c9014faf40d54ff34bfdcba72bb77e5812e13437a2b10bdd4d9f97863d891",
@@ -28263,6 +28273,8 @@
     "tdf-hq-ui/src/session/logoutIntent.ts": "abad265a1a074073f4785ddc134df91fe7e1ab5774c49d171690f2e60eeff733",
     "tdf-hq-ui/src/session/recoverableDraft.test.ts": "74a2130d7ab7fa6b45cbcca45d8080e7dfdcb7e8379c5fd93372f8e45c99fadd",
     "tdf-hq-ui/src/session/recoverableDraft.ts": "9f3c8f793e1138da42b1d71d087a6c0f6efe34af3070f76ca2fbe0ff9436c549",
+    "tdf-hq-ui/src/session/sessionContactDefaults.test.ts": "219ec0c03d2eadd8d0c95ed277ae8ec3d00bbaea14b7826c936ae4f30ac5422d",
+    "tdf-hq-ui/src/session/sessionContactDefaults.ts": "919d476f921b1be43cf346d540496b88dc38503fe46a0058f3742335789f30cc",
     "tdf-hq-ui/src/session/useOwnedSessionDraft.ts": "299dfe92522c7ef2fc3b60eca92270cf5ff7987cf0b86467fccb57b2e42dd5d0",
     "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx": "97a7079c197f0e17bd1a8385c1819a6c5be5814975d4230301b4804761e9c3ca",
     "tdf-hq-ui/src/session/useOwnedTabDraft.ts": "dc6ef35ba25ea48639b1f533540a6aa7592b7a0df3e0efde8bc3b63ce785af22",
@@ -46415,7 +46427,25 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/TrialsPage.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/session/sessionContactDefaults.ts": [
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
@@ -46427,7 +46457,25 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/session/sessionContactDefaults.test.ts": [
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
@@ -47135,7 +47183,7 @@
     {
       "id": "SURFACE-78670b2c15a18002",
       "path": "e2e/web/event-rsvp-sharing.spec.mjs",
-      "sha256": "e07304575c03673108657d8fd53c579da2d22d6f951dd65da0d311ed44d3570d",
+      "sha256": "403731138e164c280b6965d4a383a8f516625640d8ffcafb68d2abf5b8ba0f61",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47339,7 +47387,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "3fea873cbd7ec5fb2d0a0953e331abde68600eba66d1bafe8ccb9cdf459ca269",
+      "sha256": "8990a45ed65af6a3301ba7fd60839cf2f4845ac1da8e29d19ed281066199183b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56119,9 +56167,14 @@
     {
       "id": "SURFACE-df437d6ae3884110",
       "path": "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx",
-      "sha256": "c9480efd6d81fe50a6b33d66ce6e3ca806a301b9c942fb78ed87e3edadaf171d",
+      "sha256": "b27a208c02d62cc6013968ee4971b7729c46e6300aae35fad89576b6371b906b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-6fb3830cc5f24988",
@@ -62497,7 +62550,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "50b975bfc4e5a484cfc7014eb376bfe58c82a851e62d403a687a8eab02a64fd0",
+      "sha256": "8435855126f94456a4916ef4b4ef2d22af2c659ca586540ec382e31fdfc86c99",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62640,16 +62693,26 @@
     {
       "id": "SURFACE-bee40b89d7a09a1d",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-      "sha256": "fcc7b8e4ac9f7a22000ae8e90d29873e3f7a4313c43761bddebffd334d0c15b1",
+      "sha256": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "4108f16793becc7a7845b16353a13edb8e64d7b6278e4c8dd7465bec534448d0",
+      "sha256": "fae59158de75bb6d333511ea3daa3bef5f28c9057ec4674b632a131cd622353f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
@@ -63052,7 +63115,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "3b8ee10be42d1d794f75a5ce6e51e0eb5b9495a2e142a4cbf68216b39a25e4dd",
+      "sha256": "23d150cf246fee625f0495395663782bb1ca7e7982cb3fd873464a5ea0aefa57",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63648,9 +63711,14 @@
     {
       "id": "SURFACE-5b84303a4309482a",
       "path": "tdf-hq-ui/src/pages/TrialsPage.tsx",
-      "sha256": "fc88885a632d138cf895b5276ac8beb8e5517ed0e3a8d21a067f23b10574cb85",
+      "sha256": "7fed11537de4c53134cfc85c273f14e030dd7bb2e17ad5ae7abb44f520ba4f16",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-d4bbd15313dd4547",
@@ -64604,6 +64672,30 @@
       "requirements": [
         {
           "requirement": "MEDIA-STORAGE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-36125a61d31aad59",
+      "path": "tdf-hq-ui/src/session/sessionContactDefaults.test.ts",
+      "sha256": "219ec0c03d2eadd8d0c95ed277ae8ec3d00bbaea14b7826c936ae4f30ac5422d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-48278f96c133dd1a",
+      "path": "tdf-hq-ui/src/session/sessionContactDefaults.ts",
+      "sha256": "919d476f921b1be43cf346d540496b88dc38503fe46a0058f3742335789f30cc",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -81682,7 +81774,6 @@
     "SURFACE-fda7ca9bc5b40d7a",
     "SURFACE-87906dc2685f005a",
     "SURFACE-3c93d16568d6200e",
-    "SURFACE-df437d6ae3884110",
     "SURFACE-27c2e340baf13c46",
     "SURFACE-056e006eae5d1a35",
     "SURFACE-72586bea3daa1f56",
@@ -81969,8 +82060,6 @@
     "SURFACE-af6b03b0182f5f0b",
     "SURFACE-20d3b5c28f107b7d",
     "SURFACE-689d1c649ef08997",
-    "SURFACE-bee40b89d7a09a1d",
-    "SURFACE-4a562abbc0b9c284",
     "SURFACE-a4131610c954eb01",
     "SURFACE-41fac70eecbac758",
     "SURFACE-64a084fb5047842b",
@@ -82005,7 +82094,6 @@
     "SURFACE-791bf979002005a3",
     "SURFACE-b3708173ec172c34",
     "SURFACE-bedc5ce954edaf67",
-    "SURFACE-5b84303a4309482a",
     "SURFACE-5ecc9358ac20703b",
     "SURFACE-ff6d0fcdcf1bb9fc",
     "SURFACE-c55988752b32c9a9",
@@ -84099,7 +84187,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "de3f07c1685763f3121f9f19ae7dea6a7640e0443e531117996313511ea62eb9",
+      "sourceSha256": "c8925e4a008049d25cb83a132b6214827aa2a81c3b76bf4edb997f7144353d85",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -84127,7 +84215,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "de3f07c1685763f3121f9f19ae7dea6a7640e0443e531117996313511ea62eb9",
+      "sourceSha256": "c8925e4a008049d25cb83a132b6214827aa2a81c3b76bf4edb997f7144353d85",
       "definition": {
         "states": [
           "absent",
@@ -84157,7 +84245,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "de3f07c1685763f3121f9f19ae7dea6a7640e0443e531117996313511ea62eb9",
+      "sourceSha256": "c8925e4a008049d25cb83a132b6214827aa2a81c3b76bf4edb997f7144353d85",
       "definition": {
         "export": [
           "queued",

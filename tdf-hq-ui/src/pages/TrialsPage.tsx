@@ -22,6 +22,8 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import type { TrialSubject } from '../api/trials';
 import { Trials } from '../api/trials';
+import { useSession } from '../session/SessionContext';
+import { sessionContactDefaults } from '../session/sessionContactDefaults';
 import PublicBrandBar from '../components/PublicBrandBar';
 import { TRIALS_WHATSAPP_URL } from '../config/appConfig';
 import { resolveRuntimeFormatOptions } from '../utils/formatters';
@@ -124,8 +126,10 @@ const fieldSx = {
 
 export default function TrialsPage() {
   const [subjectId, setSubjectId] = useState<number | ''>('');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
+  // A signed-in visitor does not retype what the account already knows.
+  const { session } = useSession();
+  const [fullName, setFullName] = useState(() => sessionContactDefaults(session).name);
+  const [email, setEmail] = useState(() => sessionContactDefaults(session).email);
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [slotInputs, setSlotInputs] = useState<SlotInput[]>(() => createEmptySlotInputs());

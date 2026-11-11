@@ -1580,6 +1580,8 @@
       "tdf-hq-ui/src/session/onboardingIntentRecovery.ts",
       "tdf-hq-ui/src/session/recoverableDraft.test.ts",
       "tdf-hq-ui/src/session/recoverableDraft.ts",
+      "tdf-hq-ui/src/session/sessionContactDefaults.test.ts",
+      "tdf-hq-ui/src/session/sessionContactDefaults.ts",
       "tdf-hq-ui/src/session/useOwnedSessionDraft.ts",
       "tdf-hq-ui/src/session/useOwnedTabDraft.test.tsx",
       "tdf-hq-ui/src/session/useOwnedTabDraft.ts",
@@ -3386,7 +3388,7 @@
     {
       "id": "SURFACE-78670b2c15a18002",
       "path": "e2e/web/event-rsvp-sharing.spec.mjs",
-      "sha256": "e07304575c03673108657d8fd53c579da2d22d6f951dd65da0d311ed44d3570d",
+      "sha256": "403731138e164c280b6965d4a383a8f516625640d8ffcafb68d2abf5b8ba0f61",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3494,7 +3496,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "3fea873cbd7ec5fb2d0a0953e331abde68600eba66d1bafe8ccb9cdf459ca269",
+      "sha256": "8990a45ed65af6a3301ba7fd60839cf2f4845ac1da8e29d19ed281066199183b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7862,7 +7864,7 @@
     {
       "id": "SURFACE-df437d6ae3884110",
       "path": "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx",
-      "sha256": "c9480efd6d81fe50a6b33d66ce6e3ca806a301b9c942fb78ed87e3edadaf171d",
+      "sha256": "b27a208c02d62cc6013968ee4971b7729c46e6300aae35fad89576b6371b906b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11306,7 +11308,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "50b975bfc4e5a484cfc7014eb376bfe58c82a851e62d403a687a8eab02a64fd0",
+      "sha256": "8435855126f94456a4916ef4b4ef2d22af2c659ca586540ec382e31fdfc86c99",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11390,13 +11392,13 @@
     {
       "id": "SURFACE-bee40b89d7a09a1d",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-      "sha256": "fcc7b8e4ac9f7a22000ae8e90d29873e3f7a4313c43761bddebffd334d0c15b1",
+      "sha256": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "4108f16793becc7a7845b16353a13edb8e64d7b6278e4c8dd7465bec534448d0",
+      "sha256": "fae59158de75bb6d333511ea3daa3bef5f28c9057ec4674b632a131cd622353f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11588,7 +11590,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "3b8ee10be42d1d794f75a5ce6e51e0eb5b9495a2e142a4cbf68216b39a25e4dd",
+      "sha256": "23d150cf246fee625f0495395663782bb1ca7e7982cb3fd873464a5ea0aefa57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11894,7 +11896,7 @@
     {
       "id": "SURFACE-5b84303a4309482a",
       "path": "tdf-hq-ui/src/pages/TrialsPage.tsx",
-      "sha256": "fc88885a632d138cf895b5276ac8beb8e5517ed0e3a8d21a067f23b10574cb85",
+      "sha256": "7fed11537de4c53134cfc85c273f14e030dd7bb2e17ad5ae7abb44f520ba4f16",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12399,6 +12401,18 @@
       "id": "SURFACE-b1b44d308f8404bf",
       "path": "tdf-hq-ui/src/session/recoverableDraft.ts",
       "sha256": "9f3c8f793e1138da42b1d71d087a6c0f6efe34af3070f76ca2fbe0ff9436c549",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-36125a61d31aad59",
+      "path": "tdf-hq-ui/src/session/sessionContactDefaults.test.ts",
+      "sha256": "219ec0c03d2eadd8d0c95ed277ae8ec3d00bbaea14b7826c936ae4f30ac5422d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-48278f96c133dd1a",
+      "path": "tdf-hq-ui/src/session/sessionContactDefaults.ts",
+      "sha256": "919d476f921b1be43cf346d540496b88dc38503fe46a0058f3742335789f30cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30850,7 +30864,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "de3f07c1685763f3121f9f19ae7dea6a7640e0443e531117996313511ea62eb9",
+      "sha256": "c8925e4a008049d25cb83a132b6214827aa2a81c3b76bf4edb997f7144353d85",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
