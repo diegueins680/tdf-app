@@ -42,6 +42,7 @@ import MobilePromo from '../mobile/MobilePromo';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { useMetaTags } from '../hooks/useMetaTags';
 import { useSession } from '../session/SessionContext';
+import { sessionContactDefaults } from '../session/sessionContactDefaults';
 import { env } from '../utils/env';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { findExternalTicketLink, localizeTicketUnavailableReason } from '../utils/externalTicketing';
@@ -103,11 +104,8 @@ export default function PublicEventTicketsPage() {
   // A signed-in buyer does not retype what the account already knows; both
   // fields stay editable.
   const { session } = useSession();
-  const [buyerName, setBuyerName] = useState(() => session?.displayName?.trim() ?? '');
-  const [buyerEmail, setBuyerEmail] = useState(() => {
-    const username = session?.username?.trim() ?? '';
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(username) ? username : '';
-  });
+  const [buyerName, setBuyerName] = useState(() => sessionContactDefaults(session).name);
+  const [buyerEmail, setBuyerEmail] = useState(() => sessionContactDefaults(session).email);
   const [buyerPhone, setBuyerPhone] = useState('');
   const [promoCode, setPromoCode] = useState('');
   const [extrasOpen, setExtrasOpen] = useState(false);

@@ -625,7 +625,7 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
     'href',
     `/login?redirect=${encodedBookingEntry}&signup=1`,
   );
-  await expect(page.getByText(/crear una cuenta es opcional/i).first()).toBeVisible();
+  await expect(page.getByText(/no necesitas cuenta/i).first()).toBeVisible();
   await expect(page.getByText(/crearemos tu acceso automáticamente/i)).toHaveCount(0);
   const fullNameInput = page.getByLabel('Nombre completo');
   await expect(fullNameInput).toBeVisible();

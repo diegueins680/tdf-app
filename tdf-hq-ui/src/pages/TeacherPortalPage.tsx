@@ -44,6 +44,7 @@ import {
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import { useSession } from '../session/SessionContext';
 import { formatDateForUser } from '../utils/formatters';
+import { bookingStatusLabel } from '../utils/bookingStatusLabel';
 
 type PortalTab = 'agenda' | 'students' | 'subjects' | 'availability';
 type ScheduleView = 'today' | 'next24h' | 'week' | 'all';
@@ -221,7 +222,7 @@ function AgendaClassCard(props: AgendaClassCardProps) {
             {formatDateTime(classSession.startAt)} → {formatDateTime(classSession.endAt)} · {classSession.roomName ?? classSession.roomId ?? 'Sala'}
           </Typography>
           <Stack direction="row" spacing={1} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
-            <Chip size="small" label={classSession.status} variant="outlined" />
+            <Chip size="small" label={bookingStatusLabel(classSession.status)} variant="outlined" />
             {classSession.notes && <Chip size="small" label="Notas" variant="outlined" />}
           </Stack>
         </Box>

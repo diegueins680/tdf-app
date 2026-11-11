@@ -25,6 +25,7 @@ import { Cms, type CmsContentDTO, type CmsContentIn } from '../api/cms';
 import { Catalogs, type AuthoredContent, type CatalogItem } from '../api/catalogs';
 import ApiErrorNotice, { ApiLoadingNotice } from '../components/ApiErrorNotice';
 import { SessionGate } from '../components/SessionGate';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { PUBLIC_BASE } from '../config/appConfig';
 import { getCmsVersionListUiState } from './cmsAdminVersionListState';
 import { getCmsVersionRowActions } from './cmsAdminVersionActions';
@@ -304,12 +305,15 @@ export default function CmsAdminPage() {
     },
   });
 
+  // Deleting a version cannot be undone, so it is confirmed by name first.
+  const [pendingDelete, setPendingDelete] = useState<{ id: number; label: string } | null>(null);
   const deleteMutation = useMutation({
     mutationFn: (id: number) => Cms.remove(id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['cms-content'] });
       void qc.invalidateQueries({ queryKey: ['cms-public'] });
     },
+    onSettled: () => setPendingDelete(null),
   });
 
   const versions: CmsContentDTO[] = useMemo(
@@ -1325,7 +1329,7 @@ export default function CmsAdminPage() {
                           size="small"
                           variant="text"
                           color="error"
-                          onClick={() => deleteMutation.mutate(v.ccdId)}
+                          onClick={() => setPendingDelete({ id: v.ccdId, label: `${v.ccdTitle ?? v.ccdSlug} · v${v.ccdVersion}` })}
                           disabled={deleteMutation.isPending}
                         >
                           Borrar
@@ -1361,6 +1365,16 @@ export default function CmsAdminPage() {
         </Stack>
         </Paper>
       )}
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        onConfirm={() => { if (pendingDelete) deleteMutation.mutate(pendingDelete.id); }}
+        title="¿Borrar esta versión?"
+        description={`Se borrará «${pendingDelete?.label ?? ''}». No se puede deshacer.`}
+        confirmLabel="Borrar versión"
+        severity="danger"
+        confirming={deleteMutation.isPending}
+      />
     </Stack>
     </SessionGate>
   );
