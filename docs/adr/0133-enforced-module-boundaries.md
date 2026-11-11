@@ -45,8 +45,10 @@ Web (`tdf-hq-ui/src`, 521 non-test modules):
    hooks, player, mobile, desktop, theme) → `components` → `features` → `pages`
    → `routing` → `shell` (`App.tsx`, `main.tsx`, `player/PlayerShell.tsx`).
 
-   Type-only TypeScript imports are not edges: the compiler erases them, so they
-   cannot create a load-order or bundle dependency. Test files are not scanned.
+   `import type` and `export type` declarations are not edges: the compiler
+   erases them, so they cannot create a load-order or bundle dependency. An
+   inline `import { type A }` is an edge, because `verbatimModuleSyntax` keeps
+   the module import. Test files are not scanned.
 
 2. A module may not exceed 2,500 lines (backend) or 2,000 lines (web, generated
    API types exempt).
