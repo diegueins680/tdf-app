@@ -26866,6 +26866,75 @@
       },
       "historicalStatus": null,
       "critical": false
+    },
+    {
+      "id": "SYS-ARCH-BOUNDARY-001",
+      "title": "Module dependencies follow declared layers and existing violations can only shrink",
+      "statement": "Backend and web modules belong to declared ordered layers and may import only their own or lower layers. No module may exceed the declared size limit. Violations that predate the rule are listed individually; the repository check rejects any unlisted violation, any listed violation that no longer exists, growth of a listed file past its ceiling, and a ceiling left more than the declared headroom above a file that has shrunk.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "docs/architecture/module-boundaries.json declares every system's source roots, layers, listed violations and size budget."
+      ],
+      "inputs": [
+        "docs/architecture/module-boundaries.json",
+        "tdf-hq/src",
+        "tdf-hq/app",
+        "tdf-hq-ui/src"
+      ],
+      "state": {
+        "boundary": "docs/adr/0133-enforced-module-boundaries.md"
+      },
+      "allowedTransitions": [
+        "Delete a listed violation once its import is removed.",
+        "Lower a file's ceiling after it shrinks.",
+        "Add a listed violation or raise a ceiling only as an explicit, reviewed edit to the baseline."
+      ],
+      "forbiddenTransitions": [
+        "Add an unlisted import from a lower layer to a higher one.",
+        "Grow a listed file past its ceiling or an unlisted file past the size limit.",
+        "Keep a baseline entry for a violation that no longer exists."
+      ],
+      "effects": [
+        "Repository checks fail and name the offending import or file."
+      ],
+      "authorization": "The check reads source files only and authorizes no product, provider or deployment operation.",
+      "privacy": "No personal data is read; only module names, import statements and line counts.",
+      "concurrency": "Deterministic for a fixed source tree; concurrent branches that each add listed debt conflict in the baseline file and must be reconciled explicitly.",
+      "idempotency": "Re-running against the same tree gives the same result.",
+      "failure": "A missing configuration, an unsupported language, a system with no source modules, duplicate or unsorted listed violations fail the check rather than pass it.",
+      "recovery": "Move the code to the correct layer or a focused module; if the debt is accepted, edit the baseline in the same change for review.",
+      "observability": "The check prints module, listed-violation and oversized-file counts per system and each problem found.",
+      "source": "User request 2026-11-10: act as software architect, detect and fix what pushes the system toward a big ball of mud. Architecture review of main 083d1c6e.",
+      "contract": "docs/adr/0133-enforced-module-boundaries.md",
+      "implementation": [
+        "scripts/check-architecture-boundaries.mjs",
+        "scripts/quality-repo.sh",
+        "package.json"
+      ],
+      "tests": [
+        "scripts/__tests__/architecture-boundaries.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Medium: import statements and line counts are checked on every change; re-exports within a layer, Template Haskell and string-built dynamic imports are not seen, and layers follow module names.",
+      "ambiguity": [
+        "Layer assignment of individual modules (for example TDF.Cron as domain, player/PlayerShell.tsx as shell) is an engineering judgement recorded in the configuration; owner confirmation pending.",
+        "tdf-mobile is a separate repository and is not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The ratchet is enforced; 11 backend imports, 21 web imports and 17 oversized files remain listed debt."
+      },
+      "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
+      "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
+      "verification": "Deterministic fixture tests for import extraction, layering, both ratchets and configuration errors, plus a test that runs the committed configuration against the repository; no mathematical proof.",
+      "evidence": "scripts/__tests__/architecture-boundaries.test.mjs",
+      "historicalStatus": null
     }
   ]
 }

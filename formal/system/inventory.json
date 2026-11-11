@@ -137,6 +137,7 @@
       "scripts/__tests__/alloy-controls.test.mjs",
       "scripts/__tests__/app-routes-auth-implementation.test.mjs",
       "scripts/__tests__/app-smart-link.test.mjs",
+      "scripts/__tests__/architecture-boundaries.test.mjs",
       "scripts/__tests__/artist-claim-target-runtime.mjs",
       "scripts/__tests__/artist-enrichment.test.mjs",
       "scripts/__tests__/artist-image-download.test.mjs",
@@ -282,6 +283,7 @@
       "scripts/catalog-list-audit.mjs",
       "scripts/check-admin-guards.py",
       "scripts/check-api-availability.mjs",
+      "scripts/check-architecture-boundaries.mjs",
       "scripts/check-browser-vendor.mjs",
       "scripts/check-build-trust.mjs",
       "scripts/check-dependency-security.mjs",
@@ -3770,7 +3772,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "1bc10b69030ac6d05d41c5948ecc745783b5b00ee796a266d0bd5d14cb743073",
+      "sha256": "2bb0f4d104a97575b3dfa6c037b53ebeba13077f6ed12bf079045e755675657a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3789,6 +3791,12 @@
       "id": "SURFACE-906172e6c3d5a4ef",
       "path": "scripts/__tests__/app-smart-link.test.mjs",
       "sha256": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c16934793233bcac",
+      "path": "scripts/__tests__/architecture-boundaries.test.mjs",
+      "sha256": "bd52e508cbb51a17d9b2e709b80abca05c5e957aab9800aa42eba7ee85e4e173",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4662,6 +4670,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-350c1e59d110e860",
+      "path": "scripts/check-architecture-boundaries.mjs",
+      "sha256": "80d2653f3b99ac6bb842798b3ffbfcdaca952513024d517b047d3d3d447e23ea",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1e909f329835b442",
       "path": "scripts/check-browser-vendor.mjs",
       "sha256": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
@@ -5462,7 +5476,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e23945ffb38c27fd475219dd9c4b110eb2ef3b29596f27db76bce24022de1cc4",
+      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16580,7 +16594,7 @@
     {
       "id": "SURFACE-97b434e9aaa0711b",
       "path": "tdf-hq/src/TDF/Artists/Enrichment.hs",
-      "sha256": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
+      "sha256": "127098fd4fd51d244956d2aadc2be6c0adc4e764c6ac91bca431a49b3f2ec60f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17312,7 +17326,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
+      "sha256": "806657f972b93ae6ecc0b4e27bea896b3009de3123440a5eddef9e28e3fb3a21",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21977,6 +21991,13 @@
       "sha256": "deceb5ca0d5f425c7874daf296edddd8d7137e2fd8311713af354d16c1ae0d13",
       "authority": "proposed",
       "authorityBasis": "Status: proposed (implementación entregada en `tdf-desktop/`; la distribución pública requiere firma y aprobación del propietario del producto)",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0133-enforced-module-boundaries.md",
+      "sha256": "5537ac6e2810927ad5fc48af2deb65b49178d5d19362f79c51bf04fdc525e34b",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -30850,7 +30871,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sha256": "ce7fbc0ea50da7a2f74f619e4cbbbc0bd2fb0412443fd458fb8f77d511a0e3d4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32580,6 +32601,87 @@
       "statement": "La web incorpora una sesión de reproducción compartida (`tdf-hq-ui/src/player/playbackSession.ts`) para que el reproductor de lanzamientos y la radio compartan una única Media Session y los comandos del sistema actúen sobre el audio activo; añade zonas de arrastre, cancelación por archivo y reintento con la misma `Idempotency-Key` en el Studio de lanzamientos; reutiliza una sola `Idempotency-Key` por transición de ciclo de vida hasta que el servidor confirma; y oculta el inicio con Google dentro del shell porque Google Identity Services rechaza contextos embebidos.",
       "source": "docs/adr/0132-desktop-shell-electron.md#decisión",
       "status": "proposed",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:68e5b4f5d2ff",
+      "statement": "1. Each system declares ordered layers, lowest first. A module may import its own layer and lower layers only.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:f8965206b9d1",
+      "statement": "Backend: `persistence` (Persistent models) → `transfer-types` (`TDF.DTO*`, `TDF.API.Types`) → `domain` (everything not matched elsewhere, including workers and `TDF.Cron`) → `http-contract` (`TDF.API*`, `TDF.Routes.*`) → `http-delivery` (`TDF.Server*`, `*.Server`) → `composition` (`TDF.App.Boot` and the executables).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:5f949b0d8cd8",
+      "statement": "Web: `foundation` (`vendor`, `assets`, `styles`, `lib`, `i18n`) → `utils` → `config` → `api` → `app-services` (session, services, analytics, contexts, hooks, player, mobile, desktop, theme) → `components` → `features` → `pages` → `routing` → `shell` (`App.tsx`, `main.tsx`, `player/PlayerShell.tsx`).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:57510d3e49e8",
+      "statement": "Type-only TypeScript imports are not edges: the compiler erases them, so they cannot create a load-order or bundle dependency. Test files are not scanned.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:46a7e9e38629",
+      "statement": "2. A module may not exceed 2,500 lines (backend) or 2,000 lines (web, generated API types exempt).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:6924fd6677d4",
+      "statement": "3. Existing debt is listed, not excused. `knownViolations` names each offending import and `sizeBudget.oversized` gives each oversized file a ceiling just above its current size. The check fails when:",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:2cb8709e7dba",
+      "statement": "- an import crosses a layer upward and is not listed; - a listed import no longer exists (the entry must be deleted, so the gain cannot be lost again); - an unlisted file passes the limit, or a listed file passes its ceiling; - a listed file has shrunk more than the headroom below its ceiling (the ceiling must come down with it).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:f80f5755a35b",
+      "statement": "The lists can therefore only shrink unless a reviewer accepts an explicit edit to the baseline in the same change.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:cbd83b2883f1",
+      "statement": "4. The check runs in `npm run quality:repo`, which CI runs for every change.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
       "gap": "Per-clause implementation correspondence not discharged by inventory"

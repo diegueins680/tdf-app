@@ -26867,6 +26867,75 @@
       },
       "historicalStatus": null,
       "critical": false
+    },
+    {
+      "id": "SYS-ARCH-BOUNDARY-001",
+      "title": "Module dependencies follow declared layers and existing violations can only shrink",
+      "statement": "Backend and web modules belong to declared ordered layers and may import only their own or lower layers. No module may exceed the declared size limit. Violations that predate the rule are listed individually; the repository check rejects any unlisted violation, any listed violation that no longer exists, growth of a listed file past its ceiling, and a ceiling left more than the declared headroom above a file that has shrunk.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "docs/architecture/module-boundaries.json declares every system's source roots, layers, listed violations and size budget."
+      ],
+      "inputs": [
+        "docs/architecture/module-boundaries.json",
+        "tdf-hq/src",
+        "tdf-hq/app",
+        "tdf-hq-ui/src"
+      ],
+      "state": {
+        "boundary": "docs/adr/0133-enforced-module-boundaries.md"
+      },
+      "allowedTransitions": [
+        "Delete a listed violation once its import is removed.",
+        "Lower a file's ceiling after it shrinks.",
+        "Add a listed violation or raise a ceiling only as an explicit, reviewed edit to the baseline."
+      ],
+      "forbiddenTransitions": [
+        "Add an unlisted import from a lower layer to a higher one.",
+        "Grow a listed file past its ceiling or an unlisted file past the size limit.",
+        "Keep a baseline entry for a violation that no longer exists."
+      ],
+      "effects": [
+        "Repository checks fail and name the offending import or file."
+      ],
+      "authorization": "The check reads source files only and authorizes no product, provider or deployment operation.",
+      "privacy": "No personal data is read; only module names, import statements and line counts.",
+      "concurrency": "Deterministic for a fixed source tree; concurrent branches that each add listed debt conflict in the baseline file and must be reconciled explicitly.",
+      "idempotency": "Re-running against the same tree gives the same result.",
+      "failure": "A missing configuration, an unsupported language, a system with no source modules, duplicate or unsorted listed violations fail the check rather than pass it.",
+      "recovery": "Move the code to the correct layer or a focused module; if the debt is accepted, edit the baseline in the same change for review.",
+      "observability": "The check prints module, listed-violation and oversized-file counts per system and each problem found.",
+      "source": "User request 2026-11-10: act as software architect, detect and fix what pushes the system toward a big ball of mud. Architecture review of main 083d1c6e.",
+      "contract": "docs/adr/0133-enforced-module-boundaries.md",
+      "implementation": [
+        "scripts/check-architecture-boundaries.mjs",
+        "scripts/quality-repo.sh",
+        "package.json"
+      ],
+      "tests": [
+        "scripts/__tests__/architecture-boundaries.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Medium: import statements and line counts are checked on every change; re-exports within a layer, Template Haskell and string-built dynamic imports are not seen, and layers follow module names.",
+      "ambiguity": [
+        "Layer assignment of individual modules (for example TDF.Cron as domain, player/PlayerShell.tsx as shell) is an engineering judgement recorded in the configuration; owner confirmation pending.",
+        "tdf-mobile is a separate repository and is not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The ratchet is enforced; 11 backend imports, 21 web imports and 17 oversized files remain listed debt."
+      },
+      "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
+      "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
+      "verification": "Deterministic fixture tests for import extraction, layering, both ratchets and configuration errors, plus a test that runs the committed configuration against the repository; no mathematical proof.",
+      "evidence": "scripts/__tests__/architecture-boundaries.test.mjs",
+      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -27298,7 +27367,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
-    "package.json": "1bc10b69030ac6d05d41c5948ecc745783b5b00ee796a266d0bd5d14cb743073",
+    "package.json": "2bb0f4d104a97575b3dfa6c037b53ebeba13077f6ed12bf079045e755675657a",
     "playwright.config.mjs": "37eb4ab6c22dc0a3f2e575361426a045ad760a32920fe4a3b36a1f50e660e71b",
     "playwright.desktop.config.mjs": "74292833e979da0f81610adcedcddcfe6a7053cd5dfa6a34b36b2f1ddbddeb92",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -27308,6 +27377,7 @@
     "screencast/meta-app-review/run.mjs": "0b93f134c01aca678981255a0a6e25bb139c183361bb621c67a95f255e1dbaaa",
     "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
+    "scripts/__tests__/architecture-boundaries.test.mjs": "bd52e508cbb51a17d9b2e709b80abca05c5e957aab9800aa42eba7ee85e4e173",
     "scripts/__tests__/artist-enrichment.test.mjs": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
     "scripts/__tests__/artist-image-download.test.mjs": "fe0af2d7a4754bfaeadeec4000974c2d3ebaa8642d2197ae5471989f679352de",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
@@ -27406,6 +27476,7 @@
     "scripts/build-torrent-audio-fixture.mjs": "cdd56ca13a42d0c1a35b9a6e5db53e93ac7de5093385b8cccbcd3629e19aa104",
     "scripts/check-admin-guards.py": "6b44713f4518a4bee3cb8c6aa8b309cc2b66e71dc3716b0facc5cb0bdfeacf8b",
     "scripts/check-api-availability.mjs": "eee5b9b81d3c26786fdb850534e5e274ab0074f3af9b7a70d6df1101b9e42c9d",
+    "scripts/check-architecture-boundaries.mjs": "80d2653f3b99ac6bb842798b3ffbfcdaca952513024d517b047d3d3d447e23ea",
     "scripts/check-browser-vendor.mjs": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
@@ -27483,7 +27554,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "e23945ffb38c27fd475219dd9c4b110eb2ef3b29596f27db76bce24022de1cc4",
+    "scripts/quality-repo.sh": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
     "scripts/quality-ui.sh": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -28423,7 +28494,7 @@
     "tdf-hq/src/TDF/App/Readiness.hs": "85e2ee2c408055250a9ac98cfa35da55a3720a340fecd14dd1de210536e458d6",
     "tdf-hq/src/TDF/App/StartupResponse.hs": "c35b06567e82b9a5e3ca3e92972a7a13f550dfa681e7f257d24dc78ad3a202b3",
     "tdf-hq/src/TDF/AppleSignIn.hs": "76eba8d3f0377c7a130ec60ac5b8f16cd8c75a53d69c7fe2f52e0c77aa578dea",
-    "tdf-hq/src/TDF/Artists/Enrichment.hs": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
+    "tdf-hq/src/TDF/Artists/Enrichment.hs": "127098fd4fd51d244956d2aadc2be6c0adc4e764c6ac91bca431a49b3f2ec60f",
     "tdf-hq/src/TDF/Artists/Promotion.hs": "ab803d6ed02e9b51ef548548bcf9b9cee3d22bdc766b09ab09c4ba2ad3f5d078",
     "tdf-hq/src/TDF/Auth.hs": "cbf9a2642b4e43acf65afc04812816703020981198d6e9cf8f090dac7e69b4fb",
     "tdf-hq/src/TDF/Auth/AccountName.hs": "ae128e2031545da734f3c0504f541f6efe12ad28b4bb47509ee253f772f5366e",
@@ -28505,7 +28576,7 @@
     "tdf-hq/src/TDF/Operations/Server.hs": "5c93de5fb62e29d0611c5e38af6eddeef30ef7a60baaf1b15e547fb3a0a26984",
     "tdf-hq/src/TDF/Operations/Types.hs": "58208ae55c81f29ca48073762e766661784a6e956ca54cb3869fb5b039d5fc6f",
     "tdf-hq/src/TDF/Operations/Worker.hs": "45363018da50e080a6f8853ecbb32c5dfb5818bd4a16b5a42cd5527eeb2635ba",
-    "tdf-hq/src/TDF/Profiles/Artist.hs": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
+    "tdf-hq/src/TDF/Profiles/Artist.hs": "806657f972b93ae6ecc0b4e27bea896b3009de3123440a5eddef9e28e3fb3a21",
     "tdf-hq/src/TDF/Profiles/ArtistVisibility.hs": "352dd0ea4d8df0c977b6f02acdba30a38e4275b2c2d48872480ddbdff205461a",
     "tdf-hq/src/TDF/PublicUrl.hs": "f6d8765fca93de1e02416ce6aa5eab9712efb191fc5565e4b66ff22e2926ad4d",
     "tdf-hq/src/TDF/RagStore.hs": "f76a6745947e7f2087606d2d78a2fb8309560fc43c7adb00da9f210b430bd4c6",
@@ -29176,6 +29247,10 @@
       },
       {
         "requirement": "MUSIC-TORRENT-CONTROL-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-ARCH-BOUNDARY-001",
         "relationship": "implementation"
       }
     ],
@@ -32894,6 +32969,10 @@
       },
       {
         "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "SYS-ARCH-BOUNDARY-001",
         "relationship": "implementation"
       }
     ],
@@ -46194,6 +46273,18 @@
         "requirement": "SYS-DESKTOP-003",
         "relationship": "tests"
       }
+    ],
+    "scripts/check-architecture-boundaries.mjs": [
+      {
+        "requirement": "SYS-ARCH-BOUNDARY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/architecture-boundaries.test.mjs": [
+      {
+        "requirement": "SYS-ARCH-BOUNDARY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -47689,7 +47780,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "1bc10b69030ac6d05d41c5948ecc745783b5b00ee796a266d0bd5d14cb743073",
+      "sha256": "2bb0f4d104a97575b3dfa6c037b53ebeba13077f6ed12bf079045e755675657a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47702,6 +47793,10 @@
         },
         {
           "requirement": "ART-PROFILE-MEDIA-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-ARCH-BOUNDARY-001",
           "relationship": "implementation"
         }
       ]
@@ -47733,6 +47828,18 @@
       "requirements": [
         {
           "requirement": "MOB-PUBLIC-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c16934793233bcac",
+      "path": "scripts/__tests__/architecture-boundaries.test.mjs",
+      "sha256": "bd52e508cbb51a17d9b2e709b80abca05c5e957aab9800aa42eba7ee85e4e173",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-ARCH-BOUNDARY-001",
           "relationship": "tests"
         }
       ]
@@ -49487,6 +49594,18 @@
       ]
     },
     {
+      "id": "SURFACE-350c1e59d110e860",
+      "path": "scripts/check-architecture-boundaries.mjs",
+      "sha256": "80d2653f3b99ac6bb842798b3ffbfcdaca952513024d517b047d3d3d447e23ea",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-ARCH-BOUNDARY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-1e909f329835b442",
       "path": "scripts/check-browser-vendor.mjs",
       "sha256": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
@@ -51045,7 +51164,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e23945ffb38c27fd475219dd9c4b110eb2ef3b29596f27db76bce24022de1cc4",
+      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51126,6 +51245,10 @@
         },
         {
           "requirement": "MUSIC-TORRENT-CONTROL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "SYS-ARCH-BOUNDARY-001",
           "relationship": "implementation"
         }
       ]
@@ -70871,7 +70994,7 @@
     {
       "id": "SURFACE-97b434e9aaa0711b",
       "path": "tdf-hq/src/TDF/Artists/Enrichment.hs",
-      "sha256": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
+      "sha256": "127098fd4fd51d244956d2aadc2be6c0adc4e764c6ac91bca431a49b3f2ec60f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72579,7 +72702,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
+      "sha256": "806657f972b93ae6ecc0b4e27bea896b3009de3123440a5eddef9e28e3fb3a21",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83737,7 +83860,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "ce7fbc0ea50da7a2f74f619e4cbbbc0bd2fb0412443fd458fb8f77d511a0e3d4",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83765,7 +83888,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "ce7fbc0ea50da7a2f74f619e4cbbbc0bd2fb0412443fd458fb8f77d511a0e3d4",
       "definition": {
         "states": [
           "absent",
@@ -83795,7 +83918,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "ce7fbc0ea50da7a2f74f619e4cbbbc0bd2fb0412443fd458fb8f77d511a0e3d4",
       "definition": {
         "export": [
           "queued",
@@ -106760,7 +106883,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 210,
+    "PARTIAL": 211,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
