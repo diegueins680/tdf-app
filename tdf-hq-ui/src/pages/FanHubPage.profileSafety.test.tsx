@@ -169,7 +169,11 @@ describe('artist profile writes require the current account baseline', () => {
     fireEvent.click(retry[0]!);
     await waitFor(() => expect(artistName().value).toBe('Artist 42'));
     fireEvent.change(screen.getByLabelText('Ciudad'), { target: { value: 'Cuenca' } });
-    fireEvent.click(artistSave());
+    const highlights = screen.getByLabelText('Highlights');
+    const save = artistSave();
+    expect(save.closest('fieldset')).toBe(highlights.closest('fieldset'));
+    expect(highlights.compareDocumentPosition(save) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    fireEvent.click(save);
     await waitFor(() => expect(updateArtistProfile).toHaveBeenCalledTimes(1));
     expect(updateArtistProfile.mock.calls[0]![0]).toMatchObject({
       apuArtistId: 42, apuDisplayName: 'Artist 42', apuCity: 'Cuenca',
