@@ -1,7 +1,7 @@
 -- Generated from checked LegacyDm Insert observations; do not hand-edit.
 -- Checked case 1
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE false;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -12,7 +12,7 @@ END $$;
 ROLLBACK;
 -- Checked case 2
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE false;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -23,7 +23,7 @@ END $$;
 ROLLBACK;
 -- Checked case 3
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -34,7 +34,7 @@ END $$;
 ROLLBACK;
 -- Checked case 4
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,true,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -45,7 +45,7 @@ END $$;
 ROLLBACK;
 -- Checked case 5
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,true,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -56,7 +56,7 @@ END $$;
 ROLLBACK;
 -- Checked case 6
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,true,true,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -67,7 +67,7 @@ END $$;
 ROLLBACK;
 -- Checked case 7
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -78,7 +78,7 @@ END $$;
 ROLLBACK;
 -- Checked case 8
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,true WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -89,7 +89,7 @@ END $$;
 ROLLBACK;
 -- Checked case 9
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=false;
+UPDATE social_v2_runtime SET enabled=false,activated_once=false WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,true WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -100,7 +100,7 @@ END $$;
 ROLLBACK;
 -- Checked case 10
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE false;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -111,7 +111,7 @@ END $$;
 ROLLBACK;
 -- Checked case 11
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE false;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -122,7 +122,7 @@ END $$;
 ROLLBACK;
 -- Checked case 12
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -133,7 +133,7 @@ END $$;
 ROLLBACK;
 -- Checked case 13
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,true,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -144,7 +144,7 @@ END $$;
 ROLLBACK;
 -- Checked case 14
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,true,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -155,7 +155,7 @@ END $$;
 ROLLBACK;
 -- Checked case 15
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,true,true,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -166,7 +166,7 @@ END $$;
 ROLLBACK;
 -- Checked case 16
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -177,7 +177,7 @@ END $$;
 ROLLBACK;
 -- Checked case 17
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,true WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -188,7 +188,7 @@ END $$;
 ROLLBACK;
 -- Checked case 18
 BEGIN;
-UPDATE social_v2_runtime SET enabled=false,activated_once=true;
+UPDATE social_v2_runtime SET enabled=false,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,true WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -199,7 +199,7 @@ END $$;
 ROLLBACK;
 -- Checked case 19
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE false;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -210,7 +210,7 @@ END $$;
 ROLLBACK;
 -- Checked case 20
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE false;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -221,7 +221,7 @@ END $$;
 ROLLBACK;
 -- Checked case 21
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -232,7 +232,7 @@ END $$;
 ROLLBACK;
 -- Checked case 22
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,true,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -243,7 +243,7 @@ END $$;
 ROLLBACK;
 -- Checked case 23
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,true,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -254,7 +254,7 @@ END $$;
 ROLLBACK;
 -- Checked case 24
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,true,true,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -265,7 +265,7 @@ END $$;
 ROLLBACK;
 -- Checked case 25
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,false WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -276,7 +276,7 @@ END $$;
 ROLLBACK;
 -- Checked case 26
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,true WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE false;
 DO $$ DECLARE permitted boolean := true; BEGIN
@@ -287,7 +287,7 @@ END $$;
 ROLLBACK;
 -- Checked case 27
 BEGIN;
-UPDATE social_v2_runtime SET enabled=true,activated_once=true;
+UPDATE social_v2_runtime SET enabled=true,activated_once=true WHERE singleton=true;
 INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,false,false,true WHERE true;
 INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE true;
 DO $$ DECLARE permitted boolean := true; BEGIN

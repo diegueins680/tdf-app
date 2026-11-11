@@ -60,6 +60,29 @@ fi
 if [ "${TDF_SOCIAL_DM_BENCHMARK:-0}" = 1 ]; then
   psql_dm -c "SELECT dm_measure('inactive');"
 fi
+# Shadow the runtime table without its singleton CHECK so a sentinel can detect
+# any model-case UPDATE that accidentally targets rows outside the singleton.
+{
+  cat <<'SQL'
+BEGIN;
+CREATE TEMP TABLE social_v2_runtime(singleton boolean PRIMARY KEY,enabled boolean,activated_once boolean);
+INSERT INTO social_v2_runtime VALUES(true,NULL,NULL),(false,NULL,NULL);
+SQL
+  python3 - "$TDF_SOCIAL_ROOT/scripts/social/dm-model-cases.sql" <<'PY'
+import sys
+from pathlib import Path
+updates = [line for line in Path(sys.argv[1]).read_text().splitlines()
+           if line.startswith('UPDATE social_v2_runtime ')]
+assert updates, 'Missing model-case runtime updates'
+for update in updates:
+    print(update)
+    print("""DO $$ BEGIN
+  ASSERT (SELECT enabled IS NOT NULL AND activated_once IS NOT NULL FROM social_v2_runtime WHERE singleton=true), 'model case did not configure singleton';
+  ASSERT (SELECT enabled IS NULL AND activated_once IS NULL FROM social_v2_runtime WHERE singleton=false), 'model case updated non-singleton';
+END $$;""")
+PY
+  echo 'ROLLBACK;'
+} | psql_dm
 psql_dm < "$TDF_SOCIAL_ROOT/scripts/social/dm-model-cases.sql"
 echo 'PASS: 27 generated observed INSERT outcomes'
 psql_dm <<'SQL'

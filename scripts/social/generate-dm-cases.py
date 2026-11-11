@@ -33,7 +33,7 @@ out = ['-- Generated from checked LegacyDm Insert observations; do not hand-edit
 for n, case in enumerate(sorted(cases),1):
     enabled, activated, exists, blocked, closed, a, b, allowed = map(lambda x:'true' if x else 'false',case)
     out += [f'-- Checked case {n}', 'BEGIN;',
-      f'UPDATE social_v2_runtime SET enabled={enabled},activated_once={activated};',
+      f'UPDATE social_v2_runtime SET enabled={enabled},activated_once={activated} WHERE singleton=true;',
       f'INSERT INTO social_v2_pair(party_a,party_b,consent_a,consent_b,block_a) SELECT 1,2,{a},{b},{blocked} WHERE {exists};',
       f'INSERT INTO social_v2_preference(party_id,closed) SELECT 1,true WHERE {closed};',
       'DO $$ DECLARE permitted boolean := true; BEGIN',
