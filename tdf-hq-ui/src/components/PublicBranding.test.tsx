@@ -144,6 +144,25 @@ describe('PublicBranding', () => {
     }
   });
 
+  it('tells a visitor on a public page when the connection drops', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/eventos/141/entradas');
+    const notice = () => container.querySelector('[role="alert"]')?.closest('.MuiCollapse-root');
+
+    try {
+      expect(notice()?.textContent).toContain('Sin conexión');
+      expect(notice()?.classList.contains('MuiCollapse-hidden')).toBe(true);
+      await act(async () => {
+        window.dispatchEvent(new Event('offline'));
+        await flushPromises();
+      });
+      expect(notice()?.classList.contains('MuiCollapse-hidden')).toBe(false);
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('offers exactly one events entry in the main navigation', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

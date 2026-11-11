@@ -16,6 +16,7 @@ import { STUDIO_WHATSAPP_URL } from '../config/appConfig';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import InstagramEntryLinks from './InstagramEntryLinks';
 import SessionMenu from './SessionMenu';
+import { OfflineBanner } from './OfflineBanner';
 import UpcomingEventsCarousel, { EVENTS_PATH } from './events/UpcomingEventsCarousel';
 import MarketplaceCartButton from './MarketplaceCartButton';
 import { useSession } from '../session/SessionContext';
@@ -326,6 +327,7 @@ export default function PublicBranding({
           </Suspense>
         </Drawer>
       )}
+      <OfflineBanner />
       <Container
         component="main"
         id="main-content"
