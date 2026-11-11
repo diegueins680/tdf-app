@@ -128,6 +128,8 @@ export default function PublicEventTicketsPage() {
   const orderStale = lookupFailed || paymentUnconfirmed;
   const flaggedOrder = useRef<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Quantity problems are shown on the quantity field, not in the general alert.
+  const [quantityError, setQuantityError] = useState<string | null>(null);
   const [lookupRevision, setLookupRevision] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const liveLookup = useRef<{ eventId: number; orderId: number; token: string } | null>(null);
@@ -270,16 +272,17 @@ export default function PublicEventTicketsPage() {
     const selectedQuantity = Number(quantity);
     if (!Number.isSafeInteger(selectedTierId) || selectedTierId <= 0
         || !Number.isSafeInteger(selectedQuantity) || selectedQuantity <= 0) {
-      setMessage(english ? 'Choose a valid ticket and quantity.' : 'Elige una entrada y cantidad válidas.');
+      setQuantityError(english ? 'Choose a valid ticket and quantity.' : 'Elige una entrada y cantidad válidas.');
       return;
     }
     const maximumQuantity = storefront.data.policy?.maxTicketsPerOrder ?? 100;
     if (selectedQuantity > maximumQuantity) {
-      setMessage(english
+      setQuantityError(english
         ? `You can buy up to ${maximumQuantity} tickets per order.`
         : `Puedes comprar hasta ${maximumQuantity} entradas por orden.`);
       return;
     }
+    setQuantityError(null);
     const payload: PublicEventTicketCheckoutRequest = {
       tierId: selectedTierId,
       quantity: selectedQuantity,
@@ -617,7 +620,8 @@ export default function PublicEventTicketsPage() {
                       ))}
                     </TextField>
                   )}
-                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => setQuantity(event.target.value)}
+                  <TextField required type="number" label={english ? 'Quantity' : 'Cantidad'} value={quantity} onChange={(event) => { setQuantity(event.target.value); setQuantityError(null); }}
+                    error={Boolean(quantityError)}
                     inputProps={{ min: 1, max: quantityLimit, step: 1, style: { textAlign: 'center' } }}
                     sx={{ maxWidth: 220 }}
                     InputProps={{
@@ -636,9 +640,9 @@ export default function PublicEventTicketsPage() {
                         </InputAdornment>
                       ),
                     }}
-                    helperText={english
+                    helperText={quantityError ?? (english
                       ? `Up to ${storefront.data.policy?.maxTicketsPerOrder ?? 100} tickets per order.`
-                      : `Hasta ${storefront.data.policy?.maxTicketsPerOrder ?? 100} entradas por orden.`}
+                      : `Hasta ${storefront.data.policy?.maxTicketsPerOrder ?? 100} entradas por orden.`)}
                   />
                   {subtotalLabel && (
                     <Typography aria-live="polite" data-testid="ticket-subtotal">
@@ -651,7 +655,7 @@ export default function PublicEventTicketsPage() {
                     </Typography>
                   )}
                   <TextField required label={english ? 'Full name' : 'Nombre completo'} value={buyerName} onChange={(event) => setBuyerName(event.target.value)} inputProps={{ maxLength: 160 }} />
-                  <TextField required type="email" label="Email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
+                  <TextField required type="email" label={english ? 'Email' : 'Correo'} value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
                   {extrasOpen || buyerPhone || promoCode ? (
                     <>
                       <TextField label={english ? 'Phone (optional)' : 'Teléfono (opcional)'} value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} inputProps={{ maxLength: 24 }} />
@@ -699,7 +703,7 @@ export default function PublicEventTicketsPage() {
                           {storefront.data.policy.taxIncluded ? (english ? 'Included tax' : 'Impuesto incluido') : (english ? 'Additional tax' : 'Impuesto adicional')}: {percentage(storefront.data.policy.taxBps, locale)}
                         </Typography>
                         <Typography variant="body2">
-                          {english ? 'Temporary inventory hold' : 'Retención temporal de inventario'}: {storefront.data.policy.holdMinutes} {english ? 'minutes' : 'minutos'} ·{' '}
+                          {english ? 'Temporary inventory hold' : 'Reserva temporal de entradas'}: {storefront.data.policy.holdMinutes} {english ? 'minutes' : 'minutos'} ·{' '}
                           {english ? 'Transfers' : 'Transferencias'}: {storefront.data.policy.transferAllowed
                             ? (english ? 'allowed' : 'permitidas')
                             : (english ? 'not allowed' : 'no permitidas')}
@@ -760,25 +764,25 @@ export default function PublicEventTicketsPage() {
                     {english ? 'Refresh order status' : 'Actualizar estado de la orden'}
                   </Button>
                   {paid ? <Alert severity="success">{issued
-                    ? (english ? 'Payment was verified by the server and the tickets were issued.' : 'El servidor verificó el pago y emitió las entradas.')
-                    : (english ? 'Payment was verified. Ticket fulfillment is still pending.' : 'El pago fue verificado. La emisión de entradas todavía está pendiente.')}</Alert>
+                    ? (english ? 'Payment was verified by the server and the tickets were issued.' : 'Pago confirmado. Tus entradas ya fueron emitidas.')
+                    : (english ? 'Payment was verified. Ticket fulfillment is still pending.' : 'Recibimos tu pago. La emisión de entradas todavía está pendiente.')}</Alert>
                     : <Alert severity="warning">{english
                       ? 'Tickets are held temporarily. The order is not paid and no ticket has been issued.'
-                      : 'Las entradas están retenidas temporalmente. La orden no está pagada y no se emitió ninguna entrada.'}</Alert>}
+                      : 'Tus entradas están reservadas por tiempo limitado. La orden no está pagada y aún no se emitió ninguna entrada.'}</Alert>}
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                     <Chip label={`${english ? 'Face value' : 'Valor entradas'}: ${money(checkout.quote.netFaceValueMinor, checkout.quote.currency)}`} />
                     <Chip label={`${english ? 'Buyer fee' : 'Tarifa comprador'}: ${money(checkout.quote.buyerPlatformFeeMinor, checkout.quote.currency)}`} />
                     {checkout.quote.taxMinor > 0 && <Chip label={`${checkout.quote.taxIncluded ? (english ? 'Included tax' : 'Impuesto incluido') : (english ? 'Tax' : 'Impuesto')}: ${money(checkout.quote.taxMinor, checkout.quote.currency)}`} />}
                     <Chip color="primary" label={`${english ? 'Total' : 'Total'}: ${money(checkout.quote.checkoutTotalMinor, checkout.quote.currency)}`} />
                   </Stack>
-                  {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'} {date(checkout.holdExpiresAt)}.</Typography>}
+                  {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La reserva vence'} {date(checkout.holdExpiresAt)}.</Typography>}
                   {message && <Alert severity="warning">{message}</Alert>}
                   {!paid && paymentUnconfirmed && <Alert severity="warning">{english
                     ? 'A payment for this order may have been taken but is not confirmed yet. Do not pay again; refresh the order status later or contact us.'
                     : 'Es posible que ya se haya cobrado un pago de esta orden, pero aún no está confirmado. No vuelvas a pagar; actualiza el estado más tarde o contáctanos.'}</Alert>}
                   {!paid && !orderStale && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
-                    : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
+                    : 'Todavía no hay un método de pago en línea para esta orden. La reserva no equivale a pago.'}</Alert>}
                   <Stack spacing={1.5}>
                     {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                         {offeredPaymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}

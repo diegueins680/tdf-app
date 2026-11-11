@@ -89,8 +89,8 @@ const isPotentiallyAmbiguous = (error: unknown): boolean =>
 const publicError = (english: boolean, potentiallyAmbiguous: boolean): string => {
   if (potentiallyAmbiguous) {
     return english
-      ? 'The provider result is not yet known. Do not use another payment method. Retry this exact option to recover its durable status.'
-      : 'Todavía no conocemos el resultado del proveedor. No uses otro método. Reintenta esta misma opción para recuperar su estado durable.';
+      ? 'We do not know yet whether the payment went through. Do not use another payment method. Retry this same option to check its status.'
+      : 'Todavía no sabemos si el pago se completó. No uses otro método. Vuelve a intentar con esta misma opción para consultar su estado.';
   }
   return english
     ? 'This payment method could not be started. No charge is shown as successful.'
@@ -107,14 +107,14 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         severity: 'success',
         message: english
           ? 'The provider payment was verified by the server.'
-          : 'El servidor verificó el pago del proveedor.',
+          : 'Pago confirmado.',
       };
     case 'confirmed_no_charge':
       return {
         severity: 'info',
         message: english
           ? 'The server confirmed that no charge was completed. You may try again or choose another available method.'
-          : 'El servidor confirmó que no se completó un cobro. Puedes reintentar o elegir otro método disponible.',
+          : 'No se realizó ningún cobro. Puedes reintentar o elegir otro método disponible.',
       };
     case 'failed':
       return {
@@ -132,14 +132,14 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         severity: 'warning',
         message: english
           ? 'The result is ambiguous and is being reconciled. Do not retry or use another provider.'
-          : 'El resultado es ambiguo y está en conciliación. No reintentes ni uses otro proveedor.',
+          : 'Todavía no sabemos si el pago se completó y lo estamos revisando. No vuelvas a intentar ni uses otro método.',
       };
     case 'requires_customer_action':
       return {
         severity: 'info',
         message: english
           ? 'Complete the payment on the provider-hosted page. Returning to TDF is not proof of payment.'
-          : 'Completa el pago en la página alojada por el proveedor. Volver a TDF no prueba el pago.',
+          : 'Completa el pago en la página del procesador de pagos. El pago solo cuenta cuando lo confirmemos aquí.',
       };
     default:
       return {
@@ -147,10 +147,10 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         message: session.provider === 'payphone'
           ? (english
             ? 'Approve the request in PayPhone. TDF is waiting for verified provider confirmation.'
-            : 'Aprueba la solicitud en PayPhone. TDF espera la confirmación verificada del proveedor.')
+            : 'Aprueba la solicitud en PayPhone. Estamos esperando su confirmación.')
           : (english
             ? 'The payment is processing. TDF is waiting for verified provider confirmation.'
-            : 'El pago está en proceso. TDF espera la confirmación verificada del proveedor.'),
+            : 'El pago está en proceso. Estamos esperando la confirmación.'),
       };
   }
 };
@@ -436,14 +436,14 @@ export default function HostedProviderCheckout({
           setPotentiallyAmbiguous(true);
           setError(english
             ? 'Secure return recovery could not be stored. Stay on this page while TDF reconciles the attempt.'
-            : 'No se pudo guardar la recuperación segura. Permanece en esta página mientras TDF concilia el intento.');
+            : 'No pudimos guardar los datos para retomar este pago. Quédate en esta página mientras lo revisamos.');
           return;
         }
         const redirect = safePlaceToPayRedirect(next.redirectUrl);
         if (!redirect) {
           setError(english
             ? 'The provider returned an unsafe redirect. Do not retry with another method; support must reconcile this attempt.'
-            : 'El proveedor devolvió una redirección insegura. No reintentes con otro método; soporte debe conciliar este intento.');
+            : 'El procesador devolvió un enlace que no es seguro. No intentes con otro método; contacta a soporte para revisar este intento.');
           return;
         }
         navigate(redirect);
@@ -457,7 +457,7 @@ export default function HostedProviderCheckout({
       setError(startError instanceof PaymentRecoveryUnavailableError
         ? (english
           ? 'The original payment recovery key is unavailable. Do not pay again; contact support to reconcile this order.'
-          : 'La clave original de recuperación no está disponible. No pagues otra vez; contacta a soporte para conciliar esta orden.')
+          : 'No podemos retomar el pago original desde aquí. No pagues otra vez; contacta a soporte para revisar esta orden.')
         : publicError(english, ambiguous));
       if (!ambiguous && attemptedContext) {
         clearProviderPaymentPending(attemptedContext.checkoutId);
@@ -546,7 +546,7 @@ export default function HostedProviderCheckout({
       {error && <Alert severity="warning">{error}</Alert>}
       {existingRedirect && session?.state === 'requires_customer_action' && (
         <Button variant="contained" onClick={() => navigate(existingRedirect)} disabled={disabled || busy}>
-          {english ? 'Continue on the secure provider page' : 'Continuar en la página segura del proveedor'}
+          {english ? 'Continue on the secure provider page' : 'Continuar con el pago'}
         </Button>
       )}
       {session && activeContext && POLLABLE_STATES.has(session.state) && (
@@ -555,7 +555,7 @@ export default function HostedProviderCheckout({
           disabled={busy}
           onClick={() => void refreshSession(activeContext, session.attemptId)}
         >
-          {english ? 'Refresh verified status' : 'Actualizar estado verificado'}
+          {english ? 'Refresh verified status' : 'Actualizar estado del pago'}
         </Button>
       )}
       {session?.canRetryOrFallback && (session.state === 'failed' || session.state === 'confirmed_no_charge') && (
@@ -566,7 +566,7 @@ export default function HostedProviderCheckout({
       <Typography variant="caption" color="text.secondary">
         {english
           ? 'TDF never collects card numbers or security codes here. Payment success is shown only after server verification.'
-          : 'TDF no recopila aquí números de tarjeta ni códigos de seguridad. Solo mostramos éxito después de la verificación del servidor.'}
+          : 'TDF no pide aquí números de tarjeta ni códigos de seguridad. Un pago aparece como completado solo cuando está confirmado.'}
       </Typography>
     </Stack>
   );

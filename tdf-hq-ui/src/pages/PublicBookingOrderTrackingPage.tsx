@@ -23,11 +23,22 @@ import HostedProviderCheckout from '../components/payments/HostedProviderCheckou
 
 const paidStatuses = new Set(['paid', 'partially_refunded', 'refunded']);
 
+const FULFILLMENT_LABELS: Record<string, string> = {
+  pending: 'pendiente',
+  scheduled: 'agendado',
+  confirmed: 'confirmado',
+  in_progress: 'en curso',
+  completed: 'completado',
+  fulfilled: 'completado',
+  cancelled: 'cancelado',
+  no_show: 'no asistió',
+};
+
 const statusCopy = (status: string): { title: string; detail: string; severity: 'success' | 'info' | 'warning' } => {
   if (status === 'paid') {
     return {
       title: 'Depósito verificado',
-      detail: 'El servidor verificó el pago. La reserva está confirmada; el saldo y la prestación siguen su propio flujo.',
+      detail: 'Pago confirmado. La reserva está confirmada; el saldo y la prestación siguen su propio flujo.',
       severity: 'success',
     };
   }
@@ -55,21 +66,21 @@ const statusCopy = (status: string): { title: string; detail: string; severity: 
   if (status === 'processing') {
     return {
       title: 'Pago en verificación',
-      detail: 'El proveedor todavía no confirmó el resultado. Esta pantalla no representa un cobro exitoso.',
+      detail: 'Todavía no tenemos la confirmación del pago. Aún no lo damos por pagado.',
       severity: 'info',
     };
   }
   if (status === 'failed') {
     return {
       title: 'Intento no confirmado',
-      detail: 'No existe evidencia verificable de pago. Puedes reintentar mientras la retención siga vigente.',
+      detail: 'No pudimos confirmar ningún pago. Puedes volver a intentar mientras el horario siga reservado.',
       severity: 'warning',
     };
   }
   if (status === 'expired' || status === 'cancelled') {
     return {
-      title: 'Retención finalizada',
-      detail: 'Este horario ya no está retenido. Si el proveedor muestra un movimiento, contacta a soporte para conciliación.',
+      title: 'La reserva temporal terminó',
+      detail: 'Este horario ya no está reservado. Si tu banco o tarjeta muestra un cobro, contacta a soporte para revisarlo.',
       severity: 'warning',
     };
   }
@@ -159,9 +170,9 @@ export default function PublicBookingOrderTrackingPage() {
                 </Alert>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                   <Chip label={`Orden ${order.booking.bookingId}`} />
-                  <Chip label={`Pago: ${order.paymentStatus}`} color={paidStatuses.has(order.paymentStatus) ? 'success' : 'default'} />
-                  <Chip label={`Servicio: ${order.fulfillmentStatus}`} />
-                  <Chip label={`Retención: ${holdLabel}`} />
+                  {/* The alert above already states the payment status in words. */}
+                  <Chip label={`Servicio: ${FULFILLMENT_LABELS[order.fulfillmentStatus] ?? order.fulfillmentStatus}`} />
+                  {!paidStatuses.has(order.paymentStatus) && <Chip label={`Reservado hasta: ${holdLabel}`} />}
                 </Stack>
                 <Typography>
                   Depósito: <strong>{order.quote.currency} {(order.quote.depositMinor / 100).toFixed(2)}</strong>

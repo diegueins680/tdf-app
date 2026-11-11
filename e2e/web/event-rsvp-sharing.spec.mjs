@@ -209,7 +209,7 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
   await page.screenshot({ path: testInfo.outputPath('web-rsvp-profile.png'), fullPage: true });
 
   await page.goto('/eventos/42');
-  await page.getByRole('button', { name: 'No iré' }).click();
+  await page.getByRole('button', { name: 'No voy' }).click();
   await expect.poll(() => api.getState().currentRsvp?.rsvpStatus).toBe('declined');
   await page.goto('/perfil/101');
   await expect(page.getByText('Todavía no hay actividad de RSVP visible.')).toBeVisible();
@@ -231,7 +231,7 @@ test('private events do not enumerate and cancelled public events disable RSVP a
     json: { ...event, id: '43', title: 'Evento Cancelado Ficticio', canonicalUrl: '/eventos/43', workflowStateCode: 'cancelled', rsvpEligible: false, publicShareEligible: false },
   }));
   await page.goto('/eventos/43');
-  await expect(page.getByText('Los eventos cancelados no aceptan nuevos RSVPs.')).toBeVisible();
+  await expect(page.getByText('Los eventos cancelados no aceptan nuevas respuestas.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Voy' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Compartir' })).toBeDisabled();
 });
