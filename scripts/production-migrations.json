@@ -1263,6 +1263,11 @@
       "id": "2026-11-07_apple_provider_identity_issuer",
       "path": "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
       "introducedBy": "7c1525edf0f02fe53f985c24862940b91c11cdfa"
+    },
+    {
+      "id": "2026-11-11_event_admin_delegation",
+      "path": "tdf-hq/sql/2026-11-11_event_admin_delegation.sql",
+      "introducedBy": "2703eb3a1ac1604829e902262fe2dbfbbf4f4ca8"
     }
   ]
 }
