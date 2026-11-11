@@ -1,8 +1,9 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
 import { buildEventFinanceCsvRows } from '../utils/eventFinanceCsv';
 import { serializeCsvCell, type CsvCell } from '../utils/csv';
 import MarkdownText from '../components/MarkdownText';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
 import {
@@ -1330,7 +1331,12 @@ export default function SocialEventsPage() {
                     )}
                     {ev.eventArtists?.length ? (
                       <Typography variant="body2" color="text.secondary">
-                        Artistas: {ev.eventArtists.map((a) => a.artistName).join(', ')}
+                        Artistas: {ev.eventArtists.map((artist, index) => (
+                          <Fragment key={artist.artistId ?? index}>
+                            {index > 0 && ', '}
+                            <ArtistProfileLink partyId={artist.artistPartyId}>{artist.artistName}</ArtistProfileLink>
+                          </Fragment>
+                        ))}
                       </Typography>
                     ) : null}
                     {typeof ev.eventPriceCents === 'number' && (

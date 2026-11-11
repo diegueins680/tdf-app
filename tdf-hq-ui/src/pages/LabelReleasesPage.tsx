@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import { loadArtistCatalogs } from '../api/artistCatalog';
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
@@ -631,7 +632,7 @@ export default function LabelReleasesPage() {
                               />
                             </Stack>
                             <Typography variant="body2" color="text.secondary">
-                              {release.artistName}
+                              <ArtistProfileLink partyId={release.arArtistId}>{release.artistName}</ArtistProfileLink>
                               {release.artistCity ? ` · ${release.artistCity}` : ''}
                             </Typography>
                             {release.arDescription && (
