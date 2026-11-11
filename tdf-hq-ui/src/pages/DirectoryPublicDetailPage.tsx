@@ -263,7 +263,10 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
     <Box sx={{ py: { xs: 4, md: 7 }, ...(stickyBuyBar ? { pb: { xs: 14, md: 7 } } : {}) }}>
       <Container maxWidth="lg">
         <Stack spacing={3}>
-          <Button component={RouterLink} to="/buscar" startIcon={<ArrowBackIcon />} sx={{ alignSelf: 'flex-start' }}>Volver a buscar</Button>
+          {/* Events are mostly opened from a shared link, so "back" leads to more events, not to a search the visitor never made. */}
+          <Button component={RouterLink} to={kind === 'event' ? '/social/eventos' : '/buscar'} startIcon={<ArrowBackIcon />} sx={{ alignSelf: 'flex-start' }}>
+            {kind === 'event' ? (english ? 'More events' : 'Más eventos') : 'Volver a buscar'}
+          </Button>
           <Paper variant="outlined" sx={{ p: { xs: 3, md: 5 }, borderRadius: 4 }}>
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
@@ -350,7 +353,12 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 </Paper>
               ) : null)}
 
-              {locationValue && (
+              {locationValue && kind === 'event' && (
+                <Typography color="text.secondary">
+                  {text(locationValue['city']) ?? ''}{text(locationValue['countryCode']) ? `, ${text(locationValue['countryCode'])}` : ''}
+                </Typography>
+              )}
+              {locationValue && kind !== 'event' && (
                 <Alert severity="info">
                   {text(locationValue['city']) ?? 'Ubicación amplia'}{text(locationValue['countryCode']) ? `, ${text(locationValue['countryCode'])}` : ''}. La ubicación pública es aproximada; no incluye direcciones residenciales.
                 </Alert>
