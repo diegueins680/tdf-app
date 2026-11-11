@@ -483,6 +483,8 @@ export default function LabelArtistsPage() {
       return;
     }
     setHeroImageError(null);
+    // Editing the link, even back to the same value, gives its preview a fresh attempt.
+    setHeroImageLoadFailedUrl(null);
     setForm((prev) => ({ ...prev, heroImageUrl: next }));
   };
 
@@ -1312,6 +1314,7 @@ export default function LabelArtistsPage() {
                 if (uploadedHeroImageUrl) {
                   setForm((prev) => ({ ...prev, heroImageUrl: uploadedHeroImageUrl }));
                   setHeroImageError(null);
+                  setHeroImageLoadFailedUrl(null);
                 }
               }}
               accept="image/*"
@@ -1353,6 +1356,7 @@ export default function LabelArtistsPage() {
                     onClick={() => {
                       setForm((prev) => ({ ...prev, heroImageUrl: '' }));
                       setHeroImageError(null);
+                      setHeroImageLoadFailedUrl(null);
                     }}
                   >
                     Quitar
@@ -1382,7 +1386,14 @@ export default function LabelArtistsPage() {
                 </Alert>
               )}
               {heroImageLoadFailed && (
-                <Alert severity="warning">
+                <Alert
+                  severity="warning"
+                  action={
+                    <Button color="inherit" size="small" onClick={() => setHeroImageLoadFailedUrl(null)}>
+                      Reintentar
+                    </Button>
+                  }
+                >
                   Este enlace no carga como imagen. Usa el enlace directo al archivo, no la página de Spotify,
                   Instagram o Drive.
                 </Alert>

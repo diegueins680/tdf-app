@@ -621,6 +621,17 @@ describe('LabelArtistsPage', () => {
       });
       expect(upsertArtistProfileMock).not.toHaveBeenCalled();
 
+      // A transient failure is not final: retrying remounts the preview.
+      await clickButton(dialog, 'Reintentar');
+      expect(dialog.textContent).not.toContain('Este enlace no carga como imagen.');
+      expect(dialog.querySelector('img[alt="Vista previa"]')).not.toBeNull();
+      await failPreview(dialog);
+      // Clearing and pasting the same link again also starts a new attempt.
+      await changeInput(imageUrlField(dialog), '');
+      await changeInput(imageUrlField(dialog), 'https://open.spotify.com/artist/other');
+      expect(dialog.textContent).not.toContain('Este enlace no carga como imagen.');
+      expect(dialog.querySelector('img[alt="Vista previa"]')).not.toBeNull();
+
       await changeInput(imageUrlField(dialog), stored);
       await failPreview(dialog);
       expect(dialog.textContent).toContain('Este enlace no carga como imagen.');
