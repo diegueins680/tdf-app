@@ -65,6 +65,13 @@ jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
   getProviderPaymentSession: hostedGetMock,
 }));
 
+let sessionMock: { username: string; displayName: string } | null = null;
+const sessionApi = await import('../session/SessionContext');
+jest.unstable_mockModule('../session/SessionContext', () => ({
+  ...sessionApi,
+  useSession: () => ({ session: sessionMock }),
+}));
+
 const { default: PublicEventTicketsPage } = await import('../pages/PublicEventTicketsPage');
 
 const storefrontFixture = {
@@ -179,6 +186,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
   });
 
   beforeEach(() => {
+    sessionMock = null;
     window.localStorage.clear();
     window.sessionStorage.clear();
     window.localStorage.setItem('tdf:event-ticket-checkout:41:92', 'secure-lookup-token');
@@ -359,6 +367,47 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).toContain('Retención temporal de inventario: 15 minutos');
     expect(container.textContent).toContain('Transferencias: permitidas');
     expect(container.textContent).toContain('Versión de términos: event-ticket-terms-v1');
+  });
+
+  it('shows a one-line summary with a live subtotal instead of repeating the event description', async () => {
+    await renderTracking('/eventos/41/entradas?tierId=8&quantity=2');
+    await waitForExpectation(() => expect(container.querySelector('[data-testid="ticket-subtotal"]')).toBeTruthy());
+    const subtotal = container.querySelector('[data-testid="ticket-subtotal"]')!.textContent ?? '';
+    expect(subtotal).toMatch(/2 × .*20[,.]00 = .*40[,.]00/);
+    expect(subtotal).toContain('tarifa al comprador 2');
+    expect(container.textContent).not.toContain('Evento público');
+    // One ticket type is stated, not offered as a one-option menu.
+    expect(container.querySelector('[role="combobox"]')).toBeNull();
+    expect(container.textContent).toContain('General');
+    await act(async () => {
+      fireEvent.click(container.querySelector<HTMLButtonElement>('button[aria-label="Una entrada más"]')!);
+    });
+    expect(container.querySelector('[data-testid="ticket-subtotal"]')!.textContent).toMatch(/3 × .*= .*60[,.]00/);
+  });
+
+  it('keeps phone and promo code folded until the buyer asks for them', async () => {
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.textContent).toContain('Agregar teléfono o código promocional'));
+    expect(container.querySelector('input[maxlength="50"]')).toBeNull();
+    const toggle = [...container.querySelectorAll('button')].find((button) => button.textContent === 'Agregar teléfono o código promocional')!;
+    await act(async () => { fireEvent.click(toggle); });
+    expect(container.querySelector('input[maxlength="50"]')).toBeTruthy();
+    expect(container.querySelector('input[maxlength="24"]')).toBeTruthy();
+  });
+
+  it('prefills the buyer from the session and leaves a guest form empty', async () => {
+    sessionMock = { username: 'ana@example.invalid', displayName: 'Ana Fan' };
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('input[maxlength="160"]')).toBeTruthy());
+    expect(container.querySelector<HTMLInputElement>('input[maxlength="160"]')!.value).toBe('Ana Fan');
+    expect(container.querySelector<HTMLInputElement>('input[type="email"]')!.value).toBe('ana@example.invalid');
+  });
+
+  it('does not treat a plain username as an email address', async () => {
+    sessionMock = { username: 'ana-fan', displayName: 'Ana Fan' };
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('input[type="email"]')).toBeTruthy());
+    expect(container.querySelector<HTMLInputElement>('input[type="email"]')!.value).toBe('');
   });
 
   it('shows the event artwork above the checkout', async () => {

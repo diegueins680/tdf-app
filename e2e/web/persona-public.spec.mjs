@@ -384,7 +384,7 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   await page.getByLabel('Nombre completo').fill('Elena Paredes');
   await page.getByLabel('Email').fill('per-01.elena@persona.test');
   await page.getByLabel(/Acepto los términos versionados/).check();
-  await page.getByRole('button', { name: 'Retener entradas y revisar total' }).click();
+  await page.getByRole('button', { name: 'Continuar al pago' }).click();
 
   await expect(page).toHaveURL(/\/eventos\/41\/orden\/91$/);
   await expect(page.getByText(/La orden no está pagada/)).toBeVisible();
