@@ -45,17 +45,15 @@ export function haskellImports(source) {
   return [...new Set([...source.matchAll(HASKELL_IMPORT)].map((match) => match[1]))].sort();
 }
 
+// `import type { A } from 'm'` is erased. `import { type A } from 'm'` is not:
+// with verbatimModuleSyntax (set in tdf-hq-ui/tsconfig.json) the compiler keeps
+// it as `import {} from 'm'`, so the module is still loaded and is still an edge.
 function importClauseIsTypeOnly(clause) {
-  if (!clause) return false;
-  if (clause.isTypeOnly) return true;
-  if (clause.name) return false;
-  const bindings = clause.namedBindings;
-  if (!bindings || !bindings.elements) return false;
-  return bindings.elements.length > 0 && bindings.elements.every((element) => element.isTypeOnly);
+  return Boolean(clause && clause.isTypeOnly);
 }
 
-// Runtime module specifiers only: a type-only import is erased by the compiler and
-// cannot create a load-order or bundle dependency.
+// Runtime module specifiers only: a whole-declaration type-only import or export
+// is erased by the compiler and cannot create a load-order or bundle dependency.
 export function typescriptRuntimeImports(ts, fileName, source) {
   const kind = fileName.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, false, kind);
