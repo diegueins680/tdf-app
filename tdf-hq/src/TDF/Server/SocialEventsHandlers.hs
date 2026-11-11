@@ -6194,8 +6194,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         ticket <- maybe (throwError err404{errBody = "Ticket not found"}) pure mTicket
         when (eventTicketEventId ticket /= eventKey) $
             throwError err400{errBody = "Ticket does not belong to this event"}
-        managerParty <- eventManagerPartyFor eventKey eventVal
-        let manager = isEventManager managerParty eventVal
+        let manager = isEventManager currentPartyId eventVal
         when (not manager && eventTicketCurrentHolderPartyId ticket /= Just currentPartyId) $
             throwError err403{errBody = "You can only transfer your own tickets"}
         when (eventTicketStatus ticket `elem` ["cancelled", "refunded", "checked_in"]) $
@@ -6237,8 +6236,7 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         ticket <- maybe (throwError err404{errBody = "Ticket not found"}) pure mTicket
         when (eventTicketEventId ticket /= eventKey) $
             throwError err400{errBody = "Ticket does not belong to this event"}
-        managerParty <- eventManagerPartyFor eventKey eventVal
-        let manager = isEventManager managerParty eventVal
+        let manager = isEventManager currentPartyId eventVal
         when (not manager && eventTicketCurrentHolderPartyId ticket /= Just currentPartyId) $
             throwError err403{errBody = "You can only view transfers for your own tickets"}
         -- Recheck ownership in the same statement that reads invitation credentials.
@@ -7219,7 +7217,10 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                                     admissionTime <- TicketInventory.ticketReservationTime
                                     reserved <- TicketInventory.reserveTicketInventory
                                         eventKey tierKey ectQuantity admissionTime
-                                    if not reserved
+                                    if not (isTicketTierSaleOpen admissionTime tier)
+                                        then pure (Left err409
+                                            { errBody = "Courtesy tickets need an active ticket tier inside its sales window" })
+                                    else if not reserved
                                         then pure (Left err409{errBody = "Not enough tickets available"})
                                         else do
                                             orderKey <- insert orderRecord
