@@ -882,7 +882,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.deepEqual(history.get(row.id), row);
   }
   const pointer = successors.find(row => row.name === 'migrations');
-  const tip = active.find(row => row.id === pointer.currentId);
+  const tip = active.find(row => row.id === pointer.previousResolution.currentId);
   assert.equal(tip.evidence.valueCount, 248);
   assert.equal(historicalReview(tip, 247).previousDecision.id, '806180f5957fc4a7520f');
   assert.equal(tip.previousDecision.id, '4e282e4c258854caa655');
