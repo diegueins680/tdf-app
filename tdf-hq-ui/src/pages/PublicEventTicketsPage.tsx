@@ -651,7 +651,7 @@ export default function PublicEventTicketsPage() {
                     </Typography>
                   )}
                   <TextField required label={english ? 'Full name' : 'Nombre completo'} value={buyerName} onChange={(event) => setBuyerName(event.target.value)} inputProps={{ maxLength: 160 }} />
-                  <TextField required type="email" label="Email" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
+                  <TextField required type="email" label={english ? 'Email' : 'Correo'} value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
                   {extrasOpen || buyerPhone || promoCode ? (
                     <>
                       <TextField label={english ? 'Phone (optional)' : 'Teléfono (opcional)'} value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} inputProps={{ maxLength: 24 }} />

@@ -382,7 +382,7 @@ test('PW-PER-01-TICKET-OFFER distinguishes a guest hold from payment and issuanc
   await refundPolicy.click();
   await expect(page.getByText('Reembolso total.')).toBeVisible();
   await page.getByLabel('Nombre completo').fill('Elena Paredes');
-  await page.getByLabel('Email').fill('per-01.elena@persona.test');
+  await page.getByLabel('Correo').fill('per-01.elena@persona.test');
   await page.getByLabel(/Acepto los términos versionados/).check();
   await page.getByRole('button', { name: 'Continuar al pago' }).click();
 
