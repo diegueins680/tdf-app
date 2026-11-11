@@ -71,6 +71,7 @@ executable tdf-hq-exe
     TDF.Contracts.EventWorkspace
     TDF.Contracts.Server
     TDF.Contracts.Types
+    TDF.Courses.Metadata
     TDF.Courses.Production
     TDF.API.SocialEventsAPI
     TDF.API.EventResearchAPI
@@ -184,6 +185,7 @@ executable tdf-hq-exe
     TDF.API.RecordsIngestion
     TDF.SocialEventLifecycle
     TDF.Services.EventLogisticsRoutes
+    TDF.Services.LlmChat
     TDF.Services.Stripe
     TDF.RagStore
     TDF.Reputation

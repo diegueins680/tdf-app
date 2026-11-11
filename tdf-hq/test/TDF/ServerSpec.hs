@@ -146,6 +146,7 @@ import TDF.DTO
     )
 import qualified TDF.DTO as DTO
 import qualified TDF.Server as NotificationServer
+import TDF.Services.LlmChat (extractApiErrorMessage, extractModelReplyText, openAIChatRequestErrorMessage, shouldRetryWithFallbackModel)
 import TDF.Server
     ( createPurchase
     , MarketplaceCartTotalsState(..)
@@ -415,8 +416,6 @@ import TDF.Server
     , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
-    , extractApiErrorMessage
-    , extractModelReplyText
     , extractChatKitSession
     , validateChatKitSessionPayload
     , resolveDriveUploadFolderId
@@ -430,8 +429,6 @@ import TDF.Server
     , resolveDrivePublicUrl
     , resolveDrivePublicUrlAfterPermission
     , resolveWorkflowId
-    , openAIChatRequestErrorMessage
-    , shouldRetryWithFallbackModel
     , listMarketplace
     , resolveMarketplacePhotoUrl
     , calendarServer

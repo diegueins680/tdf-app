@@ -393,9 +393,10 @@ import TDF.ServerInstagramOAuth
       validateInstagramMediaUrl,
       validateInstagramRedirectUri,
       validateInstagramUsername )
+import TDF.Courses.Metadata (buildWhatsappCtaFor)
+import TDF.Services.LlmChat (extractApiErrorMessage, shouldRetryWithFallbackModel)
 import TDF.Server
     ( assetsServePathAllowed,
-      buildWhatsappCtaFor,
       loadCourseRegistrationReceiptCounts,
       toCourseRegistrationDTOWithReceiptCount,
       DriveApiResp (..),
@@ -443,9 +444,7 @@ import TDF.Server
       validateStoredGoogleCalendarAccessToken,
       validateStoredGoogleCalendarRefreshToken,
       expiredGoogleCalendarSyncRetryState,
-      extractApiErrorMessage,
-      chatKitSessionErrorMessage,
-      shouldRetryWithFallbackModel )
+      chatKitSessionErrorMessage )
 import TDF.Server.Reviews
     ( eligibilitySql
     , publicReviewTargetStatement

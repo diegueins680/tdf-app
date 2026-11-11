@@ -79,9 +79,13 @@ code reaching into HTTP delivery drops from four imports to two.
 Listed in `docs/architecture/module-boundaries.json`: 11 backend imports, 21 web
 imports, 17 oversized files. Suggested order, each as its own small change:
 
-1. `TDF.Cron -> TDF.Server`: move the course metadata helpers and the RAG reply
-   function into domain modules. This removes the worker's dependency on the
-   whole HTTP server and is the first real cut into `TDF.Server`.
+1. Done in the follow-up change: `TDF.Cron` no longer imports `TDF.Server`. The
+   course metadata helpers moved to `TDF.Courses.Metadata` and the
+   chat-completion client to `TDF.Services.LlmChat` (759 lines out of
+   `TDF.Server`). The move surfaced one import that the god module had hidden:
+   `TDF.Courses.Metadata -> TDF.Routes.Courses`, because the course transfer
+   types are declared beside the route definitions. It is listed; retiring it
+   means moving those types under `TDF.DTO`.
 2. `TDF.Commerce.ProviderEventWorker -> TDF.Server.ServiceStorefront`: move
    PayPal webhook parsing and processing under `TDF.Commerce`.
 3. `TicketPaymentReceipt`: move the response type out of the handler module so
