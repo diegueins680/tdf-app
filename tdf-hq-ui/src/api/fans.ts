@@ -1,4 +1,5 @@
 import { get, post, put, del } from './client';
+import { saveArtistProfileMedia } from './artistProfileMedia';
 import type {
   ArtistProfileDTO,
   ArtistReleaseDTO,
@@ -88,13 +89,13 @@ export const Fans = {
     (await send('/artists/me/activate', {})) as ArtistProfileDTO,
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
   updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
-    (await update('/fans/me/artist-profile', payload)) as ArtistProfileDTO,
+    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/fans/me/artist-profile', prepared))),
   createMyArtistProfile: async (payload: ArtistProfileUpsert) =>
-    (await send('/artists/me/profile', payload)) as ArtistProfileDTO,
+    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/profile', prepared))),
   updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert) =>
-    (await update('/artists/me/profile', payload)) as ArtistProfileDTO,
+    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/artists/me/profile', prepared))),
   updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate) =>
-    (await send('/artists/me/photo', payload)) as ArtistProfileDTO,
+    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/photo', prepared))),
 
   // Fan Club
   getClub: async (artistId: number) => (await read(`/fans/clubs/${artistId}`)) as FanClubDTO,

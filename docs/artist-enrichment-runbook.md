@@ -322,3 +322,17 @@ and artist self-edit/photo replacement remain authoritative. The public audit at
 `reports/artist-profile-media-2026-11-04.json` is a read-only observation, not
 proof of imported photos or deployed source. No production backfill or rollout
 is claimed by local tests.
+
+### Artist editor media
+
+Web profile creation, edits and photo replacement verify that the public cover
+URL decodes as an image before saving. Public Drive file links resolve to image
+content, while Spotify and social page links produce an actionable field error.
+A pending image check expires after 15 seconds and refuses a save if the account
+changes. The admin editor uses the hosted upload control. Existing embedded
+images remain displayable, and an image load failure uses the local artist avatar.
+
+YouTube previews derive a still from the selected video ID and try a smaller
+thumbnail if loading fails. An explicit valid poster provides another fallback.
+Direct video files can load metadata for a still before the play button is used.
+Preview loading retains the existing explicit playback and analytics boundaries.

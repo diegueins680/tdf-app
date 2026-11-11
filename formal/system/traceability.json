@@ -24950,7 +24950,13 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-        "package.json"
+        "package.json",
+        "tdf-hq-ui/src/utils/artistImage.ts",
+        "tdf-hq-ui/src/api/artistProfileMedia.ts",
+        "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/admin.ts",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
       ],
       "tests": [
         "scripts/__tests__/artist-enrichment.test.mjs",
@@ -24958,7 +24964,10 @@
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
         "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
         "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+        "tdf-hq-ui/src/api/fans.test.ts",
+        "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -27768,9 +27777,12 @@
     "tdf-hq-ui/src/analytics/useTicketFunnel.ts": "d71e28707630aabb3681977a3faf2ea23393dd80586f07dda7d338ef0347fd32",
     "tdf-hq-ui/src/api/accountDeletion.test.ts": "5a039f2ef3658b1aabee56a51f1f1e4a23c2e895ed22d863879fd245e95a4785",
     "tdf-hq-ui/src/api/accountDeletion.ts": "7d9983a96e95229e1ecf8a2470712214ad62ce525a206a0cb0a8c5ff3a3805ff",
+    "tdf-hq-ui/src/api/admin.ts": "9b26bb7f8e33117de2a27b53df49e8470b12d303ac70c2f89fa4a0eeb26c97d0",
     "tdf-hq-ui/src/api/artistCatalog.test.ts": "1ac8ee9be045c1bd56511e8bdedbf19c560ad4629bf84953297246d96eac0155",
     "tdf-hq-ui/src/api/artistCatalog.ts": "013a487fccc8b72de36e74ab2be912343b8afc350553ef9c378f7fcbd6c965cb",
     "tdf-hq-ui/src/api/artistInvitations.ts": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
+    "tdf-hq-ui/src/api/artistProfileMedia.test.ts": "a06306c44afc8d30c7f423fca08d86c11d573eb6c85ae99894514419af0ea279",
+    "tdf-hq-ui/src/api/artistProfileMedia.ts": "4e578ebd799086d2da0f9fb343ab6355fd4aff5a4ccf364b1fa9b5678271a5a3",
     "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts": "26f48bfd4ea10067fe35c87a72553091e51349ca55d3638e315acfe492f9c36d",
     "tdf-hq-ui/src/api/artistUpcomingEvents.ts": "39f404af0080d8948d28fbe9e5b55ffa15ba2569343e9228639afd8f5968a3cf",
     "tdf-hq-ui/src/api/auth.test.ts": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
@@ -27792,7 +27804,8 @@
     "tdf-hq-ui/src/api/eventMemoryModeration.ts": "0b771dcdeb9318776a5955c1ae543d97ae2b9f06af31dc13e2f397f010bb4ed5",
     "tdf-hq-ui/src/api/eventTickets.test.ts": "a411fe9ca5267672db4db1ec3481aecd3fda6d8a19bc913c0885db2eb65ea541",
     "tdf-hq-ui/src/api/eventTickets.ts": "9ed3528a555397f16261758e2fe98aa6b57348ffbda8ed45b6ac629daeaeb736",
-    "tdf-hq-ui/src/api/fans.ts": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
+    "tdf-hq-ui/src/api/fans.test.ts": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
+    "tdf-hq-ui/src/api/fans.ts": "251665e8d072decac333a04aaf3daf9357b3ffd4340c8c557407e644d30f3577",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
     "tdf-hq-ui/src/api/generated/types.ts": "00ac6131f322521d2232350733258f0666bdd7ccd25a67d0d6d343e6729b12ee",
@@ -27831,6 +27844,8 @@
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
     "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "d78edfc4cef789c2a8f9b2d9d0eb29d43465ede2e3b98c23584364960c9fcd51",
     "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx": "8c057855c1c9a5d11d6f0d54425d49d1eb5b3e1787d104710180cb34110e8cdf",
+    "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx": "06395a1892e95b4d05a90098e954daca051517b77ceb7e17fd5826abc37534ba",
+    "tdf-hq-ui/src/components/ArtistCoverPreview.tsx": "7ec230fec58cd0bf78d13c45f79e1293d273ae38307944c58ef6802f7110554d",
     "tdf-hq-ui/src/components/ArtistFansList.test.tsx": "bd3dab4df6469191bc1cdc53c951410c01fd9cf98bd874b1b55c3c88f8d92e8c",
     "tdf-hq-ui/src/components/ArtistFansList.tsx": "274c061bf5429a1a2e292f63a172d6ab237a214ea967afebe4f53620f6acd9d0",
     "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx": "ff19281d3869bde4c70c51cdbcc5f75d260a06e190963429cca242d03dea6ec7",
@@ -27867,8 +27882,8 @@
     "tdf-hq-ui/src/components/SessionInvoiceGeneratorCard.tsx": "1aaae8879191fc359cbd7689c402d1bc95febad1673418a27dd30718c7b363f5",
     "tdf-hq-ui/src/components/SessionMenu.tsx": "5b66793d4ed576109a557d643634c47a62920d08e4c7bafe2d93424129e43af5",
     "tdf-hq-ui/src/components/SessionVideoPreview.campaign.test.tsx": "4945d715b69fe77bdcd52e84df20c812c28793b62abd984b07fb475f313553c0",
-    "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx": "395baf4498cd3ce0065391a637b58da3f3f56113b5141c75c3c0bef73bda3032",
-    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "6b84cf452d35810cd5fc3d2117dabb518ed9babe6cba469ee3796f8a8ea24c83",
+    "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx": "2754bee7969922a337c1ccffb3eb1b4340db5e1fb0af7d9279b2a515024b0727",
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "838931701186526df03dfc9aae547e3204a54ca8ea89be384978a746501dd057",
     "tdf-hq-ui/src/components/SidebarNav.test.tsx": "e3256af3ef5a49bb099438a71f1106c9338c186faa26c22b2464da659a0c1728",
     "tdf-hq-ui/src/components/SidebarNav.tsx": "d579734d5562fd3512b424413860a68077f79c4e88b1f2d5e4c5a3d4592c0f62",
     "tdf-hq-ui/src/components/StreamingPlayer.tsx": "3b4577b82858d1cfd74b7e38107084a35ff6b56952c6b1050e38e0ababaca8cb",
@@ -28029,7 +28044,7 @@
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "b4eaf012b687c6fc0ae4d60d667b661e346b15323ba0e7baad282f49452fcd91",
     "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
     "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "ed81c8122a6debedadbc37dd221096ea424f4c6f482bcb05ee96562704f28b7c",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "4d2ecce58a6883d9c9b48bd837e17578c3e5385d8e1f8630df49f097bf2a7767",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "33ffabf1d0303b0b7d7610971fbcded71bc11e7feb5ef9cd7623fbb5a8b37072",
     "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx": "edceff3b6fe2336ec1b234dbc421fb13a559fbbc56e1156321bb899dcf25ad39",
     "tdf-hq-ui/src/pages/InstagramConnectPage.tsx": "c1e3000474b70b1cfa4a4e41f521762b406d1faaf2ac42966aff9c9df2b87fcf",
     "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx": "3fe5deb295874a99afc50f97d06742fad56c75a7c9a810f3fef5da66d5f4ccc1",
@@ -28037,7 +28052,7 @@
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "d9ecc9467c11b2aef9026e2f3f4156ecca840eaef8f6a657ea1eba4bc332fdf3",
     "tdf-hq-ui/src/pages/InternshipsPage.tsx": "2004b6936dabf44274f00c1f6025bfacf55fa7adaaf6d2d2c5b34a825e875ff1",
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "eeb799e5ef1e9139bddc8b0f90dee10e3b77c63f8c0abbe26076be95891bd4bd",
-    "tdf-hq-ui/src/pages/LabelArtistsPage.tsx": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+    "tdf-hq-ui/src/pages/LabelArtistsPage.tsx": "1c58c3703dee1244ec8adacbf98e639131383db61278701e4e9d80153a9586d9",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "e99b58d699ef63f0a51d91450dea034229fde9f79b2cc262d619de1ddc7f7876",
     "tdf-hq-ui/src/pages/LabelProjectsPage.tsx": "742e76d1e66f1aa3abb0c42bdc90982b4c8f91b0e70cec2d727edbc93aa6e6f4",
@@ -28167,11 +28182,12 @@
     "tdf-hq-ui/src/utils/accessControl.ts": "4550fd019b3553b00074186bf7e1614e9209c97cb4c94c5a485cb1ea102536c2",
     "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts": "b7a7422e67a3b5b9c8e6576adb0cd6b85499d2f5411b74cec1b0b658394d2777",
     "tdf-hq-ui/src/utils/artistEnrichmentReview.ts": "f4b507724bc41be6f64d46f10b2f775316f7bc9ea139e7f0c8261a79fe926aae",
-    "tdf-hq-ui/src/utils/artistFallbacks.test.ts": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
-    "tdf-hq-ui/src/utils/artistFallbacks.ts": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
+    "tdf-hq-ui/src/utils/artistFallbacks.test.ts": "182d9e6e1ddc113d0c319c0489d7905063dbb768bfecac8fef2834918abab395",
+    "tdf-hq-ui/src/utils/artistFallbacks.ts": "5e393b22956bcdb21436edf08a3ed567d7bb9b9d1023d2711c3c17e5e3bbc63b",
     "tdf-hq-ui/src/utils/artistFollowIntent.ts": "8df56d639e7ff6dcace64d8bcf1fc3169a054781c9d69aefa83fea45eaf8fb77",
     "tdf-hq-ui/src/utils/artistIdentity.test.ts": "acb5a3e652e775479c512004696b564253f1e0dd90904eb29fb8c2343902210f",
     "tdf-hq-ui/src/utils/artistIdentity.ts": "e037a5ceb7a7c8377575666d7d0e3a540a3c714da8324f17b85521c96e047a4d",
+    "tdf-hq-ui/src/utils/artistImage.ts": "d4d5b2e77247f434e0bb07d1cddf46ecd10022160933e7b3e9722e8c52795845",
     "tdf-hq-ui/src/utils/authErrorMessage.test.ts": "9c5762f7ecc5a28095746ce56460955fc98de234efbf7fa185eb9d4ec6c6eb6e",
     "tdf-hq-ui/src/utils/authErrorMessage.ts": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
     "tdf-hq-ui/src/utils/bottomDock.test.tsx": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
@@ -43561,6 +43577,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "MEDIA-STORAGE-001",
         "relationship": "implementation"
       }
@@ -43748,6 +43768,10 @@
     "tdf-hq-ui/src/api/fans.ts": [
       {
         "requirement": "MEDIA-ARTIST-CATALOG-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
         "relationship": "implementation"
       }
     ],
@@ -44779,6 +44803,30 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/utils/artistImage.ts": [
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/artistProfileMedia.ts": [
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/ArtistCoverPreview.tsx": [
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/admin.ts": [
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/artist-image-download.test.mjs": [
       {
         "requirement": "ART-PROFILE-MEDIA-001",
@@ -44798,6 +44846,24 @@
       }
     ],
     "tdf-hq-ui/src/utils/artistFallbacks.test.ts": [
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/artistProfileMedia.test.ts": [
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/fans.test.ts": [
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx": [
       {
         "requirement": "ART-PROFILE-MEDIA-001",
         "relationship": "tests"
@@ -56086,9 +56152,14 @@
     {
       "id": "SURFACE-c708f44fd07aaecc",
       "path": "tdf-hq-ui/src/api/admin.ts",
-      "sha256": "aa46977058c668c63545c17d7fdaa2eacceef4e9dfb0df1feb77f37b08cafe35",
+      "sha256": "9b26bb7f8e33117de2a27b53df49e8470b12d303ac70c2f89fa4a0eeb26c97d0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fa13a42d2d819afe",
@@ -56143,6 +56214,30 @@
       "requirements": [
         {
           "requirement": "AUTH-ARTIST-INVITE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dfed9ffddc3aa569",
+      "path": "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+      "sha256": "a06306c44afc8d30c7f423fca08d86c11d573eb6c85ae99894514419af0ea279",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f78816ba807d3b45",
+      "path": "tdf-hq-ui/src/api/artistProfileMedia.ts",
+      "sha256": "4e578ebd799086d2da0f9fb343ab6355fd4aff5a4ccf364b1fa9b5678271a5a3",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
           "relationship": "implementation"
         }
       ]
@@ -56620,18 +56715,27 @@
     {
       "id": "SURFACE-743e4202864493ee",
       "path": "tdf-hq-ui/src/api/fans.test.ts",
-      "sha256": "1d36c8a5f648dd3f44b7389181786dc3b603fa350570c898a091f9bf70bbd425",
+      "sha256": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-ffd1f7d4f06774cf",
       "path": "tdf-hq-ui/src/api/fans.ts",
-      "sha256": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
+      "sha256": "251665e8d072decac333a04aaf3daf9357b3ffd4340c8c557407e644d30f3577",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
           "relationship": "implementation"
         }
       ]
@@ -57636,6 +57740,30 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-8e1723edf220f689",
+      "path": "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+      "sha256": "06395a1892e95b4d05a90098e954daca051517b77ceb7e17fd5826abc37534ba",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-84d1edb4b5f2be7f",
+      "path": "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
+      "sha256": "7ec230fec58cd0bf78d13c45f79e1293d273ae38307944c58ef6802f7110554d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-fe345132afa3a68e",
       "path": "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
       "sha256": "bd3dab4df6469191bc1cdc53c951410c01fd9cf98bd874b1b55c3c88f8d92e8c",
@@ -58321,7 +58449,7 @@
     {
       "id": "SURFACE-2d575081440ad9a8",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-      "sha256": "395baf4498cd3ce0065391a637b58da3f3f56113b5141c75c3c0bef73bda3032",
+      "sha256": "2754bee7969922a337c1ccffb3eb1b4340db5e1fb0af7d9279b2a515024b0727",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58337,7 +58465,7 @@
     {
       "id": "SURFACE-a64f86cb6be0afe2",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-      "sha256": "6b84cf452d35810cd5fc3d2117dabb518ed9babe6cba469ee3796f8a8ea24c83",
+      "sha256": "838931701186526df03dfc9aae547e3204a54ca8ea89be384978a746501dd057",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61599,7 +61727,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "4d2ecce58a6883d9c9b48bd837e17578c3e5385d8e1f8630df49f097bf2a7767",
+      "sha256": "33ffabf1d0303b0b7d7610971fbcded71bc11e7feb5ef9cd7623fbb5a8b37072",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61873,11 +62001,15 @@
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+      "sha256": "1c58c3703dee1244ec8adacbf98e639131383db61278701e4e9d80153a9586d9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
           "relationship": "implementation"
         },
         {
@@ -64411,7 +64543,7 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
+      "sha256": "182d9e6e1ddc113d0c319c0489d7905063dbb768bfecac8fef2834918abab395",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64423,7 +64555,7 @@
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
+      "sha256": "5e393b22956bcdb21436edf08a3ed567d7bb9b9d1023d2711c3c17e5e3bbc63b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64468,6 +64600,18 @@
       "requirements": [
         {
           "requirement": "MEDIA-ARTIST-CATALOG-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-12770ceb2b42cba4",
+      "path": "tdf-hq-ui/src/utils/artistImage.ts",
+      "sha256": "d4d5b2e77247f434e0bb07d1cddf46ecd10022160933e7b3e9722e8c52795845",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "ART-PROFILE-MEDIA-001",
           "relationship": "implementation"
         }
       ]
@@ -81328,7 +81472,6 @@
     "SURFACE-fa95e5c41415dc39",
     "SURFACE-4167f2e43255ad85",
     "SURFACE-5f61a01aa269f351",
-    "SURFACE-c708f44fd07aaecc",
     "SURFACE-fa13a42d2d819afe",
     "SURFACE-e50dfc48af9bb073",
     "SURFACE-8f5ea9903969273f",
@@ -81358,7 +81501,6 @@
     "SURFACE-538da406d34b654f",
     "SURFACE-3bcebc3f217667b8",
     "SURFACE-258dda11b4e34b82",
-    "SURFACE-743e4202864493ee",
     "SURFACE-1466b07a94b92eb2",
     "SURFACE-acc1011eb1c1fb12",
     "SURFACE-5258acdc9275f4b0",
@@ -83737,7 +83879,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "cbacd03b5e9d660d68d20ad28fea9fb1e0f0736d809beb47388894db626f780d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83765,7 +83907,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "cbacd03b5e9d660d68d20ad28fea9fb1e0f0736d809beb47388894db626f780d",
       "definition": {
         "states": [
           "absent",
@@ -83795,7 +83937,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "cbacd03b5e9d660d68d20ad28fea9fb1e0f0736d809beb47388894db626f780d",
       "definition": {
         "export": [
           "queued",
