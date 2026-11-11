@@ -699,7 +699,7 @@ export default function PublicEventTicketsPage() {
                           {storefront.data.policy.taxIncluded ? (english ? 'Included tax' : 'Impuesto incluido') : (english ? 'Additional tax' : 'Impuesto adicional')}: {percentage(storefront.data.policy.taxBps, locale)}
                         </Typography>
                         <Typography variant="body2">
-                          {english ? 'Temporary inventory hold' : 'Retención temporal de inventario'}: {storefront.data.policy.holdMinutes} {english ? 'minutes' : 'minutos'} ·{' '}
+                          {english ? 'Temporary inventory hold' : 'Reserva temporal de entradas'}: {storefront.data.policy.holdMinutes} {english ? 'minutes' : 'minutos'} ·{' '}
                           {english ? 'Transfers' : 'Transferencias'}: {storefront.data.policy.transferAllowed
                             ? (english ? 'allowed' : 'permitidas')
                             : (english ? 'not allowed' : 'no permitidas')}
@@ -760,25 +760,25 @@ export default function PublicEventTicketsPage() {
                     {english ? 'Refresh order status' : 'Actualizar estado de la orden'}
                   </Button>
                   {paid ? <Alert severity="success">{issued
-                    ? (english ? 'Payment was verified by the server and the tickets were issued.' : 'El servidor verificó el pago y emitió las entradas.')
-                    : (english ? 'Payment was verified. Ticket fulfillment is still pending.' : 'El pago fue verificado. La emisión de entradas todavía está pendiente.')}</Alert>
+                    ? (english ? 'Payment was verified by the server and the tickets were issued.' : 'Pago confirmado. Tus entradas ya fueron emitidas.')
+                    : (english ? 'Payment was verified. Ticket fulfillment is still pending.' : 'Recibimos tu pago. La emisión de entradas todavía está pendiente.')}</Alert>
                     : <Alert severity="warning">{english
                       ? 'Tickets are held temporarily. The order is not paid and no ticket has been issued.'
-                      : 'Las entradas están retenidas temporalmente. La orden no está pagada y no se emitió ninguna entrada.'}</Alert>}
+                      : 'Tus entradas están reservadas por tiempo limitado. La orden no está pagada y aún no se emitió ninguna entrada.'}</Alert>}
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
                     <Chip label={`${english ? 'Face value' : 'Valor entradas'}: ${money(checkout.quote.netFaceValueMinor, checkout.quote.currency)}`} />
                     <Chip label={`${english ? 'Buyer fee' : 'Tarifa comprador'}: ${money(checkout.quote.buyerPlatformFeeMinor, checkout.quote.currency)}`} />
                     {checkout.quote.taxMinor > 0 && <Chip label={`${checkout.quote.taxIncluded ? (english ? 'Included tax' : 'Impuesto incluido') : (english ? 'Tax' : 'Impuesto')}: ${money(checkout.quote.taxMinor, checkout.quote.currency)}`} />}
                     <Chip color="primary" label={`${english ? 'Total' : 'Total'}: ${money(checkout.quote.checkoutTotalMinor, checkout.quote.currency)}`} />
                   </Stack>
-                  {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'} {date(checkout.holdExpiresAt)}.</Typography>}
+                  {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La reserva vence'} {date(checkout.holdExpiresAt)}.</Typography>}
                   {message && <Alert severity="warning">{message}</Alert>}
                   {!paid && paymentUnconfirmed && <Alert severity="warning">{english
                     ? 'A payment for this order may have been taken but is not confirmed yet. Do not pay again; refresh the order status later or contact us.'
                     : 'Es posible que ya se haya cobrado un pago de esta orden, pero aún no está confirmado. No vuelvas a pagar; actualiza el estado más tarde o contáctanos.'}</Alert>}
                   {!paid && !orderStale && checkout.paymentMethods.length === 0 && <Alert severity="info">{english
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
-                    : 'No hay un proveedor real habilitado para esta orden. La retención no equivale a pago.'}</Alert>}
+                    : 'Todavía no hay un método de pago en línea para esta orden. La reserva no equivale a pago.'}</Alert>}
                   <Stack spacing={1.5}>
                     {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                         {offeredPaymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}

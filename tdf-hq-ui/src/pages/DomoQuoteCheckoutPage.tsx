@@ -333,7 +333,7 @@ export default function DomoQuoteCheckoutPage() {
                 <Stack direction="row" justifyContent="space-between"><Typography fontWeight={800}>{english ? 'Total event quote' : 'Total cotizado'}</Typography><Typography fontWeight={800}>{money(quote.totalMinor, quote.currency)}</Typography></Stack>
                 <Stack direction="row" justifyContent="space-between"><Typography color="primary" fontWeight={900}>{english ? 'Initial deposit due' : 'Depósito inicial'}</Typography><Typography color="primary" fontWeight={900}>{money(quote.depositMinor, quote.currency)}</Typography></Stack>
                 <Stack direction="row" justifyContent="space-between"><Typography>{english ? 'Remaining balance' : 'Saldo restante'}</Typography><Typography>{money(quote.balanceMinor, quote.currency)}</Typography></Stack>
-                {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La retención vence'}: {date(quote.holdExpiresAt, quote.timezone)}.</Typography>}
+                {!paid && <Typography color="text.secondary">{english ? 'Hold expires' : 'La reserva vence'}: {date(quote.holdExpiresAt, quote.timezone)}.</Typography>}
                 {canAccept && <>
                   <FormControlLabel control={<Checkbox checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} />} label={english
                     ? `I accept the exact quote and terms version ${quote.termsVersion}. Acceptance does not mean payment.`
@@ -352,7 +352,7 @@ export default function DomoQuoteCheckoutPage() {
                 {canCancel && !cancellation && <Button variant="text" color="error" disabled={busy} onClick={() => setCancelOpen(true)}>{english ? 'Cancel quote' : 'Cancelar cotización'}</Button>}
                 {awaitingPayment && quote.paymentMethods.length === 0 && <Alert severity="info">{english
                   ? 'No real payment provider is enabled. The date remains only temporarily held.'
-                  : 'No hay un proveedor real habilitado. La fecha sigue únicamente retenida de forma temporal.'}</Alert>}
+                  : 'Todavía no hay un método de pago en línea. La fecha sigue reservada solo temporalmente.'}</Alert>}
                 <Stack spacing={1.5}>
                   {awaitingPayment && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                     {quote.paymentMethods.includes('datafast') && <Button variant="contained" disabled={busy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}

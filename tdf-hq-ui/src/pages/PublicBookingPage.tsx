@@ -1452,7 +1452,7 @@ export default function PublicBookingPage() {
                         <Stack spacing={1.5}>
                           <Typography variant="subtitle1" fontWeight={800}>Pagar depósito</Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Elige únicamente un método habilitado por el servidor. Abrir un proveedor no confirma el pago.
+                            Elige un método. El pago cuenta solo cuando lo confirmemos aquí.
                           </Typography>
                           {paymentError && <Alert severity="warning">{paymentError}</Alert>}
                           {manualPayment?.status === 'submitted' && (
@@ -1472,7 +1472,7 @@ export default function PublicBookingPage() {
                           )}
                           {paymentMethods.length === 0 && (
                             <Alert severity="info" variant="outlined">
-                              No hay un rail en línea habilitado para esta orden. El horario sigue solamente en retención temporal.
+                              Todavía no hay un método de pago en línea para esta orden. El horario sigue reservado solo temporalmente.
                             </Alert>
                           )}
                           <Stack spacing={1.5}>
@@ -1540,15 +1540,15 @@ export default function PublicBookingPage() {
                     <Typography variant="body2" color="text.secondary">
                       {checkoutSuccess
                         ? depositPaid
-                          ? '• Depósito verificado por el servidor; revisa el saldo antes de la sesión.'
-                          : `• Retención hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; no constituye pago.`
+                          ? '• Depósito confirmado; revisa el saldo antes de la sesión.'
+                          : `• Horario reservado hasta ${DateTime.fromISO(checkoutSuccess.holdExpiresAt).setZone(userTimeZone).toLocaleString(DateTime.DATETIME_MED)}; todavía no está pagado.`
                         : '• Guarda el ID de reserva y contáctanos si necesitas ajustar recursos.'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {checkoutSuccess
                         ? paymentMethods.length > 0
-                          ? '• El estado cambia solo después de una verificación del servidor.'
-                          : '• Datafast/PayPal permanecen ocultos mientras el servidor no habilite un rail real.'
+                          ? '• El estado cambia cuando confirmemos el pago.'
+                          : '• Te avisaremos cuando haya un método de pago en línea disponible.'
                         : '• Llega 10 minutos antes para hacer check-in y preparar la sala.'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">

@@ -1417,7 +1417,7 @@ export default function MarketplacePage() {
       setLastOrder(order);
       if (isPaidOrderStatus(order.moCheckoutStatus ?? order.moStatus)) {
         clearCheckoutCart();
-        setToast('El servidor verificó el pago con Stripe. Gracias por tu compra.');
+        setToast('Pago confirmado con Stripe. Gracias por tu compra.');
       } else {
         setToast('Stripe devolvió el navegador, pero el servidor aún no verificó el pago. Conservamos tu carrito.');
       }

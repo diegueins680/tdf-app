@@ -262,7 +262,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     getStorefrontMock.mockImplementation(() => new Promise(() => {}));
     getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
     await renderTracking('/eventos/41/orden/92');
-    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    await waitForExpectation(() => expect(container.textContent).toContain('Pago confirmado'));
   });
 
   it('retries a failed order lookup without creating a second purchase', async () => {
@@ -273,7 +273,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.textContent).not.toContain('Elige tus entradas');
     const retry = Array.from(container.querySelectorAll('button')).find((button) => button.textContent === 'Intentar de nuevo')!;
     await act(async () => { fireEvent.click(retry); });
-    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    await waitForExpectation(() => expect(container.textContent).toContain('Pago confirmado'));
     expect(getCheckoutMock).toHaveBeenCalledTimes(2);
     expect(createCheckoutMock).not.toHaveBeenCalled();
   });
@@ -292,7 +292,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
     expect(labels()).not.toContain('Datafast');
     expect(labels().some((label) => /paypal/i.test(label))).toBe(false);
-    expect(container.textContent).not.toContain('No hay un proveedor real habilitado');
+    expect(container.textContent).not.toContain('no hay un método de pago en línea');
     await act(async () => { fireEvent.click(refresh()); });
     await waitForExpectation(() => expect(labels()).toContain('Datafast'));
   });
@@ -364,7 +364,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(container.querySelector(`#${refundButton.getAttribute('aria-controls')}`)?.textContent).toBe('Reembolso total.');
     expect(container.textContent).toContain('Tarifa al comprador: 2%');
     expect(container.textContent).toContain('Tarifa al organizador (descontada del pago): 2%');
-    expect(container.textContent).toContain('Retención temporal de inventario: 15 minutos');
+    expect(container.textContent).toContain('Reserva temporal de entradas: 15 minutos');
     expect(container.textContent).toContain('Transferencias: permitidas');
     expect(container.textContent).toContain('Versión de términos: event-ticket-terms-v1');
   });
@@ -494,7 +494,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await act(async () => { fireEvent.click(submit); });
     await waitForExpectation(() => expect(container.textContent).toContain('Estamos verificando el depósito'));
     expect(submitBankTransferEvidenceMock).toHaveBeenCalledWith(41, 92, 'COMP-55', 'secure-lookup-token');
-    expect(container.textContent).not.toContain('El servidor verificó el pago');
+    expect(container.textContent).not.toContain('Pago confirmado');
     const providers = funnelCaptureMock.mock.calls.map((call) => call[1]);
     expect(providers).toEqual(expect.arrayContaining([expect.objectContaining({ provider: 'bank_transfer' })]));
     providers.forEach(expectNoPrivateTicketData);
@@ -584,7 +584,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     // Only a paid order settles it.
     getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));
     await act(async () => { fireEvent.click(refresh()); });
-    await waitForExpectation(() => expect(container.textContent).toContain('El servidor verificó el pago'));
+    await waitForExpectation(() => expect(container.textContent).toContain('Pago confirmado'));
     expect(container.textContent).not.toContain('No vuelvas a pagar');
   });
 
@@ -689,7 +689,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await waitForExpectation(() => expect(container.textContent).toContain(
       'No pudimos cargar tu orden. Revisa tu conexión e inténtalo de nuevo. No vuelvas a comprar ni a pagar.',
     ));
-    expect(container.textContent).not.toContain('El servidor verificó el pago');
+    expect(container.textContent).not.toContain('Pago confirmado');
     expect(container.textContent).not.toContain('TICKET-');
     expect(funnelCaptureMock).not.toHaveBeenCalled();
   });
@@ -801,7 +801,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
       92,
       'secure-lookup-token',
     ));
-    expect(container.textContent).toContain('El servidor verificó el pago y emitió las entradas.');
+    expect(container.textContent).toContain('Pago confirmado. Tus entradas ya fueron emitidas.');
     expect(container.textContent).toContain('TICKET-VERIFIED-501');
     expect(container.textContent).toContain('Entradas emitidas');
     expect(container.querySelector('canvas')).not.toBeNull();
