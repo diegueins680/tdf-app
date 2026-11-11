@@ -38,6 +38,7 @@ module TDF.Server.SocialEventsHandlers (
     validateDirectTicketOrderPricing,
     validateTicketPurchaseEventEligibility,
     eventTicketPurchaseEnabledFor,
+    ticketSalesOpenBeforeEventEnd,
     isTicketTierSaleOpen,
     issueMissingTicketsForOrder,
     finalizePaidTicketOrder,
@@ -8315,7 +8316,17 @@ eventTicketPurchaseEnabledFor :: SocialEvent -> SqlPersistT IO Bool
 eventTicketPurchaseEnabledFor eventRow =
     case socialEventWorkflowStateId eventRow of
         Nothing -> pure False
-        Just stateId -> EventLifecycle.socialEventStateHasCapability stateId "ticket-purchase"
+        Just stateId -> do
+            now <- liftIO getCurrentTime
+            if ticketSalesOpenBeforeEventEnd now (socialEventEndTime eventRow)
+                then EventLifecycle.socialEventStateHasCapability stateId "ticket-purchase"
+                else pure False
+
+-- | An event that has already ended sells no more tickets, whatever workflow
+-- state it was left in. An event without an end time is governed by its
+-- workflow state alone.
+ticketSalesOpenBeforeEventEnd :: UTCTime -> Maybe UTCTime -> Bool
+ticketSalesOpenBeforeEventEnd now = maybe True (now <)
 
 normalizeTicketStatus :: Maybe T.Text -> T.Text
 normalizeTicketStatus mStatus =

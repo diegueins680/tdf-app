@@ -17528,7 +17528,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+      "sha256": "565f35b18eb854cde142803b5cd3b29e333e2c649162c27cc190c8570d8b273c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17954,7 +17954,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+      "sha256": "72e57a5b2ff2d2740eb816c9dfd0208d6c2b0552bfacb27395ec7c6bac0fb49b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30850,7 +30850,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sha256": "2d5cc8a9e12b58075fe9bc0017a9e38dfbabfd0ad573bdb5b2558427ba73ea92",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
