@@ -48,7 +48,7 @@ import           TDF.DTO                   ( ArtistProfileDTO(..)
 import           TDF.Models
 import qualified TDF.Models                as M
 import qualified TDF.ModelsExtra           as ME
-import qualified TDF.Trials.Server         as TrialsServer (isValidHttpUrl)
+import qualified TDF.PublicUrl             as PublicUrl (isValidHttpUrl)
 
 -- The caller supplies only the authenticated identity. Serialize repeated web/mobile
 -- activation on that Party so role, audit and profile creation are idempotent.
@@ -219,7 +219,7 @@ maxArtistProfileUrlChars :: Int
 maxArtistProfileUrlChars = 2048
 
 isAbsoluteArtistProfileHttpUrl :: Text -> Bool
-isAbsoluteArtistProfileHttpUrl = TrialsServer.isValidHttpUrl
+isAbsoluteArtistProfileHttpUrl = PublicUrl.isValidHttpUrl
 
 isUnsafeArtistProfileUrlChar :: Char -> Bool
 isUnsafeArtistProfileUrlChar ch =
