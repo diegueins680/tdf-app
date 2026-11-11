@@ -8938,13 +8938,13 @@
     {
       "id": "SURFACE-fe47678f5e1d55b6",
       "path": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
-      "sha256": "ff19281d3869bde4c70c51cdbcc5f75d260a06e190963429cca242d03dea6ec7",
+      "sha256": "8f8f91271a67f1b9122b00076a85823ca32804b8b2b776bd31536e55539ff22e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-237fd771d24b44a0",
       "path": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
-      "sha256": "bbb0a57dccd78aa63d5380426e0aab0304d7735cfec9758b44c3d873d7f7128d",
+      "sha256": "17c32d75dcce72b280738b18daa461e6b3f01fb4b95a9d5a2f20ed218a99744c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10738,7 +10738,7 @@
     {
       "id": "SURFACE-9ec3af8f42eacde2",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-      "sha256": "bef2c4c9f0eda00c82706ee017e1c3936bbb9b2f584f5fcd9cbb18df26ce3328",
+      "sha256": "5d8fd4337b49b98a95b97c35059c3a09534dcd4f7b2a4ee8800c08fcc3875002",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10954,7 +10954,7 @@
     {
       "id": "SURFACE-bc6d085a2f18921b",
       "path": "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
-      "sha256": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
+      "sha256": "ef0bc404a0629dd450f959bfc86230b0d3c7bf08f6de74adb3e73a40b49cd4d9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11218,7 +11218,7 @@
     {
       "id": "SURFACE-5b7a19747c4abd6d",
       "path": "tdf-hq-ui/src/pages/LabelTracksPage.tsx",
-      "sha256": "1b3038eaba135b8f2b01d557ab77c8c0459668d16854d1d3f2c389be58e133a5",
+      "sha256": "54950b68a0e54cbea9f384ed89056e20a99de823ab9e23bb47e1a7e46054a31e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30864,7 +30864,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c8925e4a008049d25cb83a132b6214827aa2a81c3b76bf4edb997f7144353d85",
+      "sha256": "b84f1d087636bae18fa3d4729a683637c5cf96bd572997050c63cda45810ce4b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

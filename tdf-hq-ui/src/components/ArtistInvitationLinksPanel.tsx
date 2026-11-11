@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ConfirmDialog from './ConfirmDialog';
 import {
   Alert,
   Box,
@@ -65,9 +66,12 @@ export default function ArtistInvitationLinksPanel() {
     },
   });
 
+  // A revoked link stops working for the invitee and cannot be restored.
+  const [pendingRevoke, setPendingRevoke] = useState<{ id: number; label: string } | null>(null);
   const revokeMutation = useMutation({
     mutationFn: (id: number) => ArtistInvitations.revoke(id),
     onSuccess: () => { void queryClient.invalidateQueries({ queryKey: ['artist-invitations'] }); },
+    onSettled: () => setPendingRevoke(null),
   });
 
   const copyLink = async () => {
@@ -147,7 +151,7 @@ export default function ArtistInvitationLinksPanel() {
                     size="small"
                     color="error"
                     disabled={revokeMutation.isPending}
-                    onClick={() => revokeMutation.mutate(invitation.id)}
+                    onClick={() => setPendingRevoke({ id: invitation.id, label: invitation.inviteeLabel })}
                   >
                     Revocar
                   </Button>
@@ -157,6 +161,16 @@ export default function ArtistInvitationLinksPanel() {
           </Card>
         ))}
       </Stack>
+      <ConfirmDialog
+        open={pendingRevoke !== null}
+        onClose={() => setPendingRevoke(null)}
+        onConfirm={() => { if (pendingRevoke) revokeMutation.mutate(pendingRevoke.id); }}
+        title="¿Revocar esta invitación?"
+        description={`El enlace de «${pendingRevoke?.label ?? ''}» dejará de funcionar. No se puede deshacer.`}
+        confirmLabel="Revocar enlace"
+        severity="danger"
+        confirming={revokeMutation.isPending}
+      />
     </Stack>
   );
 }
