@@ -58,6 +58,7 @@ jest.unstable_mockModule('../components/reviews/ExperienceReviews', () => ({
 }));
 
 const { default: SocialEventDetailPage } = await import('./SocialEventDetailPage');
+const { ApiError } = await import('../api/client');
 
 const eventFixture: SocialEventDTO = {
   eventId: '121',
@@ -119,6 +120,63 @@ describe('SocialEventDetailPage ticket sharing', () => {
     getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+  });
+
+  it.each([403, 404])('keeps a planning event visible when memories return HTTP %i', async (status) => {
+    activeSession = { partyId: 9 };
+    getEventMock.mockResolvedValue({
+      ...eventFixture,
+      eventWorkflowStateCode: 'planning',
+      eventPublicListable: false,
+    });
+    listMomentsMock.mockRejectedValue(new ApiError('Event not found', status));
+    const view = renderPage();
+
+    await screen.findByText('Los recuerdos de este evento no están disponibles para tu cuenta.');
+    expect(screen.getByRole('heading', { name: eventFixture.eventTitle })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Logística' }).getAttribute('href')).toBe('/social/eventos/121/logistica');
+    expect(screen.queryByText('Event not found')).toBeNull();
+    expect(screen.queryByText('No se encontró el evento.')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Publicar' })).toBeNull();
+    expect(listMomentsMock).toHaveBeenCalledTimes(1);
+    view.unmount();
+  });
+
+  it('keeps memories available when the API allows access to a planning event', async () => {
+    activeSession = { partyId: 9 };
+    getEventMock.mockResolvedValue({
+      ...eventFixture,
+      eventWorkflowStateCode: 'planning',
+      eventPublicListable: false,
+    });
+    const view = renderPage();
+
+    expect(await screen.findByRole('button', { name: 'Publicar' })).toBeTruthy();
+    expect(screen.getByText('Todavía no hay publicaciones')).toBeTruthy();
+    expect(listMomentsMock).toHaveBeenCalledWith('121');
+    view.unmount();
+  });
+
+  it('lets the viewer retry a temporary memories failure without reloading the event', async () => {
+    listMomentsMock.mockRejectedValueOnce(new ApiError('Service unavailable', 503));
+    const view = renderPage();
+
+    await screen.findByText('No se pudieron cargar los recuerdos del evento.');
+    fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+    await screen.findByText('Todavía no hay publicaciones');
+    expect(getEventMock).toHaveBeenCalledTimes(1);
+    expect(listMomentsMock).toHaveBeenCalledTimes(2);
+    view.unmount();
+  });
+
+  it('shows the event-level error when the event request itself returns 404', async () => {
+    getEventMock.mockRejectedValue(new ApiError('Event not found', 404));
+    const view = renderPage();
+
+    await screen.findByText('No se encontró el evento.');
+    expect(listMomentsMock).not.toHaveBeenCalled();
+    expect(screen.queryByText('Recuerdos de la comunidad')).toBeNull();
+    view.unmount();
   });
 
   it('publishes a text memory with its server-supported type and keeps failed text in the editor', async () => {
@@ -328,7 +386,8 @@ describe('SocialEventDetailPage ticket sharing', () => {
       { emId: '987', emAuthorName: 'Ana', emCaption: 'Exact moment', emMediaUrl: 'https://example.test/moment.jpg', emMediaType: 'image' },
     ]);
     const view = renderPage('/social/eventos/121?moment=987');
-    await waitFor(() => expect(listMomentsMock).toHaveBeenCalledWith('121'));
+    await waitFor(() => expect(getEventMock).toHaveBeenCalledWith('121'));
+    expect(listMomentsMock).not.toHaveBeenCalled();
     resolveEvent(eventFixture);
     const region = await screen.findByRole('region', { name: 'Publicación de Ana' });
     await waitFor(() => expect(document.activeElement).toBe(region));
