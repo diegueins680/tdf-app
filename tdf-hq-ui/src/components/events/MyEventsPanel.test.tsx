@@ -1,6 +1,6 @@
 import '../../i18n';
 import { jest } from '@jest/globals';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -42,13 +42,22 @@ describe('MyEventsPanel', () => {
   beforeEach(() => { listEventsMock.mockReset(); });
   afterEach(() => { cleanup(); });
 
-  it('offers creation and management before the list resolves', () => {
-    listEventsMock.mockReturnValue(new Promise(() => undefined));
+  it('offers creation and management before the list resolves', async () => {
+    let resolveEvents!: (events: SocialEventDTO[]) => void;
+    const pendingEvents = new Promise<SocialEventDTO[]>((resolve) => { resolveEvents = resolve; });
+    listEventsMock.mockReturnValue(pendingEvents);
     renderPanel();
 
     expect(screen.getByRole('link', { name: 'Crear evento' }).getAttribute('href')).toBe('/social/eventos/nuevo');
     expect(screen.getByRole('link', { name: 'Gestionar eventos' }).getAttribute('href')).toBe('/social/eventos');
     expect(screen.getByLabelText('Cargando tus eventos')).toBeTruthy();
+
+    await act(async () => {
+      resolveEvents([]);
+      await pendingEvents;
+    });
+    await waitFor(() => expect(screen.queryByLabelText('Cargando tus eventos')).toBeNull());
+    expect(screen.getByText('No organizas eventos próximos. Crea el primero en minutos.')).toBeTruthy();
   });
 
   it('lists only upcoming events the viewer organizes, with management links', async () => {

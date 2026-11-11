@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 -- | Chat-completion client for the marketing assistant: prompt assembly from
 -- retrieved context and reviewed ad examples, model fallback, and the
@@ -331,15 +332,14 @@ redactApiErrorSecrets =
 redactBearerTokens :: Text -> Text
 redactBearerTokens = go Nothing
   where
-    go _ textValue
-      | T.null textValue = ""
     go previous textValue =
       case matchBearerToken previous textValue of
         Just (prefix, rest) ->
           prefix <> "[redacted]" <> go Nothing rest
         Nothing ->
-          let ch = T.head textValue
-          in T.singleton ch <> go (Just ch) (T.tail textValue)
+          case T.uncons textValue of
+            Nothing -> ""
+            Just (ch, rest) -> T.singleton ch <> go (Just ch) rest
 
 matchBearerToken :: Maybe Char -> Text -> Maybe (Text, Text)
 matchBearerToken previous textValue
@@ -358,15 +358,14 @@ matchBearerToken previous textValue
 redactSensitiveApiErrorFields :: Text -> Text
 redactSensitiveApiErrorFields = go Nothing
   where
-    go _ textValue
-      | T.null textValue = ""
     go previous textValue =
       case matchSensitiveApiErrorField previous textValue of
         Just (prefix, rest) ->
           prefix <> "[redacted]" <> go Nothing rest
         Nothing ->
-          let ch = T.head textValue
-          in T.singleton ch <> go (Just ch) (T.tail textValue)
+          case T.uncons textValue of
+            Nothing -> ""
+            Just (ch, rest) -> T.singleton ch <> go (Just ch) rest
 
 matchSensitiveApiErrorField :: Maybe Char -> Text -> Maybe (Text, Text)
 matchSensitiveApiErrorField previous textValue

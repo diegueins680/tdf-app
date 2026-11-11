@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 -- | Public course metadata: the built-in production course, the projection of
 -- stored courses, and the landing and WhatsApp links derived from them. Shared

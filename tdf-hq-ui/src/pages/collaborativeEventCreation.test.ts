@@ -8,6 +8,7 @@ import {
   createCollaborativeEvent,
   normalizeLineup,
   parseOptionalPriceCents,
+  saveNamedLineup,
   validateEventArtFile,
   type CollaborativeEventDraft,
 } from './collaborativeEventCreation';
@@ -218,6 +219,22 @@ describe('collaborative event creation', () => {
     expect(result.pendingArtists).toEqual([{ artistId: null, artistName: 'Los Nuevos' }]);
     expect(result.lineupError).toBe('eventArtists[].artistId is required');
     expect(result).toMatchObject({ artUploaded: false, artError: 'Sin conexión' });
+  });
+
+  it('returns lineup validation failures as promise rejections', async () => {
+    const saveInvalidLineup = jest.fn<never>();
+    const invalidLineupSave = saveNamedLineup('42', { ...draft(), title: '' }, saveInvalidLineup);
+
+    await expect(invalidLineupSave).rejects.toThrow('Escribe un nombre para el evento.');
+    expect(saveInvalidLineup).not.toHaveBeenCalled();
+  });
+
+  it('returns synchronous lineup adapter failures as promise rejections', async () => {
+    const failedLineupSave = saveNamedLineup('42', draft(), () => {
+      throw new Error('Adapter unavailable');
+    });
+
+    await expect(failedLineupSave).rejects.toThrow('Adapter unavailable');
   });
 
   it('refuses invalid art before anything is created', async () => {

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Werror=incomplete-patterns #-}
 
 -- | Ticket issuance for a paid order: the single place that turns a verified
 -- canonical payment into tickets. Runs inside the caller's transaction and is

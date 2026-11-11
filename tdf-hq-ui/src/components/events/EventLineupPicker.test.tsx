@@ -21,7 +21,9 @@ function Harness({ initial = [] }: { initial?: EventLineupArtistDraft[] }) {
     </QueryClientProvider>
   );
 }
-const lineup = () => JSON.parse(screen.getByTestId('lineup').textContent ?? '[]') as EventLineupArtistDraft[];
+const expectLineup = (expected: EventLineupArtistDraft[]) => {
+  expect(screen.getByTestId('lineup').textContent).toBe(JSON.stringify(expected));
+};
 const type = (value: string) => {
   const input = screen.getByRole('combobox', { name: 'Artistas que se presentan' });
   act(() => input.focus());
@@ -44,7 +46,7 @@ describe('EventLineupPicker', () => {
     type('Ver');
     fireEvent.click(await screen.findByRole('option', { name: 'Vera' }));
 
-    expect(lineup()).toEqual([{ artistId: '7', artistName: 'Vera' }]);
+    expectLineup([{ artistId: '7', artistName: 'Vera' }]);
     // A partial match still allows adding the typed name as someone else.
     expect(screen.queryByRole('option', { name: /artista nuevo/ })).toBeNull();
   });
@@ -54,27 +56,27 @@ describe('EventLineupPicker', () => {
     type('  Los   Nuevos ');
     fireEvent.click(await screen.findByRole('option', { name: 'Agregar «Los Nuevos» como artista nuevo' }));
 
-    expect(lineup()).toEqual([{ artistId: null, artistName: 'Los Nuevos' }]);
+    expectLineup([{ artistId: null, artistName: 'Los Nuevos' }]);
     expect(screen.getByText('Los Nuevos · nuevo')).toBeTruthy();
   });
 
   it('adds the typed name with Enter and does not repeat it', async () => {
     render(<Harness />);
     fireEvent.keyDown(type('Banda Invitada'), { key: 'Enter' });
-    await waitFor(() => expect(lineup()).toEqual([{ artistId: null, artistName: 'Banda Invitada' }]));
+    await waitFor(() => expectLineup([{ artistId: null, artistName: 'Banda Invitada' }]));
 
     fireEvent.keyDown(type('banda invitada'), { key: 'Enter' });
-    expect(lineup()).toHaveLength(1);
+    expectLineup([{ artistId: null, artistName: 'Banda Invitada' }]);
   });
 
   it('links the listed artist when Enter is pressed on their exact name', async () => {
     render(<Harness />);
-    const input = type('vera');
+    const exactNameInput = type('vera');
     await screen.findByRole('option', { name: 'Vera' });
     expect(screen.queryByRole('option', { name: /artista nuevo/ })).toBeNull();
-    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.keyDown(exactNameInput, { key: 'Enter' });
 
-    await waitFor(() => expect(lineup()).toEqual([{ artistId: '7', artistName: 'Vera' }]));
+    await waitFor(() => expectLineup([{ artistId: '7', artistName: 'Vera' }]));
   });
 
   it('still accepts a new name when the artist search fails', async () => {
@@ -83,6 +85,6 @@ describe('EventLineupPicker', () => {
     await screen.findByRole('alert');
     fireEvent.keyDown(type('Banda Invitada'), { key: 'Enter' });
 
-    await waitFor(() => expect(lineup()).toEqual([{ artistId: null, artistName: 'Banda Invitada' }]));
+    await waitFor(() => expectLineup([{ artistId: null, artistName: 'Banda Invitada' }]));
   });
 });

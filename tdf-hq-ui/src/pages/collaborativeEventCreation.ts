@@ -248,6 +248,8 @@ export function normalizeCollaborators(
 /**
  * Adds artists that are not on the platform yet. Runs after creation so a
  * rejected name never costs the user the event itself.
+ * Keep async so payload validation and synchronous adapter failures also reject
+ * the returned promise, just like a failed save.
  */
 export async function saveNamedLineup(
   eventId: string,

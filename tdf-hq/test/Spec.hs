@@ -394,7 +394,7 @@ import TDF.ServerInstagramOAuth
       validateInstagramRedirectUri,
       validateInstagramUsername )
 import TDF.Courses.Metadata (buildWhatsappCtaFor)
-import TDF.Services.LlmChat (extractApiErrorMessage, shouldRetryWithFallbackModel)
+import TDF.Services.LlmChat (extractApiErrorMessage, sanitizeApiErrorMessage, shouldRetryWithFallbackModel)
 import TDF.Server
     ( assetsServePathAllowed,
       loadCourseRegistrationReceiptCounts,
@@ -5658,6 +5658,18 @@ main = hspec $ do
                     Data.Text.length msg `shouldSatisfy` (<= 520)
                 Nothing ->
                     expectationFailure "Expected sanitized upstream API error message"
+
+        it "handles empty, single-character and end-of-input API error redaction" $ do
+            sanitizeApiErrorMessage "" `shouldBe` Nothing
+            sanitizeApiErrorMessage " \t\n" `shouldBe` Nothing
+            sanitizeApiErrorMessage "x" `shouldBe` Just "x"
+            sanitizeApiErrorMessage "é" `shouldBe` Just "é"
+            sanitizeApiErrorMessage "Bearer" `shouldBe` Just "Bearer"
+            sanitizeApiErrorMessage "api_key=" `shouldBe` Just "api_key=[redacted]"
+            sanitizeApiErrorMessage "Bearer secret" `shouldBe` Just "Bearer [redacted]"
+            sanitizeApiErrorMessage "api_key=secret" `shouldBe` Just "api_key=[redacted]"
+            sanitizeApiErrorMessage "Bearer secret,é" `shouldBe` Just "Bearer [redacted],é"
+            sanitizeApiErrorMessage "api_key=secret,é" `shouldBe` Just "api_key=[redacted],é"
 
         it "redacts upstream API secrets before fallback error handling exposes them" $ do
             let payload =
