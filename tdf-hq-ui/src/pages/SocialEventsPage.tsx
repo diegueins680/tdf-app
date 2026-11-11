@@ -73,6 +73,7 @@ import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
 import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel';
 import { RefundManagementPanel } from '../components/RefundManagementPanel';
+import ConfirmDialog from '../components/ConfirmDialog';
 import EventArtistSelector from '../components/events/EventArtistSelector';
 import { EVENT_PAGE_SIZE, eventArtistIds, eventPage, isPastEvent } from './eventDiscoveryFilters';
 
@@ -633,6 +634,8 @@ export default function SocialEventsPage() {
     onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
   });
 
+  // Cancelling or refunding a paid order cannot be undone, so each asks first and names the order.
+  const [pendingOrderAction, setPendingOrderAction] = useState<{ eventId: string; orderId: string; status: 'cancelled' | 'refunded' } | null>(null);
   const updateOrderStatusMutation = useMutation({
     mutationFn: ({ eventId, orderId, status }: { eventId: string; orderId: string; status: 'cancelled' | 'refunded' }) =>
       SocialEventsAPI.updateTicketOrderStatus(eventId, orderId, status),
@@ -950,7 +953,7 @@ export default function SocialEventsPage() {
                     size="small"
                     variant="outlined"
                     color="warning"
-                    onClick={() => updateOrderStatusMutation.mutate({ eventId, orderId: oid, status: 'cancelled' })}
+                    onClick={() => setPendingOrderAction({ eventId, orderId: oid, status: 'cancelled' })}
                     disabled={updateOrderStatusMutation.isPending}
                   >
                     Cancelar
@@ -959,11 +962,25 @@ export default function SocialEventsPage() {
                     size="small"
                     variant="outlined"
                     color="error"
-                    onClick={() => updateOrderStatusMutation.mutate({ eventId, orderId: oid, status: 'refunded' })}
+                    onClick={() => setPendingOrderAction({ eventId, orderId: oid, status: 'refunded' })}
                     disabled={updateOrderStatusMutation.isPending}
                   >
                     Reembolsar
                   </Button>
+                  {pendingOrderAction?.eventId === eventId && pendingOrderAction.orderId === oid && (
+                    <ConfirmDialog
+                      open
+                      severity="danger"
+                      title={pendingOrderAction.status === 'refunded' ? '¿Reembolsar esta orden?' : '¿Cancelar esta orden?'}
+                      description={`Orden ${oid.slice(0, 8)} · ${formatMoney(order.ticketOrderAmountCents, order.ticketOrderCurrency)} · ${order.ticketOrderTickets.length} ${order.ticketOrderTickets.length === 1 ? 'entrada' : 'entradas'}. Esta acción no se puede deshacer.`}
+                      confirmLabel={pendingOrderAction.status === 'refunded' ? 'Reembolsar orden' : 'Cancelar orden'}
+                      onClose={() => setPendingOrderAction(null)}
+                      onConfirm={() => {
+                        updateOrderStatusMutation.mutate(pendingOrderAction);
+                        setPendingOrderAction(null);
+                      }}
+                    />
+                  )}
                 </Stack>
               )}
             </Box>

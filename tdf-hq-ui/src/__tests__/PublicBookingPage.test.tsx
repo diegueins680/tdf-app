@@ -468,7 +468,7 @@ describe('PublicBookingPage', () => {
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
-    expect(container.textContent).toContain('Elige tu servicio');
+    expect(container.textContent).toContain('Elige el servicio');
     const serviceSelect = container.querySelector<HTMLElement>('[role="combobox"]');
     expect(serviceSelect).not.toBeNull();
     expect(serviceSelect?.textContent).toContain('Grabación de banda');
@@ -559,7 +559,7 @@ describe('PublicBookingPage', () => {
 
     expect(loginLink?.getAttribute('href')).toBe(`/login?redirect=${expectedRedirect}`);
     expect(signupLink?.getAttribute('href')).toBe(`/login?redirect=${expectedRedirect}&signup=1`);
-    expect(container.textContent).toContain('Crear una cuenta es opcional.');
+    expect(container.textContent).toContain('No necesitas cuenta.');
     expect(container.textContent).not.toContain('crearemos tu acceso automáticamente');
 
     await cleanup();

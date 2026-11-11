@@ -34,10 +34,6 @@ import {
   Typography,
   useMediaQuery,
 } from '@mui/material';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import LocalPhoneIcon from '@mui/icons-material/LocalPhone';
-import PersonIcon from '@mui/icons-material/Person';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { DateTime } from 'luxon';
 import {
@@ -366,17 +362,7 @@ export default function PublicBookingPage() {
   }, [requiresManualConfirmation, serviceCatalogUnavailable]);
   const pageEyebrow = 'Agenda pública';
   const pageTitle = 'Reserva un servicio con TDF';
-  const pageDescription =
-    'Completa tus datos y agenda el horario que prefieras. Puedes reservar como invitado; crear una cuenta es opcional.';
-  const introChips = [
-    '1. Elige tu servicio y agenda sin crear cuenta',
-    '2. Recibe un ID de reserva',
-    '3. Coordina ajustes por WhatsApp',
-  ];
-  const contactTitle = 'Datos de contacto';
-  const contactDescription = 'Usa un correo válido para identificar la reserva. Crear una cuenta es opcional.';
-  const calendarNote = 'Bloque tentativo en el calendario.';
-  const durationNote = 'Duración estándar de 1h (ajústala si necesitas más tiempo).';
+  const pageDescription = 'Elige el servicio y el horario. No necesitas cuenta.';
   const notesPlaceholder = 'Cuéntanos qué necesitas (ej: grabación de voz, mezcla, ensayo, DJ booth, etc.)';
   const [form, setForm] = useState<FormState>(buildInitialForm);
   const userZoneLabel = useMemo(() => zoneLabel(userTimeZone, form.startsAt), [userTimeZone, form.startsAt]);
@@ -1802,11 +1788,6 @@ export default function PublicBookingPage() {
                   </Stack>
                 </Alert>
               )}
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap" sx={WRAPPING_CHIP_ROW_SX}>
-                {introChips.map((label) => (
-                  <Chip key={label} label={label} size="small" variant="outlined" />
-                ))}
-              </Stack>
               {!session && (
               <Card
                 variant="outlined"
@@ -1828,7 +1809,7 @@ export default function PublicBookingPage() {
                     <Stack spacing={0.3} sx={{ minWidth: 0, flex: { sm: '1 1 240px' } }}>
                       <Typography variant="subtitle2">¿Ya tienes cuenta?</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Inicia sesión para completar tus datos guardados. Si no tienes cuenta, puedes crearla de forma opcional.
+                        Inicia sesión y completamos tus datos.
                       </Typography>
                     </Stack>
                     <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ ...WRAPPING_CHIP_ROW_SX, maxWidth: '100%' }}>
@@ -1846,39 +1827,7 @@ export default function PublicBookingPage() {
             </Stack>
 
             <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Stack spacing={1.2}>
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <PersonIcon color="primary" fontSize="small" />
-                    <Typography variant="subtitle2" color="text.secondary">
-                      {contactTitle}
-                    </Typography>
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    {contactDescription}
-                  </Typography>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <EventAvailableIcon color="primary" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {calendarNote}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <AccessTimeIcon color="primary" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      {durationNote}
-                    </Typography>
-                  </Stack>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <LocalPhoneIcon color="primary" fontSize="small" />
-                    <Typography variant="body2" color="text.secondary">
-                      Añade tu WhatsApp si prefieres coordinar por ahí.
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </Grid>
-
-              <Grid item xs={12} md={8}>
+              <Grid item xs={12}>
                 <form onSubmit={handleFormSubmit}>
                   <Stack spacing={2.5}>
                     {isMobile ? (
