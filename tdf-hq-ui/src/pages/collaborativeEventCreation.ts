@@ -17,6 +17,12 @@ export interface EventCollaboratorDraft {
   role: CollaborativeEventRole;
 }
 
+/** A lineup entry: an artist already on the platform, or just a name to create. */
+export interface EventLineupArtistDraft {
+  artistId: string | null;
+  artistName: string;
+}
+
 export interface CollaborativeEventDraft {
   title: string;
   description: string;
@@ -30,10 +36,14 @@ export interface CollaborativeEventDraft {
   ticketUrl: string;
   isPublic: boolean;
   collaborators: EventCollaboratorDraft[];
+  artists: EventLineupArtistDraft[];
 }
 
 export interface CollaborativeEventCreationDependencies {
   createEvent: (payload: SocialEventDTO) => Promise<SocialEventDTO>;
+  /** Saves the full lineup, including artists named but not yet on the platform. */
+  saveLineup?: (eventId: string, payload: SocialEventDTO) => Promise<SocialEventDTO>;
+  uploadArt?: (eventId: string, file: File) => Promise<unknown>;
   addCollaborator: (
     eventId: string,
     collaborator: EventCollaboratorDraft,
@@ -47,7 +57,56 @@ export interface CollaborativeEventCreationResult {
     collaborator: EventCollaboratorDraft;
     reason: string;
   }[];
+  /** Named artists the server has not accepted yet; the event itself exists. */
+  pendingArtists: EventLineupArtistDraft[];
+  lineupError: string | null;
+  artUploaded: boolean;
+  artError: string | null;
 }
+
+export const MAX_EVENT_ARTISTS = 50;
+export const MAX_ARTIST_NAME_LENGTH = 200;
+export const EVENT_ART_MAX_BYTES = 10 * 1024 * 1024; // Server limit for event images.
+export const EVENT_ART_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif';
+
+/** Returns a user-facing problem with the chosen art file, or null when it can be uploaded. */
+export function validateEventArtFile(file: Pick<File, 'type' | 'size'>): string | null {
+  if (!EVENT_ART_ACCEPT.split(',').includes(file.type.toLowerCase())) {
+    return 'El arte debe ser una imagen JPG, PNG, WebP o GIF.';
+  }
+  if (file.size <= 0) return 'El archivo está vacío. Elige otra imagen.';
+  if (file.size > EVENT_ART_MAX_BYTES) return 'El arte debe pesar 10 MB o menos.';
+  return null;
+}
+
+const artistNameKey = (name: string) => name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+
+/** Trims, drops blanks and duplicates (by id, or by name for new artists) and caps the lineup. */
+export function normalizeLineup(artists: readonly EventLineupArtistDraft[]): EventLineupArtistDraft[] {
+  const seenIds = new Set<string>();
+  const seenNames = new Set<string>();
+  const lineup: EventLineupArtistDraft[] = [];
+  for (const artist of artists) {
+    const trimmedId = artist.artistId?.trim();
+    // A blank identifier means a new artist, the same as a missing one.
+    const artistId = trimmedId === undefined || trimmedId === '' ? null : trimmedId;
+    const artistName = artist.artistName.trim().replace(/\s+/g, ' ').slice(0, MAX_ARTIST_NAME_LENGTH);
+    if (artistId) {
+      if (seenIds.has(artistId)) continue;
+      seenIds.add(artistId);
+    } else {
+      const key = artistNameKey(artistName);
+      if (!key || seenNames.has(key)) continue;
+      seenNames.add(key);
+    }
+    lineup.push({ artistId, artistName });
+    if (lineup.length >= MAX_EVENT_ARTISTS) break;
+  }
+  return lineup;
+}
+
+const lineupPayload = (artists: readonly EventLineupArtistDraft[]): SocialEventDTO['eventArtists'] =>
+  artists.map(({ artistId, artistName }) => (artistId ? { artistId, artistName } : { artistName }));
 
 const LOCAL_DATE_TIME_FORMAT = "yyyy-LL-dd'T'HH:mm";
 const MAX_DURATION_MINUTES = 7 * 24 * 60;
@@ -62,8 +121,8 @@ const isIntlTimeZone = (zone: string): boolean => {
   }
 };
 
-const errorMessage = (reason: unknown) =>
-  reason instanceof Error ? reason.message : 'No se pudo conceder acceso.';
+const errorMessage = (reason: unknown, fallback = 'No se pudo conceder acceso.') =>
+  reason instanceof Error && reason.message ? reason.message : fallback;
 
 export function buildInitialCollaborativeEventDraft(
   now: DateTime = DateTime.local(),
@@ -82,6 +141,7 @@ export function buildInitialCollaborativeEventDraft(
     ticketUrl: '',
     isPublic: false,
     collaborators: [],
+    artists: [],
   };
 }
 
@@ -168,7 +228,8 @@ export function buildCollaborativeEventPayload(
     eventTicketUrl: normalizeTicketUrl(draft.ticketUrl),
     eventImageUrl: null,
     eventIsPublic: draft.isPublic,
-    eventArtists: [],
+    // Creation links artists already on the platform; named ones follow in saveLineup.
+    eventArtists: lineupPayload(normalizeLineup(draft.artists ?? []).filter((artist) => artist.artistId)),
   };
 }
 
@@ -184,14 +245,70 @@ export function normalizeCollaborators(
   });
 }
 
+/**
+ * Adds artists that are not on the platform yet. Runs after creation so a
+ * rejected name never costs the user the event itself.
+ */
+export async function saveNamedLineup(
+  eventId: string,
+  draft: CollaborativeEventDraft,
+  saveLineup: NonNullable<CollaborativeEventCreationDependencies['saveLineup']>,
+): Promise<SocialEventDTO> {
+  const created = buildCollaborativeEventPayload(draft);
+  // Same core fields as creation. Image, ticket link and visibility are left
+  // out so the update keeps what the event already stores.
+  return saveLineup(eventId, {
+    eventTitle: created.eventTitle,
+    eventDescription: created.eventDescription,
+    eventStart: created.eventStart,
+    eventEnd: created.eventEnd,
+    eventTimezone: created.eventTimezone,
+    eventVenueId: created.eventVenueId,
+    eventPriceCents: created.eventPriceCents,
+    eventCapacity: created.eventCapacity,
+    eventTypeId: created.eventTypeId,
+    eventArtists: lineupPayload(normalizeLineup(draft.artists ?? [])),
+  });
+}
+
 export async function createCollaborativeEvent(
   draft: CollaborativeEventDraft,
   dependencies: CollaborativeEventCreationDependencies,
+  artFile: File | null = null,
 ): Promise<CollaborativeEventCreationResult> {
-  const event = await dependencies.createEvent(buildCollaborativeEventPayload(draft));
+  if (artFile) {
+    const artProblem = validateEventArtFile(artFile);
+    if (artProblem) throw new Error(artProblem);
+  }
+  let event = await dependencies.createEvent(buildCollaborativeEventPayload(draft));
   const eventId = event.eventId?.trim();
   if (!eventId) {
     throw new Error('El evento fue creado sin un identificador válido.');
+  }
+
+  const namedArtists = normalizeLineup(draft.artists ?? []).filter((artist) => !artist.artistId);
+  let pendingArtists: EventLineupArtistDraft[] = [];
+  let lineupError: string | null = null;
+  if (namedArtists.length > 0) {
+    try {
+      if (!dependencies.saveLineup) throw new Error('No se pudo guardar a los artistas nuevos.');
+      event = { ...await saveNamedLineup(eventId, draft, dependencies.saveLineup), eventId };
+    } catch (reason) {
+      pendingArtists = namedArtists;
+      lineupError = errorMessage(reason, 'No se pudo guardar a los artistas nuevos.');
+    }
+  }
+
+  let artUploaded = false;
+  let artError: string | null = null;
+  if (artFile) {
+    try {
+      if (!dependencies.uploadArt) throw new Error('No se pudo subir el arte.');
+      await dependencies.uploadArt(eventId, artFile);
+      artUploaded = true;
+    } catch (reason) {
+      artError = errorMessage(reason, 'No se pudo subir el arte.');
+    }
   }
 
   const collaborators = normalizeCollaborators(draft.collaborators);
@@ -216,5 +333,7 @@ export async function createCollaborativeEvent(
     }
   });
 
-  return { event, addedCollaborators, failedCollaborators };
+  return {
+    event, addedCollaborators, failedCollaborators, pendingArtists, lineupError, artUploaded, artError,
+  };
 }

@@ -30,6 +30,8 @@ let sessionMock: SessionUser | null = {
   partyId: 42,
 };
 
+// The events panel has its own suite; here it would only add unrelated requests.
+jest.unstable_mockModule('../components/events/MyEventsPanel', () => ({ default: () => null }));
 jest.unstable_mockModule('../api/directory', () => ({ Directory: { taxonomies: async () => ({ cities: [], genres: [] }), search: async () => ({ items: [], sponsoredItems: [], facets: { total: 0, entityTypes: {}, cities: [] } }) } }));
 
 jest.unstable_mockModule('../session/SessionContext', () => ({
