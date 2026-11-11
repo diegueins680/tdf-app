@@ -33,8 +33,10 @@ import {
 import { getAnalyticsClient } from '../analytics/posthog';
 import { captureFirstValueOnce } from '../analytics/onboardingProgress';
 import {
+  accessRequestPath,
   evaluateFeatureAccess,
   featureLabel,
+  featureRegistry,
   getFeatureById,
   type FeatureAction,
 } from '../features/featureRegistry';
@@ -78,6 +80,8 @@ const copy = {
     manualProvisioning: 'Esta aprobación no asigna un rol automáticamente; requiere provisión manual en Roles y permisos.',
     loadError: 'No se pudieron cargar las solicitudes.',
     createTitle: 'Solicitar acceso',
+    chooseFeature: '¿A qué función necesitas acceso?',
+    nothingToRequest: 'Ya tienes acceso a todo lo que se puede solicitar.',
     missingTarget: 'El destino solicitado no existe, es técnico o no admite solicitudes de acceso.',
     alreadyAllowed: 'Ya tienes acceso a esta acción. No hace falta enviar una solicitud.',
     missingAccess: 'Categoría de acceso faltante',
@@ -119,6 +123,8 @@ const copy = {
     manualProvisioning: 'This approval does not assign a role automatically; it requires manual provisioning in Roles and permissions.',
     loadError: 'Access requests could not be loaded.',
     createTitle: 'Request access',
+    chooseFeature: 'Which feature do you need access to?',
+    nothingToRequest: 'You already have access to everything that can be requested.',
     missingTarget: 'The requested destination does not exist, is technical, or is not eligible for access requests.',
     alreadyAllowed: 'You already have this action. No request is necessary.',
     missingAccess: 'Missing access category',
@@ -343,6 +349,18 @@ export function NewAccessRequestPage() {
     },
   });
 
+  // Opened without a target (the "new request" button): let the person pick one
+  // of the features they can ask for instead of showing an error.
+  const requestableFeatures = useMemo(() => {
+    if (requestedFeatureId) return [];
+    const viewer = { authenticated: Boolean(session), roles: session?.roles, modules: session?.modules };
+    return featureRegistry
+      .filter((feature) => feature.accessRequestEligible && !feature.technical
+        && evaluateFeatureAccess(feature, viewer, 'view').state === 'locked')
+      .map((feature) => ({ feature, label: featureLabel(feature, locale) }))
+      .sort((left, right) => left.label.localeCompare(right.label, locale));
+  }, [locale, requestedFeatureId, session]);
+
   if (requestedFeatureId === 'artist.onboarding' && action === 'create') {
     return <Navigate to="/artista/crear" replace />;
   }
@@ -350,7 +368,26 @@ export function NewAccessRequestPage() {
   return (
     <Stack spacing={3} component="section" aria-labelledby="new-access-request-title" sx={{ maxWidth: 720 }}>
       <Typography id="new-access-request-title" variant="h4" component="h1">{text.createTitle}</Typography>
-      {!requestedFeature || !action || !requestedFeature.accessRequestEligible || requestedFeature.technical ? (
+      {!requestedFeatureId ? (
+        requestableFeatures.length > 0 ? (
+          <FormControl fullWidth>
+            <InputLabel id="access-request-feature-label">{text.chooseFeature}</InputLabel>
+            <Select
+              labelId="access-request-feature-label"
+              label={text.chooseFeature}
+              value=""
+              onChange={(event) => {
+                const chosen = requestableFeatures.find(({ feature }) => feature.id === event.target.value);
+                if (chosen) navigate(accessRequestPath(chosen.feature, 'view'));
+              }}
+            >
+              {requestableFeatures.map(({ feature, label }) => (
+                <MenuItem key={feature.id} value={feature.id}>{label}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        ) : <Alert severity="info">{text.nothingToRequest}</Alert>
+      ) : !requestedFeature || !action || !requestedFeature.accessRequestEligible || requestedFeature.technical ? (
         <Alert severity="error">{text.missingTarget}</Alert>
       ) : null}
       {decision?.state === 'allowed' ? <Alert severity="info">{text.alreadyAllowed}</Alert> : null}
