@@ -26955,6 +26955,86 @@
       "property": "Home actions never depend on data; no lineup entry is dropped or guessed; a refused lineup writes nothing; a created event survives refused art or names.",
       "verification": "React regressions against the real components; Haskell tests of validation and of plan/materialize over SQLite, including the ambiguous-name refusal with no writes.",
       "evidence": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx; tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx; tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx; tdf-hq/test/Spec.hs; tdf-hq/test/TDF/ServerSpec.hs"
+    },
+    {
+      "id": "UX-FORM-ACTIONS-001",
+      "title": "Form commit actions follow the last field and remain visible in open editors",
+      "statement": "Editable web forms place Save, Update, or the equivalent commit action after their last field. Open course registration and CMS editors retain a visible action whose enabled state follows their existing save prerequisites.",
+      "domain": "UX",
+      "authority": "Product owner directive on 2026-11-10, with commit, push, merge and continuation authorized on 2026-11-11.",
+      "source": "User request to place Save or Update after the latest form field; PR #731.",
+      "property": "A user finishing the final field can continue to the commit action without returning to the form header.",
+      "contract": "formal/system/form-actions.md",
+      "actors": [
+        "Signed-in form editor"
+      ],
+      "preconditions": [
+        "The user has opened an editable form under the existing account and permission rules."
+      ],
+      "inputs": [
+        "Form fields, including expanded optional fields",
+        "Save or Update command",
+        "Keyboard focus traversal"
+      ],
+      "state": {
+        "boundary": "Form action layout and existing enabled state",
+        "states": [
+          "unready",
+          "editable",
+          "saving",
+          "saved",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "unready -> editable when existing prerequisites are met",
+        "editable -> saving through the footer action",
+        "saving -> saved or failed through the existing save handler",
+        "failed -> editable for correction or retry"
+      ],
+      "forbiddenTransitions": [
+        "An open course or CMS editor hides its save action because prerequisites are unmet.",
+        "Moving the action enables a save that existing validation, ownership or pending-state restrictions reject."
+      ],
+      "effects": [
+        "The existing persistence handler receives the current form draft."
+      ],
+      "authorization": "Existing account ownership, role, catalog and readiness checks govern writes.",
+      "privacy": "Existing save payloads and visibility rules govern submitted fields.",
+      "concurrency": "Existing pending mutation and account-baseline checks govern concurrent or late saves.",
+      "idempotency": "The layout change uses the existing single action and save handler.",
+      "failure": "Existing errors and current edits remain available for correction.",
+      "recovery": "Existing draft recovery and retry behavior remain available.",
+      "observability": "Existing saving, success and error feedback communicates save state.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
+        "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "719 targeted component tests, TypeScript, changed-file lint and browser geometry, keyboard traversal and synthetic payment/profile submissions at 390px and 1440px.",
+      "evidence": "PR #731 and its six targeted test suites; local browser fixture execution.",
+      "confidence": "The exercised form flows and viewport sizes have local test evidence.",
+      "ambiguity": [
+        "Full production form coverage requires deployed verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component and browser checks cover the edited flows. Hosted final-candidate checks and deployment remain pending."
+      },
+      "critical": false
     }
   ]
 }
