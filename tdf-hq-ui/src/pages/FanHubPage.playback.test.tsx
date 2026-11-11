@@ -14,6 +14,8 @@ const listener = (event: Event) => events.push(event as CustomEvent);
 const fixtureRelease = (): ReleaseFeedItem => ({ arArtistId: 7, arReleaseId: 42, arTitle: 'Luna Baja', artistName: 'Sofia Marquez',
   arReleaseDate: '2026-01-01', arDescription: null, arCoverImageUrl: null, arSpotifyUrl: 'https://open.spotify.com/track/synthetic', arYoutubeUrl: null });
 
+// The events panel has its own suite; here it would only add unrelated requests.
+jest.unstable_mockModule('../components/events/MyEventsPanel', () => ({ default: () => null }));
 jest.unstable_mockModule('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session, loading: false }), getActiveSession: () => session, getStoredSessionToken: () => null }));
 jest.unstable_mockModule('../api/fans', () => ({ Fans: {

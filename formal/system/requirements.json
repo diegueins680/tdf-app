@@ -27483,6 +27483,95 @@
       },
       "historicalStatus": null,
       "critical": false
+    },
+    {
+      "id": "EVT-CREATE-ENTRY-001",
+      "title": "Event creation and management on the signed-in home, art first, artists by name",
+      "statement": "A confirmed session reaches event creation and management from the top of its home; creation starts with the event art, and a lineup may name an artist who is not on the platform, who is then created with the event.",
+      "domain": "EVT",
+      "critical": false,
+      "actors": [
+        "Event organizer",
+        "Artist",
+        "Signed-in member"
+      ],
+      "preconditions": [
+        "An authenticated session confirmed by the server; existing event authorization remains authoritative.",
+        "The image endpoint attaches art to an existing event; the event list returns the organizer of each event."
+      ],
+      "inputs": [
+        "Session party",
+        "Event art file",
+        "Lineup entries: artist identifier or artist name"
+      ],
+      "state": {
+        "boundary": "formal/system/event-creation-entry.md"
+      },
+      "allowedTransitions": [
+        "Signed-in home to event creation or event management",
+        "Create event, then save named artists, then upload art; each later step is retryable",
+        "Named artist to the single stored profile with that name, or to a new profile without an owning party"
+      ],
+      "forbiddenTransitions": [
+        "Show the panel to a guest or before session hydration completes",
+        "Drop a lineup entry that has neither identifier nor name",
+        "Guess between several stored artists with the same name",
+        "Create artists or an event when the lineup is refused",
+        "Lose a created event because art or named artists were refused",
+        "Grant organizer permissions through this change"
+      ],
+      "effects": [
+        "Preview up to three upcoming events organized by the viewer",
+        "Create artist profiles named in a lineup",
+        "Attach the chosen art to the created event"
+      ],
+      "authorization": "Event creation, update and image upload keep their existing checks. A named artist is created only as part of an event write its author is already allowed to make.",
+      "privacy": "The panel shows only events the event list already returns to the viewer. A created artist profile holds a name and no party.",
+      "concurrency": "Name resolution and profile creation run inside the event write transaction; the update path holds the event lock. Concurrent writes naming the same new artist may create duplicates, which later resolve to an explicit 409.",
+      "idempotency": "Retrying named artists reuses the profile created or matched by name; retrying art uploads the retained file again.",
+      "failure": "Invalid art is refused before creation. A refused upload or lineup keeps the event and reports the reason. A failed event list keeps both home actions.",
+      "recovery": "Retry the art or the named artists from the created-event screen, or complete them later from the event.",
+      "observability": "Created-event screen states art and artist outcomes; the home panel distinguishes loading, empty, failed and listed states.",
+      "source": "Owner request 2026-11-10: event creation and management as a main feature of the artists' and other users' home; art file picker first when creating an event; create an artist by writing the name when not on the platform.",
+      "contract": "formal/system/event-creation-entry.md",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "React regression tests for the panel, picker, creator and hub mount; Haskell unit and SQLite tests for lineup validation and resolution. No end-to-end run against a deployed backend.",
+      "ambiguity": [
+        "The home preview is bounded by the first 500 upcoming events until the event list gains an organizer filter.",
+        "Claiming a name-only artist profile by the artist is not defined here.",
+        "The file dialog cannot open without a user gesture; 'first' means first on the page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "UI tests and typecheck run locally; backend tests run in CI; deployed behavior requires a backend release."
+      },
+      "authority": "approved",
+      "property": "Home actions never depend on data; no lineup entry is dropped or guessed; a refused lineup writes nothing; a created event survives refused art or names.",
+      "verification": "React regressions against the real components; Haskell tests of validation and of plan/materialize over SQLite, including the ambiguous-name refusal with no writes.",
+      "evidence": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx; tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx; tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx; tdf-hq/test/Spec.hs; tdf-hq/test/TDF/ServerSpec.hs"
     }
   ]
 }

@@ -30,7 +30,7 @@ import Data.Time (fromGregorian)
 import Data.Time.Clock (UTCTime (..), addUTCTime, getCurrentTime, secondsToDiffTime)
 import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 import Database.Persist
-    ( Entity(..), Filter, Key, PersistValue(PersistText, PersistUTCTime), count, get, getBy, getJust, insert, insert_, insertKey
+    ( Entity(..), Filter, Key, PersistValue(PersistText, PersistUTCTime), SelectOpt (Asc), count, get, getBy, getJust, insert, insert_, insertKey
     , selectList, toPersistValue, update, (=.), (==.)
     )
 import Database.Persist.Sql
@@ -533,7 +533,14 @@ import TDF.ServerFanClub
     ( validateFanClubPostMutationTarget
     , validateFanClubPostPathId
     )
-import TDF.Server.SocialEventsHandlers (redactMomentReactionIdentity, toggleMomentReactionDb, validateEventArtistIds)
+import TDF.Server.SocialEventsHandlers
+    ( EventArtistRef (..)
+    , materializeEventArtists
+    , planEventArtists
+    , redactMomentReactionIdentity
+    , toggleMomentReactionDb
+    , validateEventArtistRefs
+    )
 import TDF.ServerExtra
     ( validateFacebookReplyTarget
     , validateInstagramReplyTarget
@@ -1289,8 +1296,8 @@ spec = describe "TDF.Server helpers" $ do
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just 0))
             assertInvalid (validateOptionalPositiveIdField "engineerPartyId" (Just (-7)))
 
-    describe "validateEventArtistIds" $ do
-        it "requires explicit artist ids instead of dropping nested artist-shaped objects" $ do
+    describe "validateEventArtistRefs" $ do
+        it "requires an artist id or a name instead of dropping nested artist-shaped objects" $ do
             let eventArtistRef mArtistId =
                     ArtistDTO
                         { artistId = mArtistId
@@ -1315,30 +1322,93 @@ spec = describe "TDF.Server helpers" $ do
                                     <> show value
                                 )
 
-            validateEventArtistIds [] `shouldBe` Right []
-            validateEventArtistIds [eventArtistRef (Just "42")]
-                `shouldBe` Right [toSqlKey 42]
+            validateEventArtistRefs [] `shouldBe` Right []
+            validateEventArtistRefs [eventArtistRef (Just "42")]
+                `shouldBe` Right [EventArtistProfile (toSqlKey 42)]
+            -- Without an id the name identifies an artist to create; it is never dropped.
+            validateEventArtistRefs [eventArtistRef Nothing]
+                `shouldBe` Right [EventArtistNamed "Ada Lovelace"]
 
             assertInvalid
-                "eventArtists[].artistId is required"
-                (validateEventArtistIds [eventArtistRef Nothing])
+                "eventArtists[].artistId or artistName is required"
+                (validateEventArtistRefs [(eventArtistRef Nothing){artistName = "   "}])
             assertInvalid
                 "eventArtists[].artistId must be a positive integer"
-                (validateEventArtistIds [eventArtistRef (Just "0")])
+                (validateEventArtistRefs [eventArtistRef (Just "0")])
             assertInvalid
                 "eventArtists[].artistId must be unique"
-                ( validateEventArtistIds
+                ( validateEventArtistRefs
                     [ eventArtistRef (Just "42")
                     , eventArtistRef (Just "42")
                     ]
                 )
             assertInvalid
                 "eventArtists supports at most 50 artists"
-                ( validateEventArtistIds
+                ( validateEventArtistRefs
                     [ eventArtistRef (Just (T.pack (show (n :: Int))))
                     | n <- [1 .. 51]
                     ]
                 )
+
+    describe "planEventArtists and materializeEventArtists" $ do
+        let onSqlite action = do
+                pool <- runNoLoggingT (createSqlitePool ":memory:" 1)
+                runSqlPool action pool
+            withArtistProfiles action = onSqlite $ do
+                rawExecute
+                    "CREATE TABLE social_artist_profile (\
+                    \id INTEGER PRIMARY KEY, party_id TEXT NULL, name TEXT NOT NULL, bio TEXT NULL,\
+                    \avatar_url TEXT NULL, genres TEXT NULL, social_links TEXT NULL, country_code TEXT NULL,\
+                    \country_id TEXT NULL, created_at TIMESTAMP NOT NULL, updated_at TIMESTAMP NOT NULL)"
+                    []
+                action
+            insertProfile now mParty name =
+                insert
+                    Social.ArtistProfile
+                        { Social.artistProfilePartyId = mParty
+                        , Social.artistProfileName = name
+                        , Social.artistProfileBio = Nothing
+                        , Social.artistProfileAvatarUrl = Nothing
+                        , Social.artistProfileGenres = Nothing
+                        , Social.artistProfileSocialLinks = Nothing
+                        , Social.artistProfileCountryCode = Nothing
+                        , Social.artistProfileCountryId = Nothing
+                        , Social.artistProfileCreatedAt = now
+                        , Social.artistProfileUpdatedAt = now
+                        }
+
+        it "links the stored artist with that name and creates only the missing one, without a party" $ do
+            now <- getCurrentTime
+            (existing, lineup, profiles) <- withArtistProfiles $ do
+                existing <- insertProfile now (Just "7") "Vera"
+                planned <- planEventArtists [EventArtistNamed "  vera ", EventArtistNamed "Los Nuevos", EventArtistProfile existing]
+                lineup <- either (const (pure [])) (materializeEventArtists now) planned
+                profiles <- selectList [] [Asc Social.ArtistProfileId]
+                pure (existing, lineup, profiles)
+            map (\(Entity _ profile) -> (Social.artistProfileName profile, Social.artistProfilePartyId profile)) profiles
+                `shouldBe` [("Vera", Just "7"), ("Los Nuevos", Nothing)]
+            -- The named match and the explicit id are one artist; request order is kept.
+            lineup `shouldBe` [existing, entityKey (last profiles)]
+
+        it "refuses a name shared by several artists and writes nothing" $ do
+            now <- getCurrentTime
+            (planned, profileCount) <- withArtistProfiles $ do
+                _ <- insertProfile now (Just "7") "Vera"
+                _ <- insertProfile now Nothing "VERA"
+                planned <- planEventArtists [EventArtistNamed "Los Nuevos", EventArtistNamed "Vera"]
+                profileCount <- count ([] :: [Filter Social.ArtistProfile])
+                pure (planned, profileCount)
+            profileCount `shouldBe` 2
+            case planned of
+                Left serverErr -> do
+                    errHTTPCode serverErr `shouldBe` 409
+                    BL8.unpack (errBody serverErr) `shouldContain` "matches more than one artist"
+                Right value -> expectationFailure ("Expected an ambiguous artist name to be refused, got: " <> show value)
+
+        it "leaves an id-only lineup untouched without reading artist profiles" $ do
+            -- No table exists: a lineup of ids must not query profiles at all.
+            planned <- onSqlite (planEventArtists [EventArtistProfile (toSqlKey 3), EventArtistProfile (toSqlKey 1)])
+            planned `shouldBe` Right [Right (toSqlKey 3), Right (toSqlKey 1)]
 
     describe "validatePartyListPagination" $ do
         it "keeps CRM party list defaults only when pagination is omitted" $ do
