@@ -70,6 +70,11 @@ export default function PublicBranding({
   // Commerce pages keep the header (and its cart control) pinned so the cart
   // stays one tap away after scrolling to a product, on every width.
   const stickyHeader = location.pathname === '/marketplace' || location.pathname.startsWith('/marketplace/');
+  // Buying a ticket, reading its order and returning from a payment are one
+  // task: the shell keeps the brand, the account and help, and drops promotion
+  // and the rest of the navigation until the task is over.
+  const focusedPurchase = /^\/eventos\/[1-9]\d{0,18}\/(?:entradas$|orden\/)/.test(location.pathname)
+    || location.pathname === '/pagos/retorno';
   const signupInvitation = Boolean(session && (location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation);
   const contextualLoginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
@@ -127,7 +132,7 @@ export default function PublicBranding({
 
   // A signed-in visitor has no use for actions that only lead to the login page.
   const hideFooterAction = (action: FooterAction) =>
-    Boolean(session) && action.kind === 'route' && action.value.startsWith('/login');
+    action.kind === 'route' && (focusedPurchase || (Boolean(session) && action.value.startsWith('/login')));
 
   useEffect(() => {
     const referrer = typeof document === 'undefined' ? '' : document.referrer;
@@ -214,7 +219,7 @@ export default function PublicBranding({
                     }}
                   />
                 </Box>
-                <Stack
+                {!focusedPurchase && <Stack
                   component="nav"
                   aria-label={t('authEntry.mainNavigation')}
                   direction="row"
@@ -243,11 +248,11 @@ export default function PublicBranding({
                       {t(item.label)}
                     </Button>
                   ))}
-                </Stack>
+                </Stack>}
               </Stack>
               <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
-                <MarketplaceCartButton />
-                <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>
+                {!focusedPurchase && <MarketplaceCartButton />}
+                {!focusedPurchase && <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>}
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
@@ -283,7 +288,7 @@ export default function PublicBranding({
                       component={RouterLink}
                       to={navItemProps(item).to}
                       onClick={() => { navItemProps(item).onClick?.(); setMenuAnchor(null); }}
-                      sx={{ display: { md: 'none' } }}
+                      sx={{ display: focusedPurchase ? undefined : { md: 'none' } }}
                     >
                       {t(item.label)}
                     </MenuItem>
@@ -329,12 +334,12 @@ export default function PublicBranding({
         sx={{ py: { xs: showHeader ? 2 : 3, md: showHeader ? 4 : 5 }, minWidth: 0, outline: 'none' }}
       >
         {location.pathname !== '/cuenta/eliminar' && <SignupMobileInvitation />}
-        {showInstagramEntryLinks && <InstagramEntryLinks />}
-        {!['/login', '/reset', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && <UpcomingEventsCarousel />}
+        {showInstagramEntryLinks && !focusedPurchase && <InstagramEntryLinks />}
+        {!['/login', '/reset', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !focusedPurchase && <UpcomingEventsCarousel />}
         {children}
         {!signupInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
         {!signupInvitation && profileRoute && <MobilePromo surface="profile" />}
-        {!signupInvitation && !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && <MobilePromo surface="mobile_banner" banner />}
+        {!signupInvitation && !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && !focusedPurchase && <MobilePromo surface="mobile_banner" banner />}
       </Container>
       <Box
         component="footer"
@@ -346,7 +351,7 @@ export default function PublicBranding({
         }}
       >
         <Container maxWidth="xl">
-          {!['/app', '/cuenta/eliminar'].includes(location.pathname) && <MobilePromo surface="footer" compact />}
+          {!['/app', '/cuenta/eliminar'].includes(location.pathname) && !focusedPurchase && <MobilePromo surface="footer" compact />}
           <Stack
             direction={{ xs: 'column', xl: 'row' }}
             spacing={3}
@@ -417,7 +422,7 @@ export default function PublicBranding({
             >
               {t('authEntry.whatsappPreferences')}
             </Button>
-            {showLoginButton && !session && (
+            {showLoginButton && !session && !focusedPurchase && (
               <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
                 <Button
                   size="small"
