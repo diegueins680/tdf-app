@@ -1058,6 +1058,7 @@ createPublicCourseDatafastCheckout rawSlug rawRegistrationId mLookupToken = do
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
     Nothing -> ServiceStorefront.requestDatafastCheckoutForService
+      (cpcCheckout context)
       (registrationReference context)
       (fromIntegral (cpcDueNowMinor context))
       (cpcCurrency context)

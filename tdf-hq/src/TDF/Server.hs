@@ -11004,6 +11004,7 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
     Nothing -> ServiceStorefront.requestDatafastCheckoutForService
+      (sbpcCheckout context)
       (toPathPiece (sbpcBookingKey context))
       (fromIntegral (sbpcDepositMinor context))
       (sbpcCurrency context)
@@ -17278,6 +17279,7 @@ createDatafastCheckout rawId mIdempotency payload = do
         )
     Nothing ->
       requestDatafastCheckout
+        (msccCheckout context)
         (msccOrderKey context)
         (msccTotalCents context)
         (msccCurrency context)
@@ -17762,9 +17764,10 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
   either throwError pure $
     requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
-requestDatafastCheckout :: Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
-requestDatafastCheckout orderKey totalCents currency name email mPhone = do
+requestDatafastCheckout :: Checkout.CheckoutReference -> Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
+requestDatafastCheckout checkout orderKey totalCents currency name email mPhone = do
   dfEnv <- loadDatafastCheckoutEnv
+  cartParameters <- ServiceStorefront.loadDatafastCartParameters checkout totalCents currency
   let manager = sharedProviderManager
   let amountTxt = Internationalization.formatMinorUnitsDecimal
         currency (fromIntegral totalCents)
@@ -17782,7 +17785,7 @@ requestDatafastCheckout orderKey totalCents currency name email mPhone = do
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (dfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv
+      allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv <> cartParameters
       body = RequestBodyBS (renderSimpleQuery False allParams)
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
   req0 <- ServiceStorefront.providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")

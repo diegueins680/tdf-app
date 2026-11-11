@@ -270,7 +270,7 @@ createMusicDatafastCheckout user orderId idempotencyHeader = do
         (Provider.sdfEntityId datafast) Checkout.OperationCreate idempotencyKey now
       amount <- safeIntAmount (purchaseAmountMinor context)
       (providerId, widgetUrl) <- Provider.requestDatafastCheckoutForService
-        (UUID.toText orderId) amount (purchaseCurrency context)
+        checkout (UUID.toText orderId) amount (purchaseCurrency context)
         (purchaseBuyerName context) (purchaseBuyerEmail context) Nothing
         `catchError` failAttempt checkout attempt Checkout.ProviderDatafast "datafast_create" now
       bindResult <- runDB $ Checkout.bindProviderResource Checkout.ProviderBindingCreation

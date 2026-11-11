@@ -1380,6 +1380,7 @@ createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
     Nothing -> ServiceStorefront.requestDatafastCheckoutForService
+      (tpcCheckout context)
       (ticketReference context)
       (fromIntegral (tpcAmountMinor context))
       (tpcCurrency context)

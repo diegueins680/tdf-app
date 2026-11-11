@@ -42,15 +42,52 @@ the existing credential-based status query configuration. This does not permit
 a new attempt, fallback, capture or paid state without the original verification
 and immutable payment binding.
 
-Evidence consists of local Hspec parameter and form-decoding cases, plus the real
-SQLite-backed public availability handler with each required metadata field
-removed and a still-usable status configuration. There is no provider sandbox,
+## Immutable cart projection
+
+New Dataweb requests in every existing checkout domain read the ordered line
+items from the canonical checkout, not the current catalogue or client-supplied
+prices. The stored parent total and currency must match the amount being sent.
+The shared projection sends each description, integer quantity and exact USD
+unit price as `cart.items[n].name`, `.description`, `.quantity` and `.price`.
+It retains line order and never divides a gross total into a rounded invented
+unit price. Exact integer products and their sum must conserve the charged total;
+empty lines, nonpositive amounts, overflow and unsupported currency are refused
+before a new gateway request.
+
+The documented name field excludes ampersands and is bounded to 255 characters;
+control characters and blank descriptions are refused without echoing their
+contents. Quantity is limited to the documented five-digit integer field and
+money to ten whole decimal digits plus two cents. UTF-8 and literal plus/equals
+characters survive form encoding without adding parameters. Only the Dataweb
+projection is changed; merchant product names are never rewritten.
+
+This first projection accepts canonical parents and lines whose stored subtotal
+equals their total and whose adjustment columns are zero. Nonzero discount, tax or fee
+adjustments require their own qualified economic projection and are refused;
+they are never absorbed into a fictitious item. Zero adjustment columns in this
+generic checkout schema do not establish a zero VAT rate. The renderer does not
+emit `SHOPPER_VAL_BASE0`, `SHOPPER_VAL_BASEIMP` or `SHOPPER_VAL_IVA`, because the
+authoritative fiscal classification is still pending. This cart work does not
+establish a complete certifiable Dataweb payload.
+
+Persisted provider checkout reuse and existing payment status verification do
+not read or require this new cart projection. Removing or changing an editable
+catalogue product cannot change the saved cart. No new API, schema migration,
+card-storage capability, merchant activation or retry authority is introduced.
+
+Evidence consists of 21 local Hspec parameter and form-decoding cases, two
+100-case properties and six behavior-changing source controls. Eight isolated
+PostgreSQL cases exercise the actual canonical cart reader against the four
+unchanged checkout table definitions; this is not a complete migration replay.
+The existing real SQLite-backed public availability handler tests remove each
+required metadata field and retain a usable status configuration. There is no provider sandbox,
 3DS, browser-widget, certification, production-charge or all-domain refinement
 claim. Provider outcome, concurrency and idempotency retain their existing
 contracts; no new lifecycle model or activation authority is introduced.
 
 The provider's public integration guide is
-https://developers.datafast.com.ec/Index.aspx (read 2026-10-29). TDF's private
+https://developers.datafast.com.ec/Index.aspx (metadata read 2026-10-29; cart
+fields read 2026-11-10). TDF's private
 onboarding email and attachments remain outside Git. Merchant certification is
 still blocked on onboarding, issued test credentials, applicable buyer/cart/tax
 fields and actual credentialed qualification. Do not infer tax allocation from a

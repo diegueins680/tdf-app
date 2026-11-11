@@ -531,6 +531,7 @@
       "scripts/test-course-checkout-runtime-migration.sh",
       "scripts/test-course-identity.sh",
       "scripts/test-credential-lifecycle.sh",
+      "scripts/test-datafast-cart.sh",
       "scripts/test-ddex-partner-legacy-compatibility.sh",
       "scripts/test-directory-artist-listings.sh",
       "scripts/test-directory-event-visibility-migration.sh",
@@ -686,6 +687,7 @@
       "scripts/verify-auth-predicates.py",
       "scripts/verify-checkout-money.py",
       "scripts/verify-cors-boundary.py",
+      "scripts/verify-datafast-cart.py",
       "scripts/verify-event-operations-formal.sh",
       "scripts/verify-event-operations-pluscal.mjs",
       "scripts/verify-google-account-name.py",
@@ -2608,6 +2610,7 @@
       "tdf-hq/test/TicketConfirmationSmtpMain.hs",
       "tdf-hq/test/TicketDatabaseRoutingMain.hs",
       "tdf-hq/test/TicketManualReviewMain.hs",
+      "tdf-hq/test/integration/DatafastCart.hs",
       "tdf-hq/test/integration/artist_merch_runtime_fixture.sql",
       "tdf-hq/test/integration/artist_merch_runtime_schema_fixture.sql",
       "tdf-hq/test/integration/artist_self_service_fixture.sql",
@@ -5444,7 +5447,7 @@
     {
       "id": "SURFACE-15c410d46c49b739",
       "path": "scripts/quality-backend.sh",
-      "sha256": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
+      "sha256": "5e8749ae7c1a657554eb5723063921fb4a80ff9f7283b468a2c1a63a340f8106",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6153,6 +6156,12 @@
       "id": "SURFACE-a05d9dbe9017a8ac",
       "path": "scripts/test-credential-lifecycle.sh",
       "sha256": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e2f54ee0430722ad",
+      "path": "scripts/test-datafast-cart.sh",
+      "sha256": "0d7981719398be8cfbfd5bc1a5513141eee05adfe0fed28c12b6e134831c7cf3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7083,6 +7092,12 @@
       "id": "SURFACE-da360911414286b5",
       "path": "scripts/verify-cors-boundary.py",
       "sha256": "3eaa65583fd4a282cf0cab35afecde249ed7667c9b55e13ead8a11f7db823506",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-78c56aa0656ab519",
+      "path": "scripts/verify-datafast-cart.py",
+      "sha256": "fa2f5ebef1b0954c334bc98740264df5685a831d7abbbd828d7e7c586a94870a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16688,7 +16703,7 @@
     {
       "id": "SURFACE-7c1a166cb87f734e",
       "path": "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
-      "sha256": "a708439f9fc84fe89ce099f9bbc3078c17afaa274767e636fcaddc7a9bd2e564",
+      "sha256": "fd9b7ef3181f883abfe4a52a96c632f8d8890111f8b956544ba7f250754ea136",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17378,7 +17393,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "15768a3ab48b31a7dc9059d54d157af1993690feea8e452bd826bd991af4b0cc",
+      "sha256": "0cbc4481888c4f5c851c81a5db024be5433dccda1a0f3305c4dc7cb81276587b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17396,7 +17411,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
+      "sha256": "64ebc1e8a188fb6b7661bfe0ab1b175167f7b95c8bce4d6b6a8a3fee6fedf9cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17414,7 +17429,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
+      "sha256": "edc126d2313982581ae5d39ca460aa82d4dd65b1c067ee98899a385a419e5ba9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17426,7 +17441,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
+      "sha256": "f23f2e073da52c0086972663d0450f154c4b588e15bc0d01b7318b07393ab5da",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17462,7 +17477,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "feb330191f5b1146684ed7953ed957212d6b2aac155f829307c7305ea3444486",
+      "sha256": "2424662a3e5495ca4069f78ef3e0ac8c1025f6428e8e4f26120b83973d893f62",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17516,7 +17531,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
+      "sha256": "fc570635c540cfd1d6d52fbf160c755c11f88853b213746ebe39e5f78b1b9dee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18032,7 +18047,7 @@
     {
       "id": "SURFACE-5d41f627dd70058b",
       "path": "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
-      "sha256": "24df855e975e3512b11056f3513864c31a3451ad98c0a615b89d5a2c5222a473",
+      "sha256": "666470ccb0cb34da5456b28da49a666ac67e87b922071acd5efe459c563604f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18555,6 +18570,12 @@
       "id": "SURFACE-22495db6f5498450",
       "path": "tdf-hq/test/TicketManualReviewMain.hs",
       "sha256": "b6805c746f14039f482189a3ae4aba73e4c17748698d9778924226849bd615b9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c890ee4e13b1e801",
+      "path": "tdf-hq/test/integration/DatafastCart.hs",
+      "sha256": "636a6ba1911832ecb85fd57f6403a352dd0a2e8a63703f3577f1022103ef9097",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30045,7 +30066,7 @@
     },
     {
       "path": "formal/system/datafast-merchant-metadata.md",
-      "sha256": "fba22e8741f2d272a0c806cd7ec60b3859021d09035e47384a22ce7ce0f8ed73",
+      "sha256": "bc1158432653b8f23711d88271fcbdf1c69c8fe3a08965c0ef4806622d2439eb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30850,7 +30871,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sha256": "1acce5d47cac7928b10d6f97e99b1dfbd4e7cc9694411da7809cffc120cca8d7",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

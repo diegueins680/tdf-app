@@ -19,6 +19,7 @@ module TDF.Server.ServiceStorefront
   , loadServiceDatafastEnv
   , loadServiceDatafastCheckoutEnv
   , requestDatafastCheckoutForService
+  , loadDatafastCartParameters
   , checkDatafastPaymentStatus
   , validateDatafastSuccessfulPayment
   , parseDatafastCents
@@ -380,7 +381,7 @@ createDatafastCheckoutHandler orderIdText mLookupToken = do
           let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
           pure (existingCheckoutId, baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack existingCheckoutId)
         _ -> requestDatafastCheckoutForService
-          (toPathPiece oid) totalCents currency buyerName buyerEmail buyerPhone
+          checkout (toPathPiece oid) totalCents currency buyerName buyerEmail buyerPhone
           `catchError` failCanonicalPaymentAttempt
             checkout attempt Checkout.ProviderDatafast "datafast_checkout_create"
       
@@ -2327,17 +2328,58 @@ loadServiceDatafastCheckoutEnv = do
     >>= either (throwError . configurationError) pure
   pure (configured, parameters)
 
--- | Request a Datafast checkout session for a service order.
+-- | Read only the immutable checkout snapshot. Nonzero line adjustments need
+-- an explicit, qualified provider projection; never absorb them into a fake
+-- item or infer VAT from the amount charged.
+loadDatafastCartParameters
+  :: Checkout.CheckoutReference -> Int -> Text -> AppM [(ByteString, ByteString)]
+loadDatafastCartParameters checkout expectedCents expectedCurrency = do
+  Env{ envPool } <- ask
+  (headers, rows) <- liftIO $ flip runSqlPool envPool $ do
+    headers <- rawSql
+      "SELECT total_minor, currency,\
+      \ (subtotal_minor = total_minor AND discount_minor = 0 AND tax_minor = 0 AND fee_minor = 0)\
+      \ FROM commerce_checkout_session WHERE id=?::uuid"
+      [PersistText (Checkout.checkoutReferenceId checkout)]
+      :: SqlPersistT IO [(Single Int64, Single Text, Single Bool)]
+    rows <- rawSql
+      "SELECT description, quantity, unit_amount_minor,\
+      \ (subtotal_minor::numeric = quantity::numeric * unit_amount_minor::numeric\
+      \ AND total_minor = subtotal_minor AND discount_minor = 0\
+      \ AND tax_minor = 0 AND fee_minor = 0)\
+      \ FROM commerce_checkout_line_item WHERE checkout_id=?::uuid ORDER BY line_number"
+      [PersistText (Checkout.checkoutReferenceId checkout)]
+      :: SqlPersistT IO [(Single Text, Single Int, Single Int64, Single Bool)]
+    pure (headers, rows)
+  let reject :: Text -> AppM a
+      reject message = throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+  case headers of
+    [(Single amount, Single currency, Single parentValid)] -> do
+      unless (amount == fromIntegral expectedCents
+          && currency == T.toUpper (T.strip expectedCurrency)) $
+        reject "Dataweb cart does not match the immutable checkout amount and currency"
+      unless (parentValid && all (\(_, _, _, Single valid) -> valid) rows) $
+        reject "Dataweb cart adjustments require a qualified line and tax projection"
+      let linesToSend =
+            [ DatafastConfig.DatafastCartLine description quantity unit
+            | (Single description, Single quantity, Single unit, _) <- rows
+            ]
+      either reject pure (DatafastConfig.datafastCartParameters amount currency linesToSend)
+    _ -> reject "Dataweb requires one canonical checkout snapshot"
+
+-- | Request a Datafast checkout session for a canonical service order.
 requestDatafastCheckoutForService
-  :: Text  -- ^ Transaction ID (order UUID)
+  :: Checkout.CheckoutReference
+  -> Text  -- ^ Transaction ID (order UUID)
   -> Int   -- ^ Amount in cents
   -> Text  -- ^ Currency
   -> Text  -- ^ Buyer name
   -> Text  -- ^ Buyer email
   -> Maybe Text  -- ^ Buyer phone
   -> AppM (Text, String)  -- ^ (checkoutId, widgetUrl)
-requestDatafastCheckoutForService txnId totalCents currency name email mPhone = do
+requestDatafastCheckoutForService checkout txnId totalCents currency name email mPhone = do
   (dfEnv, merchantParameters) <- loadServiceDatafastCheckoutEnv
+  cartParameters <- loadDatafastCartParameters checkout totalCents currency
   let manager = ProviderHttp.sharedProviderManager
   let amountTxt = T.pack $ show (totalCents `div` 100) <> "." <> pad2 (totalCents `mod` 100)
       currencyTxt = T.toUpper (T.strip currency)
@@ -2355,7 +2397,7 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (sdfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam <> merchantParameters
+      allParams = baseParams <> phoneParam <> testModeParam <> merchantParameters <> cartParameters
       body = renderFormBody allParams
       baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
   req0 <- providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")

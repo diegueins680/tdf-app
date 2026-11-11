@@ -1137,6 +1137,7 @@ createPublicDomoDatafastCheckout rawQuoteId mLookupToken = do
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
     Nothing -> ServiceStorefront.requestDatafastCheckoutForService
+      (dpcCheckout context)
       (domoReference context) (fromIntegral (dpcAmountMinor context))
       (dpcCurrency context) (dpcCustomerName context) (dpcCustomerEmail context)
       (dpcCustomerPhone context)
