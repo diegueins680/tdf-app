@@ -15,7 +15,9 @@ BEGIN
     INSERT INTO social_v2_preference(party_id,closed) VALUES(1,closed_a),(2,closed_b);
     UPDATE user_credential SET active=live_a WHERE party_id=1;
     UPDATE user_credential SET active=live_b WHERE party_id=2;
-    DELETE FROM party_follow;
+    -- Reset only edges owned by the three-party relationship model.
+    DELETE FROM party_follow
+      WHERE follower_party_id IN (1,2,3) AND following_party_id IN (1,2,3);
     INSERT INTO party_follow(follower_party_id,following_party_id,created_at)
       SELECT (e->>0)::bigint,(e->>1)::bigint,'2026-01-01T23:00:00Z'::timestamptz
       FROM jsonb_array_elements(edges) e;

@@ -93,6 +93,7 @@ echo 'PASS: generated cases reject the deliberately unsafe profile policy'
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/profile-read-model-cases.sql"
 echo 'PASS: checked profile outcomes refine PostgreSQL policy, ordering and payload'
 psql_http < "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-refinement.sql"
+psql_http < "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-isolation.sql"
 for control in policy counts; do
   TDF_SOCIAL_RELATIONSHIP_NEGATIVE=$(mktemp)
   if { cat "$TDF_SOCIAL_ROOT/scripts/social/relationship-read-negative-$control.sql";
