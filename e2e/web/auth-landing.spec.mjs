@@ -138,6 +138,21 @@ test('the app shell never stays blank: a failed bundle shows recovery actions @m
   }
 });
 
+test('a blocked analytics file does not take the app down @mobile-flow @critical', async ({ page, baseURL }) => {
+  await fixture(page, baseURL);
+  await page.addInitScript(() => {
+    window.__ENV__ = { ...(window.__ENV__ ?? {}), VITE_POSTHOG_KEY: 'phc_synthetic_blocked', VITE_POSTHOG_HOST: 'https://analytics.invalid' };
+  });
+  let blocked = 0;
+  // Content blockers and flaky networks drop this file; the app must not need it.
+  await page.route(/\/assets\/analytics-[^/]+\.js$/, (route) => { blocked += 1; return route.abort('failed'); });
+  await page.goto('/fans', { waitUntil: 'domcontentloaded' });
+  await expectRenderedApp(page);
+  await expect.poll(() => blocked).toBeGreaterThan(0);
+  await expect(page.getByText('No pudimos cargar esta vista')).toHaveCount(0);
+  await expect(page.locator('#tdf-blank-screen-recovery')).toHaveCount(0);
+});
+
 test('a healthy page never shows the blank-screen recovery @mobile-flow', async ({ page, baseURL }) => {
   await fixture(page, baseURL);
   await page.goto('/fans', { waitUntil: 'domcontentloaded' });

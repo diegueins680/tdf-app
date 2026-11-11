@@ -3300,7 +3300,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "3bed38b4a63187e387f4c971d06f3e7fe3f76516d316ca2b1626d2aa1385412b",
+      "sha256": "cbe9df06de537d7f001c39d5e8eacf687d19e3588001616f3cd9a1867ecc99ac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7872,7 +7872,7 @@
     {
       "id": "SURFACE-6fb3830cc5f24988",
       "path": "tdf-hq-ui/src/__tests__/analytics.test.ts",
-      "sha256": "72aa8e30a1a14092bcd77ba295d18e7e57810c877d6245df1fd08be839b20272",
+      "sha256": "993441525fe795e32865647090cb62ad4ac49e08f14c8c50177e4196ad5192b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7944,7 +7944,7 @@
     {
       "id": "SURFACE-96eef8ce345a4711",
       "path": "tdf-hq-ui/src/analytics/posthog.ts",
-      "sha256": "c718aa9686d42146e3a8b820dc3876b7346a1faa6f7a723c06bd5dd14be06eb7",
+      "sha256": "e69eb9e0e1d0ef399067fff0a496e5c464f664b45efceb24bd93b473d667b345",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30878,7 +30878,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "fb0de24d68db0a8b46cc171753d972e4c64c215ef2832e80901c97b9a1801e47",
+      "sha256": "7442c3db02276fc239114b0678ca249f04182d653edff74aee793bc87f986b06",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
