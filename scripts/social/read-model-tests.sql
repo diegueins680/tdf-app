@@ -2,7 +2,7 @@ DO $$ BEGIN
   ASSERT NOT EXISTS(SELECT 1 FROM pg_proc WHERE proname IN
     ('social_v2_feed','social_v2_discover','social_v2_me','social_v2_relationship') AND provolatile<>'s');
 END $$;
-UPDATE social_v2_runtime SET enabled=true;
+UPDATE social_v2_runtime SET enabled=true WHERE singleton=true;
 SELECT social_v2_publish_batch();
 DO $$ DECLARE page jsonb; BEGIN
   ASSERT social_v2_publish_batch()=0;

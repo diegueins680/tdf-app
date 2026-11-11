@@ -110,6 +110,31 @@ psql_test -c "DO \$\$ BEGIN ASSERT NOT (SELECT enabled FROM social_v2_runtime); 
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/fixture.sql"
 psql_test < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
 psql_test < "$TDF_SOCIAL_ROOT/tdf-hq/sql/2026-09-14_social_v2_read_models.sql"
+# Shadow the runtime table without its singleton CHECK to verify the fixture
+# enables only the singleton, leaving an unrelated sentinel row disabled.
+{
+  cat <<'SQL'
+BEGIN;
+CREATE TEMP TABLE social_v2_runtime(singleton boolean PRIMARY KEY,enabled boolean NOT NULL DEFAULT false);
+INSERT INTO social_v2_runtime(singleton) VALUES(true),(false);
+SQL
+  python3 - "$TDF_SOCIAL_ROOT/scripts/social/read-model-tests.sql" <<'PY'
+import sys
+from pathlib import Path
+updates = [line for line in Path(sys.argv[1]).read_text().splitlines()
+           if line.startswith('UPDATE social_v2_runtime ')]
+assert updates, 'Missing read-model runtime update'
+for update in updates:
+    print(update)
+PY
+  cat <<'SQL'
+DO $$ BEGIN
+  ASSERT (SELECT enabled FROM social_v2_runtime WHERE singleton=true), 'read-model fixture did not enable singleton';
+  ASSERT NOT (SELECT enabled FROM social_v2_runtime WHERE singleton=false), 'read-model fixture enabled non-singleton';
+END $$;
+ROLLBACK;
+SQL
+} | psql_test
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/read-model-tests.sql"
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/model-cases.sql"
 psql_test < "$TDF_SOCIAL_ROOT/scripts/social/mutation-tests.sql"
