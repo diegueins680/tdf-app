@@ -205,6 +205,8 @@ describe('DirectorySearchPage', () => {
       expect(link.getAttribute('href')).toBe('/directorio/synthetic-band');
       const image = container.querySelector<HTMLImageElement>('img[alt="Foto de Synthetic Band"]');
       expect(image?.getAttribute('src')).toBe('https://cdn.example.test/synthetic-band.jpg');
+      expect(image?.closest('a')?.getAttribute('href')).toBe('/directorio/synthetic-band');
+      expect(container.querySelector('h2 a')?.getAttribute('href')).toBe('/directorio/synthetic-band');
       expect(image?.getAttribute('loading')).toBe('lazy');
     } finally {
       await act(async () => root.unmount());

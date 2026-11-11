@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -327,7 +328,9 @@ export default function ArtistEnrichmentReviewPage() {
                   <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2}>
                     <Stack spacing={1} sx={{ minWidth: 0 }}>
                       <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                        <Typography variant="h6">{profile.apeArtistName}</Typography>
+                        <Typography variant="h6">
+                          <ArtistProfileLink partyId={profile.apeArtistId}>{profile.apeArtistName}</ArtistProfileLink>
+                        </Typography>
                         <Chip size="small" label={profile.apeReviewStatus === 'verified' ? 'Verificado' : profile.apeReviewStatus === 'unverified' ? 'Sin verificar' : profile.apeReviewStatus} color={statusColor(profile.apeReviewStatus)} />
                         <Chip size="small" variant="outlined" label={`Confianza ${formatConfidence(profile.apeConfidence)}`} />
                       </Stack>
@@ -485,7 +488,9 @@ export default function ArtistEnrichmentReviewPage() {
                         <Box>
                           <Typography variant="h6">{reference?.airOriginalName ?? `Referencia ${candidate.aicInventoryReferenceId}`}</Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Candidato: {profile?.apeArtistName ?? candidate.aicCandidateUrl ?? candidate.aicExternalId ?? 'Sin identidad asignada'}
+                            Candidato: {profile ? (
+                              <ArtistProfileLink partyId={profile.apeArtistId}>{profile.apeArtistName}</ArtistProfileLink>
+                            ) : candidate.aicCandidateUrl ?? candidate.aicExternalId ?? 'Sin identidad asignada'}
                           </Typography>
                         </Box>
                         <Stack direction="row" spacing={1}>

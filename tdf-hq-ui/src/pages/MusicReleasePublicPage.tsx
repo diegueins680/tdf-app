@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { canonicalMusicMinor, formatMusicMinor, type MusicMinorUnits } from '../utils/musicMoney';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -257,7 +258,9 @@ export default function MusicReleasePublicPage() {
       <Stack spacing={1.5} flex={1}>
         <Chip label={release.data.kind.toUpperCase()} sx={{ alignSelf: 'flex-start' }} />
         <Typography variant="h2" component="h1" fontWeight={800}>{release.data.title}</Typography>
-        <Typography variant="h5" color="text.secondary">{release.data.displayArtist}</Typography>
+        <Typography variant="h5" color="text.secondary">
+          <ArtistProfileLink partyId={release.data.artistPartyId}>{release.data.displayArtist}</ArtistProfileLink>
+        </Typography>
         <Typography color="text.secondary">{[release.data.labelName, releaseDate].filter(Boolean).join(' · ')}</Typography>
         <Button variant="contained" size="large" startIcon={<PlayArrowIcon />} onClick={() => void play(release.data.tracks[0]?.trackId ?? '')}
           disabled={release.data.tracks.length === 0} sx={{ alignSelf: 'flex-start' }}>

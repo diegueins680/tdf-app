@@ -167,6 +167,8 @@ describe('TdfPlatformPage', () => {
     const carouselText = screen.getByLabelText('Carrusel de artistas destacados').textContent ?? '';
     expect(carouselText.indexOf('Artista Mayor')).toBeLessThan(carouselText.indexOf('Artista Menor'));
     expect(screen.getByText(ARTIST_RANKING_FIXTURE.majorFollowerLabel)).not.toBeNull();
+    expect(screen.getByRole('link', { name: 'Artista Mayor' }).getAttribute('href')).toBe('/a/artista-mayor');
+    expect(screen.getByRole('link', { name: 'Imagen de Artista Mayor' }).getAttribute('href')).toBe('/a/artista-mayor');
     expect(screen.getByRole('img', { name: 'Imagen de Artista Mayor' }).getAttribute('src')).toBe(
       'https://cdn.example.test/major.jpg',
     );

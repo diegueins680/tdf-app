@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../../components/ArtistProfileLink';
 import MarkdownText from '../../components/MarkdownText';
 import { InteractionPanel } from '../interactions/InteractionPanel';
 import { useId, useRef, useState, type RefObject } from 'react';
@@ -446,7 +447,7 @@ function ReleaseSummary(props: ReleaseSummaryProps) {
             {release.arTitle}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {release.artistName}
+            <ArtistProfileLink partyId={release.arArtistId}>{release.artistName}</ArtistProfileLink>
           </Typography>
         </Box>
         <Chip label={formatReleaseDate(release.arReleaseDate)} size="small" />

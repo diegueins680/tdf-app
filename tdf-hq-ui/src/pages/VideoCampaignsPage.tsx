@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
@@ -140,14 +141,14 @@ function CampaignWorkspace({ session }: { session: SessionUser }) {
         {p.source} · {p.piece}: {p.registrations} registros · {p.follows} seguidores nuevos en TDF
       </Typography>)}
       {(creating || active) && <CampaignEditor key={`${artistId}:${active?.id ?? 'new'}`} session={session}
-        artistId={artistId} artistName={artist?.apDisplayName ?? `Artista #${artistId}`} initial={active}
+        artistId={artistId} artistProfileId={artist?.apArtistId} artistName={artist?.apDisplayName ?? `Artista #${artistId}`} initial={active}
         onSaved={() => { void campaigns.refetch(); }} onClose={() => { setActive(null); setCreating(false); }} />}
     </>}
   </Stack></Box>;
 }
 
-function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClose }: {
-  session: SessionUser; artistId: number; artistName: string; initial: VideoCampaign | null;
+function CampaignEditor({ session, artistId, artistProfileId, artistName, initial, onSaved, onClose }: {
+  session: SessionUser; artistId: number; artistProfileId?: number; artistName: string; initial: VideoCampaign | null;
   onSaved: () => void; onClose: () => void;
 }) {
   const [id] = useState(() => initial?.id ?? crypto.randomUUID());
@@ -200,7 +201,7 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
     {error && <Alert severity="error">{error}</Alert>}{notice && <Alert severity="success">{notice}</Alert>}
     <Box component="fieldset" disabled={busy} sx={{ border: 0, p: 0, m: 0, minWidth: 0 }}><Stack spacing={2}>
     {step === 0 && <>
-      <Typography variant="h6">{artistName}</Typography>
+      <Typography variant="h6"><ArtistProfileLink partyId={artistProfileId}>{artistName}</ArtistProfileLink></Typography>
       <TextField label="Título de la sesión" value={doc.title} onChange={(e) => patch({ title: e.target.value })} />
       <TextField label="Enlace HTTPS del video completo" value={doc.videoUrl} onChange={(e) => patch({ videoUrl: e.target.value })}
         helperText="Puedes usar tu propio almacenamiento. No modificamos los permisos del enlace." />
@@ -272,7 +273,7 @@ function CampaignEditor({ session, artistId, artistName, initial, onSaved, onClo
     {step === 3 && <>
       <Typography variant="h6">{doc.title}</Typography>
       <Typography>Objetivo: {doc.objective ?? 'Registros y seguidores del artista en TDF'}</Typography>
-      <Typography>{artistName} · {doc.pieces.length} piezas · 14 días · USD 0 de pauta</Typography>
+      <Typography><ArtistProfileLink partyId={artistProfileId}>{artistName}</ArtistProfileLink> · {doc.pieces.length} piezas · 14 días · USD 0 de pauta</Typography>
       <Typography sx={{ overflowWrap: 'anywhere' }}>{doc.videoUrl || 'Falta el enlace del video completo.'}</Typography>
       <SessionVideoPreview url={doc.videoUrl} title={doc.title} />
       <TextField multiline minRows={3} label="Créditos confirmados" value={doc.credits ?? ''}

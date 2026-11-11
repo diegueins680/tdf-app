@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -252,7 +253,11 @@ function ArtistQuickNoteEditor({ artist, onBanner }: ArtistQuickNoteEditorProps)
       }}
     >
       <Box sx={{ minWidth: 220 }}>
-        <Typography fontWeight={700}>{artist.apDisplayName}</Typography>
+        <Typography fontWeight={700}>
+          <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug}>
+            {artist.apDisplayName}
+          </ArtistProfileLink>
+        </Typography>
         <Typography variant="body2" color="text.secondary">
           {artist.apCity ?? 'Sin ciudad'}
         </Typography>
@@ -882,7 +887,9 @@ export default function LabelArtistsPage() {
                         <TableCell>
                           <Stack spacing={0.5}>
                             <Typography variant="subtitle1" fontWeight={700}>
-                              {artist.apDisplayName}
+                              <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug}>
+                                {artist.apDisplayName}
+                              </ArtistProfileLink>
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                               ID {artist.apArtistId}
@@ -1097,7 +1104,9 @@ export default function LabelArtistsPage() {
                       {promotionReport && (
                         <>
                           <Typography variant="body1" fontWeight={700}>
-                            {promotionReport.apdArtistName}
+                            <ArtistProfileLink partyId={promotionReport.apdArtistId} slug={selectedPromotionArtist?.apSlug}>
+                              {promotionReport.apdArtistName}
+                            </ArtistProfileLink>
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             {promotionReport.apdDayHeader} · {promotionReport.apdTimezone}
@@ -1327,7 +1336,9 @@ export default function LabelArtistsPage() {
                   variant="outlined"
                   sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
                 >
-                  <CardMedia component="img" height="180" image={form.heroImageUrl} alt="Vista previa" />
+                  <ArtistProfileLink partyId={selectedArtist?.apArtistId} slug={selectedArtist?.apSlug} sx={{ display: 'block' }}>
+                    <CardMedia component="img" height="180" image={form.heroImageUrl} alt="Vista previa" />
+                  </ArtistProfileLink>
                 </Card>
               )}
               {heroImageError && <Alert severity="warning">{heroImageError}</Alert>}
