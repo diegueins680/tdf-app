@@ -32,7 +32,6 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
 import PageShell, { EmptyState, SkeletonCards } from '../components/PageShell';
@@ -119,6 +118,26 @@ function buildEmptyPromotionForm(): PromotionFormState {
     status: '',
     notes: '',
   };
+}
+
+// The API stores the artist picture as a hosted link only: an absolute http(s)
+// URL of at most 2048 characters. Embedded (data:) pictures are always rejected.
+const MAX_HERO_IMAGE_URL_CHARS = 2048;
+const isEmbeddedImage = (value: string) => value.trim().toLowerCase().startsWith('data:');
+
+function heroImageUrlProblem(value: string): string | null {
+  const url = value.trim();
+  if (!url) return null;
+  if (isEmbeddedImage(url)) {
+    return 'Esta imagen está embebida en el perfil y ya no se puede guardar así. Súbela de nuevo con «Subir portada» o quítala.';
+  }
+  if (url.length > MAX_HERO_IMAGE_URL_CHARS) {
+    return `El enlace de la imagen supera ${MAX_HERO_IMAGE_URL_CHARS} caracteres.`;
+  }
+  if (/\s/u.test(url) || !/^https?:\/\/[^/\s]+/iu.test(url)) {
+    return 'El enlace de la imagen debe ser una URL pública completa (https://…).';
+  }
+  return null;
 }
 
 const toNullableField = (value: string) => {
@@ -302,8 +321,9 @@ export default function LabelArtistsPage() {
   const { value: form, setValue: setForm, restored: editorRestored, isCurrentOwner: isCurrentEditorOwner } = editor;
   const [formError, setFormError] = useState<string | null>(null);
   const [banner, setBanner] = useState<BannerState | null>(null);
-  const [heroImageFileName, setHeroImageFileName] = useState('');
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
+  // The link whose preview failed to load; a later link starts with a clean slate.
+  const [heroImageLoadFailedUrl, setHeroImageLoadFailedUrl] = useState<string | null>(null);
   const [promotionArtistId, setPromotionArtistId] = useState<number | null>(null);
   const [promotionDay, setPromotionDay] = useState(() => todayInTimezone(timezone));
   const [promotionForm, setPromotionForm] = useState<PromotionFormState>(buildEmptyPromotionForm);
@@ -413,15 +433,6 @@ export default function LabelArtistsPage() {
   }, [artists]);
 
   useEffect(() => {
-    if (!form.heroImageUrl) {
-      setHeroImageFileName('');
-      return;
-    }
-    if (heroImageFileName) return;
-    setHeroImageFileName(form.heroImageUrl.startsWith('data:') ? 'Imagen seleccionada' : 'Imagen existente');
-  }, [form.heroImageUrl, heroImageFileName]);
-
-  useEffect(() => {
     setPromotionForm(buildEmptyPromotionForm());
     setPromotionFormError(null);
     setEditingPromotionId(null);
@@ -450,31 +461,25 @@ export default function LabelArtistsPage() {
   const showQuickNotesCard = hasArtistProfiles;
   const showFirstArtistSetup = !artistsQuery.isLoading && !artistsQuery.error && !hasArtistProfiles;
 
-  const handleHeroImageFileChange = (file: File | null) => {
-    if (!file) {
-      setForm((prev) => ({ ...prev, heroImageUrl: '' }));
-      setHeroImageFileName('');
+  const storedHeroImageUrl = (selectedArtist?.apHeroImageUrl ?? '').trim();
+  const heroImageUrl = form.heroImageUrl.trim();
+  const heroImageProblem = heroImageUrlProblem(heroImageUrl);
+  const heroImageEmbedded = isEmbeddedImage(heroImageUrl);
+  const heroImageLoadFailed = heroImageUrl.length > 0 && heroImageLoadFailedUrl === heroImageUrl;
+  // A stored link that no longer loads must not block unrelated edits; a new one must work.
+  const heroImageBlocksSave = Boolean(heroImageProblem) || (heroImageLoadFailed && heroImageUrl !== storedHeroImageUrl);
+  const heroImageStatus = !heroImageUrl ? 'Sin imagen'
+    : heroImageEmbedded ? 'Imagen embebida heredada'
+      : heroImageUrl === storedHeroImageUrl ? 'Imagen guardada' : 'Imagen nueva sin guardar';
+
+  const handleHeroImageUrlChange = (value: string) => {
+    const next = value.trim();
+    if (isEmbeddedImage(next)) {
+      setHeroImageError('No se pueden pegar imágenes embebidas. Sube el archivo con «Subir portada» o pega un enlace https://.');
       return;
     }
-    const maxBytes = 6 * 1024 * 1024;
-    if (file.size > maxBytes) {
-      setHeroImageError('El archivo supera 6 MB. Usa una imagen más liviana.');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        const dataUrl = reader.result;
-        setForm((prev) => ({ ...prev, heroImageUrl: dataUrl }));
-        setHeroImageFileName(file.name);
-        setHeroImageError(null);
-      } else {
-        setHeroImageError('No pudimos leer la imagen seleccionada.');
-        setForm((prev) => ({ ...prev, heroImageUrl: '' }));
-      }
-    };
-    reader.onerror = () => setHeroImageError('No pudimos leer la imagen seleccionada.');
-    reader.readAsDataURL(file);
+    setHeroImageError(null);
+    setForm((prev) => ({ ...prev, heroImageUrl: next }));
   };
 
   const upsertMutation = useMutation({
@@ -627,8 +632,8 @@ export default function LabelArtistsPage() {
     setForm(buildEmptyForm());
     setFormError(null);
     setDialogOpen(true);
-    setHeroImageFileName('');
     setHeroImageError(null);
+    setHeroImageLoadFailedUrl(null);
   };
 
   const handleEdit = (artist: ArtistProfileDTO) => {
@@ -638,6 +643,7 @@ export default function LabelArtistsPage() {
     setFormError(null);
     setDialogOpen(true);
     setHeroImageError(null);
+    setHeroImageLoadFailedUrl(null);
   };
 
   const handleCloseDialog = () => {
@@ -656,6 +662,14 @@ export default function LabelArtistsPage() {
     }
     if (unavailableFormGenreIds.length > 0) {
       setFormError('Sustituye los géneros inactivos o reemplazados antes de guardar.');
+      return;
+    }
+    if (heroImageProblem) {
+      setFormError(heroImageProblem);
+      return;
+    }
+    if (heroImageBlocksSave) {
+      setFormError('El enlace de la imagen no carga como imagen. Corrígelo o quítalo antes de guardar.');
       return;
     }
     const originalName = selectedParty?.displayName ?? selectedArtist?.apDisplayName ?? '';
@@ -1287,7 +1301,7 @@ export default function LabelArtistsPage() {
                 const uploadedHeroImageUrl = files[0]?.publicUrl ?? files[0]?.webContentLink ?? files[0]?.webViewLink;
                 if (uploadedHeroImageUrl) {
                   setForm((prev) => ({ ...prev, heroImageUrl: uploadedHeroImageUrl }));
-                  setHeroImageFileName('Imagen cargada');
+                  setHeroImageError(null);
                 }
               }}
               accept="image/*"
@@ -1297,42 +1311,74 @@ export default function LabelArtistsPage() {
               <Typography variant="body2" fontWeight={700}>
                 Imagen principal
               </Typography>
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems="center">
-                <Button component="label" startIcon={<UploadFileIcon />} variant="outlined">
-                  Seleccionar imagen
-                  <input
-                    type="file"
-                    accept="image/*"
-                    hidden
-                    onChange={(e) => handleHeroImageFileChange(e.target.files?.[0] ?? null)}
-                  />
-                </Button>
-                {heroImageFileName && (
-                  <Typography variant="body2" color="text.secondary">
-                    {heroImageFileName}
-                  </Typography>
+              <TextField
+                label="URL de la imagen (opcional)"
+                placeholder="https://"
+                value={heroImageEmbedded ? '' : form.heroImageUrl}
+                onChange={(event) => handleHeroImageUrlChange(event.target.value)}
+                disabled={heroImageEmbedded}
+                error={Boolean(heroImageProblem) && !heroImageEmbedded}
+                helperText={heroImageEmbedded ? undefined : heroImageProblem ?? undefined}
+                inputProps={{ 'aria-label': 'URL de la imagen del artista', maxLength: 4096 }}
+                fullWidth
+              />
+              <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="body2" color="text.secondary" data-testid="artist-hero-image-status">
+                  {heroImageStatus}
+                </Typography>
+                {heroImageEmbedded && (
+                  <Button
+                    component="a"
+                    href={form.heroImageUrl}
+                    download={`portada-${form.slug.trim() || String(form.partyId ?? 'artista')}`}
+                    variant="text"
+                  >
+                    Descargar imagen actual
+                  </Button>
                 )}
                 {form.heroImageUrl && (
                   <Button
                     variant="text"
                     color="inherit"
-                    onClick={() => setForm((prev) => ({ ...prev, heroImageUrl: '' }))}
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, heroImageUrl: '' }));
+                      setHeroImageError(null);
+                    }}
                   >
                     Quitar
                   </Button>
                 )}
               </Stack>
-              {form.heroImageUrl && (
+              {form.heroImageUrl && !heroImageLoadFailed && (
                 <Card
                   variant="outlined"
                   sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
                 >
-                  <CardMedia component="img" height="180" image={form.heroImageUrl} alt="Vista previa" />
+                  <CardMedia
+                    key={form.heroImageUrl}
+                    component="img"
+                    height="180"
+                    image={form.heroImageUrl}
+                    alt="Vista previa"
+                    onError={() => setHeroImageLoadFailedUrl(heroImageUrl)}
+                  />
                 </Card>
+              )}
+              {heroImageEmbedded && (
+                <Alert severity="warning">
+                  Esta imagen quedó embebida en el perfil y el perfil no se puede guardar mientras siga así.
+                  Descárgala, súbela con «Subir portada» y guarda; o quítala.
+                </Alert>
+              )}
+              {heroImageLoadFailed && (
+                <Alert severity="warning">
+                  Este enlace no carga como imagen. Usa el enlace directo al archivo, no la página de Spotify,
+                  Instagram o Drive.
+                </Alert>
               )}
               {heroImageError && <Alert severity="warning">{heroImageError}</Alert>}
               <Typography variant="caption" color="text.secondary">
-                Se guardará embebida (data URL). Usa imágenes livianas (&lt; 6 MB).
+                Guardamos solo enlaces hospedados (subida o URL https) para que el perfil cargue rápido.
               </Typography>
             </Stack>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

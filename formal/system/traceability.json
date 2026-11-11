@@ -25158,6 +25158,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/api/inventory.upload.test.ts",
         "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
         "tdf-hq-ui/src/api/uploadQueue.test.ts",
         "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
@@ -28037,7 +28038,8 @@
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "d9ecc9467c11b2aef9026e2f3f4156ecca840eaef8f6a657ea1eba4bc332fdf3",
     "tdf-hq-ui/src/pages/InternshipsPage.tsx": "2004b6936dabf44274f00c1f6025bfacf55fa7adaaf6d2d2c5b34a825e875ff1",
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "eeb799e5ef1e9139bddc8b0f90dee10e3b77c63f8c0abbe26076be95891bd4bd",
-    "tdf-hq-ui/src/pages/LabelArtistsPage.tsx": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+    "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx": "b85b98b84c8676a5899e8f2328c71042ca85cfaad42c7c582a0af9fb1ecd41b0",
+    "tdf-hq-ui/src/pages/LabelArtistsPage.tsx": "83a9c891ae82c77547a216d4e1477ad22f115ae9b2a3e65251c1eea52283564c",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "e99b58d699ef63f0a51d91450dea034229fde9f79b2cc262d619de1ddc7f7876",
     "tdf-hq-ui/src/pages/LabelProjectsPage.tsx": "742e76d1e66f1aa3abb0c42bdc90982b4c8f91b0e70cec2d727edbc93aa6e6f4",
@@ -45021,6 +45023,12 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx": [
+      {
+        "requirement": "MEDIA-STORAGE-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/api/uploadQueue.test.ts": [
       {
         "requirement": "MEDIA-STORAGE-001",
@@ -61866,14 +61874,19 @@
     {
       "id": "SURFACE-6c5ad1714500a7c5",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
-      "sha256": "09e4d76079f9858f37dd634b681e2319e9b30405354112ac629dea51286f34a4",
+      "sha256": "b85b98b84c8676a5899e8f2328c71042ca85cfaad42c7c582a0af9fb1ecd41b0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "MEDIA-STORAGE-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+      "sha256": "83a9c891ae82c77547a216d4e1477ad22f115ae9b2a3e65251c1eea52283564c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81588,7 +81601,6 @@
     "SURFACE-367ca1e43bc9470d",
     "SURFACE-640476dec88bc7f2",
     "SURFACE-4fd1798287b449fb",
-    "SURFACE-6c5ad1714500a7c5",
     "SURFACE-547227e70118d509",
     "SURFACE-5b7a19747c4abd6d",
     "SURFACE-1ed3bac9b35b6a6b",
@@ -83737,7 +83749,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "43ce0eea30e42837d5d6ab77910f321c46d942141829b67352281a4a59390fe4",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83765,7 +83777,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "43ce0eea30e42837d5d6ab77910f321c46d942141829b67352281a4a59390fe4",
       "definition": {
         "states": [
           "absent",
@@ -83795,7 +83807,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "28761c6b4d457fbef68a64814ea83a4abb32425a4038e835131af4e833d8fa98",
+      "sourceSha256": "43ce0eea30e42837d5d6ab77910f321c46d942141829b67352281a4a59390fe4",
       "definition": {
         "export": [
           "queued",
