@@ -475,18 +475,19 @@ function isLoopCheckpointBranch(rawBranch) {
 
 function buildBranchMergeCandidates({ localBranches = [], remoteBranches = [], baseBranch = 'main' } = {}) {
   const base = normalizeGitBranchShortName(baseBranch || 'main');
+  const PROTECTED = new Set([base, 'main', 'master', 'HEAD'].filter(Boolean));
   const localByShortName = new Map();
   const remoteByShortName = new Map();
 
   for (const branch of localBranches) {
     const shortName = normalizeGitBranchShortName(branch);
-    if (!shortName || shortName === base) continue;
+    if (!shortName || PROTECTED.has(shortName)) continue;
     localByShortName.set(shortName, String(branch).trim());
   }
 
   for (const branch of remoteBranches) {
     const shortName = normalizeGitBranchShortName(branch);
-    if (!shortName || shortName === base) continue;
+    if (!shortName || PROTECTED.has(shortName)) continue;
     remoteByShortName.set(shortName, String(branch).trim());
   }
 
