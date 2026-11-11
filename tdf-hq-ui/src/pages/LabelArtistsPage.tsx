@@ -324,6 +324,8 @@ export default function LabelArtistsPage() {
   const [heroImageError, setHeroImageError] = useState<string | null>(null);
   // The link whose preview failed to load; a later link starts with a clean slate.
   const [heroImageLoadFailedUrl, setHeroImageLoadFailedUrl] = useState<string | null>(null);
+  // The link whose preview finished loading as an image.
+  const [heroImageLoadedUrl, setHeroImageLoadedUrl] = useState<string | null>(null);
   const [promotionArtistId, setPromotionArtistId] = useState<number | null>(null);
   const [promotionDay, setPromotionDay] = useState(() => todayInTimezone(timezone));
   const [promotionForm, setPromotionForm] = useState<PromotionFormState>(buildEmptyPromotionForm);
@@ -466,8 +468,10 @@ export default function LabelArtistsPage() {
   const heroImageProblem = heroImageUrlProblem(heroImageUrl);
   const heroImageEmbedded = isEmbeddedImage(heroImageUrl);
   const heroImageLoadFailed = heroImageUrl.length > 0 && heroImageLoadFailedUrl === heroImageUrl;
-  // A stored link that no longer loads must not block unrelated edits; a new one must work.
-  const heroImageBlocksSave = Boolean(heroImageProblem) || (heroImageLoadFailed && heroImageUrl !== storedHeroImageUrl);
+  // A stored link that no longer loads must not block unrelated edits; a new one
+  // must have loaded as an image before it can be saved.
+  const heroImageChanged = heroImageUrl.length > 0 && heroImageUrl !== storedHeroImageUrl;
+  const heroImagePending = heroImageChanged && !heroImageProblem && !heroImageLoadFailed && heroImageLoadedUrl !== heroImageUrl;
   const heroImageStatus = !heroImageUrl ? 'Sin imagen'
     : heroImageEmbedded ? 'Imagen embebida heredada'
       : heroImageUrl === storedHeroImageUrl ? 'Imagen guardada' : 'Imagen nueva sin guardar';
@@ -634,6 +638,7 @@ export default function LabelArtistsPage() {
     setDialogOpen(true);
     setHeroImageError(null);
     setHeroImageLoadFailedUrl(null);
+    setHeroImageLoadedUrl(null);
   };
 
   const handleEdit = (artist: ArtistProfileDTO) => {
@@ -644,6 +649,7 @@ export default function LabelArtistsPage() {
     setDialogOpen(true);
     setHeroImageError(null);
     setHeroImageLoadFailedUrl(null);
+    setHeroImageLoadedUrl(null);
   };
 
   const handleCloseDialog = () => {
@@ -668,8 +674,12 @@ export default function LabelArtistsPage() {
       setFormError(heroImageProblem);
       return;
     }
-    if (heroImageBlocksSave) {
+    if (heroImageChanged && heroImageLoadFailed) {
       setFormError('El enlace de la imagen no carga como imagen. Corrígelo o quítalo antes de guardar.');
+      return;
+    }
+    if (heroImagePending) {
+      setFormError('Espera a que la vista previa de la imagen termine de cargar antes de guardar.');
       return;
     }
     const originalName = selectedParty?.displayName ?? selectedArtist?.apDisplayName ?? '';
@@ -1360,6 +1370,7 @@ export default function LabelArtistsPage() {
                     height="180"
                     image={form.heroImageUrl}
                     alt="Vista previa"
+                    onLoad={() => setHeroImageLoadedUrl(heroImageUrl)}
                     onError={() => setHeroImageLoadFailedUrl(heroImageUrl)}
                   />
                 </Card>

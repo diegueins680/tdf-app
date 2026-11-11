@@ -490,6 +490,15 @@ describe('LabelArtistsPage', () => {
     });
   };
 
+  const settlePreview = async (dialog: HTMLElement, outcome: 'load' | 'error') => {
+    const preview = dialog.querySelector<HTMLImageElement>('img[alt="Vista previa"]');
+    if (!preview) throw new Error('Preview not found');
+    await act(async () => {
+      preview.dispatchEvent(new Event(outcome));
+      await flushPromises();
+    });
+  };
+
   const savedHeroImage = () =>
     (upsertArtistProfileMock.mock.calls[0]?.[0] as { apuHeroImageUrl?: string | null } | undefined)?.apuHeroImageUrl;
 
@@ -514,6 +523,14 @@ describe('LabelArtistsPage', () => {
       expect(dialog.querySelector<HTMLImageElement>('img[alt="Vista previa"]')?.getAttribute('src'))
         .toBe('https://cdn.example.com/new.jpg');
 
+      // A new link cannot be saved while its preview is still loading.
+      await clickButton(dialog, 'Guardar');
+      await waitForExpectation(() => {
+        expect(dialog.textContent).toContain('Espera a que la vista previa de la imagen termine de cargar antes de guardar.');
+      });
+      expect(upsertArtistProfileMock).not.toHaveBeenCalled();
+
+      await settlePreview(dialog, 'load');
       await clickButton(dialog, 'Guardar');
       await waitForExpectation(() => expect(upsertArtistProfileMock).toHaveBeenCalledTimes(1));
       expect(savedHeroImage()).toBe('https://cdn.example.com/new.jpg');
@@ -591,14 +608,7 @@ describe('LabelArtistsPage', () => {
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
 
-    const failPreview = async (dialog: HTMLElement) => {
-      const preview = dialog.querySelector<HTMLImageElement>('img[alt="Vista previa"]');
-      if (!preview) throw new Error('Preview not found');
-      await act(async () => {
-        preview.dispatchEvent(new Event('error'));
-        await flushPromises();
-      });
-    };
+    const failPreview = (dialog: HTMLElement) => settlePreview(dialog, 'error');
 
     try {
       const dialog = await openEditor(container);

@@ -28038,8 +28038,8 @@
     "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx": "d9ecc9467c11b2aef9026e2f3f4156ecca840eaef8f6a657ea1eba4bc332fdf3",
     "tdf-hq-ui/src/pages/InternshipsPage.tsx": "2004b6936dabf44274f00c1f6025bfacf55fa7adaaf6d2d2c5b34a825e875ff1",
     "tdf-hq-ui/src/pages/InventoryPage.tsx": "eeb799e5ef1e9139bddc8b0f90dee10e3b77c63f8c0abbe26076be95891bd4bd",
-    "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx": "b85b98b84c8676a5899e8f2328c71042ca85cfaad42c7c582a0af9fb1ecd41b0",
-    "tdf-hq-ui/src/pages/LabelArtistsPage.tsx": "83a9c891ae82c77547a216d4e1477ad22f115ae9b2a3e65251c1eea52283564c",
+    "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx": "84440f5ed1ab328381e075ebd9fc54a66a7c1108d4b1a05968dc2a0352346105",
+    "tdf-hq-ui/src/pages/LabelArtistsPage.tsx": "c63ee3d3fe74b046e9535ac2253ade810ce554616cc169bcfb7ba6e8debb857a",
     "tdf-hq-ui/src/pages/LabelAssetsPage.test.tsx": "75cfbd54aa2a556b3d7d09a1fcee2bd479a4b6c2ac1e18f3173e850e17e20ba9",
     "tdf-hq-ui/src/pages/LabelAssetsPage.tsx": "e99b58d699ef63f0a51d91450dea034229fde9f79b2cc262d619de1ddc7f7876",
     "tdf-hq-ui/src/pages/LabelProjectsPage.tsx": "742e76d1e66f1aa3abb0c42bdc90982b4c8f91b0e70cec2d727edbc93aa6e6f4",
@@ -61874,7 +61874,7 @@
     {
       "id": "SURFACE-6c5ad1714500a7c5",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
-      "sha256": "b85b98b84c8676a5899e8f2328c71042ca85cfaad42c7c582a0af9fb1ecd41b0",
+      "sha256": "84440f5ed1ab328381e075ebd9fc54a66a7c1108d4b1a05968dc2a0352346105",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61886,7 +61886,7 @@
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "83a9c891ae82c77547a216d4e1477ad22f115ae9b2a3e65251c1eea52283564c",
+      "sha256": "c63ee3d3fe74b046e9535ac2253ade810ce554616cc169bcfb7ba6e8debb857a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

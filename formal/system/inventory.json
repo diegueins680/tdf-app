@@ -11168,13 +11168,13 @@
     {
       "id": "SURFACE-6c5ad1714500a7c5",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
-      "sha256": "b85b98b84c8676a5899e8f2328c71042ca85cfaad42c7c582a0af9fb1ecd41b0",
+      "sha256": "84440f5ed1ab328381e075ebd9fc54a66a7c1108d4b1a05968dc2a0352346105",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "83a9c891ae82c77547a216d4e1477ad22f115ae9b2a3e65251c1eea52283564c",
+      "sha256": "c63ee3d3fe74b046e9535ac2253ade810ce554616cc169bcfb7ba6e8debb857a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
