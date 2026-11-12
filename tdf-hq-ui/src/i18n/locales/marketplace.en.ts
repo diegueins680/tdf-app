@@ -28,6 +28,8 @@ const marketplace = {
     terms: 'Terms',
     termsDuration: 'Duration: {{minutes}} min',
     termsEquipment: 'Equipment: {{equipment}}',
+    termsCapacity: 'Capacity: {{capacity}}',
+    listingTerms: 'Listing conditions',
     roundTerms: 'Terms: {{terms}}',
     showRounds: 'Show negotiation ({{count}} rounds)',
     hideRounds: 'Hide negotiation',

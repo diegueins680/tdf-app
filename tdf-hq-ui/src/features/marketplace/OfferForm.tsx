@@ -4,7 +4,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Alert, Button, Chip, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography } from '@mui/material';
 
 import { Directory, type DirectoryTaxonomies, type ManagedDirectoryProfile } from '../../api/directory';
-import { formatMinor, moneyInputToMinor, referenceAmount } from './offers';
+import { formatMinor, moneyInputToMinor, referenceAmount, describeTerms } from './offers';
 
 interface OfferFormProps {
   classifiedId: string;
@@ -72,6 +72,9 @@ export default function OfferForm({ classifiedId, classifiedSlug, profiles, taxo
   // reference). Open and suggested listings, including unpaid or exchange
   // compensation, accept a message-only offer; a suggested price is prefilled.
   const amountRequired = priceMode === 'fixed';
+  // Conditions the publisher attached to the listing (duration, capacity,
+  // equipment…) are shown before quoting, so an offer answers them.
+  const listingTerms = describeTerms(classified.data?.terms, t);
 
   return (
     <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }} data-testid="offer-form">
@@ -88,6 +91,12 @@ export default function OfferForm({ classifiedId, classifiedSlug, profiles, taxo
                 : t('marketplace.form.statsCount', { count: classified.data.offerStats.count })} />
             )}
           </Stack>
+        )}
+        {listingTerms.length > 0 && (
+          <Alert severity="info" icon={false} data-testid="listing-terms">
+            <Typography variant="subtitle2" fontWeight={700}>{t('marketplace.offer.listingTerms')}</Typography>
+            {listingTerms.map((line) => <Typography key={line} variant="body2">{line}</Typography>)}
+          </Alert>
         )}
         {closed && <Alert severity="warning">{t('marketplace.form.closed')}</Alert>}
         <FormControl>

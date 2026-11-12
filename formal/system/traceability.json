@@ -28323,12 +28323,12 @@
     "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx": "7bbcb643b3c7d4e8384a7e3d697309aae846b8d8b685f753b3c49f4b850e9904",
     "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx": "1522853ceb07013be59bb619a262dff4a0d59e1e17b55ca805365f06f4488a67",
     "tdf-hq-ui/src/features/marketplace/OfferCard.tsx": "62f4befb9af710de4e56c1d40f7ef65ebfd76ba8282485f07ea518ec9f61aa1a",
-    "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "fc5c94b48a38e16fe65a64aa3fba8b7265de78da05316d85cfdcb1f741e96176",
+    "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "193e8cdfcb1b6561a98cf19cafd20437114fa54e6d70050347e88c45c085db85",
     "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
-    "tdf-hq-ui/src/features/marketplace/offers.test.ts": "52ce8687fa78ec1750571b4040055239418507a4473febf3463f81528bd10a4c",
-    "tdf-hq-ui/src/features/marketplace/offers.ts": "abae1c83093e0da7af7e070b301f59a6ccc3e2c754454acacea513893d3eb9bb",
+    "tdf-hq-ui/src/features/marketplace/offers.test.ts": "9d704e2b3595cd1e13300912401d7f3ccdd42a1ef11e3257be5f9c0a9e5e1609",
+    "tdf-hq-ui/src/features/marketplace/offers.ts": "5e17fe91f983b6217ffc30673e9136f6f12e6507b14a47bbea008ee53bfd68bd",
     "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx": "02a247376b7685688d733469e04a0c9444e7042db2f17e8a0097782a3d674c68",
     "tdf-hq-ui/src/features/records/RecordThumbnail.tsx": "44f25abf3cfe930e761a895e3884ef483d08da3a8e4058312e78df6573b31c67",
     "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts": "a5436d9f47bf3dfbe733946c27c818a6b0d71844d7f02e6df7331a996bba85e5",
@@ -28356,8 +28356,8 @@
     "tdf-hq-ui/src/i18n/locales/en.ts": "49154a85f27738ba723dba0c559d834a9a97fa1f1b2e6e47c1994751dd046d03",
     "tdf-hq-ui/src/i18n/locales/es.ts": "725221c145af964391a67eb53d2304830a6bcd456c1ed688f7d1da56c3f81127",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
-    "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": "1ccbc4f06adb21af025ab1c8d7b911472eed7e074b7297666ecb1db2a58c9c59",
-    "tdf-hq-ui/src/i18n/locales/marketplace.es.ts": "f8fd5b934346e15ada92e4bfbf7ca9b7671258723a84239c84d4943dd3e6b5e5",
+    "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": "5b8585b3c3a8bb0bb6e37fe901fc4b5bc933fcf0c3831196cb49ef20e45e5578",
+    "tdf-hq-ui/src/i18n/locales/marketplace.es.ts": "ecced9a51d4187263f40718ad0111d760b7ad2c9a7257f4a04cb3cecbf2933c2",
     "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
     "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
     "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
@@ -28401,7 +28401,7 @@
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "1911a9ce12ee741e5d5943d884db8ec33c12851b7d854c94cd9f4a6e3afdcff7",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "07a61e85fa89ddb7e1c4de1c1f20617c9ac6bb9690aca35daccd914e1422c81d",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "6c33e3cb8cfe4aa170ee66a541dab2489bed99ab7174af68d7ed2d59e1a47297",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "5ef4e14aa6daa2e314bf2c22f7d242181d100891bffb31cc8ef05911def5d4db",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "57d4e4708ecadf1e32f5daeaf4c1af8e45c715c88977ecbf6182278850dfcf64",
@@ -28909,7 +28909,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "5ffa67029e5a78b83222b3d944a60e37869e140effdf326a40be9f4c8b408752",
+    "tdf-hq/src/TDF/Server/Directory.hs": "3b872327329548788b8e09d77c38428224f4e5b6af5227916d8ba3fd8da5f86a",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
@@ -60765,7 +60765,7 @@
     {
       "id": "SURFACE-8481865773a143b4",
       "path": "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
-      "sha256": "fc5c94b48a38e16fe65a64aa3fba8b7265de78da05316d85cfdcb1f741e96176",
+      "sha256": "193e8cdfcb1b6561a98cf19cafd20437114fa54e6d70050347e88c45c085db85",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60813,7 +60813,7 @@
     {
       "id": "SURFACE-918143da462da26c",
       "path": "tdf-hq-ui/src/features/marketplace/offers.test.ts",
-      "sha256": "52ce8687fa78ec1750571b4040055239418507a4473febf3463f81528bd10a4c",
+      "sha256": "9d704e2b3595cd1e13300912401d7f3ccdd42a1ef11e3257be5f9c0a9e5e1609",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60825,7 +60825,7 @@
     {
       "id": "SURFACE-1b321f25c0e1bf1a",
       "path": "tdf-hq-ui/src/features/marketplace/offers.ts",
-      "sha256": "abae1c83093e0da7af7e070b301f59a6ccc3e2c754454acacea513893d3eb9bb",
+      "sha256": "5e17fe91f983b6217ffc30673e9136f6f12e6507b14a47bbea008ee53bfd68bd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61471,7 +61471,7 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "1ccbc4f06adb21af025ab1c8d7b911472eed7e074b7297666ecb1db2a58c9c59",
+      "sha256": "5b8585b3c3a8bb0bb6e37fe901fc4b5bc933fcf0c3831196cb49ef20e45e5578",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61483,7 +61483,7 @@
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "f8fd5b934346e15ada92e4bfbf7ca9b7671258723a84239c84d4943dd3e6b5e5",
+      "sha256": "ecced9a51d4187263f40718ad0111d760b7ad2c9a7257f4a04cb3cecbf2933c2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62336,7 +62336,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "6c33e3cb8cfe4aa170ee66a541dab2489bed99ab7174af68d7ed2d59e1a47297",
+      "sha256": "5ef4e14aa6daa2e314bf2c22f7d242181d100891bffb31cc8ef05911def5d4db",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74329,7 +74329,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "5ffa67029e5a78b83222b3d944a60e37869e140effdf326a40be9f4c8b408752",
+      "sha256": "3b872327329548788b8e09d77c38428224f4e5b6af5227916d8ba3fd8da5f86a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

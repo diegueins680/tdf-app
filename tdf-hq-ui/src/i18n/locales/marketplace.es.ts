@@ -28,6 +28,8 @@ const marketplace = {
     terms: 'Condiciones',
     termsDuration: 'Duración: {{minutes}} min',
     termsEquipment: 'Equipo: {{equipment}}',
+    termsCapacity: 'Aforo o tamaño: {{capacity}}',
+    listingTerms: 'Condiciones del anuncio',
     roundTerms: 'Condiciones: {{terms}}',
     showRounds: 'Ver negociación ({{count}} rondas)',
     hideRounds: 'Ocultar negociación',

@@ -147,7 +147,8 @@ export function describeTerms(terms: OfferTerms | null | undefined, t: (key: str
     if (value === null || value === undefined || value === '') continue;
     if (key === 'durationMinutes') lines.push(t('marketplace.offer.termsDuration', { minutes: value }));
     else if (key === 'equipmentProvided') lines.push(t('marketplace.offer.termsEquipment', { equipment: value }));
-    else lines.push(`${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
+    else if (key === 'capacity') lines.push(t('marketplace.offer.termsCapacity', { capacity: value }));
+    else lines.push(`${key}: ${typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value) : JSON.stringify(value)}`);
   }
   return lines;
 }

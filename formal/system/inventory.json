@@ -10210,7 +10210,7 @@
     {
       "id": "SURFACE-8481865773a143b4",
       "path": "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
-      "sha256": "fc5c94b48a38e16fe65a64aa3fba8b7265de78da05316d85cfdcb1f741e96176",
+      "sha256": "193e8cdfcb1b6561a98cf19cafd20437114fa54e6d70050347e88c45c085db85",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10234,13 +10234,13 @@
     {
       "id": "SURFACE-918143da462da26c",
       "path": "tdf-hq-ui/src/features/marketplace/offers.test.ts",
-      "sha256": "52ce8687fa78ec1750571b4040055239418507a4473febf3463f81528bd10a4c",
+      "sha256": "9d704e2b3595cd1e13300912401d7f3ccdd42a1ef11e3257be5f9c0a9e5e1609",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1b321f25c0e1bf1a",
       "path": "tdf-hq-ui/src/features/marketplace/offers.ts",
-      "sha256": "abae1c83093e0da7af7e070b301f59a6ccc3e2c754454acacea513893d3eb9bb",
+      "sha256": "5e17fe91f983b6217ffc30673e9136f6f12e6507b14a47bbea008ee53bfd68bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10540,13 +10540,13 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "1ccbc4f06adb21af025ab1c8d7b911472eed7e074b7297666ecb1db2a58c9c59",
+      "sha256": "5b8585b3c3a8bb0bb6e37fe901fc4b5bc933fcf0c3831196cb49ef20e45e5578",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "f8fd5b934346e15ada92e4bfbf7ca9b7671258723a84239c84d4943dd3e6b5e5",
+      "sha256": "ecced9a51d4187263f40718ad0111d760b7ad2c9a7257f4a04cb3cecbf2933c2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10996,7 +10996,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "6c33e3cb8cfe4aa170ee66a541dab2489bed99ab7174af68d7ed2d59e1a47297",
+      "sha256": "5ef4e14aa6daa2e314bf2c22f7d242181d100891bffb31cc8ef05911def5d4db",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17548,7 +17548,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "5ffa67029e5a78b83222b3d944a60e37869e140effdf326a40be9f4c8b408752",
+      "sha256": "3b872327329548788b8e09d77c38428224f4e5b6af5227916d8ba3fd8da5f86a",
       "semanticConformance": "not-established-by-discovery"
     },
     {

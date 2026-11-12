@@ -105,10 +105,12 @@ describe('marketplace offer helpers (ADR 0134)', () => {
 describe('describeTerms', () => {
   const t = (key: string, options?: Record<string, unknown>) => `${key}${options ? ' ' + JSON.stringify(options) : ''}`;
   it('labels the known keys, keeps unknown keys visible and skips empty values', () => {
-    expect(describeTerms({ durationMinutes: 240, equipmentProvided: 'Backline', soundcheck: '16:00', empty: '', missing: null }, t)).toEqual([
+    expect(describeTerms({ durationMinutes: 240, equipmentProvided: 'Backline', capacity: 300, soundcheck: '16:00', stage: { width: 8 }, empty: '', missing: null }, t)).toEqual([
       'marketplace.offer.termsDuration {"minutes":240}',
       'marketplace.offer.termsEquipment {"equipment":"Backline"}',
+      'marketplace.offer.termsCapacity {"capacity":300}',
       'soundcheck: 16:00',
+      'stage: {"width":8}',
     ]);
     expect(describeTerms(undefined, t)).toEqual([]);
     expect(describeTerms({}, t)).toEqual([]);

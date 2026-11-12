@@ -1121,8 +1121,16 @@ createApplication user classifiedId idempotency request@ApplicationCreateRequest
       _ <- (rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))" [PersistText ("marketplace-offer:"<>UUID.toText classifiedId<>":"<>UUID.toText applicantProfileId)] :: SqlPersistT IO [Single Int64])
       rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE classified_id=? AND applicant_profile_id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND offer_expires_at<=now()" [toPersistValue classifiedId,toPersistValue applicantProfileId]
       duplicates <- rawSql ("SELECT application.id FROM classified_application application WHERE application.classified_id=? AND application.applicant_profile_id=? AND (application.status IN ('accepted','conversation_open','converted') OR " <> activeOfferSql "application" <> ") LIMIT 1") [toPersistValue classifiedId,toPersistValue applicantProfileId] :: SqlPersistT IO [Single UUID]
+      -- The classified row is locked as well (the same lock acceptance takes),
+      -- and its admission state is re-read here: an acceptance that filled the
+      -- last slot or a closure that landed since the checks above refuses this
+      -- offer instead of leaving an open offer on a filled listing.
+      admission <- rawSql "SELECT classified.status,classified.slots_remaining,(classified.expires_at>now() AND (classified.offer_deadline_at IS NULL OR classified.offer_deadline_at>now())) FROM classified WHERE classified.id=? FOR UPDATE OF classified"
+        [toPersistValue classifiedId] :: SqlPersistT IO [(Single Text, Single Int, Single Bool)]
       if not (null duplicates)
         then pure (Left err409 {errBody="this profile already has an active offer on this classified"})
+        else if not (admissionOpen admission)
+        then pure (Left err409 {errBody="this classified no longer takes offers"})
         else do
           rawExecute "INSERT INTO classified_application(id,classified_id,applicant_profile_id,message,portfolio,availability_text,proposed_amount_minor,current_amount_minor,currency_id,terms,offer_expires_at,status,idempotency_key,request_fingerprint) VALUES (?,?,?,?,?::jsonb,?,?,?,?,?::jsonb,?,'submitted',?,?)"
             [toPersistValue applicationId,toPersistValue classifiedId,toPersistValue applicantProfileId,PersistText (T.strip message),PersistText (decodeJsonText portfolio),optionalText availability,optionalInt64 offeredAmount,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),toPersistValue offerExpiry,PersistText idempotency,PersistText fingerprint]
@@ -1206,6 +1214,12 @@ counterOffer user applicationId idempotency request@OfferCounterRequest{amountMi
     forM_ counterpart $ \profileIdValue -> notifyOfferParticipant profileIdValue applicationId "marketplace.offer.countered" "Contraoferta recibida" "La otra parte propuso un nuevo monto para la oferta."
     recordAuthenticatedEvent user "offer_countered" "application" (UUID.toText applicationId)
     getApplication user applicationId
+
+-- A classified admits a new offer while it is published, has a slot left and
+-- neither its expiry nor its offer deadline has elapsed (ADR 0134).
+admissionOpen :: [(Single Text, Single Int, Single Bool)] -> Bool
+admissionOpen [(Single status, Single remaining, Single live)] = status == "published" && remaining > 0 && live
+admissionOpen _ = False
 
 mergeObjects :: Value -> Value -> Value
 mergeObjects (Object left) (Object right) = Object (KeyMap.union right left)

@@ -29,6 +29,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
+import { describeTerms } from '../features/marketplace/offers';
 import { EventTickets } from '../api/eventTickets';
 import { findExternalTicketLink, localizeTicketUnavailableReason } from '../utils/externalTicketing';
 import { useMetaTags } from '../hooks/useMetaTags';
@@ -224,6 +225,17 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const offerStats = kind === 'classified' ? record(value['offerStats']) : undefined;
   const offerDeadline = kind === 'classified' ? text(value['offerDeadlineAt']) : undefined;
   const offersClosed = kind === 'classified' && (slotsRemaining === 0 || (offerDeadline ? new Date(offerDeadline) < new Date() : false));
+  // ADR 0134: conditions attached by the publisher (duration, capacity, equipment…).
+  const listingTerms = kind === 'classified'
+    ? describeTerms(record(value['terms']), (key, options) => {
+        switch (key) {
+          case 'marketplace.offer.termsDuration': return english ? `Duration: ${String(options?.['minutes'])} min` : `Duración: ${String(options?.['minutes'])} min`;
+          case 'marketplace.offer.termsEquipment': return english ? `Equipment: ${String(options?.['equipment'])}` : `Equipo: ${String(options?.['equipment'])}`;
+          case 'marketplace.offer.termsCapacity': return english ? `Capacity: ${String(options?.['capacity'])}` : `Aforo o tamaño: ${String(options?.['capacity'])}`;
+          default: return key;
+        }
+      })
+    : [];
   const invitationAction = `/mis-clasificados?invite=${encodeURIComponent(targetId)}`;
   const shouldResumeContact = kind === 'profile'
     && Boolean(session)
@@ -408,6 +420,12 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
                 <Paper sx={{ p: 3, bgcolor: 'action.hover', borderRadius: 3 }} elevation={0}>
                   <Typography variant="h5" fontWeight={800}>{kind === 'classified' ? (intent === 'offering' ? '¿Te interesa lo que ofrece?' : '¿Puedes cubrir lo que busca? Envía tu oferta') : '¿Quieres contactar este perfil?'}</Typography>
                   <Typography color="text.secondary" mt={1}>{kind === 'classified' && !offersClosed ? 'Propón tu precio y condiciones; el autor compara las ofertas y elige. TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.' : 'TDF mantiene tu correo y teléfono ocultos hasta que decidas compartirlos.'}</Typography>
+                  {listingTerms.length > 0 && (
+                    <Alert severity="info" icon={false} sx={{ mt: 2 }} data-testid="listing-terms">
+                      <Typography variant="subtitle2" fontWeight={700}>{english ? 'Listing conditions' : 'Condiciones del anuncio'}</Typography>
+                      {listingTerms.map((line) => <Typography key={line} variant="body2">{line}</Typography>)}
+                    </Alert>
+                  )}
                   {offersClosed && <Alert severity="info" sx={{ mt: 2 }}>Este anuncio ya no recibe ofertas{slotsRemaining === 0 ? ': cubrió sus cupos.' : ': cerró su fecha límite.'}</Alert>}
                   <Stack direction="row" gap={1} flexWrap="wrap" mt={2}>
                     <Button
