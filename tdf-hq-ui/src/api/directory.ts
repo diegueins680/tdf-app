@@ -18,6 +18,15 @@ export type DirectoryReviewPage = components['schemas']['DirectoryReviewPage'];
 export type DirectoryReviewEligibility = components['schemas']['DirectoryReviewEligibility'];
 export type DirectoryReview = components['schemas']['DirectoryReview'];
 export type DirectoryFavorite = components['schemas']['DirectoryFavorite'];
+export type PublicClassified = components['schemas']['PublicClassified'];
+export type ClassifiedApplication = components['schemas']['ClassifiedApplication'];
+export type OfferRound = components['schemas']['OfferRound'];
+export type OfferCounterRequest = components['schemas']['OfferCounterRequest'];
+export type OfferTerms = components['schemas']['OfferTerms'];
+export type ClassifiedIntent = components['schemas']['ClassifiedIntent'];
+export type PriceMode = components['schemas']['PriceMode'];
+export type OfferSort = NonNullable<NonNullable<operations['listClassifiedApplications']['parameters']['query']>['sort']>;
+export type MyOffersStatus = NonNullable<NonNullable<operations['listMyApplications']['parameters']['query']>['status']>;
 
 const idempotencyHeaders = (key?: string) => ({ headers: { 'Idempotency-Key': key ?? crypto.randomUUID() } });
 
@@ -68,12 +77,24 @@ export const Directory = {
     post<ManagedClassified>('/directory/classifieds', body, idempotencyHeaders(idempotencyKey)),
   setClassifiedStatus: (classifiedId: string, status: string) =>
     patch<ManagedClassified>(`/directory/classifieds/${encodeURIComponent(classifiedId)}/status`, { status }),
-  applications: (classifiedId: string) =>
-    get<Record<string, unknown>[]>(`/directory/classifieds/${encodeURIComponent(classifiedId)}/applications`),
+  applications: (classifiedId: string, sort?: OfferSort) =>
+    get<ClassifiedApplication[]>(`/directory/classifieds/${encodeURIComponent(classifiedId)}/applications${sort ? `?sort=${encodeURIComponent(sort)}` : ''}`),
   apply: (classifiedId: string, body: components['schemas']['ApplicationCreate'], idempotencyKey?: string) =>
-    post<components['schemas']['ClassifiedApplication']>(`/directory/classifieds/${encodeURIComponent(classifiedId)}/applications`, body, idempotencyHeaders(idempotencyKey)),
-  setApplicationStatus: (applicationId: string, status: string) =>
-    patch<Record<string, unknown>>(`/directory/applications/${encodeURIComponent(applicationId)}/status`, { status }),
+    post<ClassifiedApplication>(`/directory/classifieds/${encodeURIComponent(classifiedId)}/applications`, body, idempotencyHeaders(idempotencyKey)),
+  // ADR 0134: offers made through the caller's profiles, one offer with its rounds, and counter-offers.
+  myApplications: (status?: MyOffersStatus) =>
+    get<ClassifiedApplication[]>(`/directory/applications${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  application: (applicationId: string) =>
+    get<ClassifiedApplication>(`/directory/applications/${encodeURIComponent(applicationId)}`),
+  counterOffer: (applicationId: string, body: OfferCounterRequest, idempotencyKey?: string) =>
+    post<ClassifiedApplication>(`/directory/applications/${encodeURIComponent(applicationId)}/counter`, body, idempotencyHeaders(idempotencyKey)),
+  /** expectedVersion binds the decision to the offer round the caller saw (409 when it moved on). */
+  setApplicationStatus: (applicationId: string, status: string, reason?: string, expectedVersion?: number) =>
+    patch<ClassifiedApplication>(`/directory/applications/${encodeURIComponent(applicationId)}/status`, {
+      status,
+      ...(reason ? { reason } : {}),
+      ...(typeof expectedVersion === 'number' ? { expectedVersion } : {}),
+    } satisfies components['schemas']['StatusRequest']),
   contact: (body: components['schemas']['DirectoryContact'], idempotencyKey?: string) =>
     post<Record<string, unknown>>('/directory/contact', body, idempotencyHeaders(idempotencyKey)),
   reviewEligibility: (authorProfileId?: string) =>

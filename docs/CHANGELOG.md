@@ -5,7 +5,7 @@ _All user-facing changes per build. Keep this updated before every release._
 ## Unreleased
 
 ### Added
-- _(populate before next release)_
+- Marketplace de demanda y oferta (ADR 0134, Fase 1): los clasificados declaran intención (busca/ofrece), cupos y modo de precio (abierto, sugerido, fijo); las postulaciones son ofertas con monto, términos y vencimiento; contraofertas alternadas entre autor y oferente (rondas 2 a 9; la ronda 10 queda reservada a la aceptación); aceptación atómica bajo bloqueo de fila que consume un cupo por oferta y reabre el anuncio cubierto si una aceptación se retira y cierra el anuncio al cubrirse; vista "Mis ofertas", tablero de comparación por precio/reputación (rangos por moneda, rondas visibles) y filtro de intención en `/buscar`. La negociación (contraofertas) queda detrás del gate `marketplace.offers` (apagado en producción).
 
 ### Fixed
 - _(populate before next release)_

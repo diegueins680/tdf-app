@@ -66,6 +66,7 @@
     "test:music-api-s3-local": "node scripts/test-music-s3-local.mjs --with-api",
     "test:music-linux-integration": "node scripts/test-music-s3-local.mjs --with-linux-worker",
     "test:music-player-native": "playwright test --config=playwright.music-native.config.mjs",
+    "test:marketplace-negotiation": "playwright test --config=playwright.marketplace.config.mjs",
     "test:music-browser-integration": "node scripts/test-music-s3-local.mjs --with-linux-worker --with-browser",
     "generate:persona-program": "node scripts/persona-test-program.mjs generate",
     "test:persona-program": "node scripts/persona-test-program.mjs validate && node --test scripts/__tests__/persona-test-program.test.mjs",
