@@ -25,22 +25,28 @@ state_machines:
       pending_moderation: [published, rejected, withdrawn]
       published: [paused, filled, expired, withdrawn, moderated]
       paused: [published, filled, expired, withdrawn, moderated]
-      filled: []
+      filled: [published]
       expired: [published, withdrawn]
       withdrawn: []
       rejected: [draft, withdrawn]
       moderated: [draft, withdrawn]
   application:
+    # ADR 0134: an application is a negotiable offer. Counter states alternate
+    # actors and are entered only through the counter endpoint, which records
+    # a round; expired is a system closure (offer_expires_at elapsed).
     initial: submitted
     transitions:
-      submitted: [viewed, shortlisted, accepted, rejected, withdrawn]
-      viewed: [shortlisted, accepted, rejected, withdrawn]
-      shortlisted: [accepted, rejected, withdrawn]
+      submitted: [viewed, shortlisted, countered_by_author, accepted, rejected, withdrawn, expired]
+      viewed: [shortlisted, countered_by_author, accepted, rejected, withdrawn, expired]
+      shortlisted: [countered_by_author, accepted, rejected, withdrawn, expired]
+      countered_by_author: [countered_by_applicant, accepted, rejected, withdrawn, expired]
+      countered_by_applicant: [countered_by_author, accepted, rejected, withdrawn, expired]
       accepted: [conversation_open, converted, withdrawn]
       conversation_open: [converted, withdrawn]
       converted: []
       rejected: []
       withdrawn: []
+      expired: []
   invitation:
     initial: pending
     transitions:
@@ -130,6 +136,15 @@ invariants:
   I14_merge_preserves_references:
     statement: Merge records source->target, preserves immutable child references and source slug resolution, records before/after counts and audit, and never deletes historical rows.
     enforcement: locked idempotent merge transaction, canonical resolution view and reconciliation-count integration test
+  I18_alternating_negotiation:
+    statement: Counter-offers alternate strictly between the author and the offerer, occupy at most rounds 2 to 9, and an acceptance (always recorded, at most round 10) closes the chain; counter states are unreachable through the generic status endpoint.
+    enforcement: TDF.Directory.Policy (counterAllowedFor, acceptAllowedFor, participantTransitionAllowed, negotiationRoundsValid), classified_offer_round unique (application_id, round_number) and property tests (ADR 0134)
+  I19_slot_accounting:
+    statement: Accepting an offer consumes exactly one slot in the same transaction; slots_remaining is never negative nor above slots; when it reaches zero the classified is filled and every open offer is rejected with reason slots_filled; withdrawing an accepted offer releases one slot.
+    enforcement: CHECK (slots_remaining BETWEEN 0 AND slots), guarded decrement, handler transaction and property tests
+  I20_offer_confidentiality_aggregates:
+    statement: Offerers see only their own offer and rounds; the public and other offerers see only the offer count and, with at least three offers, an anonymous amount range.
+    enforcement: participant-scoped queries and offerStats projection
   I15_no_public_sensitive_data:
     statement: No public endpoint returns PII, credentials, tokens, private evidence, moderation notes or administrative fields.
     enforcement: DTO allowlists, OpenAPI schema audit and endpoint tests
@@ -158,7 +173,9 @@ preconditions:
     - moderation and spam policy choose a declared transition
   submit_application:
     - caller manages applicant profile with contact capability
-    - classified is published and unexpired
+    - classified is published, unexpired, not derived from an artist profile, has a slot left and its offer deadline has not passed
+    - a fixed-price classified admits only its exact amount and currency
+    - the applicant profile has no other active offer on the classified
     - neither profile blocks the other, target preferences and minimum completeness pass, and age controls pass
     - uniqueness/idempotency scope is unused or payload-identical
   send_invitation:
@@ -205,9 +222,19 @@ postconditions:
     - public search document is refreshed
     - audit event records actor, transition and correlation id
   accept_application:
-    - only target-profile managers may accept
+    - the author accepts an offer waiting on the author; the offerer accepts an author counter
+    - the classified is published, unexpired and has a slot left; the offer state and the slot are re-read under row locks and one slot is consumed atomically (concurrent acceptances of the same offer consume one slot)
+    - accepted_amount_minor freezes the last round's amount and an accept round is recorded
+    - when no slot is left the classified becomes filled and open offers are rejected (slots_filled)
     - application remains private
     - conversation context may be created exactly once
+  counter_offer:
+    - caller is the author or the offerer and it is their turn
+    - the offer is open, unexpired, the classified is published and its price mode is not fixed
+    - the round number is current_round + 1 and at most 9; round 10 is reserved for the acceptance
+    - the round expiry never exceeds the classified offer deadline or expiry
+    - the round and the offer's current amount, terms and expiry change in one transaction
+    - the counterpart is notified
   accept_invitation:
     - only target-profile managers may accept
     - an expired pending invitation transitions to expired instead of accepted
@@ -228,6 +255,7 @@ postconditions:
 idempotency_scopes:
   - invitation(sender_profile_id, target_profile_id, context_kind, context_id, idempotency_key)
   - application(classified_id, applicant_profile_id, idempotency_key)
+  - offer_round(actor_party_id, idempotency_key, request_fingerprint)
   - saved_search_alert(saved_search_id, result_kind, result_id, result_version)
   - contact_context(thread_id, context_kind, context_id)
   - review_create(actor_party_id, idempotency_key, request_fingerprint)
