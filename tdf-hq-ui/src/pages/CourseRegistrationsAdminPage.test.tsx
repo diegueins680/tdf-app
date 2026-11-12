@@ -214,7 +214,7 @@ const markPaidOptionalFollowUpAccessibleLabel = 'Agregar seguimiento opcional';
 const emptyFollowUpAlertMessage =
   'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const firstFollowUpComposerHelpText =
-  'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
+  'Escribe una nota para registrar el primer seguimiento.';
 const openPaymentWorkflowLabel = 'Registrar pago';
 const markPaymentPendingLabel = 'Marcar pago pendiente';
 const compactPaymentPendingActionLabel = 'Pasar a pendiente';
@@ -688,7 +688,7 @@ describe('CourseRegistrationsAdminPage', () => {
     });
 
     await waitForExpectation(() => {
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
       expect(countButtonsByText(document.body, optionalDossierContextActionsLabel)).toBe(0);
       expect(countButtonsByText(document.body, compactOptionalDossierContextActionsLabel)).toBe(0);
@@ -3506,8 +3506,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
       expect(dialogHeadings).toContain('Notas internas');
       expect(getButtonByText(document.body, 'Cancelar notas')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
-      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(document.body.textContent).toContain('Escribe una nota para habilitar el guardado.');
       expect(countButtonsByText(document.body, 'Ocultar editor')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar nota')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar seguimiento')).toBe(0);
@@ -3524,7 +3524,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(false);
-      expect(document.body.textContent).not.toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(document.body.textContent).not.toContain('Escribe una nota para habilitar el guardado.');
     });
 
     await act(async () => {
@@ -5740,8 +5740,8 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(hasLabel(document.body, 'Notas internas')).toBe(true);
-      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
-      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(document.body.textContent).toContain('Escribe una nota para habilitar el guardado.');
       expect(countButtonsByText(document.body, optionalDossierNotesActionLabel)).toBe(0);
     });
 
@@ -6328,7 +6328,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(getButtonByText(document.body, 'Cancelar evidencia')).toBeTruthy();
       expect(countButtonsByText(document.body, 'Cerrar pago')).toBe(0);
       expect(countButtonsByText(document.body, 'Agregar evidencia')).toBe(0);
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
     });
 
     await act(async () => {
@@ -6539,7 +6539,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.querySelector('[aria-label="Refrescar expediente"]')).toBeNull();
       expect(document.body.querySelector('[aria-label="Refrescar expediente y correos"]')).toBeNull();
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
     });
 
@@ -6718,7 +6718,7 @@ describe('CourseRegistrationsAdminPage', () => {
     await waitForExpectation(() => {
       expect(document.body.textContent).toContain(firstReceiptComposerHelpText);
       expect(document.body.textContent).not.toContain(emptyReceiptAlertMessage);
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Cancelar comprobante')).toBeTruthy();
     });
 
@@ -7100,7 +7100,7 @@ describe('CourseRegistrationsAdminPage', () => {
       expect(hasLabel(document.body, 'Nombre visible')).toBe(false);
       expect(hasLabel(document.body, 'Notas del comprobante')).toBe(false);
       expect(getButtonByText(document.body, 'Usar enlace existente en lugar de subir archivo')).toBeTruthy();
-      expect(countButtonsByText(document.body, 'Guardar comprobante')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar comprobante').disabled).toBe(true);
       expect(
         Array.from(document.body.querySelectorAll('button')).some(
           (el) => (el.textContent ?? '').trim() === 'Agregar comprobante',
@@ -7629,8 +7629,8 @@ describe('CourseRegistrationsAdminPage', () => {
       const dialogHeadings = Array.from(getDialog().querySelectorAll('h6')).map((element) => (element.textContent ?? '').trim());
       expect(dialogHeadings).toContain('Notas internas');
       expect(hasLabel(document.body, 'Notas internas')).toBe(true);
-      expect(countButtonsByText(document.body, 'Guardar notas')).toBe(0);
-      expect(document.body.textContent).toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(true);
+      expect(document.body.textContent).toContain('Escribe una nota para habilitar el guardado.');
     });
 
     await act(async () => {
@@ -7641,7 +7641,7 @@ describe('CourseRegistrationsAdminPage', () => {
 
     await waitForExpectation(() => {
       expect(getButtonByText(document.body, 'Guardar notas').disabled).toBe(false);
-      expect(document.body.textContent).not.toContain('Escribe una nota para mostrar Guardar notas.');
+      expect(document.body.textContent).not.toContain('Escribe una nota para habilitar el guardado.');
     });
 
     await cleanup();
@@ -7702,7 +7702,7 @@ describe('CourseRegistrationsAdminPage', () => {
           (el) => (el.textContent ?? '').trim() === 'Usar enlace existente en lugar de subir adjunto',
         ),
       ).toBe(false);
-      expect(countButtonsByText(document.body, 'Guardar seguimiento')).toBe(0);
+      expect(getButtonByText(document.body, 'Guardar seguimiento').disabled).toBe(true);
       expect(getButtonByText(document.body, 'Cancelar seguimiento')).toBeTruthy();
     });
 
