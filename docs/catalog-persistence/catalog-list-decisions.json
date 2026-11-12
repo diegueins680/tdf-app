@@ -4,7 +4,7 @@
   "generatedFrom": "docs/catalog-persistence/reports/static-list-inventory.json",
   "reconciliation": {
     "preservedDecisions": 1209,
-    "reviewedByPolicy": 163,
+    "reviewedByPolicy": 164,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
     "consolidatedMainRetirements": {
@@ -39986,6 +39986,28 @@
         "name": "openApplicationStatuses",
         "valueCount": 5,
         "consumerCount": 1,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      }
+    },
+    {
+      "id": "9dd6b72c9435bd64fe09",
+      "classification": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "country_reference, subdivision_reference, city_reference",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+      "reviewed": true,
+      "reviewMethod": "deterministic-policy-v3",
+      "reviewBatch": "deterministic-policy-v3",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "line": 231,
+        "kind": "switch-cases",
+        "name": "key",
+        "valueCount": 3,
+        "consumerCount": 2,
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }

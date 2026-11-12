@@ -870,7 +870,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.ok(review, 'the desktop shell reviews need their exact branch review');
     assert.deepEqual(active.find(row => row.id === review.id), review);
   }
-  // The marketplace offers branch (ADR 0134, #719) adds seventeen value lists
+  // The marketplace offers branch (ADR 0134, #719) adds eighteen value lists
   // reviewed by the deterministic policy, extends the search page view-mode
   // attribute list (successor of main's exact review 7393e5dd10ebe68ae3e2) and
   // records a successor review of the 249-entry manifest whose exact
@@ -880,7 +880,9 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     '0dc607f91bd630b1fb87', '4ed56a39eea6e4d4679d', 'aa6a65391d2c0611fdd8',
     'b79670b0b1a1fbc1ee05', 'df679c5b2cb5d91be79e', 'ef5bffc43b9c0ff3a361', '39edb2a76ecef8cd6c57',
     '2a350b9da29a2d080bd8', 'd776481beacf4f4a074f', '16393adee900667601af', '7207f087ef5f8e0b2158',
-    '3a7f374bb3b52ef8d34d', 'a9c6757fbe6f2868f4f2', '853a5f768e09d0c32259'];
+    '3a7f374bb3b52ef8d34d', 'a9c6757fbe6f2868f4f2', '853a5f768e09d0c32259',
+    // Listing-conditions labels on the public classified page (review fix round four).
+    '9dd6b72c9435bd64fe09'];
   for (const id of marketplaceReviewIds) {
     const review = active.find(row => row.id === id);
     assert.ok(review?.reviewed, `the marketplace offers review ${id} must be present and reviewed`);

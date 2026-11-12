@@ -27252,7 +27252,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "40e6cbaa3288a1f1d2a09a8a975c728e3b3fc620ad2d41f867d2c4c7504fc311",
+    "docs/catalog-persistence/catalog-list-decisions.json": "912aefc1bdba5cf87d3a4cae15a3483221774a1a628f53976a46cb284b31893a",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
@@ -27681,7 +27681,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "982392337c139e221b4f577053b2e2fef97d495f8208eb3d4b9bb423817dded1",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "f617abd9157e2e8aeed082bdbc18aecd563a02d9c8f2425d7b7820188c9d551d",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -48617,7 +48617,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "982392337c139e221b4f577053b2e2fef97d495f8208eb3d4b9bb423817dded1",
+      "sha256": "f617abd9157e2e8aeed082bdbc18aecd563a02d9c8f2425d7b7820188c9d551d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
