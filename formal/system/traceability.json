@@ -27189,6 +27189,7 @@
         "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq-ui/src/api/socialEvents.ts",
@@ -27631,7 +27632,7 @@
     "formal/system/public-routes.json": "a4d7b6030e4064c05306227ecad526339a3b2442d5360f6e1eb8cbb864110d84",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "0ee2cdc4ef46cf48846150c55f4fffd296aa496e609df675976b1b1cb339bbe4",
+    "formal/system/recovery-expiry-arithmetic.json": "07a0e29faf856735d7f92a943959a60b4f9c77c7c312220fb2ac20aa176bc0f0",
     "formal/system/route-requirements.json": "6c27d633449648bcdbf9bd090a64803df894c35c48869e761226acfc1ec14f71",
     "formal/system/state-machine-bindings.json": "ecf58aa698dc3893997bd23e681dd10d048be2b8afb08cbedca632a6222ec94c",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -28909,6 +28910,7 @@
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "0195a6a9888c881caebc81348b83fc0f98c278af778fcb2d22d69c9ab82d5215",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
+    "tdf-hq/src/TDF/Server/EventAdminDelegation.hs": "46308623354c21cfb74cb641b66b25c11c9c42fc92ef5c0511064d22f87d6a00",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
@@ -28926,7 +28928,7 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "25615c22cd49a8da93bc2f01ea5aeccf491e1de209a6996d0e1204f84ead2a56",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "cf28dc9a83d0b804aae454f246d1eed7c030388c30f75703a7c5d2357c6cb484",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
@@ -28966,7 +28968,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "b2db5d7c53f883bb315ca48c75e68d3095818e51763c61ffb66060f48806c571",
+    "tdf-hq/tdf-hq.cabal": "c45a515f01ee35a0cc8c39aa70c9b1af70e51ff0edd1cfa9f5dd0179172a2879",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -46826,6 +46828,12 @@
       }
     ],
     "tdf-hq/sql/2026-11-11_event_admin_delegation_rollback.sql": [
+      {
+        "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/EventAdminDelegation.hs": [
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
         "relationship": "implementation"
@@ -74306,6 +74314,18 @@
       ]
     },
     {
+      "id": "SURFACE-61dc9122f2e5927a",
+      "path": "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
+      "sha256": "46308623354c21cfb74cb641b66b25c11c9c42fc92ef5c0511064d22f87d6a00",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-06aae7ecd0fab607",
       "path": "tdf-hq/src/TDF/Server/EventResearch.hs",
       "sha256": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
@@ -74731,7 +74751,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "25615c22cd49a8da93bc2f01ea5aeccf491e1de209a6996d0e1204f84ead2a56",
+      "sha256": "cf28dc9a83d0b804aae454f246d1eed7c030388c30f75703a7c5d2357c6cb484",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75769,7 +75789,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b2db5d7c53f883bb315ca48c75e68d3095818e51763c61ffb66060f48806c571",
+      "sha256": "c45a515f01ee35a0cc8c39aa70c9b1af70e51ff0edd1cfa9f5dd0179172a2879",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84843,7 +84863,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b73f7dad104f65b997271e2ed6a69a7e9b3199922491f74fa67d438091665c6b",
+      "sourceSha256": "bb4b4b05daec5cc4563f6c530b0580d1c96df1852eecfa82de708867a8f2ef64",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -84871,7 +84891,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b73f7dad104f65b997271e2ed6a69a7e9b3199922491f74fa67d438091665c6b",
+      "sourceSha256": "bb4b4b05daec5cc4563f6c530b0580d1c96df1852eecfa82de708867a8f2ef64",
       "definition": {
         "states": [
           "absent",
@@ -84901,7 +84921,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "b73f7dad104f65b997271e2ed6a69a7e9b3199922491f74fa67d438091665c6b",
+      "sourceSha256": "bb4b4b05daec5cc4563f6c530b0580d1c96df1852eecfa82de708867a8f2ef64",
       "definition": {
         "export": [
           "queued",

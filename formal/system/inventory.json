@@ -2436,6 +2436,7 @@
       "tdf-hq/src/TDF/Server/DDEX.hs",
       "tdf-hq/src/TDF/Server/Directory.hs",
       "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
+      "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
       "tdf-hq/src/TDF/Server/EventResearch.hs",
       "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
       "tdf-hq/src/TDF/Server/Merch.hs",
@@ -17545,6 +17546,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-61dc9122f2e5927a",
+      "path": "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
+      "sha256": "46308623354c21cfb74cb641b66b25c11c9c42fc92ef5c0511064d22f87d6a00",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-06aae7ecd0fab607",
       "path": "tdf-hq/src/TDF/Server/EventResearch.hs",
       "sha256": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
@@ -17655,7 +17662,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "25615c22cd49a8da93bc2f01ea5aeccf491e1de209a6996d0e1204f84ead2a56",
+      "sha256": "cf28dc9a83d0b804aae454f246d1eed7c030388c30f75703a7c5d2357c6cb484",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18003,7 +18010,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "b2db5d7c53f883bb315ca48c75e68d3095818e51763c61ffb66060f48806c571",
+      "sha256": "c45a515f01ee35a0cc8c39aa70c9b1af70e51ff0edd1cfa9f5dd0179172a2879",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30262,7 +30269,7 @@
     },
     {
       "path": "formal/system/event-admin-delegation.md",
-      "sha256": "b7891cf10282c872076ff132981d621282f78ad19024016987d4f0e5a27a4c7c",
+      "sha256": "585db75a82697fa24f69229a5c40a6549f3a94b7f8fb15edcd65e65c67d7618c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31011,7 +31018,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "b73f7dad104f65b997271e2ed6a69a7e9b3199922491f74fa67d438091665c6b",
+      "sha256": "bb4b4b05daec5cc4563f6c530b0580d1c96df1852eecfa82de708867a8f2ef64",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
