@@ -12,7 +12,8 @@ module TDF.Commerce.ProviderEventWorker
 
 import           Control.Concurrent (forkIO, threadDelay)
 import           Control.Exception.Safe (tryAny)
-import           Control.Monad (foldM, forever, void)
+import           Control.Monad (foldM, forever, void, when)
+import           Data.Foldable (for_)
 import qualified Data.ByteString.Lazy as BL
 import           Data.Text (Text)
 import qualified Data.Text as T
@@ -24,6 +25,7 @@ import           System.IO (hPutStrLn, stderr)
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
+import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
 import           TDF.DB (Env(..))
 import           TDF.Server.ServiceStorefront
@@ -111,7 +113,7 @@ processReference env@Env{envPool} encryptionKey stats eventRef = do
         (ProviderEvent.loadProviderEventPayload eventRef encryptionKey) envPool
       case loaded of
         Left _ -> markRetry envPool eventRef attemptCount
-          "Provider event payload decryption failed" now claimedStats
+          "Provider event payload decryption failed" Nothing now claimedStats
         Right (Left summary) -> do
           runSqlPool
             (ProviderEvent.markProviderEventDeadLetter
@@ -153,7 +155,7 @@ processPaypalPayload env envPool eventRef attemptCount now stats payload =
         env environment (ProviderEvent.pepMerchantRef payload) envelope now
       case processed of
         Left _ -> markRetry envPool eventRef attemptCount
-          "Provider event processing failed" now stats
+          "Provider event processing failed" Nothing now stats
         Right outcome ->
           applyOutcome envPool eventRef attemptCount now stats outcome
 
@@ -170,7 +172,7 @@ processHostedPayload env envPool eventRef attemptCount now stats payload = do
   processed <- tryAny (Reconciliation.processProviderEventIO env payload now)
   case processed of
     Left _ -> markRetry envPool eventRef attemptCount
-      "Hosted provider reconciliation failed" now stats
+      "Hosted provider reconciliation failed" Nothing now stats
     Right Reconciliation.ProviderReconciliationResult{..} ->
       case prrDisposition of
         Reconciliation.ReconciliationProcessed -> do
@@ -179,11 +181,15 @@ processHostedPayload env envPool eventRef attemptCount now stats payload = do
               prrCheckoutId prrAttemptId Nothing now) envPool
           pure stats { pewProcessed = pewProcessed stats + 1 }
         Reconciliation.ReconciliationRetry ->
-          markRetry envPool eventRef attemptCount prrSummary now stats
+          markRetry envPool eventRef attemptCount prrSummary prrReview now stats
         Reconciliation.ReconciliationDeadLetter -> do
           runSqlPool
-            (ProviderEvent.markProviderEventDeadLetter eventRef attemptCount
-              prrCheckoutId prrAttemptId Nothing prrSummary now) envPool
+            (do
+              ProviderEvent.markProviderEventDeadLetter eventRef attemptCount
+                prrCheckoutId prrAttemptId Nothing prrSummary now
+              for_ prrReview $ \payment ->
+                Reconciliation.recordDeadLetterReview eventRef attemptCount payment now)
+            envPool
           pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
 
 applyOutcome
@@ -212,19 +218,28 @@ applyOutcome envPool eventRef attemptCount now stats outcome =
           eventRef attemptCount checkoutId attemptId refundId summary now) envPool
       pure stats { pewDeadLettered = pewDeadLettered stats + 1 }
     PaypalEventRetry summary ->
-      markRetry envPool eventRef attemptCount summary now stats
+      markRetry envPool eventRef attemptCount summary Nothing now stats
 
 markRetry
   :: ConnectionPool
   -> ProviderEvent.ProviderEventReference
   -> Int
   -> Text
+  -> Maybe Execution.BoundProviderPayment
   -> UTCTime
   -> ProviderEventWorkerStats
   -> IO ProviderEventWorkerStats
-markRetry envPool eventRef attemptCount summary now stats = do
+markRetry envPool eventRef attemptCount summary review now stats = do
+  -- The last retry turns the event into a dead letter; a bound payment then
+  -- gets its reconciliation exception in the same transaction.
   exhausted <- runSqlPool
-    (ProviderEvent.markProviderEventRetry eventRef attemptCount summary now) envPool
+    (do
+      exhausted <- ProviderEvent.markProviderEventRetry eventRef attemptCount summary now
+      when exhausted $
+        for_ review $ \payment ->
+          Reconciliation.recordDeadLetterReview eventRef attemptCount payment now
+      pure exhausted)
+    envPool
   pure $ if exhausted
     then stats { pewDeadLettered = pewDeadLettered stats + 1 }
     else stats { pewRetried = pewRetried stats + 1 }
