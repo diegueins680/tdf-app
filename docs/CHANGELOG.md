@@ -5,6 +5,7 @@ _All user-facing changes per build. Keep this updated before every release._
 ## Unreleased
 
 ### Added
+- Acuerdos del marketplace (ADR 0135, Fase 2 parte A): al aceptar una oferta con monto se crea un acuerdo con partes, términos, comisión de TDF (10 %) y reparto depósito/saldo (30 %/70 %) congelados; el proveedor marca el inicio, el comprador confirma la finalización (habilita reseñas verificadas), cualquiera puede cancelar (libera el cupo) o abrir disputa; pestaña «Acuerdos» en `/mis-clasificados`. Sin cobro todavía: el pago se coordina fuera de la plataforma. Detrás del gate `marketplace.agreements` (apagado en producción).
 - Marketplace de demanda y oferta (ADR 0134, Fase 1): los clasificados declaran intención (busca/ofrece), cupos y modo de precio (abierto, sugerido, fijo); las postulaciones son ofertas con monto, términos y vencimiento; contraofertas alternadas entre autor y oferente (rondas 2 a 9; la ronda 10 queda reservada a la aceptación); aceptación atómica bajo bloqueo de fila que consume un cupo por oferta y reabre el anuncio cubierto si una aceptación se retira y cierra el anuncio al cubrirse; vista "Mis ofertas", tablero de comparación por precio/reputación (rangos por moneda, rondas visibles) y filtro de intención en `/buscar`. La negociación (contraofertas) queda detrás del gate `marketplace.offers` (apagado en producción).
 
 ### Fixed

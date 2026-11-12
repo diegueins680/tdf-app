@@ -6734,6 +6734,57 @@ export interface paths {
         patch: operations["transitionClassifiedApplication"];
         trace?: never;
     };
+    "/directory/agreements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Agreements where the caller manages the buyer or the provider profile (ADR 0135) */
+        get: operations["listMyAgreements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/agreements/{agreementId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One agreement (participants and admins) */
+        get: operations["getAgreement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/agreements/{agreementId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Start or complete or cancel or dispute an agreement (ADR 0135) */
+        patch: operations["transitionAgreement"];
+        trace?: never;
+    };
     "/directory/invitations": {
         parameters: {
             query?: never;
@@ -16754,6 +16805,11 @@ export interface components {
             submittedAt: string;
             /** Format: date-time */
             updatedAt?: string;
+            /**
+             * Format: uuid
+             * @description Agreement created when this offer was accepted (ADR 0135)
+             */
+            agreementId?: string | null;
             /** Format: date-time */
             acceptedAt?: string | null;
             /** Format: int64 */
@@ -16793,6 +16849,76 @@ export interface components {
             message?: string;
             /** Format: date-time */
             expiresAt?: string;
+        };
+        AgreementProfile: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        /** @description Private to its two parties and authorized admins. Amounts and terms are frozen when the offer is accepted (ADR 0135). */
+        MarketplaceAgreement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            applicationId: string;
+            classified: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                slug: string;
+            };
+            buyerProfile: components["schemas"]["AgreementProfile"];
+            providerProfile: components["schemas"]["AgreementProfile"];
+            /** Format: int64 */
+            amountMinor: number;
+            /** Format: uuid */
+            currencyId: string;
+            commissionBps: number;
+            /** Format: int64 */
+            commissionMinor: number;
+            /**
+             * Format: int64
+             * @description Amount minus the TDF commission
+             */
+            providerNetMinor: number;
+            depositBps: number;
+            /** Format: int64 */
+            depositMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            terms: components["schemas"]["OfferTerms"];
+            cancellationPolicy?: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            settlementMode: "off_platform" | "platform";
+            /** @enum {string} */
+            status: "pending_deposit" | "confirmed" | "in_progress" | "balance_due" | "completed" | "cancelled" | "disputed" | "expired";
+            /** @enum {string} */
+            participantRole: "buyer" | "provider" | "admin";
+            /** Format: date-time */
+            startsAt?: string | null;
+            /** Format: date-time */
+            endsAt?: string | null;
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
+            cancelledAt?: string | null;
+            cancellationReason?: string | null;
+            /**
+             * Format: uuid
+             * @description Verified interaction that makes reviews eligible once the agreement is completed
+             */
+            interactionId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version: number;
         };
         DirectoryClassifiedReference: {
             /** Format: uuid */
@@ -33820,6 +33946,97 @@ export interface operations {
         responses: {
             /** @description Participant-authorized transition */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyAgreements: {
+        parameters: {
+            query?: {
+                status?: "open" | "closed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Agreements of the caller, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"][];
+                };
+            };
+        };
+    };
+    getAgreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Agreement detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"];
+                };
+            };
+            /** @description Not a participant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    transitionAgreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated agreement */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"];
+                };
+            };
+            /** @description Transition not permitted for this participant, or the agreement changed since it was displayed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The marketplace.agreements gate is off in this environment */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
