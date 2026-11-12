@@ -74,6 +74,24 @@
       "principle": "Carga de memoria de trabajo y prevención de errores financieros",
       "finding": "Deducciones de depósitos, solicitudes de reembolso, variantes de mercancía y entrega aún pedían centavos; los mensajes de error podían ocultar el saldo permitido y el formato de mercancía dividía el entero antes de redondear.",
       "change": "Importes decimales en moneda con conversión exacta, límites visibles incluso al corregir errores y bloqueo ante saldos no representables. Se conserva vacío/saldo completo en reembolsos, vacío/sin cambio y cero explícito en deducciones, precio positivo de mercancía y entrega gratis. El formato conserva el último centavo seguro; las solicitudes siguen sin ejecutar pagos."
+    },
+    {
+      "id": "COG-20261112-11",
+      "principle": "Carga extrínseca y prevención de pérdida de precisión",
+      "finding": "El estudio de música exigía escribir unidades menores y explicaba la conversión manual; el contrato permite valores exactos de64bits que no caben en Number.",
+      "change": "Precio en USD decimal con punto o coma y conversión exacta a texto canónico de centavos, conservando todo el rango existente. El texto mal formado no dispara autoguardado; los borradores admiten precio vacío/cero sin habilitar validación o revisión de una oferta incompleta. Los términos, archivo descargable y controles de publicación se conservan."
+    },
+    {
+      "id": "COG-20261112-12",
+      "principle": "Control del usuario y recuperación de errores",
+      "finding": "Los filtros monetarios de operaciones redondeaban al escribir; cero se mostraba como vacío y una coma podía producir NaN. Una vista guardada podía cargar importes inseguros.",
+      "change": "Texto editable con decimales exactos y signo, cero explícito, límites ordenados y conservación de la última consulta válida. No se consulta ni guarda un rango inválido; las vistas inseguras se rechazan y al cerrar una corrección incompleta se recupera el rango aplicado."
+    },
+    {
+      "id": "COG-20261112-13",
+      "principle": "Accesibilidad y continuidad de tarea",
+      "finding": "La barra de radio podía interceptar el clic real en Limpiar, situado al final del cajón modal de filtros.",
+      "change": "Los cajones temporales de operaciones se colocan en la capa modal, por encima de la radio. Los14 casos de navegador incluyen el clic sin forzar, Escape, reapertura y comprobación del filtro activo con Actualizar."
     }
   ],
   "measurements": [
@@ -251,7 +269,7 @@
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Importes de servicios, eventos, depósitos, reembolsos, variantes y entrega en moneda, con conversión exacta y errores por campo. Quedan el precio en unidad menor de MusicReleaseStudioPage, filtros monetarios de OperationsControlCenterPage, otros componentes no revalidados y etiquetas de estados internos."
+      "nextOrEvidence": "Servicios, eventos, comercio y música aceptan moneda con conversiones exactas según sus contratos; filtros monetarios de operaciones corregidos. Quedan etiquetas de estados internos, otros componentes monetarios no revalidados y evaluación con personas."
     },
     {
       "id": 26,
@@ -400,6 +418,14 @@
     {
       "path": "figures/rental-deduction-currency.png",
       "scope": "Lecturas sintéticas autenticadas, Chromium teléfono; no demuestra una operación financiera real."
+    },
+    {
+      "path": "figures/music-usd-price.png",
+      "scope": "Límite máximo sintético de autoría musical en USD; no es una oferta ni un cobro real."
+    },
+    {
+      "path": "figures/operations-zero-filter.png",
+      "scope": "Vista de operaciones sintética que conserva el filtro cero, con controles accesibles sobre la radio."
     }
   ],
   "followups": [
@@ -600,6 +626,47 @@
         "traceability": "passed",
         "semanticConformance": "not established by these checks"
       }
+    },
+    {
+      "date": "2026-11-12",
+      "baseCommit": "8805fc86cba4846a4fe75a30f0eed80da0d8596e",
+      "scope": "Item25 y accesibilidad del cajón de operaciones: precio musical en USD exacto de64bits, filtros monetarios y superposición de radio. Sin cambios de API/backend, permisos, términos, Mobile o decisiones de retiro.",
+      "regressionVerification": {
+        "suites": 10,
+        "tests": 92,
+        "checks": [
+          "Rango musical completo de64bits y2000 muestras deterministas de ida/vuelta",
+          "Borrador vacío/cero, pausa de autoguardado mal formado y corrección",
+          "Persistencia, uploads y bloqueo de validación/revisión sin guardar",
+          "Filtros con signo, cero/vacío, coma, límite seguro, inversión y vistas inválidas",
+          "Serializadores existentes de música y operaciones"
+        ]
+      },
+      "browserVerification": {
+        "cases": 14,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "checks": [
+          "Siete recorridos de música: lectura, error, pausa real del debounce, dos escrituras de borrador simuladas y recarga con el precio máximo exacto",
+          "Siete recorridos de operaciones: vista con cero, corrección, rango inválido sin consultas, Escape, Limpiar y Actualizar",
+          "ARIA, WCAG A/AA de los campos, campos sin obstrucciones y sin desbordamiento horizontal",
+          "Cero compras, términos, revisión, publicación u operaciones financieras reales; todas las API son fixtures"
+        ]
+      },
+      "catalogCandidates": 1425,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "typecheck": "passed",
+      "lint": "passed",
+      "hostedCI": "La nueva cabeza requiere verificación hospedada propia; no se transfieren resultados anteriores."
     }
   ]
 }

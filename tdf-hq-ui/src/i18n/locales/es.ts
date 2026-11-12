@@ -312,6 +312,7 @@ const es = {
     domain: 'Dominio o tipo', sourceChannel: 'Canal de origen', service: 'Servicio', statusLabel: 'Estado',
     priorityLabel: 'Prioridad', slaLabel: 'SLA', customerId: 'ID de cliente', paymentState: 'Estado del pago',
     from: 'Desde', to: 'Hasta', minAmount: 'Monto mínimo', maxAmount: 'Monto máximo', seenLabel: 'Lectura compartida',
+    amountInputHint: 'Hasta dos decimales. Cada registro conserva su moneda.', amountInvalid: 'Usa un importe decimal exacto con hasta dos decimales, dentro del rango admitido.', amountRangeInvalid: 'El mínimo no puede superar el máximo.', savedAmountInvalid: 'La vista guardada contiene importes inválidos. Se conservan los filtros actuales.',
     all: 'Todos', clear: 'Limpiar', applyFilters: 'Aplicar filtros',
     status: { new: 'Nuevo', seen: 'Visto', assigned: 'Asignado', in_progress: 'En curso', waiting: 'En espera', resolved: 'Resuelto', archived: 'Archivado' },
     priority: { urgent: 'Urgente', high: 'Alta', normal: 'Normal', low: 'Baja' },

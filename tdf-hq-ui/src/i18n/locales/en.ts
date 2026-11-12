@@ -311,6 +311,7 @@ const en = {
     domain: 'Domain or type', sourceChannel: 'Source channel', service: 'Service', statusLabel: 'Status',
     priorityLabel: 'Priority', slaLabel: 'SLA', customerId: 'Customer ID', paymentState: 'Payment state',
     from: 'From', to: 'To', minAmount: 'Minimum amount', maxAmount: 'Maximum amount', seenLabel: 'Shared read state',
+    amountInputHint: 'Up to two decimals. Each record keeps its own currency.', amountInvalid: 'Use an exact decimal amount with up to two decimals, within the supported range.', amountRangeInvalid: 'The minimum cannot exceed the maximum.', savedAmountInvalid: 'This saved view contains invalid amounts. The current filters were kept.',
     all: 'All', clear: 'Clear', applyFilters: 'Apply filters',
     status: { new: 'New', seen: 'Seen', assigned: 'Assigned', in_progress: 'In progress', waiting: 'Waiting', resolved: 'Resolved', archived: 'Archived' },
     priority: { urgent: 'Urgent', high: 'High', normal: 'Normal', low: 'Low' },

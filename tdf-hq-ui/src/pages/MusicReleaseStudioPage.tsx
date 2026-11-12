@@ -1,6 +1,6 @@
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import MarkdownText from '../components/MarkdownText';
-import { canonicalMusicMinor } from '../utils/musicMoney';
+import { formatMusicPriceInput, parseMusicPriceInput } from '../utils/musicMoney';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -25,7 +25,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import {
@@ -377,6 +377,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
   const [metadata, setMetadata] = useState<DraftMetadata>(() => emptyMetadata(session?.displayName ?? ''));
   const [content, setContent] = useState<DraftContent>(() => defaultMusicReleaseContent(session?.displayName ?? ''));
   const [dirty, setDirty] = useState(false);
+  const [priceInputs, setPriceInputs] = useState<Record<number, string>>({});
   const [status, setStatus] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -439,7 +440,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
   useEffect(() => {
     if (!version.data || initializedVersion.current === version.data.id) return;
     const draft = musicReleaseDraftFromVersion(version.data);
-    setMetadata(draft.metadata); setContent(draft.content); updatedAt.current = version.data.updatedAt;
+    setMetadata(draft.metadata); setContent(draft.content); setPriceInputs({}); updatedAt.current = version.data.updatedAt;
     setAcceptedTerms(version.data.terms.some((entry) => text(asRaw(entry)['terms_kind']) === 'publication_authority'));
     setDirty(false); setStatus(''); setError(null);
     initializedVersion.current = version.data.id;
@@ -450,6 +451,27 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
     queryClient.setQueryData(['music-release-version', releaseId, versionId], next);
   }, [queryClient, releaseId, versionId]);
 
+  const authoredPrices = useMemo(() => content.availability.map((rule, index) => {
+    if (rule.downloadPolicy !== 'purchase') return null;
+    let raw = priceInputs[index] ?? '';
+    let minor: string | null = null;
+    let priceError: string | null = null;
+    let parseError: string | null = null;
+    try {
+      if (priceInputs[index] === undefined) raw = formatMusicPriceInput(rule.priceMinor);
+      minor = parseMusicPriceInput(raw);
+      if (minor === null) priceError = 'Ingresa un precio en USD.';
+      else if (minor === '0') priceError = 'El precio debe ser mayor que cero. Para regalarla, elige Descarga gratuita.';
+    } catch (reason) {
+      parseError = reason instanceof Error ? reason.message : 'Ingresa un precio válido.';
+      priceError = parseError;
+    }
+    const currencyError = rule.currency?.trim().toUpperCase() === 'USD' ? null : 'Las compras de música están disponibles en USD.';
+    return { raw, minor, parseError, priceError, currencyError };
+  }), [content.availability, priceInputs]);
+  const invalidDraftPrice = authoredPrices.some(price => Boolean(price?.parseError));
+  const invalidAuthoredPrice = authoredPrices.some(price => Boolean(price?.priceError ?? price?.currencyError));
+
   const persistDraft = useCallback(async () => {
     if (autosaveTimer.current !== null) {
       window.clearTimeout(autosaveTimer.current);
@@ -458,7 +480,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
     // Fail closed: an operation must never proceed using a snapshot whose
     // persistence failed or is still in flight. Content assigns server IDs,
     // so freeze editing until both transactions have acknowledged this graph.
-    if (saving.current) return false;
+    if (saving.current || (canEdit && invalidDraftPrice)) return false;
     if (!dirty) return true;
     if (!canEdit || !updatedAt.current) return false;
     saving.current = true; setIsSaving(true); setStatus('Guardando…'); setError(null);
@@ -471,8 +493,11 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
       // Metadata and content are separate transactions. Preserve the successful
       // revision even if progressive content validation rejects the next call.
       updatedAt.current = metadataResult.updatedAt;
-      const contentResult = await musicReleases.saveContent(releaseId, versionId, { ...content, expectedUpdatedAt: metadataResult.updatedAt });
-      applyVersion(contentResult); setContent(musicReleaseDraftFromVersion(contentResult).content);
+      const contentResult = await musicReleases.saveContent(releaseId, versionId, { ...content,
+        availability: content.availability.map((rule, index) => rule.downloadPolicy === 'purchase'
+          ? { ...rule, priceMinor: authoredPrices[index]!.minor } : rule),
+        expectedUpdatedAt: metadataResult.updatedAt });
+      applyVersion(contentResult); setContent(musicReleaseDraftFromVersion(contentResult).content); setPriceInputs({});
       setDirty(false); setStatus('Borrador guardado automáticamente.');
       return true;
     } catch (reason) {
@@ -480,17 +505,17 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
       setStatus('');
       return false;
     } finally { saving.current = false; setIsSaving(false); }
-  }, [applyVersion, content, dirty, canEdit, metadata, releaseId, versionId]);
+  }, [applyVersion, content, dirty, canEdit, metadata, releaseId, versionId, authoredPrices, invalidDraftPrice]);
 
   useEffect(() => {
-    if (!dirty || !canEdit) return undefined;
+    if (!dirty || !canEdit || invalidDraftPrice) return undefined;
     const timer = window.setTimeout(() => { void persistDraft(); }, 1600);
     autosaveTimer.current = timer;
     return () => {
       window.clearTimeout(timer);
       if (autosaveTimer.current === timer) autosaveTimer.current = null;
     };
-  }, [dirty, canEdit, persistDraft]);
+  }, [dirty, canEdit, persistDraft, invalidDraftPrice]);
 
   const changeMetadata = <K extends keyof DraftMetadata>(key: K, value: DraftMetadata[K]) => {
     setMetadata((current) => ({ ...current, [key]: value })); setDirty(true);
@@ -504,6 +529,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
     setDirty(true);
   };
   const changeAvailability = (index: number, patch: Partial<AvailabilityDraft>) => {
+    if (patch.downloadPolicy !== undefined) setPriceInputs(current => { const next = { ...current }; delete next[index]; return next; });
     setContent((current) => ({
       ...current,
       availability: current.availability.map((item, at) => at === index ? { ...item, ...patch } : item),
@@ -623,6 +649,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
 
   const acceptAndValidate = async () => {
     if (operationPending.current || saving.current) return;
+    if (invalidAuthoredPrice) { setError('Corrige el precio y la moneda antes de validar la oferta.'); return; }
     if (!acceptedTerms) { setError('Debes aceptar la declaración de autoridad para publicar.'); return; }
     operationPending.current = true; setActionPending(true);
     try {
@@ -637,6 +664,7 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
   };
 
   const transition = async (targetState: string, extra: Record<string, unknown> = {}) => {
+    if (canEdit && targetState === 'ready_for_review' && invalidAuthoredPrice) { setError('Corrige el precio y la moneda antes de enviar a revisión.'); return; }
     if (operationPending.current || saving.current) return;
     operationPending.current = true; setActionPending(true);
     try {
@@ -910,16 +938,21 @@ function ReleaseEditor({ releaseId, versionId }: { releaseId: string; versionId:
             {currentVersion.assets.filter((asset) => ['master_audio','stream_audio'].includes(asset.role) && ['valid','ready'].includes(asset.processingState)).map((asset) => <MenuItem key={asset.id} value={asset.id}>{asset.originalFilename ?? asset.role} · {asset.sha256.slice(0, 12)}</MenuItem>)}
           </TextField>}
           {rule.downloadPolicy === 'purchase' && <>
-            <TextField label="Precio (unidad menor)" type="text" inputProps={{ inputMode: 'numeric' }} value={rule.priceMinor ?? ''} onChange={(event) => changeAvailability(index, { priceMinor: event.target.value === '' ? null : event.target.value })} error={rule.priceMinor !== null && canonicalMusicMinor(rule.priceMinor) === null} helperText={rule.priceMinor !== null && canonicalMusicMinor(rule.priceMinor) === null ? "Introduce unidades menores enteras exactas." : "Ej.: USD 4,99 = 499. Sin flotantes."} disabled={!editable} />
-            <TextField label="Moneda ISO" value={rule.currency ?? ''} onChange={(event) => { const currency = event.target.value.toUpperCase().slice(0, 3); changeAvailability(index, { currency: currency === '' ? null : currency }); }} disabled={!editable} />
+            <TextField label="Precio (USD)" type="text" inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+              value={authoredPrices[index]?.raw ?? ''}
+              onChange={(event) => { setPriceInputs(current => ({ ...current, [index]: event.target.value })); setDirty(true); }}
+              error={Boolean(authoredPrices[index]?.priceError)}
+              helperText={authoredPrices[index]?.priceError ?? 'Hasta dos decimales, por ejemplo 4,99.'} disabled={!editable} />
+            <TextField label="Moneda ISO" value={rule.currency ?? ''} onChange={(event) => { const currency = event.target.value.toUpperCase().slice(0, 3); changeAvailability(index, { currency: currency === '' ? null : currency }); }}
+              error={Boolean(authoredPrices[index]?.currencyError)} helperText={authoredPrices[index]?.currencyError} disabled={!editable} />
           </>}
         </Stack>
       </Stack>)}
       <FormControlLabel control={<Checkbox checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} disabled={!editable} />} label="Declaro que tengo autoridad para publicar y que los titulares, créditos, splits, territorios y restricciones son correctos." />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} flexWrap="wrap">
-        <Button variant="outlined" startIcon={<SaveIcon />} onClick={() => void persistDraft()} disabled={!editable || !dirty}>Guardar ahora</Button>
-        <Button variant="outlined" onClick={() => void acceptAndValidate()} disabled={!editable}>Aceptar y validar</Button>
-        <Button variant="contained" startIcon={<SendIcon />} onClick={() => void transition('ready_for_review')} disabled={!editable}>Enviar a revisión</Button>
+        <Button variant="outlined" startIcon={<SaveIcon />} onClick={() => void persistDraft()} disabled={!editable || !dirty || invalidDraftPrice}>Guardar ahora</Button>
+        <Button variant="outlined" onClick={() => void acceptAndValidate()} disabled={!editable || invalidAuthoredPrice}>Aceptar y validar</Button>
+        <Button variant="contained" startIcon={<SendIcon />} onClick={() => void transition('ready_for_review')} disabled={!editable || invalidAuthoredPrice}>Enviar a revisión</Button>
       </Stack>
       <Stack spacing={0.5}>{currentVersion.validation.errors.map((entry) => <Alert key={`${entry.fieldPath}-${entry.code}`} severity="warning"><strong>{entry.fieldPath}</strong>: {entry.message}</Alert>)}</Stack>
       {currentVersion.comments.map((comment) => <Alert key={comment.id}

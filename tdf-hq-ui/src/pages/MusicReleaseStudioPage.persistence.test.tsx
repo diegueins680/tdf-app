@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { MusicReleaseVersion } from '../api/musicReleases';
+import type { MusicReleaseVersion, MusicReleaseContentInput } from '../api/musicReleases';
 
 // Full MUI Studio renders, including all rights/access controls. This is a
 // component-correctness budget, not an API latency or autosave debounce limit.
@@ -15,7 +15,7 @@ const version = {
   terms: [], assets: [], comments: [], validation: { errors: [] }, updatedAt: '2026-09-15T00:00:00Z',
 } as unknown as MusicReleaseVersion;
 const saveMetadata = jest.fn<() => Promise<MusicReleaseVersion>>();
-const saveContent = jest.fn<() => Promise<MusicReleaseVersion>>();
+const saveContent = jest.fn<(releaseId: string, versionId: string, input: MusicReleaseContentInput) => Promise<MusicReleaseVersion>>();
 const acceptTerms = jest.fn<() => Promise<void>>();
 const validate = jest.fn<() => Promise<{ valid: boolean; errors: [] }>>();
 const transition = jest.fn<() => Promise<void>>();
@@ -42,7 +42,7 @@ beforeEach(() => {
   uploadAsset.mockReset().mockResolvedValue(undefined);
 });
 
-it('keeps a large authored price as exact decimal text through the actual form', async () => {
+function configurePrice(price: number | string = '9007199254740993', currency = 'USD') {
   const assetId = '00000000-0000-4000-8000-000000000001';
   version.tracks = [{ trackId: '00000000-0000-4000-8000-000000000002',
     recordingId: '00000000-0000-4000-8000-000000000003', discNumber: 1, trackNumber: 1,
@@ -51,24 +51,32 @@ it('keeps a large authored price as exact decimal text through the actual form',
     titleLanguage: 'es', titleScript: null, durationMs: 60000, explicitContent: 'not_explicit' }];
   version.availability = [{ territory_mode: 'include', territories: ['Worldwide'],
     starts_at: null, ends_at: null, listening_policy: 'none', download_policy: 'purchase',
-    purchasable: true, price_minor: '9007199254740993', currency: 'USD', downloadable_asset_id: assetId }];
+    purchasable: true, price_minor: price, currency, downloadable_asset_id: assetId }];
   version.assets = [{ id: assetId, recordingId: null, parentAssetId: 'source', role: 'stream_audio',
     originalFilename: 'synthetic.mp3', mediaType: 'audio/mpeg', byteSize: 4, sha256: 'a'.repeat(64),
     processingState: 'ready', technicalMetadata: {}, createdAt: version.updatedAt, readyAt: version.updatedAt }];
   saveMetadata.mockResolvedValue({ ...version, updatedAt: '2026-09-15T00:00:01Z' });
-  saveContent.mockResolvedValue({ ...version, updatedAt: '2026-09-15T00:00:02Z' });
+  saveContent.mockImplementation(async (_release, _version, input) => ({ ...version,
+    availability: version.availability.map((value, index) => ({ ...(value as Record<string, unknown>),
+      price_minor: input.availability[index]?.priceMinor, currency: input.availability[index]?.currency,
+      download_policy: input.availability[index]?.downloadPolicy,
+    })), updatedAt: '2026-09-15T00:00:02Z' }));
+}
+
+it('keeps a large authored price as exact decimal text through the actual form', async () => {
+  configurePrice();
   const close = await openStudio();
   try {
-    const field = await screen.findByRole<HTMLInputElement>('textbox', { name: 'Precio (unidad menor)' });
+    const field = await screen.findByRole<HTMLInputElement>('textbox', { name: 'Precio (USD)' });
     expect(field.type).toBe('text');
-    expect(field.inputMode).toBe('numeric');
-    expect(field.value).toBe('9007199254740993');
-    fireEvent.change(field, { target: { value: '9007199254740994' } });
+    expect(field.inputMode).toBe('decimal');
+    expect(field.value).toBe('90071992547409.93');
+    fireEvent.change(field, { target: { value: '90071992547409.94' } });
     fireEvent.keyDown(field, { key: 'ArrowUp' });
     expect(() => field.stepUp()).toThrow();
-    expect(field.value).toBe('9007199254740994');
-    fireEvent.change(field, { target: { value: '9223372036854775807' } });
-    expect(field.value).toBe('9223372036854775807');
+    expect(field.value).toBe('90071992547409.94');
+    fireEvent.change(field, { target: { value: '92233720368547758.07' } });
+    expect(field.value).toBe('92233720368547758.07');
     await click('Guardar ahora');
     await waitFor(() => expect(saveContent).toHaveBeenCalledTimes(1));
     expect(saveContent).toHaveBeenCalledWith('release', 'version', expect.objectContaining({
@@ -182,5 +190,77 @@ it('does not upload a cover if the draft could not be saved', async () => {
     await act(async () => { fireEvent.change(input, { target: { files: [new File(['synthetic'], 'cover.png', { type: 'image/png' })] } }); });
     await screen.findByText('Conflicto de versión');
     expect(uploadAsset).not.toHaveBeenCalled();
+  } finally { close(); }
+});
+
+
+it.each(['-1', '4.999', '1e2', '92233720368547758.08'])('keeps invalid authored USD price %s local and blocks review/validation', async value => {
+  configurePrice('499');
+  const close = await openStudio();
+  try {
+    const field = screen.getByRole<HTMLInputElement>('textbox', { name: 'Precio (USD)' });
+    fireEvent.change(field, { target: { value } });
+    expect(field.value).toBe(value);
+    expect(field.getAttribute('aria-invalid')).toBe('true');
+    for (const action of ['Guardar ahora', 'Aceptar y validar', 'Enviar a revisión']) {
+      expect(button(action).matches(':disabled')).toBe(true);
+      await click(action);
+    }
+    expect(saveMetadata).not.toHaveBeenCalled(); expect(saveContent).not.toHaveBeenCalled();
+    expect(acceptTerms).not.toHaveBeenCalled(); expect(validate).not.toHaveBeenCalled(); expect(transition).not.toHaveBeenCalled();
+  } finally { close(); }
+});
+
+it('pauses autosave on an incomplete price and saves corrected decimal-comma input exactly', async () => {
+  configurePrice('499');
+  const close = await openStudio();
+  try {
+    const field = screen.getByRole<HTMLInputElement>('textbox', { name: 'Precio (USD)' });
+    fireEvent.change(screen.getByDisplayValue('Borrador'), { target: { value: 'Cambio pendiente' } });
+    fireEvent.change(field, { target: { value: '4,' } });
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 1800)); });
+    expect(field.value).toBe('4,');
+    expect(saveMetadata).not.toHaveBeenCalled(); expect(saveContent).not.toHaveBeenCalled();
+    fireEvent.change(field, { target: { value: '4,99' } });
+    await click('Guardar ahora');
+    await waitFor(() => expect(saveContent).toHaveBeenCalledWith('release', 'version', expect.objectContaining({ availability: [expect.objectContaining({ priceMinor: '499', currency: 'USD' })] })));
+  } finally { close(); }
+});
+
+it('does not reinterpret unsupported currency as a purchasable offer', async () => {
+  configurePrice('499', 'JPY');
+  const close = await openStudio();
+  try {
+    expect(screen.getByRole('textbox', { name: 'Moneda ISO' }).getAttribute('aria-invalid')).toBe('true');
+    expect(button('Aceptar y validar').matches(':disabled')).toBe(true);
+    expect(saveMetadata).not.toHaveBeenCalled(); expect(saveContent).not.toHaveBeenCalled();
+  } finally { close(); }
+});
+
+it('keeps an unsafe loaded numeric price unavailable until explicitly corrected', async () => {
+  configurePrice(9007199254740992);
+  const close = await openStudio();
+  try {
+    const field = screen.getByRole('textbox', { name: 'Precio (USD)' });
+    expect(field.getAttribute('aria-invalid')).toBe('true');
+    expect(screen.getByText(/El precio guardado no es exacto/)).toBeTruthy();
+    expect(saveContent).not.toHaveBeenCalled();
+    fireEvent.change(field, { target: { value: '4,99' } });
+    await click('Guardar ahora');
+    await waitFor(() => expect(saveContent).toHaveBeenCalledWith('release', 'version', expect.objectContaining({ availability: [expect.objectContaining({ priceMinor: '499' })] })));
+  } finally { close(); }
+});
+
+
+it.each(['', '0'])('keeps incomplete purchase price %s saveable as a draft, with review still blocked', async raw => {
+  configurePrice('499'); const close = await openStudio();
+  try {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Precio (USD)' }), { target: { value: raw } });
+    expect(button('Guardar ahora').matches(':disabled')).toBe(false);
+    expect(button('Aceptar y validar').matches(':disabled')).toBe(true);
+    expect(button('Enviar a revisión').matches(':disabled')).toBe(true);
+    await click('Guardar ahora');
+    await waitFor(() => expect(saveContent).toHaveBeenCalledWith('release', 'version', expect.objectContaining({ availability: [expect.objectContaining({ priceMinor: raw === '' ? null : '0' })] })));
+    expect(acceptTerms).not.toHaveBeenCalled(); expect(validate).not.toHaveBeenCalled(); expect(transition).not.toHaveBeenCalled();
   } finally { close(); }
 });

@@ -21,3 +21,20 @@ export const formatPriceCentsInput = (value: number | null | undefined): string 
   const cents = BigInt(value);
   return `${cents / 100n}.${String(cents % 100n).padStart(2, '0')}`;
 };
+
+// Read-only amount ranges can include signed values. Sale-price inputs keep
+// their existing nonnegative contract above.
+export const parseOptionalSignedAmountCents = (raw: string): number | null => {
+  const value = raw.trim();
+  if (!value.startsWith('-')) return parseOptionalPriceCents(value);
+  const unsigned = value.slice(1);
+  if (unsigned.trim() !== unsigned) throw new Error('Ingresa un importe decimal válido.');
+  const magnitude = parseOptionalPriceCents(unsigned);
+  if (magnitude === null) throw new Error('Ingresa un importe decimal válido.');
+  return -magnitude;
+};
+
+export const formatSignedAmountCentsInput = (value: number | null | undefined): string => {
+  if (value == null) return '';
+  return `${value < 0 ? '-' : ''}${formatPriceCentsInput(Math.abs(value))}`;
+};

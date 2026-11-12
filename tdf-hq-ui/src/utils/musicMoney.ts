@@ -6,6 +6,26 @@ export type MusicMinorUnits = components['schemas']['MusicMinorUnits'];
 const maximumMinor = 9223372036854775807n;
 const maximumNumericMinor = 9007199254740991n;
 
+// Authoring uses USD units; the wire retains its full signed-64-bit positive
+// range as canonical decimal minor-unit text, without a Number conversion.
+export function parseMusicPriceInput(raw: string): string | null {
+  const value = raw.trim();
+  if (!value) return null;
+  if (!/^\d+(?:[.,]\d{1,2})?$/.test(value)) throw new Error('Usa un precio con hasta dos decimales, por ejemplo 4,99.');
+  const [whole = '0', fractional = ''] = value.replace(',', '.').split('.');
+  const minor = BigInt(whole) * 100n + BigInt(fractional.padEnd(2, '0'));
+  if (minor > maximumMinor) throw new Error('El precio está fuera del rango admitido.');
+  return minor.toString();
+}
+
+export function formatMusicPriceInput(value: MusicMinorUnits | null): string {
+  if (value === null) return '';
+  const canonical = canonicalMusicMinor(value);
+  if (canonical === null) throw new Error('El precio guardado no es exacto. Ingresa un precio válido.');
+  const minor = BigInt(canonical);
+  return `${minor / 100n}.${String(minor % 100n).padStart(2, '0')}`;
+}
+
 export function canonicalMusicMinor(value: unknown): string | null {
   if (typeof value === 'number') {
     return Number.isSafeInteger(value) && value >= 0 ? String(value) : null;

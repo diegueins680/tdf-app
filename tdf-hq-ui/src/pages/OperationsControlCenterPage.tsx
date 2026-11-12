@@ -1,3 +1,4 @@
+import { formatSignedAmountCentsInput, parseOptionalSignedAmountCents } from '../utils/priceInput';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
@@ -80,9 +81,15 @@ function priorityLabel(t: ReturnType<typeof useTranslation>['t'], priority: Oper
   return t(`operations.priority.${priority}`);
 }
 
-function asFilters(value: unknown): OperationsFilters {
+function asFilters(value: unknown): OperationsFilters | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return DEFAULT_FILTERS;
   const source = value as Record<string, unknown>;
+  for (const key of ['minAmountMinor', 'maxAmountMinor']) {
+    const amount = source[key];
+    if (amount != null && (typeof amount !== 'number' || !Number.isSafeInteger(amount))) return null;
+  }
+  if (typeof source['minAmountMinor'] === 'number' && typeof source['maxAmountMinor'] === 'number'
+    && source['minAmountMinor'] > source['maxAmountMinor']) return null;
   return {
     ...DEFAULT_FILTERS,
     q: typeof source['q'] === 'string' ? source['q'] : undefined,
@@ -103,6 +110,15 @@ function asFilters(value: unknown): OperationsFilters {
     minAmountMinor: typeof source['minAmountMinor'] === 'number' ? source['minAmountMinor'] : undefined,
     maxAmountMinor: typeof source['maxAmountMinor'] === 'number' ? source['maxAmountMinor'] : undefined,
   };
+}
+
+function readAmountRange(minimum: string, maximum: string) {
+  let min: number | null = null, max: number | null = null;
+  let minInvalid = false, maxInvalid = false;
+  try { min = parseOptionalSignedAmountCents(minimum); } catch { minInvalid = true; }
+  try { max = parseOptionalSignedAmountCents(maximum); } catch { maxInvalid = true; }
+  const reversed = !minInvalid && !maxInvalid && min !== null && max !== null && min > max;
+  return { min, max, minInvalid, maxInvalid, reversed, valid: !minInvalid && !maxInvalid && !reversed };
 }
 
 function WorkItemCard({
@@ -183,6 +199,17 @@ export default function OperationsControlCenterPage() {
   const { locale, currency: preferredCurrency } = useLocalePreferences();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<OperationsFilters>(DEFAULT_FILTERS);
+  const [amountInputs, setAmountInputs] = useState({ minimum: '', maximum: '' });
+  const amountRange = readAmountRange(amountInputs.minimum, amountInputs.maximum);
+  const syncAmountInputs = (value: OperationsFilters) => setAmountInputs({
+    minimum: formatSignedAmountCentsInput(value.minAmountMinor), maximum: formatSignedAmountCentsInput(value.maxAmountMinor),
+  });
+  const changeAmountInput = (next: typeof amountInputs) => {
+    setAmountInputs(next);
+    const range = readAmountRange(next.minimum, next.maximum);
+    if (range.valid) setFilters(current => ({ ...current, minAmountMinor: range.min ?? undefined, maxAmountMinor: range.max ?? undefined }));
+  };
+  const closeFilterDrawer = () => { syncAmountInputs(filters); setFilterDrawerOpen(false); };
   const [assigneeFilterParty, setAssigneeFilterParty] = useState<PartySelectorOption | null>(null);
   const [customerFilterParty, setCustomerFilterParty] = useState<PartySelectorOption | null>(null);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
@@ -286,7 +313,9 @@ export default function OperationsControlCenterPage() {
     },
   });
   const saveViewMutation = useMutation({
-    mutationFn: (organizationId: string) => Operations.saveView({
+    mutationFn: (organizationId: string) => {
+      if (!amountRange.valid) throw new Error(t('operations.amountInvalid'));
+      return Operations.saveView({
       organizationId,
       name: viewName.trim(),
       shared: false,
@@ -294,7 +323,7 @@ export default function OperationsControlCenterPage() {
       columns: ['priority', 'title', 'status', 'assignee', 'sla', 'source'],
       widgets: ['registrations', 'reservations', 'invoices', 'payments', 'sla', 'integrations'],
       subscribedEventTypes: [],
-    }),
+    }); },
     onSuccess: async () => {
       setSaveViewOpen(false);
       setViewName('');
@@ -342,12 +371,12 @@ export default function OperationsControlCenterPage() {
       maxWidth={false}
       actions={(
         <>
-          <Button startIcon={<SaveOutlinedIcon />} onClick={() => setSaveViewOpen(true)} disabled={!organizationId}>
+          <Button startIcon={<SaveOutlinedIcon />} onClick={() => setSaveViewOpen(true)} disabled={!organizationId || !amountRange.valid}>
             {t('operations.saveView')}
           </Button>
           <Button
             startIcon={<FilterAltOutlinedIcon />}
-            onClick={() => setFilterDrawerOpen(true)}
+            onClick={() => { syncAmountInputs(filters); setFilterDrawerOpen(true); }}
           >
             {t('operations.filters')} {activeFilterCount > 0 && `(${activeFilterCount})`}
           </Button>
@@ -406,7 +435,11 @@ export default function OperationsControlCenterPage() {
                 value=""
                 onChange={(event) => {
                   const view = savedViewsQuery.data?.find((candidate) => candidate.id === event.target.value);
-                  if (view) setFilters(asFilters(view.filters));
+                  if (view) {
+                    const next = asFilters(view.filters);
+                    if (!next) { setFeedback(t('operations.savedAmountInvalid')); return; }
+                    setFilters(next); syncAmountInputs(next);
+                  }
                 }}
               >
                 {(savedViewsQuery.data ?? []).map((view) => <MenuItem key={view.id} value={view.id}>{view.name}</MenuItem>)}
@@ -496,7 +529,7 @@ export default function OperationsControlCenterPage() {
         </Paper>
       </Stack>
 
-      <Drawer anchor="right" open={selectedId !== null} onClose={() => setSelectedId(null)} PaperProps={{ sx: { width: { xs: '100%', sm: 520 }, p: 2 } }}>
+      <Drawer sx={{ zIndex: theme => theme.zIndex.modal }} anchor="right" open={selectedId !== null} onClose={() => setSelectedId(null)} PaperProps={{ sx: { width: { xs: '100%', sm: 520 }, p: 2 } }}>
         {detailQuery.isLoading || !selected ? (
           <Stack alignItems="center" sx={{ pt: 8 }}><CircularProgress /></Stack>
         ) : detailQuery.error ? (
@@ -582,7 +615,7 @@ export default function OperationsControlCenterPage() {
         )}
       </Drawer>
 
-      <Drawer anchor="left" open={filterDrawerOpen} onClose={() => setFilterDrawerOpen(false)} PaperProps={{ sx: { width: { xs: '100%', sm: 380 }, p: 2 } }}>
+      <Drawer sx={{ zIndex: theme => theme.zIndex.modal }} anchor="left" open={filterDrawerOpen} onClose={closeFilterDrawer} PaperProps={{ sx: { width: { xs: '100%', sm: 380 }, p: 2 } }}>
         <Stack spacing={2}>
           <Typography variant="h5">{t('operations.filters')}</Typography>
           <TextField label={t('operations.domain')} value={filters.entityType ?? ''} onChange={(event) => setFilters((current) => ({ ...current, entityType: event.target.value || undefined }))} />
@@ -596,14 +629,20 @@ export default function OperationsControlCenterPage() {
           <TextField label={t('operations.paymentState')} value={filters.paymentState ?? ''} onChange={(event) => setFilters((current) => ({ ...current, paymentState: event.target.value || undefined }))} />
           <TextField type="date" label={t('operations.from')} value={filters.from?.slice(0, 10) ?? ''} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value ? new Date(`${event.target.value}T00:00:00`).toISOString() : undefined }))} InputLabelProps={{ shrink: true }} />
           <TextField type="date" label={t('operations.to')} value={filters.to?.slice(0, 10) ?? ''} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value ? new Date(`${event.target.value}T23:59:59`).toISOString() : undefined }))} InputLabelProps={{ shrink: true }} />
-          <Stack direction="row" spacing={1}>
-            <TextField label={t('operations.minAmount')} value={filters.minAmountMinor ? filters.minAmountMinor / 100 : ''} onChange={(event) => setFilters((current) => ({ ...current, minAmountMinor: event.target.value ? Math.round(Number(event.target.value) * 100) : undefined }))} />
-            <TextField label={t('operations.maxAmount')} value={filters.maxAmountMinor ? filters.maxAmountMinor / 100 : ''} onChange={(event) => setFilters((current) => ({ ...current, maxAmountMinor: event.target.value ? Math.round(Number(event.target.value) * 100) : undefined }))} />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+            <TextField label={t('operations.minAmount')} inputProps={{ inputMode: 'decimal', maxLength: 32 }} value={amountInputs.minimum}
+              onChange={(event) => changeAmountInput({ ...amountInputs, minimum: event.target.value })}
+              error={amountRange.minInvalid || amountRange.reversed}
+              helperText={amountRange.minInvalid ? t('operations.amountInvalid') : amountRange.reversed ? t('operations.amountRangeInvalid') : t('operations.amountInputHint')} />
+            <TextField label={t('operations.maxAmount')} inputProps={{ inputMode: 'decimal', maxLength: 32 }} value={amountInputs.maximum}
+              onChange={(event) => changeAmountInput({ ...amountInputs, maximum: event.target.value })}
+              error={amountRange.maxInvalid || amountRange.reversed}
+              helperText={amountRange.maxInvalid ? t('operations.amountInvalid') : amountRange.reversed ? t('operations.amountRangeInvalid') : t('operations.amountInputHint')} />
           </Stack>
           <FormControl><InputLabel>{t('operations.seenLabel')}</InputLabel><Select label={t('operations.seenLabel')} value={filters.seen === undefined ? '' : String(filters.seen)} onChange={(event) => setFilters((current) => ({ ...current, seen: event.target.value === '' ? undefined : event.target.value === 'true' }))}><MenuItem value="">{t('operations.all')}</MenuItem><MenuItem value="false">{t('operations.unseen')}</MenuItem><MenuItem value="true">{t('operations.seen')}</MenuItem></Select></FormControl>
           <Stack direction="row" spacing={1}>
-            <Button onClick={() => { setFilters(DEFAULT_FILTERS); setAssigneeFilterParty(null); setCustomerFilterParty(null); }}>{t('operations.clear')}</Button>
-            <Button variant="contained" onClick={() => setFilterDrawerOpen(false)}>{t('operations.applyFilters')}</Button>
+            <Button onClick={() => { setFilters(DEFAULT_FILTERS); syncAmountInputs(DEFAULT_FILTERS); setAssigneeFilterParty(null); setCustomerFilterParty(null); }}>{t('operations.clear')}</Button>
+            <Button variant="contained" disabled={!amountRange.valid} onClick={closeFilterDrawer}>{t('operations.applyFilters')}</Button>
           </Stack>
         </Stack>
       </Drawer>

@@ -71,6 +71,7 @@
       "e2e/web/mobile-layout-regressions.spec.mjs",
       "e2e/web/mobile-program.spec.mjs",
       "e2e/web/music-catalog-discovery.spec.mjs",
+      "e2e/web/music-operations-amounts.spec.mjs",
       "e2e/web/music-player-integration.spec.mjs",
       "e2e/web/music-player-native.spec.mjs",
       "e2e/web/music-player.spec.mjs",
@@ -1434,6 +1435,7 @@
       "tdf-hq-ui/src/pages/NotFoundPage.test.tsx",
       "tdf-hq-ui/src/pages/NotFoundPage.tsx",
       "tdf-hq-ui/src/pages/NotificationPage.tsx",
+      "tdf-hq-ui/src/pages/OperationsControlCenterPage.money.test.tsx",
       "tdf-hq-ui/src/pages/OperationsControlCenterPage.partySelector.test.ts",
       "tdf-hq-ui/src/pages/OperationsControlCenterPage.test.tsx",
       "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
@@ -3480,6 +3482,12 @@
       "id": "SURFACE-6910fe6162437c91",
       "path": "e2e/web/music-catalog-discovery.spec.mjs",
       "sha256": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fba5c7c3b46196b0",
+      "path": "e2e/web/music-operations-amounts.spec.mjs",
+      "sha256": "892e4449b4c21cd9a075cb1ada2e8c3b6e342af91c17763b1a5d15ae5e2a6822",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10451,13 +10459,13 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "02a8564ad6079993d42e0837b6b6880c9f77c54dd99ee7952be6c60514460e08",
+      "sha256": "84a0c64716e39a704178b426877c146e377cbc7fd76cd89812b45e3ff95d3aea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "bc8f467f4a10a129ab45e4e630fd676547fc5516f3c96e008c8dff0e8e468a2c",
+      "sha256": "b083fddf822a61b5d850afc6c4325076b84842e9a53c2e3c2aeae8355fcb0d90",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11501,7 +11509,7 @@
     {
       "id": "SURFACE-f537d8c206de6d62",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
-      "sha256": "4dd4547567f2eeb1945a623bfeb3c57e36b78df60e2808410f7475a7005125fe",
+      "sha256": "f49a1d1fcdb455d2c0fd4d0bbe0e2a493879294d1e3611fcb9fee6b4d40c35c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11513,7 +11521,7 @@
     {
       "id": "SURFACE-eb5c18c24c04950e",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
-      "sha256": "170361034fe56bbcae7deb08123fd3ed3cf3957bbbd27fdc0663023b40dd1c1c",
+      "sha256": "cd37a6f4b86d270db696993566120c3eafd67a7cbbcceafd8d0a3495d3549ff4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11541,6 +11549,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-142f78677aa1c778",
+      "path": "tdf-hq-ui/src/pages/OperationsControlCenterPage.money.test.tsx",
+      "sha256": "ad99888c633e68fbb56541bc28fae0d27a6dcbe93f9b55b8e5a80301fafb2faa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-41fac70eecbac758",
       "path": "tdf-hq-ui/src/pages/OperationsControlCenterPage.partySelector.test.ts",
       "sha256": "1d547b5381911f93bc01052de98ec4159368a0bfa985da2ecedf5a77bca9a35a",
@@ -11555,7 +11569,7 @@
     {
       "id": "SURFACE-8f163fb9673ec539",
       "path": "tdf-hq-ui/src/pages/OperationsControlCenterPage.tsx",
-      "sha256": "2e5c039ff3331a7cb62d05244fed5fc13e0a24c37e20e9b62d556a883eea1848",
+      "sha256": "6fc8abb42fea37ea006fae1448ab547da983be8a7ef322585484d2c92a46d2c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13013,13 +13027,13 @@
     {
       "id": "SURFACE-87b80f419fbdfd01",
       "path": "tdf-hq-ui/src/utils/musicMoney.test.ts",
-      "sha256": "de331c2360c09762bc1a2db6782135efd75a2995f84db6991409d825c4281c00",
+      "sha256": "5595b46af83436edef7980f5ca7ee189ba467bd417d8dba415795d337411e352",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9f13e1d451ae3a9b",
       "path": "tdf-hq-ui/src/utils/musicMoney.ts",
-      "sha256": "c64997fe823f1aa0b583d73ca115482b8c9593802c69b9c1b1ecccb846f6230c",
+      "sha256": "d82f44eb3b43765430adabd12f2931cb5e90d0c56ad18dfa2d873be001fddb51",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13073,13 +13087,13 @@
     {
       "id": "SURFACE-5bb05c2291a3a5da",
       "path": "tdf-hq-ui/src/utils/priceInput.test.ts",
-      "sha256": "df78800c77a47657c8ebbc2ceeda269c4fce4aff5e4202b1f2b9abb20bd2ee10",
+      "sha256": "8da46a8867257fc7df949d781cc833572ccb9de3933cffab0455cc8cf260b3d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-48a7c088c9cbddbf",
       "path": "tdf-hq-ui/src/utils/priceInput.ts",
-      "sha256": "a45f97f5ac4d047349b9eabf91330856113d2d7f04c294dc6ef0c9d70132e977",
+      "sha256": "8f44827348cc3e9404b5f56362e6c23031aef5842044efdd1dc72f5348cfc566",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30955,7 +30969,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "66c2e0ec627473b8f68b52378cc9379713338bd6b204777063e8923518ee23e6",
+      "sha256": "cb27232caedb59f0311d3283ae4c0ba3630dccea428dada0124b73d7bdf056bb",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
