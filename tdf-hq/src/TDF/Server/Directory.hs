@@ -1193,10 +1193,13 @@ counterOffer user applicationId idempotency request@OfferCounterRequest{amountMi
     -- acceptance or competing counter that landed since the read above makes
     -- this counter fail before any write instead of resurrecting the offer.
     outcome <- runDB $ do
-      locked <- rawSql "SELECT application.status,application.current_round,application.last_actor_role,classified.status FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=? FOR UPDATE OF application"
-        [toPersistValue applicationId] :: SqlPersistT IO [(Single Text, Single Int, Single Text, Single Text)]
-      case locked of
-        [(Single lockedStatus, Single lockedRound, Single lockedActor, Single lockedClassifiedStatus)]
+      -- Same lock order as admission and acceptance: classified, then offer.
+      listing <- rawSql "SELECT classified.status FROM classified WHERE classified.id=? FOR UPDATE"
+        [optionalUuid (valueUuid "classifiedId" current)] :: SqlPersistT IO [Single Text]
+      locked <- rawSql "SELECT application.status,application.current_round,application.last_actor_role FROM classified_application application WHERE application.id=? FOR UPDATE"
+        [toPersistValue applicationId] :: SqlPersistT IO [(Single Text, Single Int, Single Text)]
+      case (listing, locked) of
+        ([Single lockedClassifiedStatus], [(Single lockedStatus, Single lockedRound, Single lockedActor)])
           | lockedStatus /= applicationStatusText status || lockedRound + 1 /= nextRound || lockedActor /= (if lastActor == ActorAuthor then "author" else "applicant") ->
               pure (Left err409 {errBody="the offer changed before this counter; reload and retry"})
           | lockedClassifiedStatus /= "published" -> pure (Left err409 {errBody="the classified is no longer open"})
@@ -1304,10 +1307,18 @@ changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStat
   -- this one fail before any write, so one acceptance consumes one slot
   -- (ADR 0134 I19).
   outcome <- runDB $ do
-    locked <- rawSql "SELECT application.status,classified.status,classified.slots_remaining,(classified.expires_at>now()) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=? FOR UPDATE OF application,classified"
-      [toPersistValue applicationId] :: SqlPersistT IO [(Single Text, Single Text, Single Int, Single Bool)]
-    case locked of
-      [(Single lockedStatus, Single lockedClassifiedStatus, Single lockedRemaining, Single lockedLive)]
+    -- Lock order everywhere: classified first, then individual offers.
+    -- Admission (createApplication), listing transitions
+    -- (changeClassifiedStatus + closeOpenOffersDB) and this handler all take
+    -- the classified row before any offer row, so two acceptances on the same
+    -- listing serialize instead of deadlocking when the first one closes the
+    -- remaining offers.
+    listing <- rawSql "SELECT classified.status,classified.slots_remaining,(classified.expires_at>now()) FROM classified WHERE classified.id=? FOR UPDATE"
+      [toPersistValue classifiedId] :: SqlPersistT IO [(Single Text, Single Int, Single Bool)]
+    offer <- rawSql "SELECT application.status FROM classified_application application WHERE application.id=? FOR UPDATE"
+      [toPersistValue applicationId] :: SqlPersistT IO [Single Text]
+    case (listing, offer) of
+      ([(Single lockedClassifiedStatus, Single lockedRemaining, Single lockedLive)], [Single lockedStatus])
         | lockedStatus /= oldStatus -> pure (Left err409 {errBody="the offer changed before this transition; reload and retry"})
         | consumesSlot && (lockedClassifiedStatus /= "published" || not lockedLive) -> pure (Left err409 {errBody="the classified is no longer open"})
         | consumesSlot && slotsAfterAccept lockedRemaining == Nothing -> pure (Left err409 {errBody="this classified has no slot left"})
