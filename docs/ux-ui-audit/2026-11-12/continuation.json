@@ -508,7 +508,15 @@
       "catalogPreservationTestsPassed": 11,
       "typecheck": "passed",
       "lint": "passed",
-      "hostedCI": "El pase actual requiere verificación hospedada en su propia cabeza; los resultados anteriores no se transfieren."
+      "hostedCI": "El pase actual requiere verificación hospedada en su propia cabeza; los resultados anteriores no se transfieren.",
+      "sourceFreshness": {
+        "sourceCommit": "ec1f06e2cbc572843fde9fef1f83861369c8fc70",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 74,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      }
     }
   ]
 }
