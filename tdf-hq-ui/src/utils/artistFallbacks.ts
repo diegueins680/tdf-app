@@ -55,3 +55,13 @@ export function getArtistHeroImage(apHeroImageUrl: string | null | undefined, ap
   return ARTIST_HERO_FALLBACKS[normalizedSlug as keyof typeof ARTIST_HERO_FALLBACKS]
     ?? artistPlaceholderImage(artistName);
 }
+
+interface ArtistPictureFields { apHeroImageUrl?: string | null; apSlug?: string | null }
+
+export const hasArtistPicture = (artist: ArtistPictureFields): boolean =>
+  !isArtistPlaceholderImage(getArtistHeroImage(artist.apHeroImageUrl, artist.apSlug));
+
+/** Lists artists with a real picture first, keeping the incoming order within each group. */
+export function picturedArtistsFirst<T extends ArtistPictureFields>(artists: readonly T[]): T[] {
+  return [...artists.filter(hasArtistPicture), ...artists.filter((artist) => !hasArtistPicture(artist))];
+}

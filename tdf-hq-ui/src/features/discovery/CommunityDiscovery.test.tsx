@@ -53,6 +53,30 @@ test('restores URL filters and exposes canonical artist links and clear control'
   await waitFor(() => expect(search.mock.calls.at(-1)?.[0].q).toBeUndefined());
 });
 
+test('pages through profiles one server page at a time and returns to visited pages without refetching', async () => {
+  const pageOf = (title: string, nextCursor?: string): DirectorySearchResponse => ({ ...response(title), facets: { total: 30, entityTypes: { profile: 30 }, cities: [] }, nextCursor });
+  search.mockImplementation((query) => Promise.resolve(query.cursor === 'c1' ? pageOf('Third page artist') : query.cursor ? pageOf('Second page artist', 'c1') : pageOf('First page artist', 'c0')));
+  mount();
+  await screen.findByText('First page artist');
+  expect(search.mock.calls[0]?.[0].limit).toBe(12);
+  expect(screen.getByText('1–12 de 30 perfiles')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Ir a la página anterior' })).toHaveProperty('disabled', true);
+  fireEvent.click(screen.getByRole('button', { name: 'Ir a la página siguiente' }));
+  await screen.findByText('Second page artist');
+  expect(screen.queryByText('First page artist')).toBeNull();
+  expect(search.mock.calls.at(-1)?.[0].cursor).toBe('c0');
+  expect(screen.getByText('13–24 de 30 perfiles')).toBeTruthy();
+  const calls = search.mock.calls.length;
+  fireEvent.click(screen.getByRole('button', { name: 'Ir a la página anterior' }));
+  await screen.findByText('First page artist');
+  expect(search).toHaveBeenCalledTimes(calls);
+  fireEvent.click(screen.getByRole('button', { name: 'Ir a la página siguiente' }));
+  await screen.findByText('Second page artist');
+  fireEvent.click(screen.getByRole('button', { name: 'Ir a la página siguiente' }));
+  await screen.findByText('Third page artist');
+  expect(screen.getByRole('button', { name: 'Ir a la página siguiente' })).toHaveProperty('disabled', true);
+});
+
 test('rejects external or malformed canonical destinations', () => {
   const item = response('Artist').items[0]!;
   expect(directoryResultPath({ ...item, canonicalPath: '//evil.example', slug: 'a/b' })).toBe('/directorio/a%2Fb');

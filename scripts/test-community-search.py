@@ -56,6 +56,11 @@ INSERT INTO directory_profile(id,subject_party_id,profile_kind,public_name,slug,
 INSERT INTO directory_legacy_link(profile_id,legacy_kind,legacy_id,source_table)
 SELECT 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','artist_profile',id::text,'artist_profile'
 FROM artist_profile WHERE artist_party_id=990007;
+INSERT INTO party(id,display_name,is_org,created_at) VALUES (990008,'Fotoluz',false,now()),(990009,'Fotoluz Extended',false,now()),(990010,'Fotoluz Blank',false,now());
+INSERT INTO artist_profile(artist_party_id,slug,bio,city,hero_image_url,created_at) VALUES
+(990008,'fotoluz-fixture','Music','Quito',NULL,now()),
+(990009,'fotoluz-extended-fixture','Music','Quito','https://cdn.example.test/fotoluz.jpg',now()),
+(990010,'fotoluz-blank-fixture','Music','Quito','  ',now());
 SELECT directory_refresh_profile_search(id) FROM directory_profile WHERE subject_party_id BETWEEN 990002 AND 990006;
 """
 
@@ -103,6 +108,21 @@ print('PASS: canonical deduplication, published bands and musical projects')
 assert not query('Luna', 'artist', intent='offering'), 'intent filter must not match profiles without an intent'
 assert query('Luna', 'artist', intent=None)
 print('PASS: ADR 0134 intent filter is bound and leaves profile results untouched when unset')
+
+browse = query('', 'artist', limit=50)
+pictured = [bool((row.get('imageUrl') or '').strip()) for row in browse]
+assert pictured == sorted(pictured, reverse=True), [(row['title'], row.get('imageUrl')) for row in browse]
+titles = [row['title'] for row in browse]
+assert titles.index('Fotoluz Extended') < titles.index('Fotoluz') < titles.index('Fotoluz Blank'), titles
+paged, cursor = [], None
+for _ in range(len(browse)):
+    step = query('', 'artist', cursor=cursor, limit=1)
+    paged.append(step[0]['id']); cursor = step[0]['cursor']
+assert paged == [row['id'] for row in browse], (paged, browse)
+named = [row['title'] for row in query('Fotoluz', 'artist')]
+assert named[:2] == ['Fotoluz', 'Fotoluz Extended'], named
+assert all(0 <= row['score'] <= 1 for row in browse)
+print('PASS: pictured results first when browsing, stable across cursor pages; a picture never outranks a better name match')
 
 facets = query('Luna', 'artist', facets=True)[0]
 assert facets['total'] == len(query('Luna', 'artist')), facets

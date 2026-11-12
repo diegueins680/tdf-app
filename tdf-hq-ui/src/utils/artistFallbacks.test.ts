@@ -1,4 +1,4 @@
-import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage } from './artistFallbacks';
+import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage, picturedArtistsFirst } from './artistFallbacks';
 
 describe('getArtistHeroImage', () => {
   it('uses the verified Quimika Soul artwork for its canonical seeded slug', () => {
@@ -30,5 +30,18 @@ describe('getArtistHeroImage', () => {
   it('preserves artist-provided images', () => {
     expect(getArtistHeroImage(' https://cdn.example/owned.jpg ', null, 'Artist')).toBe('https://cdn.example/owned.jpg');
     expect(isArtistPlaceholderImage('https://cdn.example/owned.jpg')).toBe(false);
+  });
+});
+
+describe('picturedArtistsFirst', () => {
+  it('lists artists with a picture before those without, keeping the order within each group', () => {
+    const artists = [
+      { id: 1, apHeroImageUrl: null, apSlug: 'unknown-artist' },
+      { id: 2, apHeroImageUrl: 'https://cdn.example.test/a.jpg', apSlug: 'a' },
+      { id: 3, apHeroImageUrl: '  ', apSlug: null },
+      { id: 4, apHeroImageUrl: null, apSlug: 'skankafe' },
+      { id: 5, apHeroImageUrl: '/artist-fallback.svg', apSlug: 'b' },
+    ];
+    expect(picturedArtistsFirst(artists).map((artist) => artist.id)).toEqual([2, 4, 1, 3, 5]);
   });
 });
