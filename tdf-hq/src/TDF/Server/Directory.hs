@@ -1017,11 +1017,23 @@ parseClassifiedStatus value = lookup value [("draft",Draft),("pending_moderation
 
 classifiedSummary classifiedId = jsonOne err404 ("SELECT " <> managedClassifiedProjectionSql <> " FROM classified JOIN classified_category category ON category.id=classified.category_id WHERE classified.id=?") [toPersistValue classifiedId]
 
+-- An offer is active while its stored state is open and its expiry has not
+-- elapsed; elapsed offers read as expired before any write persists that
+-- (ADR 0134). The alias of classified_application is a parameter.
+activeOfferSql :: Text -> Text
+activeOfferSql alias =
+  alias <> ".status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND (" <> alias <> ".offer_expires_at IS NULL OR " <> alias <> ".offer_expires_at>now())"
+
+-- Negotiation rounds of an offer, oldest first.
+offerRoundsSql :: Text
+offerRoundsSql =
+  "(SELECT coalesce(jsonb_agg(jsonb_build_object('roundNumber',round.round_number,'actorRole',round.actor_role,'kind',round.kind,'amountMinor',round.amount_minor,'currencyId',round.currency_id,'terms',round.terms,'message',round.message,'expiresAt',round.expires_at,'createdAt',round.created_at) ORDER BY round.round_number),'[]'::jsonb) FROM classified_offer_round round WHERE round.application_id=application.id)"
+
 -- Shared projection for the author's own listings (ADR 0134 adds intent,
 -- slots, price mode, offer deadline and the number of offers received).
 managedClassifiedProjectionSql :: Text
 managedClassifiedProjectionSql =
-  "jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'sourceProfileId',classified.source_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'version',classified.version,'intent',category.intent,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'priceMode',classified.price_mode,'offerDeadlineAt',classified.offer_deadline_at,'budget',CASE WHEN classified.budget_max_minor IS NULL AND classified.budget_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'offerCount',(SELECT count(*) FROM classified_application application WHERE application.classified_id=classified.id),'openOfferCount',(SELECT count(*) FROM classified_application application WHERE application.classified_id=classified.id AND application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')))"
+  "jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'sourceProfileId',classified.source_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'version',classified.version,'intent',category.intent,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'priceMode',classified.price_mode,'offerDeadlineAt',classified.offer_deadline_at,'budget',CASE WHEN classified.budget_max_minor IS NULL AND classified.budget_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'offerCount',(SELECT count(*) FROM classified_application application WHERE application.classified_id=classified.id),'openOfferCount',(SELECT count(*) FROM classified_application application WHERE application.classified_id=classified.id AND " <> activeOfferSql "application" <> "))"
 
 listApplications user classifiedId mSort = do
   _ <- requireClassifiedAuthor user classifiedId
@@ -1039,7 +1051,7 @@ listMyApplications user mStatus = do
   let statusFilter = normalizeOptional mStatus
   when (maybe False (`notElem` ["open","accepted","closed"]) statusFilter) $
     throwError err400 {errBody="status must be open, accepted or closed"}
-  jsonRows ("SELECT " <> offerProjectionSql "'applicant'" <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id JOIN directory_profile_manager manager ON manager.profile_id=application.applicant_profile_id AND manager.account_party_id=? AND manager.active CROSS JOIN LATERAL (" <> profileReputationSql "classified.author_profile_id" <> ") reputation WHERE (?::text IS NULL OR (?::text='open' AND application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')) OR (?::text='accepted' AND application.status IN ('accepted','conversation_open','converted')) OR (?::text='closed' AND application.status IN ('rejected','withdrawn','expired'))) ORDER BY application.updated_at DESC,application.id")
+  jsonRows ("SELECT " <> offerProjectionSql "'applicant'" <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id JOIN directory_profile_manager manager ON manager.profile_id=application.applicant_profile_id AND manager.account_party_id=? AND manager.active CROSS JOIN LATERAL (" <> profileReputationSql "classified.author_profile_id" <> ") reputation WHERE (?::text IS NULL OR (?::text='open' AND " <> activeOfferSql "application" <> ") OR (?::text='accepted' AND application.status IN ('accepted','conversation_open','converted')) OR (?::text='closed' AND (application.status IN ('rejected','withdrawn','expired') OR (application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND application.offer_expires_at<=now())))) ORDER BY application.updated_at DESC,application.id")
     [toPersistValue (auPartyId user),optionalText statusFilter,optionalText statusFilter,optionalText statusFilter,optionalText statusFilter]
 
 getApplication user applicationId = do
@@ -1049,14 +1061,16 @@ getApplication user applicationId = do
   -- reputation and the offerer sees the author's.
   let roleLiteral = "'" <> role <> "'"
       counterpartProfile = if role == "author" then "application.applicant_profile_id" else "classified.author_profile_id"
-  jsonOne err404 ("SELECT " <> offerProjectionSql roleLiteral <> "||jsonb_build_object('rounds',(SELECT coalesce(jsonb_agg(jsonb_build_object('roundNumber',round.round_number,'actorRole',round.actor_role,'kind',round.kind,'amountMinor',round.amount_minor,'currencyId',round.currency_id,'terms',round.terms,'message',round.message,'expiresAt',round.expires_at,'createdAt',round.created_at) ORDER BY round.round_number),'[]'::jsonb) FROM classified_offer_round round WHERE round.application_id=application.id)) FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id CROSS JOIN LATERAL (" <> profileReputationSql counterpartProfile <> ") reputation WHERE application.id=?")
+  jsonOne err404 ("SELECT " <> offerProjectionSql roleLiteral <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id CROSS JOIN LATERAL (" <> profileReputationSql counterpartProfile <> ") reputation WHERE application.id=?")
     [toPersistValue applicationId]
 
--- Typed offer projection shared by every offer endpoint. The participant role
--- is interpolated as a SQL literal or placeholder by the caller.
+-- Typed offer projection shared by every offer endpoint, negotiation rounds
+-- included so boards and lists show counter-offer messages before a decision.
+-- The participant role is interpolated as a SQL literal or placeholder by the
+-- caller.
 offerProjectionSql :: Text -> Text
 offerProjectionSql roleSql =
-  "jsonb_build_object('id',application.id,'classifiedId',application.classified_id,'classified',jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'priceMode',classified.price_mode,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'offerDeadlineAt',classified.offer_deadline_at,'budget',CASE WHEN classified.budget_max_minor IS NULL AND classified.budget_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END),'applicantProfileId',application.applicant_profile_id,'applicantProfile',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind),'message',application.message,'portfolio',application.portfolio,'availability',application.availability_text,'currencyId',application.currency_id,'proposedAmountMinor',application.proposed_amount_minor,'currentAmountMinor',application.current_amount_minor,'acceptedAmountMinor',application.accepted_amount_minor,'currentRound',application.current_round,'lastActorRole',application.last_actor_role,'terms',application.terms,'offerExpiresAt',application.offer_expires_at,'status',CASE WHEN application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND application.offer_expires_at IS NOT NULL AND application.offer_expires_at<=now() THEN 'expired' ELSE application.status END,'rejectionReason',application.rejection_reason,'participantRole'," <> roleSql <> ",'reputation',reputation.value,'submittedAt',application.submitted_at,'updatedAt',application.updated_at,'acceptedAt',application.accepted_at,'version',application.version)"
+  "jsonb_build_object('id',application.id,'classifiedId',application.classified_id,'classified',jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'priceMode',classified.price_mode,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'offerDeadlineAt',classified.offer_deadline_at,'budget',CASE WHEN classified.budget_max_minor IS NULL AND classified.budget_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END),'applicantProfileId',application.applicant_profile_id,'applicantProfile',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind),'message',application.message,'portfolio',application.portfolio,'availability',application.availability_text,'currencyId',application.currency_id,'proposedAmountMinor',application.proposed_amount_minor,'currentAmountMinor',application.current_amount_minor,'acceptedAmountMinor',application.accepted_amount_minor,'currentRound',application.current_round,'lastActorRole',application.last_actor_role,'terms',application.terms,'offerExpiresAt',application.offer_expires_at,'status',CASE WHEN application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND application.offer_expires_at IS NOT NULL AND application.offer_expires_at<=now() THEN 'expired' ELSE application.status END,'rejectionReason',application.rejection_reason,'participantRole'," <> roleSql <> ",'reputation',reputation.value,'rounds'," <> offerRoundsSql <> ",'submittedAt',application.submitted_at,'updatedAt',application.updated_at,'acceptedAt',application.accepted_at,'version',application.version)"
 
 -- Verified-review reputation of a profile, from directory_review (Phase 3
 -- adds response metrics and badges on top of this).
@@ -1091,7 +1105,10 @@ createApplication user classifiedId idempotency request@ApplicationCreateRequest
         referenceCurrency = valueUuid "currencyId" listing
     unless (offerAmountAcceptable mode referenceAmount offeredAmount && (mode /= PriceFixed || currencyId == referenceCurrency)) $
       throwError err409 {errBody="this classified has a fixed price; the offer must accept that exact amount and currency"}
-    duplicates <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_application WHERE classified_id=? AND applicant_profile_id=? AND status NOT IN ('rejected','withdrawn','expired')" [toPersistValue classifiedId,toPersistValue applicantProfileId]
+    -- An elapsed previous offer is persisted as expired so a replacement is
+    -- admitted; accepted and open, unexpired offers still block duplicates.
+    runDB $ rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE classified_id=? AND applicant_profile_id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND offer_expires_at<=now()" [toPersistValue classifiedId,toPersistValue applicantProfileId]
+    duplicates <- jsonRows ("SELECT to_jsonb(TRUE) FROM classified_application application WHERE application.classified_id=? AND application.applicant_profile_id=? AND (application.status IN ('accepted','conversation_open','converted') OR " <> activeOfferSql "application" <> ")") [toPersistValue classifiedId,toPersistValue applicantProfileId]
     unless (null duplicates) $ throwError err409 {errBody="this profile already has an active offer on this classified"}
     let deadline = valueTime "offerDeadlineAt" listing <|> valueTime "expiresAt" listing
         defaultExpiry = addUTCTime (7*24*60*60) now
@@ -1126,24 +1143,31 @@ counterOffer user applicationId idempotency request@OfferCounterRequest{amountMi
   roundId <- reserveIdempotency user "offer.counter" idempotency request "offer_round"
   replayed <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_offer_round WHERE id=?" [toPersistValue roundId]
   if not (null replayed) then getApplication user applicationId else do
-    current <- jsonOne err404 "SELECT jsonb_build_object('status',application.status,'round',application.current_round,'lastActor',application.last_actor_role,'offerExpiresAt',application.offer_expires_at,'priceMode',classified.price_mode,'classifiedStatus',classified.status,'classifiedId',classified.id,'applicantProfileId',application.applicant_profile_id,'authorProfileId',classified.author_profile_id) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=?" [toPersistValue applicationId]
+    current <- jsonOne err404 "SELECT jsonb_build_object('status',application.status,'round',application.current_round,'lastActor',application.last_actor_role,'offerExpiresAt',application.offer_expires_at,'priceMode',classified.price_mode,'classifiedStatus',classified.status,'classifiedExpiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'offerDeadlineAt',classified.offer_deadline_at,'classifiedId',classified.id,'applicantProfileId',application.applicant_profile_id,'authorProfileId',classified.author_profile_id) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=?" [toPersistValue applicationId]
     status <- maybe (throwError err409 {errBody="unknown current application state"}) pure (valueText "status" current >>= parseApplicationStatus)
     now <- liftIO getCurrentTime
     when (maybe False (<=now) (valueTime "offerExpiresAt" current) && applicationIsOpen status) $ do
       runDB $ rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [toPersistValue applicationId]
       throwError err409 {errBody="the offer expired before this counter"}
     unless (valueText "classifiedStatus" current == Just "published") $ throwError err409 {errBody="the classified is no longer open"}
+    when (maybe False (<=now) (valueTime "classifiedExpiresAt" current) || maybe False (<=now) (valueTime "offerDeadlineAt" current)) $
+      throwError err409 {errBody="the classified no longer takes offers"}
     when (valueText "priceMode" current == Just "fixed") $ throwError err409 {errBody="fixed-price classifieds do not admit counter-offers"}
     unless (counterAllowedFor status actor) $ throwError err409 {errBody="it is not this participant's turn to counter"}
     let nextRound = fromMaybe 1 (valueInt "round" current) + 1
-    when (nextRound > maxNegotiationRounds) $ throwError err409 {errBody="negotiation round limit reached"}
+    -- The final round is reserved for the acceptance (I18).
+    unless (counterRoundAllowed nextRound) $ throwError err409 {errBody="negotiation round limit reached; accept, reject or withdraw the current offer"}
     lastActor <- case valueText "lastActor" current of
       Just "author" -> pure ActorAuthor
       Just "applicant" -> pure ActorApplicant
       _ -> throwError err500
     unless (nextRoundActor lastActor == actor) $ throwError err409 {errBody="negotiation must alternate between participants"}
     let defaultExpiry = addUTCTime (7*24*60*60) now
-        roundExpiry = fromMaybe defaultExpiry expiresAt
+        -- A counter never outlives the classified offer deadline or expiry.
+        listingDeadline = case (valueTime "offerDeadlineAt" current, valueTime "classifiedExpiresAt" current) of
+          (Just deadline, Just expiry) -> Just (min deadline expiry)
+          (deadline, expiry) -> deadline <|> expiry
+        roundExpiry = minimumTime (fromMaybe defaultExpiry expiresAt) listingDeadline
         newStatus = if actor == ActorAuthor then "countered_by_author" else "countered_by_applicant"
         actorText = if actor == ActorAuthor then "author" else "applicant"
     when (roundExpiry <= now) $ throwError err400 {errBody="expiresAt must be in the future"}
@@ -1236,33 +1260,48 @@ changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStat
       releasesSlot = to == ApplicationWithdrawn && from `elem` [ApplicationAccepted, ApplicationConversationOpen]
   when consumesSlot $ do
     unless (valueText "classifiedStatus" current == Just "published") $ throwError err409 {errBody="the classified is no longer open"}
+    when (maybe False (<=now) (valueTime "expiresAt" current)) $ throwError err409 {errBody="the classified has expired"}
     when (slotsAfterAccept slotsRemaining == Nothing) $ throwError err409 {errBody="this classified has no slot left"}
-  runDB $ do
-    rawExecute "UPDATE classified_application SET status=?,withdrawn_at=CASE WHEN ?='withdrawn' THEN now() ELSE withdrawn_at END,accepted_at=CASE WHEN ?='accepted' THEN now() ELSE accepted_at END,accepted_amount_minor=CASE WHEN ?='accepted' THEN current_amount_minor ELSE accepted_amount_minor END,rejection_reason=CASE WHEN ?='rejected' THEN 'author_decision' ELSE rejection_reason END,updated_at=now(),version=version+1 WHERE id=?"
-      [PersistText newStatus,PersistText newStatus,PersistText newStatus,PersistText newStatus,PersistText newStatus,toPersistValue applicationId]
-    rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'application.status','application',?,?,?,?,jsonb_build_object('reason',?::text,'participant',?::text))"
-      [toPersistValue (auPartyId user),PersistText (UUID.toText applicationId),PersistText oldStatus,PersistText newStatus,PersistText ("application-status-"<>UUID.toText applicationId),optionalText statusReason,PersistText visible]
-    when consumesSlot $ do
-      -- ADR 0134 I14: one slot per acceptance, never below zero. The accept
-      -- round closes the negotiation chain.
-      rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,created_by_party_id) SELECT id,least(current_round+1,10),?,'accept',current_amount_minor,currency_id,terms,? FROM classified_application WHERE id=? AND current_round<10 ON CONFLICT DO NOTHING"
-        [PersistText actorText,toPersistValue (auPartyId user),toPersistValue applicationId]
-      rawExecute "UPDATE classified_application SET current_round=least(current_round+1,10),last_actor_role=? WHERE id=?" [PersistText actorText,toPersistValue applicationId]
-      rawExecute "UPDATE classified SET slots_remaining=slots_remaining-1,updated_at=now(),version=version+1 WHERE id=? AND slots_remaining>0" [toPersistValue classifiedId]
-      remainingRows <- rawSql "SELECT slots_remaining FROM classified WHERE id=?" [toPersistValue classifiedId] :: SqlPersistT IO [Single Int]
-      let remaining = case remainingRows of
-            [Single value] -> value
-            _ -> 0
-      when (remaining == 0) $ do
-        rawExecute "UPDATE classified SET status='filled',closed_at=now() WHERE id=? AND status='published'" [toPersistValue classifiedId]
-        rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'classified.status','classified',?,'published','filled',?,jsonb_build_object('reason','slots_filled'))" [toPersistValue (auPartyId user),PersistText (UUID.toText classifiedId),PersistText ("classified-status-"<>UUID.toText classifiedId)]
-        closeOpenOffersDB user classifiedId "slots_filled"
-        rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,'marketplace.classified.filled','Anuncio cubierto','Tu anuncio cubrió todos sus cupos.','directory_classified',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText (UUID.toText classifiedId),optionalUuid (valueUuid "authorProfileId" current)]
-      refreshClassifiedDB classifiedId
-    when releasesSlot $ do
-      rawExecute "UPDATE classified SET slots_remaining=?,status=CASE WHEN status='filled' AND expires_at>now() THEN 'published' ELSE status END,closed_at=CASE WHEN status='filled' AND expires_at>now() THEN NULL ELSE closed_at END,updated_at=now(),version=version+1 WHERE id=?"
-        [PersistInt64 (fromIntegral (slotsAfterRelease slotsTotal slotsRemaining)),toPersistValue classifiedId]
-      refreshClassifiedDB classifiedId
+  -- The offer and its classified are re-read under row locks inside the
+  -- transaction: a concurrent transition or acceptance that won the lock makes
+  -- this one fail before any write, so one acceptance consumes one slot
+  -- (ADR 0134 I19).
+  outcome <- runDB $ do
+    locked <- rawSql "SELECT application.status,classified.status,classified.slots_remaining,(classified.expires_at>now()) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=? FOR UPDATE OF application,classified"
+      [toPersistValue applicationId] :: SqlPersistT IO [(Single Text, Single Text, Single Int, Single Bool)]
+    case locked of
+      [(Single lockedStatus, Single lockedClassifiedStatus, Single lockedRemaining, Single lockedLive)]
+        | lockedStatus /= oldStatus -> pure (Left err409 {errBody="the offer changed before this transition; reload and retry"})
+        | consumesSlot && (lockedClassifiedStatus /= "published" || not lockedLive) -> pure (Left err409 {errBody="the classified is no longer open"})
+        | consumesSlot && slotsAfterAccept lockedRemaining == Nothing -> pure (Left err409 {errBody="this classified has no slot left"})
+        | otherwise -> do
+            rawExecute "UPDATE classified_application SET status=?,withdrawn_at=CASE WHEN ?='withdrawn' THEN now() ELSE withdrawn_at END,accepted_at=CASE WHEN ?='accepted' THEN now() ELSE accepted_at END,accepted_amount_minor=CASE WHEN ?='accepted' THEN current_amount_minor ELSE accepted_amount_minor END,rejection_reason=CASE WHEN ?='rejected' THEN 'author_decision' ELSE rejection_reason END,updated_at=now(),version=version+1 WHERE id=? AND status=?"
+              [PersistText newStatus,PersistText newStatus,PersistText newStatus,PersistText newStatus,PersistText newStatus,toPersistValue applicationId,PersistText oldStatus]
+            rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'application.status','application',?,?,?,?,jsonb_build_object('reason',?::text,'participant',?::text))"
+              [toPersistValue (auPartyId user),PersistText (UUID.toText applicationId),PersistText oldStatus,PersistText newStatus,PersistText ("application-status-"<>UUID.toText applicationId),optionalText statusReason,PersistText visible]
+            when consumesSlot $ do
+              -- ADR 0134 I18/I19: the accept round always closes the chain
+              -- (counters stop at round 9) and exactly one slot is consumed.
+              rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,created_by_party_id) SELECT id,least(current_round+1,10),?,'accept',current_amount_minor,currency_id,terms,? FROM classified_application WHERE id=? ON CONFLICT DO NOTHING"
+                [PersistText actorText,toPersistValue (auPartyId user),toPersistValue applicationId]
+              rawExecute "UPDATE classified_application SET current_round=least(current_round+1,10),last_actor_role=? WHERE id=?" [PersistText actorText,toPersistValue applicationId]
+              rawExecute "UPDATE classified SET slots_remaining=slots_remaining-1,updated_at=now(),version=version+1 WHERE id=? AND slots_remaining>0" [toPersistValue classifiedId]
+              let remaining = fromMaybe 0 (slotsAfterAccept lockedRemaining)
+              when (remaining == 0) $ do
+                rawExecute "UPDATE classified SET status='filled',closed_at=now() WHERE id=? AND status='published'" [toPersistValue classifiedId]
+                rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'classified.status','classified',?,'published','filled',?,jsonb_build_object('reason','slots_filled'))" [toPersistValue (auPartyId user),PersistText (UUID.toText classifiedId),PersistText ("classified-status-"<>UUID.toText classifiedId)]
+                closeOpenOffersDB user classifiedId "slots_filled"
+                rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,'marketplace.classified.filled','Anuncio cubierto','Tu anuncio cubrió todos sus cupos.','directory_classified',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText (UUID.toText classifiedId),optionalUuid (valueUuid "authorProfileId" current)]
+              refreshClassifiedDB classifiedId
+            when releasesSlot $ do
+              -- I19: the released slot reopens a filled, unexpired classified
+              -- (filled -> published is declared in the database relation).
+              rawExecute "UPDATE classified SET slots_remaining=?,status=CASE WHEN status='filled' AND expires_at>now() THEN 'published' ELSE status END,closed_at=CASE WHEN status='filled' AND expires_at>now() THEN NULL ELSE closed_at END,updated_at=now(),version=version+1 WHERE id=?"
+                [PersistInt64 (fromIntegral (slotsAfterRelease slotsTotal lockedRemaining)),toPersistValue classifiedId]
+              refreshClassifiedDB classifiedId
+            pure (Right ())
+      _ -> pure (Left err404)
+  either throwError pure outcome
   let counterpart = if visible == "applicant" then valueUuid "authorProfileId" current else valueUuid "applicantProfileId" current
       notify kind title body = forM_ counterpart $ \profileIdValue -> notifyOfferParticipant profileIdValue applicationId kind title body
   case to of

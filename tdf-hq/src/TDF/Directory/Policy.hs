@@ -25,6 +25,7 @@ module TDF.Directory.Policy
   , negotiationRoundsValid
   , nextRoundActor
   , maxNegotiationRounds
+  , counterRoundAllowed
   , parsePriceMode
   , priceModeText
   , offerAmountAcceptable
@@ -147,6 +148,9 @@ allowedClassifiedTransition fromStatus toStatus =
       , (PendingModeration, Published), (PendingModeration, Rejected), (PendingModeration, Withdrawn)
       , (Published, Paused), (Published, Filled), (Published, Expired), (Published, Withdrawn), (Published, Moderated)
       , (Paused, Published), (Paused, Filled), (Paused, Expired), (Paused, Withdrawn), (Paused, Moderated)
+      -- ADR 0134 I19: withdrawing an accepted offer releases a slot and reopens
+      -- a filled classified that has not expired.
+      , (Filled, Published)
       , (Expired, Published), (Expired, Withdrawn)
       , (Rejected, Draft), (Rejected, Withdrawn)
       , (Moderated, Draft), (Moderated, Withdrawn)
@@ -239,6 +243,12 @@ participantTransitionAllowed _ _ _ = False
 
 maxNegotiationRounds :: Int
 maxNegotiationRounds = 10
+
+-- | A counter-offer may occupy any round but the last: the final round is
+-- reserved for the acceptance that closes the chain, so an acceptance is
+-- always recorded (I18).
+counterRoundAllowed :: Int -> Bool
+counterRoundAllowed nextRound = nextRound >= 2 && nextRound < maxNegotiationRounds
 
 -- | The actor expected to produce the next round given the last one.
 nextRoundActor :: NegotiationActor -> NegotiationActor

@@ -34,7 +34,10 @@ spec = describe "music directory formal invariants" $ do
   it "I07: undeclared classified transitions are rejected" $ do
     allowedClassifiedTransition Draft Published `shouldBe` True
     allowedClassifiedTransition Published Filled `shouldBe` True
-    allowedClassifiedTransition Filled Published `shouldBe` False
+    -- I19: a released slot reopens a filled classified; nothing else leaves filled.
+    allowedClassifiedTransition Filled Published `shouldBe` True
+    allowedClassifiedTransition Filled Paused `shouldBe` False
+    allowedClassifiedTransition Filled Withdrawn `shouldBe` False
     allowedClassifiedTransition Withdrawn Draft `shouldBe` False
 
   it "profile lifecycle changes also use the published transition table" $ do
@@ -103,6 +106,16 @@ spec = describe "music directory formal invariants" $ do
     negotiationRoundsValid [OfferRound 1 ActorApplicant RoundInitial, OfferRound 3 ActorAuthor RoundCounter] `shouldBe` False
     negotiationRoundsValid [OfferRound 1 ActorApplicant RoundInitial, OfferRound 2 ActorAuthor RoundAccept] `shouldBe` True
     negotiationRoundsValid [OfferRound 1 ActorApplicant RoundInitial, OfferRound 2 ActorAuthor RoundAccept, OfferRound 3 ActorApplicant RoundCounter] `shouldBe` False
+
+  it "I18: counters stop one round before the limit so the acceptance is always recorded" $ do
+    counterRoundAllowed 1 `shouldBe` False
+    counterRoundAllowed 2 `shouldBe` True
+    counterRoundAllowed (maxNegotiationRounds - 1) `shouldBe` True
+    counterRoundAllowed maxNegotiationRounds `shouldBe` False
+    -- Nine counters after the initial round leave exactly the final round for the accept.
+    let counters = [OfferRound i (if odd i then ActorApplicant else ActorAuthor) (if i == 1 then RoundInitial else RoundCounter) | i <- [1 .. maxNegotiationRounds - 1]]
+    all (counterRoundAllowed . roundNumber) (drop 1 counters) `shouldBe` True
+    negotiationRoundsValid (counters ++ [OfferRound maxNegotiationRounds ActorAuthor RoundAccept]) `shouldBe` True
 
   it "I19: accepting consumes exactly one slot and never goes below zero" $
     property $ \remaining ->

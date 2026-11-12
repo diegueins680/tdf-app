@@ -33,7 +33,40 @@ DO $$ DECLARE saved TEXT; BEGIN
     END IF;
   END IF;
 END $$;
+-- Restaurar la expresión de eventos analíticos previa (offer_countered y
+-- offer_accepted dejan de ser válidos y se eliminan).
+DELETE FROM directory_analytics_event WHERE event_name IN ('offer_countered','offer_accepted');
+DO $$ DECLARE saved TEXT; constraint_name TEXT; BEGIN
+  SELECT analytics_expression INTO saved FROM marketplace_offers_migration_state WHERE id = 1;
+  SELECT conname INTO constraint_name FROM pg_constraint
+  WHERE conrelid = 'directory_analytics_event'::regclass AND contype = 'c'
+    AND pg_get_expr(conbin, conrelid) LIKE '%offer_accepted%'
+  ORDER BY conname LIMIT 1;
+  IF constraint_name IS NOT NULL AND saved IS NOT NULL THEN
+    EXECUTE format('ALTER TABLE directory_analytics_event DROP CONSTRAINT %I', constraint_name);
+    EXECUTE format('ALTER TABLE directory_analytics_event ADD CONSTRAINT %I CHECK (%s)', constraint_name, saved);
+  END IF;
+END $$;
 DROP TABLE IF EXISTS marketplace_offers_migration_state;
+
+-- Restaurar la relación de transiciones del anuncio de 2026-08-14 (sin
+-- filled -> published). Anuncios reabiertos permanecen publicados.
+CREATE OR REPLACE FUNCTION directory_classified_transition_allowed(from_status TEXT, to_status TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT from_status = to_status OR (from_status, to_status) IN (
+    ('draft','pending_moderation'), ('draft','published'), ('draft','withdrawn'),
+    ('pending_moderation','published'), ('pending_moderation','rejected'), ('pending_moderation','withdrawn'),
+    ('published','paused'), ('published','filled'), ('published','expired'), ('published','withdrawn'), ('published','moderated'),
+    ('paused','published'), ('paused','filled'), ('paused','expired'), ('paused','withdrawn'), ('paused','moderated'),
+    ('expired','published'), ('expired','withdrawn'),
+    ('rejected','draft'), ('rejected','withdrawn'),
+    ('moderated','draft'), ('moderated','withdrawn')
+  );
+$$;
 
 DELETE FROM revenue_feature_flag WHERE flag_key = 'marketplace.offers';
 

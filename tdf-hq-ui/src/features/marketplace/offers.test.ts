@@ -9,6 +9,7 @@ import {
   formatMinor,
   isOfferOpen,
   moneyInputToMinor,
+  offerRangesByCurrency,
   referenceAmount,
   sortOffers,
   waitingOn,
@@ -65,6 +66,26 @@ describe('marketplace offer helpers (ADR 0134)', () => {
     expect(referenceAmount({ priceMode: 'open', budget: { maxMinor: 100, currencyId: 'usd' } })).toBeNull();
     expect(referenceAmount({ priceMode: 'fixed', budget: { maxMinor: 40000, currencyId: 'usd' } })).toEqual({ amountMinor: 40000, currencyId: 'usd' });
     expect(referenceAmount(undefined)).toBeNull();
+    // A zero fixed price (free slot) is a reference price, not an absence.
+    expect(referenceAmount({ priceMode: 'fixed', budget: { maxMinor: 0, currencyId: 'usd' } })).toEqual({ amountMinor: 0, currencyId: 'usd' });
+    expect(referenceAmount({ priceMode: 'suggested', budget: { maxMinor: null, currencyId: 'usd' } })).toBeNull();
+  });
+
+  it('keeps offer ranges per currency and never mixes currencies', () => {
+    const offers = [
+      offer({ id: '1', currentAmountMinor: 30000, currencyId: 'usd' }),
+      offer({ id: '2', currentAmountMinor: 50000, currencyId: 'usd' }),
+      offer({ id: '3', currentAmountMinor: 20000, currencyId: 'eur' }),
+      offer({ id: '4', proposedAmountMinor: 80000, currencyId: null }),
+      offer({ id: '5' }),
+    ];
+    expect(offerRangesByCurrency(offers, 'usd')).toEqual([
+      { currencyId: 'usd', minMinor: 30000, maxMinor: 80000, count: 3 },
+    ]);
+    expect(offerRangesByCurrency(offers, null)).toEqual([
+      { currencyId: 'usd', minMinor: 30000, maxMinor: 50000, count: 2 },
+    ]);
+    expect(offerRangesByCurrency([offers[0], offers[2]], null)).toEqual([]);
   });
 
   it('sorts offers by price, reputation and recency with nulls last', () => {

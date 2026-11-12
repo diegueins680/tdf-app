@@ -184,8 +184,10 @@ WHERE NOT EXISTS (
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS marketplace_offers_migration_state (
   id INTEGER PRIMARY KEY CHECK (id = 1),
-  notification_expression TEXT
+  notification_expression TEXT,
+  analytics_expression TEXT
 );
+ALTER TABLE marketplace_offers_migration_state ADD COLUMN IF NOT EXISTS analytics_expression TEXT;
 DO $$ DECLARE previous TEXT; BEGIN
   SELECT pg_get_expr(conbin, conrelid) INTO previous FROM pg_constraint
   WHERE conrelid = 'notification'::regclass AND conname = 'notification_notif_type_check' AND contype = 'c';
@@ -230,6 +232,49 @@ INSERT INTO revenue_feature_flag(flag_key, enabled, environment, reason) VALUES
   ('marketplace.offers', TRUE, 'staging', 'ADR 0132: Phase 1 rehearsal'),
   ('marketplace.offers', TRUE, 'sandbox', 'ADR 0132: local development')
 ON CONFLICT (flag_key, environment) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- 8. Eventos analíticos del marketplace. Misma técnica que el punto 5: se
+--    conserva la expresión previa (para el rollback) y se amplía con
+--    offer_countered y offer_accepted, que emiten el contraofertar y el aceptar.
+-- ---------------------------------------------------------------------------
+DO $$ DECLARE previous TEXT; constraint_name TEXT; BEGIN
+  SELECT conname, pg_get_expr(conbin, conrelid) INTO constraint_name, previous FROM pg_constraint
+  WHERE conrelid = 'directory_analytics_event'::regclass AND contype = 'c'
+    AND pg_get_expr(conbin, conrelid) LIKE '%search_submitted%'
+  ORDER BY conname LIMIT 1;
+  UPDATE marketplace_offers_migration_state SET analytics_expression = coalesce(analytics_expression, previous) WHERE id = 1;
+  IF constraint_name IS NOT NULL AND position('offer_accepted' in previous) = 0 THEN
+    EXECUTE format('ALTER TABLE directory_analytics_event DROP CONSTRAINT %I', constraint_name);
+    EXECUTE format(
+      'ALTER TABLE directory_analytics_event ADD CONSTRAINT %I CHECK ((%s) OR event_name IN (''offer_countered'',''offer_accepted''))',
+      constraint_name, previous);
+  END IF;
+END $$;
+
+-- ---------------------------------------------------------------------------
+-- 9. Transición filled -> published: retirar una oferta aceptada libera un
+--    cupo y reabre el anuncio cubierto si no venció (I19). La relación de
+--    transiciones del anuncio se amplía con esa única arista; el trigger
+--    directory_guard_classified_transition la consulta sin cambios.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION directory_classified_transition_allowed(from_status TEXT, to_status TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT from_status = to_status OR (from_status, to_status) IN (
+    ('draft','pending_moderation'), ('draft','published'), ('draft','withdrawn'),
+    ('pending_moderation','published'), ('pending_moderation','rejected'), ('pending_moderation','withdrawn'),
+    ('published','paused'), ('published','filled'), ('published','expired'), ('published','withdrawn'), ('published','moderated'),
+    ('paused','published'), ('paused','filled'), ('paused','expired'), ('paused','withdrawn'), ('paused','moderated'),
+    ('filled','published'),
+    ('expired','published'), ('expired','withdrawn'),
+    ('rejected','draft'), ('rejected','withdrawn'),
+    ('moderated','draft'), ('moderated','withdrawn')
+  );
+$$;
 
 INSERT INTO directory_audit_event(actor_party_id, action, entity_kind, entity_id, previous_state, new_state, correlation_id, metadata)
 VALUES (NULL, 'migration.apply', 'migration', '2026-11-08_marketplace_offers', NULL, 'applied',

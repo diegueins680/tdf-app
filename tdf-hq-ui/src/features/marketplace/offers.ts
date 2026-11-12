@@ -71,8 +71,30 @@ export function moneyInputToMinor(value: string, minorUnits = 2): number | undef
 
 /** The reference price of a classified for the offer form (budget max in suggested/fixed modes). */
 export function referenceAmount(classified: { priceMode?: PriceMode; budget?: { maxMinor?: number | null; currencyId?: string | null } | null } | undefined): { amountMinor: number; currencyId: string | null } | null {
-  if (!classified || classified.priceMode === 'open' || !classified.budget?.maxMinor) return null;
-  return { amountMinor: classified.budget.maxMinor, currencyId: classified.budget.currencyId ?? null };
+  // A zero reference price is a valid fixed price (free slots), so only null
+  // or undefined means "no reference".
+  const maxMinor = classified?.budget?.maxMinor;
+  if (!classified || classified.priceMode === 'open' || maxMinor === null || maxMinor === undefined) return null;
+  return { amountMinor: maxMinor, currencyId: classified.budget?.currencyId ?? null };
+}
+
+/**
+ * Amount ranges of open offers, one per currency. Amounts in different
+ * currencies are never combined: a range is only meaningful within one
+ * currency, so the board shows one chip per currency (or none when a
+ * currency has a single offer).
+ */
+export function offerRangesByCurrency(offers: ClassifiedApplication[], fallbackCurrencyId: string | null | undefined): Array<{ currencyId: string | null; minMinor: number; maxMinor: number; count: number }> {
+  const groups = new Map<string | null, number[]>();
+  for (const offer of offers) {
+    const amount = offer.currentAmountMinor ?? offer.proposedAmountMinor;
+    if (typeof amount !== 'number') continue;
+    const key = offer.currencyId ?? fallbackCurrencyId ?? null;
+    groups.set(key, [...(groups.get(key) ?? []), amount]);
+  }
+  return [...groups.entries()]
+    .filter(([, amounts]) => amounts.length >= 2)
+    .map(([currencyId, amounts]) => ({ currencyId, minMinor: Math.min(...amounts), maxMinor: Math.max(...amounts), count: amounts.length }));
 }
 
 /** Sort comparator used by the author's comparison board. */
