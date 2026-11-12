@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 518,
-    "named": 436,
+    "total": 519,
+    "named": 437,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 518
+    "covered": 519
   },
   "routes": [
     {
@@ -1103,6 +1103,14 @@
       ]
     },
     {
+      "method": "PATCH",
+      "path": "/directory/agreements/{agreementId}/status",
+      "basis": "named",
+      "requirements": [
+        "MKT-AGREEMENT-001"
+      ]
+    },
+    {
       "method": "POST",
       "path": "/directory/applications/{applicationId}/counter",
       "basis": "named",
@@ -1116,6 +1124,7 @@
       "basis": "named",
       "requirements": [
         "DIR-ENGAGEMENT-001",
+        "MKT-AGREEMENT-001",
         "MKT-DEMAND-OFFER-001"
       ]
     },
