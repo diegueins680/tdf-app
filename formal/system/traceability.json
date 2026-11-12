@@ -27290,7 +27290,7 @@
     "e2e/web/helpers/thumbnail-failure-diagnostics.mjs": "d40191d4771616880144a3c0ebd629b16f25dac26cc82552187c277fdb53d755",
     "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
     "e2e/web/marketplace-cart.spec.mjs": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
-    "e2e/web/marketplace-negotiation.spec.mjs": "06f8aa232e27fb74af434beb864889522d0a28e2a55a07cdb05faf9f70cb4c77",
+    "e2e/web/marketplace-negotiation.spec.mjs": "9832d96805066ae61f912d48ca08796ebbfb279db57af8b8852bc77197a6103b",
     "e2e/web/mobile-layout-regressions.spec.mjs": "0be1916b95d3bff15572a7237bcb427295142aa1d31322df1257b0406e50ec9c",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
@@ -28328,7 +28328,7 @@
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
     "tdf-hq-ui/src/features/marketplace/offers.test.ts": "c09400d91dc9b945c18fe2a4f48ccf2f644175333baf69cfcf1f6a42877d4be5",
-    "tdf-hq-ui/src/features/marketplace/offers.ts": "15bab00f3eb863c239b51a178a130929d588c7e9d91e1e51079b4f71583f674a",
+    "tdf-hq-ui/src/features/marketplace/offers.ts": "dc51806c2cd326429d38a15864217fbfef3554328d301f30eb1ee543bb7c9504",
     "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx": "02a247376b7685688d733469e04a0c9444e7042db2f17e8a0097782a3d674c68",
     "tdf-hq-ui/src/features/records/RecordThumbnail.tsx": "44f25abf3cfe930e761a895e3884ef483d08da3a8e4058312e78df6573b31c67",
     "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts": "a5436d9f47bf3dfbe733946c27c818a6b0d71844d7f02e6df7331a996bba85e5",
@@ -47744,7 +47744,7 @@
     {
       "id": "SURFACE-4361fde9fb21989c",
       "path": "e2e/web/marketplace-negotiation.spec.mjs",
-      "sha256": "06f8aa232e27fb74af434beb864889522d0a28e2a55a07cdb05faf9f70cb4c77",
+      "sha256": "9832d96805066ae61f912d48ca08796ebbfb279db57af8b8852bc77197a6103b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60825,7 +60825,7 @@
     {
       "id": "SURFACE-1b321f25c0e1bf1a",
       "path": "tdf-hq-ui/src/features/marketplace/offers.ts",
-      "sha256": "15bab00f3eb863c239b51a178a130929d588c7e9d91e1e51079b4f71583f674a",
+      "sha256": "dc51806c2cd326429d38a15864217fbfef3554328d301f30eb1ee543bb7c9504",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

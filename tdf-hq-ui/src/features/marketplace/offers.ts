@@ -84,7 +84,9 @@ export function referenceAmount(classified: { priceMode?: PriceMode; budget?: { 
  * currency, so the board shows one chip per currency (or none when a
  * currency has a single offer).
  */
-export function offerRangesByCurrency(offers: ClassifiedApplication[], fallbackCurrencyId: string | null | undefined): Array<{ currencyId: string | null; minMinor: number; maxMinor: number; count: number }> {
+export interface OfferCurrencyRange { currencyId: string | null; minMinor: number; maxMinor: number; count: number }
+
+export function offerRangesByCurrency(offers: ClassifiedApplication[], fallbackCurrencyId: string | null | undefined): OfferCurrencyRange[] {
   const groups = new Map<string | null, number[]>();
   for (const offer of offers) {
     const amount = offer.currentAmountMinor ?? offer.proposedAmountMinor;

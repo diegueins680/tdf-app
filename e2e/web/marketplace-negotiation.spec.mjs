@@ -114,9 +114,18 @@ test('author compares offers, counters one and the final acceptance fills the cl
   // Counter the band at 1 250 USD.
   const bandCard = board.getByTestId('offer-card').filter({ hasText: 'Los Sintéticos' });
   await bandCard.getByRole('button', { name: 'Contraofertar' }).click();
-  await bandCard.getByLabel('Monto').fill('1250');
-  await bandCard.getByRole('button', { name: 'Enviar contraoferta' }).click();
-  await expect.poll(() => state.counters.length).toBe(1);
+  const amountField = bandCard.getByLabel('Monto');
+  await expect(amountField).toBeVisible();
+  await amountField.fill('1250');
+  await expect(amountField).toHaveValue('1250');
+  const sendCounter = bandCard.getByRole('button', { name: 'Enviar contraoferta' });
+  await expect(sendCounter).toBeEnabled();
+  // The form sits in a Collapse; wait for the request itself rather than racing the animation.
+  await Promise.all([
+    page.waitForRequest((request) => request.url().includes('/counter') && request.method() === 'POST'),
+    sendCounter.click(),
+  ]);
+  await expect.poll(() => state.counters.length, { timeout: 15_000 }).toBe(1);
   expect(state.counters[0]).toMatchObject({ id: OFFER_ID, role: 'author', body: { amountMinor: 125000, currencyId: USD } });
   expect(state.counters[0].idempotency).toBeTruthy();
   await expect(bandCard.getByText('Contraoferta del autor')).toBeVisible();

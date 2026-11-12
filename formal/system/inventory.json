@@ -3466,7 +3466,7 @@
     {
       "id": "SURFACE-4361fde9fb21989c",
       "path": "e2e/web/marketplace-negotiation.spec.mjs",
-      "sha256": "06f8aa232e27fb74af434beb864889522d0a28e2a55a07cdb05faf9f70cb4c77",
+      "sha256": "9832d96805066ae61f912d48ca08796ebbfb279db57af8b8852bc77197a6103b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10240,7 +10240,7 @@
     {
       "id": "SURFACE-1b321f25c0e1bf1a",
       "path": "tdf-hq-ui/src/features/marketplace/offers.ts",
-      "sha256": "15bab00f3eb863c239b51a178a130929d588c7e9d91e1e51079b4f71583f674a",
+      "sha256": "dc51806c2cd326429d38a15864217fbfef3554328d301f30eb1ee543bb7c9504",
       "semanticConformance": "not-established-by-discovery"
     },
     {
