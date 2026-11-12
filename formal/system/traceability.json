@@ -14069,7 +14069,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction.",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction. Z3 proof stripe_ticket_capture.py covers the legacy ticket webhook's two exception writes (see PAY-STRIPE-WEBHOOK-001).",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -14083,7 +14083,8 @@
       "formalModels": [
         "formal/payments/CaptureAccounting.tla",
         "formal/payments/CaptureAccounting.cfg",
-        "formal/payments/CaptureAccountingLegacy.cfg"
+        "formal/payments/CaptureAccountingLegacy.cfg",
+        "formal/payments/stripe_ticket_capture.py"
       ],
       "confidence": "High for the protocol as modelled and the pure decision; handler correspondence by review of the twelve call sites. The provider reconciliation worker, music commerce and the PayPal webhook keep their own reconciliation paths.",
       "ambiguity": [
@@ -16734,8 +16735,10 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/Spec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end.",
+      "formalModels": [
+        "formal/payments/stripe_ticket_capture.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end. Z3 proof stripe_ticket_capture.py (translation of handleStripePaymentIntentSucceeded for a matched ticket order, validateStripeTicketPaymentEvidence, parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview, pinned by the hash of those regions): tickets are issued only with the full binding on a pending order, the answer is 400 exactly when the binding is not admitted, a succeeded positive capture on an existing order always ends in tickets, a paid redelivery or an open exception, and each comparison, the pending fence and both exception writes are load-bearing. The model also shows the one silent case left: the order row deleted between lookup and read-back while the stale copy says pending (no application code deletes ticket orders).",
       "evidence": "formal/system/social-events-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -27267,7 +27270,7 @@
     ".github/workflows/ci.yml": "be08cd8afaeaef40d4c4daea10a0ed47c7936ed2ee0e6ce53844d14bbb64b2b0",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
-    ".github/workflows/event-operations-formal.yml": "8e2c7a5adb19062bb2c4460f623319d6c3bb94d2d422e9b2677e93f15ce063dd",
+    ".github/workflows/event-operations-formal.yml": "caff655528bfa5d0a431318b72259998e456ac2949350793b86fbcf7299453e2",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -27643,6 +27646,7 @@
     "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
     "formal/payments/placetopay_query_admission.py": "b4564fbbef90dba77d7a0f03d053cf53db753fea3f50102d8efa2457a3d772c8",
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
+    "formal/payments/stripe_ticket_capture.py": "a1bbb2e1fec692fc50ca52e6af096d5e6821a582f1f2c9676367b889ec61cbcd",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -43678,6 +43682,16 @@
         "relationship": "formalModels"
       }
     ],
+    "formal/payments/stripe_ticket_capture.py": [
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "PAY-STRIPE-WEBHOOK-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": [
       {
         "requirement": "PAY-DOMO-QUOTE-001",
@@ -47277,7 +47291,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "8e2c7a5adb19062bb2c4460f623319d6c3bb94d2d422e9b2677e93f15ce063dd",
+      "sha256": "caff655528bfa5d0a431318b72259998e456ac2949350793b86fbcf7299453e2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84021,7 +84035,6 @@
     "PKG-PURCHASE-EXPIRY-001",
     "UI-EVENT-FINANCE-PRECISION-001",
     "SYS-UI-TEST-WORKER-001",
-    "PAY-STRIPE-WEBHOOK-001",
     "COURSE-ADMIN-001",
     "PAY-STOREFRONT-ADMIN-001",
     "PAY-PROVIDER-EVENT-REPLAY-001",
@@ -85202,7 +85215,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7127e1dc055c02e3aba9f559590d5436836da973d7d9a1a7b360bc88f983dc72",
+      "sourceSha256": "c225615d1a9427fac17a312acb682b6091d97e39d45e18b9936016d904dc0ef8",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85230,7 +85243,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7127e1dc055c02e3aba9f559590d5436836da973d7d9a1a7b360bc88f983dc72",
+      "sourceSha256": "c225615d1a9427fac17a312acb682b6091d97e39d45e18b9936016d904dc0ef8",
       "definition": {
         "states": [
           "absent",
@@ -85260,7 +85273,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7127e1dc055c02e3aba9f559590d5436836da973d7d9a1a7b360bc88f983dc72",
+      "sourceSha256": "c225615d1a9427fac17a312acb682b6091d97e39d45e18b9936016d904dc0ef8",
       "definition": {
         "export": [
           "queued",
