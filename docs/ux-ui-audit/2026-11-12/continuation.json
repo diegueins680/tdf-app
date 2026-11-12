@@ -404,12 +404,24 @@
         ]
       },
       "catalogCandidates": 1424,
-      "sourceFreshness": "pending final commit",
-      "hostedCI": "No main CI run observed for the previous push; dispatch for the new verified head remains pending.",
+      "sourceFreshness": {
+        "sourceCommit": "9a84e6bbb7a0b37843ec742399d944c1cec3e653",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 71,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "Completion is not established. Consult the PR checks for dispatched workflows on the published head.",
       "latestWalletVerification": {
         "suites": 1,
         "tests": 17
-      }
+      },
+      "catalogPreservationTestsPassed": 11,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "typecheck": "passed",
+      "lint": "passed"
     }
   ]
 }
