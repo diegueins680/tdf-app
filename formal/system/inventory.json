@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "7cbfde881767455e9182b17d9d0c0ec62d21c17f",
+  "mobileRevision": "4299e09e08aec71c69a082423b93aee535eba958",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -67,7 +67,6 @@
       "e2e/web/helpers/thumbnail-failure-diagnostics.mjs",
       "e2e/web/legacy-provider-playback.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
-      "e2e/web/marketplace-negotiation.spec.mjs",
       "e2e/web/mobile-layout-regressions.spec.mjs",
       "e2e/web/mobile-program.spec.mjs",
       "e2e/web/music-catalog-discovery.spec.mjs",
@@ -138,6 +137,7 @@
       "scripts/__tests__/alloy-controls.test.mjs",
       "scripts/__tests__/app-routes-auth-implementation.test.mjs",
       "scripts/__tests__/app-smart-link.test.mjs",
+      "scripts/__tests__/architecture-boundaries.test.mjs",
       "scripts/__tests__/artist-claim-target-runtime.mjs",
       "scripts/__tests__/artist-enrichment.test.mjs",
       "scripts/__tests__/artist-image-download.test.mjs",
@@ -283,6 +283,7 @@
       "scripts/catalog-list-audit.mjs",
       "scripts/check-admin-guards.py",
       "scripts/check-api-availability.mjs",
+      "scripts/check-architecture-boundaries.mjs",
       "scripts/check-browser-vendor.mjs",
       "scripts/check-build-trust.mjs",
       "scripts/check-dependency-security.mjs",
@@ -1095,6 +1096,8 @@
       "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
       "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
       "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
       "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
@@ -1109,6 +1112,8 @@
       "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
       "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+      "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+      "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
       "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
       "tdf-hq-ui/src/components/events/TicketPricePreview.tsx",
       "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
@@ -1202,15 +1207,8 @@
       "tdf-hq-ui/src/features/interactions/PublicationSelection.tsx",
       "tdf-hq-ui/src/features/interactions/model.test.ts",
       "tdf-hq-ui/src/features/interactions/model.ts",
-      "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
-      "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
-      "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
-      "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
-      "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
       "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
       "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
-      "tdf-hq-ui/src/features/marketplace/offers.test.ts",
-      "tdf-hq-ui/src/features/marketplace/offers.ts",
       "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
       "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
       "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
@@ -1260,8 +1258,6 @@
       "tdf-hq-ui/src/i18n/locales/en.ts",
       "tdf-hq-ui/src/i18n/locales/es.ts",
       "tdf-hq-ui/src/i18n/locales/fr.ts",
-      "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
       "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
       "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
       "tdf-hq-ui/src/i18n/locales/pt.ts",
@@ -1313,6 +1309,7 @@
       "tdf-hq-ui/src/pages/ClassesPage.tsx",
       "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
       "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
+      "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
       "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
       "tdf-hq-ui/src/pages/CommerceHubPage.test.tsx",
       "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
@@ -1639,6 +1636,7 @@
       "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
       "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
       "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+      "tdf-hq-ui/src/utils/eventLineup.ts",
       "tdf-hq-ui/src/utils/eventRsvpIntent.test.ts",
       "tdf-hq-ui/src/utils/eventRsvpIntent.ts",
       "tdf-hq-ui/src/utils/eventSharing.test.ts",
@@ -2231,8 +2229,6 @@
       "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
       "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql",
       "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
-      "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
-      "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -3456,12 +3452,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-4361fde9fb21989c",
-      "path": "e2e/web/marketplace-negotiation.spec.mjs",
-      "sha256": "2f6f646e651228a3327d1d13be1e87dc2bb15d732ea481bb7633339818a469b5",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-0ff897863a04e3f4",
       "path": "e2e/web/mobile-layout-regressions.spec.mjs",
       "sha256": "0be1916b95d3bff15572a7237bcb427295142aa1d31322df1257b0406e50ec9c",
@@ -3788,7 +3778,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "059819c06a02abe63b2c7f85051935f85fc88bd8b42ecd7a12aada1a9405342b",
+      "sha256": "2bb0f4d104a97575b3dfa6c037b53ebeba13077f6ed12bf079045e755675657a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3807,6 +3797,12 @@
       "id": "SURFACE-906172e6c3d5a4ef",
       "path": "scripts/__tests__/app-smart-link.test.mjs",
       "sha256": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c16934793233bcac",
+      "path": "scripts/__tests__/architecture-boundaries.test.mjs",
+      "sha256": "536a8b583458acc1dcf511caf2ca9ea307eaea3d58ef39a5235f7cd61ab62cb6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3860,7 +3856,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "b5cdf0321f2473e2138f5c963a0d6f058f28bdbcf7b47940f9d49a83d6b28718",
+      "sha256": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3944,7 +3940,7 @@
     {
       "id": "SURFACE-38cae059ca169cb6",
       "path": "scripts/__tests__/directory-search-plan-parity.mjs",
-      "sha256": "79ea65f9a6d8fba40359e8c3ac84d5c903a01a2a3e86aee1073aa9548a728c69",
+      "sha256": "f2e2748ce19217d29a4f35602121061fa22549fcd9834fdcbcdb8d9f5b2c518c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4406,7 +4402,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "5202211ac3d648ed86796460b7405bb825f92ca2fbab542bff9004031f5675bc",
+      "sha256": "0d709497ac9fb750d518997b8d573c7b28c5832c23dc107040f4315e6e231229",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4680,6 +4676,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-350c1e59d110e860",
+      "path": "scripts/check-architecture-boundaries.mjs",
+      "sha256": "df09ec947a2854c0c1dd97f9f41e60a6da7373551453d461fae9c4def69056fd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1e909f329835b442",
       "path": "scripts/check-browser-vendor.mjs",
       "sha256": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
@@ -4700,7 +4702,7 @@
     {
       "id": "SURFACE-9306a961784ddefa",
       "path": "scripts/check-generated-api.mjs",
-      "sha256": "7725e45fa91bbe2014005bef70385d318a0f2e91dac8b45b6d33d47d9f90c6e1",
+      "sha256": "7744bad5342bce6a2a39edaae846c81bee8cc36d603a62e937f7549b1d5a5827",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5246,7 +5248,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "5ec3567adc6a92188a1b3f5b91f36805e9111f0ca029de619efa38b95e4dee5f",
+      "sha256": "fd2e37c688f7ed78bea7ed85b6bebb4ff93edf514992eb18c120a477b2b25d42",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5444,7 +5446,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "0841c3f70e8471ed0dc93249ebd51f9615ceb67dc86ba97a71ac61338b10d3fd",
+      "sha256": "3c2d171b9e55a6594aaa497d95e7fd56b8ebe2b54194de6cea22f5a5b8becca9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5480,7 +5482,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e23945ffb38c27fd475219dd9c4b110eb2ef3b29596f27db76bce24022de1cc4",
+      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6140,7 +6142,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "e9875b4d849e072f384e2d96c827c0190b147c347b24806c5e85071efccb9584",
+      "sha256": "d30288be999b3815b91f1c86d1919742f11581460c34ca1ef9255a3945bc3d10",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6266,7 +6268,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "12e6bbda36f927b6c67815dab0f6fdd1205b95794322d2e5b0527f821f39257b",
+      "sha256": "a72edf2babc837d43d092af5a5ad2ed91f562c984e952d6f44a5a484a6d4b3bf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8210,7 +8212,7 @@
     {
       "id": "SURFACE-eea9abd0a36ffd69",
       "path": "tdf-hq-ui/src/api/directory.ts",
-      "sha256": "cff6b7eec4ca8a0fea737c8f6804cf7fab1b7d1b94c9171034df94e5c6bb6c89",
+      "sha256": "6d1b860759bb5841d85ff693ddfe7580cb56561eb9614f8eaef01f07c424fdc3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8378,7 +8380,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "198f24bb09ca9fb32776dc604cd2e1555a6d05f139d0608d3aed84ba37d8fd3f",
+      "sha256": "00ac6131f322521d2232350733258f0666bdd7ccd25a67d0d6d343e6729b12ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9504,6 +9506,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-84df4c94cbe62081",
+      "path": "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+      "sha256": "c42c351d53eea188ae1b0f43552144caf3a88ac0cd19286cfff6f85abc3c52a3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-85610c4675bfa874",
+      "path": "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+      "sha256": "683f169bc7412f408cac5ee1f7b6e04d715f7382ec8e56721ddc7d6da8f32b11",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6d375a8bdcbe5d7c",
       "path": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "sha256": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
@@ -9585,6 +9599,18 @@
       "id": "SURFACE-32b83043961bf6cd",
       "path": "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
       "sha256": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a17dfa34ef337c89",
+      "path": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+      "sha256": "65f904a6cf8e33ce7401154167a2ae697e6603beedc52e7fbe1dbe4bdcb7746d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-07395d7f84adf446",
+      "path": "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
+      "sha256": "239e397d3fafdbf8176572370f759a4d15be707791a9fc0cac4d0793521a1272",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10146,36 +10172,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-f4ac65c0e4cce0cb",
-      "path": "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
-      "sha256": "ea54170c3e85cb53efb8f75207d6261098d4a5dd85d91f669a6e14dde18ce25f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-d2b74a79e542b7f1",
-      "path": "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
-      "sha256": "d3cb0207379e925515a583f9c4ac3fe7466e360ddec2fcacb568d66102beb3f4",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-7fbf218766e62339",
-      "path": "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
-      "sha256": "7cffc09e494b44eab7501bd1213cc5536391ae67cf74f051943820a1198e48b0",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-8481865773a143b4",
-      "path": "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
-      "sha256": "95f7c87b5063def584176102a9662eee06f537db9bf36181420fa1015f528533",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-d08b639d621c8e20",
-      "path": "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
-      "sha256": "13d244081c4d0aad195d6ae52db43f0723c721cded889233e595ea2a67608e62",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-cae765cc556fec1a",
       "path": "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
       "sha256": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
@@ -10185,18 +10181,6 @@
       "id": "SURFACE-a35c2de02e03cc6c",
       "path": "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
       "sha256": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-918143da462da26c",
-      "path": "tdf-hq-ui/src/features/marketplace/offers.test.ts",
-      "sha256": "d9e2a18cea5b39279200997b074946b55c38e83f002c44d7f709ac5b0a1f538a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-1b321f25c0e1bf1a",
-      "path": "tdf-hq-ui/src/features/marketplace/offers.ts",
-      "sha256": "75522792470d835575a9b7a30bfd9e89564c519cd5eeacc78316e9a820346460",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10466,43 +10450,31 @@
     {
       "id": "SURFACE-7e096967d3a00d3b",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
-      "sha256": "dadbb75e6158f6d3b9786883075f683c7067c965e2e3b1aed643f772a68d9c7b",
+      "sha256": "cc46f3a87b7d849b0965173834b60f9e38d17f910d0ee298c583fcb50ff9b721",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-31dfb712c6445325",
       "path": "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
-      "sha256": "958273e4599a7e36908a62a65c6cd425c0fe44217f3f2229f76176ecd3b12944",
+      "sha256": "17a04c2651856f61f56c7afc31c9f9b4c60208f027d5cb18a5ad02efe8721c04",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "bef10e97f8ffb1133e965cc270ec2fd72db1f1e7b2bbf1b58b75b60270177354",
+      "sha256": "72138a6a422a066872b065b3c73a584f3d4b7841c4f48a4dc78957557a362e55",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "4a031019a545eb4aa473f8ad536a2e10d5c22cf38bb32be9e776ce05f8b78fdd",
+      "sha256": "c5c9e26d858ff16701ed4eb29c5ed63e2b2a6ac4468b0841c1c862c829927bb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-90a473fead52aa3c",
       "path": "tdf-hq-ui/src/i18n/locales/fr.ts",
       "sha256": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-98d71404b05bdcb7",
-      "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "deb953694a9324ac9dbf235b0f66eba71b6ed135f47ce9f120acfce469080233",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-f132c3ba830ae795",
-      "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "465b6078aa167a3ce99f49859945a7f2376bda0a51c29dee6ee1c45c53ff3d5a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10802,19 +10774,25 @@
     {
       "id": "SURFACE-10a1b2ad11b92606",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
-      "sha256": "e5c17de3ace0ccb44dc20fa2d166a0dadef24a25e5006fd40e65441f8379df17",
+      "sha256": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9ec3af8f42eacde2",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-      "sha256": "bef2c4c9f0eda00c82706ee017e1c3936bbb9b2f584f5fcd9cbb18df26ce3328",
+      "sha256": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-78d796fee86d9367",
+      "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
+      "sha256": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
+      "sha256": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10892,13 +10870,13 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "879899e9e196b72e8e80b10aab2a8786caeb1c84f586919ee4b1d359e45be581",
+      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
+      "sha256": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10934,7 +10912,7 @@
     {
       "id": "SURFACE-b1d115adebe79a56",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-      "sha256": "b6d1e3454415f6a3f55d2b381895566b1fde08e05aac023fce731969347875d5",
+      "sha256": "1fe509c9b97544f9f3b91d45db26ba6b28cfdc852cdb34a8c91eb4563c8a5658",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10946,7 +10924,7 @@
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "b74c5389083a546a62243c72fea286084a9f348064c5a3cdb1f6c0ee15f06dda",
+      "sha256": "526d99c969b397ff9531d01ca361f63932a2e4859e937eff2d44db6ef606a3a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10964,7 +10942,7 @@
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "5feeeba626bd36bdb5ccd0e1fd7c91fb4a73ba5992eaed9ab9ca03d0d0521d8b",
+      "sha256": "6fa7990f5f6b0072eb10cbd811981fd23ddffa0615dc4a20badb8a8da9ec5d34",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11066,31 +11044,31 @@
     {
       "id": "SURFACE-843ecd90497b82eb",
       "path": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-      "sha256": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
+      "sha256": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8e582de4b6234f44",
       "path": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-      "sha256": "b4eaf012b687c6fc0ae4d60d667b661e346b15323ba0e7baad282f49452fcd91",
+      "sha256": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d536aa30411edce",
       "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-      "sha256": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
+      "sha256": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "ed81c8122a6debedadbc37dd221096ea424f4c6f482bcb05ee96562704f28b7c",
+      "sha256": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "4d2ecce58a6883d9c9b48bd837e17578c3e5385d8e1f8630df49f097bf2a7767",
+      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11624,13 +11602,13 @@
     {
       "id": "SURFACE-6e21d53461f37190",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
-      "sha256": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
+      "sha256": "b015233958f9b3684f93c132236f99a9378f980ea3c66de9ffe3eeb6d71112c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
+      "sha256": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11840,13 +11818,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "7e285d998e1c9683e82627ac0b237f1a17516ad231dd5757cf646616dceb9b4b",
+      "sha256": "271aa4a3d8747258679cb7de078d02e2ac2a49be6361168dd74bcadf88f92b3b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "1ee97a2e8651484032069c2ce3fd63439bbdb901b8356e2a354ad4dce7da378a",
+      "sha256": "2f2b8400b190d6ff5a0d770c1bae2c243aceba051b888e1e1acd5f7d4fc6e6ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12074,13 +12052,13 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "8d256dd500d12005e1f9d18b238407ae20fa9374ae6d6e7a9b9c5bf998174e03",
+      "sha256": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
+      "sha256": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12768,6 +12746,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-994f6a0e134f3424",
+      "path": "tdf-hq-ui/src/utils/eventLineup.ts",
+      "sha256": "8738e19e2da553851c892d5411c188f19bafd7646b1e831399bfb93e0cb35e3c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8f26f91431e28702",
       "path": "tdf-hq-ui/src/utils/eventRsvpIntent.test.ts",
       "sha256": "149bb438194a949eff270c1f6b32a46c5889cce725bbec13af628169ef083c64",
@@ -13346,7 +13330,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
+      "sha256": "599d5043999681fa29685122f17e5383cca4d27a3df7022538dd4a8d5e863b87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13406,13 +13390,13 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "489c2159384a562416e9533a0fb732e5f1590558c7d34163a3dbad9bce063108",
+      "sha256": "4826734e2eea92b03731be956d0335c466d8e6cb6f689fcec15a542c0cdd5424",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "cc02de79887a31e12f277430e1ea54e1053c8afb02aeb4d6ee4ed6049ca7bfd5",
+      "sha256": "114c0e6650440093d3599c08fe9d40ad5d3086bbe3441a885a0ab0f0d1449811",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16308,18 +16292,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-a5284041219da02a",
-      "path": "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
-      "sha256": "237e4a0fa74b71c682939ff81b25f37a541556bdb15f69a8a21df5d6b079e09a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-489406d92a5378f7",
-      "path": "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql",
-      "sha256": "1f60ad1af4c67659a56c21a4ad730c224daba10f2a7c4216f335cae307799942",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -16406,7 +16378,7 @@
     {
       "id": "SURFACE-9f19f644ef35d148",
       "path": "tdf-hq/src/TDF/API/Directory.hs",
-      "sha256": "e902d956c7b60ff87aa7ffa42714c8d6a9c1bf7ad3362b9b2d255e7aa899d061",
+      "sha256": "edb5bfd1fb3d4dab6a9d635e1de23d02c323df9e9d1047c231e2220dfd01f238",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16664,7 +16636,7 @@
     {
       "id": "SURFACE-97b434e9aaa0711b",
       "path": "tdf-hq/src/TDF/Artists/Enrichment.hs",
-      "sha256": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
+      "sha256": "127098fd4fd51d244956d2aadc2be6c0adc4e764c6ac91bca431a49b3f2ec60f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17156,7 +17128,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "e37564d31796fc8625096370f2d75e294cf1f00acec04e33f5f5899074635ab0",
+      "sha256": "d8b30f2fb422f4bc8c0a378400340025dfef1be1b0e05a9643f37e443ce9ce2c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17396,7 +17368,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
+      "sha256": "806657f972b93ae6ecc0b4e27bea896b3009de3123440a5eddef9e28e3fb3a21",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17492,7 +17464,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "dba91cae47f1e28ffec7b05b215857f9526e64d86c0bd53afa432f052744c29f",
+      "sha256": "0195a6a9888c881caebc81348b83fc0f98c278af778fcb2d22d69c9ab82d5215",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17612,7 +17584,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "83114d52661f317e817759565005dc7de2660270ac95e619b04bf381260013b7",
+      "sha256": "a3c11c32b3920caa2aadc86420f2d40aa8e4cd430e4ef05a85072042becfd29b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18038,7 +18010,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "6e19f664145c98f1fd7f129732ba8476056fb3f694190fac79934c130dfd7381",
+      "sha256": "c7761c1efaa1b76bf212cad48ce0b9e3024c37b4d8d38a521f07737d0220bcb6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18230,7 +18202,7 @@
     {
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-      "sha256": "02a822982752796fa7b1347ededba7727825c8d4c06538c25aa2134c7bc39cd4",
+      "sha256": "a745e19b13935fcd7ca3cf51f30810f7353e91a1ff33688b7c153d6a89813887",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18494,7 +18466,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "43e056a87d4c0d606100a8b59884efb3155cd959e2b6d4b2b90d4aafe8d2e87a",
+      "sha256": "20f2bb1c2b63db2329867c127be97ee51f941d4ac394ae58f9fcf7b81e96bc38",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20486,7 +20458,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "198f24bb09ca9fb32776dc604cd2e1555a6d05f139d0608d3aed84ba37d8fd3f",
+      "sha256": "00ac6131f322521d2232350733258f0666bdd7ccd25a67d0d6d343e6729b12ee",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21729,7 +21701,7 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "sha256": "efa26dd4e398bcad65846114c72d754db18d56ada6dc2fc468620191270d55b5",
+      "sha256": "803516f6e66066aaee84e121f75de5703772fa67c3727cba68c74f0c8edcaa0d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22064,10 +22036,10 @@
       "kind": "requirement-candidate"
     },
     {
-      "path": "docs/adr/0132-marketplace-demand-offers.md",
-      "sha256": "3fd54fe57b57fb145d6e0aac70ed3d73c58ef30794ac2c0a46870a98f5df85e1",
+      "path": "docs/adr/0133-enforced-module-boundaries.md",
+      "sha256": "71af7f45965b5d8016716e17748db867efcbdd15ecd3831e70452cc0f06d02b5",
       "authority": "inferred",
-      "authorityBasis": "Estado: propuesto para implementación. Fecha: 2026-11-08. Extiende ADR 0105.",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -23506,48 +23478,6 @@
       "kind": "requirement-candidate"
     },
     {
-      "path": "docs/marketplace/00-auditoria.md",
-      "sha256": "ccefb7ecb2d0f68bc6aa4206a23219c15d336788d4178b4d85b2f9729a3c8274",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "docs/marketplace/01-plan-por-fases.md",
-      "sha256": "51af3d8108a781df0ed4cd0e97532ca58ce79b0eaf5e5d5facc4f1bb92ed87d3",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "docs/marketplace/02-especificacion-funcional.md",
-      "sha256": "28950435d3f0ef18f76829074044473143a405ceab0f12020ee3d5352fec121d",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "docs/marketplace/03-diseno-de-datos.md",
-      "sha256": "6ac8476b0aa84364a3b2d8d735868b70e62cc848b45e47964b55a5c08d6425e6",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "docs/marketplace/README.md",
-      "sha256": "becfedcca89245ef23f58480bd77c865d1bebf81f6f32241fd0bce38062a7b1f",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "docs/marketplace/manual-gates.md",
-      "sha256": "ffc75a8f78d7e20d70d5ad513d647161eb653bb61f5852fc65a4c171e51ceb37",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
       "path": "docs/merch-reputation-acceptance.md",
       "sha256": "e556619c89bf60a0191742b2361b2f1f5d9c25afde5fa3746e9bef07d83b07fc",
       "authority": "inferred",
@@ -23619,7 +23549,7 @@
     },
     {
       "path": "docs/music-directory/README.md",
-      "sha256": "3e0ee7c8cb7920afd87e8a6a373caf1dea43cfea9a6f54eecbaed8c7c22711a8",
+      "sha256": "b86ffbd486213e3681dbaeec04725887d53b17a6304c17fc68e611eed321e06a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23640,7 +23570,7 @@
     },
     {
       "path": "docs/music-directory/formal-model.yaml",
-      "sha256": "d0baa0ee00d0447bc112f326fadc464aafde23d6bd57183dc66dfce463ebb7d4",
+      "sha256": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30254,6 +30184,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-creation-entry.md",
+      "sha256": "2967fc0680609a0f8fc7d925c184aaec076a051188f9cb531da666959945f016",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-discovery-filtering.md",
       "sha256": "d52ea8766d0d60eea42122867d03d03ee77b711fc49faf0525f3fa0978bbe929",
       "authority": "inferred",
@@ -30363,6 +30300,13 @@
       "sha256": "76e5d622985c6fc019bcfcf61839cfa6c8ef744d1edf772d1a52ea87efa00394",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/form-actions.md",
+      "sha256": "b1d4b9a8dc94f8ecde735ef83a6a0089ef4030fc10a4b3015e3f43b408af39e1",
+      "authority": "inferred",
+      "authorityBasis": "Status: accepted by product owner on 2026-11-10.",
       "kind": "requirement-candidate"
     },
     {
@@ -30983,7 +30927,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "24aaaa545f097649af5633fd9a8dd704753788691320a7efee6c80a09d3da8ad",
+      "sha256": "629117239f36607cb9bb4270a83b8771ba7646c8daa29344b1d4ef51ceff8679",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31410,14 +31354,14 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "489c2159384a562416e9533a0fb732e5f1590558c7d34163a3dbad9bce063108",
+      "sha256": "4826734e2eea92b03731be956d0335c466d8e6cb6f689fcec15a542c0cdd5424",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
     },
     {
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "cc02de79887a31e12f277430e1ea54e1053c8afb02aeb4d6ee4ed6049ca7bfd5",
+      "sha256": "114c0e6650440093d3599c08fe9d40ad5d3086bbe3441a885a0ab0f0d1449811",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -32718,9 +32662,81 @@
       "gap": "Per-clause implementation correspondence not discharged by inventory"
     },
     {
-      "id": "0132-marketplace-demand-offers:a8cda5099d5b",
-      "statement": "1. **No hay entidad nueva de \"anuncio\" ni de \"oferta\"**. `classified` sigue siendo el anuncio y `classified_application` la oferta. La intención (`seeking`/`offering`) es un atributo de la categoría (`classified_category.intent`), no una tabla paralela. 2. **La negociación es estructurada y alternada.** Cada propuesta o contraoferta es una fila de `classified_offer_round` con monto, moneda, términos y vencimiento; nunca se negocia el precio por chat. La alternancia estricta y el tope de 10 rondas viven en `TDF.Directory.Policy` y se prueban con propiedades. 3. **Cupos y cierre.** El anuncio declara `slots`; aceptar una oferta consume un cupo de forma atómica; al agotarse, el anuncio pasa a `filled` y las ofertas abiertas se rechazan con motivo. Retirar una oferta aceptada libera el cupo. 4. **Modos de precio.** `open` (solo ofertas), `suggested` (referencia negociable) y `fixed` (solo aceptación del precio). El presupuesto reutiliza `budget_min/max_minor` y `compensation_type`. 5. **Confidencialidad (I08) se mantiene.** Un oferente solo ve su cadena; el público ve conteo y rango agregado. 6. **El acuerdo es un dominio separado del match (Fase 2).** `marketplace_agreement` congela términos y montos, calcula comisión en puntos base y depósito con `DepositPolicy`, y se paga con el checkout existente (`platform_fee_minor`). No se le llama \"escrow\". La liquidación a terceros empieza manual y verificada; Stripe Connect llega por gate. 7. **La reputación nace del acuerdo completado (Fase 3)**: el acuerdo `completed` inserta `directory_interaction(kind='marketplace_agreement')`, que es la única vía para una reseña verificada. 8. **Todo detrás de gates del registro de features** (`marketplace.offers`, `marketplace.agreements`, `marketplace.reputation`, `marketplace.matching`); fusionar código no activa pagos. 9. **Compatibilidad.** Columnas con `DEFAULT`, backfill idempotente, `CHECK` de estado reemplazado con rollback que mapea estados nuevos a antiguos, contrato OpenAPI aditivo (`proposedAmountMinor` sigue aceptándose junto a `amountMinor`).",
-      "source": "docs/adr/0132-marketplace-demand-offers.md#decisión",
+      "id": "0133-enforced-module-boundaries:68e5b4f5d2ff",
+      "statement": "1. Each system declares ordered layers, lowest first. A module may import its own layer and lower layers only.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:f8965206b9d1",
+      "statement": "Backend: `persistence` (Persistent models) → `transfer-types` (`TDF.DTO*`, `TDF.API.Types`) → `domain` (everything not matched elsewhere, including workers and `TDF.Cron`) → `http-contract` (`TDF.API*`, `TDF.Routes.*`) → `http-delivery` (`TDF.Server*`, `*.Server`) → `composition` (`TDF.App.Boot` and the executables).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:5f949b0d8cd8",
+      "statement": "Web: `foundation` (`vendor`, `assets`, `styles`, `lib`, `i18n`) → `utils` → `config` → `api` → `app-services` (session, services, analytics, contexts, hooks, player, mobile, desktop, theme) → `components` → `features` → `pages` → `routing` → `shell` (`App.tsx`, `main.tsx`, `player/PlayerShell.tsx`).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:3e1e933fab6e",
+      "statement": "`import type` and `export type` declarations are not edges: the compiler erases them, so they cannot create a load-order or bundle dependency. An inline `import { type A }` is an edge, because `verbatimModuleSyntax` keeps the module import. Test files are not scanned.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:46a7e9e38629",
+      "statement": "2. A module may not exceed 2,500 lines (backend) or 2,000 lines (web, generated API types exempt).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:6924fd6677d4",
+      "statement": "3. Existing debt is listed, not excused. `knownViolations` names each offending import and `sizeBudget.oversized` gives each oversized file a ceiling just above its current size. The check fails when:",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:2cb8709e7dba",
+      "statement": "- an import crosses a layer upward and is not listed; - a listed import no longer exists (the entry must be deleted, so the gain cannot be lost again); - an unlisted file passes the limit, or a listed file passes its ceiling; - a listed file has shrunk more than the headroom below its ceiling (the ceiling must come down with it).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:f80f5755a35b",
+      "statement": "The lists can therefore only shrink unless a reviewer accepts an explicit edit to the baseline in the same change.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:cbd83b2883f1",
+      "statement": "4. The check runs in `npm run quality:repo`, which CI runs for every change.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
       "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
