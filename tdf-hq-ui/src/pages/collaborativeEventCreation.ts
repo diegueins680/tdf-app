@@ -6,7 +6,15 @@ import type {
 } from '../api/socialEvents';
 import { resolveRuntimeCurrency } from '../utils/formatters';
 import { parseOptionalPriceCents } from '../utils/eventTicketPricing';
+import { normalizeLineup, type EventLineupArtistDraft } from '../utils/eventLineup';
 export { parseOptionalPriceCents } from '../utils/eventTicketPricing';
+
+export {
+  MAX_ARTIST_NAME_LENGTH,
+  MAX_EVENT_ARTISTS,
+  normalizeLineup,
+  type EventLineupArtistDraft,
+} from '../utils/eventLineup';
 
 export type CollaborativeEventRole = EventLogisticsMemberDTO['elmRole'];
 
@@ -15,12 +23,6 @@ export interface EventCollaboratorDraft {
   displayName: string;
   email?: string | null;
   role: CollaborativeEventRole;
-}
-
-/** A lineup entry: an artist already on the platform, or just a name to create. */
-export interface EventLineupArtistDraft {
-  artistId: string | null;
-  artistName: string;
 }
 
 export interface CollaborativeEventDraft {
@@ -64,8 +66,6 @@ export interface CollaborativeEventCreationResult {
   artError: string | null;
 }
 
-export const MAX_EVENT_ARTISTS = 50;
-export const MAX_ARTIST_NAME_LENGTH = 200;
 export const EVENT_ART_MAX_BYTES = 10 * 1024 * 1024; // Server limit for event images.
 export const EVENT_ART_ACCEPT = 'image/jpeg,image/png,image/webp,image/gif';
 
@@ -77,32 +77,6 @@ export function validateEventArtFile(file: Pick<File, 'type' | 'size'>): string 
   if (file.size <= 0) return 'El archivo está vacío. Elige otra imagen.';
   if (file.size > EVENT_ART_MAX_BYTES) return 'El arte debe pesar 10 MB o menos.';
   return null;
-}
-
-const artistNameKey = (name: string) => name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
-
-/** Trims, drops blanks and duplicates (by id, or by name for new artists) and caps the lineup. */
-export function normalizeLineup(artists: readonly EventLineupArtistDraft[]): EventLineupArtistDraft[] {
-  const seenIds = new Set<string>();
-  const seenNames = new Set<string>();
-  const lineup: EventLineupArtistDraft[] = [];
-  for (const artist of artists) {
-    const trimmedId = artist.artistId?.trim();
-    // A blank identifier means a new artist, the same as a missing one.
-    const artistId = trimmedId === undefined || trimmedId === '' ? null : trimmedId;
-    const artistName = artist.artistName.trim().replace(/\s+/g, ' ').slice(0, MAX_ARTIST_NAME_LENGTH);
-    if (artistId) {
-      if (seenIds.has(artistId)) continue;
-      seenIds.add(artistId);
-    } else {
-      const key = artistNameKey(artistName);
-      if (!key || seenNames.has(key)) continue;
-      seenNames.add(key);
-    }
-    lineup.push({ artistId, artistName });
-    if (lineup.length >= MAX_EVENT_ARTISTS) break;
-  }
-  return lineup;
 }
 
 const lineupPayload = (artists: readonly EventLineupArtistDraft[]): SocialEventDTO['eventArtists'] =>
