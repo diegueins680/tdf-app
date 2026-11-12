@@ -52,6 +52,9 @@ state_machines:
     # marketplace.agreements gate is on. pending_deposit, balance_due and
     # expired belong to platform settlement (checkout) and are never entered
     # by a participant request; off-platform agreements start at confirmed.
+    # ADR 0136: with the marketplace.agreement_payments gate on and a ready
+    # payout account, the agreement starts at pending_deposit instead and only
+    # verified payments move it out of pending_deposit and balance_due.
     initial: confirmed
     transitions:
       pending_deposit: [confirmed, cancelled, expired]
@@ -62,6 +65,15 @@ state_machines:
       completed: []
       cancelled: []
       expired: []
+  agreement_payment:
+    # ADR 0136: one charge (deposit or balance) of an agreement settled on the
+    # platform. Only reconciliation with verified provider evidence pays it.
+    initial: pending
+    transitions:
+      pending: [paid, expired, cancelled]
+      paid: []
+      expired: []
+      cancelled: []
   invitation:
     initial: pending
     transitions:
@@ -169,6 +181,15 @@ invariants:
   I23_agreement_accounting:
     statement: For every agreement deposit + balance = amount, 0 <= commission <= amount, and the commission and deposit are the pricing rule in force when the offer was accepted; a payment state never implies the service was delivered.
     enforcement: CHECK constraints, agreementAmounts property tests and the frozen-values trigger
+  I24_agreement_payment_transitions:
+    statement: Every agreement payment state change belongs to the declared relation; a paid, expired or cancelled payment never moves again; its amount, split, recipient and checkout are frozen at creation; and it becomes paid only with verified provider evidence bound to its own canonical checkout for the exact amount and currency.
+    enforcement: Policy relation, marketplace_guard_agreement_payment trigger (commerce_checkout_has_verified_payment), static state-machine gate and property tests
+  I25_agreement_payment_split:
+    statement: For every agreement payment platform fee + processor fee + provider amount = amount with no negative part; the platform never takes more than the commission due on that charge and, over deposit and balance, takes exactly the frozen commission; TDF never holds the provider's part.
+    enforcement: CHECK constraint, agreementPaymentSplit and agreementCommissionDue property tests, marketplace product flow capability gates (ADR 0115)
+  I26_agreement_settlement_progress:
+    statement: An agreement settled on the platform is confirmed only with a paid deposit and completed from balance_due only with a paid balance; the buyer's confirmation of delivery waits for the balance when one is owed; a participant cannot cancel directly once a deposit was collected; an unpaid deposit expires the agreement and releases the slot.
+    enforcement: marketplace_agreement_require_paid_payment trigger, agreementCompletionTarget and agreementParticipantCancelAllowed, reconciliation hook and property tests
   I15_no_public_sensitive_data:
     statement: No public endpoint returns PII, credentials, tokens, private evidence, moderation notes or administrative fields.
     enforcement: DTO allowlists, OpenAPI schema audit and endpoint tests

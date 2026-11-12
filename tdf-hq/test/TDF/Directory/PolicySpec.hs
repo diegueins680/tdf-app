@@ -150,6 +150,63 @@ spec = describe "music directory formal invariants" $ do
           deposit + balance == amount && deposit >= 0 && balance >= 0 && commission >= 0 && commission <= amount
         Nothing -> False
 
+  it "I24: a pending agreement payment is paid, expires or is cancelled, and never moves again" $ do
+    allowedAgreementPaymentTransition AgreementPaymentPending AgreementPaymentPaid `shouldBe` True
+    allowedAgreementPaymentTransition AgreementPaymentPending AgreementPaymentExpired `shouldBe` True
+    allowedAgreementPaymentTransition AgreementPaymentPending AgreementPaymentCancelled `shouldBe` True
+    allowedAgreementPaymentTransition AgreementPaymentPaid AgreementPaymentPending `shouldBe` False
+    allowedAgreementPaymentTransition AgreementPaymentPaid AgreementPaymentCancelled `shouldBe` False
+    allowedAgreementPaymentTransition AgreementPaymentExpired AgreementPaymentPaid `shouldBe` False
+
+  it "I24: no settled agreement payment has an outgoing transition" $
+    forAll ((,) <$> elements [AgreementPaymentPaid, AgreementPaymentExpired, AgreementPaymentCancelled] <*> elements [minBound .. maxBound]) $ \(from, to) ->
+      from == to || not (allowedAgreementPaymentTransition from to)
+
+  it "I25: the deposit carries the commission and the provider bears the processor fee by default" $ do
+    -- 100.00 agreed, 10 % commission, 30 % deposit, 5.75 % processor fee.
+    agreementCommissionDue AgreementDeposit 1000 3000 `shouldBe` 1000
+    agreementCommissionDue AgreementBalance 1000 3000 `shouldBe` 0
+    agreementProcessingFee 575 0 3000 `shouldBe` Just 173
+    agreementProcessingFee 575 0 7000 `shouldBe` Just 403
+    agreementPaymentSplit FeePaidByProvider 173 1000 3000 `shouldBe` Just (AgreementPaymentSplit 1000 173 1827)
+    agreementPaymentSplit FeePaidByProvider 403 0 7000 `shouldBe` Just (AgreementPaymentSplit 0 403 6597)
+    agreementPaymentSplit FeePaidByPlatform 173 1000 3000 `shouldBe` Just (AgreementPaymentSplit 827 173 2000)
+    -- A deposit smaller than the commission leaves the rest for the balance.
+    agreementCommissionDue AgreementDeposit 1000 500 `shouldBe` 500
+    agreementCommissionDue AgreementBalance 1000 500 `shouldBe` 500
+    agreementPaymentSplit FeePaidByProvider 0 1000 0 `shouldBe` Nothing
+    agreementProcessingFee 10001 0 100 `shouldBe` Nothing
+
+  it "I25: every split is exact, non-negative and never gives the platform more than the commission due" $
+    forAll ((,,,) <$> elements [FeePaidByProvider, FeePaidByPlatform] <*> choose (0, 2000000000000) <*> choose (0, 2000000000000) <*> choose (1, 1000000000000)) $ \(payer, processingFee, commissionDue, amount) ->
+      case agreementPaymentSplit payer processingFee commissionDue amount of
+        Just (AgreementPaymentSplit platform processing provider) ->
+          platform + processing + provider == amount && platform >= 0 && processing >= 0 && provider >= 0 && platform <= commissionDue
+        Nothing -> False
+
+  it "I25: over the deposit and the balance the platform takes exactly the frozen commission" $
+    forAll ((,,) <$> choose (0, 10000) <*> choose (0, 10000) <*> choose (1, 1000000000000)) $ \(commissionBps, depositBps, amount) ->
+      case agreementAmounts commissionBps depositBps amount of
+        Just (commission, deposit, balance) ->
+          let fromDeposit = agreementCommissionDue AgreementDeposit commission deposit
+              fromBalance = agreementCommissionDue AgreementBalance commission deposit
+          in fromDeposit + fromBalance == commission && fromDeposit <= deposit && fromBalance <= balance
+        Nothing -> False
+
+  it "I25: the processor fee is rounded up and never exceeds the charge" $
+    forAll ((,,) <$> choose (0, 10000) <*> choose (0, 100000) <*> choose (1, 1000000000000)) $ \(feeBps, feeFixed, amount) ->
+      case agreementProcessingFee feeBps feeFixed amount of
+        Just fee -> fee >= 0 && fee <= amount && (toInteger fee * 10000 >= min (toInteger amount * 10000) (toInteger amount * toInteger feeBps))
+        Nothing -> False
+
+  it "I26: confirming delivery waits for the balance only on the platform, and a paid deposit blocks a direct cancellation" $ do
+    agreementCompletionTarget True 7000 `shouldBe` AgreementBalanceDue
+    agreementCompletionTarget True 0 `shouldBe` AgreementCompleted
+    agreementCompletionTarget False 7000 `shouldBe` AgreementCompleted
+    agreementParticipantCancelAllowed True True `shouldBe` False
+    agreementParticipantCancelAllowed True False `shouldBe` True
+    agreementParticipantCancelAllowed False False `shouldBe` True
+
   it "I18: counters stop one round before the limit so the acceptance is always recorded" $ do
     counterRoundAllowed 1 `shouldBe` False
     counterRoundAllowed 2 `shouldBe` True

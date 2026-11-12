@@ -1410,6 +1410,10 @@ parseAgreementStatus :: Text -> Maybe AgreementStatus
 parseAgreementStatus value = lookup value
   [("pending_deposit",AgreementPendingDeposit),("confirmed",AgreementConfirmed),("in_progress",AgreementInProgress),("balance_due",AgreementBalanceDue),("completed",AgreementCompleted),("cancelled",AgreementCancelled),("disputed",AgreementDisputed),("expired",AgreementExpired)]
 
+parseAgreementPaymentStatus :: Text -> Maybe AgreementPaymentStatus
+parseAgreementPaymentStatus value = lookup value
+  [("pending",AgreementPaymentPending),("paid",AgreementPaymentPaid),("expired",AgreementPaymentExpired),("cancelled",AgreementPaymentCancelled)]
+
 -- Pricing rule that applies to a classified: its category's active rule, or
 -- the default one. Expects the alias "classified" in scope.
 agreementPricingSql :: Text
