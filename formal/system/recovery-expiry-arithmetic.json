@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "reviewedSources": {
-    "tdf-hq/src/TDF/ServerAuth.hs": "77df0fce250a9a6cade7d0da38b41674f5a8e1ce015b40ae58a4e4400df5f4a9",
+    "tdf-hq/src/TDF/ServerAuth.hs": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "1ffd313e21bf02f46ebd7d1cd2dfe21cbddae646f74c181fbca3129b26ddced5",
+    "tdf-hq/tdf-hq.cabal": "26f63115936b47a72dec9044f0f9710b95bcc4d169c824879243f84c36600fc7",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -593,28 +593,44 @@
       "qualification": "Fresh source-bound3authorization+4recovery obligations, SMT replay and16verifier controls required. No full Apple/JWKS/provider/nonce/Google/privacy or whole-handler refinement proof; inherited known-key freshness limitation remains. Current combined whole runtime/HTTP/PG/paired-Mobile-main integration still needs fresh mandatory hosted qualification."
     },
     {
-      "source": "tdf-hq/tdf-hq.cabal",
       "reviewedAgainst": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+      "source": "tdf-hq/tdf-hq.cabal",
       "previousSha256": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
-      "currentSha256": "1aad469cbec710307f0513e7b11abe40698d134899eeab062113adb8397e133a",
+      "currentSha256": "f70c31b85d419806920bf8118ca8056025e2da3eebcdd2230aa39a22d1120ab9",
+      "change": "Register three new library modules: TDF.Calendar.TokenCipher (AES-256-GCM sealing of stored Google Calendar tokens), TDF.Auth.Throttle (per-account counters for login failures, signup and password-reset requests) and TDF.Server.StripeTicketCapture (reading and recording a legacy Stripe ticket capture the order cannot admit, split out of SocialEventsHandlers to respect its size ceiling). No other line changes.",
+      "semanticReview": "Removing exactly the three added exposed-module lines reproduces protected main Cabal bytes. No dependency, flag, extension, source path or existing registration changes; the modules use packages already listed (crypton, memory, base64-bytestring, entropy, persistent, time). None of the modules imports or redefines an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. Auth.hs, Models.hs, Server/RecordsIngestion.hs, the recovery expiry SQL and Stack/lock are byte-identical to protected main. Obligation claims, assumptions and translations are unchanged. Fresh source-bound solver execution remains required; this pin refresh is not a proof or release authorization."
+    },
+    {
+      "reviewedAgainst": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+      "source": "tdf-hq/src/TDF/ServerAuth.hs",
+      "previousSha256": "77df0fce250a9a6cade7d0da38b41674f5a8e1ce015b40ae58a4e4400df5f4a9",
+      "currentSha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
+      "change": "Password login refuses with 429 once the failures recorded for the identifier use up the window (TDF.Auth.Throttle) and counts each invalid-credential answer, with the count check, runLogin and the count in one transaction under a per-identifier advisory lock; runLogin checks the password before the active flag and answers a disabled account exactly like a wrong password; signup and password-reset requests consume a per-email counter, the reset route answering unchanged and issuing nothing past the limit. Adds the import, authThrottleRefusal and loginInvalidMessage.",
+      "semanticReview": "recoveryWindowValid, createPasswordResetToken, the recovery challenge insert and every expression the restricted translator reads are byte-identical to protected main; the edits are confined to login, runLogin, signup and the request half of passwordReset, plus one import and two new top-level helpers. No reset token is issued on a path that did not issue one before; past the limit strictly fewer are issued. The recovery expiry SQL, identity-lifecycle contract and Stack/lock are unchanged. Obligation claims, assumptions, translations and limitations are preserved. Fresh source-bound solver/replay/control execution remains required."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "8ec7d85c672e844e28c38e49c087b102032582d8",
+      "previousSha256": "f70c31b85d419806920bf8118ca8056025e2da3eebcdd2230aa39a22d1120ab9",
+      "currentSha256": "a4ff61fb936fe9bc4752b7a01667e6df9fe1ca913f59e1fc7f0dbd5068ee5473",
       "change": "Add TDF.Courses.Metadata and TDF.Services.LlmChat to the library exposed-modules list only; removing those exact two lines reproduces the protected Cabal manifest byte for byte.",
       "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The two modules hold code moved verbatim out of TDF.Server (course metadata projection and the chat-completion client); they import no authorization or recovery module and introduce no authorization or recovery binding. Every other reviewed source remains byte-identical to protected main. Conditional predicate translations and their assumptions are unchanged. Reviewed by the change author only; no independent review was performed.",
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",
-      "reviewedAgainst": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "previousSha256": "1aad469cbec710307f0513e7b11abe40698d134899eeab062113adb8397e133a",
-      "currentSha256": "9255e1687eabfd29a15d6f3c7f3b4694cd16c0fa87b5c4192fa87054301765c2",
+      "reviewedAgainst": "8ec7d85c672e844e28c38e49c087b102032582d8",
+      "previousSha256": "a4ff61fb936fe9bc4752b7a01667e6df9fe1ca913f59e1fc7f0dbd5068ee5473",
+      "currentSha256": "c6250495e23745859d9104e6c57bcb9f36907ea6fde4e7a8e5d1a50a41cce2df",
       "change": "Add TDF.DTO.TicketPaymentReceipt to the library exposed-modules list only; removing that exact line reproduces the previously reviewed Cabal manifest byte for byte.",
       "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The module holds the TicketPaymentReceipt wire type and its JSON instances moved verbatim out of TDF.Server.TicketPaymentReceipt, which re-exports it; it imports no authorization or recovery module and introduces no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
     },
     {
       "source": "tdf-hq/tdf-hq.cabal",
-      "reviewedAgainst": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "previousSha256": "9255e1687eabfd29a15d6f3c7f3b4694cd16c0fa87b5c4192fa87054301765c2",
-      "currentSha256": "1ffd313e21bf02f46ebd7d1cd2dfe21cbddae646f74c181fbca3129b26ddced5",
+      "reviewedAgainst": "8ec7d85c672e844e28c38e49c087b102032582d8",
+      "previousSha256": "c6250495e23745859d9104e6c57bcb9f36907ea6fde4e7a8e5d1a50a41cce2df",
+      "currentSha256": "26f63115936b47a72dec9044f0f9710b95bcc4d169c824879243f84c36600fc7",
       "change": "Add TDF.Commerce.PaypalWebhook and TDF.Ticketing.Issuance to the library exposed-modules list only; removing those exact two lines reproduces the previously reviewed Cabal manifest byte for byte.",
       "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The modules hold PayPal webhook processing moved verbatim out of TDF.Server.ServiceStorefront and paid-order ticket issuance moved verbatim out of TDF.Server.SocialEventsHandlers; they import no authorization or recovery module and introduce no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."

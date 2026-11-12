@@ -17,6 +17,7 @@ module TDF.CampaignAutomation
   , updateCampaignAutomationStatus
   , updateCampaignEnrollmentStatus
   , isWhatsAppCampaignOptOutMessage
+  , whatsAppConsentWithdrawn
   , validateCampaignAutomationActivation
   , validateCampaignAutomationDailyLimit
   , validateCampaignAutomationStatus
@@ -560,6 +561,15 @@ partyWhatsAppPhone :: M.Party -> Maybe Text
 partyWhatsAppPhone party =
   (M.partyWhatsapp party <|> M.partyPrimaryPhone party)
     >>= normalizeWhatsAppPhone
+
+-- | The contact explicitly withdrew consent (opt-out keyword, public opt-out
+-- or staff revocation) and has not consented again. A contact with no consent
+-- row has withdrawn nothing: staff may still answer someone who wrote in.
+whatsAppConsentWithdrawn :: Maybe ME.WhatsAppConsent -> Bool
+whatsAppConsentWithdrawn Nothing = False
+whatsAppConsentWithdrawn (Just consent) =
+  not (ME.whatsAppConsentConsent consent)
+    && isJust (ME.whatsAppConsentRevokedAt consent)
 
 activeConsent :: Maybe (Entity ME.WhatsAppConsent) -> Bool
 activeConsent Nothing = False
