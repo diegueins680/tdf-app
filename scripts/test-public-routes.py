@@ -83,9 +83,15 @@ def main():
     entry(register, "POST", "/public/whatsapp/consent")["boundary"] = "known-debt"
     expect_rejected("debt without reference", SURFACE, register, "registered debt")
 
+    # No route uses the operator-secret boundary since the seed routes moved
+    # behind AuthProtect (OPS-SEED-ROUTES-001); the rule is exercised on a
+    # synthetic unauthenticated operation.
+    surface = copy.deepcopy(SURFACE)
+    surface["operations"].append(op("POST", "/synthetic-operator-action"))
     register = copy.deepcopy(REGISTER)
-    entry(register, "POST", "/seed")["header"] = None
-    expect_rejected("operator secret undeclared", SURFACE, register, "requires a declared header")
+    register["routes"].append({"method": "POST", "path": "/synthetic-operator-action",
+                               "boundary": "operator-secret", "header": None})
+    expect_rejected("operator secret undeclared", surface, register, "requires a declared header")
 
     register = copy.deepcopy(REGISTER)
     entry(register, "GET", "/version")["boundary"] = "trusted"

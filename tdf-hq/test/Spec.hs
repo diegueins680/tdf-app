@@ -526,6 +526,9 @@ import TDF.Server.SocialEventsHandlers (
     StripeTicketPaymentEvidence (..),
     parseStripeTicketPaymentEvidence,
     validateStripeTicketPaymentEvidence,
+    StripeTicketCapture (..),
+    parseStripeTicketCapture,
+    stripeTicketClosedOrderNeedsReview,
     parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
     canRecoverMarketplaceStripeOrder,
@@ -534,7 +537,8 @@ import TDF.Server.SocialEventsHandlers (
     validateInvitationToPartyId,
     validateInvitationStatusInput,
     validateInvitationStatusUpdateInput,
-    validateEventArtistIds,
+    EventArtistRef (..),
+    validateEventArtistRefs,
     validateEventArtistFilter,
     validateArtistName,
     validateSocialEventsFeatureAction,
@@ -4348,6 +4352,40 @@ main = hspec $ do
             parseStripeTicketPaymentEvidence
                 (A.object ["data" .= A.object ["object" .= A.object ["id" .= ("pi_ticket_123" :: Text)] ]])
                 `shouldBe` Left "Stripe ticket payment evidence is incomplete"
+
+        it "surfaces a succeeded Stripe capture that carries no usable ticket binding" $ do
+            let capturePayload extra intent =
+                    A.object (("data" .= A.object ["object" .= A.object intent]) : extra)
+                succeeded amount =
+                    [ "id" .= ("pi_ticket_123" :: Text)
+                    , "status" .= ("Succeeded" :: Text)
+                    , "amount_received" .= (amount :: Int)
+                    ]
+            -- No metadata at all: the binding parser refuses, the capture is still read.
+            parseStripeTicketPaymentEvidence (capturePayload [] (succeeded 5100))
+                `shouldBe` Left "Stripe ticket payment evidence is incomplete"
+            parseStripeTicketCapture (capturePayload [] (succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 Nothing CheckoutStore.CheckoutProduction)
+            parseStripeTicketCapture
+                (capturePayload ["livemode" .= False] (("currency" .= ("usd" :: Text)) : succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 (Just "usd") CheckoutStore.CheckoutSandbox)
+            parseStripeTicketCapture (capturePayload ["livemode" .= True] (succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 Nothing CheckoutStore.CheckoutProduction)
+            -- Nothing captured, nothing to reconcile.
+            parseStripeTicketCapture (capturePayload [] (succeeded 0)) `shouldBe` Nothing
+            parseStripeTicketCapture
+                ( capturePayload
+                    []
+                    [ "status" .= ("requires_payment_method" :: Text)
+                    , "amount_received" .= (5100 :: Int)
+                    ]
+                )
+                `shouldBe` Nothing
+            parseStripeTicketCapture (A.object []) `shouldBe` Nothing
+
+        it "reviews a valid Stripe capture only when the ticket order is closed" $ do
+            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded"]
+                `shouldBe` [False, False, False, True, True, True]
 
         it "recovers marketplace order ids from Stripe metadata context" $ do
             let webhookPayload =
@@ -12597,7 +12635,7 @@ main = hspec $ do
             in fmap (map fromSqlKey) (validateEventArtistFilter (Just (Data.Text.pack (show key))))
                 == Right [key]
 
-    describe "validateEventArtistIds" $ do
+    describe "validateEventArtistRefs" $ do
         let mkArtist rawArtistId =
                 ArtistDTO
                     { artistId = rawArtistId
@@ -12612,19 +12650,32 @@ main = hspec $ do
                     , artistUpdatedAt = Nothing
                     }
 
-        it "requires explicit artist ids and canonicalizes explicit positive ids" $ do
-            fmap (map fromSqlKey)
-                (validateEventArtistIds [mkArtist (Just " 0042 "), mkArtist (Just "7")])
-                `shouldBe` Right [42, 7]
-            case validateEventArtistIds [mkArtist Nothing] of
+        it "canonicalizes explicit positive ids and refuses an entry with neither id nor name" $ do
+            validateEventArtistRefs [mkArtist (Just " 0042 "), mkArtist (Just "7")]
+                `shouldBe` Right [EventArtistProfile (toSqlKey 42), EventArtistProfile (toSqlKey 7)]
+            case validateEventArtistRefs [mkArtist Nothing] of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
-                    BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId is required"
+                    BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId or artistName is required"
                 Right value ->
-                    expectationFailure ("Expected missing event artist id to be rejected, got " <> show value)
+                    expectationFailure ("Expected an event artist without id or name to be rejected, got " <> show value)
+
+        it "accepts the name of an artist who is not on the platform yet" $ do
+            validateEventArtistRefs [(mkArtist Nothing){artistName = "  Los   Nuevos "}, mkArtist (Just "7")]
+                `shouldBe` Right [EventArtistNamed "Los Nuevos", EventArtistProfile (toSqlKey 7)]
+            let assertInvalidName expectedMessage rawNames =
+                    case validateEventArtistRefs [(mkArtist Nothing){artistName = rawName} | rawName <- rawNames] of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid event artist name to be rejected, got " <> show value)
+            assertInvalidName "eventArtists[].artistName must not contain control characters" ["Los\nNuevos"]
+            assertInvalidName "eventArtists[].artistName must be 200 characters or fewer" [Data.Text.replicate 201 "a"]
+            assertInvalidName "eventArtists[].artistName must be unique" ["Los Nuevos", " los  NUEVOS "]
 
         it "rejects duplicate artist ids before event writes hit the join-table constraint" $
-            case validateEventArtistIds [mkArtist (Just "42"), mkArtist (Just "0042")] of
+            case validateEventArtistRefs [mkArtist (Just "42"), mkArtist (Just "0042")] of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId must be unique"
@@ -12633,7 +12684,7 @@ main = hspec $ do
 
         it "rejects malformed explicit artist ids instead of silently dropping event links" $ do
             let assertInvalid rawArtistId =
-                    case validateEventArtistIds [mkArtist (Just rawArtistId)] of
+                    case validateEventArtistRefs [mkArtist (Just rawArtistId)] of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
                             BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId must be a positive integer"

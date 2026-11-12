@@ -68,7 +68,7 @@ Authoritative contracts and boundaries:
 
 - Same session, permissions, routes and API as the web; no business logic in the shell
 - Installers built in CI (`.github/workflows/desktop.yml`); unsigned builds are marked `UNSIGNED-TEST`
-- Decision and limits: [ADR 0132](docs/adr/0132-desktop-shell-electron.md), [docs/desktop/README.md](docs/desktop/README.md)
+- Decision and limits: [ADR 0134](docs/adr/0134-desktop-shell-electron.md), [docs/desktop/README.md](docs/desktop/README.md)
 
 ### Mobile App - `tdf-mobile/`
 **Tech Stack:** Expo + React Native + React Query + TypeScript  

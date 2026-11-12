@@ -575,17 +575,26 @@
       "synonyms": {
         "es": [
           "anuncio",
-          "convocatoria"
+          "busco banda",
+          "busco venue",
+          "convocatoria",
+          "enviar oferta"
         ],
         "en": [
           "ad",
-          "call"
+          "call",
+          "seeking band",
+          "seeking venue",
+          "send offer"
         ]
       },
       "keywords": [
         "classified",
+        "job",
+        "offer",
+        "offering",
         "opportunity",
-        "job"
+        "seeking"
       ],
       "navigationGroup": "people",
       "icon": "campaign",
@@ -724,19 +733,25 @@
       },
       "synonyms": {
         "es": [
-          "publicar anuncio",
-          "mi directorio"
+          "marketplace musical",
+          "mi directorio",
+          "mis ofertas",
+          "publicar anuncio"
         ],
         "en": [
-          "post classified",
-          "my directory"
+          "music marketplace",
+          "my directory",
+          "my offers",
+          "post classified"
         ]
       },
       "keywords": [
-        "manage",
-        "profile",
+        "application",
         "classified",
-        "application"
+        "manage",
+        "marketplace",
+        "offers",
+        "profile"
       ],
       "navigationGroup": "create",
       "icon": "post-add",
