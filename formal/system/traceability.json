@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "8354381deb5dd631d3061477ee28e4c3f05b3128",
+  "mobileRevision": "44a306ba1fe9361e893688d944b5ce789e364abb",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -10266,6 +10266,7 @@
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/directory.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
@@ -29283,7 +29284,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "f02511ef91c919a26f53c76b53927cb418aece574c1f532dda505810657b8602",
+    "tdf-mobile/src/api/generated/types.ts": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -30950,6 +30951,10 @@
       },
       {
         "requirement": "MKT-DEMAND-OFFER-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-001",
         "relationship": "implementation"
       },
       {
@@ -81218,7 +81223,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "f02511ef91c919a26f53c76b53927cb418aece574c1f532dda505810657b8602",
+      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81235,6 +81240,10 @@
         },
         {
           "requirement": "MKT-DEMAND-OFFER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-001",
           "relationship": "implementation"
         },
         {
@@ -85391,7 +85400,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "59ba8b16367011e1f35c91b4d93e1e58a7eda9e5d226624a539ad02d8ccc0665",
+      "sourceSha256": "d85c852a170b8d25fd2f84ceaeeb0929161fa4de6a6f6cb0705856c17df3cc08",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85419,7 +85428,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "59ba8b16367011e1f35c91b4d93e1e58a7eda9e5d226624a539ad02d8ccc0665",
+      "sourceSha256": "d85c852a170b8d25fd2f84ceaeeb0929161fa4de6a6f6cb0705856c17df3cc08",
       "definition": {
         "states": [
           "absent",
@@ -85449,7 +85458,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "59ba8b16367011e1f35c91b4d93e1e58a7eda9e5d226624a539ad02d8ccc0665",
+      "sourceSha256": "d85c852a170b8d25fd2f84ceaeeb0929161fa4de6a6f6cb0705856c17df3cc08",
       "definition": {
         "export": [
           "queued",
