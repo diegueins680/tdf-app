@@ -27252,10 +27252,10 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f27fd47d77499178a2811be4b02d578cab53739ebe0d6c26f8a72b588ad1341f",
+    "docs/catalog-persistence/catalog-list-decisions.json": "40e6cbaa3288a1f1d2a09a8a975c728e3b3fc620ad2d41f867d2c4c7504fc311",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
-    "docs/music-directory/formal-model.yaml": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+    "docs/music-directory/formal-model.yaml": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
     "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
@@ -27681,7 +27681,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "3774b3e996418deab429376ea772921c8312703cb587ba44fa176c471ca70a0d",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "982392337c139e221b4f577053b2e2fef97d495f8208eb3d4b9bb423817dded1",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -27846,7 +27846,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "0841c3f70e8471ed0dc93249ebd51f9615ceb67dc86ba97a71ac61338b10d3fd",
+    "scripts/production-migrations.json": "632f310b57203439060ed72061be5631c25393a2f94ee94af0463aac75abd0a7",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -28324,11 +28324,11 @@
     "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx": "d3cb0207379e925515a583f9c4ac3fe7466e360ddec2fcacb568d66102beb3f4",
     "tdf-hq-ui/src/features/marketplace/OfferCard.tsx": "4604b8b869a1a4932af94d2a6a71deba6122e69ee2ec4ea656bd8680e832421a",
     "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "4852f1dc94aa113d1a66613e3b0744ba652caf600ab3db8d48ed0eead0fec5cf",
-    "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "efd2453329bd0dd1a570989a1f667f0d573343957fc03cdafdb86bc8ff4a5909",
+    "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
-    "tdf-hq-ui/src/features/marketplace/offers.test.ts": "ad3ee7a744f31ad91faf1ac282d01cc4d753213be7eb8c107fcd3442a0f1514e",
-    "tdf-hq-ui/src/features/marketplace/offers.ts": "dba275b9f12b63e6923cd4f38678f521c263b0cdede9127f619922404aa26806",
+    "tdf-hq-ui/src/features/marketplace/offers.test.ts": "c09400d91dc9b945c18fe2a4f48ccf2f644175333baf69cfcf1f6a42877d4be5",
+    "tdf-hq-ui/src/features/marketplace/offers.ts": "15bab00f3eb863c239b51a178a130929d588c7e9d91e1e51079b4f71583f674a",
     "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx": "02a247376b7685688d733469e04a0c9444e7042db2f17e8a0097782a3d674c68",
     "tdf-hq-ui/src/features/records/RecordThumbnail.tsx": "44f25abf3cfe930e761a895e3884ef483d08da3a8e4058312e78df6573b31c67",
     "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts": "a5436d9f47bf3dfbe733946c27c818a6b0d71844d7f02e6df7331a996bba85e5",
@@ -28786,8 +28786,8 @@
     "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql": "471b80a31120c88ce0f1fc0241b0b113d1c78825a1ae616950d53ffa54f68852",
     "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.down.sql": "a7c92a8d08fbd31316c6feaf64714e6a062f158c99420e6a04c7c4db29db5f15",
     "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql": "b88961fb0f27ecaaded3e59643aa005633e48843d53fc71bb334fcffde80e448",
-    "tdf-hq/sql/2026-11-08_marketplace_offers.sql": "237e4a0fa74b71c682939ff81b25f37a541556bdb15f69a8a21df5d6b079e09a",
-    "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql": "1f60ad1af4c67659a56c21a4ad730c224daba10f2a7c4216f335cae307799942",
+    "tdf-hq/sql/2026-11-08_marketplace_offers.sql": "fb65c76c3474d465f5463b63d441d9dcd0965e311af8bde7eb6527d1ac8a3ea5",
+    "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql": "4086427dccbc526e2c9694253155d6e80065ccea0b281b4baab2917640ea4480",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "423e3156ab7e386197f584aa654ff9b972dd71d5dbba7e243aa0d88de8ba7c00",
@@ -28864,7 +28864,7 @@
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
-    "tdf-hq/src/TDF/Directory/Policy.hs": "1b5c4f84a742c5d933eca3feee5db6c02f0571b9c5261f0f33b298e46914c348",
+    "tdf-hq/src/TDF/Directory/Policy.hs": "59bb46a490377846d9d0da9485f584f7f3a4137e6f1dea51542e63ed53fa26a1",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
@@ -28909,7 +28909,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "e9618060c7a728977e55a11ecbc2c634f26e2d814f072e4978af34bd8fee9545",
+    "tdf-hq/src/TDF/Server/Directory.hs": "4bfb5a54194e63d89ab3898ee02b5b825cba4322cbf19ac212df055715a0d237",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
@@ -29006,7 +29006,7 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "04d0fee36364ca33b7e56a6540fd19a9015efe0da1492618c5e928762e8a656a",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
-    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "0204618d6a3ee7d1b3d8212346ac0bb9314bcb94a622ffab96a7f15f182869f7",
+    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "7185d544a79020bf33e619b823a5f05262f04da17fb555b16764cdfb50218a95",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "006a2eec086a2d350f9da2e7806eab0fd8846f195b84402557f6d71528e41ecb",
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
@@ -48617,7 +48617,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3774b3e996418deab429376ea772921c8312703cb587ba44fa176c471ca70a0d",
+      "sha256": "982392337c139e221b4f577053b2e2fef97d495f8208eb3d4b9bb423817dded1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51685,7 +51685,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "0841c3f70e8471ed0dc93249ebd51f9615ceb67dc86ba97a71ac61338b10d3fd",
+      "sha256": "632f310b57203439060ed72061be5631c25393a2f94ee94af0463aac75abd0a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60777,7 +60777,7 @@
     {
       "id": "SURFACE-d08b639d621c8e20",
       "path": "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
-      "sha256": "efd2453329bd0dd1a570989a1f667f0d573343957fc03cdafdb86bc8ff4a5909",
+      "sha256": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60813,7 +60813,7 @@
     {
       "id": "SURFACE-918143da462da26c",
       "path": "tdf-hq-ui/src/features/marketplace/offers.test.ts",
-      "sha256": "ad3ee7a744f31ad91faf1ac282d01cc4d753213be7eb8c107fcd3442a0f1514e",
+      "sha256": "c09400d91dc9b945c18fe2a4f48ccf2f644175333baf69cfcf1f6a42877d4be5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60825,7 +60825,7 @@
     {
       "id": "SURFACE-1b321f25c0e1bf1a",
       "path": "tdf-hq-ui/src/features/marketplace/offers.ts",
-      "sha256": "dba275b9f12b63e6923cd4f38678f521c263b0cdede9127f619922404aa26806",
+      "sha256": "15bab00f3eb863c239b51a178a130929d588c7e9d91e1e51079b4f71583f674a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71391,7 +71391,7 @@
     {
       "id": "SURFACE-a5284041219da02a",
       "path": "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
-      "sha256": "237e4a0fa74b71c682939ff81b25f37a541556bdb15f69a8a21df5d6b079e09a",
+      "sha256": "fb65c76c3474d465f5463b63d441d9dcd0965e311af8bde7eb6527d1ac8a3ea5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -71403,7 +71403,7 @@
     {
       "id": "SURFACE-489406d92a5378f7",
       "path": "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql",
-      "sha256": "1f60ad1af4c67659a56c21a4ad730c224daba10f2a7c4216f335cae307799942",
+      "sha256": "4086427dccbc526e2c9694253155d6e80065ccea0b281b4baab2917640ea4480",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73176,7 +73176,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "1b5c4f84a742c5d933eca3feee5db6c02f0571b9c5261f0f33b298e46914c348",
+      "sha256": "59bb46a490377846d9d0da9485f584f7f3a4137e6f1dea51542e63ed53fa26a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74329,7 +74329,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "e9618060c7a728977e55a11ecbc2c634f26e2d814f072e4978af34bd8fee9545",
+      "sha256": "4bfb5a54194e63d89ab3898ee02b5b825cba4322cbf19ac212df055715a0d237",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76723,7 +76723,7 @@
     {
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-      "sha256": "0204618d6a3ee7d1b3d8212346ac0bb9314bcb94a622ffab96a7f15f182869f7",
+      "sha256": "7185d544a79020bf33e619b823a5f05262f04da17fb555b16764cdfb50218a95",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84380,7 +84380,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#profile",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+      "sourceSha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -84418,7 +84418,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#classified",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+      "sourceSha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -84446,7 +84446,9 @@
             "withdrawn",
             "moderated"
           ],
-          "filled": [],
+          "filled": [
+            "published"
+          ],
           "expired": [
             "published",
             "withdrawn"
@@ -84467,7 +84469,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#application",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+      "sourceSha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
       "definition": {
         "initial": "submitted",
         "transitions": {
@@ -84529,7 +84531,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#invitation",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+      "sourceSha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -84563,7 +84565,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#claim",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+      "sourceSha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -84600,7 +84602,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#moderation_case",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+      "sourceSha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
       "definition": {
         "initial": "open",
         "transitions": {
@@ -84644,7 +84646,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#review",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+      "sourceSha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
       "definition": {
         "initial": "published",
         "transitions": {

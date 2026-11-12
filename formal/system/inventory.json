@@ -3874,7 +3874,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "3774b3e996418deab429376ea772921c8312703cb587ba44fa176c471ca70a0d",
+      "sha256": "982392337c139e221b4f577053b2e2fef97d495f8208eb3d4b9bb423817dded1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5464,7 +5464,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "0841c3f70e8471ed0dc93249ebd51f9615ceb67dc86ba97a71ac61338b10d3fd",
+      "sha256": "632f310b57203439060ed72061be5631c25393a2f94ee94af0463aac75abd0a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10216,7 +10216,7 @@
     {
       "id": "SURFACE-d08b639d621c8e20",
       "path": "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
-      "sha256": "efd2453329bd0dd1a570989a1f667f0d573343957fc03cdafdb86bc8ff4a5909",
+      "sha256": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10234,13 +10234,13 @@
     {
       "id": "SURFACE-918143da462da26c",
       "path": "tdf-hq-ui/src/features/marketplace/offers.test.ts",
-      "sha256": "ad3ee7a744f31ad91faf1ac282d01cc4d753213be7eb8c107fcd3442a0f1514e",
+      "sha256": "c09400d91dc9b945c18fe2a4f48ccf2f644175333baf69cfcf1f6a42877d4be5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-1b321f25c0e1bf1a",
       "path": "tdf-hq-ui/src/features/marketplace/offers.ts",
-      "sha256": "dba275b9f12b63e6923cd4f38678f521c263b0cdede9127f619922404aa26806",
+      "sha256": "15bab00f3eb863c239b51a178a130929d588c7e9d91e1e51079b4f71583f674a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16366,13 +16366,13 @@
     {
       "id": "SURFACE-a5284041219da02a",
       "path": "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
-      "sha256": "237e4a0fa74b71c682939ff81b25f37a541556bdb15f69a8a21df5d6b079e09a",
+      "sha256": "fb65c76c3474d465f5463b63d441d9dcd0965e311af8bde7eb6527d1ac8a3ea5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-489406d92a5378f7",
       "path": "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql",
-      "sha256": "1f60ad1af4c67659a56c21a4ad730c224daba10f2a7c4216f335cae307799942",
+      "sha256": "4086427dccbc526e2c9694253155d6e80065ccea0b281b4baab2917640ea4480",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17212,7 +17212,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "1b5c4f84a742c5d933eca3feee5db6c02f0571b9c5261f0f33b298e46914c348",
+      "sha256": "59bb46a490377846d9d0da9485f584f7f3a4137e6f1dea51542e63ed53fa26a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17548,7 +17548,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "e9618060c7a728977e55a11ecbc2c634f26e2d814f072e4978af34bd8fee9545",
+      "sha256": "4bfb5a54194e63d89ab3898ee02b5b825cba4322cbf19ac212df055715a0d237",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18286,7 +18286,7 @@
     {
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-      "sha256": "0204618d6a3ee7d1b3d8212346ac0bb9314bcb94a622ffab96a7f15f182869f7",
+      "sha256": "7185d544a79020bf33e619b823a5f05262f04da17fb555b16764cdfb50218a95",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21785,7 +21785,7 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "sha256": "e37755d0859e48f85a3269c8ad4496a1fa0122278988ee290052784717f9339c",
+      "sha256": "f6b72cf7e8bf978f8c89d9de3a5040b393139a94eaa29fb0776f59004f8943ad",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23605,7 +23605,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "ffc75a8f78d7e20d70d5ad513d647161eb653bb61f5852fc65a4c171e51ceb37",
+      "sha256": "d12170e490a01bf7bada7a7e79459ce969e326f5515b7467796a8b4db88bbaa0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23703,7 +23703,7 @@
     },
     {
       "path": "docs/music-directory/formal-model.yaml",
-      "sha256": "225b1959baf972e71905eb84df2bdff065afffb11b4f74fd737c1fe80ef34b71",
+      "sha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

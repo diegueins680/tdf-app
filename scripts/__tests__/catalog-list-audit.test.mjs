@@ -792,13 +792,18 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   // protected main integrated; the manifest without those entries is still that
   // reviewed 247-entry manifest byte for byte.
   const marketplace = '8ee6c7a66e2504f425863ca6f5b83062723efd58';
-  const marketplaceIntroduction = 'eadfe23980ec336caacd96329ba561b1ed18c3f9';
+  const marketplaceIntroduction = '5901003189dac2291380604c66fdd66087e4a587';
   const full = JSON.parse(await fs.readFile(path.join(workspaceRoot, 'scripts/production-migrations.json'), 'utf8')).migrations;
   assert.equal(full.length, 249);
   assert.deepEqual(full[248], { id: MARKETPLACE_OFFERS_ENTRY, path: 'tdf-hq/sql/2026-11-08_marketplace_offers.sql', introducedBy: marketplaceIntroduction });
   const identityManifest = JSON.parse((await execFileAsync('git', ['show', marketplace + ':scripts/production-migrations.json'], { cwd: workspaceRoot })).stdout).migrations;
   assert.equal(identityManifest.length, 247);
-  assert.deepEqual(full.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY), identityManifest);
+  // The marketplace entry's introduction moved to the review-fix commit (the
+  // SQL gained the analytics allowlist and the filled -> published edge);
+  // everything before it is still the reviewed identity manifest byte for byte.
+  const withoutApple = full.filter(entry => entry.id !== APPLE_POLICY_ENTRY && entry.id !== APPLE_ISSUER_ENTRY);
+  assert.deepEqual(withoutApple.slice(0, -1), identityManifest.slice(0, -1));
+  assert.equal(withoutApple.at(-1).id, identityManifest.at(-1).id);
   const identityReview = historicalReview(latest, 246);
   assert.equal(identityReview.id, '806180f5957fc4a7520f');
   const identityPriorReview = JSON.parse((await execFileAsync('git', ['show', marketplace + ':' + decisionsPath], { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout).decisions.find(item => item.id === identityReview.id);

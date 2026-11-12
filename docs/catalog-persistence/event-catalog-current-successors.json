@@ -398,7 +398,7 @@
       "kind": "json-array",
       "name": "migrations",
       "valueCount": 249,
-      "change": "Preserve the entire 248-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced ateadfe23980ec336caacd96329ba561b1ed18c3f9, now after the Apple sign-in policy and issuer allowlist entries that protected main integrated at 083d1c6e1d0c709ea14b621782ff9faa3d60d572. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production.",
+      "change": "Preserve the entire 248-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced at5901003189dac2291380604c66fdd66087e4a587, now after the Apple sign-in policy and issuer allowlist entries that protected main integrated at 083d1c6e1d0c709ea14b621782ff9faa3d60d572. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production.",
       "sourceReviewReferences": [
         {
           "sourceRevision": "5875e60701465f9512fad1628b64c0d59a53f049",

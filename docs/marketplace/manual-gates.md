@@ -12,7 +12,7 @@ persona con acceso a la infraestructura. Ninguna compuerta se considera cerrada 
 | Jest web (`features/marketplace`, páginas del directorio) | `cd tdf-hq-ui && npm test` | Pendiente: sin `node_modules` ni red en el entorno de autoría |
 | Playwright `marketplace-negotiation` | `npm run test:marketplace-negotiation` | Pendiente |
 | Migración contra fixture de producción | `bash scripts/test-automatic-migrations-production-schema.sh` | Pendiente; confirma el reemplazo del `CHECK` de `classified_application.status`, el widening de tipos de notificación y la verificación de esquema añadida en `production-release.mjs` |
-| `introducedBy` del ledger | `scripts/production-migrations.json` | Apunta a `eadfe239` (commit que introdujo el SQL). El repo fusiona con merge commit, así que se conserva; si se hiciera squash, reemplazar por el SHA de merge (ver `docs/automatic-production-migrations.md`) y actualizar `scripts/__tests__/catalog-list-audit.test.mjs` |
+| `introducedBy` del ledger | `scripts/production-migrations.json` | Apunta a `5901003` (commit que fijó el SQL tras la revisión: allowlist analítica y arista filled→published). El repo fusiona con merge commit, así que se conserva; si se hiciera squash, reemplazar por el SHA de merge (ver `docs/automatic-production-migrations.md`) y actualizar `scripts/__tests__/catalog-list-audit.test.mjs` |
 | Gates de contrato y gobierno | `compiled-api-surface.json`, `requirements.json` (`MKT-DEMAND-OFFER-001`), `catalog-list-decisions.json` (decisión sucesora del manifiesto, 247 entradas) | Reconciliados en `8ee6c7a` y `16b362c`; CI `pull_request` no se dispara con pushes de la sesión: relanzar con `workflow_dispatch` o con un push propio |
 
 ## Datos previos

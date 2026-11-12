@@ -698,16 +698,16 @@
         "name": "migrations"
       },
       "replacementId": "4dc5a2f26154a0f125db",
-      "reason": "Preserve the entire 248-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced ateadfe23980ec336caacd96329ba561b1ed18c3f9, now after the Apple sign-in policy and issuer allowlist entries that protected main integrated at 083d1c6e1d0c709ea14b621782ff9faa3d60d572. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production.",
+      "reason": "Preserve the entire 248-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced at5901003189dac2291380604c66fdd66087e4a587, now after the Apple sign-in policy and issuer allowlist entries that protected main integrated at 083d1c6e1d0c709ea14b621782ff9faa3d60d572. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production.",
       "previousReplacementId": "a20e04bc426cc6383584",
       "currentResolution": {
         "id": "4dc5a2f26154a0f125db",
         "valueCount": 249,
         "sourceParents": [
           "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-          "eadfe23980ec336caacd96329ba561b1ed18c3f9"
+          "5901003189dac2291380604c66fdd66087e4a587"
         ],
-        "justification": "Preserve the entire 248-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced ateadfe23980ec336caacd96329ba561b1ed18c3f9, now after the Apple sign-in policy and issuer allowlist entries that protected main integrated at 083d1c6e1d0c709ea14b621782ff9faa3d60d572. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production."
+        "justification": "Preserve the entire 248-entry manifest and its complete review graph unchanged; append only the forward marketplace offers migration (classified intent, slots, price mode, negotiation rounds; ADR 0132) introduced at5901003189dac2291380604c66fdd66087e4a587, now after the Apple sign-in policy and issuer allowlist entries that protected main integrated at 083d1c6e1d0c709ea14b621782ff9faa3d60d572. No existing SQL, manifest entry or introduction ancestor changes. No seed, feature activation, deployment or release waiver; the marketplace.offers runtime flag stays disabled in production."
       },
       "change": "Preserve protected main 8efa5afe and its complete 239-entry manifest/review graph exactly as the prefix; append only the five unchanged storage migration entries from cf16b20. Preserve the complete concurrent 241-entry storage review as a separate immutable review branch. The storage view obtained by omitting the three independent protected-main additions is exactly its prior manifest. No SQL or introduction ancestor is changed. Current checks, independent review and coordinated recovery remain mandatory; this reconciliation grants no production execution authority.",
       "sourceReviewReferences": [
