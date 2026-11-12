@@ -144,6 +144,9 @@ export default function OfferCard({ offer, currencies, authorProfileId: authorPr
             {currentTerms.map((line) => <Typography key={line} variant="body2" color="text.secondary">{line}</Typography>)}
           </Stack>
         )}
+        {offer.agreementId && (
+          <Button component={RouterLink} to="/mis-clasificados?tab=acuerdos" size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }}>{t('marketplace.agreement.view')}</Button>
+        )}
         {offer.rejectionReason && offer.rejectionReason !== 'author_decision' && (
           <Typography variant="body2" color="text.secondary">{t(`marketplace.offer.rejection.${offer.rejectionReason}`)}</Typography>
         )}

@@ -334,6 +334,9 @@ type DirectoryProtectedAPI =
     :<|> "applications" :> Capture "applicationId" UUID :> Get '[JSON] Value
     :<|> "applications" :> Capture "applicationId" UUID :> "counter" :> RequiredIdempotency :> ReqBody '[JSON] OfferCounterRequest :> PostCreated '[JSON] Value
     :<|> "applications" :> Capture "applicationId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
+    :<|> "agreements" :> QueryParam "status" Text :> Get '[JSON] [Value]
+    :<|> "agreements" :> Capture "agreementId" UUID :> Get '[JSON] Value
+    :<|> "agreements" :> Capture "agreementId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
     :<|> "invitations" :> Get '[JSON] [Value]
     :<|> "invitations" :> RequiredIdempotency :> ReqBody '[JSON] InvitationCreateRequest :> PostCreated '[JSON] Value
     :<|> "invitations" :> Capture "invitationId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value

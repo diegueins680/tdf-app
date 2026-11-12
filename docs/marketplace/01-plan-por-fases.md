@@ -62,6 +62,16 @@ Estimación: 3–4 semanas (1 backend, 1 frontend, 0,5 QA).
 
 ## Fase 2 — Acuerdo, pago y comisión
 
+Entrega en dos partes (decisión del 2026-11-12):
+
+- **Parte A — acuerdo (ADR 0135, implementada):** `marketplace_agreement` creado al aceptar una
+  oferta con monto, partes según la intención, comisión (10 %) y depósito (30 %) congelados desde
+  `marketplace_agreement_pricing`, estados y autoridad por parte, cierre con interacción verificada
+  para reseñas, cancelación que libera el cupo, pestaña «Acuerdos». Sin cobro: el acuerdo nace
+  `confirmed` y `off_platform`.
+- **Parte B — pagos (pendiente):** checkout del depósito y del saldo, vencimiento del depósito,
+  liquidación al proveedor, reembolsos según la política congelada y panel de disputas.
+
 Alcance:
 - Tabla `marketplace_agreement` creada al aceptar una oferta cuando el gate está activo: partes,
   anuncio, postulación, monto, moneda, términos congelados (JSON versionado), `commission_bps`,

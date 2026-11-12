@@ -107,6 +107,49 @@ spec = describe "music directory formal invariants" $ do
     negotiationRoundsValid [OfferRound 1 ActorApplicant RoundInitial, OfferRound 2 ActorAuthor RoundAccept] `shouldBe` True
     negotiationRoundsValid [OfferRound 1 ActorApplicant RoundInitial, OfferRound 2 ActorAuthor RoundAccept, OfferRound 3 ActorApplicant RoundCounter] `shouldBe` False
 
+  it "I21: agreement transitions follow the declared relation and terminal states stay terminal" $ do
+    allowedAgreementTransition AgreementConfirmed AgreementInProgress `shouldBe` True
+    allowedAgreementTransition AgreementConfirmed AgreementCompleted `shouldBe` True
+    allowedAgreementTransition AgreementPendingDeposit AgreementConfirmed `shouldBe` True
+    allowedAgreementTransition AgreementConfirmed AgreementPendingDeposit `shouldBe` False
+    allowedAgreementTransition AgreementBalanceDue AgreementCancelled `shouldBe` False
+
+  it "I21: completed, cancelled and expired agreements never move again" $
+    forAll (elements [minBound .. maxBound]) $ \target ->
+      all (\terminal -> terminal == target || not (allowedAgreementTransition terminal target))
+        [AgreementCompleted, AgreementCancelled, AgreementExpired]
+
+  it "I22: the provider starts, only the buyer completes, and settlement states are never requested by a participant" $ do
+    agreementTransitionAllowedFor PartyProvider AgreementConfirmed AgreementInProgress `shouldBe` True
+    agreementTransitionAllowedFor PartyBuyer AgreementConfirmed AgreementInProgress `shouldBe` False
+    agreementTransitionAllowedFor PartyBuyer AgreementConfirmed AgreementCompleted `shouldBe` True
+    agreementTransitionAllowedFor PartyBuyer AgreementInProgress AgreementCompleted `shouldBe` True
+    agreementTransitionAllowedFor PartyProvider AgreementInProgress AgreementCompleted `shouldBe` False
+    agreementTransitionAllowedFor PartyProvider AgreementConfirmed AgreementCancelled `shouldBe` True
+    agreementTransitionAllowedFor PartyBuyer AgreementInProgress AgreementDisputed `shouldBe` True
+    agreementTransitionAllowedFor PartyAdmin AgreementDisputed AgreementCompleted `shouldBe` True
+    agreementTransitionAllowedFor PartyAdmin AgreementConfirmed AgreementCancelled `shouldBe` False
+    agreementTransitionAllowedFor PartyBuyer AgreementDisputed AgreementCompleted `shouldBe` False
+
+  it "I22: no participant ever requests a settlement state or leaves one" $
+    forAll ((,,) <$> elements [PartyBuyer, PartyProvider] <*> elements [minBound .. maxBound] <*> elements [AgreementPendingDeposit, AgreementBalanceDue, AgreementExpired]) $ \(party, from, settlement) ->
+      not (agreementTransitionAllowedFor party from settlement) && not (agreementTransitionAllowedFor party settlement AgreementConfirmed)
+
+  it "I23: agreement amounts are frozen so that deposit plus balance is the total and the commission never exceeds it" $ do
+    agreementAmounts 1000 3000 125000 `shouldBe` Just (12500, 37500, 87500)
+    agreementAmounts 1000 3000 123456 `shouldBe` Just (12345, 37037, 86419)
+    agreementAmounts 0 10000 999 `shouldBe` Just (0, 999, 0)
+    agreementAmounts 1000 3000 0 `shouldBe` Nothing
+    agreementAmounts 10001 3000 100 `shouldBe` Nothing
+    agreementAmounts 1000 (-1) 100 `shouldBe` Nothing
+
+  it "I23: for every rate and amount the split is exact and the commission is bounded" $
+    forAll ((,,) <$> choose (0, 10000) <*> choose (0, 10000) <*> choose (1, 1000000000000)) $ \(commissionBps, depositBps, amount) ->
+      case agreementAmounts commissionBps depositBps amount of
+        Just (commission, deposit, balance) ->
+          deposit + balance == amount && deposit >= 0 && balance >= 0 && commission >= 0 && commission <= amount
+        Nothing -> False
+
   it "I18: counters stop one round before the limit so the acceptance is always recorded" $ do
     counterRoundAllowed 1 `shouldBe` False
     counterRoundAllowed 2 `shouldBe` True

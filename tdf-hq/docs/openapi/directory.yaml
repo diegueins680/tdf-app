@@ -219,6 +219,35 @@ paths:
       parameters: [{ name: applicationId, in: path, required: true, schema: { type: string, format: uuid } }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
       responses: { '200': { description: Participant-authorized transition } }
+  /directory/agreements:
+    get:
+      tags: [Music classifieds]
+      operationId: listMyAgreements
+      summary: Agreements where the caller manages the buyer or the provider profile (ADR 0135)
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [open, closed] } }
+      responses: { '200': { description: 'Agreements of the caller, newest first', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MarketplaceAgreement' } } } } } }
+  /directory/agreements/{agreementId}:
+    get:
+      tags: [Music classifieds]
+      operationId: getAgreement
+      summary: One agreement (participants and admins)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: agreementId, in: path, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: Agreement detail, content: { application/json: { schema: { $ref: '#/components/schemas/MarketplaceAgreement' } } } }, '404': { description: Not a participant } }
+  /directory/agreements/{agreementId}/status:
+    patch:
+      tags: [Music classifieds]
+      operationId: transitionAgreement
+      summary: Start or complete or cancel or dispute an agreement (ADR 0135)
+      security: [{ bearerAuth: [] }]
+      parameters: [{ name: agreementId, in: path, required: true, schema: { type: string, format: uuid } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
+      responses:
+        '200': { description: Updated agreement, content: { application/json: { schema: { $ref: '#/components/schemas/MarketplaceAgreement' } } } }
+        '409': { description: 'Transition not permitted for this participant, or the agreement changed since it was displayed' }
+        '503': { description: The marketplace.agreements gate is off in this environment }
   /directory/invitations:
     get:
       tags: [Music directory contact]
@@ -847,6 +876,40 @@ components:
         message: { type: string, nullable: true }
         expiresAt: { type: string, format: date-time, nullable: true }
         createdAt: { type: string, format: date-time }
+    AgreementProfile: { type: object, required: [id, name, slug], properties: { id: { type: string, format: uuid }, name: { type: string }, slug: { type: string } } }
+    MarketplaceAgreement:
+      type: object
+      description: Private to its two parties and authorized admins. Amounts and terms are frozen when the offer is accepted (ADR 0135).
+      required: [id, applicationId, classified, buyerProfile, providerProfile, amountMinor, currencyId, commissionBps, commissionMinor, providerNetMinor, depositBps, depositMinor, balanceMinor, terms, settlementMode, status, participantRole, createdAt, version]
+      properties:
+        id: { type: string, format: uuid }
+        applicationId: { type: string, format: uuid }
+        classified: { type: object, required: [id, title, slug], properties: { id: { type: string, format: uuid }, title: { type: string }, slug: { type: string } } }
+        buyerProfile: { $ref: '#/components/schemas/AgreementProfile' }
+        providerProfile: { $ref: '#/components/schemas/AgreementProfile' }
+        amountMinor: { type: integer, format: int64 }
+        currencyId: { type: string, format: uuid }
+        commissionBps: { type: integer }
+        commissionMinor: { type: integer, format: int64 }
+        providerNetMinor: { type: integer, format: int64, description: Amount minus the TDF commission }
+        depositBps: { type: integer }
+        depositMinor: { type: integer, format: int64 }
+        balanceMinor: { type: integer, format: int64 }
+        terms: { $ref: '#/components/schemas/OfferTerms' }
+        cancellationPolicy: { type: object, additionalProperties: true }
+        settlementMode: { type: string, enum: [off_platform, platform] }
+        status: { type: string, enum: [pending_deposit, confirmed, in_progress, balance_due, completed, cancelled, disputed, expired] }
+        participantRole: { type: string, enum: [buyer, provider, admin] }
+        startsAt: { type: string, format: date-time, nullable: true }
+        endsAt: { type: string, format: date-time, nullable: true }
+        startedAt: { type: string, format: date-time, nullable: true }
+        completedAt: { type: string, format: date-time, nullable: true }
+        cancelledAt: { type: string, format: date-time, nullable: true }
+        cancellationReason: { type: string, nullable: true }
+        interactionId: { type: string, format: uuid, nullable: true, description: Verified interaction that makes reviews eligible once the agreement is completed }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
     OfferCounterRequest:
       type: object
       required: [amountMinor, currencyId]
@@ -885,6 +948,7 @@ components:
         rounds: { type: array, items: { $ref: '#/components/schemas/OfferRound' } }
         submittedAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+        agreementId: { type: string, format: uuid, nullable: true, description: Agreement created when this offer was accepted (ADR 0135) }
         acceptedAt: { type: string, format: date-time, nullable: true }
         version: { type: integer, format: int64 }
     InvitationCreate: { type: object, required: [senderProfileId, targetProfileId, message], properties: { senderProfileId: { type: string, format: uuid }, targetProfileId: { type: string, format: uuid }, classifiedId: { type: string, format: uuid }, message: { type: string, minLength: 10, maxLength: 5000 } } }

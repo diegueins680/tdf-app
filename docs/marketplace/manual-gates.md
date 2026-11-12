@@ -60,3 +60,13 @@ Casos a ejecutar con dos cuentas de prueba (autor y oferente):
 Eventos analíticos nuevos: `offer_countered`, `offer_accepted` (además de `application_submitted`,
 `match_converted`). Crear el tablero de la Fase 1 (ofertas por anuncio, tiempo a primera oferta,
 tasa de aceptación, RAS) en PostHog antes de la campaña.
+
+## Fase 2, parte A (ADR 0135)
+
+| Gate | Dónde | Qué verificar |
+| --- | --- | --- |
+| Tarifa vigente | `marketplace_agreement_pricing` | La regla por defecto es 10 % de comisión y 30 % de depósito; cambiarla es un `UPDATE` (desactivar la fila y crear otra), nunca un despliegue |
+| Recorrido con dos cuentas | sandbox/staging (`marketplace.agreements` TRUE) | Aceptar una oferta con monto crea el acuerdo; el proveedor lo inicia; el comprador lo completa; ambos pueden reseñarse; cancelar libera el cupo |
+| Producción | `revenue_feature_flag` | `marketplace.agreements` sigue en FALSE hasta decidir el lanzamiento; con el gate apagado no se crean acuerdos y las ofertas funcionan como en la Fase 1 |
+| `introducedBy` del ledger | `scripts/production-migrations.json` | Apunta al commit que introdujo `2026-11-12_marketplace_agreements.sql`; fusionar con merge commit |
+
