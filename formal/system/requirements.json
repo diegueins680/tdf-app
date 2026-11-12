@@ -14068,7 +14068,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction. Z3 proof stripe_ticket_capture.py covers the legacy ticket webhook's two exception writes (see PAY-STRIPE-WEBHOOK-001).",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction. Z3 proof stripe_ticket_capture.py covers the legacy ticket webhook's two exception writes (see PAY-STRIPE-WEBHOOK-001). Z3 proof hosted_dead_letter_review.py covers the hosted dead-letter review (see PAY-HOSTED-NOTIFICATIONS-001).",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -14083,7 +14083,8 @@
         "formal/payments/CaptureAccounting.tla",
         "formal/payments/CaptureAccounting.cfg",
         "formal/payments/CaptureAccountingLegacy.cfg",
-        "formal/payments/stripe_ticket_capture.py"
+        "formal/payments/stripe_ticket_capture.py",
+        "formal/payments/hosted_dead_letter_review.py"
       ],
       "confidence": "High for the protocol as modelled and the pure decision; handler correspondence by review of the twelve call sites. The provider reconciliation worker, music commerce and the PayPal webhook keep their own reconciliation paths.",
       "ambiguity": [
@@ -23799,14 +23800,16 @@
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one.",
+      "formalModels": [
+        "formal/payments/hosted_dead_letter_review.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one. Z3 proof hosted_dead_letter_review.py (translation of processProviderEventWith, queryAndApply, recordDeadLetterReview, processHostedPayload and markRetry, pinned by the hash of those regions): a bound event that an attempt turns into a dead letter always leaves the dead-letter review or the exception its own stage wrote; the review is written only for a bound event that is a dead letter at that attempt, never for an unbound one and never on top of the stage's own exception; a worker that lost its lease records nothing; guard necessity checked. Added 2026-11-12: a failure thrown after the event is bound keeps the binding (it used to retry without it, so an event that exhausted its retries that way dead-lettered with no exception); ProviderRetrySpec (PostgreSQL) covers it.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue.",
+        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue; that includes a failure thrown before the binding is loaded. An event whose provider state stays unknown until the retries run out ends with two open exceptions of different types (provider_status_unknown and provider_event_dead_letter).",
         "/NotificacionPago is an undocumented alias of the PayPhone handler."
       ],
       "conformance": {

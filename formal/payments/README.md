@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-STRIPE-WEBHOOK-001, PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001, PAY-DEPOSIT-POLICY-001, PAY-DOMAIN-BINDING-001.
+PAY-STRIPE-WEBHOOK-001, PAY-HOSTED-NOTIFICATIONS-001, PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001, PAY-DEPOSIT-POLICY-001, PAY-DOMAIN-BINDING-001.
 
 ## Contract
 
@@ -320,3 +320,25 @@ refuses to run when the text of any of those regions changes.
 Not modelled: signature check and event-id dedupe, JSON decoding, the separate
 transaction of the not-admitted exception, ticket codes, the confirmation
 e-mail, and events that match no ticket order.
+
+## Hosted dead-letter review (`PAY-HOSTED-NOTIFICATIONS-001`, `PAY-CAPTURE-RECON-001`)
+
+`hosted_dead_letter_review.py` (Z3 4.13.3, pinned) encodes one attempt of the
+hosted-provider worker on one inbox event: the stage at which
+`processProviderEventWith` / `queryAndApply` end and whether the result carries
+the bound payment, the fenced `recordDeadLetterReview`, and what
+`processHostedPayload` and `markRetry` write. It refuses to run when the text
+of any of those regions changes.
+
+| Obligation | Result |
+|---|---|
+| A bound event that the attempt turns into a dead letter leaves the review or the exception its own stage wrote | proved (UNSAT of the negation) |
+| The review is written only for a bound event that is a dead letter at this attempt, never for an unbound one | proved |
+| The review never doubles a query-mismatch or closed-checkout exception | proved |
+| A processed event and an unexhausted retry write no review; a lost lease changes and records nothing | proved |
+| Review after an exhausted retry, an unsupported query and a throw on the last attempt; mismatch with its own exception only; unbound dead letter without exception | witnesses found |
+| Dropping the binding kept after a throw, a refused application or a nonterminal state, either review call, the fence, or the clearing of the review | each breaks at least one proof |
+
+Assumed: `recordQueryMismatch` and `reviewClosedCheckoutApproval` write their
+exceptions. Not modelled: the open-exception fingerprint, lease timing, the
+PayPal branch, and a failure thrown before the event is bound.
