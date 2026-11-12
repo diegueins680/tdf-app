@@ -311,12 +311,11 @@ refuses to run when the text of any of those regions changes.
 |---|---|
 | Tickets are issued only with the full binding (succeeded, same PaymentIntent, order, event, amount, currency) on a pending order | proved (UNSAT of the negation) |
 | The answer is 400 exactly when the binding is not admitted | proved |
-| A succeeded positive capture on an existing order ends in tickets, a paid redelivery or an open exception | proved |
+| A succeeded positive capture ends in tickets, a paid redelivery or an open exception, also when the order row is gone at the read-back | proved |
 | An exception is written only for a capture, never together with tickets, with the order total as expected and the received amount as observed | proved |
 | A paid redelivery changes nothing and records nothing; only a pending order becomes paid | proved |
-| Issue, redelivery, both exception types and a refusal without capture are reachable | witnesses found |
-| Order row deleted between lookup and read-back while the stale copy says pending | reachable and silent (limit; no application code deletes ticket orders) |
-| Dropping any of the six comparisons, the pending fence or either exception write | each breaks at least one proof |
+| Issue, redelivery, both exception types, a refusal without capture and the review of a missing order row are reachable | witnesses found |
+| Dropping any of the six comparisons, the pending fence, either exception write or the review of a missing row | each breaks at least one proof |
 
 Not modelled: signature check and event-id dedupe, JSON decoding, the separate
 transaction of the not-admitted exception, ticket codes, the confirmation

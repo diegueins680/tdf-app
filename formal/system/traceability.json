@@ -16738,7 +16738,7 @@
       "formalModels": [
         "formal/payments/stripe_ticket_capture.py"
       ],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end. Z3 proof stripe_ticket_capture.py (translation of handleStripePaymentIntentSucceeded for a matched ticket order, validateStripeTicketPaymentEvidence, parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview, pinned by the hash of those regions): tickets are issued only with the full binding on a pending order, the answer is 400 exactly when the binding is not admitted, a succeeded positive capture on an existing order always ends in tickets, a paid redelivery or an open exception, and each comparison, the pending fence and both exception writes are load-bearing. The model also shows the one silent case left: the order row deleted between lookup and read-back while the stale copy says pending (no application code deletes ticket orders).",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end. Z3 proof stripe_ticket_capture.py (translation of handleStripePaymentIntentSucceeded for a matched ticket order, validateStripeTicketPaymentEvidence, parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview, pinned by the hash of those regions): tickets are issued only with the full binding on a pending order, the answer is 400 exactly when the binding is not admitted, a succeeded positive capture always ends in tickets, a paid redelivery or an open exception, and each comparison, the pending fence, both exception writes and the review of a missing order row are load-bearing. The model first showed one silent case (the order row deleted between lookup and read-back while the stale copy said pending); the read-back now treats a missing row as deleted, which is reviewed.",
       "evidence": "formal/system/social-events-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -27646,7 +27646,7 @@
     "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
     "formal/payments/placetopay_query_admission.py": "b4564fbbef90dba77d7a0f03d053cf53db753fea3f50102d8efa2457a3d772c8",
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
-    "formal/payments/stripe_ticket_capture.py": "a1bbb2e1fec692fc50ca52e6af096d5e6821a582f1f2c9676367b889ec61cbcd",
+    "formal/payments/stripe_ticket_capture.py": "6dee5604a11c82979208ce6c6b111f496e8f227650ae84ddfac3c9ec71ae6511",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -28963,7 +28963,7 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "d7ed3a54aac8d2a18590ce40bf54782514012eef41f7970a01b6f5c10bb3707e",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "46d32fa333e1327022967657b50d06ac2ce05487c0b24e127ace655d069489fc",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -29012,7 +29012,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "c784c9a60c1a0c1ab1f4daab5bcd0c23cc0b0c4782a131dde953409a856d2fce",
+    "tdf-hq/test/Spec.hs": "8a062e6ccfe83ab9d8bd5d9a21aef5cc9e421ee59aa3dc172492c1b0c8e98b4e",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -75072,7 +75072,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "d7ed3a54aac8d2a18590ce40bf54782514012eef41f7970a01b6f5c10bb3707e",
+      "sha256": "46d32fa333e1327022967657b50d06ac2ce05487c0b24e127ace655d069489fc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76297,7 +76297,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c784c9a60c1a0c1ab1f4daab5bcd0c23cc0b0c4782a131dde953409a856d2fce",
+      "sha256": "8a062e6ccfe83ab9d8bd5d9a21aef5cc9e421ee59aa3dc172492c1b0c8e98b4e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85215,7 +85215,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c225615d1a9427fac17a312acb682b6091d97e39d45e18b9936016d904dc0ef8",
+      "sourceSha256": "6b69cb9662873158be939057dda02fb130f58acb565ed06e3e9c01ab9f3693e2",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85243,7 +85243,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c225615d1a9427fac17a312acb682b6091d97e39d45e18b9936016d904dc0ef8",
+      "sourceSha256": "6b69cb9662873158be939057dda02fb130f58acb565ed06e3e9c01ab9f3693e2",
       "definition": {
         "states": [
           "absent",
@@ -85273,7 +85273,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "c225615d1a9427fac17a312acb682b6091d97e39d45e18b9936016d904dc0ef8",
+      "sourceSha256": "6b69cb9662873158be939057dda02fb130f58acb565ed06e3e9c01ab9f3693e2",
       "definition": {
         "export": [
           "queued",

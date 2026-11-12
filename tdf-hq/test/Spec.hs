@@ -4384,8 +4384,8 @@ main = hspec $ do
             parseStripeTicketCapture (A.object []) `shouldBe` Nothing
 
         it "reviews a valid Stripe capture only when the ticket order is closed" $ do
-            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded"]
-                `shouldBe` [False, False, False, True, True, True]
+            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded", "deleted"]
+                `shouldBe` [False, False, False, True, True, True, True]
 
         it "recovers marketplace order ids from Stripe metadata context" $ do
             let webhookPayload =

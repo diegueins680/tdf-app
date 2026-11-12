@@ -17711,7 +17711,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "d7ed3a54aac8d2a18590ce40bf54782514012eef41f7970a01b6f5c10bb3707e",
+      "sha256": "46d32fa333e1327022967657b50d06ac2ce05487c0b24e127ace655d069489fc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18143,7 +18143,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c784c9a60c1a0c1ab1f4daab5bcd0c23cc0b0c4782a131dde953409a856d2fce",
+      "sha256": "8a062e6ccfe83ab9d8bd5d9a21aef5cc9e421ee59aa3dc172492c1b0c8e98b4e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -29583,7 +29583,7 @@
     },
     {
       "path": "formal/payments/README.md",
-      "sha256": "dc869d65c3fbe82a69ab3075b1f3bb33b1af6542645aac56e0d655fc27973c8d",
+      "sha256": "e8bd28ed33687adaa30b8864989ad98b73ee7bafcdd891d4d5abe61f8c3275a9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30108,7 +30108,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -31109,7 +31109,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c225615d1a9427fac17a312acb682b6091d97e39d45e18b9936016d904dc0ef8",
+      "sha256": "6b69cb9662873158be939057dda02fb130f58acb565ed06e3e9c01ab9f3693e2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -37011,7 +37011,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -37042,7 +37042,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -37073,7 +37073,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -37104,7 +37104,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -37135,7 +37135,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -37166,7 +37166,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -37197,7 +37197,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -37228,7 +37228,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -37259,7 +37259,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -37290,7 +37290,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -37321,7 +37321,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -37352,7 +37352,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -37381,7 +37381,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -37410,7 +37410,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -37439,7 +37439,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -37468,7 +37468,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -37497,7 +37497,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -37526,7 +37526,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -37555,7 +37555,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -37584,7 +37584,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -37613,7 +37613,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "7dfa9f6aed15c2ca036cd07109ec44acde2725a3d0506b8ec2b4966e0576af88",
+      "sourceSha256": "49f2a8f44fa5ad337796f59bcd5c1861fc7e66d3b1ea30bc8471673806206636",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",

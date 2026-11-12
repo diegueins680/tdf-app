@@ -24,10 +24,11 @@ Proofs (UNSAT of the negation):
     only while the order is pending;
   - the answer is 400 exactly when the binding is not admitted, and 204
     otherwise;
-  - while the order row exists, a succeeded capture of a positive amount never
-    ends without a trace: the tickets are issued, or the order was already
-    paid by the same PaymentIntent, or an open reconciliation exception is
-    written;
+  - a succeeded capture of a positive amount never ends without a trace: the
+    tickets are issued, or the order was already paid by the same
+    PaymentIntent, or an open reconciliation exception is written; this holds
+    also when the order row is gone at the read-back, which is reviewed as a
+    closed order;
   - an exception is written only for a succeeded positive capture, the two
     exception types exclude each other and exclude ticket issue, and the
     exception carries the order total as expected and the received amount as
@@ -35,13 +36,12 @@ Proofs (UNSAT of the negation):
   - an admitted binding for an order with a positive total is a capture;
   - a redelivery for an order already paid changes nothing and records nothing.
 
-Witnesses: issue, redelivery, each exception type, and a refusal without a
-capture are reachable. A further witness shows the one silent case left: the
-order row is deleted between the lookup and the read-back while the stale copy
-says pending. No application code deletes ticket orders.
+Witnesses: issue, redelivery, each exception type, a refusal without a
+capture, and the review of an order whose row is gone are reachable.
 
-Necessity: each of the six comparisons, the pending fence of the update and
-the two exception writes are removed in turn; each must make a proof fail.
+Necessity: each of the six comparisons, the pending fence of the update, the
+two exception writes and the review of a missing row (instead of trusting the
+copy read at lookup) are removed in turn; each must make a proof fail.
 
 Not covered: the signature check and event-id dedupe before dispatch, JSON
 decoding itself, the separate transaction of the not-admitted exception (a
@@ -63,7 +63,7 @@ ROOT = Path(__file__).resolve().parents[2]
 HANDLERS = 'tdf-hq/src/TDF/Server/SocialEventsHandlers.hs'
 REGIONS = (
     (HANDLERS, 'handleStripePaymentIntentSucceeded :: UTCTime -> Aeson.Value -> AppM NoContent',
-     'issueMissingTicketsForOrder ::', 'ab35251ddbdaaea35c10ec8f776b65f2c6245dbcd83d655160f9b0f44ada6975'),
+     'issueMissingTicketsForOrder ::', '4922f009442e82d8e13523e7ee7085591b4813f9fabcdb087cf896c06b592e56'),
     (HANDLERS, 'validateStripeTicketPaymentEvidence ::',
      'parseStripeWebhookMarketplaceOrderId :: Aeson.Value -> Maybe T.Text', 'b8a75b76787d2e0ff430d3e981da1c5a5d1679fd5e63d680f73eea68f624e2e7'),
     ('tdf-hq/src/TDF/Server/StripeTicketCapture.hs',
@@ -74,7 +74,7 @@ REGIONS = (
 PENDING, PAID, CLOSED = 0, 1, 2  # order status: pending, paid, anything else
 NONE, NOT_ADMITTED, CLOSED_ORDER = 0, 1, 2  # exception written
 COMPARISONS = ('status', 'payment-intent', 'order', 'event', 'amount', 'currency')
-GUARDS = COMPARISONS + ('pending-fence', 'not-admitted-record', 'closed-order-record')
+GUARDS = COMPARISONS + ('pending-fence', 'not-admitted-record', 'closed-order-record', 'missing-row-review')
 
 
 def sources_are_current():
@@ -107,7 +107,7 @@ class Delivery:
         self.total = i('total')          # amountCents
         self.status = i('status')        # when the conditional update runs
         self.row_present = b('row_present')
-        self.stale_status = i('stale_status')  # status of the copy read at lookup
+        self.stale_status = i('stale_status')  # copy read at lookup; used only by the necessity control
 
     def wellformed(self):
         domain = lambda s: z3.And(s >= PENDING, s <= CLOSED)
@@ -129,8 +129,9 @@ class Outcome:
         self.refused = z3.Not(self.admitted)
         changed = z3.And(self.admitted, keep('pending-fence', d.status == PENDING))
         self.issued = changed
-        # read-back when nothing changed: the row, or the stale copy if it is gone
-        current = z3.If(d.row_present, d.status, d.stale_status)
+        # read-back when nothing changed: the row, or "deleted" (closed) if it is gone
+        missing = d.stale_status if dropped == 'missing-row-review' else z3.IntVal(CLOSED)
+        current = z3.If(d.row_present, d.status, missing)
         needs_review = z3.And(current != PENDING, current != PAID)
         not_admitted = z3.And(self.refused, self.capture, keep('not-admitted-record', z3.BoolVal(True)))
         if dropped == 'not-admitted-record':
@@ -154,9 +155,9 @@ def properties(dropped=None):
             o.issued, z3.And(full_binding, d.status == PENDING)),
         'answer-is-400-exactly-when-not-admitted': z3.And(
             (o.http == 400) == z3.Not(full_binding), (o.http == 204) == full_binding),
-        'a-capture-on-an-existing-order-always-leaves-a-trace': z3.Implies(
-            z3.And(o.capture, d.row_present),
-            z3.Or(o.issued, z3.And(full_binding, d.status == PAID), o.exception != NONE)),
+        'a-capture-always-leaves-a-trace': z3.Implies(
+            o.capture,
+            z3.Or(o.issued, z3.And(full_binding, d.status == PAID, d.row_present), o.exception != NONE)),
         'exceptions-only-for-captures-and-never-with-tickets': z3.Implies(
             o.exception != NONE,
             z3.And(d.core, d.succeeded, d.amount > 0, z3.Not(o.issued),
@@ -199,9 +200,9 @@ def witnesses():
         'not-admitted-exception': (o.exception == NOT_ADMITTED, o.http == 400),
         'closed-order-exception': (o.exception == CLOSED_ORDER, o.http == 204, d.row_present),
         'refusal-without-a-capture-records-nothing': (o.refused, z3.Not(o.capture), o.exception == NONE),
-        'limit-deleted-order-with-a-stale-pending-copy-is-silent': (
-            o.capture, o.admitted, z3.Not(d.row_present), d.status == CLOSED, d.stale_status == PENDING,
-            z3.Not(o.issued), o.exception == NONE),
+        'missing-order-row-is-reviewed': (
+            o.capture, o.admitted, z3.Not(d.row_present), d.stale_status == PENDING,
+            o.exception == CLOSED_ORDER),
     }, d
 
 
