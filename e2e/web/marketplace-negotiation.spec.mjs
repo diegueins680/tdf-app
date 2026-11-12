@@ -120,8 +120,12 @@ test('author compares offers, counters one and the final acceptance fills the cl
   await bandCard.getByRole('button', { name: 'Contraofertar' }).click();
   const amountField = bandCard.getByLabel('Monto');
   await expect(amountField).toBeVisible();
-  await amountField.fill('1250');
-  await expect(amountField).toHaveValue('1250');
+  // The field sits in a Collapse that is still animating in; Firefox has
+  // dropped the first fill there, so fill until the value sticks.
+  await expect(async () => {
+    await amountField.fill('1250');
+    await expect(amountField).toHaveValue('1250', { timeout: 1_000 });
+  }).toPass({ timeout: 15_000 });
   const sendCounter = bandCard.getByRole('button', { name: 'Enviar contraoferta' });
   await expect(sendCounter).toBeEnabled();
   // The form sits in a Collapse; wait for the request itself rather than racing the animation.

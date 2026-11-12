@@ -130,6 +130,9 @@ module TDF.Server.SocialEventsHandlers (
     StripeTicketPaymentEvidence (..),
     parseStripeTicketPaymentEvidence,
     validateStripeTicketPaymentEvidence,
+    StripeTicketCapture (..),
+    parseStripeTicketCapture,
+    stripeTicketClosedOrderNeedsReview,
     parseStripeWebhookMarketplaceOrderId,
     canRecoverMarketplaceStripeOrder,
     parseCheckoutSessionCourseSubscription,
@@ -169,6 +172,7 @@ import Data.Char (
     isDigit,
     isHexDigit,
  )
+import Data.Foldable (for_)
 import Data.Int (Int64)
 import Data.FileEmbed (embedFile)
 import Data.List (nub, sortOn)
@@ -333,6 +337,7 @@ import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (nativeBroadcastUnavailable)
+import TDF.Server.StripeTicketCapture (StripeTicketCapture (..), parseStripeTicketCapture, recordStripeTicketCapture, stripeTicketClosedOrderNeedsReview)
 import qualified TDF.Services.Stripe as Stripe
 import TDF.Services.EventLogisticsRoutes
     ( RouteEstimateInput (..)
@@ -969,9 +974,32 @@ handleStripePaymentIntentSucceeded now payload =
                     piId
                     (parseStripeWebhookMarketplaceOrderId payload)
             Just (Entity orderKey order) -> do
+                let mCapture = parseStripeTicketCapture payload
+                    recordCapture exceptionType =
+                        recordStripeTicketCapture
+                            exceptionType
+                            (renderKeyText orderKey)
+                            piId
+                            (eventTicketOrderAmountCents order)
+                            (eventTicketOrderCurrency order)
+                            now
+                    -- Stripe captured money that the order cannot admit: keep the
+                    -- 400 (the event stays unrecorded and replayable) but leave an
+                    -- open exception so the capture is not lost.
+                    admitOrReconcile =
+                        either
+                            ( \errText -> do
+                                for_ mCapture $ \capture ->
+                                    liftIO $
+                                        runSqlPool
+                                            (recordCapture "verified_payment_not_admitted" capture)
+                                            envPool
+                                throwError err400{errBody = textErrBody errText}
+                            )
+                            pure
                 paymentEvidence <-
-                    eitherStripeWebhookError (parseStripeTicketPaymentEvidence payload)
-                eitherStripeWebhookError $
+                    admitOrReconcile (parseStripeTicketPaymentEvidence payload)
+                admitOrReconcile $
                     validateStripeTicketPaymentEvidence
                         (renderKeyText orderKey)
                         (renderKeyText (eventTicketOrderEventId order))
@@ -995,7 +1023,13 @@ handleStripePaymentIntentSucceeded now payload =
                                     then do
                                         codes <- issueMissingTicketsForOrder now orderKey order
                                         pure (True, codes)
-                                    else pure (False, [])
+                                    else do
+                                        currentStatus <-
+                                            maybe (eventTicketOrderStatus order) eventTicketOrderStatus
+                                                <$> get orderKey
+                                        when (stripeTicketClosedOrderNeedsReview currentStatus) $
+                                            for_ mCapture (recordCapture "verified_payment_on_closed_order")
+                                        pure (False, [])
                             )
                             envPool
                 when statusChanged $
