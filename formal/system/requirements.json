@@ -4313,7 +4313,9 @@
         "tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs",
         "scripts/check-webhook-signatures.py"
       ],
-      "formalModels": [],
+      "formalModels": [
+        "formal/auth/meta_webhook_admission.py"
+      ],
       "critical": true,
       "status": "specified and implemented",
       "confidence": "High for the verifier function (properties) and for the structural presence of the verifier in all four Meta aliases (gate); HTTP-level denial execution per alias remains open.",
@@ -4327,7 +4329,7 @@
       "authority": "AUTHORITY-030; optional configuration may disable integration, never authentication.",
       "property": "Only configured exact-body HMAC reaches mutation; unavailable or rejected admission leaves state unchanged.",
       "contract": "formal/system/meta-webhook-admission.md",
-      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures. Property tests over generated secrets, bodies and headers: acceptance exactly for the HMAC of the exact bytes (either hex case), 503 for a missing or blank secret regardless of header, 401 for missing, malformed or mismatching signatures and for any single-byte body change; only success, 401 or 503 are possible. A structural gate checks that every Meta signed-callback route is served by a function that calls the verifier before decoding the body.",
+      "verification": "QuickCheck raw-byte binding and HTTP absent/blank-key alias controls with positive deletion fixtures. Property tests over generated secrets, bodies and headers: acceptance exactly for the HMAC of the exact bytes (either hex case), 503 for a missing or blank secret regardless of header, 401 for missing, malformed or mismatching signatures and for any single-byte body change; only success, 401 or 503 are possible. A structural gate checks that every Meta signed-callback route is served by a function that calls the verifier before decoding the body. Z3 proof meta_webhook_admission.py (translation of verifyMetaWebhookSignature and parseMetaWebhookSignature pinned by the hash of those two functions; HMAC uninterpreted; admission exactly the conjunction of usable secret, well-formed header and digest equal to the HMAC of the exact body; 503 for an absent or blank secret; guard necessity checked).",
       "evidence": "Current source and revision-specific runtime receipts required; production secret presence is configuration evidence only."
     },
     {
@@ -10078,6 +10080,233 @@
       }
     },
     {
+      "id": "MKT-DEMAND-OFFER-001",
+      "title": "Negotiable offers with slot accounting on seeking and offering classifieds",
+      "domain": "MKT",
+      "statement": "Every classified category declares an intent (seeking or offering) that search exposes and filters by. A classified declares slots (1-100), a price mode (open, suggested, fixed), an optional offer deadline and structured terms. An application is an offer carrying an amount, currency, terms and expiry; counter-offers alternate strictly between the classified author and the offerer through recorded rounds (at most ten; fixed prices admit none), only the participant who did not make the last move may accept, acceptance consumes exactly one slot atomically and freezes the accepted amount, exhausting the slots fills the classified and rejects every open offer with reason slots_filled, closing a classified rejects open offers with reason classified_closed, withdrawing an accepted offer releases its slot, and the public sees only an anonymous offer count and range.",
+      "authority": "Product owner instruction of 2026-11-08 to converge Comunidad y anuncios into a demand/offer marketplace with inDrive-style negotiation; ADR 0134",
+      "source": "docs/marketplace/02-especificacion-funcional.md; docs/marketplace/03-diseno-de-datos.md; docs/adr/0134-marketplace-demand-offers.md",
+      "contract": "docs/marketplace/03-diseno-de-datos.md",
+      "actors": [
+        "Classified author (profile manager with publish capability)",
+        "Offerer (profile manager with contact capability)",
+        "Anonymous visitor",
+        "Directory administrator"
+      ],
+      "preconditions": [
+        "Migration 2026-11-08_marketplace_offers is applied after the reviewed directory prefix",
+        "Offering requires a published, unexpired, non-derived classified with a slot left and an open offer deadline",
+        "Counter-offers require the marketplace.offers runtime flag for the environment",
+        "Both participants are adults and pass the existing contact preferences and blocks"
+      ],
+      "inputs": [
+        "POST /directory/classifieds (classified create requests with slots, priceMode, offerDeadlineAt and terms)",
+        "POST /directory/classifieds/{classifiedId}/applications (offer create requests with amountMinor, currencyId, terms and expiresAt)",
+        "POST /directory/applications/{applicationId}/counter (counter requests with amountMinor, currencyId, terms, message and expiresAt)",
+        "PATCH /directory/applications/{applicationId}/status (status transitions requested by either participant or an administrator)",
+        "GET /directory/applications and GET /directory/applications/{applicationId} (participant-scoped reads)"
+      ],
+      "state": {
+        "offer": "submitted, viewed, shortlisted, countered_by_author, countered_by_applicant, accepted, rejected, withdrawn, expired, conversation_open, converted",
+        "classifiedSlots": "slots_remaining between 0 and slots; classified filled when it reaches zero",
+        "authority": "TDF.Directory.Policy transition relations plus classified_application and classified CHECK constraints"
+      },
+      "allowedTransitions": [
+        "submitted|viewed|shortlisted|countered_by_applicant -> countered_by_author (author counter)",
+        "countered_by_author -> countered_by_applicant (offerer counter)",
+        "submitted|viewed|shortlisted|countered_by_applicant -> accepted (author); countered_by_author -> accepted (offerer)",
+        "any open state -> rejected (author or closure), withdrawn (offerer) or expired (system)",
+        "accepted|conversation_open -> withdrawn (releases the slot)",
+        "published classified -> filled when slots_remaining reaches zero; filled -> published when a slot is released before expiry"
+      ],
+      "forbiddenTransitions": [
+        "Two consecutive rounds by the same participant",
+        "A counter state reached through the generic status endpoint",
+        "Acceptance by the participant who made the last move",
+        "Acceptance when no slot is left or the classified is not published",
+        "A counter-offer on a fixed-price classified or beyond ten rounds",
+        "A closed offer (rejected, withdrawn, expired) reopening",
+        "A second active offer by the same profile on the same classified"
+      ],
+      "effects": [
+        "Each proposal, counter and acceptance is a classified_offer_round row; the offer mirrors the latest round",
+        "Acceptance records accepted_amount_minor and decrements slots_remaining in the same transaction",
+        "Filling or closing a classified rejects open offers with a reason and notifies offerers",
+        "Public classified projections expose intent, price mode, slots, deadline, terms and anonymous offer statistics"
+      ],
+      "authorization": "Only the classified author lists, sorts, shortlists, rejects and accepts offers waiting on the author; only the offerer withdraws or answers an author counter; administrators read with audit; offerers never see other offers (I08/I20).",
+      "privacy": "Offer amounts and messages stay private to participants; the public range appears only with at least three offers and never identifies offerers; terms carry a textual place, never an exact private address.",
+      "concurrency": "Slot consumption is a guarded UPDATE (slots_remaining > 0) inside the acceptance transaction; the round number is unique per offer; idempotency keys cover offers and counters.",
+      "idempotency": "Offer and counter requests require Idempotency-Key with request fingerprints; replays return the existing offer; backfill of initial rounds is idempotent.",
+      "failure": "Turn, slot, deadline, fixed-price and duplicate violations return 409; malformed amounts, terms or expiry return 400; counters without the runtime flag return 503; an expired offer is marked expired and the transition rejected.",
+      "recovery": "Rollback 2026-11-08_marketplace_offers_rollback maps counter states to viewed/submitted, expired to withdrawn, keeps the latest amount as proposed_amount_minor and restores the previous notification allowlist.",
+      "observability": "directory_audit_event rows for rounds, acceptances and bulk rejections; analytics events application_submitted, offer_countered, offer_accepted, match_converted; in-app notifications marketplace.offer.* and marketplace.classified.filled; release schema verification of the new objects.",
+      "property": "For every offer the rounds are numbered 1..n with alternating actors, n <= 10, round 1 belongs to the offerer and an accept round is last; for every classified 0 <= slots_remaining <= slots and slots - slots_remaining equals the number of offers in accepted, conversation_open or converted.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
+        "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql",
+        "scripts/production-migrations.json",
+        "scripts/lib/production-release.mjs",
+        "scripts/test-event-memory-source-moderation.sh",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/features/marketplace/offers.ts",
+        "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
+        "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
+        "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
+        "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
+        "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "package.json",
+        "playwright.marketplace.config.mjs"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq-ui/src/features/marketplace/offers.test.ts",
+        "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
+        "e2e/web/marketplace-negotiation.spec.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/test-community-search.py",
+        "scripts/__tests__/directory-search-plan-parity.mjs"
+      ],
+      "formalModels": [
+        "docs/music-directory/formal-model.yaml"
+      ],
+      "verification": "Hspec property tests of the transition relation, turn rules, alternation, round limit and slot arithmetic; Jest unit and component tests of the client-side mirror; Playwright synthetic negotiation journey; static state-machine gate against the formal model; release schema verification. No PostgreSQL integration test of the handler transaction yet.",
+      "evidence": "CI run on candidate 6c0abb0 (backend build and Hspec green, Jest 4147/4148 before the label matcher fix); local static gates on 2026-11-08.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Policy verified by property tests; handler slot transaction and notification widening verified by review and CI migration lanes, not yet by a PostgreSQL handler test; deployed behavior pending manual gates.",
+      "ambiguity": [
+        "Cross-currency offers are shown side by side without conversion until Phase 4 defines an indicative rate source.",
+        "Historical duplicate active offers per (classified, profile) are diagnosed, not repaired, by the migration."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented behind the marketplace.offers flag with policy, unit, component and synthetic e2e coverage; PostgreSQL handler integration tests and production manual gates (docs/marketplace/manual-gates.md) remain open."
+      }
+    },
+    {
+      "id": "MKT-AGREEMENT-001",
+      "title": "Marketplace agreements with frozen commission and deposit, created from accepted offers",
+      "domain": "MKT",
+      "statement": "With the marketplace.agreements gate on, accepting an offer that carries a positive amount and a currency creates exactly one agreement in the acceptance transaction. The buyer is the party that seeks (the classified author for seeking categories, the offerer for offering categories) and the other party is the provider. The agreement freezes the amount, currency, combined terms, the TDF commission and the deposit/balance split from the pricing rule in force (default 10% commission, 30% deposit), and those values never change. Part A collects no payment: agreements start confirmed and off-platform. The provider marks the start, only the buyer confirms completion, either party cancels or disputes a live agreement and only an administrator resolves a dispute. Completion records a verified interaction that makes both parties eligible to review each other; cancellation withdraws the accepted offer and releases its slot; withdrawing an accepted offer cancels its live agreement.",
+      "authority": "Product owner decisions of 2026-11-12 (10% commission, 30% deposit, agreement before payments); ADR 0135",
+      "source": "docs/adr/0135-marketplace-agreements.md; docs/marketplace/01-plan-por-fases.md; docs/marketplace/03-diseno-de-datos.md",
+      "contract": "docs/adr/0135-marketplace-agreements.md",
+      "actors": [
+        "Buyer (manager of the profile that seeks and pays)",
+        "Provider (manager of the profile that delivers)",
+        "Directory administrator"
+      ],
+      "preconditions": [
+        "Migration 2026-11-12_marketplace_agreements is applied after 2026-11-08_marketplace_offers",
+        "The marketplace.agreements runtime flag is on for the environment",
+        "The accepted offer carries a positive amount and a currency",
+        "An active pricing rule exists for the classified category or by default"
+      ],
+      "inputs": [
+        "PATCH /directory/applications/{applicationId}/status (acceptance creates the agreement; withdrawal cancels a live one)",
+        "GET /directory/agreements and GET /directory/agreements/{agreementId} (participant-scoped reads)",
+        "PATCH /directory/agreements/{agreementId}/status (start, complete, cancel or dispute with expectedVersion)"
+      ],
+      "state": {
+        "agreement": "pending_deposit, confirmed, in_progress, balance_due, completed, cancelled, disputed, expired",
+        "authority": "TDF.Directory.Policy.allowedAgreementTransition, marketplace_agreement_transition_allowed trigger and marketplace_agreement CHECK constraints"
+      },
+      "allowedTransitions": [
+        "confirmed -> in_progress (provider)",
+        "confirmed|in_progress -> completed (buyer)",
+        "confirmed|in_progress -> cancelled or disputed (either party)",
+        "disputed -> completed or cancelled (administrator)",
+        "pending_deposit -> confirmed|cancelled|expired and in_progress -> balance_due -> completed (platform settlement, part B only)"
+      ],
+      "forbiddenTransitions": [
+        "Any transition out of completed, cancelled or expired",
+        "Completion requested by the provider",
+        "A settlement state requested by a participant or used by an off-platform agreement",
+        "A change of amount, currency, commission, deposit, parties or terms after creation",
+        "A second agreement for the same offer",
+        "A decision on a version the caller did not see"
+      ],
+      "effects": [
+        "One marketplace_agreement row per accepted offer with commission, deposit and balance computed by agreementAmounts",
+        "Completion inserts a verified directory_interaction of kind marketplace_agreement and links it",
+        "Cancellation withdraws the accepted offer, releases its slot and reopens a filled unexpired classified",
+        "Both parties are notified of creation and of every transition"
+      ],
+      "authorization": "Only managers of the buyer or provider profile read an agreement; each party may request only its own transitions; administrators read and resolve disputes; nobody else learns the agreement exists.",
+      "privacy": "Agreements are private to their two parties and administrators; amounts, commission and terms never appear in public projections.",
+      "concurrency": "Row locks in the order classified, offer, agreement; conditional updates on the observed status; expectedVersion binds the decision to the displayed version; the unique application_id makes creation idempotent.",
+      "idempotency": "Agreement creation is ON CONFLICT (application_id) DO NOTHING inside the acceptance transaction; a repeated transition to the current state is refused by the participant rule.",
+      "failure": "Transitions not permitted for the party, stale versions and changed states return 409; unknown target states return 400; non-participants get 404; the gate off returns 503 for transitions while reads keep working.",
+      "recovery": "Rollback 2026-11-12_marketplace_agreements_rollback drops agreements, pricing and the agreement interactions with their reviews, and restores the previous interaction, notification and analytics allowlists; accepted offers are kept.",
+      "observability": "directory_audit_event rows agreement.create and agreement.status; analytics events agreement_completed and agreement_cancelled; notifications marketplace.agreement.*; release schema verification of the agreement objects.",
+      "property": "For every agreement deposit_minor + balance_minor = amount_minor and 0 <= commission_minor <= amount_minor; every stored status change is a pair of the declared relation; an off-platform agreement is never pending_deposit or balance_due.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
+        "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/features/marketplace/agreements.ts",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
+        "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
+        "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
+        "scripts/lib/production-release.mjs",
+        "scripts/test-event-memory-source-moderation.sh",
+        "scripts/production-migrations.json",
+        "formal/system/state-machine-bindings.json",
+        "formal/system/compiled-api-surface.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
+      ],
+      "formalModels": [
+        "docs/music-directory/formal-model.yaml"
+      ],
+      "verification": "Hspec property tests of the transition relation, party rules and amount arithmetic; Jest unit and component tests of the client mirror and the agreement card; static state-machine gate against the formal model; local PostgreSQL exercise of the migration, rollback, frozen-values trigger and every new statement (PREPARE). No PostgreSQL integration test of the handler transaction yet.",
+      "evidence": "Local static gates and PostgreSQL 16 exercise on 2026-11-12; CI on the candidate.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Policy verified by property tests; SQL verified against a migrated schema; handler transaction verified by review and CI build, not yet by a PostgreSQL handler test; payments are out of scope of part A.",
+      "ambiguity": [
+        "Offers without an amount (exchange or unpaid) create no agreement, so they end without a verified interaction until a later decision.",
+        "Dispute resolution is an administrator status change without a dedicated operations panel until part B."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented behind the marketplace.agreements flag with policy, unit and component coverage; payment collection, settlement, refunds and deposit expiry (part B), PostgreSQL handler integration tests and production manual gates remain open."
+      }
+    },
+    {
       "id": "MSG-WHATSAPP-REDELIVERY-001",
       "title": "A redelivered WhatsApp message changes nothing and is not answered again",
       "domain": "MSG",
@@ -13944,7 +14173,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record.",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction.",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -16566,7 +16795,7 @@
       "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-events-routes.md.",
       "source": "formal/system/social-events-routes.md",
       "contract": "formal/system/social-events-routes.md",
-      "property": "Public route authenticated by HMAC (503 without configuration, 400 bad signature or JSON). payment_intent.succeeded validates the evidence and moves a pending order to paid with a conditional update, issuing tickets; canceled cancels it and releases inventory and promotion redemptions. Outcomes are never overwritten (conditional updates, PAY-TIP-001 / StripeIntentOutcome model).",
+      "property": "Public route authenticated by HMAC (503 without configuration, 400 bad signature or JSON). payment_intent.succeeded validates the evidence and moves a pending order to paid with a conditional update, issuing tickets; canceled cancels it and releases inventory and promotion redemptions. Outcomes are never overwritten (conditional updates, PAY-TIP-001 / StripeIntentOutcome model). When a succeeded PaymentIntent with a positive amount matches a ticket order but fails the binding or evidence validation, the handler still answers 400 and first commits an open commerce_reconciliation_exception (provider stripe, verified_payment_not_admitted, internal reference event_ticket_order:{id}, expected and received amounts). A valid capture for an order that is neither pending nor paid issues no ticket and records verified_payment_on_closed_order.",
       "actors": [
         "Stripe"
       ],
@@ -16602,19 +16831,23 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/StripeTicketCapture.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/Spec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end.",
       "evidence": "formal/system/social-events-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "When succeeded evidence does not match the order, the legacy ticket path only answers 400; unlike the canonical capture paths (PAY-CAPTURE-RECON-001) it records no reconciliation exception, so captured money can be left unrecorded."
+        "Course registrations, artist tips and marketplace orders paid through this webhook are matched by a conditional status update only and record no exception when nothing matches.",
+        "The exception's merchant reference is the constant \"stripe\" and its environment comes from the event's livemode flag (production when absent); no Stripe account id is configured.",
+        "A refused event is not stored, so Stripe keeps redelivering it; the open-exception fingerprint keeps that to one row."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",
@@ -20761,7 +20994,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/public-intake-routes.md.",
       "source": "formal/system/public-intake-routes.md",
       "contract": "formal/system/public-intake-routes.md",
-      "property": "The token is a canonical UUID matching exactly one asset qr_code (404/409). Checkout accepts party loans and rentals only, requires terms, a holder email or phone, condition, a managed photo URL and dueAt (400), refuses an already checked-out asset (409) and inserts the checkout and asset status. Checkin requires the open checkout to be a party loan or rental (409), condition and photo (400) and closes it. Upload requires the asset to be available or on a party loan (409), validates the form and 1 byte..10 MB (400) and writes the file under the public inventory root without a database row.",
+      "property": "The token is a canonical UUID matching exactly one asset qr_code (404/409). Checkout accepts party loans and rentals only, requires terms, a holder email or phone, condition, a managed photo URL and dueAt (400), refuses an already checked-out asset (409) and inserts the checkout and asset status. Checkin requires the open checkout to be a party loan or rental (409), condition and photo (400) and closes it. Upload requires the asset to be available or on a party loan (409), validates the form, 1 byte..10 MB and the image signature of the declared type (400) and writes the file under the public inventory root without a database row.",
       "actors": [
         "Anonymous QR holder"
       ],
@@ -21715,7 +21948,7 @@
     {
       "id": "SVCMKT-PROVIDER-ADS-001",
       "title": "Service marketplace provider ads and slots",
-      "statement": "An authenticated party publishes a provider ad and opens time slots on it. Routes: POST /service-marketplace/ads; POST /service-marketplace/ads/{adId}/slots.",
+      "statement": "A party holding a staff-assigned provider role publishes a provider ad and opens time slots on it. Routes: POST /service-marketplace/ads; POST /service-marketplace/ads/{adId}/slots.",
       "domain": "SVCMKT",
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ads-storefront-routes.md.",
       "source": "formal/system/ads-storefront-routes.md",
@@ -21749,11 +21982,11 @@
         "service_ad",
         "service_ad_slot"
       ],
-      "authorization": "Any authenticated account may create an ad; slots require ad ownership.",
+      "authorization": "validateServiceAdProvider on both routes: one of Admin, Manager, StudioManager, Engineer, Teacher, Producer, LiveSessionsProducer, Artist, Artista, Songwriter, DJ, Photographer, Publicist, TourManager, StageManager, RoadCrew, Promotor, Promoter, Agency or Vendor (403 otherwise); slots also require ad ownership.",
       "privacy": "Unchanged; see the route table.",
       "concurrency": "No locks; no overlap check between slots.",
       "idempotency": "None: a duplicate headline per provider or an identical slot window hits a unique constraint (500).",
-      "failure": "400 invalid; 403 not the owner; 404 catalog or ad; 409 inactive catalog.",
+      "failure": "400 invalid; 403 no provider role or not the owner; 404 catalog or ad; 409 inactive catalog.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
@@ -21763,13 +21996,13 @@
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateServiceAdProvider is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
       "evidence": "formal/system/ads-storefront-routes.md",
       "critical": false,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Any account, including Fan or Customer, may publish a provider ad; siblings use module gates.",
+        "The gate is a role allow-list: there is no provider application or approval record, and ads created earlier by other accounts remain listed.",
         "Duplicate headlines and identical slots answer 500 instead of 409.",
         "Slots are not checked for overlap."
       ],
@@ -22137,7 +22370,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/artists-assets-label-routes.md.",
       "source": "formal/system/artists-assets-label-routes.md",
       "contract": "formal/system/artists-assets-label-routes.md",
-      "property": "Every route needs operations access. Creation validates name, category and photo URL (400). Uploads accept one image part (jpeg, png, webp, gif) whose extension matches the declared type, 1 byte..10 MiB (400), and write it under the public assets root at inventory/{uuid}-{name} without a database row. Patches need at least one field (400), a known room (400), refuse a status change while a checkout is open and booked without one (409). Delete refuses an asset with any checkout history (409). QR rotation replaces the token unconditionally.",
+      "property": "Every route needs operations access. Creation validates name, category and photo URL (400). Uploads accept one image part (jpeg, png, webp, gif) whose extension matches the declared type, 1 byte..10 MiB (400) and whose leading bytes are that format's signature (400), and write it under the public assets root at inventory/{uuid}-{name} without a database row. Patches need at least one field (400), a known room (400), refuse a status change while a checkout is open and booked without one (409). Delete refuses an asset with any checkout history (409). QR rotation replaces the token unconditionally.",
       "actors": [
         "Operations staff"
       ],
@@ -22185,13 +22418,13 @@
         "tdf-hq/test/TDF/ServerExtraSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateInventoryAssetUploadSignature is unit-tested in tdf-hq/test/TDF/ServerExtraSpec.hs.",
       "evidence": "formal/system/artists-assets-label-routes.md",
       "critical": false,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Uploads trust the declared MIME type (no content sniffing), land in the public root, have no database record and are never cleaned up.",
+        "Uploads land in the public root, have no database record and are never cleaned up; only the leading signature is checked, the image is not decoded.",
         "QR rotation invalidates printed codes with no confirmation or audit.",
         "A delete racing a checkout answers 500."
       ],
@@ -22420,7 +22653,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/ddex-radio-session-routes.md.",
       "source": "formal/system/ddex-radio-session-routes.md",
       "contract": "formal/system/ddex-radio-session-routes.md",
-      "property": "Every route needs a staff module grant under a coherent role set (validateRadioCatalogAccess, 403). Stream URLs must be public HTTP(S) without userinfo, fragment or private hosts (400); legacy UUID-path URLs answer 503 on save. Save upserts the stream by URL with an active country and published genre (400). Import takes up to 8 public source URLs (default four hard-coded lists) and a limit of 1..800 (400), fetches each source, parses stations and upserts them with observation rows in one transaction, counting failed sources. Refresh fetches up to 400 active streams with a 5-second timeout and updates name, genre and last check per stream. Now-playing fetches two ICY metadata blocks and answers 502 on failure.",
+      "property": "Every route needs a staff module grant under a coherent role set (validateRadioCatalogAccess, 403). Stream URLs must be public HTTP(S) without userinfo, fragment or private hosts (400); legacy UUID-path URLs answer 503 on save. Save upserts the stream by URL with an active country and published genre (400). Import takes up to 8 public source URLs (default four hard-coded lists) and a limit of 1..800 (400), fetches each source, parses stations and upserts them with observation rows in one transaction, counting failed sources. Refresh fetches up to 400 active streams with a 5-second timeout and updates name, genre and last check per stream. Now-playing fetches two ICY metadata blocks and answers 502 on failure. Every server-side fetch follows no redirect and keeps no cookie (hardenRadioFetchRequest); source imports time out after 10 seconds; refresh re-validates each stored URL before fetching it.",
       "actors": [
         "Staff"
       ],
@@ -22466,13 +22699,13 @@
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "validateRadioCatalogAccess and validateRadioStreamUrl are tested in tdf-hq/test/TDF/ServerSpec.hs; the rest is read from the handlers.",
+      "verification": "validateRadioCatalogAccess and validateRadioStreamUrl are tested in tdf-hq/test/TDF/ServerSpec.hs; the rest is read from the handlers. Added 2026-11-10: hardenRadioFetchRequest is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
       "evidence": "formal/system/ddex-radio-session-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Host validation is lexical: redirects and DNS rebinding are not re-checked, so a public source can redirect the server to a private address.",
+        "Host validation is lexical: DNS rebinding is not re-checked, so a public name that resolves to a private address is still fetched. Redirects are no longer followed.",
         "Source and metadata bodies are read without a size cap.",
         "Concurrent inserts of the same URL answer 500 instead of merging.",
         "now-playing does not apply the legacy-URL 503 guard its siblings apply."
@@ -22688,7 +22921,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
       "source": "formal/system/identity-routes.md",
       "contract": "formal/system/identity-routes.md",
-      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, answers 401 \"Account disabled\" for an inactive credential and 401 \"Invalid username or password\" otherwise, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome.",
+      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once ten invalid-credential answers were recorded for the identifier in the current 15-minute window (auth_rate_limit, counted per normalized identifier whether or not the account exists; the count check, the password check and the count run in one transaction under a per-identifier advisory lock, so concurrent attempts cannot pass the limit together), checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
       "actors": [
         "Anonymous visitor"
       ],
@@ -22730,26 +22963,33 @@
       "privacy": "Stores credentials, names and phones from anonymous input.",
       "concurrency": "Row locks on party and credential; advisory lock per Google identity; signup existence check and insert are not serialized.",
       "idempotency": "Every login mints a new token; signup is unkeyed and a racing duplicate email hits the unique username (500).",
-      "failure": "400 invalid; 401 credentials, disabled or token; 409 existing email; 500 unconfigured Google; 503 policy.",
+      "failure": "400 invalid; 401 credentials or token; 429 throttled; 409 existing email; 500 unconfigured Google; 503 policy.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAuth.hs",
-        "tdf-hq/src/TDF/Auth.hs"
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/src/TDF/App/Boot.hs",
+        "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+        "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
-        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs"
+        "tdf-hq/test/TDF/Auth/GoogleProfileNameSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "scripts/test-auth-throttle-http.sh",
+        "scripts/lib/auth_throttle_http.py"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema).",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No rate limit, lockout or failed-attempt counter exists anywhere, so online password guessing is unbounded.",
-        "Login discloses that a disabled account exists (\"Account disabled\" vs \"Invalid username or password\").",
+        "Throttling is per identifier only: the backend has no trusted client address (no proxy-forwarding contract), so one client can still try a few passwords against many accounts, and anyone can lock a known identifier out of password login for up to fifteen minutes by failing ten times. Google login is not throttled.",
+        "Signup still discloses an existing email with 409.",
         "A racing duplicate signup answers 500 instead of 409.",
         "A Google account may share a primary email with a password account, after which email login for that address matches two parties and fails."
       ],
@@ -22767,7 +23007,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
       "source": "formal/system/identity-routes.md",
       "contract": "formal/system/identity-routes.md",
-      "property": "Reset issuance needs a valid email (400) and always answers 204; for an active credential it deactivates older reset tokens and creates a password-reset token with a 900-second database-clock window and a recovery challenge row, then emails it (ID-SESSION-003). Confirmation needs a UUID token and a valid password (400), locks the credential, requires an active account (403), consumes the token with a conditional update inside the window (400 otherwise), replaces the password, revokes password, Google and reset tokens and mints a session (ID-SESSION-001/002). Change takes a username in the body or the bearer token (Cookie is never read), validates both passwords (400), answers 403 for a disabled account before checking the password and 401 for unknown or wrong credentials, then replaces the password, revokes interactive sessions and mints a session.",
+      "property": "Reset issuance needs a valid email (400) and always answers 204; past five requests for the email in an hour it issues and sends nothing; otherwise, for an active credential it deactivates older reset tokens and creates a password-reset token with a 900-second database-clock window and a recovery challenge row, then emails it (ID-SESSION-003). Confirmation needs a UUID token and a valid password (400), locks the credential, requires an active account (403), consumes the token with a conditional update inside the window (400 otherwise), replaces the password, revokes password, Google and reset tokens and mints a session (ID-SESSION-001/002). Change takes a username in the body or the bearer token (Cookie is never read), validates both passwords (400), answers 403 for a disabled account before checking the password and 401 for unknown or wrong credentials, then replaces the password, revokes interactive sessions and mints a session.",
       "actors": [
         "Account holder"
       ],
@@ -22809,10 +23049,13 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAuth.hs",
-        "tdf-hq/src/TDF/Auth.hs"
+        "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/sql/2026-11-10_auth_rate_limit.sql"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerAuthSpec.hs"
+        "tdf-hq/test/TDF/ServerAuthSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
       "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
@@ -22821,7 +23064,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No rate limit on reset emails or current-password guessing.",
+        "Current-password guessing on the change route is not throttled; reset confirmation relies on the token's entropy and its 900-second window.",
         "With a username in the body the change route needs no session, which contradicts its registered handler-session boundary; the Cookie header is never read.",
         "The change route answers 403 \"Account disabled\" for any known disabled username without a password.",
         "No audit or activity row records a password change."
@@ -23397,7 +23640,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
       "source": "formal/system/social-messaging-routes.md",
       "contract": "formal/system/social-messaging-routes.md",
-      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false.",
+      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered.",
       "actors": [
         "Social inbox staff",
         "Administrator"
@@ -23438,7 +23681,7 @@
       "privacy": "Sends messages to contacts' phones and social accounts.",
       "concurrency": "No locks; the send precedes the record.",
       "idempotency": "None: a retry sends twice; two concurrent Meta replies both send.",
-      "failure": "400 invalid; 403 access; 404 message; 503 unconfigured.",
+      "failure": "400 invalid; 403 access; 404 message; 409 consent withdrawn; 503 unconfigured.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
@@ -23451,13 +23694,13 @@
         "tdf-hq/test/TDF/ServerExtraSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
       "evidence": "formal/system/social-messaging-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "WhatsApp replies never consult whats_app_consent, so staff can message an opted-out number, and do not mark the inbound message replied.",
+        "WhatsApp replies do not mark the inbound message replied; the operator-question route and the administrator send route do not consult consent.",
         "Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a number never subscribed.",
         "Consent and opt-out are gated by the plain Admin role while siblings use strict admin."
       ],
@@ -23609,7 +23852,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "PlaceToPay needs the feature flag (503), a body of at most 1 MiB (400) and a sha256 signature over requestId, status, date and the secret compared in constant time (401); the event is stored signature-verified with an encrypted payload. PayPhone callbacks (both paths) carry no signature: the adapter classifies them untrusted and query-required (400 otherwise), the store id must match (400) and the transaction ids must already match an immutable binding (404) before the event is stored untrusted; the worker queries the provider before admitting money (PAY-ADAPTER-BINDING-001).",
+      "property": "PlaceToPay needs the feature flag (503), a body of at most 1 MiB (400) and a sha256 signature over requestId, status, date and the secret compared in constant time (401); the event is stored signature-verified with an encrypted payload. PayPhone callbacks (both paths) carry no signature: the adapter classifies them untrusted and query-required (400 otherwise), the store id must match (400) and the transaction ids must already match an immutable binding (404) before the event is stored untrusted; the worker queries the provider before admitting money (PAY-ADAPTER-BINDING-001). A bound event that ends as a dead letter without an exception of its own (refused admission, unsupported or unavailable query, a payment the provider still reports pending or unknown when retries run out) leaves one open provider_event_dead_letter reconciliation exception, written in the dead-letter transaction and only if the inbox row is a dead letter at that attempt.",
       "actors": [
         "PlaceToPay",
         "PayPhone"
@@ -23648,19 +23891,20 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The hosted worker path (ProviderReconciliation) admits money with recordVerifiedPayment and dead-letters a rejected admission without a reconciliation exception, so PAY-CAPTURE-RECON-001 is not met literally there; the inbox row remains replayable.",
+        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue.",
         "/NotificacionPago is an undocumented alias of the PayPhone handler."
       ],
       "conformance": {
@@ -23817,7 +24061,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/commerce-integration-routes.md.",
       "source": "formal/system/commerce-integration-routes.md",
       "contract": "formal/system/commerce-integration-routes.md",
-      "property": "Every route needs a strict administrator (403) and the Google client configuration (503). Token exchange validates the code and redirect URI (400), calls Google and stores access and refresh tokens on google_calendar_config. Sync needs a known calendar (404) and a refresh token (401), refreshes the access token when expired, lists events from Google (502 on failure) and upserts google_calendar_event with the cursor.",
+      "property": "Every route needs a strict administrator (403) and the Google client configuration (503). Token exchange validates the code and redirect URI (400), calls Google and stores access and refresh tokens on google_calendar_config sealed with AES-256-GCM under GOOGLE_CALENDAR_TOKEN_KEY (503 without the key; no token is written unsealed). Sync needs a known calendar (404) and a refresh token (401), refreshes the access token when expired, lists events from Google (502 on failure) and upserts google_calendar_event with the cursor. Stored tokens are opened before use: a token written before encryption existed is still read and is sealed at its next refresh; a sealed token without the key, under another key or altered answers 503.",
       "actors": [
         "Strict administrator"
       ],
@@ -23857,19 +24101,21 @@
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Calendar/Models.hs"
+        "tdf-hq/src/TDF/Calendar/Models.hs",
+        "tdf-hq/src/TDF/Calendar/TokenCipher.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: the cipher (key admission, sealing, tamper and wrong-key refusal, legacy plaintext passthrough) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the handler wiring is read from the code.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Access and refresh tokens are stored in plain text, unlike the encrypted provider inbox payloads."
+        "Rows written before encryption keep plaintext tokens until their next refresh; there is no backfill migration.",
+        "Key rotation is not supported: changing GOOGLE_CALENDAR_TOKEN_KEY makes stored tokens unreadable until the calendar is reconnected."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",
@@ -24291,12 +24537,12 @@
     {
       "id": "OPS-SEED-ROUTES-001",
       "title": "Operator seeding routes",
-      "statement": "Operators holding the seed secret load demo data, inventory assets and the demo session; the routes are disabled without the secret and refused in hosted or production runtimes. Routes: POST /seed; POST /input-list/inventory/seed; POST /input-list/sessions/seed.",
+      "statement": "Strict administrators holding the seed secret load demo data, inventory assets and the demo session; the routes are disabled without the secret and refused in hosted or production runtimes. Routes: POST /seed; POST /input-list/inventory/seed; POST /input-list/sessions/seed.",
       "domain": "OPS",
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/content-ops-routes.md.",
       "source": "formal/system/content-ops-routes.md",
       "contract": "formal/system/content-ops-routes.md",
-      "property": "requireSeedToken answers 403 when SEED_TRIGGER_TOKEN is unset, 401 without X-Seed-Token, 400 for a malformed header and 403 on mismatch (constant-time compare); the configuration refuses the token at startup when hosted-platform markers or a production environment name are present. /seed runs seedAll in one transaction (demo credentials only when allowed); the inventory and session seeds upsert assets and insert the demo session if absent.",
+      "property": "Every route sits behind AuthProtect and validateSeedOperator: a strict administrator with the Admin module (403), as POST /admin/seed requires. Then requireSeedToken answers 403 when SEED_TRIGGER_TOKEN is unset, 401 without X-Seed-Token, 400 for a malformed header and 403 on mismatch (constant-time compare); the configuration refuses the token at startup when hosted-platform markers or a production environment name are present. /seed runs seedAll in one transaction (demo credentials only when allowed); the inventory and session seeds upsert assets and insert the demo session if absent.",
       "actors": [
         "Operator"
       ],
@@ -24327,11 +24573,11 @@
         "asset",
         "session, session_room, input rows"
       ],
-      "authorization": "Operator secret (AUTH-PUBLIC-001 operator-secret boundary).",
+      "authorization": "Strict administrator session with ModuleAdmin, then the operator secret. The routes are no longer public.",
       "privacy": "Unchanged; see the route table.",
       "concurrency": "No serialization between concurrent seeds.",
       "idempotency": "Upserts and select-then-insert.",
-      "failure": "400 header; 401 missing; 403 disabled or mismatch.",
+      "failure": "400 header; 401 no session or missing header; 403 not a strict administrator, disabled or mismatch.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
@@ -24340,16 +24586,16 @@
         "tdf-hq/src/TDF/Config.hs"
       ],
       "tests": [
-        "tdf-hq/test/TDF/ServerAdminSpec.hs"
+        "tdf-hq/test/TDF/ServerAdminSpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateSeedOperator is unit-tested in tdf-hq/test/TDF/ServerSpec.hs and the compiled API surface records AuthProtect on the three routes.",
       "evidence": "formal/system/content-ops-routes.md",
       "critical": false,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The routes are weaker than POST /admin/seed, which also requires a strict administrator and ModuleAdmin.",
         "The production guard relies on platform markers; a self-hosted box without them can enable seeding.",
         "No audit row records a seed run."
       ],
@@ -26613,8 +26859,8 @@
       "title": "Desktop shell hosts only the authorized TDF origin with validated entry points",
       "statement": "The Electron shell hosts the channel appOrigin in a sandboxed, context-isolated renderer without Node; exposes a frozen window.tdfDesktop bridge only on that origin and re-validates every IPC sender; classifies navigations and popups so only the hosted origin and bundled internal pages open inside the shell while http(s) destinations go to the system browser and other schemes are blocked; parses tdf-desktop://open deep links into safe in-app paths or rejects them before navigating; limits permissions to media, notifications, fullscreen, clipboard and speaker selection; labels unpackaged and unsigned builds; and offers no Google sign-in inside the shell.",
       "domain": "SYS",
-      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
-      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0134 proposed",
+      "source": "docs/adr/0134-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
       "property": "Every navigation, popup, deep link and IPC message is classified against appOrigin before any effect; rejected inputs are logged and inert.",
       "contract": "formal/system/desktop-shell.md",
       "actors": [
@@ -26703,8 +26949,8 @@
       "title": "Release player and radio share one system playback session",
       "statement": "The web application keeps one ordered playback-owner registry: the owner that most recently started or selected audio installs its metadata and action handlers on the Media Session and reports to the desktop shell; passive updates never change the active owner; releasing the active owner restores the previous one; shell commands route to the active owner; the shell menu mirrors the last sanitized report.",
       "domain": "SYS",
-      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
-      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0134 proposed",
+      "source": "docs/adr/0134-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
       "property": "At any time at most one owner controls navigator.mediaSession and the shell menu, and it is the most recently activated owner still registered.",
       "contract": "formal/system/desktop-shell.md",
       "actors": [
@@ -26784,8 +27030,8 @@
       "title": "Desktop installers, shell update channel and recovery are reproducible and fail closed",
       "statement": "electron-builder produces DMG/ZIP (macOS x64, arm64) and NSIS (Windows x64, arm64) from one source commit with the validated channel embedded; signing and notarization run only when credentials exist, otherwise signing is explicitly disabled and artifacts carry UNSIGNED-TEST; electron-updater uses a generic feed, downloads only on user decision, verifies before installing and leaves the installed version on failure; unsigned or unpackaged builds disable updates; the workflow publishes to the feed only from a matching desktop-v<version> tag with signed artifacts and runs an installed smoke on both platforms.",
       "domain": "SYS",
-      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
-      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0134 proposed",
+      "source": "docs/adr/0134-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
       "property": "No unsigned or unverified package is ever installed or published; a failed update leaves the installed version runnable.",
       "contract": "formal/system/desktop-shell.md",
       "actors": [

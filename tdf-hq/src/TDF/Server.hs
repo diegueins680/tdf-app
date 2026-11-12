@@ -13,6 +13,7 @@ module TDF.Server where
 
 import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.ContentStorage as ContentStorage
+import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
@@ -168,6 +169,7 @@ import           TDF.Auth
   , hasModuleAccess
   , hasOperationsAccess
   , hasSocialInboxAccess
+  , hasStrictAdminAccess
   , moduleName
   , modulesForRoles
   , validateModuleAccess
@@ -1049,20 +1051,31 @@ listInventory mFieldParam mSessionParam mChannelParam = do
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool (InputList.listInventoryDB parsedField Nothing Nothing)
 
-seedInventory :: Maybe Text -> AppM NoContent
-seedInventory rawToken = do
+seedInventory :: AuthedUser -> Maybe Text -> AppM NoContent
+seedInventory user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool InputList.seedInventoryDB
   pure NoContent
 
-seedHQ :: Maybe Text -> AppM NoContent
-seedHQ rawToken = do
+seedHQ :: AuthedUser -> Maybe Text -> AppM NoContent
+seedHQ user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool envPool (InputList.seedHQDB now)
   pure NoContent
+
+-- | Every seed route needs what POST /admin/seed needs: a strict
+-- administrator session with the Admin module, and then the seed token
+-- (OPS-SEED-ROUTES-001). The shared token alone no longer seeds anything.
+validateSeedOperator :: AuthedUser -> Either ServerError ()
+validateSeedOperator user
+  | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
+  | not (hasModuleAccess ModuleAdmin user) = Left err403 { errBody = "Missing required module access" }
+  | otherwise = Right ()
 
 requireSeedToken :: Maybe Text -> AppM ()
 requireSeedToken rawToken = do
@@ -1737,6 +1750,12 @@ whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
     Just extId -> runDB $ getBy (ME.UniqueWhatsAppMessage extId)
   mReplyTarget <- either throwError pure $
     validateWhatsAppReplyTarget recipient mExternalId mReplyTargetRaw
+  -- A contact who opted out receives nothing further, staff replies included
+  -- (MSG-STAFF-OUTBOUND-001). Nothing is sent or recorded.
+  mConsent <- case normalizeWhatsAppPhone recipient of
+    Nothing -> pure Nothing
+    Just consentPhone -> runDB $ getBy (ME.UniqueWhatsAppConsent consentPhone)
+  either throwError pure (validateWhatsAppReplyConsent (entityVal <$> mConsent))
   now <- liftIO getCurrentTime
   waEnv <- liftIO loadWhatsAppEnv
   sendResult <- sendWhatsAppText waEnv recipient body
@@ -1770,6 +1789,12 @@ whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
         , "messageId" .= fromSqlKey (entityKey sentEntity)
         , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
         ])
+
+validateWhatsAppReplyConsent :: Maybe ME.WhatsAppConsent -> Either ServerError ()
+validateWhatsAppReplyConsent mConsent
+  | CampaignAutomation.whatsAppConsentWithdrawn mConsent =
+      Left err409 { errBody = "El contacto retiró su consentimiento para recibir mensajes de WhatsApp" }
+  | otherwise = Right ()
 
 whatsappOperatorQuestionHandler :: AuthedUser -> WhatsAppOperatorQuestionReq -> AppM Value
 whatsappOperatorQuestionHandler user WhatsAppOperatorQuestionReq{..} = do
@@ -4870,6 +4895,28 @@ validateGoogleCalendarSyncCursor (Just rawCursor)
 maxGoogleCalendarSyncCursorChars :: Int
 maxGoogleCalendarSyncCursorChars = 4096
 
+-- | Google Calendar tokens are stored sealed (TDF.Calendar.TokenCipher). No
+-- token is written without the key; a missing key makes the integration
+-- unavailable instead of falling back to plaintext.
+sealCalendarTokenForStorage :: Text -> AppM Text
+sealCalendarTokenForStorage plain = do
+  mKey <- liftIO CalendarTokenCipher.loadCalendarTokenKey
+  case mKey of
+    Nothing -> throwError (calendarTokenCipherError CalendarTokenCipher.CalendarTokenKeyMissing)
+    Just key -> liftIO (CalendarTokenCipher.sealCalendarToken key plain)
+
+openStoredCalendarToken :: Text -> AppM Text
+openStoredCalendarToken stored = do
+  mKey <- liftIO CalendarTokenCipher.loadCalendarTokenKey
+  either (throwError . calendarTokenCipherError) pure
+    (CalendarTokenCipher.openCalendarToken mKey stored)
+
+calendarTokenCipherError :: CalendarTokenCipher.CalendarTokenError -> ServerError
+calendarTokenCipherError CalendarTokenCipher.CalendarTokenKeyMissing =
+  err503 { errBody = "Google Calendar token encryption key is not configured" }
+calendarTokenCipherError CalendarTokenCipher.CalendarTokenUnreadable =
+  err503 { errBody = "Stored Google Calendar token cannot be read; reconnect the calendar" }
+
 validateStoredGoogleCalendarAccessToken :: Maybe Text -> Either ServerError Text
 validateStoredGoogleCalendarAccessToken Nothing =
   Left err401 { errBody = "No hay access_token para Google Calendar." }
@@ -5030,13 +5077,15 @@ calendarServer user =
             , token_type = gTokenType
             } = token
           expiresAt = addUTCTime . fromIntegral <$> gExpiresIn <*> pure now
+      sealedAccessToken <- sealCalendarTokenForStorage gAccessToken
+      sealedRefreshToken <- traverse sealCalendarTokenForStorage gRefreshToken
       mExisting <- runDB $ getBy (Cal.UniqueCalendar calendarId)
       cfgId <- case mExisting of
         Nothing -> runDB $ insert Cal.GoogleCalendarConfig
           { Cal.googleCalendarConfigOwnerId = Just (auPartyId user)
           , Cal.googleCalendarConfigCalendarId = calendarId
-          , Cal.googleCalendarConfigAccessToken = Just gAccessToken
-          , Cal.googleCalendarConfigRefreshToken = gRefreshToken
+          , Cal.googleCalendarConfigAccessToken = Just sealedAccessToken
+          , Cal.googleCalendarConfigRefreshToken = sealedRefreshToken
           , Cal.googleCalendarConfigTokenType = gTokenType
           , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
           , Cal.googleCalendarConfigSyncCursor = Nothing
@@ -5046,8 +5095,8 @@ calendarServer user =
           }
         Just (Entity eid oldCfg) -> do
           runDB $ update eid
-            [ Cal.GoogleCalendarConfigAccessToken =. Just gAccessToken
-            , Cal.GoogleCalendarConfigRefreshToken =. (gRefreshToken <|> Cal.googleCalendarConfigRefreshToken oldCfg)
+            [ Cal.GoogleCalendarConfigAccessToken =. Just sealedAccessToken
+            , Cal.GoogleCalendarConfigRefreshToken =. (sealedRefreshToken <|> Cal.googleCalendarConfigRefreshToken oldCfg)
             , Cal.GoogleCalendarConfigTokenType =. gTokenType
             , Cal.GoogleCalendarConfigTokenExpiresAt =. expiresAt
             , Cal.GoogleCalendarConfigUpdatedAt =. now
@@ -5150,7 +5199,8 @@ calendarServer user =
         _ -> do
           case Cal.googleCalendarConfigRefreshToken cfg of
             Nothing -> throwError err401 { errBody = "No hay refresh_token para Google Calendar." }
-            Just rt -> do
+            Just storedRt -> do
+              rt <- openStoredCalendarToken storedRt
               refreshToken <- either throwError pure (validateStoredGoogleCalendarRefreshToken rt)
               refreshAccessToken cid sec redirect cfg refreshToken now
 
@@ -5170,8 +5220,13 @@ calendarServer user =
             , token_type = gTokenType
             } = token
           expiresAt = addUTCTime . fromIntegral <$> gExpiresIn <*> pure now
-          updatedCfg = cfg
-            { Cal.googleCalendarConfigAccessToken = Just gAccessToken
+      sealedAccessToken <- sealCalendarTokenForStorage gAccessToken
+      -- Seal the refresh token again too: a row written before encryption
+      -- existed stops holding plaintext at its first refresh.
+      sealedRefreshToken <- sealCalendarTokenForStorage rt
+      let updatedCfg = cfg
+            { Cal.googleCalendarConfigAccessToken = Just sealedAccessToken
+            , Cal.googleCalendarConfigRefreshToken = Just sealedRefreshToken
             , Cal.googleCalendarConfigTokenType = gTokenType
             , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
             , Cal.googleCalendarConfigUpdatedAt = now
@@ -5179,6 +5234,7 @@ calendarServer user =
       _ <- runDB $ updateWhere
         [Cal.GoogleCalendarConfigCalendarId ==. Cal.googleCalendarConfigCalendarId cfg]
         [ Cal.GoogleCalendarConfigAccessToken =. Cal.googleCalendarConfigAccessToken updatedCfg
+        , Cal.GoogleCalendarConfigRefreshToken =. Cal.googleCalendarConfigRefreshToken updatedCfg
         , Cal.GoogleCalendarConfigTokenType =. Cal.googleCalendarConfigTokenType updatedCfg
         , Cal.GoogleCalendarConfigTokenExpiresAt =. Cal.googleCalendarConfigTokenExpiresAt updatedCfg
         , Cal.GoogleCalendarConfigUpdatedAt =. now
@@ -5188,8 +5244,9 @@ calendarServer user =
     syncFromGoogle :: Cal.GoogleCalendarConfig -> Maybe UTCTime -> Maybe UTCTime -> UTCTime -> AppM (Int, Int, Int, Maybe Text)
     syncFromGoogle cfg fromTs toTs now = do
       manager <- pure sharedTlsManager
+      openedAccessToken <- traverse openStoredCalendarToken (Cal.googleCalendarConfigAccessToken cfg)
       token <- either throwError pure $
-        validateStoredGoogleCalendarAccessToken (Cal.googleCalendarConfigAccessToken cfg)
+        validateStoredGoogleCalendarAccessToken openedAccessToken
       (events, cursor) <-
         fetchAllPages
           manager
@@ -8719,8 +8776,9 @@ claimReferral emailVal mUser rawCode = do
 throwNotFound :: Text -> AppM a
 throwNotFound msg = throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
-seedTrigger :: Maybe Text -> AppM NoContent
-seedTrigger rawToken = do
+seedTrigger :: AuthedUser -> Maybe Text -> AppM NoContent
+seedTrigger user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool seedAll
@@ -9377,8 +9435,24 @@ resolveServiceMarketplaceBookingEntity rawBookingId = do
     pure
     mBooking
 
+-- | Roles that staff assign to people who sell a service. Publishing an ad
+-- or its slots needs one of them; a self-registered Customer or Fan account
+-- cannot advertise (SVCMKT-PROVIDER-ADS-001).
+serviceAdProviderRoles :: [RoleEnum]
+serviceAdProviderRoles =
+  [ Admin, Manager, StudioManager, Engineer, Teacher, Producer, LiveSessionsProducer
+  , Artist, Artista, Songwriter, DJ, Photographer, Publicist, TourManager
+  , StageManager, RoadCrew, Promotor, Promoter, Agency, Vendor
+  ]
+
+validateServiceAdProvider :: AuthedUser -> Either ServerError ()
+validateServiceAdProvider user
+  | fromSqlKey (auPartyId user) > 0 && any (`elem` serviceAdProviderRoles) (auRoles user) = Right ()
+  | otherwise = Left err403 { errBody = "Service ads require an approved provider role" }
+
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
 createServiceAd user Api.ServiceAdCreateReq{..} = do
+  either throwError pure (validateServiceAdProvider user)
   when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
     throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
@@ -9425,6 +9499,7 @@ listServiceAdSlots adId = do
 
 createServiceAdSlot :: AuthedUser -> Int64 -> Api.ServiceAdSlotCreateReq -> AppM Api.ServiceAdSlotDTO
 createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
+  either throwError pure (validateServiceAdProvider user)
   runDB $ do
     ad@(Entity adKey _) <- resolveServiceAdEntity adId
     when (serviceAdProviderPartyId (entityVal ad) /= auPartyId user) $

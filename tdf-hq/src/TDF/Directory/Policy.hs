@@ -8,11 +8,36 @@ module TDF.Directory.Policy
   , DirectoryCapability(..)
   , PublicProfession(..)
   , ProfileFieldUpdate(..)
+  , NegotiationActor(..)
+  , OfferRoundKind(..)
+  , OfferRound(..)
+  , PriceMode(..)
   , allowedClaimTransition
   , allowedProfileTransition
   , allowedClassifiedTransition
   , allowedApplicationTransition
   , allowedInvitationTransition
+  , AgreementStatus(..)
+  , AgreementParty(..)
+  , allowedAgreementTransition
+  , agreementTransitionAllowedFor
+  , agreementAmounts
+  , openApplicationStatuses
+  , applicationIsOpen
+  , counterAllowedFor
+  , acceptAllowedFor
+  , participantTransitionAllowed
+  , negotiationRoundsValid
+  , nextRoundActor
+  , maxNegotiationRounds
+  , counterRoundAllowed
+  , parsePriceMode
+  , priceModeText
+  , offerAmountAcceptable
+  , slotsAfterAccept
+  , slotsAfterRelease
+  , classifiedClosesOffers
+  , closureRejectionReason
   , capabilityAllows
   , permissionsFromProfessions
   , publicSearchEligible
@@ -44,10 +69,42 @@ data ClassifiedStatus
   | Withdrawn | Rejected | Moderated
   deriving (Eq, Ord, Show, Enum, Bounded)
 
+-- ADR 0134: an application is an offer. Negotiation alternates between the
+-- applicant (offerer) and the classified author through countered states.
 data ApplicationStatus
   = ApplicationSubmitted | ApplicationViewed | ApplicationShortlisted
+  | ApplicationCounteredByAuthor | ApplicationCounteredByApplicant
   | ApplicationAccepted | ApplicationRejected | ApplicationWithdrawn
-  | ApplicationConversationOpen | ApplicationConverted
+  | ApplicationExpired | ApplicationConversationOpen | ApplicationConverted
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | ADR 0135: lifecycle of a marketplace agreement. @pending_deposit@,
+-- @balance_due@ and @expired@ belong to platform settlement (checkout) and
+-- are never entered by a participant request.
+data AgreementStatus
+  = AgreementPendingDeposit | AgreementConfirmed | AgreementInProgress
+  | AgreementBalanceDue | AgreementCompleted | AgreementCancelled
+  | AgreementDisputed | AgreementExpired
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | Who asks for an agreement transition. The buyer is the party that seeks
+-- and pays; the provider delivers; the admin resolves disputes.
+data AgreementParty = PartyBuyer | PartyProvider | PartyAdmin
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+data NegotiationActor = ActorApplicant | ActorAuthor
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+data OfferRoundKind = RoundInitial | RoundCounter | RoundAccept
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+data OfferRound = OfferRound
+  { roundNumber :: Int
+  , roundActor :: NegotiationActor
+  , roundKind :: OfferRoundKind
+  } deriving (Eq, Ord, Show)
+
+data PriceMode = PriceOpen | PriceSuggested | PriceFixed
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 data InvitationStatus
@@ -110,11 +167,77 @@ allowedClassifiedTransition fromStatus toStatus =
       , (PendingModeration, Published), (PendingModeration, Rejected), (PendingModeration, Withdrawn)
       , (Published, Paused), (Published, Filled), (Published, Expired), (Published, Withdrawn), (Published, Moderated)
       , (Paused, Published), (Paused, Filled), (Paused, Expired), (Paused, Withdrawn), (Paused, Moderated)
+      -- ADR 0134 I19: withdrawing an accepted offer releases a slot and reopens
+      -- a filled classified that has not expired.
+      , (Filled, Published)
       , (Expired, Published), (Expired, Withdrawn)
       , (Rejected, Draft), (Rejected, Withdrawn)
       , (Moderated, Draft), (Moderated, Withdrawn)
       ]
 
+-- I21 (ADR 0135): every agreement state change belongs to this relation; it
+-- mirrors marketplace_agreement_transition_allowed in the database and
+-- docs/music-directory/formal-model.yaml#agreement.
+allowedAgreementTransition :: AgreementStatus -> AgreementStatus -> Bool
+allowedAgreementTransition fromStatus toStatus =
+  fromStatus == toStatus || (fromStatus, toStatus) `Set.member` transitions
+  where
+    transitions = Set.fromList
+      [ (AgreementPendingDeposit, AgreementConfirmed)
+      , (AgreementPendingDeposit, AgreementCancelled)
+      , (AgreementPendingDeposit, AgreementExpired)
+      , (AgreementConfirmed, AgreementInProgress)
+      , (AgreementConfirmed, AgreementCompleted)
+      , (AgreementConfirmed, AgreementCancelled)
+      , (AgreementConfirmed, AgreementDisputed)
+      , (AgreementInProgress, AgreementBalanceDue)
+      , (AgreementInProgress, AgreementCompleted)
+      , (AgreementInProgress, AgreementCancelled)
+      , (AgreementInProgress, AgreementDisputed)
+      , (AgreementBalanceDue, AgreementCompleted)
+      , (AgreementBalanceDue, AgreementDisputed)
+      , (AgreementDisputed, AgreementCompleted)
+      , (AgreementDisputed, AgreementCancelled)
+      ]
+
+-- | I22 (ADR 0135): which declared transition each party may request. The
+-- provider marks the work as started; only the buyer confirms completion
+-- (a payment state never implies the service was delivered, and the provider
+-- cannot self-certify); either party may cancel or dispute while the
+-- agreement is live; only an admin resolves a dispute. Settlement states are
+-- never requested by a participant.
+agreementTransitionAllowedFor :: AgreementParty -> AgreementStatus -> AgreementStatus -> Bool
+agreementTransitionAllowedFor party fromStatus toStatus =
+  fromStatus /= toStatus && allowedAgreementTransition fromStatus toStatus && case (party, fromStatus, toStatus) of
+    (PartyProvider, AgreementConfirmed, AgreementInProgress) -> True
+    (PartyBuyer, AgreementConfirmed, AgreementCompleted) -> True
+    (PartyBuyer, AgreementInProgress, AgreementCompleted) -> True
+    (PartyAdmin, AgreementDisputed, _) -> True
+    (PartyAdmin, _, _) -> False
+    (_, AgreementConfirmed, AgreementCancelled) -> True
+    (_, AgreementInProgress, AgreementCancelled) -> True
+    (_, AgreementConfirmed, AgreementDisputed) -> True
+    (_, AgreementInProgress, AgreementDisputed) -> True
+    _ -> False
+
+-- | I23 (ADR 0135): amounts frozen when an agreement is created, from the
+-- agreed amount and the commission and deposit rates in basis points. The
+-- commission rounds down (never above the rate), the deposit rounds half up,
+-- and deposit + balance is exactly the amount. @Nothing@ for a non-positive
+-- amount or a rate outside 0..10000.
+agreementAmounts :: Int -> Int -> Int64 -> Maybe (Int64, Int64, Int64)
+agreementAmounts commissionBps depositBps amount
+  | amount <= 0 = Nothing
+  | commissionBps < 0 || commissionBps > 10000 = Nothing
+  | depositBps < 0 || depositBps > 10000 = Nothing
+  | otherwise =
+      let commission = fromInteger ((toInteger amount * toInteger commissionBps) `div` 10000)
+          deposit = fromInteger ((toInteger amount * toInteger depositBps + 5000) `div` 10000)
+      in Just (commission, deposit, amount - deposit)
+
+-- I18 (ADR 0134): every offer state change belongs to this relation. Open
+-- states can always be closed by the system (rejected/expired) and by the
+-- offerer (withdrawn); counter states alternate actors.
 allowedApplicationTransition :: ApplicationStatus -> ApplicationStatus -> Bool
 allowedApplicationTransition fromStatus toStatus =
   fromStatus == toStatus || (fromStatus, toStatus) `Set.member` transitions
@@ -122,22 +245,157 @@ allowedApplicationTransition fromStatus toStatus =
     transitions = Set.fromList
       [ (ApplicationSubmitted, ApplicationViewed)
       , (ApplicationSubmitted, ApplicationShortlisted)
+      , (ApplicationSubmitted, ApplicationCounteredByAuthor)
       , (ApplicationSubmitted, ApplicationAccepted)
       , (ApplicationSubmitted, ApplicationRejected)
       , (ApplicationSubmitted, ApplicationWithdrawn)
+      , (ApplicationSubmitted, ApplicationExpired)
       , (ApplicationViewed, ApplicationShortlisted)
+      , (ApplicationViewed, ApplicationCounteredByAuthor)
       , (ApplicationViewed, ApplicationAccepted)
       , (ApplicationViewed, ApplicationRejected)
       , (ApplicationViewed, ApplicationWithdrawn)
+      , (ApplicationViewed, ApplicationExpired)
+      , (ApplicationShortlisted, ApplicationCounteredByAuthor)
       , (ApplicationShortlisted, ApplicationAccepted)
       , (ApplicationShortlisted, ApplicationRejected)
       , (ApplicationShortlisted, ApplicationWithdrawn)
+      , (ApplicationShortlisted, ApplicationExpired)
+      , (ApplicationCounteredByAuthor, ApplicationCounteredByApplicant)
+      , (ApplicationCounteredByAuthor, ApplicationAccepted)
+      , (ApplicationCounteredByAuthor, ApplicationRejected)
+      , (ApplicationCounteredByAuthor, ApplicationWithdrawn)
+      , (ApplicationCounteredByAuthor, ApplicationExpired)
+      , (ApplicationCounteredByApplicant, ApplicationCounteredByAuthor)
+      , (ApplicationCounteredByApplicant, ApplicationAccepted)
+      , (ApplicationCounteredByApplicant, ApplicationRejected)
+      , (ApplicationCounteredByApplicant, ApplicationWithdrawn)
+      , (ApplicationCounteredByApplicant, ApplicationExpired)
       , (ApplicationAccepted, ApplicationWithdrawn)
       , (ApplicationAccepted, ApplicationConversationOpen)
       , (ApplicationAccepted, ApplicationConverted)
       , (ApplicationConversationOpen, ApplicationWithdrawn)
       , (ApplicationConversationOpen, ApplicationConverted)
       ]
+
+-- | Offers still under negotiation: they consume no slot and can be countered.
+openApplicationStatuses :: Set ApplicationStatus
+openApplicationStatuses = Set.fromList
+  [ ApplicationSubmitted, ApplicationViewed, ApplicationShortlisted
+  , ApplicationCounteredByAuthor, ApplicationCounteredByApplicant ]
+
+applicationIsOpen :: ApplicationStatus -> Bool
+applicationIsOpen status = status `Set.member` openApplicationStatuses
+
+-- | Who may counter from a given state. The author counters any offer that
+-- is waiting on the author; the applicant only answers an author counter.
+counterAllowedFor :: ApplicationStatus -> NegotiationActor -> Bool
+counterAllowedFor status ActorAuthor =
+  status `elem` [ApplicationSubmitted, ApplicationViewed, ApplicationShortlisted, ApplicationCounteredByApplicant]
+counterAllowedFor status ActorApplicant = status == ApplicationCounteredByAuthor
+
+-- | Who may accept from a given state: whoever did not make the last move.
+acceptAllowedFor :: ApplicationStatus -> NegotiationActor -> Bool
+acceptAllowedFor status ActorAuthor =
+  status `elem` [ApplicationSubmitted, ApplicationViewed, ApplicationShortlisted, ApplicationCounteredByApplicant]
+acceptAllowedFor status ActorApplicant = status == ApplicationCounteredByAuthor
+
+-- | Which target states each participant may request through the generic
+-- status endpoint. Counter states are reached only through the counter
+-- endpoint (which records the round), never by a bare status change.
+participantTransitionAllowed :: Text -> ApplicationStatus -> ApplicationStatus -> Bool
+participantTransitionAllowed "admin" _ _ = True
+participantTransitionAllowed "author" from to = case to of
+  ApplicationViewed -> True
+  ApplicationShortlisted -> True
+  ApplicationRejected -> applicationIsOpen from
+  ApplicationAccepted -> acceptAllowedFor from ActorAuthor
+  ApplicationConversationOpen -> True
+  ApplicationConverted -> True
+  _ -> False
+participantTransitionAllowed "applicant" from to = case to of
+  ApplicationWithdrawn -> True
+  ApplicationAccepted -> acceptAllowedFor from ActorApplicant
+  ApplicationConversationOpen -> True
+  _ -> False
+participantTransitionAllowed _ _ _ = False
+
+maxNegotiationRounds :: Int
+maxNegotiationRounds = 10
+
+-- | A counter-offer may occupy any round but the last: the final round is
+-- reserved for the acceptance that closes the chain, so an acceptance is
+-- always recorded (I18).
+counterRoundAllowed :: Int -> Bool
+counterRoundAllowed nextRound = nextRound >= 2 && nextRound < maxNegotiationRounds
+
+-- | The actor expected to produce the next round given the last one.
+nextRoundActor :: NegotiationActor -> NegotiationActor
+nextRoundActor ActorApplicant = ActorAuthor
+nextRoundActor ActorAuthor = ActorApplicant
+
+-- | I18: rounds are numbered consecutively from 1, start with the applicant's
+-- initial proposal, alternate actors, never exceed the maximum, and an
+-- acceptance can only be the final round.
+negotiationRoundsValid :: [OfferRound] -> Bool
+negotiationRoundsValid [] = False
+negotiationRoundsValid rounds@(first : rest) =
+  length rounds <= maxNegotiationRounds
+    && roundNumber first == 1
+    && roundActor first == ActorApplicant
+    && roundKind first == RoundInitial
+    && all ((/= RoundInitial) . roundKind) rest
+    && and (zipWith consecutive rounds rest)
+    && acceptOnlyLast rounds
+  where
+    consecutive previous next =
+      roundNumber next == roundNumber previous + 1
+        && roundActor next == nextRoundActor (roundActor previous)
+        && roundKind previous /= RoundAccept
+    acceptOnlyLast [] = True
+    acceptOnlyLast [_] = True
+    acceptOnlyLast (x : xs) = roundKind x /= RoundAccept && acceptOnlyLast xs
+
+parsePriceMode :: Text -> Maybe PriceMode
+parsePriceMode value = lookup (T.toLower (T.strip value))
+  [("open", PriceOpen), ("suggested", PriceSuggested), ("fixed", PriceFixed)]
+
+priceModeText :: PriceMode -> Text
+priceModeText PriceOpen = "open"
+priceModeText PriceSuggested = "suggested"
+priceModeText PriceFixed = "fixed"
+
+-- | Whether an offered amount is admissible for a classified price mode and
+-- its reference price (@budget_max_minor@). Fixed prices admit only the exact
+-- amount; open and suggested prices admit any non-negative amount.
+offerAmountAcceptable :: PriceMode -> Maybe Int64 -> Maybe Int64 -> Bool
+offerAmountAcceptable PriceFixed reference offered = reference /= Nothing && offered == reference
+offerAmountAcceptable _ _ (Just offered) = offered >= 0
+offerAmountAcceptable _ _ Nothing = True
+
+-- | I19: accepting consumes exactly one slot and never drives the count
+-- below zero. @Nothing@ means the classified has no slot left.
+slotsAfterAccept :: Int -> Maybe Int
+slotsAfterAccept remaining
+  | remaining <= 0 = Nothing
+  | otherwise = Just (remaining - 1)
+
+-- | Withdrawing an accepted offer releases one slot, capped at the total.
+slotsAfterRelease :: Int -> Int -> Int
+slotsAfterRelease total remaining = min total (remaining + 1)
+
+-- | Classified states that close every open offer. Pausing keeps offers
+-- open (no new offers are admitted while paused, because applying requires a
+-- published classified).
+classifiedClosesOffers :: ClassifiedStatus -> Bool
+classifiedClosesOffers status =
+  status `elem` [Filled, Expired, Withdrawn, Moderated, Rejected]
+
+closureRejectionReason :: ClassifiedStatus -> Maybe Text
+closureRejectionReason Filled = Just "slots_filled"
+closureRejectionReason status
+  | classifiedClosesOffers status = Just "classified_closed"
+  | otherwise = Nothing
 
 allowedInvitationTransition :: InvitationStatus -> InvitationStatus -> Bool
 allowedInvitationTransition fromStatus toStatus =

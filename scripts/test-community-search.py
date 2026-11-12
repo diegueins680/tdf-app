@@ -59,8 +59,11 @@ FROM artist_profile WHERE artist_party_id=990007;
 SELECT directory_refresh_profile_search(id) FROM directory_profile WHERE subject_party_id BETWEEN 990002 AND 990006;
 """
 
-def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False, changes=''):
-    params = [q, entity, None, None, None, None, None, None, None, None, None, None, None, None, kind, 'suppressed', cursor, limit]
+def query(q='', entity=None, kind=None, cursor=None, limit=20, facets=False, changes='', intent=None):
+    # Positional inputs: q, entity_type, city, latitude, longitude, radius, profession, service,
+    # instrument, genre, remote_only, available_only, date_from, date_to, profile_kind, intent (ADR 0134),
+    # then the suppressed status, cursor and limit.
+    params = [q, entity, None, None, None, None, None, None, None, None, None, None, None, None, kind, intent, 'suppressed', cursor, limit]
     if facets: params = params[:-2]
     chunks = (expression('facetsSql') if facets else sql).split('?')
     assert len(chunks) == len(params) + 1
@@ -96,6 +99,10 @@ assert len([row for row in query('Luna') if row['title'] == 'Luna Extended']) ==
 assert query('Fixture Banda', 'artist', 'band')[0]['profileKind'] == 'band'
 assert query('Fixture Proyecto', 'artist', 'project')[0]['profileKind'] == 'project'
 print('PASS: canonical deduplication, published bands and musical projects')
+
+assert not query('Luna', 'artist', intent='offering'), 'intent filter must not match profiles without an intent'
+assert query('Luna', 'artist', intent=None)
+print('PASS: ADR 0134 intent filter is bound and leaves profile results untouched when unset')
 
 facets = query('Luna', 'artist', facets=True)[0]
 assert facets['total'] == len(query('Luna', 'artist')), facets
