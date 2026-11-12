@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 517,
-    "named": 435,
+    "total": 518,
+    "named": 436,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 517
+    "covered": 518
   },
   "routes": [
     {
@@ -1103,11 +1103,20 @@
       ]
     },
     {
+      "method": "POST",
+      "path": "/directory/applications/{applicationId}/counter",
+      "basis": "named",
+      "requirements": [
+        "MKT-DEMAND-OFFER-001"
+      ]
+    },
+    {
       "method": "PATCH",
       "path": "/directory/applications/{applicationId}/status",
       "basis": "named",
       "requirements": [
-        "DIR-ENGAGEMENT-001"
+        "DIR-ENGAGEMENT-001",
+        "MKT-DEMAND-OFFER-001"
       ]
     },
     {
@@ -1132,7 +1141,8 @@
       "path": "/directory/classifieds",
       "basis": "named",
       "requirements": [
-        "DIR-CLASSIFIEDS-001"
+        "DIR-CLASSIFIEDS-001",
+        "MKT-DEMAND-OFFER-001"
       ]
     },
     {
@@ -1140,7 +1150,8 @@
       "path": "/directory/classifieds/{classifiedId}/applications",
       "basis": "named",
       "requirements": [
-        "DIR-ENGAGEMENT-001"
+        "DIR-ENGAGEMENT-001",
+        "MKT-DEMAND-OFFER-001"
       ]
     },
     {

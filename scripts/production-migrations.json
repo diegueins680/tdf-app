@@ -1263,6 +1263,16 @@
       "id": "2026-11-07_apple_provider_identity_issuer",
       "path": "tdf-hq/sql/2026-11-07_apple_provider_identity_issuer.sql",
       "introducedBy": "7c1525edf0f02fe53f985c24862940b91c11cdfa"
+    },
+    {
+      "id": "2026-11-08_marketplace_offers",
+      "path": "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
+      "introducedBy": "5901003189dac2291380604c66fdd66087e4a587"
+    },
+    {
+      "id": "2026-11-10_auth_rate_limit",
+      "path": "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
+      "introducedBy": "a96562115a8f5036e9182a9e43d2e468b31cc05b"
     }
   ]
 }

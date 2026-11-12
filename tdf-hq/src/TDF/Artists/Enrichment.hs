@@ -59,7 +59,7 @@ import           TDF.Catalog.Security          (applySecurityRoleAssignmentPolic
 import           TDF.Models
 import qualified TDF.Models.SocialEventsModels  as Social
 import qualified TDF.ModelsExtra                as ME
-import qualified TDF.Trials.Server              as TrialsServer
+import qualified TDF.PublicUrl                  as PublicUrl (isValidHttpUrl)
 
 data DiscoveryReference = DiscoveryReference
   { drSourceType     :: Text
@@ -1841,7 +1841,7 @@ cleanOptional = (>>= nonBlank)
 requirePublicUrl :: Text -> Text -> SqlPersistT IO Text
 requirePublicUrl fieldName raw = do
   value <- requireShortText fieldName 2048 raw
-  if TrialsServer.isValidHttpUrl value
+  if PublicUrl.isValidHttpUrl value
     then pure value
     else liftIO (fail (T.unpack fieldName <> " must be an absolute public http or https URL"))
 
