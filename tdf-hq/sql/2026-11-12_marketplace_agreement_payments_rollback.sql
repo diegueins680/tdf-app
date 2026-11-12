@@ -15,6 +15,10 @@ DO $$ DECLARE paid_exists BOOLEAN := FALSE; BEGIN
   END IF;
 END $$;
 
+DROP TRIGGER IF EXISTS trg_marketplace_agreement_sync_verified_checkout ON commerce_checkout_session;
+DROP TRIGGER IF EXISTS trg_marketplace_agreement_require_verified_payment ON commerce_checkout_session;
+DROP FUNCTION IF EXISTS marketplace_agreement_sync_verified_checkout();
+DROP FUNCTION IF EXISTS marketplace_agreement_checkout_require_verified_payment();
 DROP TRIGGER IF EXISTS marketplace_agreement_paid_payment_trigger ON marketplace_agreement;
 DROP FUNCTION IF EXISTS marketplace_agreement_require_paid_payment();
 
