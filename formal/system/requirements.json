@@ -27188,6 +27188,7 @@
         "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq-ui/src/api/socialEvents.ts",

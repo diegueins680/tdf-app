@@ -2,7 +2,7 @@
 
 EVT-ADMIN-DELEGATION-001 describes how the organizer of one event lets another
 account help run it, and the courtesy tickets its managers issue. It is derived
-from the handlers in `tdf-hq/src/TDF/Server/SocialEventsHandlers.hs`
+from the handlers in `tdf-hq/src/TDF/Server/EventAdminDelegation.hs`
 (`eventAdminsServer`, `eventManagerPartyFor`, `delegatedEventAdminExists`),
 `tdf-hq/src/TDF/Ticketing/Admission.hs` and the migration
 `tdf-hq/sql/2026-11-11_event_admin_delegation.sql`. It is a description of the

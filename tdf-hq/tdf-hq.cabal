@@ -216,6 +216,7 @@ library
     TDF.ServerProposals
     TDF.ServerInternships
     TDF.ServerInternAudit
+    TDF.Server.EventAdminDelegation
     TDF.Server.SocialEventsHandlers
     TDF.Server.EventResearch
     TDF.Server.DDEX
