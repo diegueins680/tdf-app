@@ -13,10 +13,16 @@ module TDF.Server.EventAdminDelegation (
     eventAdminsServer,
     eventManagerPartyFor,
     delegatedEventAdminExists,
+    isEventManager,
+    requireEventManager,
+    eventNotOrganizerError,
+    eventWithoutOrganizerError,
+    isTicketTierSaleOpen,
 ) where
 
 import Control.Monad (forM, void, when)
 import Control.Monad.IO.Class (liftIO)
+import Control.Monad.Except (throwError)
 import Control.Monad.Reader (ReaderT, ask)
 import qualified Crypto.Hash as CryptoHash
 import qualified Data.Aeson as Aeson
@@ -58,14 +64,10 @@ data EventAdminDeps = EventAdminDeps
     { parseVisibleEventKey :: T.Text -> AppM SocialEventId
     , parseInvitationKey :: T.Text -> AppM EventAdminInvitationId
     , parseTierKey :: T.Text -> AppM EventTicketTierId
-    , isEventManager :: T.Text -> SocialEvent -> Bool
-    , requireEventManager :: T.Text -> SocialEvent -> AppM SocialEvent
-    , eventNotOrganizerError :: ServerError
     , lockSocialEventForMutation :: SocialEventId -> SqlPersistT IO (Maybe (Entity SocialEvent))
     , isImportedEventHidden :: SocialEventId -> SqlPersistT IO Bool
     , validateTicketPurchaseBuyerName :: Maybe T.Text -> Either ServerError (Maybe T.Text)
     , validateTicketPurchaseBuyerEmail :: Maybe T.Text -> Either ServerError (Maybe T.Text)
-    , isTicketTierSaleOpen :: UTCTime -> EventTicketTier -> Bool
     , issueMissingTicketsForOrder :: UTCTime -> EventTicketOrderId -> EventTicketOrder -> SqlPersistT IO [T.Text]
     , ticketOrderEntityToDTO :: Entity EventTicketOrder -> [Entity EventTicket] -> TicketOrderDTO
     , sendTicketConfirmationForOrder :: EventTicketOrder -> [T.Text] -> AppM ()
@@ -84,8 +86,8 @@ eventManagerPartyFor currentPartyId eventKey eventRow =
             pure (if delegated then owner else currentPartyId)
         _ -> pure currentPartyId
 
-eventAdminsServer :: EventAdminDeps -> T.Text -> ServerT EventAdminRoutes AppM
-eventAdminsServer EventAdminDeps{..} currentPartyId =
+eventAdminsServer :: T.Text -> EventAdminDeps -> ServerT EventAdminRoutes AppM
+eventAdminsServer currentPartyId EventAdminDeps{..} =
         listEventAdmins
             :<|> getEventAdminAccess
             :<|> createEventAdminInvitation
@@ -410,6 +412,36 @@ eventAdminsServer EventAdminDeps{..} currentPartyId =
         (orderDto, orderRecord, ticketCodes) <- either throwError pure result
         sendTicketConfirmationForOrder orderRecord ticketCodes
         pure orderDto
+
+isEventManager :: T.Text -> SocialEvent -> Bool
+isEventManager currentParty eventRow =
+    case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
+        Nothing -> False
+        Just owner -> owner == currentParty
+
+eventWithoutOrganizerError :: ServerError
+eventWithoutOrganizerError =
+    err403{errBody = "This event has no organizer; \
+                    \a strict administrator must assign one by editing the event"}
+
+eventNotOrganizerError :: ServerError
+eventNotOrganizerError =
+    err403{errBody = "Only the event organizer can manage this event"}
+
+-- An event without an organizer is never taken by whoever reaches it first:
+-- organizer-only routes refuse it and write nothing.
+requireEventManager :: T.Text -> SocialEvent -> AppM SocialEvent
+requireEventManager currentParty eventRow =
+    case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
+        Just owner | owner == currentParty -> pure eventRow
+        Just _ -> throwError eventNotOrganizerError
+        Nothing -> throwError eventWithoutOrganizerError
+
+isTicketTierSaleOpen :: UTCTime -> EventTicketTier -> Bool
+isTicketTierSaleOpen now tier =
+    eventTicketTierIsActive tier
+        && maybe True (<= now) (eventTicketTierSalesStart tier)
+        && maybe True (>= now) (eventTicketTierSalesEnd tier)
 
 renderKeyText :: (ToBackendKey SqlBackend record) => Key record -> T.Text
 renderKeyText = T.pack . show . fromSqlKey

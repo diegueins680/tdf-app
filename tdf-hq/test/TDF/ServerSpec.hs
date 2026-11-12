@@ -11,6 +11,7 @@ import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ask, runReaderT)
 import Data.Aeson (eitherDecode, object, (.=))
 import qualified Data.Aeson as A
+import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Int (Int64)
@@ -19,6 +20,7 @@ import Data.Pool (destroyAllResources)
 import qualified Network.HTTP.Client as NotificationHTTP
 import Network.HTTP.Types.Status (statusCode)
 import Network.Wai.Handler.Warp (testWithApplication)
+import Data.Maybe (isJust, isNothing)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -250,6 +252,9 @@ import TDF.Server
     , publicBookingSqlConflict
     , publicBookingTransactionFailure
     , validatePublicManualPaymentSelection
+    , validateWhatsAppReplyConsent
+    , validateServiceAdProvider
+    , validateSeedOperator
     , validateCourseRegistrationPhoneE164
     , validateCourseRegistrationStoredName
     , resolveCourseRegistrationAttachmentName
@@ -431,6 +436,8 @@ import TDF.Server
     , cmsAdminServer
     )
 import qualified TDF.ServerRadio as Radio
+import qualified TDF.Auth.Throttle as Throttle
+import qualified TDF.Calendar.TokenCipher as TokenCipher
 import qualified TDF.Server.SocialSync as SocialSync
 import qualified TDF.WhatsApp.Types as WA
 import TDF.ServerAuth
@@ -10284,6 +10291,102 @@ spec = describe "TDF.Server helpers" $ do
             either errHTTPCode (const 0) (validatePublicManualPaymentSelection "processing" "bank_transfer")
                 `shouldBe` 409
             validatePublicManualPaymentSelection "awaiting_payment" " Bank_Transfer " `shouldBe` Right ()
+
+    describe "validateWhatsAppReplyConsent" $ do
+        let consentTime = posixSecondsToUTCTime 0
+            consentRow granted revoked =
+                ME.WhatsAppConsent
+                    { ME.whatsAppConsentPhoneE164 = "+593991234567"
+                    , ME.whatsAppConsentDisplayName = Nothing
+                    , ME.whatsAppConsentConsent = granted
+                    , ME.whatsAppConsentSource = Nothing
+                    , ME.whatsAppConsentNote = Nothing
+                    , ME.whatsAppConsentConsentedAt = if granted then Just consentTime else Nothing
+                    , ME.whatsAppConsentRevokedAt = if revoked then Just consentTime else Nothing
+                    , ME.whatsAppConsentConfirmationRequestedAt = Nothing
+                    , ME.whatsAppConsentCreatedAt = consentTime
+                    , ME.whatsAppConsentUpdatedAt = consentTime
+                    }
+        it "refuses a staff reply to a contact who withdrew consent" $
+            either errHTTPCode (const 0) (validateWhatsAppReplyConsent (Just (consentRow False True)))
+                `shouldBe` 409
+        it "still answers a contact with no consent row, a pending row or an active consent" $ do
+            validateWhatsAppReplyConsent Nothing `shouldBe` Right ()
+            validateWhatsAppReplyConsent (Just (consentRow False False)) `shouldBe` Right ()
+            validateWhatsAppReplyConsent (Just (consentRow True False)) `shouldBe` Right ()
+
+    describe "validateServiceAdProvider" $ do
+        it "refuses accounts that only hold self-service roles" $
+            forM_ [[], [Customer], [Fan], [Student], [Customer, Fan], [ReadOnly]] $ \roles ->
+                either errHTTPCode (const 0) (validateServiceAdProvider (mkUser roles)) `shouldBe` 403
+        it "admits staff-assigned provider roles" $
+            forM_ [[Engineer], [Teacher], [Producer], [Artist], [Vendor], [Customer, Photographer], [Admin]] $ \roles ->
+                validateServiceAdProvider (mkUser roles) `shouldBe` Right ()
+
+    describe "validateSeedOperator" $ do
+        it "admits only a strict administrator, like POST /admin/seed" $ do
+            validateSeedOperator (mkUser [Admin]) `shouldBe` Right ()
+            forM_ [[], [Manager], [StudioManager], [Webmaster], [Admin, Engineer], [Customer]] $ \roles ->
+                either errHTTPCode (const 0) (validateSeedOperator (mkUser roles)) `shouldBe` 403
+
+    describe "radio fetch request hardening" $
+        it "follows no redirect and keeps no cookie" $ do
+            request <- NotificationHTTP.parseRequest "https://stream.example.org/live"
+            let hardened = Radio.hardenRadioFetchRequest request
+            NotificationHTTP.redirectCount hardened `shouldBe` 0
+            isNothing (NotificationHTTP.cookieJar hardened) `shouldBe` True
+
+    describe "auth throttle policy" $ do
+        let at seconds = posixSecondsToUTCTime seconds
+        it "treats case and surrounding whitespace as the same subject, and scopes apart" $ do
+            Throttle.authThrottleSubject Throttle.ThrottleLoginFailure " Ada@Example.org "
+                `shouldBe` Throttle.authThrottleSubject Throttle.ThrottleLoginFailure "ada@example.org"
+            Throttle.authThrottleSubject Throttle.ThrottleLoginFailure "ada@example.org"
+                `shouldNotBe` Throttle.authThrottleSubject Throttle.ThrottleSignup "ada@example.org"
+            Throttle.authThrottleSubject Throttle.ThrottleLoginFailure "ada@example.org"
+                `shouldNotBe` Throttle.authThrottleSubject Throttle.ThrottleLoginFailure "bob@example.org"
+            T.length (Throttle.authThrottleSubject Throttle.ThrottleSignup "ada@example.org") `shouldBe` 64
+        it "locks a login out at the limit and lets the limit-th signup or reset through" $ do
+            let loginLimit = Throttle.authThrottleLimit Throttle.ThrottleLoginFailure
+            Throttle.authThrottleLockedOut Throttle.ThrottleLoginFailure (loginLimit - 1) `shouldBe` False
+            Throttle.authThrottleLockedOut Throttle.ThrottleLoginFailure loginLimit `shouldBe` True
+            forM_ [Throttle.ThrottleSignup, Throttle.ThrottlePasswordReset] $ \scope -> do
+                Throttle.authThrottleOverLimit scope (Throttle.authThrottleLimit scope) `shouldBe` False
+                Throttle.authThrottleOverLimit scope (Throttle.authThrottleLimit scope + 1) `shouldBe` True
+        it "uses fixed windows and reports the seconds left in the current one" $ do
+            Throttle.authThrottleWindowStart Throttle.ThrottleLoginFailure (at 1799) `shouldBe` at 900
+            Throttle.authThrottleWindowStart Throttle.ThrottleLoginFailure (at 1800) `shouldBe` at 1800
+            Throttle.authThrottleWindowStart Throttle.ThrottleSignup (at 7199) `shouldBe` at 3600
+            Throttle.authThrottleRetryAfterSeconds Throttle.ThrottleLoginFailure (at 900) `shouldBe` 900
+            Throttle.authThrottleRetryAfterSeconds Throttle.ThrottleLoginFailure (at 1799) `shouldBe` 1
+            Throttle.authThrottleRetryAfterSeconds Throttle.ThrottleLoginFailure (at 1799.5) `shouldBe` 1
+
+    describe "Google Calendar token cipher" $ do
+        let keyText = T.replicate 4 "calendar-key-0123456789"
+            Just key = TokenCipher.calendarTokenKeyFromText keyText
+            Just otherKey = TokenCipher.calendarTokenKeyFromText (T.replicate 4 "another-key-0123456789")
+            nonce = BS.replicate 12 7
+            Just sealed = TokenCipher.sealCalendarTokenWithNonce key nonce "ya29.synthetic-token"
+        it "accepts only keys of 32 to 256 visible ASCII characters" $ do
+            isNothing (TokenCipher.calendarTokenKeyFromText "short") `shouldBe` True
+            isNothing (TokenCipher.calendarTokenKeyFromText (T.replicate 40 " ")) `shouldBe` True
+            isNothing (TokenCipher.calendarTokenKeyFromText (T.replicate 257 "k")) `shouldBe` True
+            isJust (TokenCipher.calendarTokenKeyFromText (T.replicate 32 "k")) `shouldBe` True
+        it "seals to a marked value that does not contain the token and opens with the same key" $ do
+            TokenCipher.calendarTokenIsSealed sealed `shouldBe` True
+            ("ya29" `T.isInfixOf` sealed) `shouldBe` False
+            TokenCipher.openCalendarToken (Just key) sealed `shouldBe` Right "ya29.synthetic-token"
+            isNothing (TokenCipher.sealCalendarTokenWithNonce key (BS.replicate 11 7) "x") `shouldBe` True
+        it "refuses a sealed value without the key, with another key or after tampering" $ do
+            TokenCipher.openCalendarToken Nothing sealed `shouldBe` Left TokenCipher.CalendarTokenKeyMissing
+            TokenCipher.openCalendarToken (Just otherKey) sealed `shouldBe` Left TokenCipher.CalendarTokenUnreadable
+            TokenCipher.openCalendarToken (Just key) (T.init sealed <> (if T.last sealed == 'A' then "B" else "A"))
+                `shouldBe` Left TokenCipher.CalendarTokenUnreadable
+            TokenCipher.openCalendarToken (Just key) "enc:v1:not-base64!" `shouldBe` Left TokenCipher.CalendarTokenUnreadable
+        it "still reads a token stored before encryption existed" $ do
+            TokenCipher.openCalendarToken Nothing "1//legacy-refresh-token" `shouldBe` Right "1//legacy-refresh-token"
+            TokenCipher.openCalendarToken (Just key) "1//legacy-refresh-token" `shouldBe` Right "1//legacy-refresh-token"
+            TokenCipher.calendarTokenIsSealed "1//legacy-refresh-token" `shouldBe` False
 
     describe "validateOptionalMarketplacePaymentProviderUpdate" $ do
         it "distinguishes omitted provider updates, explicit clears, and normalized provider slugs" $ do

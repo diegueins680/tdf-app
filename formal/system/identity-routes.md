@@ -4,7 +4,7 @@ Derived on 2026-11-07 by reading `tdf-hq/src/TDF/ServerAuth.hs`, `Auth.hs`, `Ser
 
 **Guards**
 - Login, Google login, signup and password reset are public (`credential-intake`); password change is registered `handler-session` but reads only the Authorization header or a username in the body; access requests, referrals, parties and bands are behind `AuthProtect`.
-- No rate limit, lockout or failed-attempt counter exists anywhere in the authentication code.
+- Since 2026-11-10 password login locks an identifier out for the rest of a 15-minute window after ten failures, and signup and reset requests are limited to five per email per hour (`TDF.Auth.Throttle`, `auth_rate_limit`). There is no per-address limit: the backend has no trusted client address.
 - Sessions are database-clock windows (ID-SESSION-004); password replacement revokes interactive tokens (ID-SESSION-001); reset tokens are single-use within 900 seconds (ID-SESSION-002/003).
 
 ## Route → requirement
@@ -21,10 +21,10 @@ ID-SESSION-001..004, ID-ARTIST-CLAIM-001 and AUTH-ACCESS-PROVISION-001 already h
 ## Open behaviours for the owner to decide
 
 **Abuse limits (critical)**
-- Online password guessing, reset-email sending and current-password guessing are unbounded: no rate limit or lockout exists.
+- **Decided 2026-11-10.** Login failures, signup and reset requests are throttled per identifier (see Guards). Still open: no per-address limit, so a client can try a few passwords against many accounts; anyone can lock a known identifier out for up to 15 minutes; current-password guessing on the change route and Google login are not throttled.
 
 **Disclosure**
-- Login and password change answer "Account disabled" for a known disabled account, which discloses its existence; password change does so without a password.
+- **Decided 2026-11-10.** Login checks the password first and answers a disabled account exactly like a wrong password. Still open: password change answers 403 "Account disabled" for a known disabled username without a password, and signup answers 409 for an existing email.
 
 **Boundaries**
 - With a username in the body, password change needs no session, contradicting its `handler-session` registration; the Cookie header is never read.

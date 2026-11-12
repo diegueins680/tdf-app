@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 523,
-    "named": 441,
+    "total": 519,
+    "named": 437,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 523
+    "covered": 519
   },
   "routes": [
     {
@@ -1104,10 +1104,28 @@
     },
     {
       "method": "PATCH",
+      "path": "/directory/agreements/{agreementId}/status",
+      "basis": "named",
+      "requirements": [
+        "MKT-AGREEMENT-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/directory/applications/{applicationId}/counter",
+      "basis": "named",
+      "requirements": [
+        "MKT-DEMAND-OFFER-001"
+      ]
+    },
+    {
+      "method": "PATCH",
       "path": "/directory/applications/{applicationId}/status",
       "basis": "named",
       "requirements": [
-        "DIR-ENGAGEMENT-001"
+        "DIR-ENGAGEMENT-001",
+        "MKT-AGREEMENT-001",
+        "MKT-DEMAND-OFFER-001"
       ]
     },
     {
@@ -1132,7 +1150,8 @@
       "path": "/directory/classifieds",
       "basis": "named",
       "requirements": [
-        "DIR-CLASSIFIEDS-001"
+        "DIR-CLASSIFIEDS-001",
+        "MKT-DEMAND-OFFER-001"
       ]
     },
     {
@@ -1140,7 +1159,8 @@
       "path": "/directory/classifieds/{classifiedId}/applications",
       "basis": "named",
       "requirements": [
-        "DIR-ENGAGEMENT-001"
+        "DIR-ENGAGEMENT-001",
+        "MKT-DEMAND-OFFER-001"
       ]
     },
     {
@@ -3332,22 +3352,6 @@
     },
     {
       "method": "POST",
-      "path": "/social-events/admin-invitations/accept",
-      "basis": "named",
-      "requirements": [
-        "EVT-ADMIN-DELEGATION-001"
-      ]
-    },
-    {
-      "method": "POST",
-      "path": "/social-events/admin-invitations/preview",
-      "basis": "named",
-      "requirements": [
-        "EVT-ADMIN-DELEGATION-001"
-      ]
-    },
-    {
-      "method": "POST",
       "path": "/social-events/artists",
       "basis": "named",
       "requirements": [
@@ -3444,30 +3448,6 @@
     },
     {
       "method": "POST",
-      "path": "/social-events/events/{eventId}/admin-invitations",
-      "basis": "named",
-      "requirements": [
-        "EVT-ADMIN-DELEGATION-001"
-      ]
-    },
-    {
-      "method": "DELETE",
-      "path": "/social-events/events/{eventId}/admin-invitations/{invitationId}",
-      "basis": "named",
-      "requirements": [
-        "EVT-ADMIN-DELEGATION-001"
-      ]
-    },
-    {
-      "method": "DELETE",
-      "path": "/social-events/events/{eventId}/admins/{partyId}",
-      "basis": "named",
-      "requirements": [
-        "EVT-ADMIN-DELEGATION-001"
-      ]
-    },
-    {
-      "method": "POST",
       "path": "/social-events/events/{eventId}/budget-lines",
       "basis": "named",
       "requirements": [
@@ -3482,14 +3462,6 @@
         "PAY-EVENT-REPORT-RANGE-001"
       ],
       "note": "PAY-EVENT-REPORT-RANGE-001 requires rejecting a budget-line edit with an unreportable actual before its first write; updateBudgetLine does so."
-    },
-    {
-      "method": "POST",
-      "path": "/social-events/events/{eventId}/courtesy-tickets",
-      "basis": "named",
-      "requirements": [
-        "EVT-ADMIN-DELEGATION-001"
-      ]
     },
     {
       "method": "POST",

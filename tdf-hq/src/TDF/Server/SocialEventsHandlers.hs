@@ -130,6 +130,9 @@ module TDF.Server.SocialEventsHandlers (
     StripeTicketPaymentEvidence (..),
     parseStripeTicketPaymentEvidence,
     validateStripeTicketPaymentEvidence,
+    StripeTicketCapture (..),
+    parseStripeTicketCapture,
+    stripeTicketClosedOrderNeedsReview,
     parseStripeWebhookMarketplaceOrderId,
     canRecoverMarketplaceStripeOrder,
     parseCheckoutSessionCourseSubscription,
@@ -169,6 +172,7 @@ import Data.Char (
     isDigit,
     isHexDigit,
  )
+import Data.Foldable (for_)
 import Data.Int (Int64)
 import Data.FileEmbed (embedFile)
 import Data.List (nub, sortOn)
@@ -226,6 +230,7 @@ import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import qualified TDF.Server.EventAdminDelegation as EventAdmin
+import TDF.Server.EventAdminDelegation (eventNotOrganizerError, eventWithoutOrganizerError, isEventManager, isTicketTierSaleOpen, requireEventManager)
 import qualified TDF.Ticketing.Inventory as TicketInventory
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Server.TicketManualPayments as ManualPayments
@@ -334,6 +339,7 @@ import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (nativeBroadcastUnavailable)
+import TDF.Server.StripeTicketCapture (StripeTicketCapture (..), parseStripeTicketCapture, recordStripeTicketCapture, stripeTicketClosedOrderNeedsReview)
 import qualified TDF.Services.Stripe as Stripe
 import TDF.Services.EventLogisticsRoutes
     ( RouteEstimateInput (..)
@@ -970,9 +976,32 @@ handleStripePaymentIntentSucceeded now payload =
                     piId
                     (parseStripeWebhookMarketplaceOrderId payload)
             Just (Entity orderKey order) -> do
+                let mCapture = parseStripeTicketCapture payload
+                    recordCapture exceptionType =
+                        recordStripeTicketCapture
+                            exceptionType
+                            (renderKeyText orderKey)
+                            piId
+                            (eventTicketOrderAmountCents order)
+                            (eventTicketOrderCurrency order)
+                            now
+                    -- Stripe captured money that the order cannot admit: keep the
+                    -- 400 (the event stays unrecorded and replayable) but leave an
+                    -- open exception so the capture is not lost.
+                    admitOrReconcile =
+                        either
+                            ( \errText -> do
+                                for_ mCapture $ \capture ->
+                                    liftIO $
+                                        runSqlPool
+                                            (recordCapture "verified_payment_not_admitted" capture)
+                                            envPool
+                                throwError err400{errBody = textErrBody errText}
+                            )
+                            pure
                 paymentEvidence <-
-                    eitherStripeWebhookError (parseStripeTicketPaymentEvidence payload)
-                eitherStripeWebhookError $
+                    admitOrReconcile (parseStripeTicketPaymentEvidence payload)
+                admitOrReconcile $
                     validateStripeTicketPaymentEvidence
                         (renderKeyText orderKey)
                         (renderKeyText (eventTicketOrderEventId order))
@@ -996,7 +1025,13 @@ handleStripePaymentIntentSucceeded now payload =
                                     then do
                                         codes <- issueMissingTicketsForOrder now orderKey order
                                         pure (True, codes)
-                                    else pure (False, [])
+                                    else do
+                                        currentStatus <-
+                                            maybe (eventTicketOrderStatus order) eventTicketOrderStatus
+                                                <$> get orderKey
+                                        when (stripeTicketClosedOrderNeedsReview currentStatus) $
+                                            for_ mCapture (recordCapture "verified_payment_on_closed_order")
+                                        pure (False, [])
                             )
                             envPool
                 when statusChanged $
@@ -2335,23 +2370,16 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         :<|> budgetServer
         :<|> financeServer
         :<|> logisticsServer
-        :<|> EventAdmin.eventAdminsServer
-            ( EventAdmin.EventAdminDeps parseVisibleEventKey (parseKeyOr400 "administrator invitation")
-                (parseKeyOr400 "ticket tier") isEventManager requireEventManager eventNotOrganizerError
-                lockSocialEventForMutation isImportedEventHidden validateTicketPurchaseBuyerName
-                validateTicketPurchaseBuyerEmail isTicketTierSaleOpen issueMissingTicketsForOrder
-                ticketOrderEntityToDTO sendTicketConfirmationForOrder
-            )
-            currentPartyId
+        :<|> EventAdmin.eventAdminsServer currentPartyId
+            ( EventAdmin.EventAdminDeps parseVisibleEventKey (parseKeyOr400 "administrator invitation") (parseKeyOr400 "ticket tier")
+                lockSocialEventForMutation isImportedEventHidden validateTicketPurchaseBuyerName validateTicketPurchaseBuyerEmail
+                issueMissingTicketsForOrder ticketOrderEntityToDTO sendTicketConfirmationForOrder )
         :<|> memoryInvitationsServer
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
 
-    eventManagerPartyFor :: SocialEventId -> SocialEvent -> AppM T.Text
     eventManagerPartyFor = EventAdmin.eventManagerPartyFor currentPartyId
-
-    isDelegatedEventAdmin :: SocialEventId -> SocialEvent -> AppM Bool
     isDelegatedEventAdmin eventKey row = (/= currentPartyId) <$> eventManagerPartyFor eventKey row
 
     requireFeatureAction :: T.Text -> T.Text -> AppM ()
@@ -9734,36 +9762,6 @@ invalidSalesWindow _ _ = False
 ticketTierAvailability :: EventTicketTier -> Int
 ticketTierAvailability tier =
     max 0 (eventTicketTierQuantityTotal tier - eventTicketTierQuantitySold tier)
-
-isTicketTierSaleOpen :: UTCTime -> EventTicketTier -> Bool
-isTicketTierSaleOpen now tier =
-    eventTicketTierIsActive tier
-        && maybe True (<= now) (eventTicketTierSalesStart tier)
-        && maybe True (>= now) (eventTicketTierSalesEnd tier)
-
-isEventManager :: T.Text -> SocialEvent -> Bool
-isEventManager currentParty eventRow =
-    case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
-        Nothing -> False
-        Just owner -> owner == currentParty
-
-eventWithoutOrganizerError :: ServerError
-eventWithoutOrganizerError =
-    err403{errBody = "This event has no organizer; \
-                    \a strict administrator must assign one by editing the event"}
-
-eventNotOrganizerError :: ServerError
-eventNotOrganizerError =
-    err403{errBody = "Only the event organizer can manage this event"}
-
--- An event without an organizer is never taken by whoever reaches it first:
--- organizer-only routes refuse it and write nothing.
-requireEventManager :: T.Text -> SocialEvent -> AppM SocialEvent
-requireEventManager currentParty eventRow =
-    case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
-        Just owner | owner == currentParty -> pure eventRow
-        Just _ -> throwError eventNotOrganizerError
-        Nothing -> throwError eventWithoutOrganizerError
 
 -- The one assignment of a missing organizer. The caller has established that
 -- the party may be assigned. Whether the field is empty is judged here with the

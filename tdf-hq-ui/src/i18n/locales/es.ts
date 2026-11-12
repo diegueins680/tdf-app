@@ -1,6 +1,7 @@
 import mobileApp from './mobileApp.es';
 import accountDeletion from './accountDeletion.es';
 import directorySearch from './directorySearch.es';
+import marketplace from './marketplace.es';
 import authEntry from './authEntry.es';
 const es = {
   app: mobileApp,
@@ -8,6 +9,7 @@ const es = {
   records: { videoUnavailable: 'Video no disponible en la fuente', thumbnailUnavailable: 'Miniatura no disponible', loadingThumbnail: 'Cargando miniatura' },
   authEntry,
   directorySearch,
+  marketplace,
   auditAccessibility: {
     loadingFeaturedArtists: 'Cargando artistas destacados',
     loadingMarketplace: 'Cargando productos del marketplace',
