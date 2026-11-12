@@ -58,7 +58,7 @@ import { slugify } from '../utils/slug';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
-import { getArtistHeroImage } from '../utils/artistFallbacks';
+import { getArtistHeroImage, hasArtistPicture, picturedArtistsFirst } from '../utils/artistFallbacks';
 import ArtistProfileImage from '../components/ArtistProfileImage';
 import { Records, type RecordsResourceDTO } from '../api/records';
 import {
@@ -300,8 +300,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return filteredGenreOptions.slice(0, 14);
   }, [filteredGenreOptions, showAllGenres]);
   const filteredArtists = useMemo(() => {
-    if (!genreFilter) return artists;
-    return artists.filter((artist) => artist.apGenreIds.includes(genreFilter));
+    const matching = genreFilter ? artists.filter((artist) => artist.apGenreIds.includes(genreFilter)) : artists;
+    return picturedArtistsFirst(matching);
   }, [artists, genreFilter]);
   const selectedGenreFilterName = genreOptions.find((genre) => genre.id === genreFilter)?.name;
 
@@ -823,7 +823,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     const followed = new Set(follows.map((f) => f.ffArtistId));
     return artists
       .filter((artist) => !followed.has(artist.apArtistId))
-      .sort((a, b) => (b.apFollowerCount ?? 0) - (a.apFollowerCount ?? 0))
+      .sort((a, b) => Number(hasArtistPicture(b)) - Number(hasArtistPicture(a)) || (b.apFollowerCount ?? 0) - (a.apFollowerCount ?? 0))
       .slice(0, 3);
   }, [artists, follows]);
 
