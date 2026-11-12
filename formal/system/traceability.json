@@ -28909,7 +28909,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "70d0b3295bb4e4bb05538a2eca91f64ca51515824f0720eba0158a7296fd6644",
+    "tdf-hq/src/TDF/Server/Directory.hs": "50b44058f68a894aea3937d46371abc7ea5bf5c2dd1ca067e7e6b5da8655c373",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
@@ -74329,7 +74329,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "70d0b3295bb4e4bb05538a2eca91f64ca51515824f0720eba0158a7296fd6644",
+      "sha256": "50b44058f68a894aea3937d46371abc7ea5bf5c2dd1ca067e7e6b5da8655c373",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

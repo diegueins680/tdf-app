@@ -1345,8 +1345,12 @@ changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStat
               refreshClassifiedDB classifiedId
             when releasesSlot $ do
               -- I19: the released slot reopens a filled, unexpired classified
-              -- (filled -> published is declared in the database relation).
-              rawExecute "UPDATE classified SET slots_remaining=?,status=CASE WHEN status='filled' AND expires_at>now() THEN 'published' ELSE status END,closed_at=CASE WHEN status='filled' AND expires_at>now() THEN NULL ELSE closed_at END,updated_at=now(),version=version+1 WHERE id=?"
+              -- (filled -> published is declared in the database relation). A
+              -- listing still stored as published but already elapsed moves to
+              -- expired in the same write: the transition guard refuses any
+              -- row that stays published past its expiry, and an elapsed
+              -- filled listing keeps its status.
+              rawExecute "UPDATE classified SET slots_remaining=?,status=CASE WHEN status='filled' AND expires_at>now() THEN 'published' WHEN status='published' AND expires_at<=now() THEN 'expired' ELSE status END,closed_at=CASE WHEN status='filled' AND expires_at>now() THEN NULL WHEN status='published' AND expires_at<=now() THEN coalesce(closed_at,now()) ELSE closed_at END,updated_at=now(),version=version+1 WHERE id=?"
                 [PersistInt64 (fromIntegral (slotsAfterRelease slotsTotal lockedRemaining)),toPersistValue classifiedId]
               refreshClassifiedDB classifiedId
             pure (Right ())
