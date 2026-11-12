@@ -26871,7 +26871,7 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
       "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14-16, 18, 22 and25; continuation 2026-11-11.",
@@ -26912,7 +26912,7 @@
         "A payment presented as completed before confirmation"
       ],
       "effects": [
-        "Presentation and copy only; no new writes, endpoints or permissions"
+        "Presentation, copy and local input validation; no new write endpoint or permission."
       ],
       "authorization": "Unchanged. Sidebar visibility continues to use canAccessPath; hiding an entry grants or removes no access.",
       "privacy": "Name and email prefill read only the viewer's own session. No new data is collected or sent.",
@@ -26921,7 +26921,7 @@
       "failure": "Existing failure states remain, reworded in plain language with the same meaning. Field validation blocks checkout writes; optional analytics failures are caught locally, and persistent required-route failures show manual recovery after the bounded reload.",
       "recovery": "Existing retry, status refresh and support paths remain available from the focused shell.",
       "observability": "Existing funnel events are unchanged; no measured conversion effect is claimed.",
-      "property": "BuyActionFirst; FocusedPurchaseShell; SafetyMeaningPreserved; NoLockedGroups; SearchOnlyRespectsGlobalMenu",
+      "property": "BuyActionFirst; FocusedPurchaseShell; SafetyMeaningPreserved; NoLockedGroups; SearchOnlyRespectsGlobalMenu; InlinePaymentErrors; InvalidInputNoPaymentAttempt; ServicePriceCentsExact",
       "implementation": [
         "tdf-hq-ui/src/analytics/posthog.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
@@ -26930,6 +26930,7 @@
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
@@ -26949,19 +26950,23 @@
         "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
         "tdf-hq-ui/src/pages/TrialsPage.tsx",
         "tdf-hq-ui/src/session/sessionContactDefaults.ts",
         "tdf-hq-ui/src/utils/bookingStatusLabel.ts",
         "tdf-hq-ui/src/utils/directoryStatusLabel.ts",
-        "tdf-hq-ui/src/utils/lazyWithReload.ts"
+        "tdf-hq-ui/src/utils/eventTicketPricing.ts",
+        "tdf-hq-ui/src/utils/lazyWithReload.ts",
+        "tdf-hq-ui/src/utils/priceInput.ts"
       ],
       "tests": [
         "e2e/web/analytics-privacy.spec.mjs",
         "e2e/web/auth-landing.spec.mjs",
         "e2e/web/booking-timezone.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
+        "e2e/web/payment-field-errors.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
@@ -26976,6 +26981,7 @@
         "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
@@ -26983,10 +26989,14 @@
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+        "tdf-hq-ui/src/pages/ServiceTypesPage.form.test.tsx",
+        "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
         "tdf-hq-ui/src/session/sessionContactDefaults.test.ts",
         "tdf-hq-ui/src/utils/bookingStatusLabel.test.ts",
         "tdf-hq-ui/src/utils/directoryStatusLabel.test.ts",
-        "tdf-hq-ui/src/utils/lazyWithReload.test.ts"
+        "tdf-hq-ui/src/utils/eventTicketPricing.test.ts",
+        "tdf-hq-ui/src/utils/lazyWithReload.test.ts",
+        "tdf-hq-ui/src/utils/priceInput.test.ts"
       ],
       "formalModels": [],
       "verification": "Component and page regressions for each changed surface. No mathematical implementation proof claimed.",
@@ -27024,7 +27034,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "9d81f969bdcbb5a596af57572c47461fab4e8a21aa8ffff23b3975933ab0e46f",
+    "docs/catalog-persistence/catalog-list-decisions.json": "31fd2d6e5cf775dd1f4ed8085988e3ee8b3a2ed75c2df0be32db1eaa9331ff54",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -27070,6 +27080,7 @@
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
     "e2e/web/music-search-native.spec.mjs": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
+    "e2e/web/payment-field-errors.spec.mjs": "0116b1c7bdbef1d0d296a888ea72de15a5feb944d1c45a903dd8156be4055d67",
     "e2e/web/persona-public.spec.mjs": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
     "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
     "e2e/web/radio-navigation.spec.mjs": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
@@ -27450,7 +27461,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "607027df5400e9ddda72463921aaf7b59e498fcebe80ed069ce23ded5ce2aff9",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "009e93cc9b90f05f5bfaec52ceefe1a785cfbd1fc36c500bb708b4574734f8c4",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28048,12 +28059,12 @@
     "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
     "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
-    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "a0b8dbb26a11e036bcea85963500bda1227df168380a056fe3a7941bff7d73d2",
-    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "1a6354dfd8f03c665d2cb6fe572993dced69f269aa9aaaa5de94c53ec7013e1b",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "ece68991c3d3ab549b31d328afe3735d2842bf32773ca6b6f72c06d59dfe2aca",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "616d9200231897ba97dc4c1fa9a4f9457378f609d1296b8bd6cd1c0b46f433ea",
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
-    "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "a3d9a2016da97b49a8d6ec1158faefd1d312aff248310e2bcac0100b166dddb2",
-    "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx": "6a7d1d9d63dc7617096bce3744b97ddd31cea2688ff6fc65fe46cb815a2bf288",
+    "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "33f9c31935e8ce69c04a66ede76b682fa586afda515548093e00707ac45b270a",
+    "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx": "e36144f325d096a7937957b0001f4c50aec66e844ce9d41db500ec28252b7acb",
     "tdf-hq-ui/src/components/reviews/ExperienceReviews.tsx": "35e92aebdf3296f641b4fda585c9eb8302d65a78ade0486a7f967c4d9d468f2d",
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
@@ -28236,6 +28247,9 @@
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
+    "tdf-hq-ui/src/pages/ServiceTypesPage.form.test.tsx": "3763a9bf398693e0e99395b012354b51e57f8b470c918802764d260cf9161f9b",
+    "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts": "caae7a8be0f4a6debf6c7dc8a58856420b831f996a766522ac00077336e8f2bb",
+    "tdf-hq-ui/src/pages/ServiceTypesPage.tsx": "0fd8410a01cd265baab9451f83c4cff0b466e408cdbe4a048616c621aaafc2a6",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "7e285d998e1c9683e82627ac0b237f1a17516ad231dd5757cf646616dceb9b4b",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "1ee97a2e8651484032069c2ce3fd63439bbdb901b8356e2a354ad4dce7da378a",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
@@ -28341,7 +28355,7 @@
     "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts": "06ceabc3ed6366b3320f0019d9f9a766d6c0113b34aec21f9e7f23cc034459d9",
     "tdf-hq-ui/src/utils/eventFinanceMoney.ts": "c0a08330089af232d3919c68237e36e61e9f241f98c2706d1e653b233e30c4ed",
     "tdf-hq-ui/src/utils/eventTicketPricing.test.ts": "47839fafa6fba96ca8fc8f0692d751f1f2f92a3e20fb86d5d32b11633582478f",
-    "tdf-hq-ui/src/utils/eventTicketPricing.ts": "4ead75fcba5dc203faa93b300fd0db26f3ea7e28d3bf6772e7f1891dbf8e4abf",
+    "tdf-hq-ui/src/utils/eventTicketPricing.ts": "5df4bf043273e9a698f8c5e0442cdbbbf7e4b1a5b894a3ba2cdb89895a1e1d6f",
     "tdf-hq-ui/src/utils/externalTicketing.test.ts": "58c361d381fda49a14c4335aecbf3e10f353e53fce94ac615d26bf9d277ca729",
     "tdf-hq-ui/src/utils/externalTicketing.ts": "1224ccc2f203440828c55c99dc50b60f02b3a36747c2fa63826c73fde51ed8d5",
     "tdf-hq-ui/src/utils/inAppBrowser.test.ts": "1bc37ad8648797a57854e8c8e7d1ddb65e071c483b28aead5b2571545b24dcd2",
@@ -28362,6 +28376,8 @@
     "tdf-hq-ui/src/utils/navigationLabels.ts": "71994baf94f989c0f8310366255377151b5886782e0b55e741690d7c028ca3bf",
     "tdf-hq-ui/src/utils/phone.test.ts": "51ffabb6654f6441c507ee11e2cf2a2518e8fa6bce766c96377421638bb769af",
     "tdf-hq-ui/src/utils/phone.ts": "eb558c757e4f79a86c7ca3df1da08f98df111d8944c57206e85ea9bb5e1f6ff1",
+    "tdf-hq-ui/src/utils/priceInput.test.ts": "df78800c77a47657c8ebbc2ceeda269c4fce4aff5e4202b1f2b9abb20bd2ee10",
+    "tdf-hq-ui/src/utils/priceInput.ts": "a45f97f5ac4d047349b9eabf91330856113d2d7f04c294dc6ef0c9d70132e977",
     "tdf-hq-ui/src/utils/providerPaymentResume.test.ts": "103a2f73519a73ffb088df88e847789b4fc5f6afd07d9c38bdeafd0dbc4039e9",
     "tdf-hq-ui/src/utils/providerPaymentResume.ts": "27f2bbb6169784ba41aa14ddf9e2fade00617452594157fe8c74eed64ce3f0ba",
     "tdf-hq-ui/src/utils/radioRouteVisibility.test.ts": "e588d8dc3d90d1c59f88b833ccce51a34c129c42153f3bb560017432000109df",
@@ -37650,6 +37666,10 @@
       {
         "requirement": "WEB-CONTENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx": [
@@ -37759,6 +37779,10 @@
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": [
       {
         "requirement": "EVT-TICKET-MANUAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -45024,6 +45048,10 @@
       {
         "requirement": "EVT-PLANNING-UX-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/dateTime.ts": [
@@ -45047,6 +45075,10 @@
     "tdf-hq-ui/src/utils/eventTicketPricing.test.ts": [
       {
         "requirement": "EVT-PLANNING-UX-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -46558,6 +46590,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/pages/ServiceTypesPage.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/TrialsPage.tsx": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -46580,6 +46618,18 @@
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/utils/priceInput.ts": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "e2e/web/payment-field-errors.spec.mjs": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx": [
@@ -46606,6 +46656,18 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/pages/ServiceTypesPage.form.test.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq-ui/src/session/sessionContactDefaults.test.ts": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -46625,6 +46687,12 @@
       }
     ],
     "tdf-hq-ui/src/utils/lazyWithReload.test.ts": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/priceInput.test.ts": [
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
@@ -47546,6 +47614,18 @@
       ]
     },
     {
+      "id": "SURFACE-7b9e114051595d43",
+      "path": "e2e/web/payment-field-errors.spec.mjs",
+      "sha256": "0116b1c7bdbef1d0d296a888ea72de15a5feb944d1c45a903dd8156be4055d67",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
       "sha256": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
@@ -48293,7 +48373,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "607027df5400e9ddda72463921aaf7b59e498fcebe80ed069ce23ded5ce2aff9",
+      "sha256": "009e93cc9b90f05f5bfaec52ceefe1a785cfbd1fc36c500bb708b4574734f8c4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59596,7 +59676,7 @@
     {
       "id": "SURFACE-3b9b0b0c805d8c24",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
-      "sha256": "a0b8dbb26a11e036bcea85963500bda1227df168380a056fe3a7941bff7d73d2",
+      "sha256": "ece68991c3d3ab549b31d328afe3735d2842bf32773ca6b6f72c06d59dfe2aca",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59612,7 +59692,7 @@
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "1a6354dfd8f03c665d2cb6fe572993dced69f269aa9aaaa5de94c53ec7013e1b",
+      "sha256": "616d9200231897ba97dc4c1fa9a4f9457378f609d1296b8bd6cd1c0b46f433ea",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59666,11 +59746,15 @@
     {
       "id": "SURFACE-4fbcad3f047cdd71",
       "path": "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
-      "sha256": "a3d9a2016da97b49a8d6ec1158faefd1d312aff248310e2bcac0100b166dddb2",
+      "sha256": "33f9c31935e8ce69c04a66ede76b682fa586afda515548093e00707ac45b270a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-TICKET-MANUAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -59678,7 +59762,7 @@
     {
       "id": "SURFACE-a00fb37fdda810d3",
       "path": "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
-      "sha256": "6a7d1d9d63dc7617096bce3744b97ddd31cea2688ff6fc65fe46cb815a2bf288",
+      "sha256": "e36144f325d096a7937957b0001f4c50aec66e844ce9d41db500ec28252b7acb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59687,6 +59771,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -63632,18 +63720,40 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-fbcbb460f7a859f6",
+      "path": "tdf-hq-ui/src/pages/ServiceTypesPage.form.test.tsx",
+      "sha256": "3763a9bf398693e0e99395b012354b51e57f8b470c918802764d260cf9161f9b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-34ddadce83f650d3",
       "path": "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
-      "sha256": "0929e19bb090251b471473c404a997e89f6b220dffdc06234cbb8aa53e03c521",
+      "sha256": "caae7a8be0f4a6debf6c7dc8a58856420b831f996a766522ac00077336e8f2bb",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-3fd518a6b12b548c",
       "path": "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
-      "sha256": "b968e296201d4b937a36cf40a620aae129b874de6c3b6feaf6055abb238bec2c",
+      "sha256": "0fd8410a01cd265baab9451f83c4cff0b466e408cdbe4a048616c621aaafc2a6",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-edc6714214dc4ca9",
@@ -65554,17 +65664,25 @@
         {
           "requirement": "EVT-PLANNING-UX-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-6b2a9195c4ff9137",
       "path": "tdf-hq-ui/src/utils/eventTicketPricing.ts",
-      "sha256": "4ead75fcba5dc203faa93b300fd0db26f3ea7e28d3bf6772e7f1891dbf8e4abf",
+      "sha256": "5df4bf043273e9a698f8c5e0442cdbbbf7e4b1a5b894a3ba2cdb89895a1e1d6f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -65954,6 +66072,30 @@
       "requirements": [
         {
           "requirement": "COURSE-ENROLL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5bb05c2291a3a5da",
+      "path": "tdf-hq-ui/src/utils/priceInput.test.ts",
+      "sha256": "df78800c77a47657c8ebbc2ceeda269c4fce4aff5e4202b1f2b9abb20bd2ee10",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-48a7c088c9cbddbf",
+      "path": "tdf-hq-ui/src/utils/priceInput.ts",
+      "sha256": "a45f97f5ac4d047349b9eabf91330856113d2d7f04c294dc6ef0c9d70132e977",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -82365,8 +82507,6 @@
     "SURFACE-6b44ad06b4487812",
     "SURFACE-54a41f2ada423353",
     "SURFACE-ca2671adb5443ee0",
-    "SURFACE-34ddadce83f650d3",
-    "SURFACE-3fd518a6b12b548c",
     "SURFACE-9adc2b202007eacf",
     "SURFACE-81d3da97ed29847f",
     "SURFACE-01c042934329ed43",
@@ -84468,7 +84608,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "705fb125b4169cc72bb107f4b10f0e477bf53048ac41279bf5744c6fbeeef635",
+      "sourceSha256": "f7117d5afa28628c847cad94b91818a53f29e244cdf8427240af2b199b935878",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -84496,7 +84636,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "705fb125b4169cc72bb107f4b10f0e477bf53048ac41279bf5744c6fbeeef635",
+      "sourceSha256": "f7117d5afa28628c847cad94b91818a53f29e244cdf8427240af2b199b935878",
       "definition": {
         "states": [
           "absent",
@@ -84526,7 +84666,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "705fb125b4169cc72bb107f4b10f0e477bf53048ac41279bf5744c6fbeeef635",
+      "sourceSha256": "f7117d5afa28628c847cad94b91818a53f29e244cdf8427240af2b199b935878",
       "definition": {
         "export": [
           "queued",

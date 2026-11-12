@@ -841,8 +841,12 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.ok(review, 'the desktop shell reviews need their exact branch review');
     assert.deepEqual(active.find(row => row.id === review.id), review);
   }
+  const priceFixture = active.find(row => row.id === '4255c54da850af675134');
+  assert.ok(priceFixture, 'the service-price form fixture needs its explicit structural review');
+  assert.equal(priceFixture.classification, 'genuine-technical-constant');
+  assert.equal(priceFixture.evidence.file, 'tdf-hq-ui/src/pages/ServiceTypesPage.form.test.tsx');
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
-    ...desktopReviews.map(row => row.id)]);
+    ...desktopReviews.map(row => row.id), priceFixture.id]);
   // The cognitive-load continuation combines two booking presentation steps.
   // Its successor must preserve the exact earlier classification and review,
   // including in this historical Apple-policy projection.
@@ -859,7 +863,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   assert.equal(historicalAppleView.length, 1411);
   assert.deepEqual(historicalAppleView,
     await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1423);
+  assert.equal(active.length, 1424);
   const history = new Map();
   const visit = row => {
     if (!row) return;

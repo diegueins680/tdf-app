@@ -190,6 +190,51 @@ describe('HostedProviderCheckout', () => {
     expect(createMock).not.toHaveBeenCalled();
   });
 
+  it('shows PayPhone errors on the invalid fields without creating or locking a payment', async () => {
+    const locks: boolean[] = [];
+    createMock.mockResolvedValue({ ...succeeded, provider: 'payphone' });
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['payphone_wallet']}
+      onSafetyLockChange={(locked) => locks.push(locked)} />);
+    const wallet = await screen.findByRole('button', { name: /PayPhone/ });
+    fireEvent.click(wallet);
+    const phone = screen.getByRole<HTMLInputElement>('textbox', { name: 'Número PayPhone' });
+    const country = screen.getByRole<HTMLInputElement>('textbox', { name: 'Código país' });
+    expect(document.activeElement).toBe(phone);
+    fireEvent.change(country, { target: { value: '' } });
+    fireEvent.change(phone, { target: { value: '123' } });
+    fireEvent.click(wallet);
+    expect(country.getAttribute('aria-invalid')).toBe('true');
+    expect(phone.getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(country);
+    expect(createMock).not.toHaveBeenCalled();
+    expect(locks).not.toContain(true);
+    fireEvent.change(country, { target: { value: '593' } });
+    expect(document.activeElement).toBe(country);
+    fireEvent.click(wallet);
+    expect(document.activeElement).toBe(phone);
+    expect(phone.value).toBe('123');
+    fireEvent.change(phone, { target: { value: '999000111' } });
+    fireEvent.click(wallet);
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+    expect(createMock.mock.calls[0]?.[3]).toMatchObject({
+      buyerCountryCode: '593', buyerPhone: '999000111',
+    });
+  });
+
+  it('clears an unused wallet validation error when another offered method is chosen', async () => {
+    createMock.mockResolvedValue(succeeded);
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']} />);
+    const wallet = await screen.findByRole('button', { name: /PayPhone/ });
+    fireEvent.click(wallet);
+    fireEvent.click(wallet);
+    const phone = screen.getByRole('textbox', { name: 'Número PayPhone' });
+    expect(phone.getAttribute('aria-invalid')).toBe('true');
+    expect(createMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /Tarjeta · PlaceToPay/ }));
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+    expect(phone.getAttribute('aria-invalid')).toBe('false');
+  });
+
   it('keeps the original PayPhone contact frozen during exact recovery', async () => {
     const key = seedPending(true);
     createMock.mockResolvedValue({ ...succeeded, provider: 'payphone' });

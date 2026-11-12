@@ -44,6 +44,24 @@
       "principle": "Revelación progresiva y ley de Hick",
       "finding": "La captura de teléfono mostró el grupo de hasta 12 horarios sugeridos junto al campo de fecha y los accesos rápidos.",
       "change": "Grupo plegado tras un control nativo accesible por teclado. Las opciones y la fecha física de Quito se conservan."
+    },
+    {
+      "id": "COG-20261112-06",
+      "principle": "Ayuda para reconocer y corregir errores",
+      "finding": "El comprobante de transferencia no identificaba el error junto al número; el error del archivo no estaba asociado al campo para lectores de pantalla.",
+      "change": "Errores junto al número y asociaciones ARIA del archivo; se conserva la referencia y no se envía evidencia inválida."
+    },
+    {
+      "id": "COG-20261112-07",
+      "principle": "Prevención y recuperación de errores",
+      "finding": "PayPhone avisaba de código de país o teléfono inválido en una alerta general.",
+      "change": "Cada campo indica su error; el foco va al primero inválido sin iniciar pago ni cambiar datos de recuperación."
+    },
+    {
+      "id": "COG-20261112-08",
+      "principle": "Memoria de trabajo y prevención de errores monetarios",
+      "finding": "El catálogo de servicios pedía precios en centavos; un valor no entero podía convertirse silenciosamente en precio ausente.",
+      "change": "Entrada en la moneda seleccionada (25,50), conversión exacta a2550 centavos, preservación de cero y bloqueo de importes inválidos o fuera de precisión."
     }
   ],
   "measurements": [
@@ -167,7 +185,7 @@
       "id": 16,
       "item": "Errores junto al campo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Cantidad, nombre, correo e identificación/nombre de factura; foco al enviar, sin quitar lo escrito. Pago/transferencia pendientes."
+      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia; código/telefono PayPhone. Foco al corregir y pruebas sin escrituras. Quedan otras transferencias y campos de pago fuera de estas superficies."
     },
     {
       "id": 17,
@@ -221,7 +239,7 @@
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial",
-      "nextOrEvidence": "Confirmaciones nombradas y varios estados en español; importes en dólares y cobertura completa pendientes."
+      "nextOrEvidence": "Confirmaciones y estados previos; precio de servicios en moneda seleccionada con conversión exacta a centavos. Restan importes de marketplace/eventos y cobertura completa."
     },
     {
       "id": 26,
@@ -346,6 +364,52 @@
     {
       "path": "figures/booking-two-step-phone.png",
       "context": "Prueba sintética de teléfono: segundo paso con sugerencias abiertas expresamente y horario rechazado por la API de prueba. No es una reserva real."
+    },
+    {
+      "path": "figures/payphone-field-errors.png",
+      "context": "Datos sintéticos inválidos en PayPhone; cero solicitudes de pago."
+    },
+    {
+      "path": "figures/transfer-field-errors.png",
+      "context": "Archivo sintético rechazado, referencia conservada; cero envíos de evidencia."
+    }
+  ],
+  "followups": [
+    {
+      "date": "2026-11-12",
+      "baseCommit": "6939c394ce1c4ae23ea7006127c3783f1405a341",
+      "scope": "Audit items16 and25; no Mobile/backend or owner-removal changes.",
+      "focusedVerification": {
+        "suites": 6,
+        "tests": 33,
+        "scope": "Initial focused checkpoint, before the additional exact-display and method-change regressions."
+      },
+      "checkoutRegressionVerification": {
+        "suites": 13,
+        "tests": 162,
+        "scope": "Cross-checkout regressions including service-price display/edit refusal and wallet-method validation reset."
+      },
+      "browserVerification": {
+        "cases": 8,
+        "engines": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Firefox",
+          "WebKit"
+        ],
+        "checks": [
+          "Invalid payment inputs send zero writes",
+          "Error focus and preserved input",
+          "WCAG A/AA axe checks and viewport overflow"
+        ]
+      },
+      "catalogCandidates": 1424,
+      "sourceFreshness": "pending final commit",
+      "hostedCI": "No main CI run observed for the previous push; dispatch for the new verified head remains pending.",
+      "latestWalletVerification": {
+        "suites": 1,
+        "tests": 17
+      }
     }
   ]
 }

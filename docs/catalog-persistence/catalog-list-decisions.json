@@ -37846,6 +37846,23 @@
         "name": "mediaSession",
         "valueCount": 3
       }
+    },
+    {
+      "id": "4255c54da850af675134",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A fixture that stops matching the service wire shape could hide a price conversion or relationship regression.",
+      "justification": "Individually reviewed: this test-only object enumerates ServiceCatalogDTO field names for one synthetic service read. The keys are transport/fixture structure, not an editable list of services or governed currency values. The UI test proves an existing 12500-cent amount renders as125.00 and a decimal-comma edit writes exactly2550 cents while preserving version/relationship IDs.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-service-price-input-20261112",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/ServiceTypesPage.form.test.tsx",
+        "name": "service",
+        "sourceKind": "test"
+      }
     }
   ]
 }

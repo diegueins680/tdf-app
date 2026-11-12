@@ -16,16 +16,4 @@ export function estimateTicketFees(faceValueCents: number) {
   };
 }
 
-export const parseOptionalPriceCents = (raw: string): number | null => {
-  const value = raw.trim();
-  if (!value) return null;
-  if (!/^\d+(?:[.,]\d{1,2})?$/.test(value)) {
-    throw new Error('El precio debe tener como máximo dos decimales.');
-  }
-  const [whole = '0', fractional = ''] = value.replace(',', '.').split('.');
-  const cents = BigInt(whole) * 100n + BigInt(fractional.padEnd(2, '0'));
-  if (cents > BigInt(Number.MAX_SAFE_INTEGER)) {
-    throw new Error('El precio está fuera del rango permitido.');
-  }
-  return Number(cents);
-};
+export { parseOptionalPriceCents } from './priceInput';

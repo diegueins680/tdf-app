@@ -93,3 +93,32 @@ it('keeps reference-only transfers working until the API advertises receipt supp
   fireEvent.click(screen.getByRole('button', { name: 'Ya transferí' }));
   expect(submit).toHaveBeenCalledWith('COMP-77');
 });
+
+
+it('associates reference and file errors with their fields and blocks invalid submissions', () => {
+  const submit = mount(transfer());
+  const reference = screen.getByRole<HTMLInputElement>('textbox', { name: /Número de comprobante/ });
+  fireEvent.change(reference, { target: { value: '  a  ' } });
+  fireEvent.blur(reference);
+  expect(reference.getAttribute('aria-invalid')).toBe('true');
+  expect(screen.getByText('Ingresa un número de comprobante de entre 3 y 120 caracteres.')).toBeTruthy();
+  fireEvent.submit(reference.closest('form')!);
+  expect(document.activeElement).toBe(reference);
+  expect(submit).not.toHaveBeenCalled();
+  fireEvent.change(reference, { target: { value: 'x'.repeat(121) } });
+  fireEvent.submit(reference.closest('form')!);
+  expect(submit).not.toHaveBeenCalled();
+  fireEvent.change(reference, { target: { value: ' COMP-77 ' } });
+  const receipt = screen.getByLabelText(/Adjuntar comprobante/);
+  fireEvent.change(receipt, { target: { files: [new File([''], 'empty.pdf', { type: 'application/pdf' })] } });
+  expect(receipt.getAttribute('aria-invalid')).toBe('true');
+  expect(receipt.getAttribute('aria-describedby')).toContain('ticket-transfer-receipt-error');
+  fireEvent.submit(reference.closest('form')!);
+  expect(document.activeElement).toBe(receipt);
+  expect(submit).not.toHaveBeenCalled();
+  expect(reference.value).toBe(' COMP-77 ');
+  fireEvent.change(receipt, { target: { files: [] } });
+  expect(receipt.getAttribute('aria-invalid')).toBe('false');
+  fireEvent.submit(reference.closest('form')!);
+  expect(submit).toHaveBeenCalledWith('COMP-77');
+});

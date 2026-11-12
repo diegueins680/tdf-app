@@ -75,6 +75,7 @@
       "e2e/web/music-player.spec.mjs",
       "e2e/web/music-search-native.spec.mjs",
       "e2e/web/notification-navigation.spec.mjs",
+      "e2e/web/payment-field-errors.spec.mjs",
       "e2e/web/persona-public.spec.mjs",
       "e2e/web/public-text-reflow.spec.mjs",
       "e2e/web/public-welcome.spec.mjs",
@@ -1472,6 +1473,7 @@
       "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
       "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
       "tdf-hq-ui/src/pages/ServiceStorageRecovery.test.tsx",
+      "tdf-hq-ui/src/pages/ServiceTypesPage.form.test.tsx",
       "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
       "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
       "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
@@ -1682,6 +1684,8 @@
       "tdf-hq-ui/src/utils/passwordPolicy.ts",
       "tdf-hq-ui/src/utils/phone.test.ts",
       "tdf-hq-ui/src/utils/phone.ts",
+      "tdf-hq-ui/src/utils/priceInput.test.ts",
+      "tdf-hq-ui/src/utils/priceInput.ts",
       "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
       "tdf-hq-ui/src/utils/providerPaymentResume.ts",
       "tdf-hq-ui/src/utils/publicBookingRooms.ts",
@@ -3498,6 +3502,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-7b9e114051595d43",
+      "path": "e2e/web/payment-field-errors.spec.mjs",
+      "sha256": "0116b1c7bdbef1d0d296a888ea72de15a5feb944d1c45a903dd8156be4055d67",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
       "sha256": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
@@ -3848,7 +3858,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "607027df5400e9ddda72463921aaf7b59e498fcebe80ed069ce23ded5ce2aff9",
+      "sha256": "009e93cc9b90f05f5bfaec52ceefe1a785cfbd1fc36c500bb708b4574734f8c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9686,13 +9696,13 @@
     {
       "id": "SURFACE-3b9b0b0c805d8c24",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
-      "sha256": "a0b8dbb26a11e036bcea85963500bda1227df168380a056fe3a7941bff7d73d2",
+      "sha256": "ece68991c3d3ab549b31d328afe3735d2842bf32773ca6b6f72c06d59dfe2aca",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "1a6354dfd8f03c665d2cb6fe572993dced69f269aa9aaaa5de94c53ec7013e1b",
+      "sha256": "616d9200231897ba97dc4c1fa9a4f9457378f609d1296b8bd6cd1c0b46f433ea",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9722,13 +9732,13 @@
     {
       "id": "SURFACE-4fbcad3f047cdd71",
       "path": "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
-      "sha256": "a3d9a2016da97b49a8d6ec1158faefd1d312aff248310e2bcac0100b166dddb2",
+      "sha256": "33f9c31935e8ce69c04a66ede76b682fa586afda515548093e00707ac45b270a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a00fb37fdda810d3",
       "path": "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
-      "sha256": "6a7d1d9d63dc7617096bce3744b97ddd31cea2688ff6fc65fe46cb815a2bf288",
+      "sha256": "e36144f325d096a7937957b0001f4c50aec66e844ce9d41db500ec28252b7acb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11760,15 +11770,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-fbcbb460f7a859f6",
+      "path": "tdf-hq-ui/src/pages/ServiceTypesPage.form.test.tsx",
+      "sha256": "3763a9bf398693e0e99395b012354b51e57f8b470c918802764d260cf9161f9b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-34ddadce83f650d3",
       "path": "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
-      "sha256": "0929e19bb090251b471473c404a997e89f6b220dffdc06234cbb8aa53e03c521",
+      "sha256": "caae7a8be0f4a6debf6c7dc8a58856420b831f996a766522ac00077336e8f2bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3fd518a6b12b548c",
       "path": "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
-      "sha256": "b968e296201d4b937a36cf40a620aae129b874de6c3b6feaf6055abb238bec2c",
+      "sha256": "0fd8410a01cd265baab9451f83c4cff0b466e408cdbe4a048616c621aaafc2a6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12782,7 +12798,7 @@
     {
       "id": "SURFACE-6b2a9195c4ff9137",
       "path": "tdf-hq-ui/src/utils/eventTicketPricing.ts",
-      "sha256": "4ead75fcba5dc203faa93b300fd0db26f3ea7e28d3bf6772e7f1891dbf8e4abf",
+      "sha256": "5df4bf043273e9a698f8c5e0442cdbbbf7e4b1a5b894a3ba2cdb89895a1e1d6f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13017,6 +13033,18 @@
       "id": "SURFACE-92ac9e5d6124c8b2",
       "path": "tdf-hq-ui/src/utils/phone.ts",
       "sha256": "eb558c757e4f79a86c7ca3df1da08f98df111d8944c57206e85ea9bb5e1f6ff1",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-5bb05c2291a3a5da",
+      "path": "tdf-hq-ui/src/utils/priceInput.test.ts",
+      "sha256": "df78800c77a47657c8ebbc2ceeda269c4fce4aff5e4202b1f2b9abb20bd2ee10",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-48a7c088c9cbddbf",
+      "path": "tdf-hq-ui/src/utils/priceInput.ts",
+      "sha256": "a45f97f5ac4d047349b9eabf91330856113d2d7f04c294dc6ef0c9d70132e977",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30892,7 +30920,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "705fb125b4169cc72bb107f4b10f0e477bf53048ac41279bf5744c6fbeeef635",
+      "sha256": "f7117d5afa28628c847cad94b91818a53f29e244cdf8427240af2b199b935878",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -189,6 +189,13 @@ export default function HostedProviderCheckout({
   const [buyerCountryCode, setBuyerCountryCode] = useState('593');
   const [buyerPhone, setBuyerPhone] = useState(() => digitsOnly(initialBuyerPhone ?? ''));
   const [payphoneRequested, setPayphoneRequested] = useState(false);
+  const [countryCodeError, setCountryCodeError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const countryInput = useRef<HTMLInputElement | null>(null);
+  const phoneInput = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (payphoneRequested) phoneInput.current?.focus();
+  }, [payphoneRequested]);
   const recoveryScope = checkout?.checkoutId ?? pendingReturnPathPrefix ?? '';
   const recoveryScopeRef = useRef(recoveryScope);
   recoveryScopeRef.current = recoveryScope;
@@ -239,6 +246,8 @@ export default function HostedProviderCheckout({
     setPendingCreation(null);
     setPotentiallyAmbiguous(false);
     setError(null);
+    setCountryCodeError(null);
+    setPhoneError(null);
     setBusy(false);
     const expectedCheckoutId = checkout?.checkoutId;
     const pending = loadProviderPaymentPending(expectedCheckoutId, pendingReturnPathPrefix);
@@ -344,14 +353,20 @@ export default function HostedProviderCheckout({
     }
     const phone = original?.buyerPhone ?? digitsOnly(buyerPhone);
     const countryCode = original?.buyerCountryCode ?? digitsOnly(buyerCountryCode);
-    if (method.provider === 'payphone'
-        && (phone.length < 6 || phone.length > 15
-          || countryCode.length < 1 || countryCode.length > 3)) {
-      setError(english
-        ? 'Enter a valid country calling code and phone number for PayPhone.'
-        : 'Ingresa un código de país y número de teléfono válidos para PayPhone.');
-      return;
+    if (method.provider === 'payphone') {
+      const invalidCountry = countryCode.length < 1 || countryCode.length > 3;
+      const invalidPhone = phone.length < 6 || phone.length > 15;
+      setCountryCodeError(invalidCountry
+        ? (english ? 'Enter a country calling code of 1 to 3 digits.' : 'Ingresa un código de país de 1 a 3 dígitos.') : null);
+      setPhoneError(invalidPhone
+        ? (english ? 'Enter a phone number of 6 to 15 digits, without the country code.' : 'Ingresa un teléfono de 6 a 15 dígitos, sin el código de país.') : null);
+      if (invalidCountry || invalidPhone) {
+        (invalidCountry ? countryInput : phoneInput).current?.focus();
+        return;
+      }
     }
+    setCountryCodeError(null);
+    setPhoneError(null);
     setBusy(true);
     setPotentiallyAmbiguous(true);
     setSelected(method);
@@ -511,7 +526,14 @@ export default function HostedProviderCheckout({
             label={english ? 'Country code' : 'Código país'}
             disabled={safetyLocked}
             value={buyerCountryCode}
-            onChange={(event) => setBuyerCountryCode(digitsOnly(event.target.value).slice(0, 3))}
+            inputRef={countryInput}
+            error={Boolean(countryCodeError)}
+            helperText={countryCodeError}
+            autoComplete="tel-country-code"
+            onChange={(event) => {
+              setBuyerCountryCode(digitsOnly(event.target.value).slice(0, 3));
+              setCountryCodeError(null);
+            }}
             inputProps={{ inputMode: 'numeric', maxLength: 3 }}
             sx={{ maxWidth: { sm: 150 } }}
           />
@@ -520,9 +542,15 @@ export default function HostedProviderCheckout({
             label={english ? 'PayPhone number' : 'Número PayPhone'}
             disabled={safetyLocked}
             value={buyerPhone}
-            onChange={(event) => setBuyerPhone(digitsOnly(event.target.value).slice(0, 15))}
+            inputRef={phoneInput}
+            error={Boolean(phoneError)}
+            autoComplete="tel-national"
+            onChange={(event) => {
+              setBuyerPhone(digitsOnly(event.target.value).slice(0, 15));
+              setPhoneError(null);
+            }}
             inputProps={{ inputMode: 'tel', maxLength: 15 }}
-            helperText={english ? 'Digits only, without the country code.' : 'Solo dígitos, sin el código de país.'}
+            helperText={phoneError ?? (english ? 'Digits only, without the country code.' : 'Solo dígitos, sin el código de país.')}
           />
         </Stack>
       )}
