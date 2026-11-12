@@ -317,7 +317,14 @@
       "scope": "Blocked analytics, bounded route recovery, Quito/UTC/Madrid booking clocks, guest booking retry; all responses synthetic. WebKit retains failed modules and exposes manual recovery.",
       "latestBookingDisclosurePassed": 10
     },
-    "governance": "Inventory/conformance regenerated; final committed-source freshness check pending.",
+    "governance": {
+      "sourceCommit": "7d3bbe8f72d2d16263972ec6ad6afe82ed3f259f",
+      "inventoryFreshness": "passed",
+      "traceabilityFreshness": "passed",
+      "mappedChangedMaterialSurfaces": 62,
+      "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+      "semanticConformance": "not established by inventory or mapping checks"
+    },
     "catalog": {
       "candidates": 1423,
       "unreviewed": 0,
