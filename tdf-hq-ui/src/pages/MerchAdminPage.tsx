@@ -234,7 +234,7 @@ export default function MerchAdminPage() {
                 </>}
               </Stack>
             </Paper>;
-          })}{refunds.data?.length === 0 && <Typography color="text.secondary">{language === 'en' ? 'No canonical refund requests.' : 'No hay solicitudes canónicas de reembolso.'}</Typography>}</Stack>
+          })}{refunds.data?.length === 0 && <Typography color="text.secondary">{language === 'en' ? 'No refund requests.' : 'No hay solicitudes de reembolso.'}</Typography>}</Stack>
           {reviewRefund.isError && <Alert severity="error" sx={{ mt: 2 }}>{language === 'en' ? 'The refund review was rejected. Check separation of duties and current state.' : 'La revisión fue rechazada. Comprueba la separación de funciones y el estado actual.'}</Alert>}
         </>}
       </Paper>
@@ -248,7 +248,7 @@ export default function MerchAdminPage() {
               <Box><Typography fontWeight={800}>{dispute.storeName} · {dispute.orderNumber}</Typography><Typography variant="body2">{dispute.providerDisputeId} · {formatMerchMoney(dispute.amountMinor, dispute.currency)}</Typography></Box>
               <Stack direction="row" spacing={1}><Chip label={merchStatusLabel(dispute.kind, language)} /><Chip label={merchStatusLabel(dispute.status, language)} /></Stack>
             </Stack>
-          </Paper>)}{disputes.data?.length === 0 && <Typography color="text.secondary">{language === 'en' ? 'No canonical provider disputes.' : 'No hay disputas canónicas del proveedor.'}</Typography>}</Stack>
+          </Paper>)}{disputes.data?.length === 0 && <Typography color="text.secondary">{language === 'en' ? 'No provider disputes.' : 'No hay disputas del proveedor.'}</Typography>}</Stack>
         </>}
       </Paper>
 
@@ -291,7 +291,7 @@ export default function MerchAdminPage() {
               {item.resolution && <Alert severity="success">{item.resolution}</Alert>}
               {refundOperations && financial && item.status === 'staff_review' && ['paid', 'partially_refunded'].includes(item.paymentStatus ?? '') && <Paper variant="outlined" sx={{ p: 2 }}>
                 <Stack spacing={1.5}>
-                  <Typography fontWeight={800}>{language === 'en' ? 'Prepare canonical refund' : 'Preparar reembolso canónico'}</Typography>
+                  <Typography fontWeight={800}>{language === 'en' ? 'Prepare refund request' : 'Preparar solicitud de reembolso'}</Typography>
                   <Alert severity="warning">{language === 'en' ? 'This records a request only. It never contacts the provider or returns money.' : 'Esto registra únicamente una solicitud. Nunca contacta al proveedor ni devuelve dinero.'}</Alert>
                   {linkedRefund ? <Alert severity="info">{language === 'en' ? `Linked refund: ${merchStatusLabel(linkedRefund.status, language)}.` : `Reembolso vinculado: ${merchStatusLabel(linkedRefund.status, language)}.`}</Alert> : <>
                     <TextField

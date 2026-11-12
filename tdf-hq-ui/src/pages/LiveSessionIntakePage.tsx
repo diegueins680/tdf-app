@@ -91,9 +91,11 @@ export interface LiveSessionIntakeFormProps {
   accessCode?: string;
   draftOwner?: number;
   canReuseContacts?: boolean;
+  /** Email from this form's verified account, never the ambient staff session. */
+  contactEmailDefault?: string;
 }
 
-export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftOwner, canReuseContacts = false }: LiveSessionIntakeFormProps) {
+export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftOwner, canReuseContacts = false, contactEmailDefault = '' }: LiveSessionIntakeFormProps) {
   const [submissionKey, setSubmissionKey] = useState<string>(() => crypto.randomUUID());
   const qc = useQueryClient();
   const authority = useRef({ accessCode, generation: 0 });
@@ -116,7 +118,8 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
   const [bandName, setBandName] = useState('');
   const [bandDescription, setBandDescription] = useState('');
   const [primaryGenreId, setPrimaryGenreId] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
+  const initialContactEmail = useRef(contactEmailDefault);
+  const [contactEmail, setContactEmail] = useState(contactEmailDefault);
   const [contactPhone, setContactPhone] = useState('');
   const [sessionDate, setSessionDate] = useState(() => toLocalDateInputValue());
   const [availableDates, setAvailableDates] = useState('');
@@ -151,7 +154,7 @@ export function LiveSessionIntakeForm({ variant = 'internal', accessCode, draftO
       setBandName(parsed.bandName ?? '');
       setBandDescription(parsed.bandDescription ?? '');
       setPrimaryGenreId(parsed.primaryGenreId ?? '');
-      setContactEmail(parsed.contactEmail ?? '');
+      setContactEmail(parsed.contactEmail ?? initialContactEmail.current);
       setContactPhone(parsed.contactPhone ?? '');
       setSessionDate(parsed.sessionDate ?? toLocalDateInputValue());
       setAvailableDates(parsed.availableDates ?? '');

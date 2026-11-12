@@ -87,12 +87,17 @@ async function checkError(page, input) {
 }
 
 async function showField(input) {
-  await input.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }));
-  await expect(input).toBeInViewport({ ratio: 1 });
-  expect(await input.evaluate(element => {
-    const rect = element.getBoundingClientRect();
-    return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === element;
-  })).toBe(true);
+  // Reload can restore the old scroll position after the field first mounts.
+  // Reposition during that restoration while retaining full visibility and
+  // real hit-testing assertions (no forced interaction or relaxed ratio).
+  await expect(async () => {
+    await input.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' }));
+    await expect(input).toBeInViewport({ ratio: 1, timeout: 500 });
+    expect(await input.evaluate(element => {
+      const rect = element.getBoundingClientRect();
+      return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === element;
+    })).toBe(true);
+  }).toPass({ timeout: 8000 });
 }
 
 test('music authoring keeps exact 64-bit cents behind USD decimal entry and blocks malformed autosave @critical @mobile-flow', async ({ page, baseURL }, testInfo) => {

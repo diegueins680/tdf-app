@@ -26871,7 +26871,7 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
       "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14-16, 18, 22 and25; continuation 2026-11-11.",
@@ -26945,6 +26945,8 @@
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/LabelTracksPage.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
         "tdf-hq-ui/src/pages/LoginPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
@@ -26978,10 +26980,12 @@
         "e2e/web/booking-timezone.spec.mjs",
         "e2e/web/commerce-money-input.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
+        "e2e/web/live-session-contact.spec.mjs",
         "e2e/web/music-operations-amounts.spec.mjs",
         "e2e/web/payment-field-errors.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
         "e2e/web/staff-event-money.spec.mjs",
+        "e2e/web/video-campaigns.spec.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
@@ -27002,6 +27006,8 @@
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionIntakePage.test.tsx",
+        "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.money.test.tsx",
@@ -27065,7 +27071,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "63d7ab0f525d8a98845bb0876228dd4e4754c1ba1939db8fc166aef4190ed460",
+    "docs/catalog-persistence/catalog-list-decisions.json": "398464c71dc8d0acd2254bfbb0b34885324b2d26c14415d96802070f7add812f",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -27090,7 +27096,7 @@
     "e2e/web/campaign-accessibility.spec.mjs": "4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d",
     "e2e/web/chat-mobile-follow.spec.mjs": "f5ea13a3ebd693cb1fd5e71d58e977429b511f42f2a890bd2affb7efa72ad916",
     "e2e/web/chat-notification-navigation.spec.mjs": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
-    "e2e/web/commerce-money-input.spec.mjs": "ff6b5e0ef4fc4d6c70bae780dc57b4f73f70d5ce88e3fd6545f235ed43fb65b4",
+    "e2e/web/commerce-money-input.spec.mjs": "411cd75a53aec38cab811e230c0d29c962342827ab2871c490232ed7b9a63902",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "5330e8d056e9ef1407f7a3e711bd7b88fde84795896409db2b43164c69efc161",
     "e2e/web/directory-entry.spec.mjs": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
@@ -27103,11 +27109,12 @@
     "e2e/web/helpers/campaign-accessibility.mjs": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
     "e2e/web/helpers/thumbnail-failure-diagnostics.mjs": "d40191d4771616880144a3c0ebd629b16f25dac26cc82552187c277fdb53d755",
     "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
+    "e2e/web/live-session-contact.spec.mjs": "8d10f1047d9776529dc99884b690eb174b5a0c54089012312dce9ec8c134a58d",
     "e2e/web/marketplace-cart.spec.mjs": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
     "e2e/web/mobile-layout-regressions.spec.mjs": "0be1916b95d3bff15572a7237bcb427295142aa1d31322df1257b0406e50ec9c",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
-    "e2e/web/music-operations-amounts.spec.mjs": "892e4449b4c21cd9a075cb1ada2e8c3b6e342af91c17763b1a5d15ae5e2a6822",
+    "e2e/web/music-operations-amounts.spec.mjs": "f4f60c819ff1295537f18be106db93cb33c66ddf48a7daf56aad624c0edb6d29",
     "e2e/web/music-player-integration.spec.mjs": "2ffa2744931cc356a8df4d5e15705e3e23bfc6531ed0c03cc9b8717b37259b6c",
     "e2e/web/music-player-native.spec.mjs": "56c9594a65f72264034209158aa9076a4578d44be41750771c7b448ba63a187b",
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
@@ -27122,7 +27129,7 @@
     "e2e/web/storage-upload-recovery.spec.mjs": "9ba8f8b0971a3568352fb46ffc77e5091c49ac50ec5f8a9b0dcc0c09603823dc",
     "e2e/web/studio-internship-audit.spec.mjs": "d8af2f768d192425c5328ab5d4a21482b375911576905342f56f59bbff4bb60b",
     "e2e/web/ticket-credential.spec.mjs": "f28ff1a9bc0f69d9e5e707c41705b07611dcee219dc15f84a645fd85d940ef02",
-    "e2e/web/video-campaigns.spec.mjs": "4028aeb82bc7d91c568672124ce308acf27ed2626bf36167546bcca46e12a2cf",
+    "e2e/web/video-campaigns.spec.mjs": "a19442ea1d99d0e082cb197eecd31268a254dfc5720a4641d9e8015d7d1ff5ae",
     "e2e/web/webtorrent-browser.spec.mjs": "6610f089d7b7c82b5c6460ed623cbc5413e250741162b48cf4e2de7ae14305d0",
     "formal/auth/LogoutIntent.cfg": "f30060897bc76161ef739e65981da34addc1e9ef7ef6d5892a7184521eb3c7ae",
     "formal/auth/LogoutIntent.tla": "1b08e8a1073c5aa73236e42bac4e02dd9ebf5a64bbcf68729101eed15cf34445",
@@ -27495,7 +27502,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "d33bf22641371d21569a52f662c08f78f78974d5813238135142c9643c8cc0fd",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "e3fb54e079df592a4ae7ce069c4957bb3d8318b45ce62292953bb1d343d4028a",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28232,18 +28239,19 @@
     "tdf-hq-ui/src/pages/LabelReleasesPage.tsx": "209b471c138d4a8a9369059a34002f06b8de9fce8f6ad9601b809ad0c9a64892",
     "tdf-hq-ui/src/pages/LabelTracksPage.tsx": "54950b68a0e54cbea9f384ed89056e20a99de823ab9e23bb47e1a7e46054a31e",
     "tdf-hq-ui/src/pages/LeadsPage.tsx": "aecc18f64a3c6c82985217cef6f4bfc66912a9c35cf87a1af23e521407832b8f",
-    "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
-    "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
-    "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
+    "tdf-hq-ui/src/pages/LiveSessionIntakePage.test.tsx": "57b278c8fe57cc83897e1b3eec8c3c7484271f8e971d4a8de4d5a18c7fb8202f",
+    "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": "5189701c17624ff9ee775f7817b32e1a04ececd9627b4e67b1ac693be137bccb",
+    "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": "a9e3c68b966d0449aa88bf45ddf8699f5fb439a4f75cf057bbf1ea17bbb54e74",
+    "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx": "92a29403cea86f9248089d86285156bf517edb0acbab7d478bc751ce7940ae64",
     "tdf-hq-ui/src/pages/LoginPage.test.tsx": "c54e1dc874ddd7b725f832aff03384377a4ed3d5e2f9cc6489d9228422fa520c",
     "tdf-hq-ui/src/pages/LoginPage.tsx": "bfb5cdbd81ea3a7f1efd62aab1c68f9d654f06e167e915b8482931f067f31021",
     "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx": "13a878136764e5afcddf99d85bee2abbe50904e681f33d7aa3f4eb83ac50eba4",
     "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx": "5dffd9165ed71c3cd34be4af5aa43ccf616b0f8bc1f7002b3ce31e8cbca66246",
     "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx": "c5c2307bef8d7a46deed4e13a4c5e4c13eaf103d97ca47c02545d02084926e97",
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "8435855126f94456a4916ef4b4ef2d22af2c659ca586540ec382e31fdfc86c99",
-    "tdf-hq-ui/src/pages/MerchAdminPage.money.test.tsx": "a66fccf8c96cf4b114f67c61ae9caff7e8418996eb4edbc576b5396c6b31b27b",
+    "tdf-hq-ui/src/pages/MerchAdminPage.money.test.tsx": "9306f6cbe5ba3a54badf15943df50f35badbcb11a062227ab0e78822216decf8",
     "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx": "2ebb0cc8490fb5df6e2ea0ea8781e9776afbec0e999ddfa5cd9b9d594dd2f725",
-    "tdf-hq-ui/src/pages/MerchAdminPage.tsx": "de8bc5405362562ec3b4e3241591483c9de8d54a42c340dbb1f33f174eb55194",
+    "tdf-hq-ui/src/pages/MerchAdminPage.tsx": "a77106030c05eeb3b9fa54df184afaa128e8247c153e25a312763b882ac6d5e3",
     "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx": "e5f7a21499794c798916c4f05ab53f15aa44a7f1ee46265e913e1db03317c5d0",
     "tdf-hq-ui/src/pages/MerchProductPage.tsx": "f4f2d80c1035cf622424164999ab3e81ec37d184e5cd34304eb1eb592e1e35b3",
     "tdf-hq-ui/src/pages/MerchReputationPage.tsx": "ef4c88e1640e18c84679d7968ce7eea06fc2b60d9df2e58787a8139c8726b359",
@@ -28412,8 +28420,8 @@
     "tdf-hq-ui/src/utils/loginRouting.test.ts": "8fabb75d7f986e9d7bf8f24b2a6a71f786e08fcae9718b8d22ede42eaf89f617",
     "tdf-hq-ui/src/utils/loginRouting.ts": "d66e41d819a407a04dbbe6d4a35824ec444aa4a119ea013bd7263db435ca6593",
     "tdf-hq-ui/src/utils/markdownMentions.ts": "de382e370625d8f4da61c55d8352f87afb69a1aab083adf998ee26941e93e79d",
-    "tdf-hq-ui/src/utils/merch.test.ts": "7d6d6d66ca466f58dda4a90166d03141d514b40803ca23822db7ab478b99c94f",
-    "tdf-hq-ui/src/utils/merch.ts": "d7a7445666e502c2e925b218308070d781f290f9f44389dfad86f8eea97adf3b",
+    "tdf-hq-ui/src/utils/merch.test.ts": "3846429813d4d4c3a8c72acb6d2b96c67cee4e078048c5b783df597d0dcb3881",
+    "tdf-hq-ui/src/utils/merch.ts": "5983d3941a54bb27e53e43b7f09380dff9b53f85b7d73d7735ec4cef47215b51",
     "tdf-hq-ui/src/utils/musicMoney.test.ts": "5595b46af83436edef7980f5ca7ee189ba467bd417d8dba415795d337411e352",
     "tdf-hq-ui/src/utils/musicMoney.ts": "d82f44eb3b43765430adabd12f2931cb5e90d0c56ad18dfa2d873be001fddb51",
     "tdf-hq-ui/src/utils/musicPreviewRange.test.ts": "90c8840b4c1e8bdf2c9641efa7e5e75ba8182bbfc511c002f336361d065e4a7f",
@@ -40539,6 +40547,10 @@
       {
         "requirement": "SYS-WEB-LAYOUT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx": [
@@ -40548,6 +40560,10 @@
       },
       {
         "requirement": "LEGAL-DISCLOSURE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
       }
     ],
@@ -40596,6 +40612,10 @@
     "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx": [
       {
         "requirement": "SYS-WEB-LAYOUT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -45689,6 +45709,10 @@
       {
         "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx": [
@@ -46757,6 +46781,12 @@
         "relationship": "tests"
       }
     ],
+    "e2e/web/live-session-contact.spec.mjs": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
     "e2e/web/music-operations-amounts.spec.mjs": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -46794,6 +46824,12 @@
       }
     ],
     "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/LiveSessionIntakePage.test.tsx": [
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
@@ -47514,7 +47550,7 @@
     {
       "id": "SURFACE-454188068d4cc550",
       "path": "e2e/web/commerce-money-input.spec.mjs",
-      "sha256": "ff6b5e0ef4fc4d6c70bae780dc57b4f73f70d5ce88e3fd6545f235ed43fb65b4",
+      "sha256": "411cd75a53aec38cab811e230c0d29c962342827ab2871c490232ed7b9a63902",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47715,6 +47751,18 @@
       ]
     },
     {
+      "id": "SURFACE-306f707fff5e8fff",
+      "path": "e2e/web/live-session-contact.spec.mjs",
+      "sha256": "8d10f1047d9776529dc99884b690eb174b5a0c54089012312dce9ec8c134a58d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
       "sha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
@@ -47765,7 +47813,7 @@
     {
       "id": "SURFACE-fba5c7c3b46196b0",
       "path": "e2e/web/music-operations-amounts.spec.mjs",
-      "sha256": "892e4449b4c21cd9a075cb1ada2e8c3b6e342af91c17763b1a5d15ae5e2a6822",
+      "sha256": "f4f60c819ff1295537f18be106db93cb33c66ddf48a7daf56aad624c0edb6d29",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47999,11 +48047,15 @@
     {
       "id": "SURFACE-9561c312584f3d24",
       "path": "e2e/web/video-campaigns.spec.mjs",
-      "sha256": "4028aeb82bc7d91c568672124ce308acf27ed2626bf36167546bcca46e12a2cf",
+      "sha256": "a19442ea1d99d0e082cb197eecd31268a254dfc5720a4641d9e8015d7d1ff5ae",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -48610,7 +48662,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "d33bf22641371d21569a52f662c08f78f78974d5813238135142c9643c8cc0fd",
+      "sha256": "e3fb54e079df592a4ae7ce069c4957bb3d8318b45ce62292953bb1d343d4028a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62945,14 +62997,19 @@
     {
       "id": "SURFACE-ee05853b9d278f61",
       "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.test.tsx",
-      "sha256": "3e008cbdaddd108fef1385b5ee84424053c42cb74cbe735139a97df6f5c32a01",
+      "sha256": "57b278c8fe57cc83897e1b3eec8c3c7484271f8e971d4a8de4d5a18c7fb8202f",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-517e48428bed4a91",
       "path": "tdf-hq-ui/src/pages/LiveSessionIntakePage.tsx",
-      "sha256": "071f7a3d488fd88687cffda5cb6c4a505018aaec8380c51e88c3f73560d28371",
+      "sha256": "5189701c17624ff9ee775f7817b32e1a04ececd9627b4e67b1ac693be137bccb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62962,17 +63019,25 @@
         {
           "requirement": "LEGAL-DISCLOSURE-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-07c0b63cc31dfe61",
       "path": "tdf-hq-ui/src/pages/LiveSessionPublicPage.test.tsx",
-      "sha256": "c7ee179cb1dd5e0326054d9cc06d6f0c433ecd48b7620a9b25d0ae278ade6218",
+      "sha256": "a9e3c68b966d0449aa88bf45ddf8699f5fb439a4f75cf057bbf1ea17bbb54e74",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -62980,11 +63045,15 @@
     {
       "id": "SURFACE-aabfa794448b924b",
       "path": "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
-      "sha256": "b3d9afb2fcef5772f8397011443b084abf8d65e47b9ff4ac2187bca2a027c14a",
+      "sha256": "92a29403cea86f9248089d86285156bf517edb0acbab7d478bc751ce7940ae64",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-LAYOUT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -63153,7 +63222,7 @@
     {
       "id": "SURFACE-d02372b89410f44a",
       "path": "tdf-hq-ui/src/pages/MerchAdminPage.money.test.tsx",
-      "sha256": "a66fccf8c96cf4b114f67c61ae9caff7e8418996eb4edbc576b5396c6b31b27b",
+      "sha256": "9306f6cbe5ba3a54badf15943df50f35badbcb11a062227ab0e78822216decf8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63177,7 +63246,7 @@
     {
       "id": "SURFACE-61f97ffdc68a2602",
       "path": "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
-      "sha256": "de8bc5405362562ec3b4e3241591483c9de8d54a42c340dbb1f33f174eb55194",
+      "sha256": "a77106030c05eeb3b9fa54df184afaa128e8247c153e25a312763b882ac6d5e3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66318,7 +66387,7 @@
     {
       "id": "SURFACE-a2fad7ff00e326b8",
       "path": "tdf-hq-ui/src/utils/merch.test.ts",
-      "sha256": "7d6d6d66ca466f58dda4a90166d03141d514b40803ca23822db7ab478b99c94f",
+      "sha256": "3846429813d4d4c3a8c72acb6d2b96c67cee4e078048c5b783df597d0dcb3881",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66334,7 +66403,7 @@
     {
       "id": "SURFACE-69214ab4dd4d9619",
       "path": "tdf-hq-ui/src/utils/merch.ts",
-      "sha256": "d7a7445666e502c2e925b218308070d781f290f9f44389dfad86f8eea97adf3b",
+      "sha256": "5983d3941a54bb27e53e43b7f09380dff9b53f85b7d73d7735ec4cef47215b51",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82853,7 +82922,6 @@
     "SURFACE-6c5ad1714500a7c5",
     "SURFACE-547227e70118d509",
     "SURFACE-1ed3bac9b35b6a6b",
-    "SURFACE-ee05853b9d278f61",
     "SURFACE-9f6c120925c7ada4",
     "SURFACE-f8300b1e60eaa398",
     "SURFACE-2da0a841fde450c0",
@@ -84985,7 +85053,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cb27232caedb59f0311d3283ae4c0ba3630dccea428dada0124b73d7bdf056bb",
+      "sourceSha256": "f690c15915886ecaed4627932cd616df57f733416229e8bc3e44949d2cbdcb50",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85013,7 +85081,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cb27232caedb59f0311d3283ae4c0ba3630dccea428dada0124b73d7bdf056bb",
+      "sourceSha256": "f690c15915886ecaed4627932cd616df57f733416229e8bc3e44949d2cbdcb50",
       "definition": {
         "states": [
           "absent",
@@ -85043,7 +85111,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "cb27232caedb59f0311d3283ae4c0ba3630dccea428dada0124b73d7bdf056bb",
+      "sourceSha256": "f690c15915886ecaed4627932cd616df57f733416229e8bc3e44949d2cbdcb50",
       "definition": {
         "export": [
           "queued",

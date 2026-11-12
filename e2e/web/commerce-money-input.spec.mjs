@@ -92,6 +92,8 @@ test('merch prices and delivery accept currency units without submitting invalid
 test('refund currency input keeps the verified balance and request-only meaning @critical @mobile-flow', async ({ page, baseURL }, testInfo) => {
   const writes = await fixture(page, baseURL);
   await page.goto('/admin/merch');
+  await expect(page.getByText('Reembolso · En revisión del equipo TDF', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Pago: Reembolsado parcialmente.*Reembolso: Ninguno/)).toBeVisible();
   const amount = page.getByRole('textbox', { name: /^Monto \(USD;/ });
   await amount.fill('40.01');
   await errorAssociation(page, amount);

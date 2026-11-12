@@ -37882,6 +37882,78 @@
         "sourceKind": "test",
         "valueCount": 6
       }
+    },
+    {
+      "id": "32d2939cc4dcd34d3c1e",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "merch_order.payment_status",
+      "priority": "P1-integrity",
+      "risk": "Confusing a partial refund with a full refund or request approval could misstate the financial outcome.",
+      "justification": "Individually reviewed: Two read-only Spanish/English display strings for the existing partially_refunded payment status in the merchandise schema CHECK constraint and server response. The array indexes select the UI language only; it is not a selectable payment-state list and cannot change a persisted status. Component and browser checks retain the partial-payment wording beside the request-only refund warning; exports keep the wire value.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-merch-status-labels-20261112",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/merch.ts",
+        "name": "partially_refunded",
+        "kind": "array",
+        "sourceKind": "production",
+        "valueCount": 2,
+        "values": [
+          "Reembolsado parcialmente",
+          "Partially refunded"
+        ],
+        "authority": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      }
+    },
+    {
+      "id": "38c31c0f6ac4d4fafd4b",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "merch_order.payment_status",
+      "priority": "P1-integrity",
+      "risk": "A full-refund label must not be used for approval, processing or partial refund.",
+      "justification": "Individually reviewed: Two read-only localized labels for the existing refunded merchandise payment status, verified against 2026-09-07_artist_merch_storefronts.sql. This lookup only presents the status supplied by the backend, never authorizes or executes a refund. Distinct requested/approved/paid/partial/refunded labels and unknown-state fallback retain their separate meanings.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-merch-status-labels-20261112",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/merch.ts",
+        "name": "refunded",
+        "kind": "array",
+        "sourceKind": "production",
+        "valueCount": 2,
+        "values": [
+          "Reembolsado",
+          "Refunded"
+        ],
+        "authority": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      }
+    },
+    {
+      "id": "ddb74ea1ebe3db43e723",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "merch_order_issue.issue_type",
+      "priority": "P1-integrity",
+      "risk": "An issue-type label must not imply that a refund has occurred.",
+      "justification": "Individually reviewed: Two Spanish/English display strings for the existing refund support-case type in the merchandise schema and server query. This is a localized type name, not a client-owned catalog or financial transition. The admin case shows its separate review and payment states and keeps the warning that recording a request never contacts the provider or returns money.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-merch-status-labels-20261112",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/merch.ts",
+        "name": "refund",
+        "kind": "array",
+        "sourceKind": "production",
+        "valueCount": 2,
+        "values": [
+          "Reembolso",
+          "Refund"
+        ],
+        "authority": "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql"
+      }
     }
   ]
 }

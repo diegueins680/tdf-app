@@ -40,6 +40,9 @@ afterEach(() => { cleanup(); client.clear(); });
 it.each(['es', 'en'] as const)('converts a partial refund in %s and retains request-only guidance', async locale => {
   language = locale;
   const amount = await mount();
+  expect(screen.getByText(locale === 'en' ? 'Refund · Under TDF staff review' : 'Reembolso · En revisión del equipo TDF')).toBeTruthy();
+  expect(screen.getByText(locale === 'en' ? /Payment: Partially refunded.*Refund: None/ : /Pago: Reembolsado parcialmente.*Reembolso: Ninguno/)).toBeTruthy();
+  expect(screen.getByText(locale === 'en' ? 'Prepare refund request' : 'Preparar solicitud de reembolso')).toBeTruthy();
   fireEvent.change(amount, { target: { value: '25,50' } });
   fireEvent.click(request());
   await waitFor(() => expect(createAdminRefund).toHaveBeenCalledWith('synthetic-order', expect.objectContaining({ issueId: 'synthetic-issue', amountMinor: 2550 }), 'synthetic-refund-key'));

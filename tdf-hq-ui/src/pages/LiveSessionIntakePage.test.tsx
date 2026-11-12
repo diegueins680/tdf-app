@@ -112,3 +112,24 @@ it('explicitly abandons the owned draft and starts a new operation after warning
   expect(submit.mock.calls[1]?.[2]).not.toBe(oldKey);
  } finally { back.mockRestore(); }
 });
+
+
+it.each([undefined, 'saved@example.test', ''])('prefills verified contact without replacing an owned draft (%j) or later edits', async saved => {
+ const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+ if (saved !== undefined) localStorage.setItem('live-session-draft:public:42', JSON.stringify({ contactEmail: saved }));
+ const element = (email: string, owner = 42) => <QueryClientProvider client={client}><LiveSessionIntakeForm key={owner} variant="public" draftOwner={owner} accessCode="synthetic-code" contactEmailDefault={email} /></QueryClientProvider>;
+ const view = render(element('verified@example.test'));
+ const email = screen.getByLabelText('Email de contacto');
+ expect(email).toHaveValue(saved ?? 'verified@example.test');
+ expect(screen.getByLabelText(/Nombre completo/)).toHaveValue('');
+ expect(screen.getByRole('checkbox', { name: /Acepto los términos/ })).not.toBeChecked();
+ fireEvent.change(email, { target: { value: 'edited@example.test' } });
+ view.rerender(element('refreshed@example.test'));
+ expect(email).toHaveValue('edited@example.test');
+ fireEvent.change(email, { target: { value: '' } });
+ view.rerender(element('refreshed-again@example.test'));
+ expect(email).toHaveValue('');
+ view.rerender(element('another@example.test', 99));
+ expect(screen.getByLabelText('Email de contacto')).toHaveValue('another@example.test');
+ expect(submit).not.toHaveBeenCalled();
+});
