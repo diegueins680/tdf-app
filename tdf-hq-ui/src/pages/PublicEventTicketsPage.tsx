@@ -128,6 +128,13 @@ export default function PublicEventTicketsPage() {
   const [message, setMessage] = useState<string | null>(null);
   // Quantity problems are shown on the quantity field, not in the general alert.
   const [quantityError, setQuantityError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<'name' | 'email' | 'billingId' | 'billingName', string>>>({});
+  const checkoutForm = useRef<HTMLFormElement | null>(null);
+  const [validationAttempt, setValidationAttempt] = useState(0);
+
+  useEffect(() => {
+    checkoutForm.current?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
+  }, [validationAttempt]);
   const [lookupRevision, setLookupRevision] = useState(0);
   const idempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const liveLookup = useRef<{ eventId: number; orderId: number; token: string } | null>(null);
@@ -260,6 +267,7 @@ export default function PublicEventTicketsPage() {
 
   const handleCreateCheckout = async () => {
     if (!storefront.data?.checkoutAvailable) return;
+    setValidationAttempt((attempt) => attempt + 1);
     if (!termsAccepted) {
       setMessage(english
         ? 'Accept the event terms to continue.'
@@ -280,7 +288,23 @@ export default function PublicEventTicketsPage() {
         : `Puedes comprar hasta ${maximumQuantity} entradas por orden.`);
       return;
     }
+    const chosenTier = storefront.data.tiers.find((tier) => tier.tierId === selectedTierId);
+    if (!chosenTier || selectedQuantity > chosenTier.remaining) {
+      setQuantityError(english ? 'There are not enough tickets left. Choose a smaller quantity.' : 'No quedan suficientes entradas. Elige una cantidad menor.');
+      return;
+    }
     setQuantityError(null);
+    const errors: typeof fieldErrors = {};
+    if (!buyerName.trim()) errors.name = english ? 'Enter your full name.' : 'Ingresa tu nombre completo.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail.trim())) {
+      errors.email = english ? 'Enter a valid email to receive your tickets.' : 'Ingresa un correo válido para recibir tus entradas.';
+    }
+    if (storefront.data.policy?.taxInvoiceIssued && billingIdType !== 'consumidor_final') {
+      if (!billingIdNumber.trim()) errors.billingId = english ? 'Enter the invoice ID number.' : 'Ingresa la identificación para tu factura.';
+      if (!billingName.trim()) errors.billingName = english ? 'Enter the name or business name for your invoice.' : 'Ingresa el nombre o razón social para tu factura.';
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     const payload: PublicEventTicketCheckoutRequest = {
       tierId: selectedTierId,
       quantity: selectedQuantity,
@@ -603,7 +627,7 @@ export default function PublicEventTicketsPage() {
           {!checkout && storefront.data?.checkoutAvailable ? (
             <Card variant="outlined">
               <CardContent>
-                <Stack spacing={2} component="form" onSubmit={(event) => { event.preventDefault(); void handleCreateCheckout(); }}>
+                <Stack spacing={2} component="form" ref={checkoutForm} noValidate onSubmit={(event) => { event.preventDefault(); void handleCreateCheckout(); }}>
                   <Typography variant="h5" fontWeight={800}>{english ? 'Choose tickets' : 'Elige tus entradas'}</Typography>
                   {storefront.data.tiers.length === 1 && selectedTier ? (
                     <Typography>
@@ -652,8 +676,24 @@ export default function PublicEventTicketsPage() {
                       {english ? 'You will see the exact total before paying.' : 'Verás el total exacto antes de pagar.'}
                     </Typography>
                   )}
-                  <TextField required label={english ? 'Full name' : 'Nombre completo'} value={buyerName} onChange={(event) => setBuyerName(event.target.value)} inputProps={{ maxLength: 160 }} />
-                  <TextField required type="email" label={english ? 'Email' : 'Correo'} value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} inputProps={{ maxLength: 254 }} />
+                  <TextField
+                    required label={english ? 'Full name' : 'Nombre completo'} value={buyerName}
+                    onChange={(event) => {
+                      setBuyerName(event.target.value);
+                      setFieldErrors((current) => ({ ...current, name: undefined }));
+                    }}
+                    error={Boolean(fieldErrors.name)} helperText={fieldErrors.name}
+                    autoComplete="name" inputProps={{ maxLength: 160 }}
+                  />
+                  <TextField
+                    required type="email" label={english ? 'Email' : 'Correo'} value={buyerEmail}
+                    onChange={(event) => {
+                      setBuyerEmail(event.target.value);
+                      setFieldErrors((current) => ({ ...current, email: undefined }));
+                    }}
+                    error={Boolean(fieldErrors.email)} helperText={fieldErrors.email}
+                    autoComplete="email" inputProps={{ maxLength: 254 }}
+                  />
                   {extrasOpen || buyerPhone || promoCode ? (
                     <>
                       <TextField label={english ? 'Phone (optional)' : 'Teléfono (opcional)'} value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} inputProps={{ maxLength: 24 }} />
@@ -670,7 +710,10 @@ export default function PublicEventTicketsPage() {
                         {english ? 'Electronic invoice details' : 'Datos para tu factura electrónica'}
                       </Typography>
                       <TextField select label={english ? 'Invoice to' : 'Facturar a'} value={billingIdType}
-                        onChange={(event) => setBillingIdType(event.target.value as typeof billingIdType)}
+                        onChange={(event) => {
+                          setBillingIdType(event.target.value as typeof billingIdType);
+                          setFieldErrors((current) => ({ ...current, billingId: undefined, billingName: undefined }));
+                        }}
                         helperText={english
                           ? 'Final consumer is allowed up to USD 50. Above that, enter an ID.'
                           : 'Consumidor final se permite hasta USD 50. Sobre ese valor, ingresa una identificación.'}>
@@ -682,9 +725,19 @@ export default function PublicEventTicketsPage() {
                       {billingIdType !== 'consumidor_final' && (
                         <>
                           <TextField required label={english ? 'ID number' : 'Número de identificación'} value={billingIdNumber}
-                            onChange={(event) => setBillingIdNumber(event.target.value)} inputProps={{ maxLength: 20, inputMode: billingIdType === 'pasaporte' ? 'text' : 'numeric' }} />
+                            onChange={(event) => {
+                              setBillingIdNumber(event.target.value);
+                              setFieldErrors((current) => ({ ...current, billingId: undefined }));
+                            }}
+                            error={Boolean(fieldErrors.billingId)} helperText={fieldErrors.billingId}
+                            inputProps={{ maxLength: 20, inputMode: billingIdType === 'pasaporte' ? 'text' : 'numeric' }} />
                           <TextField required label={english ? 'Name or business name' : 'Nombre o razón social'} value={billingName}
-                            onChange={(event) => setBillingName(event.target.value)} inputProps={{ maxLength: 300 }} />
+                            onChange={(event) => {
+                              setBillingName(event.target.value);
+                              setFieldErrors((current) => ({ ...current, billingName: undefined }));
+                            }}
+                            error={Boolean(fieldErrors.billingName)} helperText={fieldErrors.billingName}
+                            inputProps={{ maxLength: 300 }} />
                         </>
                       )}
                     </Stack>

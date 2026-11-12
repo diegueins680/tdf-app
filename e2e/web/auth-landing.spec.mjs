@@ -144,13 +144,63 @@ test('a blocked analytics file does not take the app down @mobile-flow @critical
     window.__ENV__ = { ...(window.__ENV__ ?? {}), VITE_POSTHOG_KEY: 'phc_synthetic_blocked', VITE_POSTHOG_HOST: 'https://analytics.invalid' };
   });
   let blocked = 0;
+  const navigations = [];
+  page.on('request', (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) navigations.push(request.url());
+  });
   // Content blockers and flaky networks drop this file; the app must not need it.
   await page.route(/\/assets\/analytics-[^/]+\.js$/, (route) => { blocked += 1; return route.abort('failed'); });
   await page.goto('/fans', { waitUntil: 'domcontentloaded' });
   await expectRenderedApp(page);
   await expect.poll(() => blocked).toBeGreaterThan(0);
+  // Optional analytics must not reload the page or consume its recovery budget.
+  await expect(page.getByRole('heading', { name: 'Comunidad — Conecta con tus artistas' })).toBeVisible();
+  expect(navigations).toHaveLength(1);
+  expect(await page.evaluate(() => sessionStorage.getItem('tdf-hq-ui/chunk-reload-attempted'))).toBeNull();
   await expect(page.getByText('No pudimos cargar esta vista')).toHaveCount(0);
   await expect(page.locator('#tdf-blank-screen-recovery')).toHaveCount(0);
+});
+
+test('a stale route chunk retains bounded recovery @mobile-flow @critical', async ({ page, baseURL, browserName }) => {
+  await fixture(page, baseURL);
+  let attempts = 0;
+  const documents = [];
+  page.on('request', (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(request.url());
+  });
+  await page.route(/\/assets\/FanHubPage-[^/]+\.js$/, (route) => {
+    attempts += 1;
+    return attempts === 1
+      ? route.fulfill({ status: 404, headers: { 'cache-control': 'no-store' }, body: 'Synthetic stale deploy' })
+      : route.continue();
+  });
+  await page.goto('/fans', { waitUntil: 'domcontentloaded' });
+  if (browserName === 'webkit') {
+    // WebKit retains a failed ES module in its process cache across reload.
+    // It must show manual recovery instead of entering another reload loop.
+    await expect(page.getByText('No pudimos cargar esta vista.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Recargar', exact: true })).toBeVisible();
+  } else {
+    await expect(page.getByRole('heading', { name: 'Comunidad — Conecta con tus artistas' })).toBeVisible();
+    await expect.poll(() => attempts).toBe(2);
+    await expectRenderedApp(page);
+  }
+  expect(documents).toHaveLength(2);
+});
+
+test('a persistently missing route stops after one reload with manual recovery @mobile-flow @critical', async ({ page, baseURL }) => {
+  await fixture(page, baseURL);
+  const documents = [];
+  page.on('request', (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documents.push(request.url());
+  });
+  await page.route(/\/assets\/FanHubPage-[^/]+\.js$/, (route) => route.fulfill({
+    status: 404, headers: { 'cache-control': 'no-store' }, body: 'Synthetic missing chunk',
+  }));
+  await page.goto('/fans', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByText('No pudimos cargar esta vista.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Recargar', exact: true })).toBeVisible();
+  expect(documents).toHaveLength(2);
 });
 
 test('a healthy page never shows the blank-screen recovery @mobile-flow', async ({ page, baseURL }) => {

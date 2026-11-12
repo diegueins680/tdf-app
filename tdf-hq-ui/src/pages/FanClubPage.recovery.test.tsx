@@ -15,7 +15,7 @@ jest.unstable_mockModule('../api/fans', () => ({ Fans: { getClub, getMyClub, lis
 jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: authenticated ? { partyId: 8, roles: [], modules: [] } : null }) }));
 jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({ default: () => null }));
 jest.unstable_mockModule('../features/interactions/InteractionPanel', () => ({ InteractionPanel: () => null }));
-jest.unstable_mockModule('@mui/icons-material', () => Object.fromEntries(['PushPinOutlined', 'VisibilityOff', 'HowToVote', 'CalendarMonth', 'Forum', 'Groups', 'Add', 'PhotoLibrary', 'Report', 'Person', 'LockOutlined', 'MailOutline', 'Whatshot', 'TrendingUp', 'FiberNew'].map(name => [name, () => null])));
+jest.unstable_mockModule('@mui/icons-material', () => Object.fromEntries(['PushPinOutlined', 'DeleteOutline', 'VisibilityOff', 'HowToVote', 'CalendarMonth', 'Forum', 'Groups', 'Add', 'PhotoLibrary', 'Report', 'Person', 'LockOutlined', 'MailOutline', 'Whatshot', 'TrendingUp', 'FiberNew'].map(name => [name, () => null])));
 const { default: FanClubPage } = await import('./FanClubPage');
 const clients: QueryClient[] = [];
 function mount(route = '/fans/clubs/9', cachedClub = false) {

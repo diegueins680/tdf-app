@@ -12510,14 +12510,26 @@
       "reviewed": true
     },
     {
-      "id": "528ebad9929ca2769837",
+      "id": "6a832158d7d69c8fcc7e",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "service_category, service_offering, booking_type",
       "priority": "P1-cross-platform",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model. Presentation sequence now combines schedule and confirmation (audit item22); service, booking, price and consent authority are unchanged. The previous classification and catalog obligations are preserved.",
+      "reviewed": true,
+      "previousDecision": {
+        "id": "528ebad9929ca2769837",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "service_category, service_offering, booking_type",
+        "priority": "P1-cross-platform",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      },
+      "reviewMethod": "successor-of-reviewed-decision",
+      "reviewBatch": "cognitive-load-booking-two-steps-20261111"
     },
     {
       "id": "720d867f7e9dfc6e3a88",

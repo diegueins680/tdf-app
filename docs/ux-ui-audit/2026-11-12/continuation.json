@@ -1,0 +1,344 @@
+{
+  "date": "2026-11-12",
+  "timezone": "America/Guayaquil",
+  "baselineWebCommit": "147d83c9c12ccceb65bac7f2353522bbdebb33ca",
+  "sourceAudit": "https://claude.ai/artifact/WDwk1hsN9qLpEV57jqe1zY",
+  "sourceConversations": [
+    "31e888fb-d3a8-400a-b250-665723d41188",
+    "41891438-3732-4be1-823f-733d5b959fd3",
+    "a567855b-d4e4-4a2f-ab9b-021dffd27363"
+  ],
+  "implementation": {
+    "webPR": 722,
+    "mobilePR": 188,
+    "salesClosePR": 735,
+    "productionDeployedByThisContinuation": false
+  },
+  "findings": [
+    {
+      "id": "COG-20261112-01",
+      "principle": "Continuidad de tarea y prevención de errores",
+      "finding": "La carga diferida de analítica aún disparaba la recarga global de Vite al bloquearse su archivo.",
+      "change": "El observador global registra el fallo; el consumidor decide su recuperación. Analítica puede fallar sin recargar el formulario."
+    },
+    {
+      "id": "COG-20261112-02",
+      "principle": "Recuperación de errores y control del usuario",
+      "finding": "Una importación de ruta exitosa borraba el límite de recarga de otra ruta fallida. Sin almacenamiento, tampoco existía un límite persistente.",
+      "change": "Un intento automático por commit y sesión; ante fallos persistentes o almacenamiento denegado queda recuperación manual. WebKit puede retener un módulo fallido en su caché."
+    },
+    {
+      "id": "COG-20261112-03",
+      "principle": "Carga extrínseca",
+      "finding": "Horario y Confirmación dividían una misma decisión de reserva en dos pantallas.",
+      "change": "Dos pasos totales, con resumen y consentimiento junto al horario; disponibilidad/precio pendientes impiden enviar."
+    },
+    {
+      "id": "COG-20261112-04",
+      "principle": "Prevención y recuperación de errores",
+      "finding": "Nombre/correo e identificación de factura no tenían errores propios en el checkout; un envío sin validación HTML dependía del error general.",
+      "change": "Errores por campo, foco en el primero solo al enviar y protección local del stock; la validación del servidor permanece."
+    },
+    {
+      "id": "COG-20261112-05",
+      "principle": "Revelación progresiva y ley de Hick",
+      "finding": "La captura de teléfono mostró el grupo de hasta 12 horarios sugeridos junto al campo de fecha y los accesos rápidos.",
+      "change": "Grupo plegado tras un control nativo accesible por teclado. Las opciones y la fecha física de Quito se conservan."
+    }
+  ],
+  "measurements": [
+    {
+      "source": "Producción pública, solo lectura, sin sesión",
+      "url": "https://www.tdfrecords.net/reservar",
+      "viewport": {
+        "width": 1282,
+        "height": 759
+      },
+      "bookingStepLabels": [
+        "Contacto",
+        "Horario",
+        "Confirmación"
+      ],
+      "mainWords": 210,
+      "wordMethod": "main.innerText.trim().split(/\\s+/).length",
+      "horizontalOverflow": false,
+      "limits": "Escritorio; no se envió ningún formulario ni se verificó producción con usuarios autenticados."
+    },
+    {
+      "source": "Candidato local y pruebas sintéticas",
+      "bookingSteps": 2,
+      "contactAndInvoiceErrors": "por campo",
+      "automaticRouteReloadLimit": 1,
+      "limits": "No demuestra conversión, comprensión humana, pago real ni despliegue. En WebKit, el fallo de módulo retenido puede requerir recuperación manual."
+    }
+  ],
+  "plan": [
+    {
+      "id": 1,
+      "item": "Compra primero en el evento",
+      "status": "Implementado en #722",
+      "nextOrEvidence": "Precio y botón bajo el título; acción fija en teléfono."
+    },
+    {
+      "id": 2,
+      "item": "Contacto y acciones del evento",
+      "status": "Implementado en #722",
+      "nextOrEvidence": "Sin panel de contacto de perfiles; compartir recuerdos como enlace."
+    },
+    {
+      "id": 3,
+      "item": "Resumen del checkout",
+      "status": "Implementado en #722",
+      "nextOrEvidence": "Resumen breve en entradas y orden."
+    },
+    {
+      "id": 4,
+      "item": "Cantidad y total",
+      "status": "Parcial",
+      "nextOrEvidence": "Selector y subtotal en vivo; el total exacto sigue siendo la cotización autorizada del servidor."
+    },
+    {
+      "id": 5,
+      "item": "Lenguaje de compra",
+      "status": "Parcial",
+      "nextOrEvidence": "Avisos simplificados; tarifa al organizador y redacción del consentimiento conservadas para revisión."
+    },
+    {
+      "id": 6,
+      "item": "Datos del comprador",
+      "status": "Implementado en #722",
+      "nextOrEvidence": "Nombre/correo de la sesión; teléfono y promoción plegados."
+    },
+    {
+      "id": 7,
+      "item": "App: directorio a entradas",
+      "status": "Implementado en móvil #188",
+      "nextOrEvidence": "Enlace al detalle completo; falta prueba de dispositivo."
+    },
+    {
+      "id": 8,
+      "item": "App: compra y lista inicial",
+      "status": "Parcial en móvil #188",
+      "nextOrEvidence": "Sin datos duplicados en entradas pagadas; Explorar por defecto sin ciudades seguidas. Ciudad del directorio pendiente."
+    },
+    {
+      "id": 9,
+      "item": "Pie de página",
+      "status": "Implementado en #722",
+      "nextOrEvidence": "Sin navegación repetida ni ingreso con sesión; preferencias de WhatsApp accesibles."
+    },
+    {
+      "id": 10,
+      "item": "Ingreso web",
+      "status": "Parcial",
+      "nextOrEvidence": "Ayudas y enlaces duplicados retirados; rutas rápidas D5 pendientes de decisión."
+    },
+    {
+      "id": 11,
+      "item": "Menú por acceso",
+      "status": "Implementado en #722",
+      "nextOrEvidence": "Grupos inaccesibles ocultos; globalMenu:false respetado, con búsqueda y acceso directo."
+    },
+    {
+      "id": 12,
+      "item": "Reserva: servicio y depósito",
+      "status": "Implementado en #722",
+      "nextOrEvidence": "Servicio una vez; depósito pendiente como acción principal; sin ingreso redundante con sesión."
+    },
+    {
+      "id": 13,
+      "item": "App: cuenta e ingreso",
+      "status": "Implementado en móvil #188",
+      "nextOrEvidence": "Mensajes claros, cierre de sesión y eliminación visibles; falta prueba de dispositivo."
+    },
+    {
+      "id": 14,
+      "item": "Vocabulario compartido",
+      "status": "Parcial",
+      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles."
+    },
+    {
+      "id": 15,
+      "item": "Lista de métodos de pago",
+      "status": "Parcial",
+      "nextOrEvidence": "PayPhone pide datos tras elegirlo; agrupación completa y recomendación pendientes."
+    },
+    {
+      "id": 16,
+      "item": "Errores junto al campo",
+      "status": "Parcial; ampliado en esta continuación",
+      "nextOrEvidence": "Cantidad, nombre, correo e identificación/nombre de factura; foco al enviar, sin quitar lo escrito. Pago/transferencia pendientes."
+    },
+    {
+      "id": 17,
+      "item": "Enlace seguro a la orden por correo",
+      "status": "Pendiente de backend",
+      "nextOrEvidence": "Diseñar expiración, recuperación y verificación; no poner la capacidad privada en analítica ni registros."
+    },
+    {
+      "id": 18,
+      "item": "Armazón de compra",
+      "status": "Parcial",
+      "nextOrEvidence": "Compra/orden/retorno sin promoción ni navegación general. Recorte global D4 pendiente."
+    },
+    {
+      "id": 19,
+      "item": "App: pestañas y acciones",
+      "status": "Pendiente",
+      "nextOrEvidence": "Eventos como pestaña, menú por rol y detalle; incluye decisiones D7 y D8."
+    },
+    {
+      "id": 20,
+      "item": "App: explorar sin cuenta",
+      "status": "Pendiente",
+      "nextOrEvidence": "Recorrido invitado y simplificación del registro; D10 pendiente de decisión."
+    },
+    {
+      "id": 21,
+      "item": "App: toasts y validación",
+      "status": "Pendiente",
+      "nextOrEvidence": "Auditoría nativa y prueba en dispositivo antes de sustituir alertas."
+    },
+    {
+      "id": 22,
+      "item": "Reserva y datos repetidos",
+      "status": "Parcial; ampliado en esta continuación",
+      "nextOrEvidence": "Reserva pasa de 3 pasos a 2, con resumen, cotización, depósito y consentimiento en Horario. Prefill previo en mezcla, marketplace y pruebas. Contacto plegado y live sessions pendientes. Los horarios sugeridos opcionales quedan plegados."
+    },
+    {
+      "id": 23,
+      "item": "Inicio: héroe y filtros",
+      "status": "Decisión de producto pendiente",
+      "nextOrEvidence": "Conciliar con el héroe solicitado previamente por el responsable."
+    },
+    {
+      "id": 24,
+      "item": "Estudio y fusiones de menú",
+      "status": "Decisión de permisos pendiente",
+      "nextOrEvidence": "No cambiar roles ni fusionar destinos D11–D14/D17 sin revisar pérdida y afectados."
+    },
+    {
+      "id": 25,
+      "item": "Herramientas del equipo",
+      "status": "Parcial",
+      "nextOrEvidence": "Confirmaciones nombradas y varios estados en español; importes en dólares y cobertura completa pendientes."
+    },
+    {
+      "id": 26,
+      "item": "Tarjetas: disponibilidad y precio",
+      "status": "Pendiente de backend",
+      "nextOrEvidence": "Usar disponibilidad de tipos de entrada, no inferir Gratis/Agotado de un precio de referencia."
+    },
+    {
+      "id": 27,
+      "item": "Continuidad de pago y Mis entradas",
+      "status": "Pendiente estructural",
+      "nextOrEvidence": "Retorno seguro al móvil y vista web de entradas; requiere integración autenticada."
+    },
+    {
+      "id": 28,
+      "item": "Identidad y editor de artista",
+      "status": "Pendiente estructural",
+      "nextOrEvidence": "Campos compartidos con edición propia, permisos y preservación de borradores."
+    },
+    {
+      "id": 29,
+      "item": "Gestión de eventos",
+      "status": "Integración pendiente",
+      "nextOrEvidence": "Existe una rama de gestión de eventos; revisar antes de duplicar trabajo. No se declara integrada en #722."
+    },
+    {
+      "id": 30,
+      "item": "Compra y lanzamientos unificados",
+      "status": "Decisiones D6 y D16 pendientes",
+      "nextOrEvidence": "Comparar proveedores y funciones antes de retirar un flujo."
+    },
+    {
+      "id": 31,
+      "item": "Un armazón y un buscador",
+      "status": "Pendiente estructural",
+      "nextOrEvidence": "Conservar rutas, enlaces profundos, permisos y navegación por teclado."
+    },
+    {
+      "id": 32,
+      "item": "Primer valor y cierre de ventas",
+      "status": "Parcial; backend #735",
+      "nextOrEvidence": "Cierre al finalizar evento implementado en PR separado. Capacidad Fan al registrarse (D18) pendiente de decisión."
+    }
+  ],
+  "ownerDecisions": {
+    "implemented": [
+      "D1"
+    ],
+    "pending": [
+      "D2",
+      "D3",
+      "D4",
+      "D5",
+      "D6",
+      "D7",
+      "D8",
+      "D9",
+      "D10",
+      "D11",
+      "D12",
+      "D13",
+      "D14",
+      "D15",
+      "D16",
+      "D17",
+      "D18",
+      "D19"
+    ],
+    "other": [
+      "Redacción de tarifa al organizador y consentimiento",
+      "Héroe de /inicio",
+      "Restricción por rol de /estudio/*"
+    ]
+  },
+  "verification": {
+    "fullWebJest": {
+      "suitesPassed": 371,
+      "testsPassed": 4200,
+      "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
+    },
+    "latestFocusedJest": {
+      "suitesPassed": 4,
+      "testsPassed": 72
+    },
+    "browser": {
+      "passed": 22,
+      "engines": [
+        "Chromium desktop",
+        "Chromium phone",
+        "Firefox",
+        "WebKit"
+      ],
+      "scope": "Blocked analytics, bounded route recovery, Quito/UTC/Madrid booking clocks, guest booking retry; all responses synthetic. WebKit retains failed modules and exposes manual recovery.",
+      "latestBookingDisclosurePassed": 10
+    },
+    "governance": "Inventory/conformance regenerated; final committed-source freshness check pending.",
+    "catalog": {
+      "candidates": 1423,
+      "unreviewed": 0,
+      "stale": 0,
+      "preservationTestsPassed": 11
+    },
+    "typecheck": "passed",
+    "lint": "passed"
+  },
+  "limitations": [
+    "No hay exportación de embudos ni pruebas de comprensión con personas; prioridades heurísticas.",
+    "La app móvil no se ejecutó ni modificó en esta continuación.",
+    "No se revalidaron las 28 páginas ni los 50 hallazgos históricos del informe de agosto.",
+    "Las cifras históricas 49/50 del informe original requieren conciliación; no son conteos nuevos.",
+    "No se creó ninguna compra, reserva, correo ni transacción en producción.",
+    "No hay aprobación independiente, fusión ni despliegue en producción de esta continuación."
+  ],
+  "screenshots": [
+    {
+      "path": "figures/booking-two-step-phone.png",
+      "context": "Prueba sintética de teléfono: segundo paso con sugerencias abiertas expresamente y horario rechazado por la API de prueba. No es una reserva real."
+    }
+  ]
+}

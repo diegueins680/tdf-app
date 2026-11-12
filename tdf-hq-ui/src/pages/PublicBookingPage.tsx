@@ -95,7 +95,7 @@ const STUDIO_TIME_ZONE = 'America/Guayaquil';
 const OPEN_HOURS = { start: 8, end: 22 }; // 24h local time
 const MAX_DURATION_MINUTES = (OPEN_HOURS.end - OPEN_HOURS.start) * 60;
 const QUICK_SLOT_STEP_MINUTES = 30;
-const BOOKING_STEPS = ['Contacto', 'Horario', 'Confirmación'] as const;
+const BOOKING_STEPS = ['Contacto', 'Horario y confirmación'] as const;
 const EMAIL_PATTERN = /^\S+@\S+\.\S+$/;
 
 // Page column: the booking card and the service reviews stack vertically so a
@@ -676,19 +676,13 @@ export default function PublicBookingPage() {
     setActiveStep(1);
   };
 
-  const goToConfirmStep = () => {
-    setError(null);
-    const message = validateScheduleStep();
-    if (message) {
-      setError(message);
-      return;
-    }
-    setActiveStep(2);
-  };
-
   const handleSubmit = async () => {
     setError(null);
     setSuccess(null);
+    if (availabilityStatus === 'checking') {
+      setError('Espera a que terminemos de consultar el horario y el precio.');
+      return;
+    }
 
     const contactError = validateContactStep();
     if (contactError) {
@@ -786,10 +780,6 @@ export default function PublicBookingPage() {
     if (formDisabled) return;
     if (activeStep === 0) {
       goToScheduleStep();
-      return;
-    }
-    if (activeStep === 1) {
-      goToConfirmStep();
       return;
     }
     void handleSubmit();
@@ -2087,11 +2077,11 @@ export default function PublicBookingPage() {
                           </Grid>
                           {suggestedSlots.length > 0 && (
                             <Grid item xs={12}>
-                              <Stack spacing={0.5}>
-                                <Typography variant="body2" color="text.secondary">
-                                  Sugerencias rápidas
+                              <Box component="details">
+                                <Typography component="summary" variant="body2" color="text.secondary" sx={{ cursor: 'pointer', py: 1.25, minHeight: 44, boxSizing: 'border-box' }}>
+                                  Horarios sugeridos
                                 </Typography>
-                                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mt: 1 }}>
                                   {suggestedSlots.map((slot) => (
                                     <Tooltip
                                       key={slot.value}
@@ -2118,7 +2108,7 @@ export default function PublicBookingPage() {
                                     </Tooltip>
                                   ))}
                                 </Stack>
-                              </Stack>
+                              </Box>
                             </Grid>
                           )}
                           {selectedServiceRequiresEngineer && (
@@ -2231,35 +2221,6 @@ export default function PublicBookingPage() {
                             />
                           </Grid>
                           <Grid item xs={12}>
-                            <Stack
-                              direction={{ xs: 'column', sm: 'row' }}
-                              justifyContent="space-between"
-                              spacing={1}
-                            >
-                              <Button
-                                variant="text"
-                                onClick={() => setActiveStep(0)}
-                                disabled={formDisabled}
-                                fullWidth={isMobile}
-                              >
-                                Volver
-                              </Button>
-                              <Button
-                                variant="contained"
-                                onClick={goToConfirmStep}
-                                disabled={formDisabled}
-                                fullWidth={isMobile}
-                              >
-                                Revisar reserva
-                              </Button>
-                            </Stack>
-                          </Grid>
-                        </>
-                      )}
-
-                      {activeStep === 2 && (
-                        <>
-                          <Grid item xs={12}>
                             <Card
                               variant="outlined"
                               sx={{
@@ -2359,8 +2320,8 @@ export default function PublicBookingPage() {
                             >
                               <Button
                                 variant="text"
-                                onClick={() => setActiveStep(1)}
-                                disabled={formDisabled || Boolean(authoritativeQuote && !termsAccepted)}
+                                onClick={() => setActiveStep(0)}
+                                disabled={formDisabled}
                                 fullWidth={isMobile}
                               >
                                 Volver
@@ -2369,7 +2330,7 @@ export default function PublicBookingPage() {
                                 type="submit"
                                 variant="contained"
                                 size="large"
-                                disabled={formDisabled}
+                                disabled={formDisabled || availabilityStatus === 'checking'}
                                 fullWidth={isMobile}
                               >
                                 {success

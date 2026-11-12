@@ -1,7 +1,6 @@
 import type { ErrorInfo, ReactNode } from 'react';
 import { Component } from 'react';
 import { reportClientError } from './analytics/errorReporting';
-import { reloadOnceForChunkError } from './utils/lazyWithReload';
 
 /**
  * Outermost safety net. AppErrorBoundary lives inside the theme, session,
@@ -77,8 +76,8 @@ let installed = false;
 
 /**
  * Report failures that never reach a React boundary (event handlers, async
- * effects, third-party scripts) and recover from stale chunk preloads after a
- * deploy. Handlers only observe; they never swallow application errors.
+ * effects, third-party scripts and chunk preloads). Route loaders recover
+ * stale chunks after a deploy. Global handlers only observe; they never swallow application errors.
  */
 export function installGlobalErrorHandlers(): void {
   if (installed || typeof window === 'undefined') return;
@@ -97,13 +96,14 @@ export function installGlobalErrorHandlers(): void {
     reportClientError('unhandled_rejection', event.reason);
   });
 
-  // Vite fires this when a lazily preloaded chunk/CSS from an older deploy no
-  // longer exists. Reload once into the current asset graph instead of
-  // leaving the route half-rendered.
+  // Observe preload failures without reloading every importer. Route imports
+  // recover stale deploys in lazyWithReload; optional imports (such as analytics)
+  // handle their own failures. Safari omits the failing URL, so message-based
+  // classification cannot safely distinguish them here. Do not preventDefault:
+  // Vite must reject the import so its actual consumer can recover.
   window.addEventListener('vite:preloadError', (event: Event) => {
     const payload = (event as Event & { payload?: unknown }).payload;
     reportClientError('chunk_preload', payload ?? 'vite:preloadError');
-    if (reloadOnceForChunkError()) event.preventDefault();
   });
 
   const reportBlankScreen = () => {

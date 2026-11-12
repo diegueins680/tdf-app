@@ -78,18 +78,26 @@ describe('boot safety', () => {
     }
   });
 
-  it('reports unhandled rejections, blank-screen detections and recovers stale chunk preloads', () => {
+  it('reports unhandled rejections, blank-screen detections and leaves chunk recovery to each importer', () => {
     installGlobalErrorHandlers();
     const rejection = new Event('unhandledrejection') as Event & { reason?: unknown };
     rejection.reason = new Error('session fetch failed');
     window.dispatchEvent(rejection);
     expect(reportMock).toHaveBeenCalledWith('unhandled_rejection', rejection.reason);
 
+    const optional = new Event('vite:preloadError', { cancelable: true }) as Event & { payload?: unknown };
+    optional.payload = new TypeError('error loading dynamically imported module: https://tdf.invalid/assets/analytics-abc123.js');
+    const reloadsBefore = reloadOnceMock.mock.calls.length;
+    window.dispatchEvent(optional);
+    expect(reloadOnceMock).toHaveBeenCalledTimes(reloadsBefore);
+    expect(optional.defaultPrevented).toBe(false);
+
     const preload = new Event('vite:preloadError', { cancelable: true }) as Event & { payload?: unknown };
     preload.payload = new Error('Failed to fetch dynamically imported module');
     window.dispatchEvent(preload);
-    expect(reloadOnceMock).toHaveBeenCalled();
-    expect(preload.defaultPrevented).toBe(true);
+    expect(reloadOnceMock).toHaveBeenCalledTimes(reloadsBefore);
+    expect(preload.defaultPrevented).toBe(false);
+    expect(reportMock).toHaveBeenCalledWith('chunk_preload', preload.payload);
 
     (window as Window & { __tdfBlankScreen?: unknown }).__tdfBlankScreen = { state: 'blank', lastRoute: '/fans' };
     window.dispatchEvent(new Event('tdf:blank-screen'));

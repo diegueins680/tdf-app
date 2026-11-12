@@ -607,6 +607,71 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     expect(funnelCaptureMock).not.toHaveBeenCalled();
   });
 
+  it('names invalid contact fields, focuses the first and preserves edits without starting checkout', async () => {
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('form')).toBeTruthy());
+    const name = container.querySelector<HTMLInputElement>('input[maxlength="160"]')!;
+    const email = container.querySelector<HTMLInputElement>('input[type="email"]')!;
+    await act(async () => {
+      fireEvent.change(name, { target: { value: '   ' } });
+      fireEvent.change(email, { target: { value: 'sin-correo' } });
+      fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!);
+    });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(name.getAttribute('aria-invalid')).toBe('true');
+    expect(email.getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(name);
+    expect(container.textContent).toContain('Ingresa un correo válido para recibir tus entradas.');
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+    expect(funnelCaptureMock.mock.calls.some(([event]) => event === 'ticketing_checkout_started')).toBe(false);
+    await act(async () => { fireEvent.change(name, { target: { value: 'Compradora' } }); });
+    // Clearing one error must not steal focus while a person is typing.
+    expect(document.activeElement).toBe(name);
+    expect(email.value).toBe('sin-correo');
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(document.activeElement).toBe(email);
+    await act(async () => { fireEvent.change(email, { target: { value: 'buyer@example.invalid' } }); });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(createCheckoutMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps invoice errors next to their fields and sends no order until they are complete', async () => {
+    sessionMock = { username: 'buyer@example.invalid', displayName: 'Compradora' };
+    getStorefrontMock.mockResolvedValue({ ...storefrontFixture,
+      policy: { ...storefrontFixture.policy, taxInvoiceIssued: true } });
+    await renderTracking('/eventos/41/entradas');
+    await waitForExpectation(() => expect(container.querySelector('[role="combobox"]')).toBeTruthy());
+    await act(async () => { fireEvent.mouseDown(container.querySelector('[role="combobox"]')!); });
+    const idOption = [...document.querySelectorAll('[role="option"]')].find((row) => row.textContent === 'Cédula')!;
+    await act(async () => { fireEvent.click(idOption); });
+    await act(async () => { fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!); });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(container.textContent).toContain('Ingresa la identificación para tu factura.');
+    expect(container.textContent).toContain('Ingresa el nombre o razón social para tu factura.');
+    expect(document.activeElement).toBe(container.querySelector('input[maxlength="20"]'));
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.change(container.querySelector('input[maxlength="20"]')!, { target: { value: '1710034065' } });
+      fireEvent.change(container.querySelector('input[maxlength="300"]')!, { target: { value: 'Compradora' } });
+    });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(createCheckoutMock).toHaveBeenCalledWith(41, expect.objectContaining({
+      billingIdType: 'cedula', billingIdNumber: '1710034065', billingName: 'Compradora',
+    }), expect.any(String));
+  });
+
+  it('rejects a quantity beyond remaining stock without sending a checkout request', async () => {
+    getStorefrontMock.mockResolvedValue({ ...storefrontFixture,
+      tiers: [{ ...storefrontFixture.tiers[0], remaining: 2 }] });
+    await renderTracking('/eventos/41/entradas?quantity=3');
+    await waitForExpectation(() => expect(container.querySelector('form')).toBeTruthy());
+    await act(async () => { fireEvent.click(container.querySelector<HTMLInputElement>('input[type="checkbox"]')!); });
+    await act(async () => { fireEvent.submit(container.querySelector('form')!); });
+    expect(container.textContent).toContain('No quedan suficientes entradas.');
+    expect(document.activeElement).toBe(container.querySelector('input[type="number"]'));
+    expect(createCheckoutMock).not.toHaveBeenCalled();
+  });
+
   it('permits the exact policy boundary and retains the actual remaining stock display', async () => {
     getStorefrontMock.mockResolvedValue({
       ...storefrontFixture,

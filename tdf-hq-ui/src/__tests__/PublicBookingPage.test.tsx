@@ -585,6 +585,10 @@ describe('PublicBookingPage', () => {
         setInputValue(date, selectedStart);
         await flushPromises();
       });
+      const disclosure = container.querySelector<HTMLDetailsElement>('details')!;
+      expect(disclosure.open).toBe(false);
+      disclosure.querySelector('summary')!.click();
+      expect(disclosure.open).toBe(true);
       for (let click = 0; click < 2; click += 1) {
         await act(async () => {
           const suggestion = Array.from(container.querySelectorAll<HTMLElement>('[role="button"]'))
@@ -654,10 +658,6 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
 
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
 
     await act(async () => {
       const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -684,6 +684,31 @@ describe('PublicBookingPage', () => {
 
     await cleanup();
     document.body.removeChild(container);
+  });
+
+  it('cannot turn a pending price check into an unconsented tentative booking', async () => {
+    const pending: ((value: unknown) => void)[] = [];
+    globalThis.fetch = jest.fn(() => new Promise((resolve) => { pending.push(resolve); })) as unknown as typeof fetch;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Compradora sintética');
+        setInputValue(getInputByLabel(container, 'Correo'), 'buyer@example.invalid');
+        submitBookingForm(container);
+        await flushPromises();
+      });
+      expect(container.textContent).toContain('Resumen rápido');
+      expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
+      await act(async () => { submitBookingForm(container); await flushPromises(); });
+      expect(container.textContent).toContain('Espera a que terminemos de consultar');
+      expect(createPublicMock).not.toHaveBeenCalled();
+      expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+    } finally {
+      await cleanup();
+      container.remove();
+    }
   });
 
   it('creates an idempotent deposit checkout only from an authoritative server quote', async () => {
@@ -734,16 +759,16 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
 
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
 
     expect(container.textContent).toContain('Precio autorizado: USD 230.00 total · depósito USD 115.00');
     const termsCheckbox = container.querySelector<HTMLInputElement>(
       'input[aria-label="Aceptar precio y política de reserva"]',
     );
     if (!termsCheckbox) throw new Error('Terms checkbox not found');
+    await act(async () => { submitBookingForm(container); await flushPromises(); });
+    expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+    expect(createPublicMock).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Acepta la política y el precio');
 
     await act(async () => {
       termsCheckbox.click();
@@ -832,10 +857,6 @@ describe('PublicBookingPage', () => {
       await flushPromises();
     });
 
-    await act(async () => {
-      clickButtonByText(container, 'Revisar reserva');
-      await flushPromises();
-    });
 
     await act(async () => {
       const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');
@@ -946,7 +967,7 @@ describe('PublicBookingPage', () => {
     document.body.removeChild(container);
   });
 
-  it('advances by step on form submit before sending booking', async () => {
+  it('shows the summary with the schedule and sends only on the second step submit', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const { cleanup } = await renderPage(container);
@@ -970,7 +991,6 @@ describe('PublicBookingPage', () => {
       const dateInput = getInputByLabel(container, 'Fecha y hora');
       setInputValue(dateInput, desiredUser.toFormat("yyyy-MM-dd'T'HH:mm"));
       clickCheckboxNearText(container, 'Asignar ingeniero después');
-      submitBookingForm(container);
       await flushPromises();
     });
     expect(container.textContent).toContain('Resumen rápido');
@@ -1017,10 +1037,6 @@ describe('PublicBookingPage', () => {
         await flushPromises();
       });
 
-      await act(async () => {
-        clickButtonByText(container, 'Revisar reserva');
-        await flushPromises();
-      });
 
       await act(async () => {
         const submitButton = container.querySelector<HTMLButtonElement>('button[type="submit"]');

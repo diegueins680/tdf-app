@@ -3302,7 +3302,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "cbe9df06de537d7f001c39d5e8eacf687d19e3588001616f3cd9a1867ecc99ac",
+      "sha256": "f69976e1516323adf28208deaed41806edb962be2f52fa1060c0518f5880cfba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3314,7 +3314,7 @@
     {
       "id": "SURFACE-a58a6650faecc2e6",
       "path": "e2e/web/booking-timezone.spec.mjs",
-      "sha256": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
+      "sha256": "97b2aacfe448cf5d01ad4b8b54521d9b0fe03ba6354a3004ea2d7ac405b4d651",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3500,7 +3500,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "8990a45ed65af6a3301ba7fd60839cf2f4845ac1da8e29d19ed281066199183b",
+      "sha256": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3848,7 +3848,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
+      "sha256": "607027df5400e9ddda72463921aaf7b59e498fcebe80ed069ce23ded5ce2aff9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7856,13 +7856,13 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "8d75c374021fa06eec1e414ad70d64189431571438c8d6abb7eb536aa70f8095",
+      "sha256": "2ed6fbb308d0dbe89c46d4ee407480d9c531351e0f43b0b531db31ceef3c22d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "200dcef2bab6d9918301c6070f282e41c4899d67a6354dd0f4aebf6d47030ad6",
+      "sha256": "208ff62347774f0c9aa5b1d773c370f3b346e8a98f42a4a77de6065f7796673e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7880,7 +7880,7 @@
     {
       "id": "SURFACE-077e9bba1bd34cd9",
       "path": "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
-      "sha256": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
+      "sha256": "4bb56f2d7f3e557fd60d61e74fad694ab93ca3848fe3b5aceebb3e458d54d59e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8852,7 +8852,7 @@
     {
       "id": "SURFACE-d012a7e1199bfda1",
       "path": "tdf-hq-ui/src/bootSafety.tsx",
-      "sha256": "d86542845ea039c65a5135d5d94e1c2331cadb6f4866ba309a4973c9cc10cbdc",
+      "sha256": "6c8dbd26e51d2684d18dd4fd2b74860d03ccbc065be4dee40f65b64f1bc2a992",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10982,13 +10982,13 @@
     {
       "id": "SURFACE-a90d5d67ce529d4f",
       "path": "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-      "sha256": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
+      "sha256": "33a335a1602ea6c4ac3ea14cad84261b77454e4be0f31a20ecbca3e2d117ebd3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-adbe6d097447b912",
       "path": "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-      "sha256": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
+      "sha256": "440da24e354a801a5bd7d5692befd3e9b2c064eb7b56502aea288484d0173527",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11588,13 +11588,13 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "7a97976630f9c31e03b88f50738661406c8efb81d58ebbac34b199739d879d0f",
+      "sha256": "27203216b717b7668ac25e8a87fabef364aaa472940bd2ad479b8677fc5813b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "23d150cf246fee625f0495395663782bb1ca7e7982cb3fd873464a5ea0aefa57",
+      "sha256": "4e7d476baf70894414b61e68e073fda5e6024ec57b98a883918acce952c07397",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12890,13 +12890,13 @@
     {
       "id": "SURFACE-7ee3df6cd47255b2",
       "path": "tdf-hq-ui/src/utils/lazyWithReload.test.ts",
-      "sha256": "16b3ce3a3101695e6d24049d7ec53a8e88989a34945653ba8176e797826a57bb",
+      "sha256": "710b76b6d5597703cc8372d533766c1c5742604613411107d829e3af0de0209c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0475b0acdc163a7f",
       "path": "tdf-hq-ui/src/utils/lazyWithReload.ts",
-      "sha256": "b5dea0e45bcf0dd99fd9f9b31bd79323881fae0f588cc3145eee6454e1857aed",
+      "sha256": "ece64362135f716df791766c2bf113654b91a9e7a4c682e06c1d0d65300be3db",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30892,7 +30892,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9b5ba891dcfbc4c77d007e3d23e66b1c2c692d6d4fe0c05ddd1884c65fdd3cb7",
+      "sha256": "705fb125b4169cc72bb107f4b10f0e477bf53048ac41279bf5744c6fbeeef635",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

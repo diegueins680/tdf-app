@@ -26871,10 +26871,10 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
-      "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14, 16 and 18",
+      "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14-16, 18, 22 and25; continuation 2026-11-11.",
       "contract": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
       "actors": [
         "Anonymous visitor",
@@ -26918,12 +26918,13 @@
       "privacy": "Name and email prefill read only the viewer's own session. No new data is collected or sent.",
       "concurrency": "Unchanged; existing checkout idempotency and payment safety locks are preserved.",
       "idempotency": "Unchanged; the checkout request fingerprint and idempotency key logic is preserved.",
-      "failure": "Existing failure states remain, reworded in plain language with the same meaning.",
+      "failure": "Existing failure states remain, reworded in plain language with the same meaning. Field validation blocks checkout writes; optional analytics failures are caught locally, and persistent required-route failures show manual recovery after the bounded reload.",
       "recovery": "Existing retry, status refresh and support paths remain available from the focused shell.",
       "observability": "Existing funnel events are unchanged; no measured conversion effect is claimed.",
       "property": "BuyActionFirst; FocusedPurchaseShell; SafetyMeaningPreserved; NoLockedGroups; SearchOnlyRespectsGlobalMenu",
       "implementation": [
         "tdf-hq-ui/src/analytics/posthog.ts",
+        "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
         "tdf-hq-ui/src/components/PublicBranding.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
@@ -26953,18 +26954,22 @@
         "tdf-hq-ui/src/pages/TrialsPage.tsx",
         "tdf-hq-ui/src/session/sessionContactDefaults.ts",
         "tdf-hq-ui/src/utils/bookingStatusLabel.ts",
-        "tdf-hq-ui/src/utils/directoryStatusLabel.ts"
+        "tdf-hq-ui/src/utils/directoryStatusLabel.ts",
+        "tdf-hq-ui/src/utils/lazyWithReload.ts"
       ],
       "tests": [
         "e2e/web/analytics-privacy.spec.mjs",
         "e2e/web/auth-landing.spec.mjs",
+        "e2e/web/booking-timezone.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs",
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
         "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx",
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
         "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
         "tdf-hq-ui/src/components/PublicBranding.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
@@ -26973,12 +26978,15 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/LoginPage.test.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
         "tdf-hq-ui/src/session/sessionContactDefaults.test.ts",
         "tdf-hq-ui/src/utils/bookingStatusLabel.test.ts",
-        "tdf-hq-ui/src/utils/directoryStatusLabel.test.ts"
+        "tdf-hq-ui/src/utils/directoryStatusLabel.test.ts",
+        "tdf-hq-ui/src/utils/lazyWithReload.test.ts"
       ],
       "formalModels": [],
       "verification": "Component and page regressions for each changed surface. No mathematical implementation proof claimed.",
@@ -26987,7 +26995,7 @@
       "critical": false,
       "openQuestions": [
         "No usage data weights these changes; human comprehension and conversion effects are unmeasured.",
-        "Footer, sign-in, booking and sidebar changes were not measured in a browser."
+        "Footer, sign-in and sidebar changes were not measured in a browser; booking flow changes use synthetic browser evidence, not live submissions."
       ],
       "confidence": "Heuristic audit with before/after measurements on the event page and ticket checkout only.",
       "ambiguity": [],
@@ -27016,7 +27024,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "15e68fab5c6e19ae285566596e6efb42878cbc7ac88e3b72310166bfa8fcc653",
+    "docs/catalog-persistence/catalog-list-decisions.json": "9d81f969bdcbb5a596af57572c47461fab4e8a21aa8ffff23b3975933ab0e46f",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -27035,9 +27043,9 @@
     "e2e/web/analytics-privacy.spec.mjs": "7919f29fba68e18b86e9bb32b3ad4bd66236e926c664b3158229934960332b06",
     "e2e/web/artist-follow.spec.mjs": "ed6c600fc6928a8c7a273aca09fdcc1bf9231602bf13dbd89e3e5c468c3d8a83",
     "e2e/web/artist-merch.spec.mjs": "6940cc484e165424623c0992f972b42436cc53de2a4489cfe3df2a170768ecf7",
-    "e2e/web/auth-landing.spec.mjs": "cbe9df06de537d7f001c39d5e8eacf687d19e3588001616f3cd9a1867ecc99ac",
+    "e2e/web/auth-landing.spec.mjs": "f69976e1516323adf28208deaed41806edb962be2f52fa1060c0518f5880cfba",
     "e2e/web/booking-catalog-recovery.spec.mjs": "deee255f49ae71569a5f313e5af59357f352d1420d7226a43ed67c0c0481b95f",
-    "e2e/web/booking-timezone.spec.mjs": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
+    "e2e/web/booking-timezone.spec.mjs": "97b2aacfe448cf5d01ad4b8b54521d9b0fe03ba6354a3004ea2d7ac405b4d651",
     "e2e/web/campaign-accessibility.spec.mjs": "4e1b301bd4f7c45af74679e3cb1d9109273af1f77ff83e41bfebf8b49eb7248d",
     "e2e/web/chat-mobile-follow.spec.mjs": "f5ea13a3ebd693cb1fd5e71d58e977429b511f42f2a890bd2affb7efa72ad916",
     "e2e/web/chat-notification-navigation.spec.mjs": "19b46431ff1817bae1ac37b70e6b5a90e118cbb0d842b4240fb716c85a6b1f7b",
@@ -27062,7 +27070,7 @@
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
     "e2e/web/music-search-native.spec.mjs": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
-    "e2e/web/persona-public.spec.mjs": "8990a45ed65af6a3301ba7fd60839cf2f4845ac1da8e29d19ed281066199183b",
+    "e2e/web/persona-public.spec.mjs": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
     "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
     "e2e/web/radio-navigation.spec.mjs": "ebb525a994536606532fd81c20f2cd773cf616a556dca6b2aef2739cb747d1ea",
     "e2e/web/records-thumbnails.spec.mjs": "53bff5d1d66f9ee34b8d177f04c1aa0d53e42129bb230d4774a0fe15970b2821",
@@ -27442,7 +27450,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "607027df5400e9ddda72463921aaf7b59e498fcebe80ed069ce23ded5ce2aff9",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -27883,11 +27891,11 @@
     "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
     "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx": "205cd4ebacf67f48da978914e77c6ca5c5a0dac6a24b26c557865df5dc587bb1",
-    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "8d75c374021fa06eec1e414ad70d64189431571438c8d6abb7eb536aa70f8095",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "200dcef2bab6d9918301c6070f282e41c4899d67a6354dd0f4aebf6d47030ad6",
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "2ed6fbb308d0dbe89c46d4ee407480d9c531351e0f43b0b531db31ceef3c22d8",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "208ff62347774f0c9aa5b1d773c370f3b346e8a98f42a4a77de6065f7796673e",
     "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx": "b27a208c02d62cc6013968ee4971b7729c46e6300aae35fad89576b6371b906b",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "993441525fe795e32865647090cb62ad4ac49e08f14c8c50177e4196ad5192b8",
-    "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
+    "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "4bb56f2d7f3e557fd60d61e74fad694ab93ca3848fe3b5aceebb3e458d54d59e",
     "tdf-hq-ui/src/analytics/errorReporting.test.ts": "c56a20ab2521faed8bfd6e435636898248694c6ba0d75ce2ea66514aca688bc8",
     "tdf-hq-ui/src/analytics/errorReporting.ts": "c47953821d45c98c9feddca8a4ebb90fdcf350e64e6a568cf243f82129fa52b4",
     "tdf-hq-ui/src/analytics/growthAttribution.test.ts": "fefe42899bf23e119afc88b328c9b2732fa35af6bf28af6caf744ae9d926c6fa",
@@ -27957,7 +27965,7 @@
     "tdf-hq-ui/src/api/uploadQueue.ts": "518ff9a043e587d3721814372de69cf238ee962d3df9b48ef369b72c5810b22e",
     "tdf-hq-ui/src/api/videoCampaigns.ts": "8ee7fef3bd2d796b66f216817fe73d2e0638f0ddadd76e0f615d75bd4a7b6c64",
     "tdf-hq-ui/src/api/whatsappConsentPublic.ts": "5c41328394ff76400c1fbcd32b95555bec11455ad923acd96e922b5aadbccfda",
-    "tdf-hq-ui/src/bootSafety.tsx": "d86542845ea039c65a5135d5d94e1c2331cadb6f4866ba309a4973c9cc10cbdc",
+    "tdf-hq-ui/src/bootSafety.tsx": "6c8dbd26e51d2684d18dd4fd2b74860d03ccbc065be4dee40f65b64f1bc2a992",
     "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
     "tdf-hq-ui/src/components/AccountDeletionQueue.tsx": "d78edfc4cef789c2a8f9b2d9d0eb29d43465ede2e3b98c23584364960c9fcd51",
     "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx": "8c057855c1c9a5d11d6f0d54425d49d1eb5b3e1787d104710180cb34110e8cdf",
@@ -28155,8 +28163,8 @@
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "edc51fcd5cd15ae3959a12ea047bbf40cd2e755b223caa13ed589ab96aa5fdbf",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "ef0bc404a0629dd450f959bfc86230b0d3c7bf08f6de74adb3e73a40b49cd4d9",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
-    "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
-    "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
+    "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "33a335a1602ea6c4ac3ea14cad84261b77454e4be0f31a20ecbca3e2d117ebd3",
+    "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx": "440da24e354a801a5bd7d5692befd3e9b2c064eb7b56502aea288484d0173527",
     "tdf-hq-ui/src/pages/FanClubPage.tsx": "79dbb4926462ad0d5986204698c5dd7f7f58d7b1c509bf510f9c0503496c7671",
     "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "b4eaf012b687c6fc0ae4d60d667b661e346b15323ba0e7baad282f49452fcd91",
@@ -28216,8 +28224,8 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "ce6ad9db314d718c18736bbd51652b4bc666c9d8df7cc028b482e21c877f25af",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "cd5515ffdf95e8a621791d1b89648d8de171600c9d6292bce8dfc015f0e4b194",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "212b909b23793400907c09696153136b452038d6c8a0f7d48853c01cb09e75f4",
-    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "7a97976630f9c31e03b88f50738661406c8efb81d58ebbac34b199739d879d0f",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "23d150cf246fee625f0495395663782bb1ca7e7982cb3fd873464a5ea0aefa57",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "27203216b717b7668ac25e8a87fabef364aaa472940bd2ad479b8677fc5813b8",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "4e7d476baf70894414b61e68e073fda5e6024ec57b98a883918acce952c07397",
     "tdf-hq-ui/src/pages/PublicProfilePage.tsx": "231a90d2da08b7eb5049818d418372a6c05d9069b9b874e8cf37c28824e17164",
     "tdf-hq-ui/src/pages/PublicReputationRightsPage.tsx": "f6de05dae2322ea92e05066bf94073a68dcaa1c437c10b1e9524dfb98867268f",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
@@ -28340,7 +28348,8 @@
     "tdf-hq-ui/src/utils/inAppBrowser.ts": "e8cf3a4277519ec11f07f2533ff28a113595a2156406bd95d08162edbc793924",
     "tdf-hq-ui/src/utils/incrementalSha256.test.ts": "dfc75d64b7e8ea09c1606d830cb3f9a00c06c7e857e13640eb0e842d15d5184d",
     "tdf-hq-ui/src/utils/incrementalSha256.ts": "a7964918e4d6c577458a488a35f6f938b3584857ea40b2169c27b56c3435f899",
-    "tdf-hq-ui/src/utils/lazyWithReload.ts": "b5dea0e45bcf0dd99fd9f9b31bd79323881fae0f588cc3145eee6454e1857aed",
+    "tdf-hq-ui/src/utils/lazyWithReload.test.ts": "710b76b6d5597703cc8372d533766c1c5742604613411107d829e3af0de0209c",
+    "tdf-hq-ui/src/utils/lazyWithReload.ts": "ece64362135f716df791766c2bf113654b91a9e7a4c682e06c1d0d65300be3db",
     "tdf-hq-ui/src/utils/loginRouting.test.ts": "8fabb75d7f986e9d7bf8f24b2a6a71f786e08fcae9718b8d22ede42eaf89f617",
     "tdf-hq-ui/src/utils/loginRouting.ts": "d66e41d819a407a04dbbe6d4a35824ec444aa4a119ea013bd7263db435ca6593",
     "tdf-hq-ui/src/utils/markdownMentions.ts": "de382e370625d8f4da61c55d8352f87afb69a1aab083adf998ee26941e93e79d",
@@ -30710,6 +30719,10 @@
       },
       {
         "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -33484,6 +33497,10 @@
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": [
       {
         "requirement": "SYS-UX-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -40049,6 +40066,10 @@
       {
         "requirement": "SYS-WEB-SHELL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": [
@@ -40061,11 +40082,19 @@
       {
         "requirement": "SYS-WEB-SHELL-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": [
       {
         "requirement": "SYS-WEB-SHELL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -42333,6 +42362,10 @@
       {
         "requirement": "COMM-CLUB-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/components/PublicWelcome.tsx": [
@@ -43052,6 +43085,10 @@
     "e2e/web/booking-timezone.spec.mjs": [
       {
         "requirement": "BOOK-STUDIO-TIMEZONE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
     ],
@@ -46586,6 +46623,12 @@
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq-ui/src/utils/lazyWithReload.test.ts": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -47107,7 +47150,7 @@
     {
       "id": "SURFACE-8096aa6aaf7d328c",
       "path": "e2e/web/auth-landing.spec.mjs",
-      "sha256": "cbe9df06de537d7f001c39d5e8eacf687d19e3588001616f3cd9a1867ecc99ac",
+      "sha256": "f69976e1516323adf28208deaed41806edb962be2f52fa1060c0518f5880cfba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -47143,11 +47186,15 @@
     {
       "id": "SURFACE-a58a6650faecc2e6",
       "path": "e2e/web/booking-timezone.spec.mjs",
-      "sha256": "24ab1f1962db70d48f835f4b1986b5ec6a6ac43e2de17213592a26db694099e3",
+      "sha256": "97b2aacfe448cf5d01ad4b8b54521d9b0fe03ba6354a3004ea2d7ac405b4d651",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "BOOK-STUDIO-TIMEZONE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -47501,7 +47548,7 @@
     {
       "id": "SURFACE-8e97f033e44df926",
       "path": "e2e/web/persona-public.spec.mjs",
-      "sha256": "8990a45ed65af6a3301ba7fd60839cf2f4845ac1da8e29d19ed281066199183b",
+      "sha256": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48246,7 +48293,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "0cf3920c4367acfb1d5451df5fc378bb4363b8141d3495c6d072e46436b7092f",
+      "sha256": "607027df5400e9ddda72463921aaf7b59e498fcebe80ed069ce23ded5ce2aff9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48259,6 +48306,10 @@
         },
         {
           "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -56221,7 +56272,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "8d75c374021fa06eec1e414ad70d64189431571438c8d6abb7eb536aa70f8095",
+      "sha256": "2ed6fbb308d0dbe89c46d4ee407480d9c531351e0f43b0b531db31ceef3c22d8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56245,7 +56296,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "200dcef2bab6d9918301c6070f282e41c4899d67a6354dd0f4aebf6d47030ad6",
+      "sha256": "208ff62347774f0c9aa5b1d773c370f3b346e8a98f42a4a77de6065f7796673e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56309,11 +56360,15 @@
     {
       "id": "SURFACE-077e9bba1bd34cd9",
       "path": "tdf-hq-ui/src/__tests__/bootSafety.test.tsx",
-      "sha256": "b357e6d043fb3bc56474d52410ce3dcba47feaf74cf28a5a5aad56f9bc5fc464",
+      "sha256": "4bb56f2d7f3e557fd60d61e74fad694ab93ca3848fe3b5aceebb3e458d54d59e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-SHELL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -57957,11 +58012,15 @@
     {
       "id": "SURFACE-d012a7e1199bfda1",
       "path": "tdf-hq-ui/src/bootSafety.tsx",
-      "sha256": "d86542845ea039c65a5135d5d94e1c2331cadb6f4866ba309a4973c9cc10cbdc",
+      "sha256": "6c8dbd26e51d2684d18dd4fd2b74860d03ccbc065be4dee40f65b64f1bc2a992",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-SHELL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -62020,11 +62079,15 @@
     {
       "id": "SURFACE-a90d5d67ce529d4f",
       "path": "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-      "sha256": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
+      "sha256": "33a335a1602ea6c4ac3ea14cad84261b77454e4be0f31a20ecbca3e2d117ebd3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-UX-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -62032,11 +62095,15 @@
     {
       "id": "SURFACE-adbe6d097447b912",
       "path": "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-      "sha256": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
+      "sha256": "440da24e354a801a5bd7d5692befd3e9b2c064eb7b56502aea288484d0173527",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "COMM-CLUB-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -63248,7 +63315,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "7a97976630f9c31e03b88f50738661406c8efb81d58ebbac34b199739d879d0f",
+      "sha256": "27203216b717b7668ac25e8a87fabef364aaa472940bd2ad479b8677fc5813b8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63272,7 +63339,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "23d150cf246fee625f0495395663782bb1ca7e7982cb3fd873464a5ea0aefa57",
+      "sha256": "4e7d476baf70894414b61e68e073fda5e6024ec57b98a883918acce952c07397",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65654,18 +65721,27 @@
     {
       "id": "SURFACE-7ee3df6cd47255b2",
       "path": "tdf-hq-ui/src/utils/lazyWithReload.test.ts",
-      "sha256": "16b3ce3a3101695e6d24049d7ec53a8e88989a34945653ba8176e797826a57bb",
+      "sha256": "710b76b6d5597703cc8372d533766c1c5742604613411107d829e3af0de0209c",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0475b0acdc163a7f",
       "path": "tdf-hq-ui/src/utils/lazyWithReload.ts",
-      "sha256": "b5dea0e45bcf0dd99fd9f9b31bd79323881fae0f588cc3145eee6454e1857aed",
+      "sha256": "ece64362135f716df791766c2bf113654b91a9e7a4c682e06c1d0d65300be3db",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "SYS-WEB-SHELL-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -82366,7 +82442,6 @@
     "SURFACE-e3c3eb97cf382453",
     "SURFACE-7e3aed9916df1cc0",
     "SURFACE-8fa9a54ebf13387d",
-    "SURFACE-7ee3df6cd47255b2",
     "SURFACE-ca499665708ebf7a",
     "SURFACE-fd1e89356f58ecc6",
     "SURFACE-f50e70c61acf715a",
@@ -84393,7 +84468,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9b5ba891dcfbc4c77d007e3d23e66b1c2c692d6d4fe0c05ddd1884c65fdd3cb7",
+      "sourceSha256": "705fb125b4169cc72bb107f4b10f0e477bf53048ac41279bf5744c6fbeeef635",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -84421,7 +84496,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9b5ba891dcfbc4c77d007e3d23e66b1c2c692d6d4fe0c05ddd1884c65fdd3cb7",
+      "sourceSha256": "705fb125b4169cc72bb107f4b10f0e477bf53048ac41279bf5744c6fbeeef635",
       "definition": {
         "states": [
           "absent",
@@ -84451,7 +84526,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "9b5ba891dcfbc4c77d007e3d23e66b1c2c692d6d4fe0c05ddd1884c65fdd3cb7",
+      "sourceSha256": "705fb125b4169cc72bb107f4b10f0e477bf53048ac41279bf5744c6fbeeef635",
       "definition": {
         "export": [
           "queued",

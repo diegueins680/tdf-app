@@ -843,7 +843,16 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   }
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
     ...desktopReviews.map(row => row.id)]);
-  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id));
+  // The cognitive-load continuation combines two booking presentation steps.
+  // Its successor must preserve the exact earlier classification and review,
+  // including in this historical Apple-policy projection.
+  const bookingReview = active.find(row => row.id === '6a832158d7d69c8fcc7e');
+  const bookingParent = await reviewedParent('147d83c9c12ccceb65bac7f2353522bbdebb33ca');
+  assert.ok(bookingReview, 'the two-step booking list needs its successor review');
+  assert.deepEqual(bookingReview.previousDecision,
+    bookingParent.find(row => row.id === '528ebad9929ca2769837'));
+  const historicalAppleView = active.filter(row => !laterMainIds.has(row.id))
+    .map(row => row.id === bookingReview.id ? bookingReview.previousDecision : row);
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);

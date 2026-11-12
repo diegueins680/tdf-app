@@ -633,7 +633,6 @@ test('PW-PER-01-BOOKING keeps legacy confirmation on customer-safe public action
   await page.getByLabel('Correo').fill('per-01.elena@persona.test');
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByLabel('Fecha y hora').fill('2030-01-01T12:00');
-  await page.getByRole('button', { name: 'Revisar reserva' }).click();
   const confirmBookingButton = page.getByRole('button', { name: 'Confirmar reserva' });
   const failedAttempt = page.waitForResponse((response) =>
     response.request().method() === 'POST'
