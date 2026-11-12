@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "8354381deb5dd631d3061477ee28e4c3f05b3128",
+  "mobileRevision": "44a306ba1fe9361e893688d944b5ce789e364abb",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1210,11 +1210,16 @@
       "tdf-hq-ui/src/features/interactions/PublicationSelection.tsx",
       "tdf-hq-ui/src/features/interactions/model.test.ts",
       "tdf-hq-ui/src/features/interactions/model.ts",
+      "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+      "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+      "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
       "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
       "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
       "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
+      "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+      "tdf-hq-ui/src/features/marketplace/agreements.ts",
       "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
       "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
       "tdf-hq-ui/src/features/marketplace/offers.test.ts",
@@ -2245,6 +2250,8 @@
       "tdf-hq/sql/2026-11-08_marketplace_offers_rollback.sql",
       "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
       "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql",
+      "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
+      "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "tdf-hq/sql/init_schema.sql",
       "tdf-hq/sql/preflight_security_emergency_readiness.sql",
@@ -3473,7 +3480,7 @@
     {
       "id": "SURFACE-4361fde9fb21989c",
       "path": "e2e/web/marketplace-negotiation.spec.mjs",
-      "sha256": "56a1b12aaef07ab367cf9385cec0b7421abfa2017d3593038da88a6f9e0256b5",
+      "sha256": "cb1b1a4bd84ac9771db4bce96c37b14150892f64722d6b78ee2215b2cf8424ac",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3881,7 +3888,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "247b0a26c22b699fa77514c27f2c791b1c55c87195fc733818292ebf9559c33b",
+      "sha256": "4a01ad058c31969eddad68ba76d31e0aa698e96ff8a180155f23fc8576e89545",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4427,7 +4434,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "b1b7fe2829a044c1e2da8e636c298255f03fa4e2cda2295877af9eb449baf388",
+      "sha256": "a8ae9dcd557d2ef1093a9924ba2768a1cb3fda070b293f6242801c3d3722bcc0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5279,7 +5286,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "c44d5a2a5d810cc88d71d6b678bb599ee283a9510625d507d9b14a52d28afcfd",
+      "sha256": "ba0eee95b5317f7f5bf65b18a295483410a1555bf42a8f23561eb6986b2c0ac3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5477,7 +5484,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "a385fc97faebcd1c8f7be9836d6f751921d1a76cebdcbf484993ce60f7b532bf",
+      "sha256": "c918e27f59078a15801dc3166bd251ca77630c3f3137050fc50a03f894cb1815",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6305,7 +6312,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "21eae6595afeabe167593f705cfd348214e3f5db26812d6cbd6477a6aed92965",
+      "sha256": "667a63493e8d56bd6cf0ccf2584f52be2543a52e8c5193c20feff06774e12613",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8249,7 +8256,7 @@
     {
       "id": "SURFACE-eea9abd0a36ffd69",
       "path": "tdf-hq-ui/src/api/directory.ts",
-      "sha256": "c1b8fe4b02943fa93fb81b2ddf22d67936798402e5ed9c4ae0cc90925a7c20d5",
+      "sha256": "12bdec65e9f52df1889e9215414c43cd020c50af8c8b957b86ef0e8b97db6426",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8417,7 +8424,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "f02511ef91c919a26f53c76b53927cb418aece574c1f532dda505810657b8602",
+      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10209,6 +10216,24 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e3dae8e47713ceac",
+      "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+      "sha256": "34d38e97a9e6c27509256ce7182b50a883de6942b5038887b2bab8d089821fd4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0ba61d7e94897ebf",
+      "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+      "sha256": "1fa60ea04595a4315ee739142efd2d98c889af584844b6c39f8a9d22e50bc5d8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1b27c584cae1f8d6",
+      "path": "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
+      "sha256": "eb7f1eb13f345b656751be082638b185fc86132af05fca7c2bcd402f505bf38b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f4ac65c0e4cce0cb",
       "path": "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
       "sha256": "7bbcb643b3c7d4e8384a7e3d697309aae846b8d8b685f753b3c49f4b850e9904",
@@ -10223,7 +10248,7 @@
     {
       "id": "SURFACE-7fbf218766e62339",
       "path": "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
-      "sha256": "14c13f40386f948b1d253864f80637ed441c75fe1bff6fb7cf4d2e9f7953eabc",
+      "sha256": "2291cb88256a1b77446614e804671d74523b23615be7bfd5264a8dbe46df0c68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10236,6 +10261,18 @@
       "id": "SURFACE-d08b639d621c8e20",
       "path": "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
       "sha256": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c03ebdd9cd29f92c",
+      "path": "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+      "sha256": "f3278e2f5bc2bd62776b3f931c1a3d0dd61fa301cb34336d18a9c79d992ab3ed",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fbfd335398170a3a",
+      "path": "tdf-hq-ui/src/features/marketplace/agreements.ts",
+      "sha256": "3276d73bc416130c4e35f01346b72311be9f5d32b225c267c40c7eac3ecf2d06",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10559,13 +10596,13 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "5b8585b3c3a8bb0bb6e37fe901fc4b5bc933fcf0c3831196cb49ef20e45e5578",
+      "sha256": "7af47a4af4e01c8f61127ee48dfc88a9da941c07e4e998970e0b1ff41a77f73f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "ecced9a51d4187263f40718ad0111d760b7ad2c9a7257f4a04cb3cecbf2933c2",
+      "sha256": "18f1a13142035e017c86dc79f94849ace4ffccc74d613f6e3ee40412fa13e1d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11003,7 +11040,7 @@
     {
       "id": "SURFACE-b1d115adebe79a56",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-      "sha256": "1911a9ce12ee741e5d5943d884db8ec33c12851b7d854c94cd9f4a6e3afdcff7",
+      "sha256": "79916a75d5b599099363cf05b08b24d0d7e76cfa4575c488eb5606921aff1b9c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13481,13 +13518,13 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "489c2159384a562416e9533a0fb732e5f1590558c7d34163a3dbad9bce063108",
+      "sha256": "2e42ef0a3c3979ed55e3a8af94f1e5bbf7e70d3be6e75570f0141656cae957de",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "ca3c283b2fdc4e7b82e4a68789904678cc31950a8edb31c182ad517291a6ef56",
+      "sha256": "d6054e9b9a87004a98114c1cf04e689dde6dec820a1f9b456831b11a994b598b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16407,6 +16444,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-df68b39756932536",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
+      "sha256": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f09e091f0db96aa7",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
+      "sha256": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -16493,7 +16542,7 @@
     {
       "id": "SURFACE-9f19f644ef35d148",
       "path": "tdf-hq/src/TDF/API/Directory.hs",
-      "sha256": "e1d08ba954eaddceb905921d092a2b4b13245b55e699b8c47e0a09f55aa63ffd",
+      "sha256": "9e0fcbc872de32141d2e8d7b66c4f841d2aa7980ee8367193fe0493f73a1ba9d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17255,7 +17304,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "59bb46a490377846d9d0da9485f584f7f3a4137e6f1dea51542e63ed53fa26a1",
+      "sha256": "66b1fa1f3049652819edd28cac9492af97df515bd45b0dcc94f10f770627bfa0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17591,7 +17640,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "86106361580616e8d64f194d36979f39ba75c377884930879b7ee8cf74fe01ba",
+      "sha256": "9d07eced1aaff603ab95124997c824109383af0dfa2fe4c3ae211926d00c72b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18335,7 +18384,7 @@
     {
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-      "sha256": "7185d544a79020bf33e619b823a5f05262f04da17fb555b16764cdfb50218a95",
+      "sha256": "5b2555b902ebbfeb435a4d7159e47f24380a3abb2b12ee681e5ba854f5511474",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20591,7 +20640,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "f02511ef91c919a26f53c76b53927cb418aece574c1f532dda505810657b8602",
+      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21834,7 +21883,7 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "sha256": "f6b72cf7e8bf978f8c89d9de3a5040b393139a94eaa29fb0776f59004f8943ad",
+      "sha256": "5e8cdcb259b1fafeeaa4291225473818b1b2f16aefb5f9574c3d0b08555063b0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22180,6 +22229,13 @@
       "sha256": "a005be8dd8dfc09f39e6586deb7e6368881b37efaadc12d708f8549050ba2414",
       "authority": "inferred",
       "authorityBasis": "Estado: propuesto para implementación. Fecha: 2026-11-08. Extiende ADR 0105.",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0135-marketplace-agreements.md",
+      "sha256": "7f92234860016a8b51fad31506596fbb7477fdff86c563675e1f3f3b7bcf706c",
+      "authority": "approved",
+      "authorityBasis": "Estado: aceptado para implementación. Fecha: 2026-11-12. Extiende ADR 0134 y ADR 0105.",
       "kind": "requirement-candidate"
     },
     {
@@ -23626,7 +23682,7 @@
     },
     {
       "path": "docs/marketplace/01-plan-por-fases.md",
-      "sha256": "92b79430a71dc14c63766d66d55e978e99f1ef5b4a198df953b22030d3ca13c6",
+      "sha256": "26451daa3f1310c1fce795730c67c3d4458e47aa27389cfcc822d765406428e4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23640,7 +23696,7 @@
     },
     {
       "path": "docs/marketplace/03-diseno-de-datos.md",
-      "sha256": "6ac8476b0aa84364a3b2d8d735868b70e62cc848b45e47964b55a5c08d6425e6",
+      "sha256": "ffc7f159f4e3ecc4528507692201eea1c735922c98c82c0c6f14d668eb0226b8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23654,7 +23710,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "d12170e490a01bf7bada7a7e79459ce969e326f5515b7467796a8b4db88bbaa0",
+      "sha256": "181c32663f56ae54ba8d5db69d6f30e4a57c02ed33072beedbf49f675cc2d12f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23752,7 +23808,7 @@
     },
     {
       "path": "docs/music-directory/formal-model.yaml",
-      "sha256": "5bcc6191b31e9294f0bca901812301bc0e0b04044738202d1bb7c22618b6c09e",
+      "sha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31109,7 +31165,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7631061ebcbde8160b3b9625e919a26f4c954137519db79dbf7cff97ac20cce8",
+      "sha256": "62161c8b6b3425305ef24560437766e2ad6899c11140d87a14301eebccea6bed",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31536,14 +31592,14 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "489c2159384a562416e9533a0fb732e5f1590558c7d34163a3dbad9bce063108",
+      "sha256": "2e42ef0a3c3979ed55e3a8af94f1e5bbf7e70d3be6e75570f0141656cae957de",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
     },
     {
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "ca3c283b2fdc4e7b82e4a68789904678cc31950a8edb31c182ad517291a6ef56",
+      "sha256": "d6054e9b9a87004a98114c1cf04e689dde6dec820a1f9b456831b11a994b598b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -32929,6 +32985,15 @@
       "statement": "1. **No hay entidad nueva de \"anuncio\" ni de \"oferta\"**. `classified` sigue siendo el anuncio y `classified_application` la oferta. La intención (`seeking`/`offering`) es un atributo de la categoría (`classified_category.intent`), no una tabla paralela. 2. **La negociación es estructurada y alternada.** Cada propuesta o contraoferta es una fila de `classified_offer_round` con monto, moneda, términos y vencimiento; nunca se negocia el precio por chat. La alternancia estricta y el tope de 10 rondas viven en `TDF.Directory.Policy` y se prueban con propiedades. 3. **Cupos y cierre.** El anuncio declara `slots`; aceptar una oferta consume un cupo de forma atómica; al agotarse, el anuncio pasa a `filled` y las ofertas abiertas se rechazan con motivo. Retirar una oferta aceptada libera el cupo. 4. **Modos de precio.** `open` (solo ofertas), `suggested` (referencia negociable) y `fixed` (solo aceptación del precio). El presupuesto reutiliza `budget_min/max_minor` y `compensation_type`. 5. **Confidencialidad (I08) se mantiene.** Un oferente solo ve su cadena; el público ve conteo y rango agregado. 6. **El acuerdo es un dominio separado del match (Fase 2).** `marketplace_agreement` congela términos y montos, calcula comisión en puntos base y depósito con `DepositPolicy`, y se paga con el checkout existente (`platform_fee_minor`). No se le llama \"escrow\". La liquidación a terceros empieza manual y verificada; Stripe Connect llega por gate. 7. **La reputación nace del acuerdo completado (Fase 3)**: el acuerdo `completed` inserta `directory_interaction(kind='marketplace_agreement')`, que es la única vía para una reseña verificada. 8. **Todo detrás de gates del registro de features** (`marketplace.offers`, `marketplace.agreements`, `marketplace.reputation`, `marketplace.matching`); fusionar código no activa pagos. 9. **Compatibilidad.** Columnas con `DEFAULT`, backfill idempotente, `CHECK` de estado reemplazado con rollback que mapea estados nuevos a antiguos, contrato OpenAPI aditivo (`proposedAmountMinor` sigue aceptándose junto a `amountMinor`).",
       "source": "docs/adr/0134-marketplace-demand-offers.md#decisión",
       "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0135-marketplace-agreements:350f4c31cf1b",
+      "statement": "1. **Un acuerdo por oferta aceptada.** Con el gate `marketplace.agreements` activo, aceptar una oferta que tiene monto positivo y moneda crea, en la misma transacción, una fila `marketplace_agreement`. Ofertas sin monto (intercambio, no remunerado) no crean acuerdo. 2. **Partes según la intención del anuncio.** En un anuncio `seeking` el autor es el comprador (busca y paga) y el oferente el proveedor; en uno `offering`, al revés. 3. **Valores congelados.** El acuerdo guarda monto, moneda, términos (los del anuncio combinados con los de la oferta), comisión y reparto depósito/saldo calculados con la tarifa vigente (`marketplace_agreement_pricing`, por categoría o regla por defecto, editable sin desplegar). Un trigger rechaza cualquier cambio posterior de esos valores. `agreementAmounts` es la única fórmula: la comisión redondea hacia abajo, el depósito al medio hacia arriba, y depósito + saldo = total siempre. 4. **Sin cobro en la parte A.** El acuerdo nace `confirmed` con `settlement_mode='off_platform'`: el pago se coordina entre las partes y TDF no cobra depósito ni comisión todavía. Los estados `pending_deposit`, `balance_due` y `expired` existen en el modelo para la parte B (checkout), pero ninguna solicitud de un participante puede entrar en ellos y un `CHECK` impide usarlos con liquidación fuera de la plataforma. 5. **Quién mueve qué.** El proveedor marca el inicio; solo el comprador confirma que se completó (el proveedor no se autocertifica, y un estado de pago nunca implica servicio prestado); cualquiera de los dos cancela o abre disputa mientras el acuerdo está vivo; solo un administrador resuelve una disputa. La relación vive en `TDF.Directory.Policy`, en `marketplace_agreement_transition_allowed` (trigger) y en `formal-model.yaml#agreement`, y el gate estático las compara. 6. **Cierre con reputación.** Completar un acuerdo registra una `directory_interaction` verificada de tipo `marketplace_agreement`; con ella ambas partes pueden dejarse reseña con las reglas de reseñas existentes (I12). 7. **Cancelar deshace el compromiso.** Cancelar el acuerdo retira la oferta aceptada y libera su cupo (reabre el anuncio cubierto si no venció); retirar la oferta aceptada cancela el acuerdo vivo. Un acuerdo completado, en disputa o con saldo pendiente no se deshace retirando la oferta. 8. **Concurrencia.** Mismo orden de bloqueo que ADR 0134, extendido: anuncio → oferta → acuerdo. Cada decisión va atada a la versión mostrada (`expectedVersion`). 9. **Transparencia.** Ambas partes ven las mismas cifras: total, depósito, saldo, comisión de TDF y neto del proveedor.",
+      "source": "docs/adr/0135-marketplace-agreements.md#decisión",
+      "status": "approved",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
       "gap": "Per-clause implementation correspondence not discharged by inventory"
