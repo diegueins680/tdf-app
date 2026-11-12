@@ -28323,7 +28323,7 @@
     "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx": "7bbcb643b3c7d4e8384a7e3d697309aae846b8d8b685f753b3c49f4b850e9904",
     "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx": "d3cb0207379e925515a583f9c4ac3fe7466e360ddec2fcacb568d66102beb3f4",
     "tdf-hq-ui/src/features/marketplace/OfferCard.tsx": "4604b8b869a1a4932af94d2a6a71deba6122e69ee2ec4ea656bd8680e832421a",
-    "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "4852f1dc94aa113d1a66613e3b0744ba652caf600ab3db8d48ed0eead0fec5cf",
+    "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "fc5c94b48a38e16fe65a64aa3fba8b7265de78da05316d85cfdcb1f741e96176",
     "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
@@ -28909,7 +28909,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "4bfb5a54194e63d89ab3898ee02b5b825cba4322cbf19ac212df055715a0d237",
+    "tdf-hq/src/TDF/Server/Directory.hs": "5921d88b8fd6f9a3bb6aae51d8c46084a05bff0a5791a57a4b6be1e075917875",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
@@ -60765,7 +60765,7 @@
     {
       "id": "SURFACE-8481865773a143b4",
       "path": "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
-      "sha256": "4852f1dc94aa113d1a66613e3b0744ba652caf600ab3db8d48ed0eead0fec5cf",
+      "sha256": "fc5c94b48a38e16fe65a64aa3fba8b7265de78da05316d85cfdcb1f741e96176",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74329,7 +74329,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "4bfb5a54194e63d89ab3898ee02b5b825cba4322cbf19ac212df055715a0d237",
+      "sha256": "5921d88b8fd6f9a3bb6aae51d8c46084a05bff0a5791a57a4b6be1e075917875",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

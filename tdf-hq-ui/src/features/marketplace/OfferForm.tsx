@@ -68,7 +68,10 @@ export default function OfferForm({ classifiedId, classifiedSlug, profiles, taxo
 
   const slotsLeft = classified.data?.slotsRemaining;
   const closed = classified.data ? (slotsLeft === 0 || (classified.data.offerDeadlineAt ? new Date(classified.data.offerDeadlineAt) < new Date() : false)) : false;
-  const amountRequired = priceMode !== 'open' || Boolean(classified.data?.compensation);
+  // Only a fixed price makes the amount mandatory (it is locked to the
+  // reference). Open and suggested listings, including unpaid or exchange
+  // compensation, accept a message-only offer; a suggested price is prefilled.
+  const amountRequired = priceMode === 'fixed';
 
   return (
     <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }} data-testid="offer-form">

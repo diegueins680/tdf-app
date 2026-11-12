@@ -10210,7 +10210,7 @@
     {
       "id": "SURFACE-8481865773a143b4",
       "path": "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
-      "sha256": "4852f1dc94aa113d1a66613e3b0744ba652caf600ab3db8d48ed0eead0fec5cf",
+      "sha256": "fc5c94b48a38e16fe65a64aa3fba8b7265de78da05316d85cfdcb1f741e96176",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17548,7 +17548,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "4bfb5a54194e63d89ab3898ee02b5b825cba4322cbf19ac212df055715a0d237",
+      "sha256": "5921d88b8fd6f9a3bb6aae51d8c46084a05bff0a5791a57a4b6be1e075917875",
       "semanticConformance": "not-established-by-discovery"
     },
     {
