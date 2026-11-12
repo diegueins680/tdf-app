@@ -26884,6 +26884,248 @@
       },
       "historicalStatus": null,
       "critical": false
+    },
+    {
+      "id": "EVT-CREATE-ENTRY-001",
+      "title": "Event creation and management on the signed-in home, art first, artists by name",
+      "statement": "A confirmed session reaches event creation and management from the top of its home; creation starts with the event art, and a lineup may name an artist who is not on the platform, who is then created with the event.",
+      "domain": "EVT",
+      "critical": false,
+      "actors": [
+        "Event organizer",
+        "Artist",
+        "Signed-in member"
+      ],
+      "preconditions": [
+        "An authenticated session confirmed by the server; existing event authorization remains authoritative.",
+        "The image endpoint attaches art to an existing event; the event list returns the organizer of each event."
+      ],
+      "inputs": [
+        "Session party",
+        "Event art file",
+        "Lineup entries: artist identifier or artist name"
+      ],
+      "state": {
+        "boundary": "formal/system/event-creation-entry.md"
+      },
+      "allowedTransitions": [
+        "Signed-in home to event creation or event management",
+        "Create event, then save named artists, then upload art; each later step is retryable",
+        "Named artist to the single stored profile with that name, or to a new profile without an owning party"
+      ],
+      "forbiddenTransitions": [
+        "Show the panel to a guest or before session hydration completes",
+        "Drop a lineup entry that has neither identifier nor name",
+        "Guess between several stored artists with the same name",
+        "Create artists or an event when the lineup is refused",
+        "Lose a created event because art or named artists were refused",
+        "Grant organizer permissions through this change"
+      ],
+      "effects": [
+        "Preview up to three upcoming events organized by the viewer",
+        "Create artist profiles named in a lineup",
+        "Attach the chosen art to the created event"
+      ],
+      "authorization": "Event creation, update and image upload keep their existing checks. A named artist is created only as part of an event write its author is already allowed to make.",
+      "privacy": "The panel shows only events the event list already returns to the viewer. A created artist profile holds a name and no party.",
+      "concurrency": "Name resolution and profile creation run inside the event write transaction; the update path holds the event lock. Concurrent writes naming the same new artist may create duplicates, which later resolve to an explicit 409.",
+      "idempotency": "Retrying named artists reuses the profile created or matched by name; retrying art uploads the retained file again.",
+      "failure": "Invalid art is refused before creation. A refused upload or lineup keeps the event and reports the reason. A failed event list keeps both home actions.",
+      "recovery": "Retry the art or the named artists from the created-event screen, or complete them later from the event.",
+      "observability": "Created-event screen states art and artist outcomes; the home panel distinguishes loading, empty, failed and listed states.",
+      "source": "Owner request 2026-11-10: event creation and management as a main feature of the artists' and other users' home; art file picker first when creating an event; create an artist by writing the name when not on the platform.",
+      "contract": "formal/system/event-creation-entry.md",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/i18n/locales/es.ts",
+        "tdf-hq-ui/src/i18n/locales/en.ts",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/utils/eventLineup.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+        "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "React regression tests for the panel, picker, creator and hub mount; Haskell unit and SQLite tests for lineup validation and resolution. No end-to-end run against a deployed backend.",
+      "ambiguity": [
+        "The home preview is bounded by the first 500 upcoming events until the event list gains an organizer filter.",
+        "Claiming a name-only artist profile by the artist is not defined here.",
+        "The file dialog cannot open without a user gesture; 'first' means first on the page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "UI tests and typecheck run locally; backend tests run in CI; deployed behavior requires a backend release."
+      },
+      "authority": "approved",
+      "property": "Home actions never depend on data; no lineup entry is dropped or guessed; a refused lineup writes nothing; a created event survives refused art or names.",
+      "verification": "React regressions against the real components; Haskell tests of validation and of plan/materialize over SQLite, including the ambiguous-name refusal with no writes.",
+      "evidence": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx; tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx; tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx; tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts; tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx; tdf-hq/test/Spec.hs; tdf-hq/test/TDF/ServerSpec.hs"
+    },
+    {
+      "id": "UX-FORM-ACTIONS-001",
+      "title": "Form commit actions follow the last field and remain visible in open editors",
+      "statement": "Editable web forms place Save, Update, or the equivalent commit action after their last field. Open course registration and CMS editors retain a visible action whose enabled state follows their existing save prerequisites.",
+      "domain": "UX",
+      "authority": "Product owner directive on 2026-11-10, with commit, push, merge and continuation authorized on 2026-11-11.",
+      "source": "User request to place Save or Update after the latest form field; PR #731.",
+      "property": "A user finishing the final field can continue to the commit action without returning to the form header.",
+      "contract": "formal/system/form-actions.md",
+      "actors": [
+        "Signed-in form editor"
+      ],
+      "preconditions": [
+        "The user has opened an editable form under the existing account and permission rules."
+      ],
+      "inputs": [
+        "Form fields, including expanded optional fields",
+        "Save or Update command",
+        "Keyboard focus traversal"
+      ],
+      "state": {
+        "boundary": "Form action layout and existing enabled state",
+        "states": [
+          "unready",
+          "editable",
+          "saving",
+          "saved",
+          "failed"
+        ]
+      },
+      "allowedTransitions": [
+        "unready -> editable when existing prerequisites are met",
+        "editable -> saving through the footer action",
+        "saving -> saved or failed through the existing save handler",
+        "failed -> editable for correction or retry"
+      ],
+      "forbiddenTransitions": [
+        "An open course or CMS editor hides its save action because prerequisites are unmet.",
+        "Moving the action enables a save that existing validation, ownership or pending-state restrictions reject."
+      ],
+      "effects": [
+        "The existing persistence handler receives the current form draft."
+      ],
+      "authorization": "Existing account ownership, role, catalog and readiness checks govern writes.",
+      "privacy": "Existing save payloads and visibility rules govern submitted fields.",
+      "concurrency": "Existing pending mutation and account-baseline checks govern concurrent or late saves.",
+      "idempotency": "The layout change uses the existing single action and save handler.",
+      "failure": "Existing errors and current edits remain available for correction.",
+      "recovery": "Existing draft recovery and retry behavior remain available.",
+      "observability": "Existing saving, success and error feedback communicates save state.",
+      "implementation": [
+        "tdf-hq-ui/src/pages/PaymentsPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
+        "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
+        "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
+        "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
+        "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "719 targeted component tests, TypeScript, changed-file lint and browser geometry, keyboard traversal and synthetic payment/profile submissions at 390px and 1440px.",
+      "evidence": "PR #731 and its six targeted test suites; local browser fixture execution.",
+      "confidence": "The exercised form flows and viewport sizes have local test evidence.",
+      "ambiguity": [
+        "Full production form coverage requires deployed verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component and browser checks cover the edited flows. Hosted final-candidate checks and deployment remain pending."
+      },
+      "critical": false
+    },
+    {
+      "id": "SYS-ARCH-BOUNDARY-001",
+      "title": "Module dependencies follow declared layers and existing violations can only shrink",
+      "statement": "Backend and web modules belong to declared ordered layers and may import only their own or lower layers. No module may exceed the declared size limit. Violations that predate the rule are listed individually; the repository check rejects any unlisted violation, any listed violation that no longer exists, growth of a listed file past its ceiling, and a ceiling left more than the declared headroom above a file that has shrunk.",
+      "domain": "SYS",
+      "critical": false,
+      "actors": [
+        "Maintainer",
+        "CI worker"
+      ],
+      "preconditions": [
+        "docs/architecture/module-boundaries.json declares every system's source roots, layers, listed violations and size budget."
+      ],
+      "inputs": [
+        "docs/architecture/module-boundaries.json",
+        "tdf-hq/src",
+        "tdf-hq/app",
+        "tdf-hq-ui/src"
+      ],
+      "state": {
+        "boundary": "docs/adr/0133-enforced-module-boundaries.md"
+      },
+      "allowedTransitions": [
+        "Delete a listed violation once its import is removed.",
+        "Lower a file's ceiling after it shrinks.",
+        "Add a listed violation or raise a ceiling only as an explicit, reviewed edit to the baseline."
+      ],
+      "forbiddenTransitions": [
+        "Add an unlisted import from a lower layer to a higher one.",
+        "Grow a listed file past its ceiling or an unlisted file past the size limit.",
+        "Keep a baseline entry for a violation that no longer exists."
+      ],
+      "effects": [
+        "Repository checks fail and name the offending import or file."
+      ],
+      "authorization": "The check reads source files only and authorizes no product, provider or deployment operation.",
+      "privacy": "No personal data is read; only module names, import statements and line counts.",
+      "concurrency": "Deterministic for a fixed source tree; concurrent branches that each add listed debt conflict in the baseline file and must be reconciled explicitly.",
+      "idempotency": "Re-running against the same tree gives the same result.",
+      "failure": "A missing configuration, an unsupported language, a system with no source modules, duplicate or unsorted listed violations fail the check rather than pass it.",
+      "recovery": "Move the code to the correct layer or a focused module; if the debt is accepted, edit the baseline in the same change for review.",
+      "observability": "The check prints module, listed-violation and oversized-file counts per system and each problem found.",
+      "source": "User request 2026-11-10: act as software architect, detect and fix what pushes the system toward a big ball of mud. Architecture review of main 083d1c6e.",
+      "contract": "docs/adr/0133-enforced-module-boundaries.md",
+      "implementation": [
+        "scripts/check-architecture-boundaries.mjs",
+        "scripts/quality-repo.sh",
+        "package.json",
+        "tdf-hq-ui/src/utils/eventLineup.ts",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx"
+      ],
+      "tests": [
+        "scripts/__tests__/architecture-boundaries.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Medium: import statements and line counts are checked on every change; re-exports within a layer, Template Haskell and string-built dynamic imports are not seen, and layers follow module names.",
+      "ambiguity": [
+        "Layer assignment of individual modules (for example TDF.Cron as domain, player/PlayerShell.tsx as shell) is an engineering judgement recorded in the configuration; owner confirmation pending.",
+        "tdf-mobile is a separate repository and is not covered."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The ratchet is enforced; 11 backend imports, 21 web imports and 17 oversized files remain listed debt."
+      },
+      "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
+      "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
+      "verification": "Deterministic fixture tests for import extraction, layering, both ratchets and configuration errors, plus a test that runs the committed configuration against the repository; no mathematical proof.",
+      "evidence": "scripts/__tests__/architecture-boundaries.test.mjs",
+      "historicalStatus": null
     }
   ]
 }
