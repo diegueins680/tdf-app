@@ -22,7 +22,6 @@ module TDF.Server.EventAdminDelegation (
 
 import Control.Monad (forM, void, when)
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad.Except (throwError)
 import Control.Monad.Reader (ReaderT, ask)
 import qualified Crypto.Hash as CryptoHash
 import qualified Data.Aeson as Aeson
