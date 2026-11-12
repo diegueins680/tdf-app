@@ -33,6 +33,7 @@ import {
   formatMinor,
   moneyInputToMinor,
   waitingOn,
+  describeTerms,
 } from './offers';
 
 interface OfferCardProps {
@@ -103,6 +104,7 @@ export default function OfferCard({ offer, currencies, authorProfileId: authorPr
     : offer.status === 'rejected' || offer.status === 'withdrawn' || offer.status === 'expired' ? 'default' : 'primary';
   const counterpartName = actor === 'author' ? offer.applicantProfile.name : (offer.classified?.title ?? t('marketplace.offer.author'));
   const rounds = offer.rounds ?? [];
+  const currentTerms = describeTerms(offer.terms, t);
 
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 3, borderColor: myTurn ? 'primary.main' : undefined }} data-testid="offer-card">
@@ -134,6 +136,12 @@ export default function OfferCard({ offer, currencies, authorProfileId: authorPr
 
         <MarkdownText>{offer.message}</MarkdownText>
         {offer.availability && <Typography variant="body2" color="text.secondary">{t('marketplace.offer.availability')}: {offer.availability}</Typography>}
+        {currentTerms.length > 0 && (
+          <Stack spacing={0.25} data-testid="offer-terms">
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>{t('marketplace.offer.terms')}</Typography>
+            {currentTerms.map((line) => <Typography key={line} variant="body2" color="text.secondary">{line}</Typography>)}
+          </Stack>
+        )}
         {offer.rejectionReason && offer.rejectionReason !== 'author_decision' && (
           <Typography variant="body2" color="text.secondary">{t(`marketplace.offer.rejection.${offer.rejectionReason}`)}</Typography>
         )}
@@ -153,6 +161,7 @@ export default function OfferCard({ offer, currencies, authorProfileId: authorPr
                     <Typography variant="body2">
                       {t(`marketplace.offer.round.${round.kind}`, { actor: t(`marketplace.offer.actor.${round.actorRole}`), number: round.roundNumber })}
                       {round.message ? ` — ${round.message}` : ''}
+                      {describeTerms(round.terms, t).length > 0 ? ` · ${t('marketplace.offer.roundTerms', { terms: describeTerms(round.terms, t).join('; ') })}` : ''}
                     </Typography>
                     <Typography variant="body2" fontWeight={700}>{formatMinor(round.amountMinor, round.currencyId, currencies, i18n.language) ?? '—'}</Typography>
                   </Stack>

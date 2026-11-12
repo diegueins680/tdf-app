@@ -8,6 +8,7 @@ import {
   canWithdraw,
   formatMinor,
   isOfferOpen,
+  describeTerms,
   moneyInputToMinor,
   offerRangesByCurrency,
   referenceAmount,
@@ -98,5 +99,18 @@ describe('marketplace offer helpers (ADR 0134)', () => {
     expect(sortOffers(offers, 'price_desc').map((item) => item.id)).toEqual(['a', 'b', 'c']);
     expect(sortOffers(offers, 'reputation').map((item) => item.id)).toEqual(['a', 'b', 'c']);
     expect(sortOffers(offers, 'recent').map((item) => item.id)).toEqual(['c', 'b', 'a']);
+  });
+});
+
+describe('describeTerms', () => {
+  const t = (key: string, options?: Record<string, unknown>) => `${key}${options ? ' ' + JSON.stringify(options) : ''}`;
+  it('labels the known keys, keeps unknown keys visible and skips empty values', () => {
+    expect(describeTerms({ durationMinutes: 240, equipmentProvided: 'Backline', soundcheck: '16:00', empty: '', missing: null }, t)).toEqual([
+      'marketplace.offer.termsDuration {"minutes":240}',
+      'marketplace.offer.termsEquipment {"equipment":"Backline"}',
+      'soundcheck: 16:00',
+    ]);
+    expect(describeTerms(undefined, t)).toEqual([]);
+    expect(describeTerms({}, t)).toEqual([]);
   });
 });

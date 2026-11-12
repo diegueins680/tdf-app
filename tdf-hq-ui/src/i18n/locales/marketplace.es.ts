@@ -25,6 +25,10 @@ const marketplace = {
     yourTurn: 'Te toca responder',
     theirTurn: 'Esperando a la otra parte',
     expires: 'Vence el {{date}}',
+    terms: 'Condiciones',
+    termsDuration: 'Duración: {{minutes}} min',
+    termsEquipment: 'Equipo: {{equipment}}',
+    roundTerms: 'Condiciones: {{terms}}',
     showRounds: 'Ver negociación ({{count}} rondas)',
     hideRounds: 'Ocultar negociación',
     round: {

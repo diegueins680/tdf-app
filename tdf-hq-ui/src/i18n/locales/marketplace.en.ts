@@ -25,6 +25,10 @@ const marketplace = {
     yourTurn: 'Your move',
     theirTurn: 'Waiting on the other side',
     expires: 'Expires {{date}}',
+    terms: 'Terms',
+    termsDuration: 'Duration: {{minutes}} min',
+    termsEquipment: 'Equipment: {{equipment}}',
+    roundTerms: 'Terms: {{terms}}',
     showRounds: 'Show negotiation ({{count}} rounds)',
     hideRounds: 'Hide negotiation',
     round: {

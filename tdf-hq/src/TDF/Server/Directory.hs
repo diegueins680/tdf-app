@@ -1105,22 +1105,31 @@ createApplication user classifiedId idempotency request@ApplicationCreateRequest
         referenceCurrency = valueUuid "currencyId" listing
     unless (offerAmountAcceptable mode referenceAmount offeredAmount && (mode /= PriceFixed || currencyId == referenceCurrency)) $
       throwError err409 {errBody="this classified has a fixed price; the offer must accept that exact amount and currency"}
-    -- An elapsed previous offer is persisted as expired so a replacement is
-    -- admitted; accepted and open, unexpired offers still block duplicates.
-    runDB $ rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE classified_id=? AND applicant_profile_id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND offer_expires_at<=now()" [toPersistValue classifiedId,toPersistValue applicantProfileId]
-    duplicates <- jsonRows ("SELECT to_jsonb(TRUE) FROM classified_application application WHERE application.classified_id=? AND application.applicant_profile_id=? AND (application.status IN ('accepted','conversation_open','converted') OR " <> activeOfferSql "application" <> ")") [toPersistValue classifiedId,toPersistValue applicantProfileId]
-    unless (null duplicates) $ throwError err409 {errBody="this profile already has an active offer on this classified"}
     let deadline = valueTime "offerDeadlineAt" listing <|> valueTime "expiresAt" listing
         defaultExpiry = addUTCTime (7*24*60*60) now
         offerExpiry = minimumTime (fromMaybe defaultExpiry expiresAt) deadline
     when (offerExpiry <= now) $ throwError err400 {errBody="expiresAt must be in the future"}
     consumeRate user "application" 20
     let fingerprint = requestFingerprint request
-    runDB $ do
-      rawExecute "INSERT INTO classified_application(id,classified_id,applicant_profile_id,message,portfolio,availability_text,proposed_amount_minor,current_amount_minor,currency_id,terms,offer_expires_at,status,idempotency_key,request_fingerprint) VALUES (?,?,?,?,?::jsonb,?,?,?,?,?::jsonb,?,'submitted',?,?)"
-        [toPersistValue applicationId,toPersistValue classifiedId,toPersistValue applicantProfileId,PersistText (T.strip message),PersistText (decodeJsonText portfolio),optionalText availability,optionalInt64 offeredAmount,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),toPersistValue offerExpiry,PersistText idempotency,PersistText fingerprint]
-      rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,message,expires_at,created_by_party_id) VALUES (?,1,'applicant','initial',?,?,?::jsonb,?,?,?)"
-        [toPersistValue applicationId,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),PersistText (T.strip message),toPersistValue offerExpiry,toPersistValue (auPartyId user)]
+    -- Admission for one (classified, profile) pair is serialised with a
+    -- transaction-scoped advisory lock, so the duplicate check and the insert
+    -- happen in the same transaction: two submissions with different
+    -- idempotency keys cannot both become active offers. An elapsed previous
+    -- offer is persisted as expired first so a replacement is admitted;
+    -- accepted and open, unexpired offers still block duplicates.
+    outcome <- runDB $ do
+      _ <- (rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))" [PersistText ("marketplace-offer:"<>UUID.toText classifiedId<>":"<>UUID.toText applicantProfileId)] :: SqlPersistT IO [Single Int64])
+      rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE classified_id=? AND applicant_profile_id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND offer_expires_at<=now()" [toPersistValue classifiedId,toPersistValue applicantProfileId]
+      duplicates <- rawSql ("SELECT application.id FROM classified_application application WHERE application.classified_id=? AND application.applicant_profile_id=? AND (application.status IN ('accepted','conversation_open','converted') OR " <> activeOfferSql "application" <> ") LIMIT 1") [toPersistValue classifiedId,toPersistValue applicantProfileId] :: SqlPersistT IO [Single UUID]
+      if not (null duplicates)
+        then pure (Left err409 {errBody="this profile already has an active offer on this classified"})
+        else do
+          rawExecute "INSERT INTO classified_application(id,classified_id,applicant_profile_id,message,portfolio,availability_text,proposed_amount_minor,current_amount_minor,currency_id,terms,offer_expires_at,status,idempotency_key,request_fingerprint) VALUES (?,?,?,?,?::jsonb,?,?,?,?,?::jsonb,?,'submitted',?,?)"
+            [toPersistValue applicationId,toPersistValue classifiedId,toPersistValue applicantProfileId,PersistText (T.strip message),PersistText (decodeJsonText portfolio),optionalText availability,optionalInt64 offeredAmount,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),toPersistValue offerExpiry,PersistText idempotency,PersistText fingerprint]
+          rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,message,expires_at,created_by_party_id) VALUES (?,1,'applicant','initial',?,?,?::jsonb,?,?,?)"
+            [toPersistValue applicationId,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),PersistText (T.strip message),toPersistValue offerExpiry,toPersistValue (auPartyId user)]
+          pure (Right ())
+    either throwError pure outcome
     notifyClassifiedAuthor classifiedId applicationId "marketplace.offer.new" "Nueva oferta" "Recibiste una oferta en tu anuncio."
     recordAuthenticatedEvent user "application_submitted" "application" (UUID.toText applicationId)
     applicationSummary user applicationId

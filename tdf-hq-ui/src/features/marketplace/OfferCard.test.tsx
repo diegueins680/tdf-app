@@ -73,3 +73,23 @@ it('never offers a counter on a fixed-price classified and explains a slots_fill
   expect(screen.getByText('marketplace.offer.rejection.slots_filled')).toBeTruthy();
   expect(screen.queryAllByRole('button').map((button) => button.textContent)).not.toContain('marketplace.offer.withdraw');
 });
+
+it('shows the structured terms of the offer and of each negotiation round before any decision', () => {
+  show({
+    ...base,
+    terms: { durationMinutes: 240, equipmentProvided: 'Backline completo', soundcheck: 'a las 16:00' },
+    currentRound: 2,
+    lastActorRole: 'author',
+    status: 'countered_by_author',
+    rounds: [
+      { roundNumber: 1, actorRole: 'applicant', kind: 'initial', amountMinor: 130000, currencyId: 'usd', terms: { durationMinutes: 240 }, createdAt: '2026-11-01T12:00:00Z' },
+      { roundNumber: 2, actorRole: 'author', kind: 'counter', amountMinor: 125000, currencyId: 'usd', terms: { durationMinutes: 180 }, message: 'Tres horas bastan.', createdAt: '2026-11-02T12:00:00Z' },
+    ],
+  });
+  const terms = screen.getByTestId('offer-terms');
+  expect(terms.textContent).toContain('marketplace.offer.termsDuration');
+  expect(terms.textContent).toContain('marketplace.offer.termsEquipment');
+  expect(terms.textContent).toContain('soundcheck: a las 16:00');
+  fireEvent.click(screen.getByRole('button', { name: 'marketplace.offer.showRounds' }));
+  expect(screen.getByText(/Tres horas bastan/).textContent).toContain('marketplace.offer.roundTerms');
+});

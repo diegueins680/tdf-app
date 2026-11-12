@@ -1,4 +1,4 @@
-import type { ClassifiedApplication, DirectoryTaxonomyItem, PriceMode } from '../../api/directory';
+import type { OfferTerms, ClassifiedApplication, DirectoryTaxonomyItem, PriceMode } from '../../api/directory';
 
 // ADR 0134: pure helpers for the demand/offer marketplace UI. Kept free of
 // React so they can be unit tested and shared with the mobile client later.
@@ -134,3 +134,20 @@ export const OFFER_STATUS_LABEL_KEYS: Record<ClassifiedApplication['status'], st
   conversation_open: 'marketplace.status.conversationOpen',
   converted: 'marketplace.status.converted',
 };
+
+/**
+ * Human-readable structured terms of an offer or a round. Known keys get
+ * their own label; any other key is shown as "key: value" so nothing the
+ * offerer submitted is hidden from the decision.
+ */
+export function describeTerms(terms: OfferTerms | null | undefined, t: (key: string, options?: Record<string, unknown>) => string): string[] {
+  if (!terms || typeof terms !== 'object') return [];
+  const lines: string[] = [];
+  for (const [key, value] of Object.entries(terms)) {
+    if (value === null || value === undefined || value === '') continue;
+    if (key === 'durationMinutes') lines.push(t('marketplace.offer.termsDuration', { minutes: value }));
+    else if (key === 'equipmentProvided') lines.push(t('marketplace.offer.termsEquipment', { equipment: value }));
+    else lines.push(`${key}: ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`);
+  }
+  return lines;
+}
