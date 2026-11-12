@@ -1268,6 +1268,11 @@
       "id": "2026-11-08_marketplace_offers",
       "path": "tdf-hq/sql/2026-11-08_marketplace_offers.sql",
       "introducedBy": "5901003189dac2291380604c66fdd66087e4a587"
+    },
+    {
+      "id": "2026-11-12_marketplace_agreements",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
+      "introducedBy": "5ca1a385177711438a8b0e44336ea2739dbd56f5"
     }
   ]
 }
