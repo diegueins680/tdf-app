@@ -26,6 +26,7 @@ import ShareIcon from '@mui/icons-material/Share';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link as RouterLink, Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { Directory, type DirectoryEntityType, type DirectoryReviewEligibility, type DirectoryReviewPage } from '../api/directory';
@@ -43,7 +44,8 @@ import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventRsvpFeed from '../components/events/EventRsvpFeed';
 import { canonicalEventUrl } from '../utils/eventSharing';
 import { resolveDirectoryPreviewImage } from '../utils/directoryPreviewImage';
-import DirectoryPreviewImage from '../components/directory/DirectoryPreviewImage';
+import ExpandablePreviewImage from '../components/directory/ExpandablePreviewImage';
+import appI18n from '../i18n';
 import { useAnalytics } from '../analytics/useAnalytics';
 import { useTicketFunnel } from '../analytics/useTicketFunnel';
 import { captureGrowthEvent } from '../analytics/growthAttribution';
@@ -98,7 +100,9 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
     staleTime: 60_000,
   });
   const value = detail.data ?? {};
-  const displayLocale = navigator.language || 'es';
+  // The app's own language (Spanish unless the visitor chose another), never the browser's.
+  const { i18n } = useTranslation(undefined, { i18n: appI18n });
+  const displayLocale = i18n.resolvedLanguage ?? i18n.language ?? 'es';
   const english = displayLocale.toLowerCase().startsWith('en');
   const title = text(value['name']) ?? text(value['title']) ?? 'Directorio musical';
   const description = text(value['bio']) ?? text(value['description']) ?? text(value['creditsSummary']) ?? 'Perfil público en TDF.';
@@ -233,11 +237,13 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" gap={3}>
                 <Stack direction={{ xs: 'column', sm: 'row' }} gap={3} sx={{ minWidth: 0 }}>
                   {/* Always mounted: without media it shows the kind's placeholder. */}
-                  <DirectoryPreviewImage
+                  <ExpandablePreviewImage
                     kind={kind === 'profile' || kind === 'classified' || kind === 'event' ? kind : 'venue'}
                     imageUrl={absolutePreviewImage}
                     alt={kind === 'event' ? `Afiche de ${title}` : `Foto de ${title}`}
                     fallbackAlt={`Imagen de referencia de ${title}`}
+                    expandLabel={english ? 'View the full image' : kind === 'event' ? 'Ver el afiche completo' : 'Ver la imagen completa'}
+                    closeLabel={english ? 'Close' : 'Cerrar'}
                     width={440}
                     height={440}
                     sizes="(min-width: 600px) 220px, 100vw"
