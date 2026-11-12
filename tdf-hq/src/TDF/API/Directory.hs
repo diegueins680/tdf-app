@@ -129,6 +129,9 @@ instance ToJSON DirectoryProfileUpsert
 data DirectoryStatusRequest = DirectoryStatusRequest
   { status :: Text
   , reason :: Maybe Text
+  -- | Optimistic concurrency (ADR 0134): the entity version the caller decided
+  -- on. Offers refuse the transition with 409 when their version moved on.
+  , expectedVersion :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON DirectoryStatusRequest
 instance ToJSON DirectoryStatusRequest

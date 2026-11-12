@@ -64,14 +64,18 @@ function makeFixture(page, baseURL, role) {
       offer.currentAmountMinor = body.amountMinor;
       offer.status = actor === 'author' ? 'countered_by_author' : 'countered_by_applicant';
       offer.rounds.push({ roundNumber: offer.currentRound, actorRole: actor, kind: 'counter', amountMinor: body.amountMinor, currencyId: body.currencyId, terms: {}, message: body.message ?? null, createdAt: '2026-11-03T12:00:00Z' });
+      offer.version += 1;
       return route.fulfill({ status: 201, json: withRole(offer) });
     }
     const statusMatch = path.match(/^\/directory\/applications\/([^/]+)\/status$/);
     if (statusMatch && method === 'PATCH') {
       const offer = state.offers[statusMatch[1]];
       const body = request.postDataJSON();
-      state.transitions.push({ id: statusMatch[1], role, status: body.status });
+      state.transitions.push({ id: statusMatch[1], role, status: body.status, expectedVersion: body.expectedVersion });
+      // The decision is bound to the version the client displayed (ADR 0134).
+      if (body.expectedVersion !== offer.version) return route.fulfill({ status: 409, body: 'the offer changed since it was displayed' });
       offer.status = body.status;
+      offer.version += 1;
       if (body.status === 'accepted') {
         // Server-side slot accounting (I19): one slot consumed, classified filled,
         // every other open offer rejected with slots_filled.
@@ -138,7 +142,7 @@ test('offerer accepts the author counter from "Mis ofertas" and sees the negotia
   const state = makeFixture(page, baseURL, 'applicant');
   // The author already countered at 1 250 USD.
   const offer = state.offers[OFFER_ID];
-  offer.status = 'countered_by_author'; offer.lastActorRole = 'author'; offer.currentRound = 2; offer.currentAmountMinor = 125000;
+  offer.status = 'countered_by_author'; offer.lastActorRole = 'author'; offer.currentRound = 2; offer.currentAmountMinor = 125000; offer.version = 2;
   offer.rounds.push({ roundNumber: 2, actorRole: 'author', kind: 'counter', amountMinor: 125000, currencyId: USD, terms: {}, message: 'Podemos llegar a 1250 si incluyen el backline.', createdAt: '2026-11-03T12:00:00Z' });
 
   await page.goto('/mis-clasificados', { waitUntil: 'domcontentloaded' });
@@ -153,7 +157,7 @@ test('offerer accepts the author counter from "Mis ofertas" and sees the negotia
 
   await card.getByRole('button', { name: /^Aceptar/ }).click();
   await expect.poll(() => state.transitions.length).toBe(1);
-  expect(state.transitions[0]).toEqual({ id: OFFER_ID, role: 'applicant', status: 'accepted' });
+  expect(state.transitions[0]).toEqual({ id: OFFER_ID, role: 'applicant', status: 'accepted', expectedVersion: 2 });
   expect(state.classified.status).toBe('filled');
   expect(state.offers[OTHER_OFFER_ID].status).toBe('rejected');
   expect(state.offers[OTHER_OFFER_ID].rejectionReason).toBe('slots_filled');

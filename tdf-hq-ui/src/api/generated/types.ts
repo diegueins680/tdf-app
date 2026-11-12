@@ -16573,6 +16573,11 @@ export interface components {
         StatusRequest: {
             status: string;
             reason?: string;
+            /**
+             * Format: int64
+             * @description Optimistic concurrency: the entity version the caller decided on; the transition is refused with 409 when the entity has moved on since (offers)
+             */
+            expectedVersion?: number;
         };
         OfferBudget: {
             /** Format: int64 */
@@ -16680,7 +16685,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
-        /** @description Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on the detail endpoint. */
+        /** @description Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on every offer endpoint. */
         ClassifiedApplication: {
             /** Format: uuid */
             id: string;

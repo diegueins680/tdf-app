@@ -1280,7 +1280,7 @@ applicationStatusText status = case status of
   ApplicationConversationOpen -> "conversation_open"
   ApplicationConverted -> "converted"
 
-changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStatus,reason=statusReason} = do
+changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStatus,reason=statusReason,expectedVersion} = do
   visible <- applicationParticipantRole user applicationId
   current <- jsonOne err404 "SELECT jsonb_build_object('status',application.status,'offerExpiresAt',application.offer_expires_at,'classifiedId',classified.id,'classifiedStatus',classified.status,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'expiresAt',classified.expires_at,'applicantProfileId',application.applicant_profile_id,'authorProfileId',classified.author_profile_id,'currentAmountMinor',application.current_amount_minor) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=?" [toPersistValue applicationId]
   oldStatus <- maybe (throwError err500) pure (valueText "status" current)
@@ -1317,11 +1317,18 @@ changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStat
     -- remaining offers.
     listing <- rawSql "SELECT classified.status,classified.slots_remaining,(classified.expires_at>now()) FROM classified WHERE classified.id=? FOR UPDATE"
       [toPersistValue classifiedId] :: SqlPersistT IO [(Single Text, Single Int, Single Bool)]
-    offer <- rawSql "SELECT application.status FROM classified_application application WHERE application.id=? FOR UPDATE"
-      [toPersistValue applicationId] :: SqlPersistT IO [Single Text]
+    -- The offer's own expiry is re-read here too, against the database clock:
+    -- an acceptance that waited on the classified lock past the offer's
+    -- expiry must not consume a slot.
+    offer <- rawSql "SELECT application.status,application.version,(application.offer_expires_at IS NULL OR application.offer_expires_at>now()) FROM classified_application application WHERE application.id=? FOR UPDATE"
+      [toPersistValue applicationId] :: SqlPersistT IO [(Single Text, Single Int64, Single Bool)]
     case (listing, offer) of
-      ([(Single lockedClassifiedStatus, Single lockedRemaining, Single lockedLive)], [Single lockedStatus])
+      ([(Single lockedClassifiedStatus, Single lockedRemaining, Single lockedLive)], [(Single lockedStatus, Single lockedVersion, Single offerLive)])
         | lockedStatus /= oldStatus -> pure (Left err409 {errBody="the offer changed before this transition; reload and retry"})
+        -- The caller decided on a specific round (version): a newer counter
+        -- that landed since, even in another tab, is never accepted unseen.
+        | maybe False (/= lockedVersion) expectedVersion -> pure (Left err409 {errBody="the offer changed since it was displayed; review the latest round and retry"})
+        | consumesSlot && not offerLive -> pure (Left err409 {errBody="the offer has expired"})
         | consumesSlot && (lockedClassifiedStatus /= "published" || not lockedLive) -> pure (Left err409 {errBody="the classified is no longer open"})
         | consumesSlot && slotsAfterAccept lockedRemaining == Nothing -> pure (Left err409 {errBody="this classified has no slot left"})
         | otherwise -> do

@@ -88,8 +88,13 @@ export const Directory = {
     get<ClassifiedApplication>(`/directory/applications/${encodeURIComponent(applicationId)}`),
   counterOffer: (applicationId: string, body: OfferCounterRequest, idempotencyKey?: string) =>
     post<ClassifiedApplication>(`/directory/applications/${encodeURIComponent(applicationId)}/counter`, body, idempotencyHeaders(idempotencyKey)),
-  setApplicationStatus: (applicationId: string, status: string, reason?: string) =>
-    patch<ClassifiedApplication>(`/directory/applications/${encodeURIComponent(applicationId)}/status`, reason ? { status, reason } : { status }),
+  /** expectedVersion binds the decision to the offer round the caller saw (409 when it moved on). */
+  setApplicationStatus: (applicationId: string, status: string, reason?: string, expectedVersion?: number) =>
+    patch<ClassifiedApplication>(`/directory/applications/${encodeURIComponent(applicationId)}/status`, {
+      status,
+      ...(reason ? { reason } : {}),
+      ...(typeof expectedVersion === 'number' ? { expectedVersion } : {}),
+    } satisfies components['schemas']['StatusRequest']),
   contact: (body: components['schemas']['DirectoryContact'], idempotencyKey?: string) =>
     post<Record<string, unknown>>('/directory/contact', body, idempotencyHeaders(idempotencyKey)),
   reviewEligibility: (authorProfileId?: string) =>

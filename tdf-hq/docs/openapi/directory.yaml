@@ -761,7 +761,7 @@ components:
         moderationStatus: { type: string }
         version: { type: integer, format: int64 }
         capabilities: { type: object, additionalProperties: { type: boolean } }
-    StatusRequest: { type: object, required: [status], properties: { status: { type: string }, reason: { type: string } } }
+    StatusRequest: { type: object, required: [status], properties: { status: { type: string }, reason: { type: string }, expectedVersion: { type: integer, format: int64, description: 'Optimistic concurrency: the entity version the caller decided on; the transition is refused with 409 when the entity has moved on since (offers)' } } }
     ClassifiedCreate:
       type: object
       additionalProperties: false
@@ -859,7 +859,7 @@ components:
     OfferReputation: { type: object, nullable: true, additionalProperties: false, properties: { ratingAvg: { type: number, nullable: true }, ratingCount: { type: integer }, completedCount: { type: integer } } }
     ClassifiedApplication:
       type: object
-      description: Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on the detail endpoint.
+      description: Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on every offer endpoint.
       required: [id, classifiedId, applicantProfileId, applicantProfile, message, status, currentRound, lastActorRole, participantRole, submittedAt, version]
       properties:
         id: { type: string, format: uuid }

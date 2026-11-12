@@ -72,7 +72,9 @@ export default function OfferCard({ offer, currencies, authorProfileId: authorPr
     ]);
     onChanged?.();
   };
-  const transition = useMutation({ mutationFn: (status: string) => Directory.setApplicationStatus(offer.id, status), onSuccess: refresh });
+  // Every decision is bound to the version of the offer shown on this card, so a
+  // newer counter that landed in another tab is refused (409) instead of accepted unseen.
+  const transition = useMutation({ mutationFn: (status: string) => Directory.setApplicationStatus(offer.id, status, undefined, offer.version), onSuccess: refresh });
   const counter = useMutation({
     mutationFn: () => {
       const minorUnits = currencies?.find((item) => item.id === counterCurrency)?.minorUnits ?? 2;
@@ -89,7 +91,7 @@ export default function OfferCard({ offer, currencies, authorProfileId: authorPr
       const targetProfileId = actor === 'author' ? offer.applicantProfileId : authorProfileId;
       if (!senderProfileId || !targetProfileId) throw new Error(t('marketplace.offer.conversationUnavailable'));
       await Directory.contact({ senderProfileId, targetProfileId, contextKind: 'application', contextId: offer.id, message: conversationMessage.trim() }, `directory-application-contact-${offer.id}`);
-      return Directory.setApplicationStatus(offer.id, 'conversation_open');
+      return Directory.setApplicationStatus(offer.id, 'conversation_open', undefined, offer.version);
     },
     onSuccess: refresh,
   });

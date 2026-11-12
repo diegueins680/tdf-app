@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "7cbfde881767455e9182b17d9d0c0ec62d21c17f",
+  "mobileRevision": "8354381deb5dd631d3061477ee28e4c3f05b3128",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -3466,7 +3466,7 @@
     {
       "id": "SURFACE-4361fde9fb21989c",
       "path": "e2e/web/marketplace-negotiation.spec.mjs",
-      "sha256": "9832d96805066ae61f912d48ca08796ebbfb279db57af8b8852bc77197a6103b",
+      "sha256": "56a1b12aaef07ab367cf9385cec0b7421abfa2017d3593038da88a6f9e0256b5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8230,7 +8230,7 @@
     {
       "id": "SURFACE-eea9abd0a36ffd69",
       "path": "tdf-hq-ui/src/api/directory.ts",
-      "sha256": "a4f5eccea682f6c7c4408e893b42785ad391cd1221c07eba98921f9370d55adb",
+      "sha256": "c1b8fe4b02943fa93fb81b2ddf22d67936798402e5ed9c4ae0cc90925a7c20d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8398,7 +8398,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "198f24bb09ca9fb32776dc604cd2e1555a6d05f139d0608d3aed84ba37d8fd3f",
+      "sha256": "f02511ef91c919a26f53c76b53927cb418aece574c1f532dda505810657b8602",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10198,13 +10198,13 @@
     {
       "id": "SURFACE-d2b74a79e542b7f1",
       "path": "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
-      "sha256": "1522853ceb07013be59bb619a262dff4a0d59e1e17b55ca805365f06f4488a67",
+      "sha256": "f35d51716ccd0fb15ab2d115e984a7de5c59a117898a422b9a3cdf2e401f6e4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7fbf218766e62339",
       "path": "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
-      "sha256": "62f4befb9af710de4e56c1d40f7ef65ebfd76ba8282485f07ea518ec9f61aa1a",
+      "sha256": "14c13f40386f948b1d253864f80637ed441c75fe1bff6fb7cf4d2e9f7953eabc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13468,7 +13468,7 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "cc02de79887a31e12f277430e1ea54e1053c8afb02aeb4d6ee4ed6049ca7bfd5",
+      "sha256": "ca3c283b2fdc4e7b82e4a68789904678cc31950a8edb31c182ad517291a6ef56",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16462,7 +16462,7 @@
     {
       "id": "SURFACE-9f19f644ef35d148",
       "path": "tdf-hq/src/TDF/API/Directory.hs",
-      "sha256": "8c643d662c667974715d58c1d934dca23a4ce45ba7df23737b363668308fb155",
+      "sha256": "e1d08ba954eaddceb905921d092a2b4b13245b55e699b8c47e0a09f55aa63ffd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17548,7 +17548,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "50b44058f68a894aea3937d46371abc7ea5bf5c2dd1ca067e7e6b5da8655c373",
+      "sha256": "86106361580616e8d64f194d36979f39ba75c377884930879b7ee8cf74fe01ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20542,7 +20542,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "198f24bb09ca9fb32776dc604cd2e1555a6d05f139d0608d3aed84ba37d8fd3f",
+      "sha256": "f02511ef91c919a26f53c76b53927cb418aece574c1f532dda505810657b8602",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31494,7 +31494,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "cc02de79887a31e12f277430e1ea54e1053c8afb02aeb4d6ee4ed6049ca7bfd5",
+      "sha256": "ca3c283b2fdc4e7b82e4a68789904678cc31950a8edb31c182ad517291a6ef56",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"

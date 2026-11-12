@@ -44,7 +44,7 @@ it('lets the author accept, counter, shortlist or reject a fresh offer and shows
   expect(buttons).not.toContain('marketplace.offer.withdraw');
   setApplicationStatus.mockResolvedValue({ ...base, status: 'accepted' });
   fireEvent.click(screen.getByRole('button', { name: `marketplace.offer.accept ${money(130000)}` }));
-  await waitFor(() => expect(setApplicationStatus).toHaveBeenCalledWith('offer-1', 'accepted'));
+  await waitFor(() => expect(setApplicationStatus).toHaveBeenCalledWith('offer-1', 'accepted', undefined, base.version));
 });
 
 it('records a counter-offer round with the amount in minor units', async () => {
