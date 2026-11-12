@@ -68,6 +68,12 @@
       "principle": "Prevención de errores monetarios y carga de memoria de trabajo",
       "finding": "Precios de entradas, presupuestos, contratos y asientos de eventos pedían centavos en lugar de importes en moneda.",
       "change": "Entrada decimal con punto o coma, moneda visible y conversión exacta a centavos en las mismas API. Entradas gratis y presupuestos en cero se conservan; contratos y asientos exigen un monto positivo. Los importes inválidos muestran errores junto al campo y no llegan a las API."
+    },
+    {
+      "id": "COG-20261112-10",
+      "principle": "Carga de memoria de trabajo y prevención de errores financieros",
+      "finding": "Deducciones de depósitos, solicitudes de reembolso, variantes de mercancía y entrega aún pedían centavos; los mensajes de error podían ocultar el saldo permitido y el formato de mercancía dividía el entero antes de redondear.",
+      "change": "Importes decimales en moneda con conversión exacta, límites visibles incluso al corregir errores y bloqueo ante saldos no representables. Se conserva vacío/saldo completo en reembolsos, vacío/sin cambio y cero explícito en deducciones, precio positivo de mercancía y entrega gratis. El formato conserva el último centavo seguro; las solicitudes siguen sin ejecutar pagos."
     }
   ],
   "measurements": [
@@ -245,7 +251,7 @@
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Precios del catálogo de servicios y montos de entradas, presupuestos, contratos y asientos de eventos en moneda, con conversión exacta y errores por campo. Quedan deducciones, reembolsos y precios de mercancía, además de estados internos pendientes de revisar."
+      "nextOrEvidence": "Importes de servicios, eventos, depósitos, reembolsos, variantes y entrega en moneda, con conversión exacta y errores por campo. Quedan el precio en unidad menor de MusicReleaseStudioPage, filtros monetarios de OperationsControlCenterPage, otros componentes no revalidados y etiquetas de estados internos."
     },
     {
       "id": 26,
@@ -382,6 +388,18 @@
     {
       "path": "figures/event-budget-currency.png",
       "scope": "Evento sintético, presupuesto en EUR, Chromium teléfono. No demuestra datos ni operaciones reales."
+    },
+    {
+      "path": "figures/merch-price-currency.png",
+      "scope": "Lecturas sintéticas autenticadas, Chromium teléfono; no demuestra una operación financiera real."
+    },
+    {
+      "path": "figures/refund-currency.png",
+      "scope": "Lecturas sintéticas autenticadas, Chromium teléfono; no demuestra una operación financiera real."
+    },
+    {
+      "path": "figures/rental-deduction-currency.png",
+      "scope": "Lecturas sintéticas autenticadas, Chromium teléfono; no demuestra una operación financiera real."
     }
   ],
   "followups": [
@@ -508,7 +526,7 @@
       "catalogPreservationTestsPassed": 11,
       "typecheck": "passed",
       "lint": "passed",
-      "hostedCI": "El pase actual requiere verificación hospedada en su propia cabeza; los resultados anteriores no se transfieren.",
+      "hostedCI": "Completado en la cabeza4f7300aa63cc77c17d86610cf5ba1f728421c867: CI y los cuatro flujos especializados aprobados. La matriz principal de navegador tiene869 casos aprobados y22 omitidos; los tests de recuperación de reservas ya no fallan.",
       "sourceFreshness": {
         "sourceCommit": "ec1f06e2cbc572843fde9fef1f83861369c8fc70",
         "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
@@ -516,7 +534,64 @@
         "inventory": "passed",
         "traceability": "passed",
         "semanticConformance": "not established by these checks"
+      },
+      "hostedVerification": {
+        "head": "4f7300aa63cc77c17d86610cf5ba1f728421c867",
+        "ciRun": 43283500201,
+        "ciConclusion": "success",
+        "uiSuitesPassed": 374,
+        "uiTestsPassed": 4220,
+        "browserPassed": 869,
+        "browserSkipped": 22,
+        "specialistRunsPassed": [
+          43283505793,
+          43283510398,
+          43283515833,
+          43283521457
+        ]
       }
+    },
+    {
+      "date": "2026-11-12",
+      "baseCommit": "4f7300aa63cc77c17d86610cf5ba1f728421c867",
+      "scope": "Item25: deducciones de renta, solicitud de reembolso, variantes/entrega de mercancía y formato exacto de centavos. Sin cambios de backend, permisos, publicación, Mobile o decisiones de retiro.",
+      "regressionVerification": {
+        "suites": 6,
+        "tests": 123,
+        "checks": [
+          "Conversión exacta a las mismas API",
+          "Vacío/cero, saldo restante y límites",
+          "Solicitud de reembolso sin ejecución, con clave de reintento conservada",
+          "Estado de custodia, peso y stock sin conversión",
+          "Último centavo y locale explícito al formatear"
+        ]
+      },
+      "browserVerification": {
+        "cases": 21,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "checks": [
+          "Tres recorridos en cada configuración: vendedor/entrega, solicitud de reembolso y deducción de renta",
+          "Errores asociados por ARIA y WCAG A/AA de los campos",
+          "Corrección con valor y límite preservados",
+          "Cero mutaciones financieras; ciclo de sesión simulado",
+          "Campos centrados y sin obstrucción en las capturas; sin desbordamiento horizontal"
+        ]
+      },
+      "catalogCandidates": 1425,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "typecheck": "passed",
+      "lint": "passed",
+      "hostedCI": "La nueva cabeza requiere sus propios flujos; no se transfieren los resultados de la base."
     }
   ]
 }

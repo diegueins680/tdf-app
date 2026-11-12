@@ -3143,4 +3143,66 @@ describe('MarketplaceOrdersPage', () => {
       await cleanup();
     }
   });
+
+  it.each([
+    ['12,50', 1250], ['0', 0], ['50.00', 5000], ['', undefined],
+  ] as const)('uses exact currency units for rental deduction %s without changing its operational transition', async (value, cents) => {
+    const order = buildOrder({ moOrderKind: 'rental', moStatus: 'paid', moCheckoutStatus: 'paid',
+      moFulfillmentStatus: 'returned_pending_inspection', moSecurityDepositUsdCents: 5000,
+      moDepositDeductionUsdCents: 1250, moConditionIn: 'Condición sintética verificada.' });
+    listOrdersMock.mockResolvedValue([order]); updateRentalMock.mockResolvedValue(order);
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      const input = getInputByLabel(document.body, 'Deducción propuesta del depósito (USD)');
+      expect(input.value).toBe('12.50');
+      await selectOptionByLabel(document.body, 'Siguiente estado de renta', 'Daños en revisión');
+      await setInputValue(input, value);
+      await clickActionByText(document.body, 'Guardar transición de renta');
+      await waitForExpectation(() => expect(updateRentalMock).toHaveBeenCalledWith('order-1', cents === undefined
+        ? { mruStatus: 'damage_review', mruConditionIn: 'Condición sintética verificada.' } : { mruStatus: 'damage_review', mruConditionIn: 'Condición sintética verificada.', mruDepositDeductionUsdCents: cents }));
+      expect(updateOrderMock).not.toHaveBeenCalled(); expect(updateFulfillmentMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it.each(['-1', '12.505', '50.01', '1e2', '90071992547409.92'])('blocks invalid rental deduction %s and preserves the input for correction', async value => {
+    const order = buildOrder({ moOrderKind: 'rental', moStatus: 'paid', moCheckoutStatus: 'paid',
+      moFulfillmentStatus: 'returned_pending_inspection', moSecurityDepositUsdCents: 5000,
+      moDepositDeductionUsdCents: 0, moConditionIn: 'Condición sintética verificada.' });
+    listOrdersMock.mockResolvedValue([order]);
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await selectOptionByLabel(document.body, 'Siguiente estado de renta', 'Daños en revisión');
+      const input = getInputByLabel(document.body, 'Deducción propuesta del depósito (USD)');
+      await setInputValue(input, value);
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent).toContain('Máximo:');
+      expect(queryActionByText(document.body, 'Guardar transición de renta')?.hasAttribute('disabled')).toBe(true);
+      expect(input.value).toBe(value); expect(updateRentalMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
+  it('blocks rental deduction edits when a stored amount cannot be represented exactly', async () => {
+    const order = buildOrder({ moOrderKind: 'rental', moStatus: 'paid', moCheckoutStatus: 'paid',
+      moFulfillmentStatus: 'returned_pending_inspection', moSecurityDepositUsdCents: 5000,
+      moDepositDeductionUsdCents: Number.MAX_SAFE_INTEGER + 1, moConditionIn: 'Condición sintética verificada.' });
+    listOrdersMock.mockResolvedValue([order]);
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await waitForExpectation(() => expect(queryActionByText(container, 'Abrir orden')).not.toBeNull());
+      await clickFirstOrderRow(container);
+      await selectOptionByLabel(document.body, 'Siguiente estado de renta', 'Daños en revisión');
+      await setInputValue(getInputByLabel(document.body, 'Deducción propuesta del depósito (USD)'), '1.00');
+      expect(queryActionByText(document.body, 'Guardar transición de renta')?.hasAttribute('disabled')).toBe(true);
+      expect(document.body.textContent).toContain('Los importes guardados no están disponibles con precisión.');
+      expect(updateRentalMock).not.toHaveBeenCalled();
+    } finally { await cleanup(); }
+  });
+
 });

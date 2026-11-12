@@ -1,3 +1,5 @@
+import { formatPriceCentsInput, parseOptionalPriceCents } from '../utils/priceInput';
+import { formatEventMoney as formatMoney } from '../utils/eventFinanceMoney';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -370,7 +372,9 @@ export default function MarketplaceOrdersPage() {
     setRentalConditionOutInput(selectedOrder.moConditionOut ?? '');
     setRentalConditionInInput(selectedOrder.moConditionIn ?? '');
     setRentalEvidenceUrlInput('');
-    setRentalDepositDeductionInput(String(selectedOrder.moDepositDeductionUsdCents ?? ''));
+    const storedDeduction = selectedOrder.moDepositDeductionUsdCents;
+    setRentalDepositDeductionInput(storedDeduction != null && Number.isSafeInteger(storedDeduction) && storedDeduction >= 0
+      ? formatPriceCentsInput(storedDeduction) : '');
     setRentalReasonInput('');
     setRentalNotesInput('');
     setManualReviewNotes('');
@@ -811,9 +815,10 @@ export default function MarketplaceOrdersPage() {
     Error,
     MarketplaceDepositSettlementSubmitPayload
   >({
-    mutationFn: (payload) => Marketplace.submitDepositSettlement(
-      selectedId!, payload, getMarketplaceDepositIdempotencyKey(selectedId!),
-    ),
+    mutationFn: (payload) => {
+      if (rentalMoneyUnavailable) throw new Error('No se pueden verificar con precisión los importes del depósito.');
+      return Marketplace.submitDepositSettlement(selectedId!, payload, getMarketplaceDepositIdempotencyKey(selectedId!));
+    },
     onSuccess: (created) => {
       clearMarketplaceDepositIdempotencyKey(created.mdsOrderId);
       qc.setQueryData<MarketplaceDepositSettlementDTO[]>(
@@ -986,7 +991,7 @@ export default function MarketplaceOrdersPage() {
   };
 
   const handleRentalSave = async () => {
-    if (!selectedOrder || !rentalStatusInput) return;
+    if (!selectedOrder || !rentalStatusInput || rentalDeductionInvalid) return;
     const payload: MarketplaceRentalUpdatePayload = { mruStatus: rentalStatusInput };
     const conditionOut = rentalConditionOutInput.trim();
     const conditionIn = rentalConditionInInput.trim();
@@ -1000,7 +1005,7 @@ export default function MarketplaceOrdersPage() {
       rentalDepositDeductionInput.trim()
       && ['damage_review', 'deposit_refund_due', 'disputed'].includes(rentalStatusInput)
     ) {
-      payload.mruDepositDeductionUsdCents = Number(rentalDepositDeductionInput);
+      payload.mruDepositDeductionUsdCents = parsedRentalDeduction!;
     }
     if (reasonCode) payload.mruReasonCode = reasonCode;
     if (notes) payload.mruNotes = notes;
@@ -1135,12 +1140,21 @@ export default function MarketplaceOrdersPage() {
   const rentalConditionInRequired = rentalStatusInput === 'returned_pending_inspection'
     && !rentalConditionInInput.trim()
     && !selectedOrder?.moConditionIn;
-  const parsedRentalDeduction = rentalDepositDeductionInput.trim() === ''
-    ? 0
-    : Number(rentalDepositDeductionInput);
-  const rentalDeductionInvalid = !Number.isSafeInteger(parsedRentalDeduction)
-    || parsedRentalDeduction < 0
-    || parsedRentalDeduction > (selectedOrder?.moSecurityDepositUsdCents ?? 0);
+  const rentalDeposit = selectedOrder?.moSecurityDepositUsdCents ?? 0;
+  const storedRentalDeduction = selectedOrder?.moDepositDeductionUsdCents ?? 0;
+  const rentalMoneyUnavailable = !Number.isSafeInteger(rentalDeposit) || rentalDeposit < 0
+    || !Number.isSafeInteger(storedRentalDeduction) || storedRentalDeduction < 0 || storedRentalDeduction > rentalDeposit;
+  let parsedRentalDeduction: number | null = null;
+  let rentalDeductionError: string | null = rentalMoneyUnavailable ? 'Los importes guardados no están disponibles con precisión. Recarga la orden para revisarlos.' : null;
+  try {
+    parsedRentalDeduction = parseOptionalPriceCents(rentalDepositDeductionInput);
+    if (!rentalDeductionError && parsedRentalDeduction !== null && parsedRentalDeduction > rentalDeposit) {
+      rentalDeductionError = 'La deducción no puede superar el depósito.';
+    }
+  } catch (error) {
+    rentalDeductionError = error instanceof Error ? error.message : 'Ingresa un monto válido.';
+  }
+  const rentalDeductionInvalid = Boolean(rentalDeductionError);
   const selectedFulfillmentTransition = availableFulfillmentTransitions.includes(fulfillmentStatusInput)
     ? fulfillmentStatusInput
     : '';
@@ -1809,12 +1823,12 @@ export default function MarketplaceOrdersPage() {
                               <strong>Fechas:</strong> {selectedOrder.moRentalStartDate} → {selectedOrder.moRentalEndDate} ({selectedOrder.moRentalDurationDays} día(s))
                             </Typography>
                             <Typography variant="body2">
-                              <strong>Cargo:</strong> {selectedOrder.moRentalChargeUsdCents ?? 0} centavos · <strong>depósito:</strong> {selectedOrder.moSecurityDepositUsdCents ?? 0} centavos
+                              <strong>Cargo:</strong> {formatMoney(selectedOrder.moRentalChargeUsdCents ?? 0, 'USD')} · <strong>depósito:</strong> {formatMoney(rentalDeposit, 'USD')}
                             </Typography>
                             <Typography variant="body2">
                               <strong>Estado del depósito:</strong> {selectedOrder.moDepositStatus ?? '—'}
                               {(selectedOrder.moDepositDeductionUsdCents ?? 0) > 0
-                                ? ` · deducción propuesta ${selectedOrder.moDepositDeductionUsdCents} centavos`
+                                ? ` · deducción propuesta ${formatMoney(selectedOrder.moDepositDeductionUsdCents, 'USD')}`
                                 : ''}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
@@ -1900,13 +1914,12 @@ export default function MarketplaceOrdersPage() {
                           />
                           {(rentalStatusInput === 'damage_review' || (selectedOrder.moDepositDeductionUsdCents ?? 0) > 0) && (
                             <TextField
-                              label="Deducción propuesta del depósito (centavos)"
-                              type="number"
+                              label="Deducción propuesta del depósito (USD)"
                               value={rentalDepositDeductionInput}
                               onChange={(event) => setRentalDepositDeductionInput(event.target.value)}
-                              inputProps={{ min: 0, max: selectedOrder.moSecurityDepositUsdCents ?? 0, step: 1 }}
+                              inputProps={{ inputMode: 'decimal', maxLength: 32 }}
                               error={rentalDeductionInvalid}
-                              helperText={`Máximo: ${selectedOrder.moSecurityDepositUsdCents ?? 0} centavos. La propuesta no ejecuta un cobro ni un reembolso.`}
+                              helperText={rentalMoneyUnavailable ? rentalDeductionError : `${rentalDeductionError ? `${rentalDeductionError} ` : ''}Máximo: ${formatMoney(rentalDeposit, 'USD')}. La propuesta no ejecuta un cobro ni un reembolso.`}
                             />
                           )}
                           <TextField
@@ -2349,7 +2362,7 @@ export default function MarketplaceOrdersPage() {
                         {(depositSettlementsQuery.data?.length ?? 0) === 0 && (
                           <>
                             <Alert severity="warning" variant="outlined">
-                              Depósito: {selectedOrder.moSecurityDepositUsdCents ?? 0} {selectedOrder.moCurrency} centavos · deducción aprobada: {selectedOrder.moDepositDeductionUsdCents ?? 0} · devolución esperada: {(selectedOrder.moSecurityDepositUsdCents ?? 0) - (selectedOrder.moDepositDeductionUsdCents ?? 0)}.
+                              Depósito: {formatMoney(rentalDeposit, 'USD')} · deducción aprobada: {formatMoney(storedRentalDeduction, 'USD')} · devolución esperada: {rentalMoneyUnavailable ? 'Monto no disponible' : formatMoney(rentalDeposit - storedRentalDeduction, 'USD')}.
                             </Alert>
                             <FormControl fullWidth size="small">
                               <InputLabel id="deposit-settlement-method-label">Método real de liquidación</InputLabel>
@@ -2384,7 +2397,7 @@ export default function MarketplaceOrdersPage() {
                             />
                             <Button
                               variant="contained"
-                              disabled={depositSettlementMutation.isPending
+                              disabled={rentalMoneyUnavailable || depositSettlementMutation.isPending
                                 || depositExternalReference.trim().length < 3
                                 || !(depositEvidenceUrl.trim().startsWith('https://')
                                   || depositEvidenceUrl.trim().startsWith('/assets/'))}
@@ -2404,7 +2417,7 @@ export default function MarketplaceOrdersPage() {
                               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
                                 <Chip size="small" label={settlement.mdsStatus.replace(/_/g, ' ')} />
                                 <Typography variant="body2">
-                                  {settlement.mdsSettlementMethod.replace(/_/g, ' ')} · devolución {settlement.mdsRefundAmountMinor} {settlement.mdsCurrency} centavos · deducción {settlement.mdsDeductionAmountMinor}
+                                  {settlement.mdsSettlementMethod.replace(/_/g, ' ')} · devolución {formatMoney(settlement.mdsRefundAmountMinor, settlement.mdsCurrency)} · deducción {formatMoney(settlement.mdsDeductionAmountMinor, settlement.mdsCurrency)}
                                 </Typography>
                               </Stack>
                               <Typography variant="body2">

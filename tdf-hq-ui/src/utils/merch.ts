@@ -1,8 +1,27 @@
 import { API_BASE_URL } from '../api/client';
 import { serializeCsvCell } from './csv';
+import { formatEventMoney } from './eventFinanceMoney';
+import { parseOptionalPriceCents } from './priceInput';
 
 export const formatMerchMoney = (minor: number, currency = 'USD', locale = 'es-EC') =>
-  new Intl.NumberFormat(locale, { style: 'currency', currency }).format(minor / 100);
+  formatEventMoney(minor, currency, locale);
+
+export const readMerchMoneyInput = (
+  raw: string,
+  language: 'es' | 'en',
+  { required = false, positive = false }: { required?: boolean; positive?: boolean } = {},
+): { minor: number | null; error: string | null } => {
+  try {
+    const minor = parseOptionalPriceCents(raw);
+    if (required && minor === null) return { minor, error: language === 'en' ? 'Enter an amount.' : 'Ingresa un monto.' };
+    if (positive && minor === 0) return { minor, error: language === 'en' ? 'The amount must be greater than zero.' : 'El monto debe ser mayor que cero.' };
+    return { minor, error: null };
+  } catch {
+    return { minor: null, error: language === 'en'
+      ? 'Use a non-negative amount with up to two decimals, within the supported range.'
+      : 'Usa un monto no negativo con hasta dos decimales, dentro del rango admitido.' };
+  }
+};
 
 export const resolveMerchImageUrl = (value?: string | null) => {
   if (!value) return undefined;

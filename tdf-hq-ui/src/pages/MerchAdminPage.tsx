@@ -3,12 +3,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Box, Button, Checkbox, Chip, CircularProgress, FormControlLabel, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { Merch, createMerchIdempotencyKey, type MerchIssueTriageRequest } from '../api/merch';
-import { formatMerchMoney, merchLanguage, merchStatusLabel } from '../utils/merch';
+import { formatMerchMoney, merchLanguage, merchStatusLabel, readMerchMoneyInput } from '../utils/merch';
 
 const optionalTrimmed = (value?: string) => {
   const trimmed = value?.trim();
   if (!trimmed) return null;
   return trimmed;
+};
+
+const refundBalance = (total?: number | null, refunded?: number | null): number | null => {
+  const returned = refunded ?? 0;
+  if (total == null || !Number.isSafeInteger(total) || total < 0
+    || !Number.isSafeInteger(returned) || returned < 0 || returned > total) return null;
+  return total - returned;
 };
 
 const dateInputValue = (date: Date) => date.toISOString().slice(0, 10);
@@ -122,10 +129,15 @@ export default function MerchAdminPage() {
   });
   const createRefund = useMutation({
     mutationFn: ({ issueId, orderId, key }: { issueId: string; orderId: string; key: string }) => {
-      const rawAmount = refundAmounts[issueId]?.trim();
+      const amount = readMerchMoneyInput(refundAmounts[issueId] ?? '', language, { positive: true });
+      const issue = issues.data?.find(item => item.id === issueId && item.orderId === orderId);
+      const remaining = refundBalance(issue?.totalMinor, issue?.refundedMinor);
+      if (amount.error || remaining === null || remaining < 1 || (amount.minor !== null && amount.minor > remaining)) {
+        throw new Error(amount.error ?? (language === 'en' ? 'Check the refundable balance.' : 'Revisa el saldo reembolsable.'));
+      }
       return Merch.createAdminRefund(orderId, {
         issueId,
-        amountMinor: rawAmount ? Number(rawAmount) : null,
+        amountMinor: amount.minor,
         reasonCode: 'customer_request',
         note: optionalTrimmed(refundNotes[issueId]),
       }, key);
@@ -259,10 +271,13 @@ export default function MerchAdminPage() {
           const response = issueResponses[item.id] ?? '';
           const terminal = ['resolved', 'rejected', 'cancelled'].includes(item.status);
           const financial = ['cancellation', 'return', 'refund', 'damaged', 'missing', 'fraud'].includes(item.issueType);
-          const rawRefundAmount = refundAmounts[item.id]?.trim() ?? '';
-          const parsedRefundAmount = rawRefundAmount ? Number(rawRefundAmount) : null;
-          const remainingRefund = Math.max(0, (item.totalMinor ?? 0) - (item.refundedMinor ?? 0));
-          const validRefundAmount = parsedRefundAmount === null || (Number.isInteger(parsedRefundAmount) && parsedRefundAmount > 0 && parsedRefundAmount <= remainingRefund);
+          const amount = readMerchMoneyInput(refundAmounts[item.id] ?? '', language, { positive: true });
+          const remainingRefund = refundBalance(item.totalMinor, item.refundedMinor);
+          const refundAmountError = amount.error ?? (remainingRefund === null
+            ? (language === 'en' ? 'Verified balance unavailable.' : 'Saldo verificado no disponible.')
+            : amount.minor !== null && amount.minor > remainingRefund
+              ? (language === 'en' ? 'The amount exceeds the remaining balance.' : 'El monto supera el saldo restante.') : null);
+          const validRefundAmount = !refundAmountError;
           const linkedRefund = refunds.data?.find((refund) => refund.issueId === item.id && refund.status !== 'cancelled');
           return <Paper key={item.id} variant="outlined" sx={{ p: 2 }}>
             <Stack spacing={1.5}>
@@ -280,16 +295,15 @@ export default function MerchAdminPage() {
                   <Alert severity="warning">{language === 'en' ? 'This records a request only. It never contacts the provider or returns money.' : 'Esto registra únicamente una solicitud. Nunca contacta al proveedor ni devuelve dinero.'}</Alert>
                   {linkedRefund ? <Alert severity="info">{language === 'en' ? `Linked refund: ${merchStatusLabel(linkedRefund.status, language)}.` : `Reembolso vinculado: ${merchStatusLabel(linkedRefund.status, language)}.`}</Alert> : <>
                     <TextField
-                      type="number"
-                      inputProps={{ min: 1, max: remainingRefund, step: 1 }}
-                      label={language === 'en' ? 'Amount in cents (blank = full remaining)' : 'Monto en centavos (vacío = saldo completo)'}
+                      inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+                      label={language === 'en' ? `Amount (${item.currency ?? 'USD'}; blank = full remaining)` : `Monto (${item.currency ?? 'USD'}; vacío = saldo completo)`}
                       value={refundAmounts[item.id] ?? ''}
                       onChange={(event) => setRefundAmounts({ ...refundAmounts, [item.id]: event.target.value })}
                       error={!validRefundAmount}
-                      helperText={`${language === 'en' ? 'Remaining verified balance' : 'Saldo verificado restante'}: ${formatMerchMoney(remainingRefund, item.currency ?? 'USD')}`}
+                      helperText={remainingRefund === null ? refundAmountError : `${refundAmountError ? `${refundAmountError} ` : ''}${language === 'en' ? 'Remaining verified balance' : 'Saldo verificado restante'}: ${formatMerchMoney(remainingRefund, item.currency ?? 'USD')}`}
                     />
                     <TextField multiline minRows={2} inputProps={{ maxLength: 2000 }} label={language === 'en' ? 'Operational note (optional)' : 'Nota operativa (opcional)'} value={refundNotes[item.id] ?? ''} onChange={(event) => setRefundNotes({ ...refundNotes, [item.id]: event.target.value })} />
-                    <Button variant="contained" disabled={!validRefundAmount || remainingRefund < 1 || createRefund.isPending} onClick={() => {
+                    <Button variant="contained" disabled={!validRefundAmount || remainingRefund === null || remainingRefund < 1 || createRefund.isPending} onClick={() => {
                       const key = refundKeys[item.id] ?? createMerchIdempotencyKey('refund');
                       if (!refundKeys[item.id]) setRefundKeys((current) => ({ ...current, [item.id]: key }));
                       createRefund.mutate({ issueId: item.id, orderId: item.orderId, key });

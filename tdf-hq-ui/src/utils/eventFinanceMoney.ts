@@ -12,10 +12,9 @@ export function assertSafeEventFinanceMoney<T extends object>(value: T): T {
   return value;
 }
 
-export const formatEventMoney = (amountCents?: number | null, currency?: string | null): string => {
+export const formatEventMoney = (amountCents?: number | null, currency?: string | null, locale = resolveRuntimeFormatOptions().locale): string => {
   if (typeof amountCents !== 'number') return 'Gratis';
   if (!Number.isSafeInteger(amountCents)) return 'Monto no disponible';
-  const locale = resolveRuntimeFormatOptions().locale;
   const formatter = new Intl.NumberFormat(locale, {
     style: 'currency', currency: (currency ?? resolveRuntimeCurrency()).toUpperCase(),
   });

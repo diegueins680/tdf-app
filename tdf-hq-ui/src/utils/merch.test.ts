@@ -1,4 +1,4 @@
-import { buildMerchOrdersCsv, type MerchOrderExportRow } from './merch';
+import { buildMerchOrdersCsv, formatMerchMoney, readMerchMoneyInput, type MerchOrderExportRow } from './merch';
 
 const order = (overrides: Partial<MerchOrderExportRow> = {}): MerchOrderExportRow => ({
   orderNumber: 'TDF-MERCH-100',
@@ -49,5 +49,26 @@ describe('buildMerchOrdersCsv', () => {
     expect(csv).toContain('"\'-1+1"');
     expect(csv).toContain('"-3000","-250","-2750"');
     expect(csv).not.toContain('"\'-3000"');
+  });
+});
+
+
+describe('merch currency amounts', () => {
+  it('preserves the last cent and the explicitly requested locale when displaying large amounts', () => {
+    expect(formatMerchMoney(Number.MAX_SAFE_INTEGER, 'USD', 'en-US')).toBe('$90,071,992,547,409.91');
+    expect(formatMerchMoney(-1, 'USD', 'en-US')).toBe('-$0.01');
+    expect(formatMerchMoney(0, 'USD', 'en-US')).toBe('$0.00');
+    expect(formatMerchMoney(2550, 'EUR', 'de-DE')).toBe('25,50\u00a0€');
+  });
+  it('distinguishes optional full-balance blank, required blank, free delivery and positive prices', () => {
+    expect(readMerchMoneyInput('', 'en')).toEqual({ minor: null, error: null });
+    expect(readMerchMoneyInput('', 'en', { required: true }).error).toBe('Enter an amount.');
+    expect(readMerchMoneyInput('0', 'es', { required: true })).toEqual({ minor: 0, error: null });
+    expect(readMerchMoneyInput('0', 'en', { positive: true }).error).toMatch(/greater than zero/);
+    expect(readMerchMoneyInput('25,50', 'es')).toEqual({ minor: 2550, error: null });
+  });
+  it.each(['25.505', '-1', '1e2', '90071992547409.92'])('rejects %s without rounding or interpreting it as blank', value => {
+    expect(readMerchMoneyInput(value, 'es').error).toMatch(/dos decimales/);
+    expect(readMerchMoneyInput(value, 'en').error).toMatch(/two decimals/);
   });
 });
