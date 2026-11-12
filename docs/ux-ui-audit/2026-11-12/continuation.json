@@ -591,7 +591,15 @@
       "catalogPreservationTestsPassed": 11,
       "typecheck": "passed",
       "lint": "passed",
-      "hostedCI": "La nueva cabeza requiere sus propios flujos; no se transfieren los resultados de la base."
+      "hostedCI": "La nueva cabeza requiere sus propios flujos; no se transfieren los resultados de la base.",
+      "sourceFreshness": {
+        "sourceCommit": "a06b9af207cd6f7bdf38ab47682f839f37aeb918",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 84,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      }
     }
   ]
 }
