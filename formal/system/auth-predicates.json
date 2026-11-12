@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "c0dcf0903d9b4cdab0a5365cbc0ff413c7dd13d9a38470cd791a62e591d9d0b2"
+    "tdf-hq/tdf-hq.cabal": "f70c31b85d419806920bf8118ca8056025e2da3eebcdd2230aa39a22d1120ab9"
   },
   "obligations": [
     {
@@ -562,9 +562,9 @@
       "reviewedAgainst": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
       "source": "tdf-hq/tdf-hq.cabal",
       "previousSha256": "24d6ac2f7661ca4e50189b5fa85a3e2a4434b92c9c7924b845fec1e0aea3d582",
-      "currentSha256": "c0dcf0903d9b4cdab0a5365cbc0ff413c7dd13d9a38470cd791a62e591d9d0b2",
-      "change": "Register two new library modules, TDF.Calendar.TokenCipher (AES-256-GCM sealing of stored Google Calendar tokens) and TDF.Auth.Throttle (per-account counters for login failures, signup and password-reset requests). No other line changes.",
-      "semanticReview": "Removing exactly the two added exposed-module lines reproduces protected main Cabal bytes. No dependency, flag, extension, source path or existing registration changes; both modules use packages already listed (crypton, memory, base64-bytestring, entropy, persistent, time). Neither module imports or redefines an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. Auth.hs, Models.hs, Server/RecordsIngestion.hs, the recovery expiry SQL and Stack/lock are byte-identical to protected main. Obligation claims, assumptions and translations are unchanged. Fresh source-bound solver execution remains required; this pin refresh is not a proof or release authorization."
+      "currentSha256": "f70c31b85d419806920bf8118ca8056025e2da3eebcdd2230aa39a22d1120ab9",
+      "change": "Register three new library modules: TDF.Calendar.TokenCipher (AES-256-GCM sealing of stored Google Calendar tokens), TDF.Auth.Throttle (per-account counters for login failures, signup and password-reset requests) and TDF.Server.StripeTicketCapture (reading and recording a legacy Stripe ticket capture the order cannot admit, split out of SocialEventsHandlers to respect its size ceiling). No other line changes.",
+      "semanticReview": "Removing exactly the three added exposed-module lines reproduces protected main Cabal bytes. No dependency, flag, extension, source path or existing registration changes; the modules use packages already listed (crypton, memory, base64-bytestring, entropy, persistent, time). None of the modules imports or redefines an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. Auth.hs, Models.hs, Server/RecordsIngestion.hs, the recovery expiry SQL and Stack/lock are byte-identical to protected main. Obligation claims, assumptions and translations are unchanged. Fresh source-bound solver execution remains required; this pin refresh is not a proof or release authorization."
     }
   ]
 }

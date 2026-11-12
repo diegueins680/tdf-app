@@ -337,7 +337,7 @@ import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
 import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (nativeBroadcastUnavailable)
-import qualified TDF.Commerce.CheckoutStore as Checkout
+import TDF.Server.StripeTicketCapture (StripeTicketCapture (..), parseStripeTicketCapture, recordStripeTicketCapture, stripeTicketClosedOrderNeedsReview)
 import qualified TDF.Services.Stripe as Stripe
 import TDF.Services.EventLogisticsRoutes
     ( RouteEstimateInput (..)
@@ -719,56 +719,6 @@ validateStripeTicketPaymentEvidence expectedOrderId expectedEventId expectedPaym
         Left "Stripe ticket currency does not match the immutable order currency"
     | otherwise = Right ()
 
-{- | What a signed @payment_intent.succeeded@ event says Stripe captured,
-read without the ticket binding. It is what remains when the binding in
-@metadata.tdf_context@ is missing or does not match the stored order: the
-money was still captured and has to be surfaced for review
-(PAY-STRIPE-WEBHOOK-001, PAY-CAPTURE-RECON-001).
--}
-data StripeTicketCapture = StripeTicketCapture
-    { stcAmountReceived :: Int64
-    , stcCurrency :: Maybe T.Text
-    , stcEnvironment :: Checkout.CheckoutEnvironment
-    }
-    deriving (Eq, Show)
-
--- | 'Nothing' unless the PaymentIntent is succeeded with a positive amount.
--- A missing @livemode@ is treated as production so the capture is never
--- hidden in the sandbox queue.
-parseStripeTicketCapture :: Aeson.Value -> Maybe StripeTicketCapture
-parseStripeTicketCapture payload = do
-    (status, amountReceived, mCurrency, mLiveMode) <-
-        parseMaybe
-            ( Aeson.withObject "event" $ \eventObject -> do
-                dataObject <- eventObject Aeson..: "data" :: Parser Object
-                paymentIntentObject <- dataObject Aeson..: "object" :: Parser Object
-                (,,,)
-                    <$> paymentIntentObject Aeson..: "status"
-                    <*> paymentIntentObject Aeson..: "amount_received"
-                    <*> paymentIntentObject Aeson..:? "currency"
-                    <*> eventObject Aeson..:? "livemode"
-            )
-            payload
-    if T.toLower (T.strip status) == ("succeeded" :: T.Text) && amountReceived > (0 :: Int64)
-        then
-            Just
-                StripeTicketCapture
-                    { stcAmountReceived = amountReceived
-                    , stcCurrency = mCurrency
-                    , stcEnvironment =
-                        if mLiveMode == Just False
-                            then Checkout.CheckoutSandbox
-                            else Checkout.CheckoutProduction
-                    }
-        else Nothing
-
--- | A valid capture for an order that is neither pending nor already paid
--- (cancelled, expired, refunded) issued no ticket and needs review. A paid
--- order is a redelivery and needs none.
-stripeTicketClosedOrderNeedsReview :: T.Text -> Bool
-stripeTicketClosedOrderNeedsReview status =
-    T.toLower (T.strip status) `notElem` ["pending", "paid"]
-
 parseStripeWebhookMarketplaceOrderId :: Aeson.Value -> Maybe T.Text
 parseStripeWebhookMarketplaceOrderId payload = do
     contextJson <-
@@ -1025,17 +975,13 @@ handleStripePaymentIntentSucceeded now payload =
                     (parseStripeWebhookMarketplaceOrderId payload)
             Just (Entity orderKey order) -> do
                 let mCapture = parseStripeTicketCapture payload
-                    recordCapture exceptionType capture =
-                        Checkout.recordReconciliationException
-                            Checkout.ProviderStripe
-                            (stcEnvironment capture)
-                            "stripe"
+                    recordCapture exceptionType =
+                        recordStripeTicketCapture
                             exceptionType
-                            ("event_ticket_order:" <> renderKeyText orderKey)
+                            (renderKeyText orderKey)
                             piId
-                            (fromIntegral (eventTicketOrderAmountCents order))
-                            (Just (stcAmountReceived capture))
-                            (fromMaybe (eventTicketOrderCurrency order) (stcCurrency capture))
+                            (eventTicketOrderAmountCents order)
+                            (eventTicketOrderCurrency order)
                             now
                     -- Stripe captured money that the order cannot admit: keep the
                     -- 400 (the event stays unrecorded and replayable) but leave an

@@ -16604,7 +16604,8 @@
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Server/StripeTicketCapture.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",

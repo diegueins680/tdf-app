@@ -2452,6 +2452,7 @@
       "tdf-hq/src/TDF/Server/SocialDiscovery.hs",
       "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
       "tdf-hq/src/TDF/Server/SocialSync.hs",
+      "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
       "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
       "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
       "tdf-hq/src/TDF/Server/TicketRefunds.hs",
@@ -17626,13 +17627,19 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "08b7743e5a43ae2ed1a42423b004384f0ad09b4e6df2209a464a73b9134c1376",
+      "sha256": "d7ed3a54aac8d2a18590ce40bf54782514012eef41f7970a01b6f5c10bb3707e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-cb2c54ef31474aee",
       "path": "tdf-hq/src/TDF/Server/SocialSync.hs",
       "sha256": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d492abfa85197d85",
+      "path": "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
+      "sha256": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17974,7 +17981,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "c0dcf0903d9b4cdab0a5365cbc0ff413c7dd13d9a38470cd791a62e591d9d0b2",
+      "sha256": "f70c31b85d419806920bf8118ca8056025e2da3eebcdd2230aa39a22d1120ab9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30969,7 +30976,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c4a59db9218e806e5df7766d73a9844429bb26eb2a0a7d884f2e443ce2da8536",
+      "sha256": "ad66efefa0fffc5c1809ac27633e2cc447ce65badb7ac03a9047e7b6c0510316",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
