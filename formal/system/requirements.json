@@ -14068,7 +14068,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction.",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction. Z3 proof stripe_ticket_capture.py covers the legacy ticket webhook's two exception writes (see PAY-STRIPE-WEBHOOK-001).",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -14082,7 +14082,8 @@
       "formalModels": [
         "formal/payments/CaptureAccounting.tla",
         "formal/payments/CaptureAccounting.cfg",
-        "formal/payments/CaptureAccountingLegacy.cfg"
+        "formal/payments/CaptureAccountingLegacy.cfg",
+        "formal/payments/stripe_ticket_capture.py"
       ],
       "confidence": "High for the protocol as modelled and the pure decision; handler correspondence by review of the twelve call sites. The provider reconciliation worker, music commerce and the PayPal webhook keep their own reconciliation paths.",
       "ambiguity": [
@@ -16733,8 +16734,10 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/Spec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end.",
+      "formalModels": [
+        "formal/payments/stripe_ticket_capture.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end. Z3 proof stripe_ticket_capture.py (translation of handleStripePaymentIntentSucceeded for a matched ticket order, validateStripeTicketPaymentEvidence, parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview, pinned by the hash of those regions): tickets are issued only with the full binding on a pending order, the answer is 400 exactly when the binding is not admitted, a succeeded positive capture on an existing order always ends in tickets, a paid redelivery or an open exception, and each comparison, the pending fence and both exception writes are load-bearing. The model also shows the one silent case left: the order row deleted between lookup and read-back while the stale copy says pending (no application code deletes ticket orders).",
       "evidence": "formal/system/social-events-routes.md",
       "critical": true,
       "status": "implemented but unspecified",

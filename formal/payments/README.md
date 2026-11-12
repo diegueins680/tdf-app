@@ -1,7 +1,7 @@
 # Payment proofs
 
 PAY-TIP-001, PAY-CAPTURE-RECON-001, PAY-DOMO-QUOTE-001, PAY-COURSE-PRICE-001,
-PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001, PAY-DEPOSIT-POLICY-001, PAY-DOMAIN-BINDING-001.
+PAY-STRIPE-WEBHOOK-001, PAY-PROVIDER-INBOX-001, PAY-ADAPTER-BINDING-001, PAY-INVOICE-ISSUE-001, CONTRACT-SEND-001, PAY-CHECKOUT-003, PAY-CHECKOUT-001, PAY-DEPOSIT-POLICY-001, PAY-DOMAIN-BINDING-001.
 
 ## Contract
 
@@ -297,3 +297,27 @@ were not executed in this consolidation. No prior immutable PostgreSQL job/log
 receipt was found for the new two-case claim; owner prose is retained as a
 reported result, not substituted for execution evidence. Existing inherited
 SQLite/migration evidence remains separately scoped to the earlier audit.
+
+## Legacy Stripe ticket capture (`PAY-STRIPE-WEBHOOK-001`, `PAY-CAPTURE-RECON-001`)
+
+`stripe_ticket_capture.py` (Z3 4.13.3, pinned) encodes what a signed
+`payment_intent.succeeded` event does to a matched ticket order:
+`handleStripePaymentIntentSucceeded` and `validateStripeTicketPaymentEvidence`
+of `SocialEventsHandlers.hs`, and `parseStripeTicketCapture` and
+`stripeTicketClosedOrderNeedsReview` of `Server/StripeTicketCapture.hs`. It
+refuses to run when the text of any of those regions changes.
+
+| Obligation | Result |
+|---|---|
+| Tickets are issued only with the full binding (succeeded, same PaymentIntent, order, event, amount, currency) on a pending order | proved (UNSAT of the negation) |
+| The answer is 400 exactly when the binding is not admitted | proved |
+| A succeeded positive capture on an existing order ends in tickets, a paid redelivery or an open exception | proved |
+| An exception is written only for a capture, never together with tickets, with the order total as expected and the received amount as observed | proved |
+| A paid redelivery changes nothing and records nothing; only a pending order becomes paid | proved |
+| Issue, redelivery, both exception types and a refusal without capture are reachable | witnesses found |
+| Order row deleted between lookup and read-back while the stale copy says pending | reachable and silent (limit; no application code deletes ticket orders) |
+| Dropping any of the six comparisons, the pending fence or either exception write | each breaks at least one proof |
+
+Not modelled: signature check and event-id dedupe, JSON decoding, the separate
+transaction of the not-admitted exception, ticket codes, the confirmation
+e-mail, and events that match no ticket order.
