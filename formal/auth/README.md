@@ -89,3 +89,27 @@ constant-time comparison, provider replay or key rotation. That every Meta
 callback route calls the verifier before decoding is the structural gate
 `scripts/check-webhook-signatures.py`; behaviour of the real function is the
 QuickCheck suite `tdf-hq/test/TDF/MetaWebhookSignatureSpec.hs`.
+
+## Credential throttle (`AUTH-CREDENTIAL-INTAKE-001`, `AUTH-PASSWORD-RECOVERY-001`)
+
+`credential_throttle.py` (Z3 4.13.3, pinned) encodes the pure policy of
+`tdf-hq/src/TDF/Auth/Throttle.hs` (limits, windows, window start, Retry-After,
+lockout and over-limit predicates) and the login transaction of
+`tdf-hq/src/TDF/ServerAuth.hs`. It refuses to run when the text of either
+region changes. Attempts on one subject are taken one after another; that the
+advisory lock achieves this is PostgreSQL behaviour and is assumed.
+
+| Obligation | Result |
+|---|---|
+| The window start is a multiple of the window and contains the instant; two instants share a window exactly when they share the quotient | proved for the three scopes |
+| Retry-After is between one second and the window and reaches the next window | proved |
+| Login: the counter equals the failed password checks of the window and never exceeds ten (inductive) | proved |
+| Login: a locked-out attempt checks no password and changes nothing; only a failed check moves the counter | proved |
+| Signup and reset: every request is counted and exactly the first five of a window are admitted (inductive) | proved |
+| Tenth failed check, lockout, fifth admitted signup and refused sixth are reachable | witnesses found |
+| Dropping the lockout check, the failure count, the window alignment or the strict over-limit comparison | each breaks at least one proof |
+| The `max 1` of `authThrottleRetryAfterSeconds` | not load-bearing: the ceiling is already at least one |
+
+Not modelled: the subject hash, the SQL upsert, a timestamp read before the
+lock is granted, the silent answer of the reset route past its limit, and any
+per-address limit (there is none).

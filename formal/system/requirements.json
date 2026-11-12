@@ -22876,8 +22876,10 @@
         "scripts/test-auth-throttle-http.sh",
         "scripts/lib/auth_throttle_http.py"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema).",
+      "formalModels": [
+        "formal/auth/credential_throttle.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): the failure counter equals the failed password checks of the window and never exceeds ten, a locked-out attempt checks no password, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -22952,8 +22954,10 @@
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "formalModels": [
+        "formal/auth/credential_throttle.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Z3 proof credential_throttle.py: reset requests are counted one by one and exactly the first five of an hourly window are admitted (the SQL upsert, the subject hash and the silent answer past the limit are not modelled).",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
