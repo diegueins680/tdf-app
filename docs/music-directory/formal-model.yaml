@@ -58,7 +58,7 @@ state_machines:
     initial: confirmed
     transitions:
       pending_deposit: [confirmed, cancelled, expired]
-      confirmed: [in_progress, completed, cancelled, disputed]
+      confirmed: [in_progress, balance_due, completed, cancelled, disputed]
       in_progress: [balance_due, completed, cancelled, disputed]
       balance_due: [completed, disputed]
       disputed: [completed, cancelled]

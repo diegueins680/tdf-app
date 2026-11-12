@@ -207,6 +207,23 @@ spec = describe "music directory formal invariants" $ do
     agreementParticipantCancelAllowed True False `shouldBe` True
     agreementParticipantCancelAllowed False False `shouldBe` True
 
+  it "I25: a payout recipient is a cédula, a RUC or an E.164 phone" $ do
+    payoutIdentifierValid "identification" "1712345678" `shouldBe` True
+    payoutIdentifierValid "identification" "1712345678001" `shouldBe` True
+    payoutIdentifierValid "identification" "17123456" `shouldBe` False
+    payoutIdentifierValid "identification" "17123456AB" `shouldBe` False
+    payoutIdentifierValid "phone" "+593991234567" `shouldBe` True
+    payoutIdentifierValid "phone" "0991234567" `shouldBe` False
+    payoutIdentifierValid "phone" "+0991234567" `shouldBe` False
+    payoutIdentifierValid "account" "acct_1234567890" `shouldBe` False
+
+  it "I22: either party may cancel before the deposit is paid, and nobody confirms it by hand" $ do
+    agreementTransitionAllowedFor PartyBuyer AgreementPendingDeposit AgreementCancelled `shouldBe` True
+    agreementTransitionAllowedFor PartyProvider AgreementPendingDeposit AgreementCancelled `shouldBe` True
+    agreementTransitionAllowedFor PartyAdmin AgreementPendingDeposit AgreementConfirmed `shouldBe` False
+    allowedAgreementTransition AgreementConfirmed AgreementBalanceDue `shouldBe` True
+    agreementTransitionAllowedFor PartyBuyer AgreementConfirmed AgreementBalanceDue `shouldBe` False
+
   it "I18: counters stop one round before the limit so the acceptance is always recorded" $ do
     counterRoundAllowed 1 `shouldBe` False
     counterRoundAllowed 2 `shouldBe` True

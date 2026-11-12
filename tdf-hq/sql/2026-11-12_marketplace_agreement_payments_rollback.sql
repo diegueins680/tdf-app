@@ -51,6 +51,22 @@ DROP FUNCTION IF EXISTS marketplace_agreement_payment_transition_allowed(TEXT, T
 DROP TABLE IF EXISTS marketplace_payout_account;
 DROP TABLE IF EXISTS marketplace_payment_fee_rule;
 
+-- Relación de transiciones del acuerdo tal como la dejó ADR 0135.
+CREATE OR REPLACE FUNCTION marketplace_agreement_transition_allowed(from_status TEXT, to_status TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT from_status = to_status OR (from_status, to_status) IN (
+    ('pending_deposit','confirmed'), ('pending_deposit','cancelled'), ('pending_deposit','expired'),
+    ('confirmed','in_progress'), ('confirmed','completed'), ('confirmed','cancelled'), ('confirmed','disputed'),
+    ('in_progress','balance_due'), ('in_progress','completed'), ('in_progress','cancelled'), ('in_progress','disputed'),
+    ('balance_due','completed'), ('balance_due','disputed'),
+    ('disputed','completed'), ('disputed','cancelled')
+  );
+$$;
+
 DELETE FROM notification
  WHERE notif_type IN ('marketplace.agreement.deposit_paid','marketplace.agreement.balance_due','marketplace.agreement.expired');
 

@@ -211,6 +211,28 @@ BEFORE UPDATE ON marketplace_agreement
 FOR EACH ROW EXECUTE FUNCTION marketplace_agreement_require_paid_payment();
 
 -- ---------------------------------------------------------------------------
+-- 5a. El comprador puede confirmar la entrega sin que el proveedor haya
+--     marcado el inicio; con saldo pendiente en plataforma eso lleva a
+--     balance_due, así que la relación declara confirmed -> balance_due.
+--     Debe coincidir con TDF.Directory.Policy.allowedAgreementTransition y con
+--     docs/music-directory/formal-model.yaml#agreement.
+-- ---------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION marketplace_agreement_transition_allowed(from_status TEXT, to_status TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT from_status = to_status OR (from_status, to_status) IN (
+    ('pending_deposit','confirmed'), ('pending_deposit','cancelled'), ('pending_deposit','expired'),
+    ('confirmed','in_progress'), ('confirmed','balance_due'), ('confirmed','completed'), ('confirmed','cancelled'), ('confirmed','disputed'),
+    ('in_progress','balance_due'), ('in_progress','completed'), ('in_progress','cancelled'), ('in_progress','disputed'),
+    ('balance_due','completed'), ('balance_due','disputed'),
+    ('disputed','completed'), ('disputed','cancelled')
+  );
+$$;
+
+-- ---------------------------------------------------------------------------
 -- 5b. Sincronización con el checkout canónico (mismo patrón que reservas,
 --     cursos y Domo). El checkout de un cobro de acuerdo solo pasa a pagado con
 --     evidencia verificada; al pasar, el cobro queda pagado y el acuerdo
@@ -356,8 +378,8 @@ END $$;
 -- ---------------------------------------------------------------------------
 INSERT INTO revenue_feature_flag(flag_key, enabled, environment, reason) VALUES
   ('marketplace.agreement_payments', FALSE, 'production', 'ADR 0136: enable after a split-capable provider is contracted and verified'),
-  ('marketplace.agreement_payments', TRUE, 'staging', 'ADR 0136: Phase 2 payments rehearsal'),
-  ('marketplace.agreement_payments', TRUE, 'sandbox', 'ADR 0136: local development')
+  ('marketplace.agreement_payments', FALSE, 'staging', 'ADR 0136: enable when a split-capable provider flow is verified'),
+  ('marketplace.agreement_payments', FALSE, 'sandbox', 'ADR 0136: enable when a split-capable provider flow is verified')
 ON CONFLICT (flag_key, environment) DO NOTHING;
 
 INSERT INTO directory_audit_event(actor_party_id, action, entity_kind, entity_id, previous_state, new_state, correlation_id, metadata)

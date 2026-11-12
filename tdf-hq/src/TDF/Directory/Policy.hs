@@ -32,6 +32,7 @@ module TDF.Directory.Policy
   , agreementPaymentSplit
   , agreementCompletionTarget
   , agreementParticipantCancelAllowed
+  , payoutIdentifierValid
   , openApplicationStatuses
   , applicationIsOpen
   , counterAllowedFor
@@ -197,6 +198,9 @@ allowedAgreementTransition fromStatus toStatus =
       , (AgreementPendingDeposit, AgreementCancelled)
       , (AgreementPendingDeposit, AgreementExpired)
       , (AgreementConfirmed, AgreementInProgress)
+      -- ADR 0136: the buyer may confirm delivery before the provider marked
+      -- the start; with a balance owed on the platform that waits for it.
+      , (AgreementConfirmed, AgreementBalanceDue)
       , (AgreementConfirmed, AgreementCompleted)
       , (AgreementConfirmed, AgreementCancelled)
       , (AgreementConfirmed, AgreementDisputed)
@@ -224,6 +228,8 @@ agreementTransitionAllowedFor party fromStatus toStatus =
     (PartyBuyer, AgreementInProgress, AgreementCompleted) -> True
     (PartyAdmin, AgreementDisputed, _) -> True
     (PartyAdmin, _, _) -> False
+    -- ADR 0136: either party may walk away before the deposit is paid.
+    (_, AgreementPendingDeposit, AgreementCancelled) -> True
     (_, AgreementConfirmed, AgreementCancelled) -> True
     (_, AgreementInProgress, AgreementCancelled) -> True
     (_, AgreementConfirmed, AgreementDisputed) -> True
@@ -340,6 +346,20 @@ agreementCompletionTarget settledOnPlatform balance
 agreementParticipantCancelAllowed :: Bool -> Bool -> Bool
 agreementParticipantCancelAllowed settledOnPlatform depositPaid =
   not (settledOnPlatform && depositPaid)
+
+-- | ADR 0136: shape of a PayPhone payout recipient. An identification is an
+-- Ecuadorian cédula (10 digits) or RUC (13 digits); a phone is E.164 with a
+-- leading plus sign. Anything else, or another identifier kind, is rejected.
+payoutIdentifierValid :: Text -> Text -> Bool
+payoutIdentifierValid kind identifier = case kind of
+  "identification" -> T.length identifier `elem` [10, 13] && T.all isAsciiDigit identifier
+  "phone" -> case T.uncons identifier of
+    Just ('+', digits) ->
+      T.length digits >= 8 && T.length digits <= 15 && T.all isAsciiDigit digits && T.take 1 digits /= "0"
+    _ -> False
+  _ -> False
+  where
+    isAsciiDigit character = character >= '0' && character <= '9'
 
 -- I18 (ADR 0134): every offer state change belongs to this relation. Open
 -- states can always be closed by the system (rejected/expired) and by the

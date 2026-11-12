@@ -2846,6 +2846,9 @@ main = hspec $ do
               `shouldBe` Just ProviderCapabilities.FlowEventTicket
             PaymentRuntimeStore.productFlowForDomain "marketplace_rental"
               `shouldBe` Just ProviderCapabilities.FlowMarketplace
+            -- ADR 0136: agreement charges need the marketplace capabilities.
+            PaymentRuntimeStore.productFlowForDomain "marketplace_agreement"
+              `shouldBe` Just ProviderCapabilities.FlowMarketplace
             PaymentRuntimeStore.productFlowForDomain "unknown"
               `shouldBe` Nothing
 
