@@ -137,6 +137,7 @@
       "scripts/__tests__/alloy-controls.test.mjs",
       "scripts/__tests__/app-routes-auth-implementation.test.mjs",
       "scripts/__tests__/app-smart-link.test.mjs",
+      "scripts/__tests__/architecture-boundaries.test.mjs",
       "scripts/__tests__/artist-claim-target-runtime.mjs",
       "scripts/__tests__/artist-enrichment.test.mjs",
       "scripts/__tests__/artist-image-download.test.mjs",
@@ -282,6 +283,7 @@
       "scripts/catalog-list-audit.mjs",
       "scripts/check-admin-guards.py",
       "scripts/check-api-availability.mjs",
+      "scripts/check-architecture-boundaries.mjs",
       "scripts/check-browser-vendor.mjs",
       "scripts/check-build-trust.mjs",
       "scripts/check-dependency-security.mjs",
@@ -1096,6 +1098,8 @@
       "tdf-hq-ui/src/components/events/EventArtistSelector.tsx",
       "tdf-hq-ui/src/components/events/EventLineupEditor.test.tsx",
       "tdf-hq-ui/src/components/events/EventLineupEditor.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+      "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
       "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
@@ -1110,6 +1114,8 @@
       "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
       "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
+      "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+      "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
       "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
       "tdf-hq-ui/src/components/events/TicketPricePreview.tsx",
       "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
@@ -1305,6 +1311,7 @@
       "tdf-hq-ui/src/pages/ClassesPage.tsx",
       "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
       "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
+      "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
       "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
       "tdf-hq-ui/src/pages/CommerceHubPage.test.tsx",
       "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
@@ -1631,6 +1638,7 @@
       "tdf-hq-ui/src/utils/eventFinanceCsv.ts",
       "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
       "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
+      "tdf-hq-ui/src/utils/eventLineup.ts",
       "tdf-hq-ui/src/utils/eventRsvpIntent.test.ts",
       "tdf-hq-ui/src/utils/eventRsvpIntent.ts",
       "tdf-hq-ui/src/utils/eventSharing.test.ts",
@@ -3776,7 +3784,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "1bc10b69030ac6d05d41c5948ecc745783b5b00ee796a266d0bd5d14cb743073",
+      "sha256": "2bb0f4d104a97575b3dfa6c037b53ebeba13077f6ed12bf079045e755675657a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3795,6 +3803,12 @@
       "id": "SURFACE-906172e6c3d5a4ef",
       "path": "scripts/__tests__/app-smart-link.test.mjs",
       "sha256": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c16934793233bcac",
+      "path": "scripts/__tests__/architecture-boundaries.test.mjs",
+      "sha256": "536a8b583458acc1dcf511caf2ca9ea307eaea3d58ef39a5235f7cd61ab62cb6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4668,6 +4682,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-350c1e59d110e860",
+      "path": "scripts/check-architecture-boundaries.mjs",
+      "sha256": "df09ec947a2854c0c1dd97f9f41e60a6da7373551453d461fae9c4def69056fd",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1e909f329835b442",
       "path": "scripts/check-browser-vendor.mjs",
       "sha256": "613cb0eb3d9aaf83138699bbc93ea3e41dcb5f03960ad3b6f666b0de908776c8",
@@ -5474,7 +5494,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "e23945ffb38c27fd475219dd9c4b110eb2ef3b29596f27db76bce24022de1cc4",
+      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9504,6 +9524,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-84df4c94cbe62081",
+      "path": "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
+      "sha256": "c42c351d53eea188ae1b0f43552144caf3a88ac0cd19286cfff6f85abc3c52a3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-85610c4675bfa874",
+      "path": "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+      "sha256": "683f169bc7412f408cac5ee1f7b6e04d715f7382ec8e56721ddc7d6da8f32b11",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-6d375a8bdcbe5d7c",
       "path": "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
       "sha256": "8dd7b161d48cb42ad908c110619321011fd66354cd81796413f63be2b3cd1953",
@@ -9585,6 +9617,18 @@
       "id": "SURFACE-32b83043961bf6cd",
       "path": "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
       "sha256": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-a17dfa34ef337c89",
+      "path": "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
+      "sha256": "65f904a6cf8e33ce7401154167a2ae697e6603beedc52e7fbe1dbe4bdcb7746d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-07395d7f84adf446",
+      "path": "tdf-hq-ui/src/components/events/MyEventsPanel.tsx",
+      "sha256": "239e397d3fafdbf8176572370f759a4d15be707791a9fc0cac4d0793521a1272",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10436,13 +10480,13 @@
     {
       "id": "SURFACE-844ef4d7558a76f8",
       "path": "tdf-hq-ui/src/i18n/locales/en.ts",
-      "sha256": "02a8564ad6079993d42e0837b6b6880c9f77c54dd99ee7952be6c60514460e08",
+      "sha256": "72138a6a422a066872b065b3c73a584f3d4b7841c4f48a4dc78957557a362e55",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-40770a4aba9f94ce",
       "path": "tdf-hq-ui/src/i18n/locales/es.ts",
-      "sha256": "bc8f467f4a10a129ab45e4e630fd676547fc5516f3c96e008c8dff0e8e468a2c",
+      "sha256": "c5c9e26d858ff16701ed4eb29c5ed63e2b2a6ac4468b0841c1c862c829927bb0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10748,19 +10792,25 @@
     {
       "id": "SURFACE-10a1b2ad11b92606",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx",
-      "sha256": "e5c17de3ace0ccb44dc20fa2d166a0dadef24a25e5006fd40e65441f8379df17",
+      "sha256": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-9ec3af8f42eacde2",
       "path": "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
-      "sha256": "bef2c4c9f0eda00c82706ee017e1c3936bbb9b2f584f5fcd9cbb18df26ce3328",
+      "sha256": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-78d796fee86d9367",
+      "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
+      "sha256": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
+      "sha256": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10838,13 +10888,13 @@
     {
       "id": "SURFACE-b584e0770511a16a",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
-      "sha256": "879899e9e196b72e8e80b10aab2a8786caeb1c84f586919ee4b1d359e45be581",
+      "sha256": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-bf79c7904e71c2d9",
       "path": "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
-      "sha256": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
+      "sha256": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11012,31 +11062,31 @@
     {
       "id": "SURFACE-843ecd90497b82eb",
       "path": "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-      "sha256": "c0da4534df22f6993d1a95379878d3e1be72845fc8e412cb7914f197ee3c9077",
+      "sha256": "6d1a4156273bc94c6fd44e89ba9c9cff52bb47e7b0f4d4af5fc45085e24feaa3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8e582de4b6234f44",
       "path": "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-      "sha256": "b4eaf012b687c6fc0ae4d60d667b661e346b15323ba0e7baad282f49452fcd91",
+      "sha256": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d536aa30411edce",
       "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-      "sha256": "b62887c39922bc38025aa8caf0813ac4b059cb4487f94da70b6956ff7ca2f86d",
+      "sha256": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2bbd93102a783ed1",
       "path": "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
-      "sha256": "ed81c8122a6debedadbc37dd221096ea424f4c6f482bcb05ee96562704f28b7c",
+      "sha256": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "4d2ecce58a6883d9c9b48bd837e17578c3e5385d8e1f8630df49f097bf2a7767",
+      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11570,13 +11620,13 @@
     {
       "id": "SURFACE-6e21d53461f37190",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
-      "sha256": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
+      "sha256": "b015233958f9b3684f93c132236f99a9378f980ea3c66de9ffe3eeb6d71112c5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
+      "sha256": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11786,13 +11836,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "7e285d998e1c9683e82627ac0b237f1a17516ad231dd5757cf646616dceb9b4b",
+      "sha256": "271aa4a3d8747258679cb7de078d02e2ac2a49be6361168dd74bcadf88f92b3b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "1ee97a2e8651484032069c2ce3fd63439bbdb901b8356e2a354ad4dce7da378a",
+      "sha256": "2f2b8400b190d6ff5a0d770c1bae2c243aceba051b888e1e1acd5f7d4fc6e6ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12020,13 +12070,13 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "8d256dd500d12005e1f9d18b238407ae20fa9374ae6d6e7a9b9c5bf998174e03",
+      "sha256": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "3e5d65bc6318065f9ab7095a0dadfce24cdf2d9b385425d1ac092e0abbfe2040",
+      "sha256": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12711,6 +12761,12 @@
       "id": "SURFACE-92990a3989bb72d1",
       "path": "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
       "sha256": "c0a08330089af232d3919c68237e36e61e9f241f98c2706d1e653b233e30c4ed",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-994f6a0e134f3424",
+      "path": "tdf-hq-ui/src/utils/eventLineup.ts",
+      "sha256": "8738e19e2da553851c892d5411c188f19bafd7646b1e831399bfb93e0cb35e3c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16610,7 +16666,7 @@
     {
       "id": "SURFACE-97b434e9aaa0711b",
       "path": "tdf-hq/src/TDF/Artists/Enrichment.hs",
-      "sha256": "951a31dbb6587a11150478ddf9122b8288f72f20c44512e09a0d640beee8ba2c",
+      "sha256": "127098fd4fd51d244956d2aadc2be6c0adc4e764c6ac91bca431a49b3f2ec60f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17354,7 +17410,7 @@
     {
       "id": "SURFACE-2d796ef32d3ee01d",
       "path": "tdf-hq/src/TDF/Profiles/Artist.hs",
-      "sha256": "e193f8e958b28a2d79d6fdb3f86437d0d48e58c8b4acfe1f25abd8c383a0483a",
+      "sha256": "806657f972b93ae6ecc0b4e27bea896b3009de3123440a5eddef9e28e3fb3a21",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17570,7 +17626,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "d1234048a5dbef693b73cb16a2688d3245a530d96216fecc7e541cbabf51bb77",
+      "sha256": "08b7743e5a43ae2ed1a42423b004384f0ad09b4e6df2209a464a73b9134c1376",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17996,7 +18052,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b588191dc2ccf7cc74b81d0be415f29b14b51dc710b7ea9357ca25cee4b448d8",
+      "sha256": "c784c9a60c1a0c1ab1f4daab5bcd0c23cc0b0c4782a131dde953409a856d2fce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18452,7 +18508,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "46bae510adc8431a7c1e69bf6475df604bd8bf32e4c5b8b504b15e236fc478b9",
+      "sha256": "c72a8012846d356f910c69b504e0fe49a13261c680948983e1918237c703a484",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22019,6 +22075,13 @@
       "sha256": "deceb5ca0d5f425c7874daf296edddd8d7137e2fd8311713af354d16c1ae0d13",
       "authority": "proposed",
       "authorityBasis": "Status: proposed (implementación entregada en `tdf-desktop/`; la distribución pública requiere firma y aprobación del propietario del producto)",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0133-enforced-module-boundaries.md",
+      "sha256": "71af7f45965b5d8016716e17748db867efcbdd15ecd3831e70452cc0f06d02b5",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
     },
     {
@@ -30163,6 +30226,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/event-creation-entry.md",
+      "sha256": "2967fc0680609a0f8fc7d925c184aaec076a051188f9cb531da666959945f016",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/event-discovery-filtering.md",
       "sha256": "d52ea8766d0d60eea42122867d03d03ee77b711fc49faf0525f3fa0978bbe929",
       "authority": "inferred",
@@ -30272,6 +30342,13 @@
       "sha256": "76e5d622985c6fc019bcfcf61839cfa6c8ef744d1edf772d1a52ea87efa00394",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "formal/system/form-actions.md",
+      "sha256": "b1d4b9a8dc94f8ecde735ef83a6a0089ef4030fc10a4b3015e3f43b408af39e1",
+      "authority": "inferred",
+      "authorityBasis": "Status: accepted by product owner on 2026-11-10.",
       "kind": "requirement-candidate"
     },
     {
@@ -30892,7 +30969,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "1309cbd2bf1bfccb009bc8c32d3ddf7af82f9a36a452537f4a7674852197bda4",
+      "sha256": "c4a59db9218e806e5df7766d73a9844429bb26eb2a0a7d884f2e443ce2da8536",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -32622,6 +32699,87 @@
       "statement": "La web incorpora una sesión de reproducción compartida (`tdf-hq-ui/src/player/playbackSession.ts`) para que el reproductor de lanzamientos y la radio compartan una única Media Session y los comandos del sistema actúen sobre el audio activo; añade zonas de arrastre, cancelación por archivo y reintento con la misma `Idempotency-Key` en el Studio de lanzamientos; reutiliza una sola `Idempotency-Key` por transición de ciclo de vida hasta que el servidor confirma; y oculta el inicio con Google dentro del shell porque Google Identity Services rechaza contextos embebidos.",
       "source": "docs/adr/0132-desktop-shell-electron.md#decisión",
       "status": "proposed",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:68e5b4f5d2ff",
+      "statement": "1. Each system declares ordered layers, lowest first. A module may import its own layer and lower layers only.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:f8965206b9d1",
+      "statement": "Backend: `persistence` (Persistent models) → `transfer-types` (`TDF.DTO*`, `TDF.API.Types`) → `domain` (everything not matched elsewhere, including workers and `TDF.Cron`) → `http-contract` (`TDF.API*`, `TDF.Routes.*`) → `http-delivery` (`TDF.Server*`, `*.Server`) → `composition` (`TDF.App.Boot` and the executables).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:5f949b0d8cd8",
+      "statement": "Web: `foundation` (`vendor`, `assets`, `styles`, `lib`, `i18n`) → `utils` → `config` → `api` → `app-services` (session, services, analytics, contexts, hooks, player, mobile, desktop, theme) → `components` → `features` → `pages` → `routing` → `shell` (`App.tsx`, `main.tsx`, `player/PlayerShell.tsx`).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:3e1e933fab6e",
+      "statement": "`import type` and `export type` declarations are not edges: the compiler erases them, so they cannot create a load-order or bundle dependency. An inline `import { type A }` is an edge, because `verbatimModuleSyntax` keeps the module import. Test files are not scanned.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:46a7e9e38629",
+      "statement": "2. A module may not exceed 2,500 lines (backend) or 2,000 lines (web, generated API types exempt).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:6924fd6677d4",
+      "statement": "3. Existing debt is listed, not excused. `knownViolations` names each offending import and `sizeBudget.oversized` gives each oversized file a ceiling just above its current size. The check fails when:",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:2cb8709e7dba",
+      "statement": "- an import crosses a layer upward and is not listed; - a listed import no longer exists (the entry must be deleted, so the gain cannot be lost again); - an unlisted file passes the limit, or a listed file passes its ceiling; - a listed file has shrunk more than the headroom below its ceiling (the ceiling must come down with it).",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:f80f5755a35b",
+      "statement": "The lists can therefore only shrink unless a reviewer accepts an explicit edit to the baseline in the same change.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0133-enforced-module-boundaries:cbd83b2883f1",
+      "statement": "4. The check runs in `npm run quality:repo`, which CI runs for every change.",
+      "source": "docs/adr/0133-enforced-module-boundaries.md#decision",
+      "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
       "gap": "Per-clause implementation correspondence not discharged by inventory"
