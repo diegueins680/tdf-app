@@ -17,6 +17,11 @@ module TDF.Directory.Policy
   , allowedClassifiedTransition
   , allowedApplicationTransition
   , allowedInvitationTransition
+  , AgreementStatus(..)
+  , AgreementParty(..)
+  , allowedAgreementTransition
+  , agreementTransitionAllowedFor
+  , agreementAmounts
   , openApplicationStatuses
   , applicationIsOpen
   , counterAllowedFor
@@ -71,6 +76,20 @@ data ApplicationStatus
   | ApplicationCounteredByAuthor | ApplicationCounteredByApplicant
   | ApplicationAccepted | ApplicationRejected | ApplicationWithdrawn
   | ApplicationExpired | ApplicationConversationOpen | ApplicationConverted
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | ADR 0135: lifecycle of a marketplace agreement. @pending_deposit@,
+-- @balance_due@ and @expired@ belong to platform settlement (checkout) and
+-- are never entered by a participant request.
+data AgreementStatus
+  = AgreementPendingDeposit | AgreementConfirmed | AgreementInProgress
+  | AgreementBalanceDue | AgreementCompleted | AgreementCancelled
+  | AgreementDisputed | AgreementExpired
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | Who asks for an agreement transition. The buyer is the party that seeks
+-- and pays; the provider delivers; the admin resolves disputes.
+data AgreementParty = PartyBuyer | PartyProvider | PartyAdmin
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 data NegotiationActor = ActorApplicant | ActorAuthor
@@ -155,6 +174,66 @@ allowedClassifiedTransition fromStatus toStatus =
       , (Rejected, Draft), (Rejected, Withdrawn)
       , (Moderated, Draft), (Moderated, Withdrawn)
       ]
+
+-- I21 (ADR 0135): every agreement state change belongs to this relation; it
+-- mirrors marketplace_agreement_transition_allowed in the database and
+-- docs/music-directory/formal-model.yaml#agreement.
+allowedAgreementTransition :: AgreementStatus -> AgreementStatus -> Bool
+allowedAgreementTransition fromStatus toStatus =
+  fromStatus == toStatus || (fromStatus, toStatus) `Set.member` transitions
+  where
+    transitions = Set.fromList
+      [ (AgreementPendingDeposit, AgreementConfirmed)
+      , (AgreementPendingDeposit, AgreementCancelled)
+      , (AgreementPendingDeposit, AgreementExpired)
+      , (AgreementConfirmed, AgreementInProgress)
+      , (AgreementConfirmed, AgreementCompleted)
+      , (AgreementConfirmed, AgreementCancelled)
+      , (AgreementConfirmed, AgreementDisputed)
+      , (AgreementInProgress, AgreementBalanceDue)
+      , (AgreementInProgress, AgreementCompleted)
+      , (AgreementInProgress, AgreementCancelled)
+      , (AgreementInProgress, AgreementDisputed)
+      , (AgreementBalanceDue, AgreementCompleted)
+      , (AgreementBalanceDue, AgreementDisputed)
+      , (AgreementDisputed, AgreementCompleted)
+      , (AgreementDisputed, AgreementCancelled)
+      ]
+
+-- | I22 (ADR 0135): which declared transition each party may request. The
+-- provider marks the work as started; only the buyer confirms completion
+-- (a payment state never implies the service was delivered, and the provider
+-- cannot self-certify); either party may cancel or dispute while the
+-- agreement is live; only an admin resolves a dispute. Settlement states are
+-- never requested by a participant.
+agreementTransitionAllowedFor :: AgreementParty -> AgreementStatus -> AgreementStatus -> Bool
+agreementTransitionAllowedFor party fromStatus toStatus =
+  fromStatus /= toStatus && allowedAgreementTransition fromStatus toStatus && case (party, fromStatus, toStatus) of
+    (PartyProvider, AgreementConfirmed, AgreementInProgress) -> True
+    (PartyBuyer, AgreementConfirmed, AgreementCompleted) -> True
+    (PartyBuyer, AgreementInProgress, AgreementCompleted) -> True
+    (PartyAdmin, AgreementDisputed, _) -> True
+    (PartyAdmin, _, _) -> False
+    (_, AgreementConfirmed, AgreementCancelled) -> True
+    (_, AgreementInProgress, AgreementCancelled) -> True
+    (_, AgreementConfirmed, AgreementDisputed) -> True
+    (_, AgreementInProgress, AgreementDisputed) -> True
+    _ -> False
+
+-- | I23 (ADR 0135): amounts frozen when an agreement is created, from the
+-- agreed amount and the commission and deposit rates in basis points. The
+-- commission rounds down (never above the rate), the deposit rounds half up,
+-- and deposit + balance is exactly the amount. @Nothing@ for a non-positive
+-- amount or a rate outside 0..10000.
+agreementAmounts :: Int -> Int -> Int64 -> Maybe (Int64, Int64, Int64)
+agreementAmounts commissionBps depositBps amount
+  | amount <= 0 = Nothing
+  | commissionBps < 0 || commissionBps > 10000 = Nothing
+  | depositBps < 0 || depositBps > 10000 = Nothing
+  | otherwise =
+      let commission = fromInteger ((toInteger amount * toInteger commissionBps) `div` 10000)
+          deposit = fromInteger ((toInteger amount * toInteger depositBps + 5000) `div` 10000)
+      in Just (commission, deposit, amount - deposit)
 
 -- I18 (ADR 0134): every offer state change belongs to this relation. Open
 -- states can always be closed by the system (rejected/expired) and by the

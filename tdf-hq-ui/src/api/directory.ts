@@ -21,6 +21,9 @@ export type DirectoryFavorite = components['schemas']['DirectoryFavorite'];
 export type PublicClassified = components['schemas']['PublicClassified'];
 export type ClassifiedApplication = components['schemas']['ClassifiedApplication'];
 export type OfferRound = components['schemas']['OfferRound'];
+export type MarketplaceAgreement = components['schemas']['MarketplaceAgreement'];
+export type AgreementStatus = MarketplaceAgreement['status'];
+export type MyAgreementsStatus = 'open' | 'closed';
 export type OfferCounterRequest = components['schemas']['OfferCounterRequest'];
 export type OfferTerms = components['schemas']['OfferTerms'];
 export type ClassifiedIntent = components['schemas']['ClassifiedIntent'];
@@ -91,6 +94,17 @@ export const Directory = {
   /** expectedVersion binds the decision to the offer round the caller saw (409 when it moved on). */
   setApplicationStatus: (applicationId: string, status: string, reason?: string, expectedVersion?: number) =>
     patch<ClassifiedApplication>(`/directory/applications/${encodeURIComponent(applicationId)}/status`, {
+      status,
+      ...(reason ? { reason } : {}),
+      ...(typeof expectedVersion === 'number' ? { expectedVersion } : {}),
+    } satisfies components['schemas']['StatusRequest']),
+  myAgreements: (status?: MyAgreementsStatus) =>
+    get<MarketplaceAgreement[]>(`/directory/agreements${status ? `?status=${encodeURIComponent(status)}` : ''}`),
+  agreement: (agreementId: string) =>
+    get<MarketplaceAgreement>(`/directory/agreements/${encodeURIComponent(agreementId)}`),
+  /** expectedVersion binds the decision to the agreement the caller saw (409 when it moved on). */
+  setAgreementStatus: (agreementId: string, status: AgreementStatus, reason?: string, expectedVersion?: number) =>
+    patch<MarketplaceAgreement>(`/directory/agreements/${encodeURIComponent(agreementId)}/status`, {
       status,
       ...(reason ? { reason } : {}),
       ...(typeof expectedVersion === 'number' ? { expectedVersion } : {}),

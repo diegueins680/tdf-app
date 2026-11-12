@@ -50,6 +50,7 @@ import {
   type ManagedDirectoryProfile,
   type PriceMode,
 } from '../api/directory';
+import MyAgreementsPanel from '../features/marketplace/MyAgreementsPanel';
 import MyOffersPanel from '../features/marketplace/MyOffersPanel';
 import OfferCard from '../features/marketplace/OfferCard';
 import OfferForm from '../features/marketplace/OfferForm';
@@ -99,7 +100,7 @@ function DirectoryNotificationContext({ kind, id }: { kind: string; id: string }
 function DirectoryManagement() {
   const client = useQueryClient();
   const [params, setParams] = useSearchParams();
-  const [tab, setTab] = useState(params.has('apply') || params.has('contact') || params.has('invite') ? 2 : 0);
+  const [tab, setTab] = useState(params.has('apply') || params.has('contact') || params.has('invite') ? 2 : params.get('tab') === 'acuerdos' ? 5 : 0);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<ManagedDirectoryProfile>();
   const [classifiedOpen, setClassifiedOpen] = useState(false);
@@ -134,6 +135,7 @@ function DirectoryManagement() {
           <Tab label="Ofertar, contactar o invitar" />
           <Tab label="Invitaciones" />
           <Tab label="Mis ofertas" />
+          <Tab label="Acuerdos" />
         </Tabs>
 
         {tab === 0 && <ProfilePanel profiles={profiles.data ?? []} loading={profiles.isLoading} onCreate={() => { setEditingProfile(undefined); setProfileOpen(true); }} onEdit={(profile) => { setEditingProfile(profile); setProfileOpen(true); }} onRefresh={refresh} />}
@@ -141,6 +143,7 @@ function DirectoryManagement() {
         {tab === 2 && <OpportunityActionPanel profiles={profiles.data ?? []} classifieds={classifieds.data ?? []} taxonomies={taxonomies.data} applyId={params.get('apply')} applySlug={params.get('slug')} contactId={params.get('contact')} inviteId={params.get('invite')} contextKind={contextKind} onDone={() => { setNotice('Acción enviada de forma segura.'); setParams({}); }} />}
         {tab === 3 && <InvitationPanel />}
         {tab === 4 && <MyOffersPanel currencies={taxonomies.data?.currencies} />}
+        {tab === 5 && <MyAgreementsPanel currencies={taxonomies.data?.currencies} />}
 
         <ProfileDialog profile={editingProfile} open={profileOpen} onClose={() => setProfileOpen(false)} taxonomies={taxonomies.data} onSaved={() => { setProfileOpen(false); void refresh(); setNotice(editingProfile ? 'Perfil actualizado.' : 'Perfil creado como borrador.'); }} />
         <ClassifiedDialog open={classifiedOpen} onClose={() => setClassifiedOpen(false)} profiles={profiles.data ?? []} taxonomies={taxonomies.data} onCreated={() => { setClassifiedOpen(false); void refresh(); setNotice('Clasificado creado como borrador. Revísalo y publícalo cuando esté listo.'); }} />

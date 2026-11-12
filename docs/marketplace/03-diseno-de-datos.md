@@ -242,7 +242,13 @@ Cambios en `tdf-hq/docs/openapi/directory.yaml` (aditivos):
     recent|reputation`.
 - `GET /directory/search`: parámetro `intent?`.
 
-## 3. Fase 2 (definición, no implementada en este PR)
+## 3. Fase 2
+
+La parte A está implementada en `tdf-hq/sql/2026-11-12_marketplace_agreements.sql` (ADR 0135); esa
+migración es la fuente de verdad del esquema. Respecto del borrador de abajo añade
+`marketplace_agreement_pricing`, `deposit_bps`, `settlement_mode` (`off_platform` en la parte A),
+`started_at`, `disputed_at`, `cancellation_reason` y la relación de transiciones con su trigger;
+`deposit_due_at` es opcional hasta que exista el cobro. Borrador original:
 
 ```sql
 CREATE TABLE marketplace_agreement (

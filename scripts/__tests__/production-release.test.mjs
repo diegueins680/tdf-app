@@ -1078,6 +1078,26 @@ test('buildMigrationBatchSql verifies the ADR 0134 marketplace offer schema unle
   assert.match(buildSchemaVerificationSql(), /classified_application rows without an initial negotiation round/);
 });
 
+test('buildMigrationBatchSql verifies the ADR 0135 marketplace agreement schema unless a prefix opts out', () => {
+  const before = {
+    id: '2026-10-25_event_memory_invitations',
+    path: 'tdf-hq/sql/2026-10-25_event_memory_invitations.sql',
+    checksum: '1'.repeat(64),
+    content: 'SELECT 1;',
+  };
+  const agreementCheck = /Marketplace agreement schema \(ADR 0135\) is missing/;
+  assert.match(buildMigrationBatchSql([before]), agreementCheck);
+  assert.match(buildMigrationBatchSql([before]), /Marketplace agreement default pricing rule is missing/);
+  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false, marketplaceOffersIncluded: false, marketplaceAgreementsIncluded: false });
+  assert.doesNotMatch(prefix, agreementCheck);
+  assert.match(prefix, /ADR 0135: marketplace agreements verified only when the batch applies 2026-11-12_marketplace_agreements/);
+  // Opting out of agreements alone keeps the offers verification.
+  const offersOnly = buildMigrationBatchSql([before], { marketplaceAgreementsIncluded: false });
+  assert.match(offersOnly, /Marketplace offer schema \(ADR 0134\) is missing/);
+  assert.doesNotMatch(offersOnly, agreementCheck);
+  assert.match(buildSchemaVerificationSql(), agreementCheck);
+});
+
 test('buildMigrationBatchSql rejects unexpanded include directives', () => {
   assert.throws(
     () => buildMigrationBatchSql([{
