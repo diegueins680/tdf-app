@@ -617,7 +617,7 @@
       "catalogPreservationTestsPassed": 11,
       "typecheck": "passed",
       "lint": "passed",
-      "hostedCI": "La nueva cabeza requiere sus propios flujos; no se transfieren los resultados de la base.",
+      "hostedCI": "Completado en8805fc86cba4846a4fe75a30f0eed80da0d8596e: CI43310786691 y los cuatro flujos especializados aprobados. UI:376 suites/4256 pruebas. Matriz principal:890 aprobados/22 omitidos; navegador adicional21/10/25 casos aprobado.",
       "sourceFreshness": {
         "sourceCommit": "a06b9af207cd6f7bdf38ab47682f839f37aeb918",
         "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
@@ -625,6 +625,21 @@
         "inventory": "passed",
         "traceability": "passed",
         "semanticConformance": "not established by these checks"
+      },
+      "hostedVerification": {
+        "head": "8805fc86cba4846a4fe75a30f0eed80da0d8596e",
+        "ciRun": 43310786691,
+        "ciConclusion": "success",
+        "specialistRunsPassed": [
+          43310793041,
+          43310799450,
+          43310804887,
+          43310810484
+        ],
+        "uiSuitesPassed": 376,
+        "uiTestsPassed": 4256,
+        "browserPassed": 890,
+        "browserSkipped": 22
       }
     },
     {
@@ -666,7 +681,15 @@
       "catalogPreservationTestsPassed": 11,
       "typecheck": "passed",
       "lint": "passed",
-      "hostedCI": "La nueva cabeza requiere verificación hospedada propia; no se transfieren resultados anteriores."
+      "hostedCI": "La nueva cabeza requiere verificación hospedada propia; no se transfieren resultados anteriores.",
+      "sourceFreshness": {
+        "sourceCommit": "d59ba585682b18886a53a85ce774519931c8dbf7",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 93,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      }
     }
   ]
 }
