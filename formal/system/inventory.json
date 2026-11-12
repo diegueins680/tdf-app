@@ -11346,13 +11346,13 @@
     {
       "id": "SURFACE-6c5ad1714500a7c5",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
-      "sha256": "09e4d76079f9858f37dd634b681e2319e9b30405354112ac629dea51286f34a4",
+      "sha256": "e90be7b98a15b108d99bb0b55f4b704c3310bc242190870d1048f98c6905b9cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+      "sha256": "b4f10db9421ac0d1097d424af1f63888a8aae7894a39c1b02dd28e17a09a51bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31165,7 +31165,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "62161c8b6b3425305ef24560437766e2ad6899c11140d87a14301eebccea6bed",
+      "sha256": "0821accccfff03e139a24740089b1799e53605e2e27fd836c77cb16f8bea7791",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
