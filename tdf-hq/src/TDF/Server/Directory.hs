@@ -1525,7 +1525,12 @@ changeAgreementStatus user agreementId DirectoryStatusRequest{status=newStatus,r
               -- (same statement as an offer withdrawal, ADR 0134 I19).
               released <- rawSql "UPDATE classified_application SET status='withdrawn',withdrawn_at=now(),updated_at=now(),version=version+1 WHERE id=? AND status IN ('accepted','conversation_open') RETURNING id"
                 [toPersistValue applicationId] :: SqlPersistT IO [Single UUID]
-              unless (null released) $ do
+              -- An offer the author already marked as converted is terminal and
+              -- keeps that status, but its slot was consumed by the same
+              -- acceptance, so cancelling the agreement releases it as well.
+              converted <- rawSql "SELECT application.id FROM classified_application application WHERE application.id=? AND application.status='converted'"
+                [toPersistValue applicationId] :: SqlPersistT IO [Single UUID]
+              unless (null released && null converted) $ do
                 rawExecute "UPDATE classified SET slots_remaining=least(slots,slots_remaining+1),status=CASE WHEN status='filled' AND expires_at>now() THEN 'published' WHEN status='published' AND expires_at<=now() THEN 'expired' ELSE status END,closed_at=CASE WHEN status='filled' AND expires_at>now() THEN NULL WHEN status='published' AND expires_at<=now() THEN coalesce(closed_at,now()) ELSE closed_at END,updated_at=now(),version=version+1 WHERE id=?"
                   [toPersistValue classifiedId]
                 refreshClassifiedDB classifiedId

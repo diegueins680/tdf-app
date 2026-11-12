@@ -11040,7 +11040,7 @@
     {
       "id": "SURFACE-b1d115adebe79a56",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-      "sha256": "79916a75d5b599099363cf05b08b24d0d7e76cfa4575c488eb5606921aff1b9c",
+      "sha256": "a6a7ddbdeb0f342d6d3e2b2265e00211452bf51d693e9ce7d7f7ed07cb1eda5f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17640,7 +17640,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "9d07eced1aaff603ab95124997c824109383af0dfa2fe4c3ae211926d00c72b1",
+      "sha256": "eb080034aad1b6ecda2c9da03ffc17345e96f536ce996c41e018780bc34446d4",
       "semanticConformance": "not-established-by-discovery"
     },
     {

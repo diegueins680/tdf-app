@@ -28531,7 +28531,7 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "d48c1b8f09a778fae561feae57637ac5c8793a26add0ad6669fc6b762dbd3616",
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
-    "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "79916a75d5b599099363cf05b08b24d0d7e76cfa4575c488eb5606921aff1b9c",
+    "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "a6a7ddbdeb0f342d6d3e2b2265e00211452bf51d693e9ce7d7f7ed07cb1eda5f",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "07a61e85fa89ddb7e1c4de1c1f20617c9ac6bb9690aca35daccd914e1422c81d",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "5ef4e14aa6daa2e314bf2c22f7d242181d100891bffb31cc8ef05911def5d4db",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
@@ -29047,7 +29047,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "9d07eced1aaff603ab95124997c824109383af0dfa2fe4c3ae211926d00c72b1",
+    "tdf-hq/src/TDF/Server/Directory.hs": "eb080034aad1b6ecda2c9da03ffc17345e96f536ce996c41e018780bc34446d4",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
@@ -62769,7 +62769,7 @@
     {
       "id": "SURFACE-b1d115adebe79a56",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-      "sha256": "79916a75d5b599099363cf05b08b24d0d7e76cfa4575c488eb5606921aff1b9c",
+      "sha256": "a6a7ddbdeb0f342d6d3e2b2265e00211452bf51d693e9ce7d7f7ed07cb1eda5f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74906,7 +74906,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "9d07eced1aaff603ab95124997c824109383af0dfa2fe4c3ae211926d00c72b1",
+      "sha256": "eb080034aad1b6ecda2c9da03ffc17345e96f536ce996c41e018780bc34446d4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
