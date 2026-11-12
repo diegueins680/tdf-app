@@ -506,7 +506,7 @@ function ClassifiedDialog({ open, onClose, profiles, taxonomies, onCreated }: { 
   const [currencyId, setCurrencyId] = useState('');
   const [budgetNegotiable, setBudgetNegotiable] = useState(false);
   const [serviceOfferingId, setServiceOfferingId] = useState('');
-  // ADR 0132 marketplace fields
+  // ADR 0134 marketplace fields
   const [slots, setSlots] = useState('1');
   const [priceMode, setPriceMode] = useState<PriceMode | ''>('');
   const [offerDeadlineAt, setOfferDeadlineAt] = useState('');

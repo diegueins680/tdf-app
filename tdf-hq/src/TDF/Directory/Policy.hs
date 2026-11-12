@@ -63,7 +63,7 @@ data ClassifiedStatus
   | Withdrawn | Rejected | Moderated
   deriving (Eq, Ord, Show, Enum, Bounded)
 
--- ADR 0132: an application is an offer. Negotiation alternates between the
+-- ADR 0134: an application is an offer. Negotiation alternates between the
 -- applicant (offerer) and the classified author through countered states.
 data ApplicationStatus
   = ApplicationSubmitted | ApplicationViewed | ApplicationShortlisted
@@ -152,7 +152,7 @@ allowedClassifiedTransition fromStatus toStatus =
       , (Moderated, Draft), (Moderated, Withdrawn)
       ]
 
--- I18 (ADR 0132): every offer state change belongs to this relation. Open
+-- I18 (ADR 0134): every offer state change belongs to this relation. Open
 -- states can always be closed by the system (rejected/expired) and by the
 -- offerer (withdrawn); counter states alternate actors.
 allowedApplicationTransition :: ApplicationStatus -> ApplicationStatus -> Bool

@@ -1,6 +1,8 @@
-# ADR 0132: Marketplace de demanda y oferta sobre clasificados
+# ADR 0134: Marketplace de demanda y oferta sobre clasificados
 
 Estado: propuesto para implementación. Fecha: 2026-11-08. Extiende ADR 0105.
+
+Nota de numeración: este ADR se redactó como 0132 y recibió el 0134 al integrarse main, donde 0132 pasó a ser el shell de escritorio y 0133 los límites de módulos. La migración `2026-11-08_marketplace_offers.sql` (contenido congelado por el manifiesto de producción) y las descripciones del contrato OpenAPI, de las que derivan los clientes generados, siguen citando «ADR 0132»; se refieren a este documento.
 
 ## Contexto
 
@@ -62,5 +64,5 @@ dominio, comisión de plataforma, depósitos, reembolsos y varios proveedores de
 - Las pantallas actuales de "postulaciones" se convierten en "ofertas" con comparación y
   negociación; la terminología cambia en i18n manteniendo alias.
 - `Policy.hs`, `formal-model.yaml` y `PolicySpec` ganan invariantes I18–I20.
-- La Fase 2 requiere ADR 0133 para acuerdo, comisión y liquidación, con revisión legal de la
+- La Fase 2 requiere ADR 0135 para acuerdo, comisión y liquidación, con revisión legal de la
   política de cancelación por país.

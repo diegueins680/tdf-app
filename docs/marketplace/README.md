@@ -3,7 +3,7 @@
 Evolución de Comunidad y anuncios hacia un marketplace bilateral: quien busca publica (banda para
 una boda, venue para una fecha, tecladista para una banda), quienes ofrecen responden con precio y
 condiciones, el autor compara y elige, y (Fase 2) la oferta aceptada se convierte en acuerdo con
-depósito, pago en la app y comisión para TDF. Decisión: [ADR 0132](../adr/0132-marketplace-demand-offers.md).
+depósito, pago en la app y comisión para TDF. Decisión: [ADR 0134](../adr/0134-marketplace-demand-offers.md).
 
 | Documento | Contenido |
 | --- | --- |

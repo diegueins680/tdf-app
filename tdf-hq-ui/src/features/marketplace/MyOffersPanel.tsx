@@ -9,7 +9,7 @@ import OfferCard from './OfferCard';
 
 const FILTERS: MyOffersStatus[] = ['open', 'accepted', 'closed'];
 
-/** The offerer's view: every offer made through profiles the account manages (ADR 0132). */
+/** The offerer's view: every offer made through profiles the account manages (ADR 0134). */
 export default function MyOffersPanel({ currencies }: { currencies?: DirectoryTaxonomyItem[] }) {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<MyOffersStatus>('open');

@@ -81,7 +81,7 @@ export const Directory = {
     get<ClassifiedApplication[]>(`/directory/classifieds/${encodeURIComponent(classifiedId)}/applications${sort ? `?sort=${encodeURIComponent(sort)}` : ''}`),
   apply: (classifiedId: string, body: components['schemas']['ApplicationCreate'], idempotencyKey?: string) =>
     post<ClassifiedApplication>(`/directory/classifieds/${encodeURIComponent(classifiedId)}/applications`, body, idempotencyHeaders(idempotencyKey)),
-  // ADR 0132: offers made through the caller's profiles, one offer with its rounds, and counter-offers.
+  // ADR 0134: offers made through the caller's profiles, one offer with its rounds, and counter-offers.
   myApplications: (status?: MyOffersStatus) =>
     get<ClassifiedApplication[]>(`/directory/applications${status ? `?status=${encodeURIComponent(status)}` : ''}`),
   application: (applicationId: string) =>

@@ -216,7 +216,7 @@ export default function DirectoryPublicDetailPage({ kind, authenticationFallback
   const authenticatedAction = kind === 'classified'
     ? `/mis-clasificados?apply=${encodeURIComponent(targetId)}&slug=${encodeURIComponent(classifiedSlug ?? identifier)}`
     : `/mis-clasificados?contact=${encodeURIComponent(targetId)}&contextKind=profile`;
-  // ADR 0132: marketplace signals of a classified (intent, price mode, slots, anonymous offer stats).
+  // ADR 0134: marketplace signals of a classified (intent, price mode, slots, anonymous offer stats).
   const intent = kind === 'classified' ? text(value['intent']) : undefined;
   const priceMode = kind === 'classified' ? text(value['priceMode']) : undefined;
   const slotsRemaining = kind === 'classified' ? number(value['slotsRemaining']) : undefined;

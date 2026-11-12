@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-// ADR 0132 — demand/offer marketplace, Phase 1 journey, as a synthetic
+// ADR 0134 — demand/offer marketplace, Phase 1 journey, as a synthetic
 // API/browser integration (same approach as fanhub-onboarding.spec.mjs):
 // author publishes a seeking classified with a suggested price → a band
 // offers → the author counters → the band accepts → the classified is

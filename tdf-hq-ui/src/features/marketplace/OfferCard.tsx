@@ -47,7 +47,7 @@ interface OfferCardProps {
 
 /**
  * One offer with its negotiation chain and the actions the current
- * participant may take (ADR 0132). The same card serves the author's
+ * participant may take (ADR 0134). The same card serves the author's
  * comparison board and the offerer's "my offers" list; the role comes from
  * the API (`participantRole`), never from the client.
  */

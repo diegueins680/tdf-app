@@ -205,7 +205,7 @@ directoryFilterClause =
   "input.city_id,input.profession_id,input.service_id,input.instrument_id,input.genre_id," <>
   "input.remote_only,input.available_only,input.date_from,input.date_to) " <>
   "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>
-  -- ADR 0132: an intent filter only ever selects classifieds, by their
+  -- ADR 0134: an intent filter only ever selects classifieds, by their
   -- category intent (busco / ofrezco).
   "AND (input.intent IS NULL OR (document.entity_kind='classified' AND EXISTS (SELECT 1 FROM classified intent_classified JOIN classified_category intent_category ON intent_category.id=intent_classified.category_id WHERE intent_classified.id::text=document.entity_id AND intent_category.intent=input.intent))) "
 
@@ -888,7 +888,7 @@ createClassified user idempotency request@ClassifiedCreateRequest
         replaceClassifiedSelectionsDB classifiedId request
       classifiedSummary classifiedId
 
--- ADR 0132: slots, price mode and structured terms. The price mode defaults
+-- ADR 0134: slots, price mode and structured terms. The price mode defaults
 -- from the budget exactly as the migration backfilled existing rows.
 validateMarketplaceFields :: Maybe Int -> Maybe Text -> Maybe Value -> Maybe Int64 -> Maybe Int64 -> Maybe UUID -> Bool -> AppM (Int, PriceMode, Value)
 validateMarketplaceFields slots priceMode terms budgetMinMinor budgetMaxMinor currencyId budgetNegotiable = do
@@ -998,7 +998,7 @@ changeClassifiedStatus user classifiedId DirectoryStatusRequest{status=newStatus
   runDB $ do
     rawExecute "UPDATE classified SET status=?,closed_at=CASE WHEN ? IN ('filled','withdrawn') THEN now() ELSE closed_at END,published_at=CASE WHEN ?='published' AND published_at IS NULL THEN now() ELSE published_at END,updated_at=now(),version=version+1 WHERE id=?" [PersistText newStatus,PersistText newStatus,PersistText newStatus,toPersistValue classifiedId]
     rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'classified.status','classified',?,?,?,?,jsonb_build_object('authorProfileId',?::text,'reason',?::text))" [toPersistValue (auPartyId user),PersistText (UUID.toText classifiedId),PersistText oldStatus,PersistText newStatus,PersistText ("classified-status-"<>UUID.toText classifiedId),PersistText (UUID.toText authorProfile),optionalText statusReason]
-    -- ADR 0132: closing a classified rejects every open offer with a reason.
+    -- ADR 0134: closing a classified rejects every open offer with a reason.
     forM_ (closureRejectionReason to) $ \reason -> closeOpenOffersDB user classifiedId reason
     refreshClassifiedDB classifiedId
   when (newStatus == "published") $
@@ -1017,7 +1017,7 @@ parseClassifiedStatus value = lookup value [("draft",Draft),("pending_moderation
 
 classifiedSummary classifiedId = jsonOne err404 ("SELECT " <> managedClassifiedProjectionSql <> " FROM classified JOIN classified_category category ON category.id=classified.category_id WHERE classified.id=?") [toPersistValue classifiedId]
 
--- Shared projection for the author's own listings (ADR 0132 adds intent,
+-- Shared projection for the author's own listings (ADR 0134 adds intent,
 -- slots, price mode, offer deadline and the number of offers received).
 managedClassifiedProjectionSql :: Text
 managedClassifiedProjectionSql =
@@ -1034,7 +1034,7 @@ listApplications user classifiedId mSort = do
     Just _ -> throwError err400 {errBody="sort must be recent, price_asc, price_desc or reputation"}
   jsonRows ("SELECT " <> offerProjectionSql "'author'" <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id CROSS JOIN LATERAL (" <> profileReputationSql "application.applicant_profile_id" <> ") reputation WHERE application.classified_id=? ORDER BY " <> orderBy) [toPersistValue classifiedId]
 
--- Offers where the caller manages the offering profile (ADR 0132).
+-- Offers where the caller manages the offering profile (ADR 0134).
 listMyApplications user mStatus = do
   let statusFilter = normalizeOptional mStatus
   when (maybe False (`notElem` ["open","accepted","closed"]) statusFilter) $
@@ -1080,7 +1080,7 @@ createApplication user classifiedId idempotency request@ApplicationCreateRequest
   if not (null existing) then applicationSummary user applicationId else do
     allowed <- jsonRows "SELECT to_jsonb(TRUE) FROM classified JOIN directory_profile author ON author.id=classified.author_profile_id JOIN directory_profile applicant ON applicant.id=? LEFT JOIN directory_contact_preference preference ON preference.profile_id=author.id WHERE classified.id=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now() AND classified.author_profile_id<>applicant.id AND applicant.completeness_score>=coalesce(preference.minimum_profile_completeness,0) AND coalesce(preference.allow_classified_applications,TRUE) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE (block.blocker_profile_id=classified.author_profile_id AND block.blocked_profile_id=applicant.id) OR (block.blocker_profile_id=applicant.id AND block.blocked_profile_id=classified.author_profile_id))" [toPersistValue applicantProfileId,toPersistValue classifiedId]
     when (null allowed) $ throwError err403 {errBody="this classified does not accept this application"}
-    -- ADR 0132: marketplace admission rules.
+    -- ADR 0134: marketplace admission rules.
     listing <- jsonOne err404 "SELECT jsonb_build_object('priceMode',price_mode,'budgetMaxMinor',budget_max_minor,'currencyId',currency_id,'slotsRemaining',slots_remaining,'offerDeadlineAt',offer_deadline_at,'expiresAt',expires_at,'derived',source_profile_id IS NOT NULL) FROM classified WHERE id=?" [toPersistValue classifiedId]
     when (valueBool "derived" listing) $ throwError err409 {errBody="artist profile listings do not take offers; contact the profile or invite it to a classified"}
     when (maybe True (<=0) (valueInt "slotsRemaining" listing)) $ throwError err409 {errBody="this classified has no slot left"}
@@ -1108,7 +1108,7 @@ createApplication user classifiedId idempotency request@ApplicationCreateRequest
     recordAuthenticatedEvent user "application_submitted" "application" (UUID.toText applicationId)
     applicationSummary user applicationId
 
--- A counter-offer from either participant (ADR 0132). Alternation and the
+-- A counter-offer from either participant (ADR 0134). Alternation and the
 -- round limit come from TDF.Directory.Policy; the round and the offer's
 -- current state change in one transaction.
 counterOffer user applicationId idempotency request@OfferCounterRequest{amountMinor, currencyId, terms, message, expiresAt} = do
@@ -1243,7 +1243,7 @@ changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStat
     rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'application.status','application',?,?,?,?,jsonb_build_object('reason',?::text,'participant',?::text))"
       [toPersistValue (auPartyId user),PersistText (UUID.toText applicationId),PersistText oldStatus,PersistText newStatus,PersistText ("application-status-"<>UUID.toText applicationId),optionalText statusReason,PersistText visible]
     when consumesSlot $ do
-      -- ADR 0132 I14: one slot per acceptance, never below zero. The accept
+      -- ADR 0134 I14: one slot per acceptance, never below zero. The accept
       -- round closes the negotiation chain.
       rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,created_by_party_id) SELECT id,least(current_round+1,10),?,'accept',current_amount_minor,currency_id,terms,? FROM classified_application WHERE id=? AND current_round<10 ON CONFLICT DO NOTHING"
         [PersistText actorText,toPersistValue (auPartyId user),toPersistValue applicationId]
@@ -1644,7 +1644,7 @@ validateReportTarget kind identifier = do
   when (T.null (T.strip identifier) || T.length identifier>160) $
     throwError err400 {errBody="invalid report targetId"}
 
--- ADR 0132: the marketplace offer flow (amounts, counters, slot accounting)
+-- ADR 0134: the marketplace offer flow (amounts, counters, slot accounting)
 -- ships behind the `marketplace.offers` runtime flag, read from the same
 -- revenue_feature_flag table as the other commerce gates. Merging code never
 -- enables it.
@@ -1893,7 +1893,7 @@ validateContactContext user senderProfileIdValue targetProfileIdValue kind ident
 notificationContext :: AuthedUser -> Text -> UUID.UUID -> AppM Value
 notificationContext user kind ident = case kind of
   "application" -> do
-    -- ADR 0132: offer notifications reach both participants (new offer,
+    -- ADR 0134: offer notifications reach both participants (new offer,
     -- counter, acceptance, rejection), so either may open the context.
     detail <- getApplication user ident
     authorProfile <- jsonOne err404 "SELECT jsonb_build_object('authorProfileId',c.author_profile_id,'title',c.title) FROM classified_application a JOIN classified c ON c.id=a.classified_id WHERE a.id=?" [toPersistValue ident]

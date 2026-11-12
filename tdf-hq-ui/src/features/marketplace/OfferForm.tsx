@@ -16,7 +16,7 @@ interface OfferFormProps {
 }
 
 /**
- * Submit an offer on a classified (ADR 0132): acting profile, message, amount
+ * Submit an offer on a classified (ADR 0134): acting profile, message, amount
  * and currency, optional availability and terms. Fixed-price classifieds
  * lock the amount to the reference price; suggested prices prefill it.
  */

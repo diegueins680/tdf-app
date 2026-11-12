@@ -20,7 +20,7 @@ pequeños detrás de un feature flag, con migración + rollback + entrada en
 ## Fase 0 — Auditoría y decisión (hecha)
 
 Entregables: `00-auditoria.md`, este plan, `02-especificacion-funcional.md`,
-`03-diseno-de-datos.md`, `04-mockups/`, ADR 0132. Criterio de aceptación: el equipo puede estimar
+`03-diseno-de-datos.md`, `04-mockups/`, ADR 0134. Criterio de aceptación: el equipo puede estimar
 y empezar la Fase 1 sin preguntas abiertas de alcance.
 
 ## Fase 1 — Demanda y ofertas negociables (sin pago)
@@ -78,7 +78,7 @@ Alcance:
   (ventanas y porcentajes) en el registro de features.
 - UI: pantalla de acuerdo (resumen, términos, depósito/saldo, estado), checkout enlazado,
   seguimiento `/acuerdos/:id`, panel de operaciones para liquidaciones.
-- Formal: ADR 0133 (acuerdo y comisión), invariantes contables (depósito + saldo = total;
+- Formal: ADR 0135 (acuerdo y comisión), invariantes contables (depósito + saldo = total;
   comisión ≤ total; estados de pago nunca implican servicio prestado).
 
 Criterios: depósito cobrado en sandbox Stripe; comisión registrada en ledger; reembolso parcial

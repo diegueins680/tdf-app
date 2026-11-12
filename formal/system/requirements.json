@@ -10082,8 +10082,8 @@
       "title": "Negotiable offers with slot accounting on seeking and offering classifieds",
       "domain": "MKT",
       "statement": "Every classified category declares an intent (seeking or offering) that search exposes and filters by. A classified declares slots (1-100), a price mode (open, suggested, fixed), an optional offer deadline and structured terms. An application is an offer carrying an amount, currency, terms and expiry; counter-offers alternate strictly between the classified author and the offerer through recorded rounds (at most ten; fixed prices admit none), only the participant who did not make the last move may accept, acceptance consumes exactly one slot atomically and freezes the accepted amount, exhausting the slots fills the classified and rejects every open offer with reason slots_filled, closing a classified rejects open offers with reason classified_closed, withdrawing an accepted offer releases its slot, and the public sees only an anonymous offer count and range.",
-      "authority": "Product owner instruction of 2026-11-08 to converge Comunidad y anuncios into a demand/offer marketplace with inDrive-style negotiation; ADR 0132",
-      "source": "docs/marketplace/02-especificacion-funcional.md; docs/marketplace/03-diseno-de-datos.md; docs/adr/0132-marketplace-demand-offers.md",
+      "authority": "Product owner instruction of 2026-11-08 to converge Comunidad y anuncios into a demand/offer marketplace with inDrive-style negotiation; ADR 0134",
+      "source": "docs/marketplace/02-especificacion-funcional.md; docs/marketplace/03-diseno-de-datos.md; docs/adr/0134-marketplace-demand-offers.md",
       "contract": "docs/marketplace/03-diseno-de-datos.md",
       "actors": [
         "Classified author (profile manager with publish capability)",
@@ -26735,8 +26735,8 @@
       "title": "Desktop shell hosts only the authorized TDF origin with validated entry points",
       "statement": "The Electron shell hosts the channel appOrigin in a sandboxed, context-isolated renderer without Node; exposes a frozen window.tdfDesktop bridge only on that origin and re-validates every IPC sender; classifies navigations and popups so only the hosted origin and bundled internal pages open inside the shell while http(s) destinations go to the system browser and other schemes are blocked; parses tdf-desktop://open deep links into safe in-app paths or rejects them before navigating; limits permissions to media, notifications, fullscreen, clipboard and speaker selection; labels unpackaged and unsigned builds; and offers no Google sign-in inside the shell.",
       "domain": "SYS",
-      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
-      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0134 proposed",
+      "source": "docs/adr/0134-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
       "property": "Every navigation, popup, deep link and IPC message is classified against appOrigin before any effect; rejected inputs are logged and inert.",
       "contract": "formal/system/desktop-shell.md",
       "actors": [
@@ -26825,8 +26825,8 @@
       "title": "Release player and radio share one system playback session",
       "statement": "The web application keeps one ordered playback-owner registry: the owner that most recently started or selected audio installs its metadata and action handlers on the Media Session and reports to the desktop shell; passive updates never change the active owner; releasing the active owner restores the previous one; shell commands route to the active owner; the shell menu mirrors the last sanitized report.",
       "domain": "SYS",
-      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
-      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0134 proposed",
+      "source": "docs/adr/0134-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
       "property": "At any time at most one owner controls navigator.mediaSession and the shell menu, and it is the most recently activated owner still registered.",
       "contract": "formal/system/desktop-shell.md",
       "actors": [
@@ -26906,8 +26906,8 @@
       "title": "Desktop installers, shell update channel and recovery are reproducible and fail closed",
       "statement": "electron-builder produces DMG/ZIP (macOS x64, arm64) and NSIS (Windows x64, arm64) from one source commit with the validated channel embedded; signing and notarization run only when credentials exist, otherwise signing is explicitly disabled and artifacts carry UNSIGNED-TEST; electron-updater uses a generic feed, downloads only on user decision, verifies before installing and leaves the installed version on failure; unsigned or unpackaged builds disable updates; the workflow publishes to the feed only from a matching desktop-v<version> tag with signed artifacts and runs an installed smoke on both platforms.",
       "domain": "SYS",
-      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0132 proposed",
-      "source": "docs/adr/0132-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
+      "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0134 proposed",
+      "source": "docs/adr/0134-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
       "property": "No unsigned or unverified package is ever installed or published; a failed update leaves the installed version runnable.",
       "contract": "formal/system/desktop-shell.md",
       "actors": [

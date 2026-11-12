@@ -11,7 +11,7 @@ const SORTS: OfferSort[] = ['recent', 'price_asc', 'price_desc', 'reputation'];
 
 /**
  * The author's comparison board for one classified: every offer received,
- * sortable by price, reputation or recency (ADR 0132, inDrive-style choice).
+ * sortable by price, reputation or recency (ADR 0134, inDrive-style choice).
  * Sorting happens client-side on the already-fetched list so switching is
  * instant; the server accepts the same `sort` for larger lists.
  */

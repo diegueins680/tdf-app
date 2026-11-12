@@ -225,7 +225,7 @@ export default function DirectorySearchPage() {
     q: query || undefined,
     profileKind: entityType === 'profile' || entityType === 'artist' ? urlState.profileKind : undefined,
     entityType: entityType === 'all' ? undefined : entityType,
-    // ADR 0132: the intent filter only applies to classifieds.
+    // ADR 0134: the intent filter only applies to classifieds.
     intent: entityType === 'classified' || entityType === 'all' ? urlState.intent : undefined,
     cityId: coordinates ? undefined : cityId || undefined,
     professionId: professionId || undefined,

@@ -53,7 +53,7 @@ spec = describe "music directory formal invariants" $ do
     allowedInvitationTransition InvitationPending InvitationConversationOpen `shouldBe` False
     allowedInvitationTransition InvitationDeclined InvitationAccepted `shouldBe` False
 
-  -- ADR 0132: negotiable offers.
+  -- ADR 0134: negotiable offers.
   it "I18: counter states alternate and are reached only from open states" $ do
     allowedApplicationTransition ApplicationSubmitted ApplicationCounteredByAuthor `shouldBe` True
     allowedApplicationTransition ApplicationCounteredByAuthor ApplicationCounteredByApplicant `shouldBe` True

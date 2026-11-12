@@ -16,7 +16,7 @@ function render(template, params) {
   assert.equal(chunks.length, params.length + 1);
   return chunks[0] + params.map((value, i) => quote(value) + chunks[i + 1]).join('');
 }
-// ADR 0132 adds the intent input after profile_kind; the immutable reference SQL
+// ADR 0134 adds the intent input after profile_kind; the immutable reference SQL
 // predates it, so the reference is rendered without that parameter and the
 // per-row intent projection is ignored when comparing result rows.
 const INTENT_INDEX = 15;

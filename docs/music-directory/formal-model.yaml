@@ -31,7 +31,7 @@ state_machines:
       rejected: [draft, withdrawn]
       moderated: [draft, withdrawn]
   application:
-    # ADR 0132: an application is a negotiable offer. Counter states alternate
+    # ADR 0134: an application is a negotiable offer. Counter states alternate
     # actors and are entered only through the counter endpoint, which records
     # a round; expired is a system closure (offer_expires_at elapsed).
     initial: submitted
@@ -138,7 +138,7 @@ invariants:
     enforcement: locked idempotent merge transaction, canonical resolution view and reconciliation-count integration test
   I18_alternating_negotiation:
     statement: Counter-offers alternate strictly between the author and the offerer, never exceed ten rounds, and an acceptance closes the chain; counter states are unreachable through the generic status endpoint.
-    enforcement: TDF.Directory.Policy (counterAllowedFor, acceptAllowedFor, participantTransitionAllowed, negotiationRoundsValid), classified_offer_round unique (application_id, round_number) and property tests (ADR 0132)
+    enforcement: TDF.Directory.Policy (counterAllowedFor, acceptAllowedFor, participantTransitionAllowed, negotiationRoundsValid), classified_offer_round unique (application_id, round_number) and property tests (ADR 0134)
   I19_slot_accounting:
     statement: Accepting an offer consumes exactly one slot in the same transaction; slots_remaining is never negative nor above slots; when it reaches zero the classified is filled and every open offer is rejected with reason slots_filled; withdrawing an accepted offer releases one slot.
     enforcement: CHECK (slots_remaining BETWEEN 0 AND slots), guarded decrement, handler transaction and property tests

@@ -26,7 +26,7 @@ const migrations=await Promise.all(prefix.map(async entry=>{
  return {...entry,content,checksum:createHash('sha256').update(content).digest('hex')};
 }));
 // The prefix ends before 2026-11-01_social_sync_account_delivery_designation (AUTHORITY-094)
-// and before 2026-11-08_marketplace_offers (ADR 0132).
+// and before 2026-11-08_marketplace_offers (ADR 0134).
 process.stdout.write(buildMigrationBatchSql(migrations,{sourceCommit:'0'.repeat(40),socialDesignationIncluded:false,marketplaceOffersIncluded:false})+'\n');
 JS
 tdf_test_psql -f "$batch" >/dev/null

@@ -25,7 +25,7 @@ const REGISTRY_REFRESH_ENTRY = '2026-09-18_identity_review_dependencies';
 const SESSION_EXPIRY_ENTRY = '2026-10-31_api_token_session_expiry';
 const APPLE_POLICY_ENTRY = '2026-10-13_apple_sign_in_policy';
 const APPLE_ISSUER_ENTRY = '2026-11-07_apple_provider_identity_issuer';
-// 2026-11-08 marketplace offers (ADR 0132) append after the Apple issuer entry.
+// 2026-11-08 marketplace offers (ADR 0134) append after the Apple issuer entry.
 const MARKETPLACE_OFFERS_ENTRY = '2026-11-08_marketplace_offers';
 const historicalReview = (entry, count) => {
   while (entry && entry.evidence?.valueCount !== count) entry = entry.previousDecision;
@@ -787,7 +787,7 @@ test('video campaign migration appends to the exact protected 244-entry manifest
   assert.deepEqual(videoReview, priorReview);
   assert.equal(await fs.readFile(path.join(workspaceRoot, current[245].path), 'utf8'), (await execFileAsync('git', ['show', forward + ':' + current[245].path], { cwd: workspaceRoot })).stdout);
   await execFileAsync('git', ['merge-base', '--is-ancestor', forward, 'HEAD'], { cwd: workspaceRoot });
-  // ADR 0132: marketplace offers were reviewed on top of the exact 246-entry
+  // ADR 0134: marketplace offers were reviewed on top of the exact 246-entry
   // identity manifest (8ee6c7a) and now append after the two Apple entries that
   // protected main integrated; the manifest without those entries is still that
   // reviewed 247-entry manifest byte for byte.
@@ -812,7 +812,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   const fromGit = async file => (await execFileAsync('git', ['show', `${main}:${file}`],
     { cwd: workspaceRoot, maxBuffer: 16 * 1024 * 1024 })).stdout;
   const oldManifest = JSON.parse(await fromGit('scripts/production-migrations.json')).migrations;
-  // The marketplace offers entry (ADR 0132) appends after the Apple entries;
+  // The marketplace offers entry (ADR 0134) appends after the Apple entries;
   // the Apple review is verified over the manifest without it.
   const currentManifest = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'scripts/production-migrations.json'), 'utf8')).migrations.filter(entry => entry.id !== MARKETPLACE_OFFERS_ENTRY);
@@ -865,7 +865,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.ok(review, 'the desktop shell reviews need their exact branch review');
     assert.deepEqual(active.find(row => row.id === review.id), review);
   }
-  // The marketplace offers branch (ADR 0132, #719) adds seventeen value lists
+  // The marketplace offers branch (ADR 0134, #719) adds seventeen value lists
   // reviewed by the deterministic policy, extends the search page view-mode
   // attribute list (successor of main's exact review 7393e5dd10ebe68ae3e2) and
   // records a successor review of the 249-entry manifest whose exact

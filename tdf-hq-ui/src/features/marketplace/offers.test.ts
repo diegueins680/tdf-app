@@ -20,7 +20,7 @@ const offer = (overrides: Partial<ClassifiedApplication>): ClassifiedApplication
   submittedAt: '2026-11-01T00:00:00Z', version: 1, ...overrides,
 });
 
-describe('marketplace offer helpers (ADR 0132)', () => {
+describe('marketplace offer helpers (ADR 0134)', () => {
   it('mirrors the backend turn rules for accepting and countering', () => {
     expect(canAccept('submitted', 'author')).toBe(true);
     expect(canAccept('submitted', 'applicant')).toBe(false);

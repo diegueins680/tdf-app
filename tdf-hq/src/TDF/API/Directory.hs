@@ -159,7 +159,7 @@ data ClassifiedCreateRequest = ClassifiedCreateRequest
   , serviceOfferingId :: Maybe UUID
   , serviceAdId :: Maybe Int64
   , expiresAt :: Maybe UTCTime
-    -- ADR 0132 marketplace fields (all optional for compatibility)
+    -- ADR 0134 marketplace fields (all optional for compatibility)
   , slots :: Maybe Int
   , priceMode :: Maybe Text
   , offerDeadlineAt :: Maybe UTCTime
@@ -169,7 +169,7 @@ instance FromJSON ClassifiedCreateRequest
 instance ToJSON ClassifiedCreateRequest
 
 -- | An offer on a classified. @amountMinor@ supersedes @proposedAmountMinor@;
--- both are accepted while clients migrate (ADR 0132).
+-- both are accepted while clients migrate (ADR 0134).
 data ApplicationCreateRequest = ApplicationCreateRequest
   { applicantProfileId :: UUID
   , message :: Text
@@ -184,7 +184,7 @@ data ApplicationCreateRequest = ApplicationCreateRequest
 instance FromJSON ApplicationCreateRequest
 instance ToJSON ApplicationCreateRequest
 
--- | A counter-offer round from either participant (ADR 0132).
+-- | A counter-offer round from either participant (ADR 0134).
 data OfferCounterRequest = OfferCounterRequest
   { amountMinor :: Int64
   , currencyId :: UUID

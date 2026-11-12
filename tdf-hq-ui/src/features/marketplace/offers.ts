@@ -1,6 +1,6 @@
 import type { ClassifiedApplication, DirectoryTaxonomyItem, PriceMode } from '../../api/directory';
 
-// ADR 0132: pure helpers for the demand/offer marketplace UI. Kept free of
+// ADR 0134: pure helpers for the demand/offer marketplace UI. Kept free of
 // React so they can be unit tested and shared with the mobile client later.
 
 export const OPEN_OFFER_STATUSES = new Set<ClassifiedApplication['status']>([
