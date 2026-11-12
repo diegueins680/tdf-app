@@ -92,6 +92,24 @@
       "principle": "Accesibilidad y continuidad de tarea",
       "finding": "La barra de radio podía interceptar el clic real en Limpiar, situado al final del cajón modal de filtros.",
       "change": "Los cajones temporales de operaciones se colocan en la capa modal, por encima de la radio. Los14 casos de navegador incluyen el clic sin forzar, Escape, reapertura y comprobación del filtro activo con Actualizar."
+    },
+    {
+      "id": "COG-20261112-14",
+      "principle": "Reconocimiento y lenguaje cotidiano",
+      "finding": "La revisión de mercancía exponía refund, staff_review, partially_refunded y none; la preparación de solicitudes usaba el término técnico canónico.",
+      "change": "Se traducen los estados y tipos existentes del servidor al español/inglés y se simplifica el texto de solicitudes. Solicitud, aprobación, pago y reembolso parcial/completo conservan significados distintos. No cambian las transiciones, permisos, advertencias financieras ni códigos del CSV."
+    },
+    {
+      "id": "COG-20261112-15",
+      "principle": "Menos datos repetidos y control de la persona",
+      "finding": "El registro público de Live Sessions pedía volver a escribir el correo pese a que la validación de su propio código ya identificaba la cuenta.",
+      "change": "Se ofrece el username con forma de correo devuelto por esa validación. El borrador del propietario, incluso un correo intencionalmente vacío, y las ediciones tienen prioridad. No se toma la sesión ambiental del equipo ni se infiere que el contacto sea un músico; el consentimiento sigue sin marcar."
+    },
+    {
+      "id": "COG-20261112-16",
+      "principle": "Continuidad de tarea y prevención de pérdida de datos",
+      "finding": "La prueba real de navegador mostró que salir del campo de código ya verificado iniciaba otra validación, deshabilitaba el formulario y podía descartar la siguiente edición del correo.",
+      "change": "El blur conserva la validación vigente del mismo código y permite editar sin interrupción. Un código modificado continúa requiriendo validación exitosa; se mantienen el control de generación, aislamiento de propietario y rechazo de respuestas antiguas."
     }
   ],
   "measurements": [
@@ -251,7 +269,7 @@
       "id": 22,
       "item": "Reserva y datos repetidos",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Reserva pasa de 3 pasos a 2, con resumen, cotización, depósito y consentimiento en Horario. Prefill previo en mezcla, marketplace y pruebas. Contacto plegado y live sessions pendientes. Los horarios sugeridos opcionales quedan plegados."
+      "nextOrEvidence": "Reserva pasa de 3 pasos a 2, con resumen, cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y ahora correo de Live Sessions tras validar su código, con prioridad del borrador y edición. Contacto plegado y otras repeticiones aún pendientes. Horarios sugeridos opcionales plegados."
     },
     {
       "id": 23,
@@ -269,7 +287,7 @@
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Servicios, eventos, comercio y música aceptan moneda con conversiones exactas según sus contratos; filtros monetarios de operaciones corregidos. Quedan etiquetas de estados internos, otros componentes monetarios no revalidados y evaluación con personas."
+      "nextOrEvidence": "Servicios, eventos, comercio y música aceptan moneda con conversiones exactas según sus contratos; filtros monetarios de operaciones corregidos. Estados y tipos de incidencias de mercancía traducidos, manteniendo distinciones financieras y advertencias. Otros componentes monetarios y etiquetas no revalidados; evaluación con personas pendiente."
     },
     {
       "id": 26,
@@ -351,8 +369,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 4,
-      "testsPassed": 72
+      "suitesPassed": 5,
+      "testsPassed": 56,
+      "sourceCommit": "c0ca83d555a327249651f39ab684834b26199dec"
     },
     "browser": {
       "passed": 22,
@@ -366,21 +385,78 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "7d3bbe8f72d2d16263972ec6ad6afe82ed3f259f",
-      "inventoryFreshness": "passed",
-      "traceabilityFreshness": "passed",
-      "mappedChangedMaterialSurfaces": 62,
+      "sourceCommit": "c0ca83d555a327249651f39ab684834b26199dec",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "semanticConformance": "not established by inventory or mapping checks"
+      "mappedChangedMaterialSurfaces": 99,
+      "inventory": "passed",
+      "traceability": "passed",
+      "semanticConformance": "not established by these checks"
     },
     "catalog": {
-      "candidates": 1423,
+      "candidates": 1428,
       "unreviewed": 0,
       "stale": 0,
       "preservationTestsPassed": 11
     },
     "typecheck": "passed",
-    "lint": "passed"
+    "lint": "passed",
+    "latestBrowserMatrix": {
+      "distinctCases": 62,
+      "configurations": [
+        "Chromium desktop",
+        "Chromium phone",
+        "Chromium tablet",
+        "Android Chrome small",
+        "WebKit iPhone",
+        "Firefox critical",
+        "WebKit critical"
+      ],
+      "caseGroups": {
+        "commerceMoney": 21,
+        "musicAndOperations": 14,
+        "campaigns": 20,
+        "liveSessionContact": 7
+      },
+      "runs": [
+        {
+          "scope": "Complete selected matrix on final product source",
+          "passed": 61,
+          "failed": 1,
+          "failure": "New contact screenshot sampled a desktop scroll/focus frame before pointer hit testing settled; contact data assertions passed."
+        },
+        {
+          "scope": "All seven contact cases after synchronizing full viewport/pointer assertions",
+          "passed": 7,
+          "failed": 0
+        }
+      ],
+      "finalDistinctCoverage": "55 other selected cases plus7 final contact cases; not a claim that one62-case run passed simultaneously.",
+      "checks": [
+        "Código inválido no habilita ni prellena; sesión ambiental del equipo no se reutiliza",
+        "Edición conservada en recarga tras revalidar el propietario, correo borrado y cambio de cuenta",
+        "Consentimiento sin marcar, identidad de músicos vacía, cero escrituras de intake/CRM",
+        "Etiquetas de revisión y reembolso parcial junto a advertencias financieras",
+        "Regresiones musicales, filtros, importación y revisión manual de campañas con APIs sintéticas",
+        "WCAG A/AA de campos, asociación accesible, visibilidad completa, hit testing sin forzar y ausencia de desbordamiento horizontal"
+      ]
+    },
+    "latestCompletedHostedCheckpoint": {
+      "commit": "cfbd8d66447585ef4b178c1ea76004b188cdad46",
+      "ciRun": 43317143712,
+      "ciConclusion": "failure",
+      "webJest": {
+        "suites": 377,
+        "tests": 4297,
+        "result": "passed"
+      },
+      "mainBrowser": {
+        "passed": 902,
+        "skipped": 22,
+        "failed": 2
+      },
+      "specialistWorkflows": "all four passed",
+      "failureScope": "Music price screenshot after reload in WebKit iPhone (scroll restoration race); long campaign draft/import/save journey exhausted its30s overall budget before the final unforced click. Scoped test synchronization and60s journey budget fixed; assertion budgets and hit tests retained. New local browser evidence does not establish a hosted result for the new head."
+    }
   },
   "limitations": [
     "No hay exportación de embudos ni pruebas de comprensión con personas; prioridades heurísticas.",
@@ -426,6 +502,10 @@
     {
       "path": "figures/operations-zero-filter.png",
       "scope": "Vista de operaciones sintética que conserva el filtro cero, con controles accesibles sobre la radio."
+    },
+    {
+      "path": "figures/live-session-contact.png",
+      "scope": "Correo editado en Live Sessions después de validar su propietario y conservar su borrador; datos y APIs sintéticos."
     }
   ],
   "followups": [
@@ -686,6 +766,94 @@
         "sourceCommit": "d59ba585682b18886a53a85ce774519931c8dbf7",
         "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
         "mappedChangedMaterialSurfaces": 93,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      }
+    },
+    {
+      "date": "2026-11-12",
+      "baseCommit": "cfbd8d66447585ef4b178c1ea76004b188cdad46",
+      "scope": "Items22/25: vocabulario de mercancía, correo editable de Live Sessions tras validar el código y corrección de la validación repetida al salir del campo. Se conservan contratos/API, autoridad financiera, CRM, consentimiento, Mobile y decisiones del responsable.",
+      "regressionVerification": {
+        "suites": 5,
+        "tests": 56,
+        "checks": [
+          "Prefill solo del correo de la cuenta verificada; handles y tipos de respuesta inválidos no se ofrecen como correo",
+          "Prioridad de borradores propios, correo intencionalmente vacío, edición y cambio de propietario",
+          "Un código ya válido conserva el formulario habilitado al perder foco; códigos modificados y respuestas antiguas conservan sus controles",
+          "Estados financieros distintos, etiquetas en español/inglés, solicitudes y revisión independientes; CSV conserva códigos"
+        ]
+      },
+      "browserVerification": {
+        "distinctCases": 62,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "commerceMoney": 21,
+          "musicAndOperations": 14,
+          "campaigns": 20,
+          "liveSessionContact": 7
+        },
+        "runs": [
+          {
+            "scope": "Complete selected matrix on final product source",
+            "passed": 61,
+            "failed": 1,
+            "failure": "New contact screenshot sampled a desktop scroll/focus frame before pointer hit testing settled; contact data assertions passed."
+          },
+          {
+            "scope": "All seven contact cases after synchronizing full viewport/pointer assertions",
+            "passed": 7,
+            "failed": 0
+          }
+        ],
+        "finalDistinctCoverage": "55 other selected cases plus7 final contact cases; not a claim that one62-case run passed simultaneously.",
+        "checks": [
+          "Código inválido no habilita ni prellena; sesión ambiental del equipo no se reutiliza",
+          "Edición conservada en recarga tras revalidar el propietario, correo borrado y cambio de cuenta",
+          "Consentimiento sin marcar, identidad de músicos vacía, cero escrituras de intake/CRM",
+          "Etiquetas de revisión y reembolso parcial junto a advertencias financieras",
+          "Regresiones musicales, filtros, importación y revisión manual de campañas con APIs sintéticas",
+          "WCAG A/AA de campos, asociación accesible, visibilidad completa, hit testing sin forzar y ausencia de desbordamiento horizontal"
+        ]
+      },
+      "catalogCandidates": 1428,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "Three individual display-label reviews added; all1425 previous decisions are identical JSON structures to cfbd8d664. Backend states remain authoritative.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "cfbd8d66447585ef4b178c1ea76004b188cdad46",
+        "ciRun": 43317143712,
+        "ciConclusion": "failure",
+        "webJest": {
+          "suites": 377,
+          "tests": 4297,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 902,
+          "skipped": 22,
+          "failed": 2
+        },
+        "specialistWorkflows": "all four passed",
+        "failureScope": "Music price screenshot after reload in WebKit iPhone (scroll restoration race); long campaign draft/import/save journey exhausted its30s overall budget before the final unforced click. Scoped test synchronization and60s journey budget fixed; assertion budgets and hit tests retained. New local browser evidence does not establish a hosted result for the new head."
+      },
+      "hostedCI": "New published head requires its own hosted verification.",
+      "sourceFreshness": {
+        "sourceCommit": "c0ca83d555a327249651f39ab684834b26199dec",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 99,
         "inventory": "passed",
         "traceability": "passed",
         "semanticConformance": "not established by these checks"
