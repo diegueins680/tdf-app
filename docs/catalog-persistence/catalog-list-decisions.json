@@ -37863,6 +37863,25 @@
         "name": "service",
         "sourceKind": "test"
       }
+    },
+    {
+      "id": "7eedc6e7af967d6f5e56",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "If the synthetic event transport fixture drifts from the organizer read shape, the amount tests could exercise the wrong visibility or currency.",
+      "justification": "Individually reviewed: six SocialEventDTO field names in the money-input test describe one synthetic organizer-owned event. They are transport structure, not a selectable catalog of events, currencies or roles. Component tests exercise the actual mutation handlers and verify exact minor amounts, blank/zero distinctions and rejection of invalid or unsafe input before API calls.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "cognitive-load-event-money-20261112",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx",
+        "name": "event",
+        "kind": "object-registry",
+        "sourceKind": "test",
+        "valueCount": 6
+      }
     }
   ]
 }

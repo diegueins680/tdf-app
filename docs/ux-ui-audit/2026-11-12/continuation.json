@@ -62,6 +62,12 @@
       "principle": "Memoria de trabajo y prevención de errores monetarios",
       "finding": "El catálogo de servicios pedía precios en centavos; un valor no entero podía convertirse silenciosamente en precio ausente.",
       "change": "Entrada en la moneda seleccionada (25,50), conversión exacta a2550 centavos, preservación de cero y bloqueo de importes inválidos o fuera de precisión."
+    },
+    {
+      "id": "COG-20261112-09",
+      "principle": "Prevención de errores monetarios y carga de memoria de trabajo",
+      "finding": "Precios de entradas, presupuestos, contratos y asientos de eventos pedían centavos en lugar de importes en moneda.",
+      "change": "Entrada decimal con punto o coma, moneda visible y conversión exacta a centavos en las mismas API. Entradas gratis y presupuestos en cero se conservan; contratos y asientos exigen un monto positivo. Los importes inválidos muestran errores junto al campo y no llegan a las API."
     }
   ],
   "measurements": [
@@ -238,8 +244,8 @@
     {
       "id": 25,
       "item": "Herramientas del equipo",
-      "status": "Parcial",
-      "nextOrEvidence": "Confirmaciones y estados previos; precio de servicios en moneda seleccionada con conversión exacta a centavos. Restan importes de marketplace/eventos y cobertura completa."
+      "status": "Parcial; ampliado en esta continuación",
+      "nextOrEvidence": "Precios del catálogo de servicios y montos de entradas, presupuestos, contratos y asientos de eventos en moneda, con conversión exacta y errores por campo. Quedan deducciones, reembolsos y precios de mercancía, además de estados internos pendientes de revisar."
     },
     {
       "id": 26,
@@ -372,6 +378,10 @@
     {
       "path": "figures/transfer-field-errors.png",
       "context": "Archivo sintético rechazado, referencia conservada; cero envíos de evidencia."
+    },
+    {
+      "path": "figures/event-budget-currency.png",
+      "scope": "Evento sintético, presupuesto en EUR, Chromium teléfono. No demuestra datos ni operaciones reales."
     }
   ],
   "followups": [
@@ -412,7 +422,7 @@
         "traceability": "passed",
         "semanticConformance": "not established by these checks"
       },
-      "hostedCI": "Completion is not established. Consult the PR checks for dispatched workflows on the published head.",
+      "hostedCI": "Completado en el commit publicado eee445b995e61f304d25304363719cf7bad89117: UI, backend, móvil estático, migraciones, contratos y cuatro flujos especializados pasaron. El recorrido de navegador tuvo 848 casos aprobados, 22 omitidos y 14 fallidos, todos en el test de reserva que aún esperaba el rótulo/flujo anterior. Corregido y reverificado por separado en el siguiente pase; no se atribuye éxito al flujo original.",
       "latestWalletVerification": {
         "suites": 1,
         "tests": 17
@@ -421,7 +431,84 @@
       "catalogUnreviewed": 0,
       "catalogStale": 0,
       "typecheck": "passed",
-      "lint": "passed"
+      "lint": "passed",
+      "hostedVerification": {
+        "head": "eee445b995e61f304d25304363719cf7bad89117",
+        "ciRun": 43273405466,
+        "ciConclusion": "failure",
+        "uiSuitesPassed": 373,
+        "uiTestsPassed": 4211,
+        "browserPassed": 848,
+        "browserSkipped": 22,
+        "browserFailed": 14,
+        "specialistRunsPassed": [
+          43273405736,
+          43273406043,
+          43273405731,
+          43273405513
+        ]
+      }
+    },
+    {
+      "date": "2026-11-12",
+      "baseCommit": "eee445b995e61f304d25304363719cf7bad89117",
+      "scope": "Item25: montos del espacio de eventos; actualización del test de recuperación de reservas para el flujo de dos pasos y su revelación progresiva. Sin cambios de backend, Mobile o decisiones de retiro.",
+      "regressionVerification": {
+        "suites": 8,
+        "tests": 58,
+        "scope": "API de montos exactos, cero/vacío, límite entero seguro, negativos, centavos fraccionarios, errores por campo, exportación y filtros existentes."
+      },
+      "bookingBrowserVerification": {
+        "cases": 21,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "checks": [
+          "Abrir sugerencias por teclado",
+          "Recuperación de catálogo sin perder contacto",
+          "Foco y tooltip al cambiar viewport",
+          "Control negativo de desbordamiento",
+          "Cero reservas reales"
+        ]
+      },
+      "staffBrowserVerification": {
+        "cases": 7,
+        "engines": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Firefox",
+          "WebKit"
+        ],
+        "checks": [
+          "Teclado decimal y punto/coma",
+          "Errores asociados por ARIA y corrección conservando importes",
+          "WCAG A/AA de los cuatro campos",
+          "Sin desbordamiento horizontal",
+          "Cero mutaciones financieras; llamadas de ciclo de sesión simuladas"
+        ],
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ]
+      },
+      "catalogCandidates": 1425,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "typecheck": "passed",
+      "lint": "passed",
+      "hostedCI": "El pase actual requiere verificación hospedada en su propia cabeza; los resultados anteriores no se transfieren."
     }
   ]
 }
