@@ -7022,7 +7022,8 @@
         "scripts/test-stripe-integration.sh",
         "scripts/upsert-course.mjs",
         "tdf-hq/scripts/create_artists_from_list.sh",
-        "tdf-hq/src/TDF/Config.hs"
+        "tdf-hq/src/TDF/Config.hs",
+        "scripts/check-messaging-token.mjs"
       ],
       "tests": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -19875,12 +19876,14 @@
       "implementation": [
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/src/TDF/ServerInternships.hs",
-        "tdf-hq/src/TDF/API/InternAudit.hs"
+        "tdf-hq/src/TDF/API/InternAudit.hs",
+        "scripts/lib/studio-audit-safety.mjs"
       ],
       "tests": [
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "e2e/web/studio-internship-audit.spec.mjs",
-        "scripts/test-studio-internship-audit-migration.sh"
+        "scripts/test-studio-internship-audit-migration.sh",
+        "scripts/__tests__/studio-internship-audit.test.mjs"
       ],
       "formalModels": [],
       "verification": "scripts/test-studio-internship-audit-api-e2e.mjs drives the real API: plan creation races, cancel/activate races, activation refusals, completion with exception justification and immutability, intern 404/403 boundaries, audit-controlled task and project 409s, concurrent executions and terminal immutability, summary authorization and post-completion refusals.",
@@ -27569,7 +27572,7 @@
     ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
     ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
-    ".github/workflows/ci.yml": "7f2f2181f1f14f59916ea98da4c6182cdf6f85707e7bae855be49cd7083c6fc6",
+    ".github/workflows/ci.yml": "3b8676cc2a2e32d514be643384f4f88d16fb5b20adc4231ed2e4d5c3c6c755ec",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
     ".github/workflows/event-operations-formal.yml": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
@@ -28007,7 +28010,7 @@
     "scripts/__tests__/alloy-controls.test.mjs": "1f1b6904444f5c7e47a71c00f37d332da956b885d2746b2a1dcc2b342742c873",
     "scripts/__tests__/app-smart-link.test.mjs": "b1f83731ad036425b8c0b66d159bc075a843d069c81d19f052453978536012fb",
     "scripts/__tests__/architecture-boundaries.test.mjs": "536a8b583458acc1dcf511caf2ca9ea307eaea3d58ef39a5235f7cd61ab62cb6",
-    "scripts/__tests__/artist-enrichment.test.mjs": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
+    "scripts/__tests__/artist-enrichment.test.mjs": "045b26e1fbb6697cf16314850fd71df4896aa647f5b90036ddc8f908929c303f",
     "scripts/__tests__/artist-image-download.test.mjs": "fe0af2d7a4754bfaeadeec4000974c2d3ebaa8642d2197ae5471989f679352de",
     "scripts/__tests__/artist-import-idempotency.test.mjs": "88f35f30ba9f3ca09699ce098a3f38c1b6489988e9f564b40aaa3f5f242b59cd",
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
@@ -28051,7 +28054,7 @@
     "scripts/__tests__/hetzner-preparation.test.mjs": "f5c996dbf9fd298e088531bfbde258202d7b54f30832427b2868f1718d82ad36",
     "scripts/__tests__/hetzner-restore.test.mjs": "d13b746d0d264c4e710a16cd81ff2f7532876d4520e9ff1ed85d8daf623b5a25",
     "scripts/__tests__/identity-http-runtime.mjs": "67e453896cfdc6a2fc2a3c7a9e6299bee61dc5a1e7ead3c3720ce729431f2354",
-    "scripts/__tests__/instagram-token-workflows.test.mjs": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
+    "scripts/__tests__/instagram-token-workflows.test.mjs": "60c2b30195a7b5a1d89b8d26ced251a0152afecdb41806d7eff35aaa629c0b9b",
     "scripts/__tests__/ledger-event-identity.mjs": "65e6578d15bba078f5e48d36a9a8ad2c240d1f34d89b7f015f43a9f9ca23a526",
     "scripts/__tests__/ledger-posting-namespace.py": "e2cf1845e5c4d31de06a9f4065969365ff2098bb31e93a1943bb2d7dbb89e490",
     "scripts/__tests__/ledger-posting-snapshot.py": "a69dc1a988132d62c614fe09b4da4207da0ab00134d1e68d0fcdf3adf79f4af3",
@@ -28085,6 +28088,7 @@
     "scripts/__tests__/provider-rollback.test.mjs": "f1dc29ea2b20a71b88a3ae50552c130a0802c6d8ae00e90075af2bd4d2291910",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
+    "scripts/__tests__/studio-internship-audit.test.mjs": "17d13b1f02ee443aa724c4378e184f588782fe704c7e330901291a8a2adf1311",
     "scripts/__tests__/test-child-completion.test.mjs": "5b6b04119090e05d9931a04993e0b8b4d2779b30513145da54485fd35f6c9a4e",
     "scripts/__tests__/test-process-session.test.mjs": "a3c6c8ab9be3f4083f0ff33cdc4c66bf0ff2cc13717bdbdea7a447a499a35bda",
     "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs": "dac0014a94862b79c1ecf385194e60747ec31ce2300c00d6d0cf6a0df88c25cc",
@@ -28096,7 +28100,7 @@
     "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
     "scripts/__tests__/video-campaign-access.test.mjs": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
     "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
-    "scripts/artist-enrichment.mjs": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
+    "scripts/artist-enrichment.mjs": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
     "scripts/artist-image-download.mjs": "012978206590de16a22c53b98ed29e5245a586dd2928ad26be34981005e3c20c",
     "scripts/audit-feature-registry.mjs": "752879239ca79cdb0a8dc8a68de6468f079d9e0d141b297d0baea74dcc772b3b",
     "scripts/audit-formal-methods.mjs": "3a34763b5815dbd9fa02dc53e50ce019d5ac64646aeaeee2c515e435d9db85d1",
@@ -28110,6 +28114,7 @@
     "scripts/check-build-trust.mjs": "1f1486dd10e0edb906926a3ff419b765fdca8c263d3fa8065e5353d50992e61e",
     "scripts/check-dependency-security.mjs": "4326c36055405ed802ea31a31fbb54c9843f02fbe3656a7ea43e3a3d60ec3475",
     "scripts/check-generated-api.mjs": "7725e45fa91bbe2014005bef70385d318a0f2e91dac8b45b6d33d47d9f90c6e1",
+    "scripts/check-messaging-token.mjs": "feb51d713046b1c1e65df434d1c73c4820bc3a71c90ca4bbfc83bb203e0fafc8",
     "scripts/check-mobile-distribution.mjs": "69bcc44343de5106f36d3dd53d7e89a0686db8be324be2a159bcc1e4419e5171",
     "scripts/check-mobile-gitlink-ancestry.sh": "869c14c28762f93d572ea7dca182e43fe1fc860f1576cc833062ae6d52a715d1",
     "scripts/check-native-resolver-lock.mjs": "04e39a1b57373db9720bf6ea9e4453668202e689289cd2997b63daa07ee15529",
@@ -28163,6 +28168,7 @@
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
+    "scripts/lib/studio-audit-safety.mjs": "4cec971d00a5ec16524dd94c490289ffc33d69d9cae32ba9db0910275f3e80d8",
     "scripts/lib/test-child-completion.mjs": "73f6d1e064be16aed833091c25a0dcf526b9e59dd6c19dc4a5712f5afe7c1da0",
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
     "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
@@ -28963,13 +28969,13 @@
     "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js": "98f65d27e64f5872427544e53566bba011ace28af867ac44fc8fc08c2f92bcae",
     "tdf-hq-ui/src/vite-env.d.ts": "28fae652abf43eaed9c5a3615cb2f362f8d81efdd7815347fa995b222908a22e",
     "tdf-hq/.env.example": "52c6e873ba21c44a10f7fd7fb1bdb44c0234a806dde3b019cf383a850b06b77a",
-    "tdf-hq/Dockerfile": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
+    "tdf-hq/Dockerfile": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
     "tdf-hq/Dockerfile.music-worker": "1de769ca7636491fb5391fc2fe8b90ee19e20d19621b21d90a52ffa170366a83",
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
-    "tdf-hq/config/default.env.example": "3c7d42b92d6b894c6ae8689552438b0d42badb31a28efc944b41f22220ab364b",
+    "tdf-hq/config/default.env.example": "be021cdb3189b160aab684de4c3a5044253f76dc6dba44f717e12475a225df06",
     "tdf-hq/docs/openapi/api.yaml": "2e42ef0a3c3979ed55e3a8af94f1e5bbf7e70d3be6e75570f0141656cae957de",
     "tdf-hq/docs/openapi/directory.yaml": "d6054e9b9a87004a98114c1cf04e689dde6dec820a1f9b456831b11a994b598b",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
@@ -37478,6 +37484,12 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/check-messaging-token.mjs": [
+      {
+        "requirement": "OPS-CLIENT-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/instagram-token-workflows.test.mjs": [
       {
         "requirement": "OPS-CLIENT-001",
@@ -45486,7 +45498,19 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/lib/studio-audit-safety.mjs": [
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/test-studio-internship-audit-migration.sh": [
+      {
+        "requirement": "OPS-INTERN-AUDIT-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/studio-internship-audit.test.mjs": [
       {
         "requirement": "OPS-INTERN-AUDIT-001",
         "relationship": "tests"
@@ -47787,7 +47811,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7f2f2181f1f14f59916ea98da4c6182cdf6f85707e7bae855be49cd7083c6fc6",
+      "sha256": "3b8676cc2a2e32d514be643384f4f88d16fb5b20adc4231ed2e4d5c3c6c755ec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49282,7 +49306,7 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
+      "sha256": "045b26e1fbb6697cf16314850fd71df4896aa647f5b90036ddc8f908929c303f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50099,7 +50123,7 @@
     {
       "id": "SURFACE-ac7679c947f7408b",
       "path": "scripts/__tests__/instagram-token-workflows.test.mjs",
-      "sha256": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
+      "sha256": "60c2b30195a7b5a1d89b8d26ced251a0152afecdb41806d7eff35aaa629c0b9b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50482,13 +50506,6 @@
       ]
     },
     {
-      "id": "SURFACE-2f21c1c45f5b1cca",
-      "path": "scripts/__tests__/payment-staging-inspection.test.mjs",
-      "sha256": "acb99cc43fbbdca8d24d3d52b7972b0100c5aa1392959ff5c5b91927677db317",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-9f80dbca9b5074c0",
       "path": "scripts/__tests__/persistent-uploads.test.mjs",
       "sha256": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
@@ -50647,9 +50664,14 @@
     {
       "id": "SURFACE-2814c9b72c5f2d05",
       "path": "scripts/__tests__/studio-internship-audit.test.mjs",
-      "sha256": "630716fa1e50aa604476b1159a3ac8daed37b79c7dc9ebd557a6af25f2a33a57",
+      "sha256": "17d13b1f02ee443aa724c4378e184f588782fe704c7e330901291a8a2adf1311",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-a1dd9455f7a2ce96",
@@ -50881,7 +50903,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
+      "sha256": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51108,9 +51130,14 @@
     {
       "id": "SURFACE-ccd62b2a303eba94",
       "path": "scripts/check-messaging-token.mjs",
-      "sha256": "f2505fab497e7f96880d22952a6863595548f6e1f6b08725cc5243708f2cec75",
+      "sha256": "feb51d713046b1c1e65df434d1c73c4820bc3a71c90ca4bbfc83bb203e0fafc8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7cf4797085be81ca",
@@ -51529,13 +51556,6 @@
           "relationship": "implementation"
         }
       ]
-    },
-    {
-      "id": "SURFACE-09f409fc2f5fdd87",
-      "path": "scripts/inspect-payment-staging.mjs",
-      "sha256": "a141c1c20e8c9c0d149c91a6cffec7690fd13388ec5f00a0ecfe0ecc26855317",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
     },
     {
       "id": "SURFACE-6efdc7705573cc29",
@@ -52185,9 +52205,14 @@
     {
       "id": "SURFACE-4a885036f5208454",
       "path": "scripts/lib/studio-audit-safety.mjs",
-      "sha256": "bc8b2be2d1ba687743be7400b4b4f225f24e5b8fc962471b6a7a4d3072ed3ab7",
+      "sha256": "4cec971d00a5ec16524dd94c490289ffc33d69d9cae32ba9db0910275f3e80d8",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-INTERN-AUDIT-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0ebd44c86ad332c6",
@@ -67785,7 +67810,7 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
+      "sha256": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83580,12 +83605,10 @@
     "SURFACE-3875378b2b3df521",
     "SURFACE-2661bcd3e8c66ae8",
     "SURFACE-69900817facd771e",
-    "SURFACE-2f21c1c45f5b1cca",
     "SURFACE-57edc37515705dee",
     "SURFACE-3abf163ab83b446e",
     "SURFACE-bcdd803220771b0c",
     "SURFACE-80b41740576c6c1f",
-    "SURFACE-2814c9b72c5f2d05",
     "SURFACE-d6cb46e6ca8e56e0",
     "SURFACE-c000c38c68fca4c6",
     "SURFACE-0d3a8be771c58138",
@@ -83604,7 +83627,6 @@
     "SURFACE-7972d2e7d13940a5",
     "SURFACE-d79860272960ddbf",
     "SURFACE-74289e89f4a7d171",
-    "SURFACE-ccd62b2a303eba94",
     "SURFACE-254fa49d7ac82af7",
     "SURFACE-6c037a47184dd0e1",
     "SURFACE-3b3b7300cb3b148d",
@@ -83623,7 +83645,6 @@
     "SURFACE-017df03fe878b45b",
     "SURFACE-298863fcec57d5aa",
     "SURFACE-61ce5bdd849d0317",
-    "SURFACE-09f409fc2f5fdd87",
     "SURFACE-6efdc7705573cc29",
     "SURFACE-e10a3732c19671ff",
     "SURFACE-7762cc1d53f882c8",
@@ -83647,7 +83668,6 @@
     "SURFACE-69f81b4cfc6d7588",
     "SURFACE-0fae219dd0862347",
     "SURFACE-f19f1cdea9599922",
-    "SURFACE-4a885036f5208454",
     "SURFACE-f1db2c4adbf5dce0",
     "SURFACE-0aa382713c667a78",
     "SURFACE-8b09001cab518c05",
@@ -86265,7 +86285,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "639ea38b1b118e2139c0231c756523388ce2474534c46ae4fcb913426c849b39",
+      "sourceSha256": "256e6cbf7f463593291fc31c46796d1d3b122171c00c69884e58dc3149ec462f",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86293,7 +86313,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "639ea38b1b118e2139c0231c756523388ce2474534c46ae4fcb913426c849b39",
+      "sourceSha256": "256e6cbf7f463593291fc31c46796d1d3b122171c00c69884e58dc3149ec462f",
       "definition": {
         "states": [
           "absent",
@@ -86323,7 +86343,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "639ea38b1b118e2139c0231c756523388ce2474534c46ae4fcb913426c849b39",
+      "sourceSha256": "256e6cbf7f463593291fc31c46796d1d3b122171c00c69884e58dc3149ec462f",
       "definition": {
         "export": [
           "queued",

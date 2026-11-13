@@ -153,12 +153,12 @@ maintenance and their CLI silently ignores the flag.
 Both tokens must pass the existing health checks without needing maintenance.
 Missing, invalid, expired, soon-expiring tokens or failed provider checks return
 a nonzero status; read-only mode never exchanges tokens, retrieves replacement
-Page tokens, or calls Fly. In Actions, this step receives only the messaging
+Page tokens. In Actions, this step receives only the messaging
 tokens and Meta inspector credentials. The hourly schedule and manual
-`action=check` now use this same read-only path. The workflow has no Fly CLI or
-Fly credentials; `action=refresh` is rejected. Failure notifications are retained.
-Do not run the legacy no-argument `check-messaging-token.mjs` command after the
-cutover: it still belongs to the retired Fly maintenance implementation.
+`action=check` now use this same read-only path. The workflow has no hosting
+credentials; `action=refresh` is rejected. Failure notifications are retained.
+The no-argument `check-messaging-token.mjs` command no longer installs
+credentials: when a token needs maintenance it stops before any token exchange.
 
 ### Messaging credential rotation after the cutover
 

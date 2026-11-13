@@ -24,7 +24,7 @@ The TDF platform consists of three deployable components:
 
 | Component | Technology | Deployment Target | Status |
 |-----------|-----------|-------------------|--------|
-| **Backend API** | Haskell + PostgreSQL | Koyeb / Fly.io | Historical; see current runbook |
+| **Backend API** | Haskell + PostgreSQL | Koyeb | Historical; see current runbook |
 | **Web UI** | React/Vite SPA | Cloudflare Pages / Vercel | Production |
 | **Mobile App** | Expo/React Native | App Store / Play Store | Development |
 
@@ -203,109 +203,6 @@ server {
 ```
 
 ---
-
-## Legacy Backend Deployment (Fly.io)
-
-Fly formerly powered the production `tdf-hq` API; this section is historical. Production releases must use the guarded release lane; do not run `fly deploy` or `scripts/deploy-stripe-ticketing.sh production` directly.
-
-Application startup never owns production schema changes. `RUN_MIGRATIONS`,
-`CONTEXTUAL_REPUTATION_ENABLED`, `REPUTATION_AGGREGATION_WORKER_ENABLED`, and
-`EVENT_DISCOVERY_ENABLED` remain `false` in `fly.toml` during a release. The
-reputation worker environment is pinned to `production`, which the process
-rejects if the worker is ever enabled. The release lane applies the reviewed,
-additive SQL migrations once before updating any API Machine, deploys an image
-pinned to the requested full git SHA, and verifies the running image digest,
-version payload, and healthy response.
-
-### Guarded release commands
-
-Run these commands from the repository root. Use the same 40-character commit SHA throughout:
-
-```bash
-# Local-only: show the immutable image and ordered release sequence.
-npm run release:backend:plan -- --sha <full-sha>
-
-# Read-only: verify production schema/data, image availability, and Fly state.
-npm run release:backend:preflight -- --sha <full-sha>
-
-# Mutating: apply pending migrations once and perform the rolling deployment.
-npm run release:backend -- --sha <full-sha> --execute --confirm <full-sha>
-```
-
-The execute command deliberately requires both `--execute` and an exact SHA confirmation. A failed preflight blocks migration and deployment. Do not bypass that refusal with direct Fly commands.
-
-For the ticket checkout and event-discovery release, the required order is:
-
-1. Verify the already repaired notification schema.
-2. Apply `tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql` to repair the previously unapplied ticketing base schema.
-3. Apply `tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql`.
-4. Apply `tdf-hq/sql/2026-07-12_event_discovery_imports.sql`.
-5. Roll out the pinned backend image with discovery still disabled.
-6. Verify each started API Machine, the public `/health` and `/version` endpoints, and logs before enabling any new background job.
-
-Before this release can execute, Fly must have `STRIPE_SECRET_KEY` and
-`STRIPE_WEBHOOK_SECRET` set. The lane also requires every running Machine to
-have effective `RUN_MIGRATIONS=false`, `CONTEXTUAL_REPUTATION_ENABLED=false`,
-`REPUTATION_AGGREGATION_WORKER_ENABLED=false`, and
-`EVENT_DISCOVERY_ENABLED=false`. Disable any main-branch auto-deploy path before
-pushing this release work; schema application must happen only through the
-guarded lane.
-
-These migrations are additive. If application rollback is required, restore the previous pinned image and leave the new nullable columns/tables in place.
-
-### Setting Secrets in Fly
-
-Sensitive values like API keys should be set as secrets instead of environment variables in `fly.toml`:
-
-```bash
-# Set PayPal client ID
-flyctl secrets set VITE_PAYPAL_CLIENT_ID=your-paypal-client-id
-
-# Set live sessions token
-flyctl secrets set VITE_LIVE_SESSIONS_PUBLIC_TOKEN=your-token
-
-# Ticketmaster may be stored before rollout, but discovery stays disabled in fly.toml
-flyctl secrets set TICKETMASTER_API_KEY=your-consumer-key
-
-# List current secrets
-flyctl secrets list
-```
-
-Note: Secrets are not shown in `fly.toml` to avoid leaking sensitive values.
-
-### Health Check
-
-The API provides a health check endpoint at `/health` that returns:
-
-```json
-{
-  "status": "ok",
-  "db": "ok"
-}
-```
-
-For the historical Fly deployment only, verify that Fly service after deployment or secret updates:
-
-```bash
-# Check health endpoint
-curl https://tdf-hq.fly.dev/health
-
-# Check deployment status
-flyctl status
-
-# View logs
-flyctl logs
-```
-
-During application boot, `/health` can temporarily report a `starting` payload. Release verification must wait for `status: "ok"` and `db: "ok"`; an HTTP 200 alone is not sufficient. Fly uses the endpoint for rolling Machine health checks, while the release lane verifies the response body and exact `/version` SHA.
-
-The service is configured to:
-
-- Listen on `0.0.0.0:8080` (accepts connections from Fly's proxy)
-- Use `internal_port = 8080` in fly.toml for service binding
-- Expose ports 80 (HTTP) and 443 (HTTPS) via Fly's proxy
-- Roll Machines gradually and require the `/health` HTTP check
-- Keep startup migrations and Ticketmaster discovery disabled by default
 
 ## Frontend Deployment
 
@@ -1032,15 +929,10 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_signing_secret
 # STRIPE_PUBLISHABLE_KEY=pk_test_your_test_publishable_key
 ```
 
-**Koyeb/Fly.io Deployment:**
+**Hosted deployment:**
 
-```bash
-# Koyeb - Add as environment variables in service settings
-# Fly.io - Set as secrets
-flyctl secrets set STRIPE_SECRET_KEY=sk_live_...
-flyctl secrets set STRIPE_PUBLISHABLE_KEY=pk_live_...
-flyctl secrets set STRIPE_WEBHOOK_SECRET=whsec_...
-```
+Add `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY` and `STRIPE_WEBHOOK_SECRET`
+to the deployment's secret store (see `ops/hetzner/README.md`); never commit them.
 
 ### Step 4: Frontend Environment Variables
 
