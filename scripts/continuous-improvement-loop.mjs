@@ -199,8 +199,11 @@ function buildContext(repoRoot, contextDir, iteration) {
 }
 
 function loopEnvironment(context) {
+  // Steps must not inherit the supervisor's status file: a nested loop run (for example the
+  // loop's own tests inside the verification gate) would overwrite the live status.
+  const { CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE: _statusFile, ...inheritedEnv } = process.env;
   return {
-    ...process.env,
+    ...inheritedEnv,
     CONTINUOUS_LOOP_REPO_ROOT: context.repo_root,
     CONTINUOUS_LOOP_TOOL_ROOT: context.tool_root,
     CONTINUOUS_LOOP_CONTEXT_DIR: context.context_dir,
@@ -1617,7 +1620,7 @@ async function runIterationSteps(repoRoot, config, iteration, context, branch) {
   await emitLoopStatus({ state: 'running', phase: 'verify-commit-push', currentIteration: iteration, ideaTitle: context.idea_title });
   logStep(`Iteration ${iteration}: verify, commit, push, and pull request`);
   const result = await finalizeIteration(repoRoot, config, context, branch);
-  await emitLoopStatus({ state: 'running', phase: 'iteration-complete', currentIteration: iteration, lastIterationResult: result.ok ? 'ok' : 'attention' });
+  await emitLoopStatus({ state: 'running', phase: 'iteration-complete', currentIteration: iteration, lastIterationResult: result.ok ? 'ok' : 'attention', lastError: null });
   return result;
 }
 

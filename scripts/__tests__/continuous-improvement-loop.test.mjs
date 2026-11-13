@@ -793,6 +793,29 @@ test('continuous-improvement-loop publishes each iteration on its own branch and
   }
 });
 
+test('continuous-improvement-loop steps do not inherit the supervisor status file', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-step-env-test-');
+  const statusFile = path.join(fixture.tempRoot, 'status.json');
+  const seenFile = path.join(fixture.tempRoot, 'seen-env');
+
+  try {
+    const configPath = await fixture.writeConfig({
+      verifyCommand: `printf '%s' "\${CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE:-unset}" > '${seenFile}'`,
+    });
+    await execFileAsync('node', [loopScriptPath, '--config', configPath, '--max-iterations', '1'], {
+      cwd: fixture.repoDir,
+      env: { ...process.env, CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE: statusFile },
+    });
+
+    assert.equal(await fs.readFile(seenFile, 'utf8'), 'unset');
+    const status = JSON.parse(await fs.readFile(statusFile, 'utf8'));
+    assert.equal(status.lastIterationResult, 'ok');
+    assert.equal(status.lastError, null);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test('continuous-improvement-loop branches from the latest remote base, not a stale local one', async () => {
   const fixture = await createLoopFixture('continuous-improvement-loop-latest-base-test-');
   const otherDir = path.join(fixture.tempRoot, 'other');
