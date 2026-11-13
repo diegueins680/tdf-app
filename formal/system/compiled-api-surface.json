@@ -6983,7 +6983,9 @@
           }
         ],
         "bodies": [],
-        "authCombinators": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
         "internalInputs": [],
         "method": "POST",
         "successStatus": 200,
@@ -7125,7 +7127,9 @@
           }
         ],
         "bodies": [],
-        "authCombinators": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
         "internalInputs": [],
         "method": "POST",
         "successStatus": 200,
@@ -7169,7 +7173,9 @@
           }
         ],
         "bodies": [],
-        "authCombinators": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
         "internalInputs": [],
         "method": "POST",
         "successStatus": 200,
@@ -9681,6 +9687,27 @@
           {
             "in": "query",
             "name": "profileKind",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          },
+          {
+            "in": "query",
+            "name": "intent",
             "modifiers": [
               {
                 "args": [],
@@ -30858,8 +30885,19 @@
       },
       {
         "ordinal": 507,
-        "path": "/social-events/me/memory-invitations",
-        "parameters": [],
+        "path": "/social-events/events/{eventId}/admins",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
         "bodies": [],
         "authCombinators": [
           "bearer-token"
@@ -30875,73 +30913,428 @@
           }
         ],
         "responseType": {
-          "args": [
-            {
-              "args": [
-                {
-                  "args": [
-                    {
-                      "args": [
-                        {
-                          "args": [],
-                          "module": "Servant.API.Modifiers",
-                          "name": "Optional"
-                        },
-                        {
-                          "args": [
-                            {
-                              "args": [],
-                              "module": "Servant.API.Modifiers",
-                              "name": "Strict"
-                            },
-                            {
-                              "args": [],
-                              "module": "GHC.Types",
-                              "name": "'[]"
-                            }
-                          ],
-                          "module": "GHC.Types",
-                          "name": "':"
-                        }
-                      ],
-                      "module": "GHC.Types",
-                      "name": "':"
-                    },
-                    {
-                      "args": [],
-                      "module": "GHC.TypeLits",
-                      "name": "\"Cache-Control\""
-                    },
-                    {
-                      "args": [],
-                      "module": "Data.Text.Internal",
-                      "name": "Text"
-                    }
-                  ],
-                  "module": "Servant.API.Header",
-                  "name": "Header'"
-                },
-                {
-                  "args": [],
-                  "module": "GHC.Types",
-                  "name": "'[]"
-                }
-              ],
-              "module": "GHC.Types",
-              "name": "':"
-            },
-            {
-              "args": [],
-              "module": "Data.Aeson.Types.Internal",
-              "name": "Value"
-            }
-          ],
-          "module": "Servant.API.ResponseHeaders",
-          "name": "Headers"
+          "args": [],
+          "module": "TDF.DTO.SocialEventsDTO",
+          "name": "EventAdminRosterDTO"
         }
       },
       {
         "ordinal": 508,
+        "path": "/social-events/events/{eventId}/admin-access",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "TDF.DTO.SocialEventsDTO",
+          "name": "EventAdminAccessDTO"
+        }
+      },
+      {
+        "ordinal": 509,
+        "path": "/social-events/events/{eventId}/admin-invitations",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.DTO.SocialEventsDTO",
+              "name": "EventAdminInvitationCreateDTO"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "TDF.DTO.SocialEventsDTO",
+          "name": "EventAdminInvitationIssuedDTO"
+        }
+      },
+      {
+        "ordinal": 510,
+        "path": "/social-events/events/{eventId}/admin-invitations/{invitationId}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invitationId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "DELETE",
+        "successStatus": 204,
+        "contentTypes": [],
+        "responseType": null
+      },
+      {
+        "ordinal": 511,
+        "path": "/social-events/events/{eventId}/admins/{partyId}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          },
+          {
+            "in": "path",
+            "name": "partyId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "DELETE",
+        "successStatus": 204,
+        "contentTypes": [],
+        "responseType": null
+      },
+      {
+        "ordinal": 512,
+        "path": "/social-events/admin-invitations/preview",
+        "parameters": [],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.DTO.SocialEventsDTO",
+              "name": "EventAdminInvitationTokenDTO"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "TDF.DTO.SocialEventsDTO",
+          "name": "EventAdminInvitationPreviewDTO"
+        }
+      },
+      {
+        "ordinal": 513,
+        "path": "/social-events/admin-invitations/accept",
+        "parameters": [],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.DTO.SocialEventsDTO",
+              "name": "EventAdminInvitationTokenDTO"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "TDF.DTO.SocialEventsDTO",
+          "name": "EventAdminAccessDTO"
+        }
+      },
+      {
+        "ordinal": 514,
+        "path": "/social-events/events/{eventId}/courtesy-tickets",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "eventId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.DTO.SocialEventsDTO",
+              "name": "EventCourtesyTicketDTO"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "TDF.DTO.SocialEventsDTO",
+          "name": "TicketOrderDTO"
+        }
+      },
+      {
+        "ordinal": 515,
+        "path": "/social-events/me/memory-invitations",
+        "parameters": [],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [
+                {
+                  "args": [
+                    {
+                      "args": [
+                        {
+                          "args": [],
+                          "module": "Servant.API.Modifiers",
+                          "name": "Optional"
+                        },
+                        {
+                          "args": [
+                            {
+                              "args": [],
+                              "module": "Servant.API.Modifiers",
+                              "name": "Strict"
+                            },
+                            {
+                              "args": [],
+                              "module": "GHC.Types",
+                              "name": "'[]"
+                            }
+                          ],
+                          "module": "GHC.Types",
+                          "name": "':"
+                        }
+                      ],
+                      "module": "GHC.Types",
+                      "name": "':"
+                    },
+                    {
+                      "args": [],
+                      "module": "GHC.TypeLits",
+                      "name": "\"Cache-Control\""
+                    },
+                    {
+                      "args": [],
+                      "module": "Data.Text.Internal",
+                      "name": "Text"
+                    }
+                  ],
+                  "module": "Servant.API.Header",
+                  "name": "Header'"
+                },
+                {
+                  "args": [],
+                  "module": "GHC.Types",
+                  "name": "'[]"
+                }
+              ],
+              "module": "GHC.Types",
+              "name": "':"
+            },
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "Servant.API.ResponseHeaders",
+          "name": "Headers"
+        }
+      },
+      {
+        "ordinal": 516,
         "path": "/social-events/me/memory-invitations",
         "parameters": [],
         "bodies": [
@@ -31052,7 +31445,7 @@
         }
       },
       {
-        "ordinal": 509,
+        "ordinal": 517,
         "path": "/social-events/events/{eventId}/memory-invitations",
         "parameters": [
           {
@@ -31147,7 +31540,7 @@
         }
       },
       {
-        "ordinal": 510,
+        "ordinal": 518,
         "path": "/social-events/events/{eventId}/memory-invitations",
         "parameters": [
           {
@@ -31269,7 +31662,7 @@
         }
       },
       {
-        "ordinal": 511,
+        "ordinal": 519,
         "path": "/social-events/events/{eventId}/memory-invitations/{deliveryId}/open",
         "parameters": [
           {
@@ -31374,7 +31767,7 @@
         }
       },
       {
-        "ordinal": 512,
+        "ordinal": 520,
         "path": "/contracts",
         "parameters": [],
         "bodies": [
@@ -31425,7 +31818,7 @@
         }
       },
       {
-        "ordinal": 513,
+        "ordinal": 521,
         "path": "/contracts/{id}/pdf",
         "parameters": [
           {
@@ -31460,7 +31853,7 @@
         }
       },
       {
-        "ordinal": 514,
+        "ordinal": 522,
         "path": "/contracts/{id}/send",
         "parameters": [
           {
@@ -31522,7 +31915,7 @@
         }
       },
       {
-        "ordinal": 515,
+        "ordinal": 523,
         "path": "/internships/interns",
         "parameters": [],
         "bodies": [],
@@ -31552,7 +31945,7 @@
         }
       },
       {
-        "ordinal": 516,
+        "ordinal": 524,
         "path": "/internships/profile",
         "parameters": [],
         "bodies": [],
@@ -31576,7 +31969,7 @@
         }
       },
       {
-        "ordinal": 517,
+        "ordinal": 525,
         "path": "/internships/profile",
         "parameters": [],
         "bodies": [
@@ -31627,7 +32020,7 @@
         }
       },
       {
-        "ordinal": 518,
+        "ordinal": 526,
         "path": "/internships/projects",
         "parameters": [],
         "bodies": [],
@@ -31657,7 +32050,7 @@
         }
       },
       {
-        "ordinal": 519,
+        "ordinal": 527,
         "path": "/internships/projects",
         "parameters": [],
         "bodies": [
@@ -31708,7 +32101,7 @@
         }
       },
       {
-        "ordinal": 520,
+        "ordinal": 528,
         "path": "/internships/projects/{projectId}",
         "parameters": [
           {
@@ -31770,7 +32163,7 @@
         }
       },
       {
-        "ordinal": 521,
+        "ordinal": 529,
         "path": "/internships/tasks",
         "parameters": [],
         "bodies": [],
@@ -31800,7 +32193,7 @@
         }
       },
       {
-        "ordinal": 522,
+        "ordinal": 530,
         "path": "/internships/tasks",
         "parameters": [],
         "bodies": [
@@ -31851,7 +32244,7 @@
         }
       },
       {
-        "ordinal": 523,
+        "ordinal": 531,
         "path": "/internships/tasks/{taskId}",
         "parameters": [
           {
@@ -31913,7 +32306,7 @@
         }
       },
       {
-        "ordinal": 524,
+        "ordinal": 532,
         "path": "/internships/tasks/{taskId}",
         "parameters": [
           {
@@ -31938,7 +32331,7 @@
         "responseType": null
       },
       {
-        "ordinal": 525,
+        "ordinal": 533,
         "path": "/internships/todos",
         "parameters": [],
         "bodies": [],
@@ -31968,7 +32361,7 @@
         }
       },
       {
-        "ordinal": 526,
+        "ordinal": 534,
         "path": "/internships/todos",
         "parameters": [],
         "bodies": [
@@ -32019,7 +32412,7 @@
         }
       },
       {
-        "ordinal": 527,
+        "ordinal": 535,
         "path": "/internships/todos/{todoId}",
         "parameters": [
           {
@@ -32081,7 +32474,7 @@
         }
       },
       {
-        "ordinal": 528,
+        "ordinal": 536,
         "path": "/internships/todos/{todoId}",
         "parameters": [
           {
@@ -32106,7 +32499,7 @@
         "responseType": null
       },
       {
-        "ordinal": 529,
+        "ordinal": 537,
         "path": "/internships/time-entries",
         "parameters": [
           {
@@ -32158,7 +32551,7 @@
         }
       },
       {
-        "ordinal": 530,
+        "ordinal": 538,
         "path": "/internships/time-entries/clock-in",
         "parameters": [],
         "bodies": [
@@ -32209,7 +32602,7 @@
         }
       },
       {
-        "ordinal": 531,
+        "ordinal": 539,
         "path": "/internships/time-entries/clock-out",
         "parameters": [],
         "bodies": [
@@ -32260,7 +32653,7 @@
         }
       },
       {
-        "ordinal": 532,
+        "ordinal": 540,
         "path": "/internships/permissions",
         "parameters": [],
         "bodies": [],
@@ -32290,7 +32683,7 @@
         }
       },
       {
-        "ordinal": 533,
+        "ordinal": 541,
         "path": "/internships/permissions",
         "parameters": [],
         "bodies": [
@@ -32341,7 +32734,7 @@
         }
       },
       {
-        "ordinal": 534,
+        "ordinal": 542,
         "path": "/internships/permissions/{permissionId}",
         "parameters": [
           {
@@ -32403,7 +32796,7 @@
         }
       },
       {
-        "ordinal": 535,
+        "ordinal": 543,
         "path": "/internships/audit-plans",
         "parameters": [],
         "bodies": [],
@@ -32433,7 +32826,7 @@
         }
       },
       {
-        "ordinal": 536,
+        "ordinal": 544,
         "path": "/internships/audit-plans",
         "parameters": [],
         "bodies": [
@@ -32484,7 +32877,7 @@
         }
       },
       {
-        "ordinal": 537,
+        "ordinal": 545,
         "path": "/internships/audit-plans/{planId}",
         "parameters": [
           {
@@ -32519,7 +32912,7 @@
         }
       },
       {
-        "ordinal": 538,
+        "ordinal": 546,
         "path": "/internships/audit-plans/{planId}",
         "parameters": [
           {
@@ -32581,7 +32974,7 @@
         }
       },
       {
-        "ordinal": 539,
+        "ordinal": 547,
         "path": "/internships/audit-plans/{planId}/activate",
         "parameters": [
           {
@@ -32616,7 +33009,7 @@
         }
       },
       {
-        "ordinal": 540,
+        "ordinal": 548,
         "path": "/internships/audit-plans/{planId}/cases",
         "parameters": [
           {
@@ -32657,7 +33050,7 @@
         }
       },
       {
-        "ordinal": 541,
+        "ordinal": 549,
         "path": "/internships/audit-plans/{planId}/cases",
         "parameters": [
           {
@@ -32719,7 +33112,7 @@
         }
       },
       {
-        "ordinal": 542,
+        "ordinal": 550,
         "path": "/internships/audit-plans/{planId}/daily-summaries",
         "parameters": [
           {
@@ -32760,7 +33153,7 @@
         }
       },
       {
-        "ordinal": 543,
+        "ordinal": 551,
         "path": "/internships/audit-plans/{planId}/daily-summaries",
         "parameters": [
           {
@@ -32822,7 +33215,7 @@
         }
       },
       {
-        "ordinal": 544,
+        "ordinal": 552,
         "path": "/internships/audit-plans/{planId}/final-summary",
         "parameters": [
           {
@@ -32857,7 +33250,7 @@
         }
       },
       {
-        "ordinal": 545,
+        "ordinal": 553,
         "path": "/internships/audit-plans/{planId}/final-summary",
         "parameters": [
           {
@@ -32919,7 +33312,7 @@
         }
       },
       {
-        "ordinal": 546,
+        "ordinal": 554,
         "path": "/internships/test-cases/{testCaseId}/executions",
         "parameters": [
           {
@@ -32960,7 +33353,7 @@
         }
       },
       {
-        "ordinal": 547,
+        "ordinal": 555,
         "path": "/internships/test-cases/{testCaseId}/executions",
         "parameters": [
           {
@@ -33022,7 +33415,7 @@
         }
       },
       {
-        "ordinal": 548,
+        "ordinal": 556,
         "path": "/internships/test-executions/{executionId}",
         "parameters": [
           {
@@ -33084,7 +33477,7 @@
         }
       },
       {
-        "ordinal": 549,
+        "ordinal": 557,
         "path": "/feedback/internal",
         "parameters": [
           {
@@ -33199,7 +33592,7 @@
         }
       },
       {
-        "ordinal": 550,
+        "ordinal": 558,
         "path": "/feedback/internal/export.csv",
         "parameters": [
           {
@@ -33266,7 +33659,7 @@
         }
       },
       {
-        "ordinal": 551,
+        "ordinal": 559,
         "path": "/feedback/internal/export.json",
         "parameters": [
           {
@@ -33339,7 +33732,7 @@
         }
       },
       {
-        "ordinal": 552,
+        "ordinal": 560,
         "path": "/feedback/internal/legacy",
         "parameters": [
           {
@@ -33412,7 +33805,7 @@
         }
       },
       {
-        "ordinal": 553,
+        "ordinal": 561,
         "path": "/feedback/internal/account-deletion/{feedbackId}",
         "parameters": [
           {
@@ -33474,7 +33867,7 @@
         }
       },
       {
-        "ordinal": 554,
+        "ordinal": 562,
         "path": "/feedback/internal",
         "parameters": [],
         "bodies": [
@@ -33525,7 +33918,7 @@
         }
       },
       {
-        "ordinal": 555,
+        "ordinal": 563,
         "path": "/feedback/internal/{reportId}",
         "parameters": [
           {
@@ -33560,7 +33953,7 @@
         }
       },
       {
-        "ordinal": 556,
+        "ordinal": 564,
         "path": "/feedback/internal/{reportId}",
         "parameters": [
           {
@@ -33622,7 +34015,7 @@
         }
       },
       {
-        "ordinal": 557,
+        "ordinal": 565,
         "path": "/feedback/internal/{reportId}/submit",
         "parameters": [
           {
@@ -33657,7 +34050,7 @@
         }
       },
       {
-        "ordinal": 558,
+        "ordinal": 566,
         "path": "/feedback/internal/{reportId}/comments",
         "parameters": [
           {
@@ -33719,7 +34112,7 @@
         }
       },
       {
-        "ordinal": 559,
+        "ordinal": 567,
         "path": "/feedback/internal/{reportId}/evidence",
         "parameters": [
           {
@@ -33769,7 +34162,7 @@
         }
       },
       {
-        "ordinal": 560,
+        "ordinal": 568,
         "path": "/feedback/internal/{reportId}/evidence-links",
         "parameters": [
           {
@@ -33831,7 +34224,7 @@
         }
       },
       {
-        "ordinal": 561,
+        "ordinal": 569,
         "path": "/feedback/internal/{reportId}/evidence/{evidenceId}/file",
         "parameters": [
           {
@@ -33936,7 +34329,7 @@
         }
       },
       {
-        "ordinal": 562,
+        "ordinal": 570,
         "path": "/feedback/internal/{reportId}/retests",
         "parameters": [
           {
@@ -33998,7 +34391,7 @@
         }
       },
       {
-        "ordinal": 563,
+        "ordinal": 571,
         "path": "/ads/assist",
         "parameters": [],
         "bodies": [
@@ -34049,7 +34442,7 @@
         }
       },
       {
-        "ordinal": 564,
+        "ordinal": 572,
         "path": "/ads/inquiries",
         "parameters": [],
         "bodies": [],
@@ -34079,7 +34472,7 @@
         }
       },
       {
-        "ordinal": 565,
+        "ordinal": 573,
         "path": "/ads/campaigns",
         "parameters": [],
         "bodies": [],
@@ -34109,7 +34502,7 @@
         }
       },
       {
-        "ordinal": 566,
+        "ordinal": 574,
         "path": "/ads/campaigns",
         "parameters": [],
         "bodies": [
@@ -34160,7 +34553,7 @@
         }
       },
       {
-        "ordinal": 567,
+        "ordinal": 575,
         "path": "/ads/campaigns/{campaignId}",
         "parameters": [
           {
@@ -34195,7 +34588,7 @@
         }
       },
       {
-        "ordinal": 568,
+        "ordinal": 576,
         "path": "/ads/ads",
         "parameters": [],
         "bodies": [
@@ -34246,7 +34639,7 @@
         }
       },
       {
-        "ordinal": 569,
+        "ordinal": 577,
         "path": "/ads/campaigns/{campaignId}/ads",
         "parameters": [
           {
@@ -34287,7 +34680,7 @@
         }
       },
       {
-        "ordinal": 570,
+        "ordinal": 578,
         "path": "/ads/{adId}/examples",
         "parameters": [
           {
@@ -34328,7 +34721,7 @@
         }
       },
       {
-        "ordinal": 571,
+        "ordinal": 579,
         "path": "/ads/{adId}/examples",
         "parameters": [
           {
@@ -34390,7 +34783,7 @@
         }
       },
       {
-        "ordinal": 572,
+        "ordinal": 580,
         "path": "/ads/automation-templates",
         "parameters": [],
         "bodies": [],
@@ -34420,7 +34813,7 @@
         }
       },
       {
-        "ordinal": 573,
+        "ordinal": 581,
         "path": "/ads/automations",
         "parameters": [],
         "bodies": [],
@@ -34450,7 +34843,7 @@
         }
       },
       {
-        "ordinal": 574,
+        "ordinal": 582,
         "path": "/ads/automations",
         "parameters": [],
         "bodies": [
@@ -34501,7 +34894,7 @@
         }
       },
       {
-        "ordinal": 575,
+        "ordinal": 583,
         "path": "/ads/automations/{automationId}/enroll",
         "parameters": [
           {
@@ -34563,7 +34956,7 @@
         }
       },
       {
-        "ordinal": 576,
+        "ordinal": 584,
         "path": "/ads/automations/{automationId}/enrollments",
         "parameters": [
           {
@@ -34604,7 +34997,7 @@
         }
       },
       {
-        "ordinal": 577,
+        "ordinal": 585,
         "path": "/ads/automations/{automationId}/preview",
         "parameters": [
           {
@@ -34645,7 +35038,7 @@
         }
       },
       {
-        "ordinal": 578,
+        "ordinal": 586,
         "path": "/ads/automations/{automationId}/status",
         "parameters": [
           {
@@ -34707,7 +35100,7 @@
         }
       },
       {
-        "ordinal": 579,
+        "ordinal": 587,
         "path": "/ads/automations/{automationId}/enrollments/{enrollmentId}/status",
         "parameters": [
           {
@@ -34779,7 +35172,7 @@
         }
       },
       {
-        "ordinal": 580,
+        "ordinal": 588,
         "path": "/academy/enroll",
         "parameters": [],
         "bodies": [
@@ -34830,7 +35223,7 @@
         }
       },
       {
-        "ordinal": 581,
+        "ordinal": 589,
         "path": "/academy/progress",
         "parameters": [],
         "bodies": [
@@ -34881,7 +35274,7 @@
         }
       },
       {
-        "ordinal": 582,
+        "ordinal": 590,
         "path": "/referrals/claim",
         "parameters": [],
         "bodies": [
@@ -34932,7 +35325,7 @@
         }
       },
       {
-        "ordinal": 583,
+        "ordinal": 591,
         "path": "/admin/courses",
         "parameters": [],
         "bodies": [
@@ -34983,7 +35376,7 @@
         }
       },
       {
-        "ordinal": 584,
+        "ordinal": 592,
         "path": "/admin/courses/cohorts",
         "parameters": [],
         "bodies": [],
@@ -35013,7 +35406,7 @@
         }
       },
       {
-        "ordinal": 585,
+        "ordinal": 593,
         "path": "/admin/courses/registrations",
         "parameters": [
           {
@@ -35107,7 +35500,7 @@
         }
       },
       {
-        "ordinal": 586,
+        "ordinal": 594,
         "path": "/admin/courses/{slug}/registrations/{registrationId}",
         "parameters": [
           {
@@ -35152,7 +35545,7 @@
         }
       },
       {
-        "ordinal": 587,
+        "ordinal": 595,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/dossier",
         "parameters": [
           {
@@ -35197,7 +35590,7 @@
         }
       },
       {
-        "ordinal": 588,
+        "ordinal": 596,
         "path": "/admin/courses/registrations/{registrationId}/emails",
         "parameters": [
           {
@@ -35259,7 +35652,7 @@
         }
       },
       {
-        "ordinal": 589,
+        "ordinal": 597,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/status",
         "parameters": [
           {
@@ -35331,7 +35724,7 @@
         }
       },
       {
-        "ordinal": 590,
+        "ordinal": 598,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/notes",
         "parameters": [
           {
@@ -35403,7 +35796,7 @@
         }
       },
       {
-        "ordinal": 591,
+        "ordinal": 599,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts",
         "parameters": [
           {
@@ -35475,7 +35868,7 @@
         }
       },
       {
-        "ordinal": 592,
+        "ordinal": 600,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
         "parameters": [
           {
@@ -35557,7 +35950,7 @@
         }
       },
       {
-        "ordinal": 593,
+        "ordinal": 601,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/receipts/{receiptId}",
         "parameters": [
           {
@@ -35612,7 +36005,7 @@
         }
       },
       {
-        "ordinal": 594,
+        "ordinal": 602,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups",
         "parameters": [
           {
@@ -35684,7 +36077,7 @@
         }
       },
       {
-        "ordinal": 595,
+        "ordinal": 603,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}",
         "parameters": [
           {
@@ -35766,7 +36159,7 @@
         }
       },
       {
-        "ordinal": 596,
+        "ordinal": 604,
         "path": "/admin/courses/{slug}/registrations/{registrationId}/follow-ups/{followUpId}",
         "parameters": [
           {
@@ -35821,7 +36214,7 @@
         }
       },
       {
-        "ordinal": 597,
+        "ordinal": 605,
         "path": "/label/tracks",
         "parameters": [
           {
@@ -35873,7 +36266,7 @@
         }
       },
       {
-        "ordinal": 598,
+        "ordinal": 606,
         "path": "/label/tracks",
         "parameters": [],
         "bodies": [
@@ -35924,7 +36317,7 @@
         }
       },
       {
-        "ordinal": 599,
+        "ordinal": 607,
         "path": "/label/tracks/{id}",
         "parameters": [
           {
@@ -35986,7 +36379,7 @@
         }
       },
       {
-        "ordinal": 600,
+        "ordinal": 608,
         "path": "/label/tracks/{id}",
         "parameters": [
           {
@@ -36011,7 +36404,7 @@
         "responseType": null
       },
       {
-        "ordinal": 601,
+        "ordinal": 609,
         "path": "/label/project-notes",
         "parameters": [],
         "bodies": [],
@@ -36041,7 +36434,7 @@
         }
       },
       {
-        "ordinal": 602,
+        "ordinal": 610,
         "path": "/label/project-notes",
         "parameters": [],
         "bodies": [
@@ -36092,7 +36485,7 @@
         }
       },
       {
-        "ordinal": 603,
+        "ordinal": 611,
         "path": "/label/project-notes/{id}",
         "parameters": [
           {
@@ -36154,7 +36547,7 @@
         }
       },
       {
-        "ordinal": 604,
+        "ordinal": 612,
         "path": "/label/project-notes/{id}",
         "parameters": [
           {
@@ -36179,7 +36572,7 @@
         "responseType": null
       },
       {
-        "ordinal": 605,
+        "ordinal": 613,
         "path": "/calendar/v1/auth-url",
         "parameters": [],
         "bodies": [],
@@ -36203,7 +36596,7 @@
         }
       },
       {
-        "ordinal": 606,
+        "ordinal": 614,
         "path": "/calendar/v1/tokens",
         "parameters": [],
         "bodies": [
@@ -36254,7 +36647,7 @@
         }
       },
       {
-        "ordinal": 607,
+        "ordinal": 615,
         "path": "/calendar/v1/config",
         "parameters": [
           {
@@ -36306,7 +36699,7 @@
         }
       },
       {
-        "ordinal": 608,
+        "ordinal": 616,
         "path": "/calendar/v1/sync",
         "parameters": [],
         "bodies": [
@@ -36357,7 +36750,7 @@
         }
       },
       {
-        "ordinal": 609,
+        "ordinal": 617,
         "path": "/calendar/v1/events",
         "parameters": [
           {
@@ -36472,7 +36865,7 @@
         }
       },
       {
-        "ordinal": 610,
+        "ordinal": 618,
         "path": "/cms/admin/content",
         "parameters": [
           {
@@ -36545,7 +36938,7 @@
         }
       },
       {
-        "ordinal": 611,
+        "ordinal": 619,
         "path": "/cms/admin/content",
         "parameters": [],
         "bodies": [
@@ -36596,7 +36989,7 @@
         }
       },
       {
-        "ordinal": 612,
+        "ordinal": 620,
         "path": "/cms/admin/content/{id}/publish",
         "parameters": [
           {
@@ -36631,7 +37024,7 @@
         }
       },
       {
-        "ordinal": 613,
+        "ordinal": 621,
         "path": "/cms/admin/content/{id}",
         "parameters": [
           {
@@ -36666,7 +37059,7 @@
         }
       },
       {
-        "ordinal": 614,
+        "ordinal": 622,
         "path": "/drive/upload",
         "parameters": [
           {
@@ -36727,7 +37120,7 @@
         }
       },
       {
-        "ordinal": 615,
+        "ordinal": 623,
         "path": "/drive/token",
         "parameters": [],
         "bodies": [
@@ -36778,7 +37171,7 @@
         }
       },
       {
-        "ordinal": 616,
+        "ordinal": 624,
         "path": "/drive/token/refresh",
         "parameters": [],
         "bodies": [
@@ -36829,7 +37222,7 @@
         }
       },
       {
-        "ordinal": 617,
+        "ordinal": 625,
         "path": "/storage/me",
         "parameters": [],
         "bodies": [],
@@ -36853,7 +37246,7 @@
         }
       },
       {
-        "ordinal": 618,
+        "ordinal": 626,
         "path": "/storage/me/destination",
         "parameters": [],
         "bodies": [
@@ -36904,7 +37297,7 @@
         }
       },
       {
-        "ordinal": 619,
+        "ordinal": 627,
         "path": "/storage/files",
         "parameters": [
           {
@@ -36977,7 +37370,7 @@
         }
       },
       {
-        "ordinal": 620,
+        "ordinal": 628,
         "path": "/storage/files/{fileId}",
         "parameters": [
           {
@@ -37170,7 +37563,7 @@
         }
       },
       {
-        "ordinal": 621,
+        "ordinal": 629,
         "path": "/storage/files/{fileId}",
         "parameters": [
           {
@@ -37195,7 +37588,7 @@
         "responseType": null
       },
       {
-        "ordinal": 622,
+        "ordinal": 630,
         "path": "/radio/auto-stop-options",
         "parameters": [
           {
@@ -37241,7 +37634,7 @@
         }
       },
       {
-        "ordinal": 623,
+        "ordinal": 631,
         "path": "/radio/streams",
         "parameters": [
           {
@@ -37314,7 +37707,7 @@
         }
       },
       {
-        "ordinal": 624,
+        "ordinal": 632,
         "path": "/radio/streams/active",
         "parameters": [],
         "bodies": [
@@ -37365,7 +37758,7 @@
         }
       },
       {
-        "ordinal": 625,
+        "ordinal": 633,
         "path": "/radio/streams/import",
         "parameters": [],
         "bodies": [
@@ -37416,7 +37809,7 @@
         }
       },
       {
-        "ordinal": 626,
+        "ordinal": 634,
         "path": "/radio/streams/refresh-metadata",
         "parameters": [],
         "bodies": [
@@ -37467,7 +37860,7 @@
         }
       },
       {
-        "ordinal": 627,
+        "ordinal": 635,
         "path": "/radio/streams/now-playing",
         "parameters": [],
         "bodies": [
@@ -37518,7 +37911,7 @@
         }
       },
       {
-        "ordinal": 628,
+        "ordinal": 636,
         "path": "/radio/transmissions",
         "parameters": [],
         "bodies": [
@@ -37569,7 +37962,7 @@
         }
       },
       {
-        "ordinal": 629,
+        "ordinal": 637,
         "path": "/radio/presence",
         "parameters": [],
         "bodies": [],
@@ -37599,7 +37992,7 @@
         }
       },
       {
-        "ordinal": 630,
+        "ordinal": 638,
         "path": "/radio/presence",
         "parameters": [],
         "bodies": [
@@ -37650,7 +38043,7 @@
         }
       },
       {
-        "ordinal": 631,
+        "ordinal": 639,
         "path": "/radio/presence",
         "parameters": [],
         "bodies": [],
@@ -37674,7 +38067,7 @@
         }
       },
       {
-        "ordinal": 632,
+        "ordinal": 640,
         "path": "/radio/presence/{partyId}",
         "parameters": [
           {
@@ -37715,7 +38108,7 @@
         }
       },
       {
-        "ordinal": 633,
+        "ordinal": 641,
         "path": "/stubs/catalog",
         "parameters": [],
         "bodies": [],
@@ -37745,7 +38138,7 @@
         }
       },
       {
-        "ordinal": 634,
+        "ordinal": 642,
         "path": "/stubs/access/login-options",
         "parameters": [],
         "bodies": [],
@@ -37769,7 +38162,7 @@
         }
       },
       {
-        "ordinal": 635,
+        "ordinal": 643,
         "path": "/stubs/access/module-behaviour",
         "parameters": [],
         "bodies": [],
@@ -37793,7 +38186,7 @@
         }
       },
       {
-        "ordinal": 636,
+        "ordinal": 644,
         "path": "/stubs/access/session-policy",
         "parameters": [],
         "bodies": [],
@@ -37817,7 +38210,7 @@
         }
       },
       {
-        "ordinal": 637,
+        "ordinal": 645,
         "path": "/stubs/crm/parties/list-columns",
         "parameters": [],
         "bodies": [],
@@ -37841,7 +38234,7 @@
         }
       },
       {
-        "ordinal": 638,
+        "ordinal": 646,
         "path": "/stubs/crm/parties/filters",
         "parameters": [],
         "bodies": [],
@@ -37865,7 +38258,7 @@
         }
       },
       {
-        "ordinal": 639,
+        "ordinal": 647,
         "path": "/stubs/crm/parties/detail-tabs",
         "parameters": [],
         "bodies": [],
@@ -37889,7 +38282,7 @@
         }
       },
       {
-        "ordinal": 640,
+        "ordinal": 648,
         "path": "/stubs/scheduling/bookings/views",
         "parameters": [],
         "bodies": [],
@@ -37913,7 +38306,7 @@
         }
       },
       {
-        "ordinal": 641,
+        "ordinal": 649,
         "path": "/stubs/scheduling/sessions/creation",
         "parameters": [],
         "bodies": [],
@@ -37937,7 +38330,7 @@
         }
       },
       {
-        "ordinal": 642,
+        "ordinal": 650,
         "path": "/stubs/scheduling/rooms/features",
         "parameters": [],
         "bodies": [],
@@ -37961,7 +38354,7 @@
         }
       },
       {
-        "ordinal": 643,
+        "ordinal": 651,
         "path": "/stubs/packages/catalog",
         "parameters": [],
         "bodies": [],
@@ -37985,7 +38378,7 @@
         }
       },
       {
-        "ordinal": 644,
+        "ordinal": 652,
         "path": "/stubs/packages/purchase-flow",
         "parameters": [],
         "bodies": [],
@@ -38009,7 +38402,7 @@
         }
       },
       {
-        "ordinal": 645,
+        "ordinal": 653,
         "path": "/stubs/invoicing/composer",
         "parameters": [],
         "bodies": [],
@@ -38033,7 +38426,7 @@
         }
       },
       {
-        "ordinal": 646,
+        "ordinal": 654,
         "path": "/stubs/invoicing/status-flow",
         "parameters": [],
         "bodies": [],
@@ -38057,7 +38450,7 @@
         }
       },
       {
-        "ordinal": 647,
+        "ordinal": 655,
         "path": "/stubs/inventory/assets/metadata",
         "parameters": [],
         "bodies": [],
@@ -38081,7 +38474,7 @@
         }
       },
       {
-        "ordinal": 648,
+        "ordinal": 656,
         "path": "/stubs/inventory/assets/workflow",
         "parameters": [],
         "bodies": [],
@@ -38105,7 +38498,7 @@
         }
       },
       {
-        "ordinal": 649,
+        "ordinal": 657,
         "path": "/stubs/inventory/stock",
         "parameters": [],
         "bodies": [],
@@ -38129,7 +38522,7 @@
         }
       },
       {
-        "ordinal": 650,
+        "ordinal": 658,
         "path": "/stubs/admin/seed-policy",
         "parameters": [],
         "bodies": [],
@@ -38153,7 +38546,7 @@
         }
       },
       {
-        "ordinal": 651,
+        "ordinal": 659,
         "path": "/stubs/admin/console",
         "parameters": [],
         "bodies": [],
@@ -38177,7 +38570,7 @@
         }
       },
       {
-        "ordinal": 652,
+        "ordinal": 660,
         "path": "/stubs/experience/navigation",
         "parameters": [],
         "bodies": [],
@@ -38201,7 +38594,7 @@
         }
       },
       {
-        "ordinal": 653,
+        "ordinal": 661,
         "path": "/stubs/experience/feedback",
         "parameters": [],
         "bodies": [],
@@ -38225,7 +38618,7 @@
         }
       },
       {
-        "ordinal": 654,
+        "ordinal": 662,
         "path": "/stubs/experience/offline",
         "parameters": [],
         "bodies": [],
@@ -38249,7 +38642,7 @@
         }
       },
       {
-        "ordinal": 655,
+        "ordinal": 663,
         "path": "/stubs/experience/design",
         "parameters": [],
         "bodies": [],
@@ -38273,7 +38666,7 @@
         }
       },
       {
-        "ordinal": 656,
+        "ordinal": 664,
         "path": "/stubs/experience/auditing",
         "parameters": [],
         "bodies": [],
@@ -38297,7 +38690,7 @@
         }
       },
       {
-        "ordinal": 657,
+        "ordinal": 665,
         "path": "/ddex/references",
         "parameters": [
           {
@@ -38343,7 +38736,7 @@
         }
       },
       {
-        "ordinal": 658,
+        "ordinal": 666,
         "path": "/ddex/documents",
         "parameters": [],
         "bodies": [
@@ -38394,7 +38787,7 @@
         }
       },
       {
-        "ordinal": 659,
+        "ordinal": 667,
         "path": "/ddex/documents",
         "parameters": [
           {
@@ -38446,7 +38839,7 @@
         }
       },
       {
-        "ordinal": 660,
+        "ordinal": 668,
         "path": "/ddex/documents/{id}",
         "parameters": [
           {
@@ -38481,7 +38874,7 @@
         }
       },
       {
-        "ordinal": 661,
+        "ordinal": 669,
         "path": "/ddex/documents/{id}/raw",
         "parameters": [
           {
@@ -38516,7 +38909,7 @@
         }
       },
       {
-        "ordinal": 662,
+        "ordinal": 670,
         "path": "/ddex/documents/{id}/validation-runs",
         "parameters": [
           {
@@ -38551,7 +38944,7 @@
         }
       },
       {
-        "ordinal": 663,
+        "ordinal": 671,
         "path": "/ddex/documents/{id}/validation-runs/latest",
         "parameters": [
           {
@@ -38586,7 +38979,7 @@
         }
       },
       {
-        "ordinal": 664,
+        "ordinal": 672,
         "path": "/ddex/documents/{id}/preview",
         "parameters": [
           {
@@ -38621,7 +39014,7 @@
         }
       },
       {
-        "ordinal": 665,
+        "ordinal": 673,
         "path": "/ddex/documents/{id}/import-plans",
         "parameters": [
           {
@@ -38656,7 +39049,7 @@
         }
       },
       {
-        "ordinal": 666,
+        "ordinal": 674,
         "path": "/ddex/import-plans/{id}",
         "parameters": [
           {
@@ -38718,7 +39111,7 @@
         }
       },
       {
-        "ordinal": 667,
+        "ordinal": 675,
         "path": "/ddex/import-plans/{id}/commit",
         "parameters": [
           {
@@ -38753,7 +39146,7 @@
         }
       },
       {
-        "ordinal": 668,
+        "ordinal": 676,
         "path": "/ddex/exports",
         "parameters": [],
         "bodies": [
@@ -38804,7 +39197,7 @@
         }
       },
       {
-        "ordinal": 669,
+        "ordinal": 677,
         "path": "/ddex/exports/{id}/download",
         "parameters": [
           {
@@ -38839,7 +39232,7 @@
         }
       },
       {
-        "ordinal": 670,
+        "ordinal": 678,
         "path": "/ddex/partners",
         "parameters": [],
         "bodies": [],
@@ -38869,7 +39262,7 @@
         }
       },
       {
-        "ordinal": 671,
+        "ordinal": 679,
         "path": "/ddex/partners",
         "parameters": [],
         "bodies": [
@@ -38920,7 +39313,7 @@
         }
       },
       {
-        "ordinal": 672,
+        "ordinal": 680,
         "path": "/catalog/content-types",
         "parameters": [
           {
@@ -38972,7 +39365,7 @@
         }
       },
       {
-        "ordinal": 673,
+        "ordinal": 681,
         "path": "/catalog/workflow-states",
         "parameters": [
           {
@@ -39045,7 +39438,7 @@
         }
       },
       {
-        "ordinal": 674,
+        "ordinal": 682,
         "path": "/catalog/authored-contents",
         "parameters": [
           {
@@ -39097,7 +39490,7 @@
         }
       },
       {
-        "ordinal": 675,
+        "ordinal": 683,
         "path": "/catalog/definitions",
         "parameters": [
           {
@@ -39149,7 +39542,7 @@
         }
       },
       {
-        "ordinal": 676,
+        "ordinal": 684,
         "path": "/catalog/batch",
         "parameters": [
           {
@@ -39370,7 +39763,7 @@
         }
       },
       {
-        "ordinal": 677,
+        "ordinal": 685,
         "path": "/catalog/{catalogCode}/items",
         "parameters": [
           {
@@ -39591,7 +39984,7 @@
         }
       },
       {
-        "ordinal": 678,
+        "ordinal": 686,
         "path": "/catalog/{catalogCode}/items/{itemId}",
         "parameters": [
           {
@@ -39657,7 +40050,7 @@
         }
       },
       {
-        "ordinal": 679,
+        "ordinal": 687,
         "path": "/catalog/{catalogCode}/revisions",
         "parameters": [
           {
@@ -39740,7 +40133,7 @@
         }
       },
       {
-        "ordinal": 680,
+        "ordinal": 688,
         "path": "/catalog/{catalogCode}/revisions",
         "parameters": [
           {
@@ -39802,7 +40195,7 @@
         }
       },
       {
-        "ordinal": 681,
+        "ordinal": 689,
         "path": "/catalog/revisions/{revisionId}/submit",
         "parameters": [
           {
@@ -39837,7 +40230,7 @@
         }
       },
       {
-        "ordinal": 682,
+        "ordinal": 690,
         "path": "/catalog/revisions/{revisionId}/approve",
         "parameters": [
           {
@@ -39899,7 +40292,7 @@
         }
       },
       {
-        "ordinal": 683,
+        "ordinal": 691,
         "path": "/catalog/revisions/{revisionId}/reject",
         "parameters": [
           {
@@ -39961,7 +40354,7 @@
         }
       },
       {
-        "ordinal": 684,
+        "ordinal": 692,
         "path": "/catalog/{catalogCode}/items/{itemId}/activation",
         "parameters": [
           {
@@ -40033,7 +40426,7 @@
         }
       },
       {
-        "ordinal": 685,
+        "ordinal": 693,
         "path": "/catalog/{catalogCode}/reorder",
         "parameters": [
           {
@@ -40095,7 +40488,7 @@
         }
       },
       {
-        "ordinal": 686,
+        "ordinal": 694,
         "path": "/catalog/{catalogCode}/merge",
         "parameters": [
           {
@@ -40157,7 +40550,7 @@
         }
       },
       {
-        "ordinal": 687,
+        "ordinal": 695,
         "path": "/catalog/{catalogCode}/usage",
         "parameters": [
           {
@@ -40240,7 +40633,7 @@
         }
       },
       {
-        "ordinal": 688,
+        "ordinal": 696,
         "path": "/catalog/{catalogCode}/export.csv",
         "parameters": [
           {
@@ -40275,7 +40668,7 @@
         }
       },
       {
-        "ordinal": 689,
+        "ordinal": 697,
         "path": "/catalog/{catalogCode}/import.csv",
         "parameters": [
           {
@@ -40358,7 +40751,7 @@
         }
       },
       {
-        "ordinal": 690,
+        "ordinal": 698,
         "path": "/catalog/security/roles",
         "parameters": [],
         "bodies": [],
@@ -40388,7 +40781,7 @@
         }
       },
       {
-        "ordinal": 691,
+        "ordinal": 699,
         "path": "/catalog/security/party-role-assignments",
         "parameters": [
           {
@@ -40440,7 +40833,7 @@
         }
       },
       {
-        "ordinal": 692,
+        "ordinal": 700,
         "path": "/catalog/security/revisions",
         "parameters": [
           {
@@ -40534,7 +40927,7 @@
         }
       },
       {
-        "ordinal": 693,
+        "ordinal": 701,
         "path": "/catalog/security/audit",
         "parameters": [
           {
@@ -40628,7 +41021,7 @@
         }
       },
       {
-        "ordinal": 694,
+        "ordinal": 702,
         "path": "/catalog/security/party-role-revisions",
         "parameters": [],
         "bodies": [
@@ -40679,7 +41072,7 @@
         }
       },
       {
-        "ordinal": 695,
+        "ordinal": 703,
         "path": "/catalog/security/role-permission-revisions",
         "parameters": [],
         "bodies": [
@@ -40730,7 +41123,7 @@
         }
       },
       {
-        "ordinal": 696,
+        "ordinal": 704,
         "path": "/catalog/security/revisions/{revisionId}/submit",
         "parameters": [
           {
@@ -40765,7 +41158,7 @@
         }
       },
       {
-        "ordinal": 697,
+        "ordinal": 705,
         "path": "/catalog/security/revisions/{revisionId}/approve",
         "parameters": [
           {
@@ -40827,7 +41220,7 @@
         }
       },
       {
-        "ordinal": 698,
+        "ordinal": 706,
         "path": "/catalog/security/revisions/{revisionId}/reject",
         "parameters": [
           {
@@ -40889,7 +41282,7 @@
         }
       },
       {
-        "ordinal": 699,
+        "ordinal": 707,
         "path": "/admin/services/storefront/orders",
         "parameters": [
           {
@@ -40983,7 +41376,7 @@
         }
       },
       {
-        "ordinal": 700,
+        "ordinal": 708,
         "path": "/admin/services/storefront/orders/{orderId}",
         "parameters": [
           {
@@ -41045,7 +41438,7 @@
         }
       },
       {
-        "ordinal": 701,
+        "ordinal": 709,
         "path": "/admin/services/storefront/packages",
         "parameters": [],
         "bodies": [],
@@ -41075,7 +41468,7 @@
         }
       },
       {
-        "ordinal": 702,
+        "ordinal": 710,
         "path": "/admin/services/storefront/packages",
         "parameters": [],
         "bodies": [
@@ -41126,7 +41519,7 @@
         }
       },
       {
-        "ordinal": 703,
+        "ordinal": 711,
         "path": "/admin/services/storefront/packages/{packageId}",
         "parameters": [
           {
@@ -41188,7 +41581,7 @@
         }
       },
       {
-        "ordinal": 704,
+        "ordinal": 712,
         "path": "/admin/services/storefront/orders/{orderId}/refunds",
         "parameters": [
           {
@@ -41229,7 +41622,7 @@
         }
       },
       {
-        "ordinal": 705,
+        "ordinal": 713,
         "path": "/admin/services/storefront/orders/{orderId}/refunds",
         "parameters": [
           {
@@ -41312,7 +41705,7 @@
         }
       },
       {
-        "ordinal": 706,
+        "ordinal": 714,
         "path": "/admin/services/storefront/refunds/{refundId}/approve",
         "parameters": [
           {
@@ -41347,7 +41740,7 @@
         }
       },
       {
-        "ordinal": 707,
+        "ordinal": 715,
         "path": "/admin/services/storefront/refunds/{refundId}/reconcile",
         "parameters": [
           {
@@ -41442,7 +41835,7 @@
         }
       },
       {
-        "ordinal": 708,
+        "ordinal": 716,
         "path": "/admin/services/storefront/refunds/{refundId}/reconcile",
         "parameters": [
           {
@@ -41537,7 +41930,7 @@
         }
       },
       {
-        "ordinal": 709,
+        "ordinal": 717,
         "path": "/admin/services/storefront/orders/{orderId}/reconcile",
         "parameters": [
           {
@@ -41572,7 +41965,7 @@
         }
       },
       {
-        "ordinal": 710,
+        "ordinal": 718,
         "path": "/access-requests",
         "parameters": [],
         "bodies": [],
@@ -41602,7 +41995,7 @@
         }
       },
       {
-        "ordinal": 711,
+        "ordinal": 719,
         "path": "/access-requests",
         "parameters": [],
         "bodies": [
@@ -41653,7 +42046,7 @@
         }
       },
       {
-        "ordinal": 712,
+        "ordinal": 720,
         "path": "/access-requests/review",
         "parameters": [
           {
@@ -41705,7 +42098,7 @@
         }
       },
       {
-        "ordinal": 713,
+        "ordinal": 721,
         "path": "/access-requests/{requestId}",
         "parameters": [
           {
@@ -41740,7 +42133,7 @@
         }
       },
       {
-        "ordinal": 714,
+        "ordinal": 722,
         "path": "/access-requests/{requestId}/decision",
         "parameters": [
           {
@@ -41802,7 +42195,7 @@
         }
       },
       {
-        "ordinal": 715,
+        "ordinal": 723,
         "path": "/access-requests/{requestId}/cancel",
         "parameters": [
           {
@@ -41864,7 +42257,7 @@
         }
       },
       {
-        "ordinal": 716,
+        "ordinal": 724,
         "path": "/artist-invitations",
         "parameters": [],
         "bodies": [],
@@ -41894,7 +42287,7 @@
         }
       },
       {
-        "ordinal": 717,
+        "ordinal": 725,
         "path": "/artist-invitations",
         "parameters": [],
         "bodies": [
@@ -41945,7 +42338,7 @@
         }
       },
       {
-        "ordinal": 718,
+        "ordinal": 726,
         "path": "/artist-invitations/{invitationId}/revoke",
         "parameters": [
           {
@@ -41980,7 +42373,7 @@
         }
       },
       {
-        "ordinal": 719,
+        "ordinal": 727,
         "path": "/navigation/preferences",
         "parameters": [],
         "bodies": [],
@@ -42010,7 +42403,7 @@
         }
       },
       {
-        "ordinal": 720,
+        "ordinal": 728,
         "path": "/navigation/preferences/{featureId}",
         "parameters": [
           {
@@ -42072,7 +42465,7 @@
         }
       },
       {
-        "ordinal": 721,
+        "ordinal": 729,
         "path": "/navigation/preferences/{featureId}/visit",
         "parameters": [
           {
@@ -42107,7 +42500,7 @@
         }
       },
       {
-        "ordinal": 722,
+        "ordinal": 730,
         "path": "/directory/notification-context/{kind}/{targetId}",
         "parameters": [
           {
@@ -42152,7 +42545,7 @@
         }
       },
       {
-        "ordinal": 723,
+        "ordinal": 731,
         "path": "/directory/age-assurance",
         "parameters": [],
         "bodies": [
@@ -42203,7 +42596,7 @@
         }
       },
       {
-        "ordinal": 724,
+        "ordinal": 732,
         "path": "/directory/profiles",
         "parameters": [],
         "bodies": [],
@@ -42233,7 +42626,7 @@
         }
       },
       {
-        "ordinal": 725,
+        "ordinal": 733,
         "path": "/directory/profiles",
         "parameters": [
           {
@@ -42306,7 +42699,7 @@
         }
       },
       {
-        "ordinal": 726,
+        "ordinal": 734,
         "path": "/directory/profiles/{profileId}",
         "parameters": [
           {
@@ -42368,7 +42761,7 @@
         }
       },
       {
-        "ordinal": 727,
+        "ordinal": 735,
         "path": "/directory/profiles/{profileId}/status",
         "parameters": [
           {
@@ -42430,7 +42823,7 @@
         }
       },
       {
-        "ordinal": 728,
+        "ordinal": 736,
         "path": "/directory/classifieds",
         "parameters": [],
         "bodies": [],
@@ -42460,7 +42853,7 @@
         }
       },
       {
-        "ordinal": 729,
+        "ordinal": 737,
         "path": "/directory/classifieds",
         "parameters": [
           {
@@ -42533,7 +42926,7 @@
         }
       },
       {
-        "ordinal": 730,
+        "ordinal": 738,
         "path": "/directory/classifieds/{classifiedId}/status",
         "parameters": [
           {
@@ -42595,7 +42988,7 @@
         }
       },
       {
-        "ordinal": 731,
+        "ordinal": 739,
         "path": "/directory/classifieds/{classifiedId}/applications",
         "parameters": [
           {
@@ -42606,6 +42999,27 @@
               "args": [],
               "module": "Data.UUID.Types.Internal",
               "name": "UUID"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
             }
           }
         ],
@@ -42636,7 +43050,7 @@
         }
       },
       {
-        "ordinal": 732,
+        "ordinal": 740,
         "path": "/directory/classifieds/{classifiedId}/applications",
         "parameters": [
           {
@@ -42719,7 +43133,177 @@
         }
       },
       {
-        "ordinal": 733,
+        "ordinal": 741,
+        "path": "/directory/applications",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "GHC.Types",
+          "name": "List"
+        }
+      },
+      {
+        "ordinal": 742,
+        "path": "/directory/applications/{applicationId}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "applicationId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.UUID.Types.Internal",
+              "name": "UUID"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "Data.Aeson.Types.Internal",
+          "name": "Value"
+        }
+      },
+      {
+        "ordinal": 743,
+        "path": "/directory/applications/{applicationId}/counter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "applicationId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.UUID.Types.Internal",
+              "name": "UUID"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.API.Directory",
+              "name": "OfferCounterRequest"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "POST",
+        "successStatus": 201,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "Data.Aeson.Types.Internal",
+          "name": "Value"
+        }
+      },
+      {
+        "ordinal": 744,
         "path": "/directory/applications/{applicationId}/status",
         "parameters": [
           {
@@ -42781,7 +43365,156 @@
         }
       },
       {
-        "ordinal": 734,
+        "ordinal": 745,
+        "path": "/directory/agreements",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Optional"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "Data.Text.Internal",
+              "name": "Text"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [
+            {
+              "args": [],
+              "module": "Data.Aeson.Types.Internal",
+              "name": "Value"
+            }
+          ],
+          "module": "GHC.Types",
+          "name": "List"
+        }
+      },
+      {
+        "ordinal": 746,
+        "path": "/directory/agreements/{agreementId}",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agreementId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.UUID.Types.Internal",
+              "name": "UUID"
+            }
+          }
+        ],
+        "bodies": [],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "GET",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "Data.Aeson.Types.Internal",
+          "name": "Value"
+        }
+      },
+      {
+        "ordinal": 747,
+        "path": "/directory/agreements/{agreementId}/status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agreementId",
+            "modifiers": [],
+            "type": {
+              "args": [],
+              "module": "Data.UUID.Types.Internal",
+              "name": "UUID"
+            }
+          }
+        ],
+        "bodies": [
+          {
+            "modifiers": [
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Required"
+              },
+              {
+                "args": [],
+                "module": "Servant.API.Modifiers",
+                "name": "Strict"
+              }
+            ],
+            "contentTypes": [
+              {
+                "args": [],
+                "module": "Servant.API.ContentTypes",
+                "name": "JSON"
+              }
+            ],
+            "type": {
+              "args": [],
+              "module": "TDF.API.Directory",
+              "name": "DirectoryStatusRequest"
+            }
+          }
+        ],
+        "authCombinators": [
+          "bearer-token"
+        ],
+        "internalInputs": [],
+        "method": "PATCH",
+        "successStatus": 200,
+        "contentTypes": [
+          {
+            "args": [],
+            "module": "Servant.API.ContentTypes",
+            "name": "JSON"
+          }
+        ],
+        "responseType": {
+          "args": [],
+          "module": "Data.Aeson.Types.Internal",
+          "name": "Value"
+        }
+      },
+      {
+        "ordinal": 748,
         "path": "/directory/invitations",
         "parameters": [],
         "bodies": [],
@@ -42811,7 +43544,7 @@
         }
       },
       {
-        "ordinal": 735,
+        "ordinal": 749,
         "path": "/directory/invitations",
         "parameters": [
           {
@@ -42884,7 +43617,7 @@
         }
       },
       {
-        "ordinal": 736,
+        "ordinal": 750,
         "path": "/directory/invitations/{invitationId}/status",
         "parameters": [
           {
@@ -42946,7 +43679,7 @@
         }
       },
       {
-        "ordinal": 737,
+        "ordinal": 751,
         "path": "/directory/contact",
         "parameters": [
           {
@@ -43019,7 +43752,7 @@
         }
       },
       {
-        "ordinal": 738,
+        "ordinal": 752,
         "path": "/directory/review-eligibility",
         "parameters": [
           {
@@ -43071,7 +43804,7 @@
         }
       },
       {
-        "ordinal": 739,
+        "ordinal": 753,
         "path": "/directory/reviews",
         "parameters": [
           {
@@ -43144,7 +43877,7 @@
         }
       },
       {
-        "ordinal": 740,
+        "ordinal": 754,
         "path": "/directory/favorites",
         "parameters": [
           {
@@ -43196,7 +43929,7 @@
         }
       },
       {
-        "ordinal": 741,
+        "ordinal": 755,
         "path": "/directory/favorites/{targetKind}/{targetId}",
         "parameters": [
           {
@@ -43241,7 +43974,7 @@
         }
       },
       {
-        "ordinal": 742,
+        "ordinal": 756,
         "path": "/directory/favorites/{targetKind}/{targetId}",
         "parameters": [
           {
@@ -43286,7 +44019,7 @@
         }
       },
       {
-        "ordinal": 743,
+        "ordinal": 757,
         "path": "/directory/saved-searches",
         "parameters": [],
         "bodies": [],
@@ -43316,7 +44049,7 @@
         }
       },
       {
-        "ordinal": 744,
+        "ordinal": 758,
         "path": "/directory/saved-searches",
         "parameters": [
           {
@@ -43389,7 +44122,7 @@
         }
       },
       {
-        "ordinal": 745,
+        "ordinal": 759,
         "path": "/directory/artist-claim-targets/{partyId}",
         "parameters": [
           {
@@ -43424,7 +44157,7 @@
         }
       },
       {
-        "ordinal": 746,
+        "ordinal": 760,
         "path": "/directory/claims",
         "parameters": [
           {
@@ -43497,7 +44230,7 @@
         }
       },
       {
-        "ordinal": 747,
+        "ordinal": 761,
         "path": "/directory/verifications",
         "parameters": [
           {
@@ -43570,7 +44303,7 @@
         }
       },
       {
-        "ordinal": 748,
+        "ordinal": 762,
         "path": "/directory/reports",
         "parameters": [
           {
@@ -43643,7 +44376,7 @@
         }
       },
       {
-        "ordinal": 749,
+        "ordinal": 763,
         "path": "/directory/admin/claims",
         "parameters": [],
         "bodies": [],
@@ -43673,7 +44406,7 @@
         }
       },
       {
-        "ordinal": 750,
+        "ordinal": 764,
         "path": "/directory/admin/claims/{claimId}/status",
         "parameters": [
           {
@@ -43735,7 +44468,7 @@
         }
       },
       {
-        "ordinal": 751,
+        "ordinal": 765,
         "path": "/directory/admin/verifications",
         "parameters": [],
         "bodies": [],
@@ -43765,7 +44498,7 @@
         }
       },
       {
-        "ordinal": 752,
+        "ordinal": 766,
         "path": "/directory/admin/verifications/{verificationId}/status",
         "parameters": [
           {
@@ -43827,7 +44560,7 @@
         }
       },
       {
-        "ordinal": 753,
+        "ordinal": 767,
         "path": "/directory/admin/moderation",
         "parameters": [],
         "bodies": [],
@@ -43857,7 +44590,7 @@
         }
       },
       {
-        "ordinal": 754,
+        "ordinal": 768,
         "path": "/directory/admin/moderation/{caseId}/decisions",
         "parameters": [
           {
@@ -43940,7 +44673,7 @@
         }
       },
       {
-        "ordinal": 755,
+        "ordinal": 769,
         "path": "/directory/admin/merges",
         "parameters": [
           {
@@ -44013,7 +44746,7 @@
         }
       },
       {
-        "ordinal": 756,
+        "ordinal": 770,
         "path": "/merch/favorites/{productId}",
         "parameters": [
           {
@@ -44048,7 +44781,7 @@
         }
       },
       {
-        "ordinal": 757,
+        "ordinal": 771,
         "path": "/merch/favorites/{productId}",
         "parameters": [
           {
@@ -44083,7 +44816,7 @@
         }
       },
       {
-        "ordinal": 758,
+        "ordinal": 772,
         "path": "/merch/seller/stores",
         "parameters": [],
         "bodies": [],
@@ -44113,7 +44846,7 @@
         }
       },
       {
-        "ordinal": 759,
+        "ordinal": 773,
         "path": "/merch/seller/applications",
         "parameters": [
           {
@@ -44186,7 +44919,7 @@
         }
       },
       {
-        "ordinal": 760,
+        "ordinal": 774,
         "path": "/merch/seller/stores/{storeId}",
         "parameters": [
           {
@@ -44248,7 +44981,7 @@
         }
       },
       {
-        "ordinal": 761,
+        "ordinal": 775,
         "path": "/merch/seller/stores/{storeId}/members",
         "parameters": [
           {
@@ -44289,7 +45022,7 @@
         }
       },
       {
-        "ordinal": 762,
+        "ordinal": 776,
         "path": "/merch/seller/stores/{storeId}/members",
         "parameters": [
           {
@@ -44372,7 +45105,7 @@
         }
       },
       {
-        "ordinal": 763,
+        "ordinal": 777,
         "path": "/merch/seller/stores/{storeId}/members/{memberId}",
         "parameters": [
           {
@@ -44444,7 +45177,7 @@
         }
       },
       {
-        "ordinal": 764,
+        "ordinal": 778,
         "path": "/merch/seller/stores/{storeId}/policies",
         "parameters": [
           {
@@ -44506,7 +45239,7 @@
         }
       },
       {
-        "ordinal": 765,
+        "ordinal": 779,
         "path": "/merch/seller/stores/{storeId}/shipping-zones",
         "parameters": [
           {
@@ -44568,7 +45301,7 @@
         }
       },
       {
-        "ordinal": 766,
+        "ordinal": 780,
         "path": "/merch/seller/stores/{storeId}/products",
         "parameters": [
           {
@@ -44609,7 +45342,7 @@
         }
       },
       {
-        "ordinal": 767,
+        "ordinal": 781,
         "path": "/merch/seller/stores/{storeId}/products",
         "parameters": [
           {
@@ -44692,7 +45425,7 @@
         }
       },
       {
-        "ordinal": 768,
+        "ordinal": 782,
         "path": "/merch/seller/stores/{storeId}/products/{productId}",
         "parameters": [
           {
@@ -44764,7 +45497,7 @@
         }
       },
       {
-        "ordinal": 769,
+        "ordinal": 783,
         "path": "/merch/seller/stores/{storeId}/products/{productId}/status",
         "parameters": [
           {
@@ -44836,7 +45569,7 @@
         }
       },
       {
-        "ordinal": 770,
+        "ordinal": 784,
         "path": "/merch/seller/stores/{storeId}/products/{productId}/images",
         "parameters": [
           {
@@ -44896,7 +45629,7 @@
         }
       },
       {
-        "ordinal": 771,
+        "ordinal": 785,
         "path": "/merch/seller/stores/{storeId}/variants/{variantId}/stock",
         "parameters": [
           {
@@ -44968,7 +45701,7 @@
         }
       },
       {
-        "ordinal": 772,
+        "ordinal": 786,
         "path": "/merch/seller/stores/{storeId}/orders",
         "parameters": [
           {
@@ -45030,7 +45763,7 @@
         }
       },
       {
-        "ordinal": 773,
+        "ordinal": 787,
         "path": "/merch/seller/stores/{storeId}/issues",
         "parameters": [
           {
@@ -45092,7 +45825,7 @@
         }
       },
       {
-        "ordinal": 774,
+        "ordinal": 788,
         "path": "/merch/seller/stores/{storeId}/issues/{issueId}",
         "parameters": [
           {
@@ -45164,7 +45897,7 @@
         }
       },
       {
-        "ordinal": 775,
+        "ordinal": 789,
         "path": "/merch/seller/stores/{storeId}/orders/{orderId}/fulfillment",
         "parameters": [
           {
@@ -45236,7 +45969,7 @@
         }
       },
       {
-        "ordinal": 776,
+        "ordinal": 790,
         "path": "/merch/admin/stores",
         "parameters": [
           {
@@ -45288,7 +46021,7 @@
         }
       },
       {
-        "ordinal": 777,
+        "ordinal": 791,
         "path": "/merch/admin/stores/{storeId}/review",
         "parameters": [
           {
@@ -45350,7 +46083,7 @@
         }
       },
       {
-        "ordinal": 778,
+        "ordinal": 792,
         "path": "/merch/admin/products",
         "parameters": [
           {
@@ -45402,7 +46135,7 @@
         }
       },
       {
-        "ordinal": 779,
+        "ordinal": 793,
         "path": "/merch/admin/products/{productId}/review",
         "parameters": [
           {
@@ -45464,7 +46197,7 @@
         }
       },
       {
-        "ordinal": 780,
+        "ordinal": 794,
         "path": "/merch/admin/issues",
         "parameters": [
           {
@@ -45516,7 +46249,7 @@
         }
       },
       {
-        "ordinal": 781,
+        "ordinal": 795,
         "path": "/merch/admin/issues/{issueId}",
         "parameters": [
           {
@@ -45578,7 +46311,7 @@
         }
       },
       {
-        "ordinal": 782,
+        "ordinal": 796,
         "path": "/merch/admin/refunds",
         "parameters": [
           {
@@ -45630,7 +46363,7 @@
         }
       },
       {
-        "ordinal": 783,
+        "ordinal": 797,
         "path": "/merch/admin/orders/{orderId}/refunds",
         "parameters": [
           {
@@ -45713,7 +46446,7 @@
         }
       },
       {
-        "ordinal": 784,
+        "ordinal": 798,
         "path": "/merch/admin/refunds/{refundId}/status",
         "parameters": [
           {
@@ -45775,7 +46508,7 @@
         }
       },
       {
-        "ordinal": 785,
+        "ordinal": 799,
         "path": "/merch/admin/disputes",
         "parameters": [],
         "bodies": [],
@@ -45805,7 +46538,7 @@
         }
       },
       {
-        "ordinal": 786,
+        "ordinal": 800,
         "path": "/merch/admin/settlements",
         "parameters": [],
         "bodies": [
@@ -45856,7 +46589,7 @@
         }
       },
       {
-        "ordinal": 787,
+        "ordinal": 801,
         "path": "/merch/admin/settlements/{settlementId}/status",
         "parameters": [
           {
@@ -45918,7 +46651,7 @@
         }
       },
       {
-        "ordinal": 788,
+        "ordinal": 802,
         "path": "/merch/admin/settlements",
         "parameters": [
           {
@@ -45970,7 +46703,7 @@
         }
       },
       {
-        "ordinal": 789,
+        "ordinal": 803,
         "path": "/merch/admin/stores/{storeId}/settlement-orders",
         "parameters": [
           {
@@ -46011,7 +46744,7 @@
         }
       },
       {
-        "ordinal": 790,
+        "ordinal": 804,
         "path": "/merch/admin/settlements/{settlementId}/payment-evidence",
         "parameters": [
           {
@@ -46082,7 +46815,7 @@
         }
       },
       {
-        "ordinal": 791,
+        "ordinal": 805,
         "path": "/operations/metrics",
         "parameters": [
           {
@@ -46149,7 +46882,7 @@
         }
       },
       {
-        "ordinal": 792,
+        "ordinal": 806,
         "path": "/operations/work-items",
         "parameters": [
           {
@@ -46573,7 +47306,7 @@
         }
       },
       {
-        "ordinal": 793,
+        "ordinal": 807,
         "path": "/operations/work-items",
         "parameters": [],
         "bodies": [
@@ -46624,7 +47357,7 @@
         }
       },
       {
-        "ordinal": 794,
+        "ordinal": 808,
         "path": "/operations/work-items/{workItemId}",
         "parameters": [
           {
@@ -46659,7 +47392,7 @@
         }
       },
       {
-        "ordinal": 795,
+        "ordinal": 809,
         "path": "/operations/work-items/{workItemId}/seen",
         "parameters": [
           {
@@ -46721,7 +47454,7 @@
         }
       },
       {
-        "ordinal": 796,
+        "ordinal": 810,
         "path": "/operations/work-items/{workItemId}/transition",
         "parameters": [
           {
@@ -46783,7 +47516,7 @@
         }
       },
       {
-        "ordinal": 797,
+        "ordinal": 811,
         "path": "/operations/work-items/{workItemId}/assignment",
         "parameters": [
           {
@@ -46845,7 +47578,7 @@
         }
       },
       {
-        "ordinal": 798,
+        "ordinal": 812,
         "path": "/operations/work-items/{workItemId}/priority",
         "parameters": [
           {
@@ -46907,7 +47640,7 @@
         }
       },
       {
-        "ordinal": 799,
+        "ordinal": 813,
         "path": "/operations/work-items/{workItemId}/notes",
         "parameters": [
           {
@@ -46969,7 +47702,7 @@
         }
       },
       {
-        "ordinal": 800,
+        "ordinal": 814,
         "path": "/operations/approvals",
         "parameters": [],
         "bodies": [
@@ -47020,7 +47753,7 @@
         }
       },
       {
-        "ordinal": 801,
+        "ordinal": 815,
         "path": "/operations/approvals/{approvalId}/decision",
         "parameters": [
           {
@@ -47082,7 +47815,7 @@
         }
       },
       {
-        "ordinal": 802,
+        "ordinal": 816,
         "path": "/operations/integration-failures",
         "parameters": [
           {
@@ -47176,7 +47909,7 @@
         }
       },
       {
-        "ordinal": 803,
+        "ordinal": 817,
         "path": "/operations/integration-failures/{failureId}/replay",
         "parameters": [
           {
@@ -47238,7 +47971,7 @@
         }
       },
       {
-        "ordinal": 804,
+        "ordinal": 818,
         "path": "/operations/events",
         "parameters": [
           {
@@ -47326,7 +48059,7 @@
         }
       },
       {
-        "ordinal": 805,
+        "ordinal": 819,
         "path": "/operations/saved-views",
         "parameters": [
           {
@@ -47378,7 +48111,7 @@
         }
       },
       {
-        "ordinal": 806,
+        "ordinal": 820,
         "path": "/operations/saved-views",
         "parameters": [],
         "bodies": [
@@ -47429,7 +48162,7 @@
         }
       },
       {
-        "ordinal": 807,
+        "ordinal": 821,
         "path": "/operations/push-subscriptions",
         "parameters": [],
         "bodies": [
@@ -47480,7 +48213,7 @@
         }
       },
       {
-        "ordinal": 808,
+        "ordinal": 822,
         "path": "/event-operations/events/{eventId}",
         "parameters": [
           {
@@ -47515,7 +48248,7 @@
         }
       },
       {
-        "ordinal": 809,
+        "ordinal": 823,
         "path": "/event-operations/events/{eventId}/transitions",
         "parameters": [
           {
@@ -47598,7 +48331,7 @@
         }
       },
       {
-        "ordinal": 810,
+        "ordinal": 824,
         "path": "/event-operations/events/{eventId}/tasks/{activityId}",
         "parameters": [
           {
@@ -47703,7 +48436,7 @@
         }
       },
       {
-        "ordinal": 811,
+        "ordinal": 825,
         "path": "/event-operations/events/{eventId}/tasks/{activityId}/revisioned",
         "parameters": [
           {
@@ -47808,7 +48541,7 @@
         }
       },
       {
-        "ordinal": 812,
+        "ordinal": 826,
         "path": "/event-operations/events/{eventId}/tasks/{activityId}/raci/reassign",
         "parameters": [
           {
@@ -47961,7 +48694,7 @@
         }
       },
       {
-        "ordinal": 813,
+        "ordinal": 827,
         "path": "/event-operations/events/{eventId}/tasks/{activityId}/raci/context",
         "parameters": [
           {
@@ -48087,7 +48820,7 @@
         }
       },
       {
-        "ordinal": 814,
+        "ordinal": 828,
         "path": "/event-operations/events/{eventId}/tasks/{activityId}/complete",
         "parameters": [
           {
@@ -48240,7 +48973,7 @@
         }
       },
       {
-        "ordinal": 815,
+        "ordinal": 829,
         "path": "/admin/commerce/overview",
         "parameters": [],
         "bodies": [],
@@ -48264,7 +48997,7 @@
         }
       },
       {
-        "ordinal": 816,
+        "ordinal": 830,
         "path": "/admin/commerce/provider-events",
         "parameters": [
           {
@@ -48358,7 +49091,7 @@
         }
       },
       {
-        "ordinal": 817,
+        "ordinal": 831,
         "path": "/admin/commerce/provider-events/{eventId}/replay",
         "parameters": [
           {
@@ -48420,7 +49153,7 @@
         }
       },
       {
-        "ordinal": 818,
+        "ordinal": 832,
         "path": "/admin/commerce/provider-queries",
         "parameters": [
           {
@@ -48589,7 +49322,7 @@
         }
       },
       {
-        "ordinal": 819,
+        "ordinal": 833,
         "path": "/admin/commerce/reconciliation-exceptions",
         "parameters": [
           {
@@ -48779,7 +49512,7 @@
         }
       },
       {
-        "ordinal": 820,
+        "ordinal": 834,
         "path": "/reviews/eligibility",
         "parameters": [
           {
@@ -48852,7 +49585,7 @@
         }
       },
       {
-        "ordinal": 821,
+        "ordinal": 835,
         "path": "/reviews",
         "parameters": [
           {
@@ -48925,7 +49658,7 @@
         }
       },
       {
-        "ordinal": 822,
+        "ordinal": 836,
         "path": "/reputation/preferences",
         "parameters": [
           {
@@ -48971,7 +49704,7 @@
         }
       },
       {
-        "ordinal": 823,
+        "ordinal": 837,
         "path": "/reputation/preferences",
         "parameters": [
           {
@@ -49044,7 +49777,7 @@
         }
       },
       {
-        "ordinal": 824,
+        "ordinal": 838,
         "path": "/reputation/consents",
         "parameters": [],
         "bodies": [],
@@ -49074,7 +49807,7 @@
         }
       },
       {
-        "ordinal": 825,
+        "ordinal": 839,
         "path": "/reputation/consents",
         "parameters": [],
         "bodies": [
@@ -49137,7 +49870,7 @@
         }
       },
       {
-        "ordinal": 826,
+        "ordinal": 840,
         "path": "/music/studio/releases",
         "parameters": [
           {
@@ -49189,7 +49922,7 @@
         }
       },
       {
-        "ordinal": 827,
+        "ordinal": 841,
         "path": "/music/releases",
         "parameters": [
           {
@@ -49262,7 +49995,7 @@
         }
       },
       {
-        "ordinal": 828,
+        "ordinal": 842,
         "path": "/music/releases/{releaseId}/versions/{versionId}",
         "parameters": [
           {
@@ -49307,7 +50040,7 @@
         }
       },
       {
-        "ordinal": 829,
+        "ordinal": 843,
         "path": "/music/releases/{releaseId}/versions/{versionId}/corrections",
         "parameters": [
           {
@@ -49373,7 +50106,7 @@
         }
       },
       {
-        "ordinal": 830,
+        "ordinal": 844,
         "path": "/music/releases/{releaseId}/versions/{versionId}/draft",
         "parameters": [
           {
@@ -49445,7 +50178,7 @@
         }
       },
       {
-        "ordinal": 831,
+        "ordinal": 845,
         "path": "/music/releases/{releaseId}/versions/{versionId}/content",
         "parameters": [
           {
@@ -49517,7 +50250,7 @@
         }
       },
       {
-        "ordinal": 832,
+        "ordinal": 846,
         "path": "/music/releases/{releaseId}/versions/{versionId}/terms",
         "parameters": [
           {
@@ -49589,7 +50322,7 @@
         }
       },
       {
-        "ordinal": 833,
+        "ordinal": 847,
         "path": "/music/releases/{releaseId}/versions/{versionId}/validate",
         "parameters": [
           {
@@ -49634,7 +50367,7 @@
         }
       },
       {
-        "ordinal": 834,
+        "ordinal": 848,
         "path": "/music/releases/{releaseId}/versions/{versionId}/transition",
         "parameters": [
           {
@@ -49727,7 +50460,7 @@
         }
       },
       {
-        "ordinal": 835,
+        "ordinal": 849,
         "path": "/music/releases/{releaseId}/versions/{versionId}/comments",
         "parameters": [
           {
@@ -49799,7 +50532,7 @@
         }
       },
       {
-        "ordinal": 836,
+        "ordinal": 850,
         "path": "/music/releases/{releaseId}/versions/{versionId}/comments/{commentId}/resolve",
         "parameters": [
           {
@@ -49854,7 +50587,7 @@
         }
       },
       {
-        "ordinal": 837,
+        "ordinal": 851,
         "path": "/music/releases/{releaseId}/versions/{versionId}/uploads",
         "parameters": [
           {
@@ -49947,7 +50680,7 @@
         }
       },
       {
-        "ordinal": 838,
+        "ordinal": 852,
         "path": "/music/uploads/{uploadId}/provider",
         "parameters": [
           {
@@ -50009,7 +50742,7 @@
         }
       },
       {
-        "ordinal": 839,
+        "ordinal": 853,
         "path": "/music/uploads/{uploadId}/parts/{partNumber}",
         "parameters": [
           {
@@ -50054,7 +50787,7 @@
         }
       },
       {
-        "ordinal": 840,
+        "ordinal": 854,
         "path": "/music/uploads/{uploadId}/parts/{partNumber}",
         "parameters": [
           {
@@ -50126,7 +50859,7 @@
         }
       },
       {
-        "ordinal": 841,
+        "ordinal": 855,
         "path": "/music/uploads/{uploadId}/completion",
         "parameters": [
           {
@@ -50161,7 +50894,7 @@
         }
       },
       {
-        "ordinal": 842,
+        "ordinal": 856,
         "path": "/music/uploads/{uploadId}/confirm",
         "parameters": [
           {
@@ -50223,7 +50956,7 @@
         }
       },
       {
-        "ordinal": 843,
+        "ordinal": 857,
         "path": "/music/uploads/{uploadId}",
         "parameters": [
           {
@@ -50258,7 +50991,7 @@
         }
       },
       {
-        "ordinal": 844,
+        "ordinal": 858,
         "path": "/music/favorites",
         "parameters": [
           {
@@ -50310,7 +51043,7 @@
         }
       },
       {
-        "ordinal": 845,
+        "ordinal": 859,
         "path": "/music/favorites",
         "parameters": [
           {
@@ -50383,7 +51116,7 @@
         }
       },
       {
-        "ordinal": 846,
+        "ordinal": 860,
         "path": "/music/favorites/{recordingId}",
         "parameters": [
           {
@@ -50418,7 +51151,7 @@
         }
       },
       {
-        "ordinal": 847,
+        "ordinal": 861,
         "path": "/music/playlists",
         "parameters": [
           {
@@ -50470,7 +51203,7 @@
         }
       },
       {
-        "ordinal": 848,
+        "ordinal": 862,
         "path": "/music/playlists",
         "parameters": [],
         "bodies": [
@@ -50521,7 +51254,7 @@
         }
       },
       {
-        "ordinal": 849,
+        "ordinal": 863,
         "path": "/music/playlists/{playlistId}",
         "parameters": [
           {
@@ -50583,7 +51316,7 @@
         }
       },
       {
-        "ordinal": 850,
+        "ordinal": 864,
         "path": "/music/playlists/{playlistId}",
         "parameters": [
           {
@@ -50618,7 +51351,7 @@
         }
       },
       {
-        "ordinal": 851,
+        "ordinal": 865,
         "path": "/music/playlists/{playlistId}/items",
         "parameters": [
           {
@@ -50701,7 +51434,7 @@
         }
       },
       {
-        "ordinal": 852,
+        "ordinal": 866,
         "path": "/music/playlists/{playlistId}/items/{itemId}",
         "parameters": [
           {
@@ -50773,7 +51506,7 @@
         }
       },
       {
-        "ordinal": 853,
+        "ordinal": 867,
         "path": "/music/playlists/{playlistId}/items/{itemId}",
         "parameters": [
           {
@@ -50818,7 +51551,7 @@
         }
       },
       {
-        "ordinal": 854,
+        "ordinal": 868,
         "path": "/music/me/playback-events",
         "parameters": [
           {
@@ -50891,7 +51624,7 @@
         }
       },
       {
-        "ordinal": 855,
+        "ordinal": 869,
         "path": "/music/history",
         "parameters": [
           {
@@ -50943,7 +51676,7 @@
         }
       },
       {
-        "ordinal": 856,
+        "ordinal": 870,
         "path": "/music/infringement-reports",
         "parameters": [
           {
@@ -51016,7 +51749,7 @@
         }
       },
       {
-        "ordinal": 857,
+        "ordinal": 871,
         "path": "/music/infringement-reports",
         "parameters": [
           {
@@ -51068,7 +51801,7 @@
         }
       },
       {
-        "ordinal": 858,
+        "ordinal": 872,
         "path": "/music/infringement-reports/{reportId}",
         "parameters": [
           {
@@ -51130,7 +51863,7 @@
         }
       },
       {
-        "ordinal": 859,
+        "ordinal": 873,
         "path": "/music/analytics/releases/{releaseId}",
         "parameters": [
           {
@@ -51207,7 +51940,7 @@
         }
       },
       {
-        "ordinal": 860,
+        "ordinal": 874,
         "path": "/music/purchases",
         "parameters": [
           {
@@ -51301,7 +52034,7 @@
         }
       },
       {
-        "ordinal": 861,
+        "ordinal": 875,
         "path": "/music/purchases",
         "parameters": [],
         "bodies": [],
@@ -51331,7 +52064,7 @@
         }
       },
       {
-        "ordinal": 862,
+        "ordinal": 876,
         "path": "/music/purchases/{purchaseId}/datafast/checkout",
         "parameters": [
           {
@@ -51387,7 +52120,7 @@
         }
       },
       {
-        "ordinal": 863,
+        "ordinal": 877,
         "path": "/music/purchases/{purchaseId}/datafast/status",
         "parameters": [
           {
@@ -51470,7 +52203,7 @@
         }
       },
       {
-        "ordinal": 864,
+        "ordinal": 878,
         "path": "/music/purchases/{purchaseId}/paypal/create",
         "parameters": [
           {
@@ -51526,7 +52259,7 @@
         }
       },
       {
-        "ordinal": 865,
+        "ordinal": 879,
         "path": "/music/purchases/{purchaseId}/paypal/capture",
         "parameters": [
           {
@@ -51609,7 +52342,7 @@
         }
       },
       {
-        "ordinal": 866,
+        "ordinal": 880,
         "path": "/music/entitlements",
         "parameters": [],
         "bodies": [],
@@ -51639,7 +52372,7 @@
         }
       },
       {
-        "ordinal": 867,
+        "ordinal": 881,
         "path": "/music/entitlements/{entitlementId}/download",
         "parameters": [
           {
@@ -51701,7 +52434,7 @@
         }
       },
       {
-        "ordinal": 868,
+        "ordinal": 882,
         "path": "/music/downloads/free",
         "parameters": [
           {
@@ -51774,7 +52507,7 @@
         }
       },
       {
-        "ordinal": 869,
+        "ordinal": 883,
         "path": "/music/ddex/parties",
         "parameters": [],
         "bodies": [],
@@ -51804,7 +52537,7 @@
         }
       },
       {
-        "ordinal": 870,
+        "ordinal": 884,
         "path": "/music/ddex/parties",
         "parameters": [],
         "bodies": [
@@ -51855,7 +52588,7 @@
         }
       },
       {
-        "ordinal": 871,
+        "ordinal": 885,
         "path": "/music/releases/{releaseId}/versions/{versionId}/ddex-exports",
         "parameters": [
           {
@@ -51906,7 +52639,7 @@
         }
       },
       {
-        "ordinal": 872,
+        "ordinal": 886,
         "path": "/music/releases/{releaseId}/versions/{versionId}/ddex-exports",
         "parameters": [
           {
@@ -51999,7 +52732,7 @@
         }
       },
       {
-        "ordinal": 873,
+        "ordinal": 887,
         "path": "/music/ddex/exports/{exportId}/download",
         "parameters": [
           {
@@ -52034,7 +52767,7 @@
         }
       },
       {
-        "ordinal": 874,
+        "ordinal": 888,
         "path": "/interactions/targets/{kind}/{entityKey}",
         "parameters": [
           {
@@ -52139,7 +52872,7 @@
         }
       },
       {
-        "ordinal": 875,
+        "ordinal": 889,
         "path": "/interactions/targets/{kind}/{entityKey}/comments",
         "parameters": [
           {
@@ -52328,7 +53061,7 @@
         }
       },
       {
-        "ordinal": 876,
+        "ordinal": 890,
         "path": "/interactions/targets/{kind}/{entityKey}/comments/{commentId}",
         "parameters": [
           {
@@ -52443,7 +53176,7 @@
         }
       },
       {
-        "ordinal": 877,
+        "ordinal": 891,
         "path": "/interactions/targets/{kind}/{entityKey}/reactors",
         "parameters": [
           {
@@ -52590,7 +53323,7 @@
         }
       },
       {
-        "ordinal": 878,
+        "ordinal": 892,
         "path": "/interactions/targets/{targetId}/commands",
         "parameters": [
           {
@@ -52712,7 +53445,7 @@
         }
       },
       {
-        "ordinal": 879,
+        "ordinal": 893,
         "path": "/interactions/resolve/{destinationKind}/{destinationId}",
         "parameters": [
           {
@@ -52817,7 +53550,7 @@
         }
       },
       {
-        "ordinal": 880,
+        "ordinal": 894,
         "path": "/interactions/blocks/{partyId}",
         "parameters": [
           {
@@ -52912,7 +53645,7 @@
         }
       },
       {
-        "ordinal": 881,
+        "ordinal": 895,
         "path": "/interactions/blocks/{partyId}",
         "parameters": [
           {
@@ -53034,7 +53767,7 @@
         }
       },
       {
-        "ordinal": 882,
+        "ordinal": 896,
         "path": "/interactions/blocked-accounts",
         "parameters": [
           {
@@ -53161,7 +53894,7 @@
         }
       },
       {
-        "ordinal": 883,
+        "ordinal": 897,
         "path": "/interactions/reports",
         "parameters": [
           {
@@ -53309,7 +54042,7 @@
         }
       },
       {
-        "ordinal": 884,
+        "ordinal": 898,
         "path": "/interactions/preferences",
         "parameters": [],
         "bodies": [],
@@ -53393,7 +54126,7 @@
         }
       },
       {
-        "ordinal": 885,
+        "ordinal": 899,
         "path": "/interactions/preferences",
         "parameters": [],
         "bodies": [
@@ -53504,7 +54237,7 @@
         }
       },
       {
-        "ordinal": 886,
+        "ordinal": 900,
         "path": "/interactions/moderation/{targetId}",
         "parameters": [
           {
@@ -53641,7 +54374,7 @@
         }
       },
       {
-        "ordinal": 887,
+        "ordinal": 901,
         "path": "/marketplace",
         "parameters": [],
         "bodies": [],
@@ -53669,7 +54402,7 @@
         }
       },
       {
-        "ordinal": 888,
+        "ordinal": 902,
         "path": "/marketplace/{id}",
         "parameters": [
           {
@@ -53702,7 +54435,7 @@
         }
       },
       {
-        "ordinal": 889,
+        "ordinal": 903,
         "path": "/marketplace/cart",
         "parameters": [],
         "bodies": [],
@@ -53724,7 +54457,7 @@
         }
       },
       {
-        "ordinal": 890,
+        "ordinal": 904,
         "path": "/marketplace/cart/{cartId}",
         "parameters": [
           {
@@ -53757,7 +54490,7 @@
         }
       },
       {
-        "ordinal": 891,
+        "ordinal": 905,
         "path": "/marketplace/cart/{cartId}/items",
         "parameters": [
           {
@@ -53817,7 +54550,7 @@
         }
       },
       {
-        "ordinal": 892,
+        "ordinal": 906,
         "path": "/marketplace/cart/{cartId}/checkout",
         "parameters": [
           {
@@ -53898,7 +54631,7 @@
         }
       },
       {
-        "ordinal": 893,
+        "ordinal": 907,
         "path": "/marketplace/cart/{cartId}/stripe/payment-intent",
         "parameters": [
           {
@@ -53979,7 +54712,7 @@
         }
       },
       {
-        "ordinal": 894,
+        "ordinal": 908,
         "path": "/marketplace/cart/{cartId}/datafast/checkout",
         "parameters": [
           {
@@ -54060,7 +54793,7 @@
         }
       },
       {
-        "ordinal": 895,
+        "ordinal": 909,
         "path": "/marketplace/datafast/status",
         "parameters": [
           {
@@ -54146,7 +54879,7 @@
         }
       },
       {
-        "ordinal": 896,
+        "ordinal": 910,
         "path": "/marketplace/cart/{cartId}/paypal/create",
         "parameters": [
           {
@@ -54227,7 +54960,7 @@
         }
       },
       {
-        "ordinal": 897,
+        "ordinal": 911,
         "path": "/marketplace/paypal/capture",
         "parameters": [
           {
@@ -54298,7 +55031,7 @@
         }
       },
       {
-        "ordinal": 898,
+        "ordinal": 912,
         "path": "/marketplace/orders/{orderId}",
         "parameters": [
           {
@@ -54352,7 +55085,7 @@
         }
       },
       {
-        "ordinal": 899,
+        "ordinal": 913,
         "path": "/marketplace/orders/{orderId}/manual-payment/evidence",
         "parameters": [
           {
@@ -54433,7 +55166,7 @@
         }
       },
       {
-        "ordinal": 900,
+        "ordinal": 914,
         "path": "/marketplace/orders/{orderId}/requests",
         "parameters": [
           {
@@ -54493,7 +55226,7 @@
         }
       },
       {
-        "ordinal": 901,
+        "ordinal": 915,
         "path": "/marketplace/orders/{orderId}/requests",
         "parameters": [
           {
@@ -54595,7 +55328,7 @@
         }
       },
       {
-        "ordinal": 902,
+        "ordinal": 916,
         "path": "/rooms/public",
         "parameters": [],
         "bodies": [],
@@ -54623,7 +55356,7 @@
         }
       },
       {
-        "ordinal": 903,
+        "ordinal": 917,
         "path": "/services/catalog/public",
         "parameters": [
           {
@@ -54748,7 +55481,7 @@
         }
       },
       {
-        "ordinal": 904,
+        "ordinal": 918,
         "path": "/services/storefront",
         "parameters": [],
         "bodies": [],
@@ -54776,7 +55509,7 @@
         }
       },
       {
-        "ordinal": 905,
+        "ordinal": 919,
         "path": "/services/storefront/{packageId}",
         "parameters": [
           {
@@ -54809,7 +55542,7 @@
         }
       },
       {
-        "ordinal": 906,
+        "ordinal": 920,
         "path": "/services/storefront/order",
         "parameters": [
           {
@@ -54880,7 +55613,7 @@
         }
       },
       {
-        "ordinal": 907,
+        "ordinal": 921,
         "path": "/services/storefront/order/{orderId}",
         "parameters": [
           {
@@ -54934,7 +55667,7 @@
         }
       },
       {
-        "ordinal": 908,
+        "ordinal": 922,
         "path": "/services/storefront/order/{orderId}/stripe/payment-intent",
         "parameters": [
           {
@@ -54988,7 +55721,7 @@
         }
       },
       {
-        "ordinal": 909,
+        "ordinal": 923,
         "path": "/services/storefront/order/{orderId}/datafast/checkout",
         "parameters": [
           {
@@ -55042,7 +55775,7 @@
         }
       },
       {
-        "ordinal": 910,
+        "ordinal": 924,
         "path": "/services/storefront/datafast/status",
         "parameters": [
           {
@@ -55128,7 +55861,7 @@
         }
       },
       {
-        "ordinal": 911,
+        "ordinal": 925,
         "path": "/services/storefront/order/{orderId}/paypal/create",
         "parameters": [
           {
@@ -55182,7 +55915,7 @@
         }
       },
       {
-        "ordinal": 912,
+        "ordinal": 926,
         "path": "/services/storefront/paypal/capture",
         "parameters": [
           {
@@ -55253,7 +55986,7 @@
         }
       },
       {
-        "ordinal": 913,
+        "ordinal": 927,
         "path": "/services/storefront/paypal/webhook",
         "parameters": [
           {
@@ -55408,7 +56141,7 @@
         }
       },
       {
-        "ordinal": 914,
+        "ordinal": 928,
         "path": "/services/storefront/order/{orderId}/manual-payment",
         "parameters": [
           {
@@ -55489,7 +56222,7 @@
         }
       },
       {
-        "ordinal": 915,
+        "ordinal": 929,
         "path": "/services/storefront/order/{orderId}/revision",
         "parameters": [
           {
@@ -55570,7 +56303,7 @@
         }
       },
       {
-        "ordinal": 916,
+        "ordinal": 930,
         "path": "/engineers",
         "parameters": [],
         "bodies": [],
@@ -55598,7 +56331,7 @@
         }
       },
       {
-        "ordinal": 917,
+        "ordinal": 931,
         "path": "/bookings/public/availability",
         "parameters": [
           {
@@ -55669,7 +56402,7 @@
         }
       },
       {
-        "ordinal": 918,
+        "ordinal": 932,
         "path": "/bookings/public",
         "parameters": [
           {
@@ -55740,7 +56473,7 @@
         }
       },
       {
-        "ordinal": 919,
+        "ordinal": 933,
         "path": "/bookings/public/checkout",
         "parameters": [
           {
@@ -55811,7 +56544,7 @@
         }
       },
       {
-        "ordinal": 920,
+        "ordinal": 934,
         "path": "/bookings/public/orders/{bookingId}",
         "parameters": [
           {
@@ -55865,7 +56598,7 @@
         }
       },
       {
-        "ordinal": 921,
+        "ordinal": 935,
         "path": "/bookings/public/orders/{bookingId}/datafast/checkout",
         "parameters": [
           {
@@ -55919,7 +56652,7 @@
         }
       },
       {
-        "ordinal": 922,
+        "ordinal": 936,
         "path": "/bookings/public/orders/{bookingId}/datafast/status",
         "parameters": [
           {
@@ -55989,7 +56722,7 @@
         }
       },
       {
-        "ordinal": 923,
+        "ordinal": 937,
         "path": "/bookings/public/orders/{bookingId}/paypal/create",
         "parameters": [
           {
@@ -56043,7 +56776,7 @@
         }
       },
       {
-        "ordinal": 924,
+        "ordinal": 938,
         "path": "/bookings/public/orders/{bookingId}/paypal/capture",
         "parameters": [
           {
@@ -56124,7 +56857,7 @@
         }
       },
       {
-        "ordinal": 925,
+        "ordinal": 939,
         "path": "/bookings/public/orders/{bookingId}/manual-payment",
         "parameters": [
           {
@@ -56205,7 +56938,7 @@
         }
       },
       {
-        "ordinal": 926,
+        "ordinal": 940,
         "path": "/bookings/public/orders/{bookingId}/manual-payment/evidence",
         "parameters": [
           {
@@ -56286,7 +57019,7 @@
         }
       },
       {
-        "ordinal": 929,
+        "ordinal": 943,
         "path": "/social-events/stripe/webhook",
         "parameters": [
           {
@@ -56359,7 +57092,7 @@
     ],
     "rawMounts": [
       {
-        "ordinal": 927,
+        "ordinal": 941,
         "path": "/inventory",
         "parameters": [],
         "bodies": [],
@@ -56367,7 +57100,7 @@
         "internalInputs": []
       },
       {
-        "ordinal": 928,
+        "ordinal": 942,
         "path": "/assets/serve",
         "parameters": [],
         "bodies": [],

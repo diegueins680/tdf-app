@@ -439,6 +439,14 @@ jobs:
           export TDF_AUDIT_E2E_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
           sh scripts/test-studio-internship-audit-api-e2e.sh
 
+      - name: Verify login lockout, disabled-account answer and signup and reset limits over HTTP
+        env:
+          PGHOST: postgres
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          TDF_AUTH_THROTTLE_BACKEND_EXE: ${{ env.BACKEND_BINARY_OUT }}
+        run: sh scripts/test-auth-throttle-http.sh
+
       - name: Inspect the compiled Servant API against documented operations
         run: |
           mkdir -p tmp/specification
@@ -669,6 +677,10 @@ jobs:
         env:
           TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
         run: sh scripts/test-event-organizer.sh
+      - name: Verify delegated event administration, single-use links and courtesy tickets
+        env:
+          TDF_IDENTITY_HTTP_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test
+        run: sh scripts/test-event-admin-delegation.sh
       - name: Chat recipient notifications and repeated messages
         env:
           TDF_CHAT_NOTIFICATION_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/tdf_hq_automatic_migration_test

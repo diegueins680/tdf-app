@@ -56,6 +56,7 @@ import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
+import qualified TDF.EventAdminDelegationSpec as EventAdminDelegationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
@@ -526,6 +527,9 @@ import TDF.Server.SocialEventsHandlers (
     StripeTicketPaymentEvidence (..),
     parseStripeTicketPaymentEvidence,
     validateStripeTicketPaymentEvidence,
+    StripeTicketCapture (..),
+    parseStripeTicketCapture,
+    stripeTicketClosedOrderNeedsReview,
     parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
     canRecoverMarketplaceStripeOrder,
@@ -923,6 +927,7 @@ main = hspec $ do
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
+    EventAdminDelegationSpec.spec
     InvoiceDatilSpec.spec
     TicketManualReviewSpec.spec
     TicketPaymentReceiptSpec.spec
@@ -4349,6 +4354,40 @@ main = hspec $ do
             parseStripeTicketPaymentEvidence
                 (A.object ["data" .= A.object ["object" .= A.object ["id" .= ("pi_ticket_123" :: Text)] ]])
                 `shouldBe` Left "Stripe ticket payment evidence is incomplete"
+
+        it "surfaces a succeeded Stripe capture that carries no usable ticket binding" $ do
+            let capturePayload extra intent =
+                    A.object (("data" .= A.object ["object" .= A.object intent]) : extra)
+                succeeded amount =
+                    [ "id" .= ("pi_ticket_123" :: Text)
+                    , "status" .= ("Succeeded" :: Text)
+                    , "amount_received" .= (amount :: Int)
+                    ]
+            -- No metadata at all: the binding parser refuses, the capture is still read.
+            parseStripeTicketPaymentEvidence (capturePayload [] (succeeded 5100))
+                `shouldBe` Left "Stripe ticket payment evidence is incomplete"
+            parseStripeTicketCapture (capturePayload [] (succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 Nothing CheckoutStore.CheckoutProduction)
+            parseStripeTicketCapture
+                (capturePayload ["livemode" .= False] (("currency" .= ("usd" :: Text)) : succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 (Just "usd") CheckoutStore.CheckoutSandbox)
+            parseStripeTicketCapture (capturePayload ["livemode" .= True] (succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 Nothing CheckoutStore.CheckoutProduction)
+            -- Nothing captured, nothing to reconcile.
+            parseStripeTicketCapture (capturePayload [] (succeeded 0)) `shouldBe` Nothing
+            parseStripeTicketCapture
+                ( capturePayload
+                    []
+                    [ "status" .= ("requires_payment_method" :: Text)
+                    , "amount_received" .= (5100 :: Int)
+                    ]
+                )
+                `shouldBe` Nothing
+            parseStripeTicketCapture (A.object []) `shouldBe` Nothing
+
+        it "reviews a valid Stripe capture only when the ticket order is closed" $ do
+            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded"]
+                `shouldBe` [False, False, False, True, True, True]
 
         it "recovers marketplace order ids from Stripe metadata context" $ do
             let webhookPayload =

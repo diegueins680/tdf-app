@@ -21,6 +21,7 @@ const DomoVenuePage = lazy(() => import('../pages/DomoVenuePage'));
 const DomoQuoteCheckoutPage = lazy(() => import('../pages/DomoQuoteCheckoutPage'));
 const DirectorySearchPage = lazy(() => import('../pages/DirectorySearchPage'));
 const DirectoryPublicDetailPage = lazy(() => import('../pages/DirectoryPublicDetailPage'));
+const EventAdminInvitationAcceptPanel = lazy(() => import('../components/events/EventAdminInvitationAcceptPanel'));
 const EventCommunityEntry = lazy(() => import('./EventCommunityEntry'));
 const SocialEventWorkspacePage = lazy(() => import('../pages/SocialEventWorkspacePage'));
 const FanClubPage = lazy(() => import('../pages/FanClubPage'));
@@ -109,7 +110,7 @@ export function renderPublicRoutes() {
       <Route path="/buscar" element={<PublicBranding><DirectorySearchPage /></PublicBranding>} />
       <Route path="/directorio/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="profile" /></PublicBranding>} />
       <Route path="/clasificados/:slug" element={<PublicBranding><DirectoryPublicDetailPage kind="classified" /></PublicBranding>} />
-      <Route path="/eventos/:eventId" element={<PublicBranding><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
+      <Route path="/eventos/:eventId" element={<PublicBranding><EventAdminInvitationAcceptPanel /><DirectoryPublicDetailPage kind="event" /></PublicBranding>} />
       <Route path="/social/eventos/:eventId" element={<EventCommunityEntry />}>
         <Route index element={<SocialEventWorkspacePage />} />
       </Route>

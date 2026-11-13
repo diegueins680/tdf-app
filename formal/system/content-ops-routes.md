@@ -24,7 +24,7 @@ Derived on 2026-11-07 by reading `tdf-hq/src/TDF/Server.hs` (CMS, seeding), `Ser
 ## Open behaviours for the owner to decide
 
 **Seeding**
-- The seed routes are weaker than `POST /admin/seed` (no strict administrator or module); the production guard relies on hosting-platform markers, so a self-hosted box without them can enable seeding; no audit row records a seed run.
+- **Decided 2026-11-10.** The three seed routes sit behind `AuthProtect` and need a strict administrator with the Admin module, like `POST /admin/seed`, before the seed token is read. Still open: the production guard relies on hosting-platform markers, so a self-hosted box without them can enable seeding, and no audit row records a seed run.
 
 **Workflow**
 - CMS publish does not check the row's current status, so an archived or already published row can be republished and two publishers can race.

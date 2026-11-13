@@ -216,7 +216,9 @@ library
     TDF.ServerProposals
     TDF.ServerInternships
     TDF.ServerInternAudit
+    TDF.Server.EventAdminDelegation
     TDF.Server.SocialEventsHandlers
+    TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
@@ -244,6 +246,8 @@ library
     TDF.Trials.Seed
     TDF.Trials.Server
     TDF.Calendar.Models
+    TDF.Calendar.TokenCipher
+    TDF.Auth.Throttle
     TDF.CMS.Models
     TDF.Catalog.Models
     TDF.Catalog.CountryReferenceSeed
@@ -410,6 +414,7 @@ test-suite tdf-hq-test
     TDF.FailureBoundarySpec
     TDF.ReadinessSpec
     TDF.TicketConfirmationSpec
+    TDF.EventAdminDelegationSpec
     TDF.EventOrganizerSpec
     TDF.InvoiceDatilSpec
     TDF.TicketManualReviewSpec
