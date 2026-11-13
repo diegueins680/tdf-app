@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 525,
-    "named": 443,
+    "total": 527,
+    "named": 445,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 525
+    "covered": 527
   },
   "routes": [
     {
@@ -3747,6 +3747,14 @@
     },
     {
       "method": "POST",
+      "path": "/social-events/events/{eventId}/organizer-claims",
+      "basis": "named",
+      "requirements": [
+        "EVT-ORGANIZER-CLAIM-001"
+      ]
+    },
+    {
+      "method": "POST",
       "path": "/social-events/events/{eventId}/promo-codes",
       "basis": "named",
       "requirements": [
@@ -3949,6 +3957,14 @@
         "SOCIAL-EVENT-INVITATION-001"
       ],
       "note": "SOCIAL-EVENT-INVITATION-001 specifies the organizer campaign setting, recipient consent and opening attribution these SQL-backed handlers implement."
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/organizer-claims/{claimId}/decision",
+      "basis": "named",
+      "requirements": [
+        "EVT-ORGANIZER-CLAIM-001"
+      ]
     },
     {
       "method": "POST",

@@ -11,6 +11,8 @@ Historical green results are not current-candidate evidence.
 
 - [event-organizer-assignment.md](event-organizer-assignment.md): events without an organizer are never taken by the first caller; single conditional assignment to a strict administrator, bounded model, three negative controls and PostgreSQL concurrency tests.
 
+- [event-organizer-claim.md](event-organizer-claim.md): an event without an organizer is claimed with evidence, like an artist profile without an account; only a strict administrator other than the claimant approves, and approval assigns the claimant through the single conditional assignment (EVT-ORGANIZER-CLAIM-001); PostgreSQL tests, no model, owner confirmation of the limits pending.
+
 - [event-planning-ux.md](event-planning-ux.md): explicit event clocks, standard ticket fee estimates and bounded poster retry/session checks; delegated management is specified separately below.
 
 - [event-admin-delegation.md](event-admin-delegation.md): organizer-issued single-use links that make one account administrator of one event, what that administrator can and cannot do, and courtesy tickets (EVT-ADMIN-DELEGATION-001); PostgreSQL tests, no model, owner confirmation of the limits pending.

@@ -4,7 +4,7 @@ jest.unstable_mockModule('../components/events/EventMemoryInvitations', () => ({
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { EventAdminAccessDTO, EventAdminRosterDTO, SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
+import type { EventAdminAccessDTO, EventAdminRosterDTO, EventOrganizerClaimStateDTO, SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
 const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
 const uploadMomentMediaMock = jest.fn<(eventId: string, file: File) => Promise<{ eiuPublicUrl: string }>>();
@@ -16,6 +16,7 @@ const listMomentsMock = jest.fn<(eventId: string) => Promise<SocialEventMomentDT
 const listTicketTiersMock = jest.fn<(eventId: string) => Promise<SocialTicketTierDTO[]>>();
 const getEventAdminAccessMock = jest.fn<(eventId: string) => Promise<EventAdminAccessDTO>>();
 const listEventAdminsMock = jest.fn<(eventId: string) => Promise<EventAdminRosterDTO>>();
+const getEventOrganizerClaimMock = jest.fn<(eventId: string) => Promise<EventOrganizerClaimStateDTO>>();
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<{ checkoutAvailable: boolean }>>();
 
 jest.unstable_mockModule('../api/socialEvents', () => ({
@@ -29,6 +30,8 @@ jest.unstable_mockModule('../api/socialEvents', () => ({
     createTicketTier: jest.fn(),
     getEventAdminAccess: (eventId: string) => getEventAdminAccessMock(eventId),
     listEventAdmins: (eventId: string) => listEventAdminsMock(eventId),
+    getEventOrganizerClaim: (eventId: string) => getEventOrganizerClaimMock(eventId),
+    submitEventOrganizerClaim: jest.fn(),
     listArtists: jest.fn(async () => []),
   },
 }));
@@ -122,6 +125,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
     getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
     getEventAdminAccessMock.mockReset().mockResolvedValue({ eaaEventId: '121', eaaAccess: 'none' });
     listEventAdminsMock.mockReset().mockResolvedValue({ earAccess: 'admin', earAdmins: [], earInvitations: [] });
+    getEventOrganizerClaimMock.mockReset().mockResolvedValue({ eocsEventId: '121', eocsClaimable: true, eocsClaim: null });
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
   });
@@ -452,6 +456,34 @@ describe('SocialEventDetailPage ticket sharing', () => {
     const guestView = renderPage();
     expect(await screen.findByText('General')).toBeTruthy();
     expect(getEventAdminAccessMock).toHaveBeenCalledTimes(2);
+    guestView.unmount();
+  });
+
+  it('offers the organizer claim only to a signed-in account on an event without an organizer', async () => {
+    activeSession = { partyId: 9 };
+    const organizedView = renderPage();
+    expect(await screen.findByText('General')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Este evento no tiene quien lo administre' })).toBeNull();
+    expect(getEventOrganizerClaimMock).not.toHaveBeenCalled();
+    organizedView.unmount();
+
+    getEventMock.mockResolvedValue({ ...eventFixture, eventOrganizerPartyId: '   ' });
+    const ownerlessView = renderPage();
+    expect(await screen.findByRole('heading', { name: 'Este evento no tiene quien lo administre' })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: 'Solicitar administración del evento' })).toBeTruthy();
+    expect(getEventOrganizerClaimMock).toHaveBeenCalledWith('121');
+    // A claim form grants nothing: no management tool appears with it.
+    expect(screen.queryByRole('heading', { name: 'Preparar evento' })).toBeNull();
+    expect(screen.queryByText('Crear tipo de ticket')).toBeNull();
+    ownerlessView.unmount();
+
+    activeSession = null;
+    getEventOrganizerClaimMock.mockClear();
+    getEventMock.mockResolvedValue({ ...eventFixture, eventOrganizerPartyId: null });
+    const guestView = renderPage();
+    expect(await screen.findByText('General')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Este evento no tiene quien lo administre' })).toBeNull();
+    expect(getEventOrganizerClaimMock).not.toHaveBeenCalled();
     guestView.unmount();
   });
 

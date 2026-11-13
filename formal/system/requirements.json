@@ -3741,7 +3741,7 @@
       "id": "AUTH-RADIO-001",
       "title": "Authenticated party radio-presence read",
       "domain": "AUTH",
-      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party’s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
+      "statement": "GET /radio/presence/{partyId} requires a currently valid bearer session and positive party ID. Anonymous or inactive tokens must not expose listening presence. An authenticated actor may read another party\u2019s existing presence, or null when absent; this contract does not introduce a relationship restriction.",
       "property": "One mounted declaration for party presence, protected by bearer authentication; anonymous denial preserves current documented privacy boundary.",
       "actors": [
         "Visitor",
@@ -4738,7 +4738,7 @@
       "id": "EVT-OWNER-CLAIM-001",
       "title": "Never hand an event without an organizer to the first caller",
       "domain": "EVT",
-      "statement": "An event is managed by its stored organizer and no request path replaces a stored organizer. On an event without an organizer, organizer-only routes refuse and never write; strict administrators keep the administrative routes that never depended on assignment. Only a strict administrator whose edit of the event is accepted becomes its organizer, in the same transaction, through one conditional update whose stored result decides the outcome.",
+      "statement": "An event is managed by its stored organizer and no request path replaces a stored organizer. On an event without an organizer, organizer-only routes refuse and never write; strict administrators keep the administrative routes that never depended on assignment. A missing organizer is filled only through one conditional update whose stored result decides the outcome, in the same transaction as its cause: a strict administrator's accepted edit of the event assigns that administrator, and a strict administrator's approval of another account's claim under EVT-ORGANIZER-CLAIM-001 assigns the claimant.",
       "authority": "Event-operations foundation migration of 2026-09-14 (events without a resolved owner stay disabled until reviewed) and repository audit of 2026-09-14 (remove organizer-null claiming)",
       "source": "formal/system/event-organizer-assignment.md",
       "contract": "formal/system/event-organizer-assignment.md",
@@ -4761,11 +4761,13 @@
         "authority": "PostgreSQL conditional update and row lock"
       },
       "allowedTransitions": [
-        "No organizer -> strict administrator whose edit of the event is accepted"
+        "No organizer -> strict administrator whose edit of the event is accepted",
+        "No organizer -> claimant whose claim a strict administrator other than the claimant approves (EVT-ORGANIZER-CLAIM-001)"
       ],
       "forbiddenTransitions": [
         "No organizer -> any caller of a read route",
-        "No organizer -> ordinary user",
+        "No organizer -> ordinary user without an approved claim",
+        "No organizer -> the caller of any route, on that caller's own request",
         "No organizer -> administrator whose edit was refused",
         "Organizer A -> organizer B through any organizer-only route",
         "Acting as organizer when the stored organizer is another party"
@@ -4774,18 +4776,19 @@
         "Organizer assigned once",
         "updated_at refreshed on assignment"
       ],
-      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before. A delegated administrator under EVT-ADMIN-DELEGATION-001 passes the organizer check of the operations that requirement lists, only on an event that has a stored organizer; the stored organizer itself is never changed by a grant.",
+      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it; a claim under EVT-ORGANIZER-CLAIM-001 passes no organizer check until a strict administrator approves it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before. A delegated administrator under EVT-ADMIN-DELEGATION-001 passes the organizer check of the operations that requirement lists, only on an event that has a stored organizer; the stored organizer itself is never changed by a grant.",
       "privacy": "Buyer, refund and invoice data of an event without an organizer are no longer reachable by an arbitrary signed-in account.",
       "concurrency": "Assignment runs under the event row lock together with the accepted edit and is one UPDATE conditional on the organizer still being missing; the row is reread and the edit proceeds only if the stored organizer is the caller.",
       "idempotency": "Repeating the edit as the assigned organizer is an ordinary organizer request; a second assignment changes nothing.",
       "failure": "403 for an event without an organizer; 403 for a caller who lost a simultaneous assignment; 404 if the event disappeared.",
-      "recovery": "A strict administrator edits the event through the API to become its organizer, or an owner is assigned by a reviewed database change; no shipped client exposes the administrator edit.",
-      "observability": "The organizer field and updated_at; no audit row is written.",
-      "property": "A stored organizer never changes through a request, and a missing organizer is filled at most once and only by a strict administrator.",
+      "recovery": "The account that organizes the event claims it and a strict administrator approves the claim (EVT-ORGANIZER-CLAIM-001, web client available); or a strict administrator edits the event through the API to become its organizer; or an owner is assigned by a reviewed database change. No shipped client exposes the administrator edit.",
+      "observability": "The organizer field and updated_at; an assignment by approved claim is recorded in event_organizer_claim (claimant, reviewer, notes, time); the administrator edit writes no audit row.",
+      "property": "A stored organizer never changes through a request, and a missing organizer is filled at most once, and only with a strict administrator who edits the event or with a claimant whose claim a strict administrator other than the claimant approved.",
       "implementation": [
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "formal/event-operations/EventOrganizer.tla",
-        "scripts/test-event-organizer.sh"
+        "scripts/test-event-organizer.sh",
+        "tdf-hq/src/TDF/Server/EventOrganizerClaim.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/EventOrganizerSpec.hs",
@@ -4809,7 +4812,7 @@
         "How many production events lack an organizer is unknown; none is created by current code.",
         "The assignment is not audited and does not update event_operation_relationship.",
         "The assigning administrator stays organizer; there is no transfer route and no client surface for the assignment.",
-        "Whether a non-administrator should ever be able to request ownership of such an event is a product decision; today the answer is no."
+        "The owner decided on 2026-11-13 that an event without an organizer can be claimed like an artist profile; EVT-ORGANIZER-CLAIM-001 specifies the reviewed claim. The model of this requirement was not extended with the claim path."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -7791,7 +7794,7 @@
       "title": "Issue an SRI electronic invoice for every paid invoiced ticket order",
       "domain": "EVT",
       "statement": "A ticket policy may require electronic invoices. Such an event cannot sell until invoicing is configured for its checkout environment and the submission worker is switched on. Each paid order enqueues exactly one invoice with the next sequential number; the worker binds a TDF-generated access key and submits through an authorized provider, never resending a submission whose outcome is unknown. Every verified refund of an invoiced order enqueues exactly one credit note bound to the invoice; bank-transfer orders are refunded by staff with separation of duties.",
-      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (Dátil)",
+      "authority": "User decision of 2026-10-06: TDF must generate the invoice before selling, through an authorized provider (D\u00e1til)",
       "source": "docs/events/ticket-electronic-invoices.md",
       "contract": "docs/events/ticket-electronic-invoices.md",
       "actors": [
@@ -7891,7 +7894,7 @@
       "evidence": "Local PostgreSQL 16 worker tests, TLC and Hspec on 2026-10-10; PostgreSQL 16, Hspec and Jest on 2026-10-06; no provider sandbox invoice yet.",
       "status": "specified and implemented",
       "critical": true,
-      "confidence": "Provider contract taken from Dátil public documentation; an actual pruebas invoice is required before production.",
+      "confidence": "Provider contract taken from D\u00e1til public documentation; an actual pruebas invoice is required before production.",
       "ambiguity": [
         "Regime legends (e.g. RIMPE) are not automated.",
         "An uncertain document has no in-app reconciliation and a rejected document cannot be corrected and resent; both need a product and tax decision.",
@@ -7903,7 +7906,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real Dátil pruebas authorization and production configuration are pending."
+        "reason": "Worker submission rules are modeled within bounds and exercised on PostgreSQL with a substitute transport; a real D\u00e1til pruebas authorization and production configuration are pending."
       }
     },
     {
@@ -9663,7 +9666,7 @@
       "authorization": "RSVP reads and writes use the existing authenticated RSVP endpoints; the carousel grants nothing.",
       "privacy": "Only the viewer's own RSVP is read; one-tap RSVPs follow the viewer's profile-visibility preference. Artist priority admits only events with public-listable capability and public metadata, including for administrative viewers; management-only event fields are excluded from the card projection.",
       "concurrency": "RSVP upserts are per viewer and event. One-tap attendance stays disabled until the viewer's RSVP for that event has loaded, an in-flight read is cancelled before the write, and the response updates the RSVP cache entry shared with the event detail controls and invalidates the summary and profile feed.",
-      "idempotency": "Re-tapping Asistiré re-upserts the same accepted RSVP.",
+      "idempotency": "Re-tapping Asistir\u00e9 re-upserts the same accepted RSVP.",
       "failure": "A failed or malformed general agenda read leaves any available artist dates visible. Failed or absent artist dates retain the general agenda. If neither group has available events, hide the carousel. An RSVP read failure leaves the card as a plain link. The surrounding page and navigation are unaffected.",
       "recovery": "Dismissal is per browser session; a new session shows the carousel again.",
       "observability": "None beyond existing RSVP and API telemetry.",
@@ -10898,7 +10901,7 @@
         "classification": "PARTIAL",
         "reason": "Implemented, tested over HTTP and PostgreSQL and model-checked within bounds; not deployed."
       },
-      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure …', 'operations worker …', 'operations retried …', 'operations migration …'; formal/event-operations/OperationsFailureReplay.tla",
+      "evidence": "scripts/lib/operations_conformance.py cases named 'operations failure \u2026', 'operations worker \u2026', 'operations retried \u2026', 'operations migration \u2026'; formal/event-operations/OperationsFailureReplay.tla",
       "observability": "Audit row with previous and resulting status; failure attempt count and timestamps; work item resolved on recovery.",
       "recovery": "The migration returns to dead_letter every failure relabelled retrying while its projection stayed dead-lettered, keeps the oldest of several open failures for a record, and resolves failures whose projections have all run.",
       "verification": "HTTP requests against the compiled server on a disposable PostgreSQL database built from the production manifest; the projection is dead-lettered and run by the real worker function; bounded TLA+ model with three single-rule controls.",
@@ -11254,7 +11257,7 @@
     {
       "id": "SYS-CI-DB-001",
       "title": "Event-operations API fixtures wait for final PostgreSQL readiness",
-      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image’s temporary initialization socket server is insufficient.",
+      "statement": "The owned event-operations API migration test must authenticate a successful query through the container loopback TCP listener before applying fixtures or migrations; a query against the image\u2019s temporary initialization socket server is insufficient.",
       "domain": "SYS",
       "actors": [
         "CI fixture runner",
@@ -11404,7 +11407,7 @@
       "domain": "PAY",
       "critical": true,
       "statement": "A music purchase key is scoped to its authenticated buyer and bound to the original offer, normalized declared/effective country, terms version and checkout environment. Current admission is rechecked. Identical requests reuse the order; conflicting or incomplete binding evidence returns 409 without purchase effects, including after concurrent reservation.",
-      "authority": "User audit sections 14–15 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
+      "authority": "User audit sections 14\u201315 require parameter-bound conflicting replay; scoped refinement of PAY-MUSIC-DOWNLOAD-001",
       "source": "User audit request; formal/system/music-purchase-replay.md; recovered createMusicPurchase implementation",
       "contract": "formal/system/music-purchase-replay.md",
       "property": "Single order per buyer/key; every accepted replay preserves original buyer and bound payload.",
@@ -11493,7 +11496,7 @@
       "critical": true,
       "statement": "Music monetary JSON uses exact safe integers or canonical Int64 decimal text, never lossy numeric conversion. Price authoring and display retain exact minor units. Purchase creation requires a positive canonical amount and canonical currency matching the currently eligible USD offer before creating effects.",
       "authority": "Technical correctness under the user audit; existing USD-only content validation; RFC8259 integer interoperability",
-      "source": "User audit sections9–15 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
+      "source": "User audit sections9\u201315 and18; TDF.MusicRelease.ContentValidation; RFC8259 section6; recovered music UI and handler",
       "contract": "formal/system/music-money-wire.md",
       "property": "Every admitted numeric encoding round trips through binary64 without losing its Int64 value; larger values retain exact decimal text. A conflicting confirmed quote produces no purchase.",
       "actors": [
@@ -11607,7 +11610,7 @@
       "critical": false,
       "statement": "The canonical Hspec entrypoint must execute the music domain, content, ERN432 and S3 specifications. Backend quality must fail if any required named group is absent even when other tests pass.",
       "authority": "User audit validation and traceability requirements",
-      "source": "User audit sections9,24–25; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
+      "source": "User audit sections9,24\u201325; previous canonical Spec.hs and uninvoked MusicReleaseSpecMain.hs",
       "contract": "formal/system/music-test-entrypoint.md",
       "property": "Each of four named unit groups has executable examples in the test binary used by canonical backend quality.",
       "actors": [
@@ -13886,8 +13889,8 @@
       "id": "BOOK-STUDIO-TIMEZONE-001",
       "title": "Public studio hours use Quito time independently of visitor preferences",
       "domain": "BOOK",
-      "statement": "The public studio booking page interprets 08:00–22:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
-      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00–22:00.",
+      "statement": "The public studio booking page interprets 08:00\u201322:00 in America/Guayaquil (Quito), independently of the general application timezone and visitor timezone. It displays the studio hours, converts them to the visitor zone, accepts starts at opening and bookings ending at closing, normalizes out-of-window input to a valid interval before confirmation and refuses invalid intervals at validation, and sends the same selected instant in UTC to availability and booking APIs. Existing persisted bookings are not reinterpreted. Visitor offset labels follow the selected booking date, including daylight saving. Quick suggestions derive the opening window from the selected instant in Quito before taking the start of day; repeated suggestion clicks preserve that Quito calendar date, including visitor-local midnight crossings.",
+      "authority": "Product owner confirmation in direct chat, 2026-10-26 America/Guayaquil: Quito, 08:00\u201322:00.",
       "source": "Direct owner confirmation after anonymous production observation showed studio UTC.",
       "contract": "formal/system/public-booking-timezone.md",
       "actors": [
@@ -27476,6 +27479,117 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "The grant lifecycle, the single-acceptance race, removal and courtesy issuance are exercised on PostgreSQL (locally; the runner is now a hosted workflow step) and the web flows by Jest; the widened organizer checks on existing routes are covered by reading only, no model exists and the product limits await owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "EVT-ORGANIZER-CLAIM-001",
+      "title": "Reviewed claim of an event without an organizer",
+      "domain": "EVT",
+      "statement": "A signed-in account that can see an event without a stored organizer may submit one open claim on it with evidence. A claim grants nothing: the organizer field, roles, modules and delegated administration are unchanged and organizer-only routes keep refusing the claimant. Only a strict administrator other than the claimant decides a claim. A rejection leaves the event without an organizer. An approval assigns the claimant as organizer through the single conditional assignment of EVT-OWNER-CLAIM-001, only while the event still has no organizer and the claimant's party exists, and closes every other open claim on the event in the same transaction. A decision is recorded once and is not reversed.",
+      "authority": "Owner instruction of 2026-11-13: an event without an administrator can be claimed in the same way an artist profile without an account can be claimed. The artist flow is ID-ARTIST-CLAIM-001 and ID-CLAIM-REVIEW-001 (evidence, no authority from the request, review by a distinct administrator). The text limits, the limits of 5 open claims per account and 20 per event, the queue sizes and the absence of withdrawal, revocation and notification are implementation choices pending owner confirmation.",
+      "source": "formal/system/event-organizer-claim.md",
+      "contract": "formal/system/event-organizer-claim.md",
+      "property": "The organizer of an event without one changes through a claim only by the approval of a strict administrator who is not the claimant, at most once, to the claimant of the approved claim. No claim, pending or rejected, passes an organizer check. At most one claim of an event is approved while its organizer assignment stands.",
+      "actors": [
+        "Claimant: signed-in account that can see the event",
+        "Reviewer: strict administrator other than the claimant",
+        "Other signed-in account",
+        "Stored organizer, once assigned"
+      ],
+      "preconditions": [
+        "Authenticated bearer session on every route",
+        "Event visible to the caller and not hidden, for the two event routes",
+        "Event has no stored organizer (absent or only whitespace) for submission and approval",
+        "Migration tdf-hq/sql/2026-11-13_event_organizer_claim.sql applied"
+      ],
+      "inputs": [
+        "GET /social-events/events/{eventId}/organizer-claim",
+        "POST /social-events/events/{eventId}/organizer-claims",
+        "GET /social-events/organizer-claims",
+        "POST /social-events/organizer-claims/{claimId}/decision",
+        "Evidence: trimmed, 20 to 2000 characters, no control characters other than line breaks and tabs",
+        "Decision: approved or rejected, with review notes of 10 to 2000 trimmed characters"
+      ],
+      "state": {
+        "boundary": "event_organizer_claim rows of one event and social_event.organizer_party_id",
+        "authority": "PostgreSQL rows read and written under the social_event row lock; partial unique index on (event_id, claimant_party_id) for open claims; check constraints on status, evidence length, reviewer distinct from claimant",
+        "claimStatus": "submitted, approved, rejected or superseded"
+      },
+      "allowedTransitions": [
+        "No open claim by the account on the event -> submitted, while the event has no organizer, the account holds fewer than 5 open claims and the event fewer than 20",
+        "submitted -> rejected, by a strict administrator other than the claimant",
+        "submitted -> approved, by a strict administrator other than the claimant, while the event has no organizer and the claimant party exists; the claimant becomes the stored organizer",
+        "submitted -> superseded, for every other open claim of the event, in the transaction that approves one",
+        "rejected -> a new submitted claim by the same account, as a new row"
+      ],
+      "forbiddenTransitions": [
+        "Any change of the organizer field, a role, a module or a delegated-administrator grant by submitting a claim",
+        "Submit a claim on an event that has a stored organizer",
+        "A second open claim by the same account on the same event",
+        "Decide a claim as its claimant, as an ordinary account, or as an administrator who is not a strict administrator",
+        "Approve a claim once the event has an organizer, or for a claimant party that does not exist",
+        "Change a recorded decision, or decide a superseded claim",
+        "Disclose evidence, review notes or another account's claim to an account that is not a strict administrator",
+        "Replace a stored organizer through a claim"
+      ],
+      "effects": [
+        "Insert one event_organizer_claim row with status submitted",
+        "On rejection: set status, reviewer, notes and review time",
+        "On approval: assign social_event.organizer_party_id to the claimant and refresh updated_at through assignMissingEventOrganizer; set status, reviewer, notes and review time; set every other open claim of the event to superseded",
+        "No notification is sent to the claimant or the reviewers; event_operation_relationship is not updated"
+      ],
+      "authorization": "Claim state and submission require a session and the event visibility check. The queue and the decision require hasStrictAdminAccess; the decision additionally refuses the claimant of the claim with 403, and the table refuses an approved or rejected row whose reviewer is missing or equals the claimant. An open or rejected claim is not consulted by requireEventManager or any other organizer check.",
+      "privacy": "The claimant reads only the identifier, status and times of their own claims. Evidence, review notes, claimant party and display name are returned only to strict administrators. Approval makes order, ticket, buyer, refund and finance data of the event readable by the approved claimant, as for any organizer; the review screen states this.",
+      "concurrency": "Submission and decision lock the social_event row FOR UPDATE and read the organizer and the claim again under it. Simultaneous approvals of different claims of one event admit exactly one; the others find an organizer and are refused. The assignment is the conditional update of EVT-OWNER-CLAIM-001 and its reread decides. The per-account limit is counted under the lock of the event being claimed only, so simultaneous submissions for different events can exceed it by the number of requests in flight.",
+      "idempotency": "Submitting again while a claim is open returns that claim and keeps the evidence first recorded. Repeating the recorded decision on a decided claim returns it unchanged and writes nothing.",
+      "failure": "400 invalid evidence, decision or notes; 403 not a strict administrator, or reviewer is the claimant; 404 event missing or hidden, or claim not found; 409 event already has an organizer, open-claim limit reached, claim already decided otherwise or superseded, or claimant party missing. A refused request writes nothing.",
+      "recovery": "A rejected claimant submits a new claim. A wrong approval is not reversible through the API: the organizer field has no clearing route and is corrected by a reviewed database change. The rollback script refuses to drop the table while claims exist.",
+      "observability": "HTTP status; event_organizer_claim rows (claimant, evidence, status, reviewer, notes, submission and review times). No metric, log line or notification is added.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-13_event_organizer_claim.sql",
+        "tdf-hq/sql/2026-11-13_event_organizer_claim_rollback.sql",
+        "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/EventOrganizerClaim.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/utils/eventOrganizerClaimLimits.ts",
+        "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.tsx",
+        "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
+        "scripts/test-event-organizer-claim.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventOrganizerClaimSpec.hs",
+        "scripts/test-event-organizer-claim.sh",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.test.tsx",
+        "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "verification": "Seven PostgreSQL Hspec examples in tdf-hq/test/TDF/EventOrganizerClaimSpec.hs, run through scripts/test-event-organizer-claim.sh against a fully migrated disposable database: submission only on an event without an organizer, once, granting nothing; review only by a strict administrator other than the claimant; approval assigning the claimant and superseding the other open claims, replay and no reversal; rejection and a renewed claim; refusal once the event has an organizer or the claimant party is missing; six simultaneous approvals of different claims admitting one; the per-account limit. Jest tests cover the client calls, the claim card states, the review queue and the placement of both on their pages.",
+      "evidence": "formal/system/event-organizer-claim.md; local PostgreSQL run of scripts/test-event-organizer-claim.sh on 2026-11-13 (7 examples, 0 failures) against a migrated disposable database, with the organizer-assignment (6) and delegation (6) runners and the full Hspec suite (4418 examples, 0 failures, 25 pending) passing on the same build; Jest, ESLint and TypeScript passed locally for the web files. The runner is a step of .github/workflows/ci.yml; no hosted run of it has been observed yet.",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "The handlers reuse the existing event lock and single assignment and the claim lifecycle, the reviewer rule and the approval race are exercised on PostgreSQL; the table constraints are a backstop not exercised directly, and there is no model.",
+      "ambiguity": [
+        "The evidence and notes length limits, 5 open claims per account, 20 per event and the queue sizes are implementation choices; owner confirmation is pending.",
+        "An approval cannot be revoked through the API and a claim cannot be withdrawn or amended; whether either is wanted is undecided.",
+        "The claimant is not notified of the decision and does not see the review notes.",
+        "A strict administrator's edit of an event without an organizer still assigns that administrator and leaves open claims submitted; they can then only be rejected.",
+        "The public event page does not say whether an event has an organizer, so the claim is offered only on the signed-in event page; Mobile has no claim surface and the routes are absent from the OpenAPI document.",
+        "event_operation_relationship still reports owner_missing after an approval."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The claim lifecycle, the distinct-reviewer rule and the simultaneous-approval race are exercised on PostgreSQL (locally; the runner is a hosted workflow step not yet observed) and the web flows by Jest; no model covers the claim state machine and the product limits await owner confirmation."
       },
       "historicalStatus": null
     }

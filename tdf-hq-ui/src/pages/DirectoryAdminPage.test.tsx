@@ -10,6 +10,9 @@ jest.unstable_mockModule('../api/directory', () => ({ Directory: {
   adminClaims: claims, adminVerifications: jest.fn(), moderationQueue: jest.fn(),
   setClaimStatus: decide, mergeProfiles: jest.fn(),
 } }));
+jest.unstable_mockModule('../components/events/EventOrganizerClaimsQueue', () => ({
+  default: () => <p>Cola de eventos sin organizador</p>,
+}));
 const { default: DirectoryAdminPage } = await import('./DirectoryAdminPage');
 const contract = yaml.parse(readFileSync('../docs/music-directory/formal-model.yaml', 'utf8')) as {
   state_machines: { claim: { transitions: Record<string, string[]> } };
@@ -62,4 +65,13 @@ it('renders the claimant and submitted evidence as text without activating marku
   expect(await screen.findByText('Solicitante (Party): 42')).toBeTruthy();
   expect(screen.getByText(/untrusted submitted evidence/).tagName).toBe('PRE');
   expect(document.querySelector('script')).toBeNull();
+});
+
+it('opens the event claims queue in its own tab without loading the directory claims again', async () => {
+  claims.mockResolvedValue([fixture('under_review')]); show();
+  await screen.findByRole('heading', { name: 'Perfil sintético' });
+  fireEvent.click(screen.getByRole('tab', { name: 'Eventos sin organizador' }));
+  expect(await screen.findByText('Cola de eventos sin organizador')).toBeTruthy();
+  expect(screen.queryByRole('heading', { name: 'Perfil sintético' })).toBeNull();
+  expect(claims).toHaveBeenCalledTimes(1);
 });

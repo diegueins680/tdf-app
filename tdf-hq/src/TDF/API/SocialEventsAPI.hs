@@ -23,6 +23,7 @@ module TDF.API.SocialEventsAPI (
     FinanceRoutes,
     LogisticsRoutes,
     EventAdminRoutes,
+    EventOrganizerClaimRoutes,
     IdParam,
     EventImageUploadForm (..),
     EventMemoryMediaUploadForm (..),
@@ -70,6 +71,11 @@ import TDF.DTO.SocialEventsDTO (
     EventAdminInvitationTokenDTO,
     EventAdminRosterDTO,
     EventCourtesyTicketDTO,
+    EventOrganizerClaimCreateDTO,
+    EventOrganizerClaimDTO,
+    EventOrganizerClaimDecisionDTO,
+    EventOrganizerClaimReviewDTO,
+    EventOrganizerClaimStateDTO,
     ArtistDTO,
     ArtistFollowRequest,
     ArtistFollowerDTO,
@@ -669,6 +675,14 @@ type EventAdminRoutes =
         :<|> "admin-invitations" :> "accept" :> ReqBody '[JSON] EventAdminInvitationTokenDTO :> Post '[JSON] EventAdminAccessDTO
         :<|> "events" :> Capture "eventId" Text :> "courtesy-tickets" :> ReqBody '[JSON] EventCourtesyTicketDTO :> Post '[JSON] TicketOrderDTO
 
+-- Reviewed claims on an event without an organizer (EVT-ORGANIZER-CLAIM-001).
+-- The two collection routes are for strict administrators.
+type EventOrganizerClaimRoutes =
+    "events" :> Capture "eventId" Text :> "organizer-claim" :> Get '[JSON] EventOrganizerClaimStateDTO
+        :<|> "events" :> Capture "eventId" Text :> "organizer-claims" :> ReqBody '[JSON] EventOrganizerClaimCreateDTO :> Post '[JSON] EventOrganizerClaimDTO
+        :<|> "organizer-claims" :> Get '[JSON] [EventOrganizerClaimReviewDTO]
+        :<|> "organizer-claims" :> Capture "claimId" Text :> "decision" :> ReqBody '[JSON] EventOrganizerClaimDecisionDTO :> Post '[JSON] EventOrganizerClaimReviewDTO
+
 type SocialEventsAPI =
     EventsRoutes
         :<|> EventCitiesRoutes
@@ -685,4 +699,5 @@ type SocialEventsAPI =
         :<|> FinanceRoutes
         :<|> LogisticsRoutes
         :<|> EventAdminRoutes
+        :<|> EventOrganizerClaimRoutes
         :<|> MemoryInvitationRoutes

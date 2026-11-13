@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+    "tdf-hq/tdf-hq.cabal": "758b264b1f90222ebd5f811d74440b49f33b13a3a437c25cc0f28d9f7c296693",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -615,6 +615,15 @@
       "currentSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
       "change": "Register the library module TDF.Server.EventAdminDelegation in exposed-modules and the test module TDF.EventAdminDelegationSpec in the tdf-hq-test other-modules list for EVT-ADMIN-DELEGATION-001.",
       "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds event-delegation handlers only and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "d4bb96030b1182e165ff39b614315c6a2554aee7",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "currentSha256": "758b264b1f90222ebd5f811d74440b49f33b13a3a437c25cc0f28d9f7c296693",
+      "change": "Register the library module TDF.Server.EventOrganizerClaim in exposed-modules and the test module TDF.EventOrganizerClaimSpec in the tdf-hq-test other-modules list for EVT-ORGANIZER-CLAIM-001.",
+      "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds event organizer-claim handlers only, calls hasStrictAdminAccess through its caller without redefining it, and is not imported by any reviewed source.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
     }
   ]

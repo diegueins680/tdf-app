@@ -78,6 +78,11 @@ module TDF.DTO.SocialEventsDTO (
     EventAdminInvitationTokenDTO (..),
     EventAdminInvitationPreviewDTO (..),
     EventCourtesyTicketDTO (..),
+    EventOrganizerClaimDTO (..),
+    EventOrganizerClaimStateDTO (..),
+    EventOrganizerClaimCreateDTO (..),
+    EventOrganizerClaimReviewDTO (..),
+    EventOrganizerClaimDecisionDTO (..),
     EventLogisticsMemberDTO (..),
     EventLogisticsPlaceDTO (..),
     EventLogisticsAssignmentDTO (..),
@@ -1883,6 +1888,64 @@ data EventCourtesyTicketDTO = EventCourtesyTicketDTO
     deriving (Show, Eq, Generic)
 instance ToJSON EventCourtesyTicketDTO
 instance FromJSON EventCourtesyTicketDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+-- Reviewed claims on an event without an organizer. The claimant sees the
+-- state of their own claim; evidence and review notes go to reviewers only.
+data EventOrganizerClaimDTO = EventOrganizerClaimDTO
+    { eocId :: Text
+    , eocEventId :: Text
+    , eocStatus :: Text
+    , eocSubmittedAt :: UTCTime
+    , eocReviewedAt :: Maybe UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventOrganizerClaimDTO
+instance FromJSON EventOrganizerClaimDTO
+
+data EventOrganizerClaimStateDTO = EventOrganizerClaimStateDTO
+    { eocsEventId :: Text
+    , eocsClaimable :: Bool
+    , eocsClaim :: Maybe EventOrganizerClaimDTO
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventOrganizerClaimStateDTO
+instance FromJSON EventOrganizerClaimStateDTO
+
+newtype EventOrganizerClaimCreateDTO = EventOrganizerClaimCreateDTO
+    { eoccEvidence :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventOrganizerClaimCreateDTO
+instance FromJSON EventOrganizerClaimCreateDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+data EventOrganizerClaimReviewDTO = EventOrganizerClaimReviewDTO
+    { eocrId :: Text
+    , eocrEventId :: Text
+    , eocrEventTitle :: Text
+    , eocrEventStart :: UTCTime
+    , eocrEventHasOrganizer :: Bool
+    , eocrClaimantPartyId :: Text
+    , eocrClaimantName :: Maybe Text
+    , eocrEvidence :: Text
+    , eocrStatus :: Text
+    , eocrSubmittedAt :: UTCTime
+    , eocrReviewerPartyId :: Maybe Text
+    , eocrReviewerNotes :: Maybe Text
+    , eocrReviewedAt :: Maybe UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventOrganizerClaimReviewDTO
+instance FromJSON EventOrganizerClaimReviewDTO
+
+data EventOrganizerClaimDecisionDTO = EventOrganizerClaimDecisionDTO
+    { eocdDecision :: Text
+    , eocdNotes :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventOrganizerClaimDecisionDTO
+instance FromJSON EventOrganizerClaimDecisionDTO where
     parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
 
 data EventLogisticsPlaceDTO = EventLogisticsPlaceDTO

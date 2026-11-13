@@ -18,9 +18,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Directory } from '../api/directory';
+import EventOrganizerClaimsQueue from '../components/events/EventOrganizerClaimsQueue';
 
 type ReviewRecord = Record<string, unknown>;
 type QueueKind = 'claims' | 'verifications' | 'moderation';
+// Event claims have their own typed queue and reviewer rule (strict administrator).
+type TabKind = QueueKind | 'event-claims';
 const moderationDecisionValues = ['dismiss', 'warn', 'pause', 'remove', 'suspend', 'close'] as const;
 type ModerationDecision = typeof moderationDecisionValues[number];
 
@@ -29,8 +32,9 @@ const isModerationDecision = (value: string): value is ModerationDecision =>
   (moderationDecisionValues as readonly string[]).includes(value);
 
 export default function DirectoryAdminPage() {
-  const [queue, setQueue] = useState<QueueKind>('claims');
-  const claims = useQuery({ queryKey: ['directory', 'admin', 'claims'], queryFn: Directory.adminClaims, enabled: queue === 'claims' });
+  const [tab, setTab] = useState<TabKind>('claims');
+  const queue: QueueKind = tab === 'event-claims' ? 'claims' : tab;
+  const claims = useQuery({ queryKey: ['directory', 'admin', 'claims'], queryFn: Directory.adminClaims, enabled: tab === 'claims' });
   const verifications = useQuery({ queryKey: ['directory', 'admin', 'verifications'], queryFn: Directory.adminVerifications, enabled: queue === 'verifications' });
   const moderation = useQuery({ queryKey: ['directory', 'admin', 'moderation'], queryFn: Directory.moderationQueue, enabled: queue === 'moderation' });
   const selected = queue === 'claims' ? claims : queue === 'verifications' ? verifications : moderation;
@@ -43,17 +47,20 @@ export default function DirectoryAdminPage() {
           <Typography color="text.secondary" mt={1}>Las decisiones requieren el rol y el módulo Admin, quedan auditadas y nunca convierten una profesión pública en permiso interno.</Typography>
         </Box>
         <Alert severity="warning">No apruebes identidad, propiedad, créditos ni consentimiento sin revisar la evidencia y la política operativa vigente. La fusión de duplicados permanece fuera de esta acción genérica.</Alert>
-        <Tabs value={queue} onChange={(_, value: unknown) => { if (value === 'claims' || value === 'verifications' || value === 'moderation') setQueue(value); }} aria-label="Colas administrativas del directorio">
+        <Tabs value={tab} onChange={(_, value: unknown) => { if (value === 'claims' || value === 'verifications' || value === 'moderation' || value === 'event-claims') setTab(value); }} aria-label="Colas administrativas del directorio" variant="scrollable" allowScrollButtonsMobile>
           <Tab value="claims" label="Reclamos" />
           <Tab value="verifications" label="Verificaciones" />
           <Tab value="moderation" label="Moderación" />
+          <Tab value="event-claims" label="Eventos sin organizador" />
         </Tabs>
-        {selected.isLoading && <CircularProgress />}
-        {selected.isError && <Alert severity="error">No tienes acceso a esta cola o no se pudo cargar.</Alert>}
-        {!selected.isLoading && !selected.isError && (selected.data?.length ?? 0) === 0 && <Alert severity="info">La cola está vacía.</Alert>}
-        <Stack spacing={2}>
-          {(selected.data ?? []).map((record) => <ReviewCard key={stringValue(record['id'])} kind={queue} record={record} />)}
-        </Stack>
+        {tab === 'event-claims' ? <EventOrganizerClaimsQueue /> : <>
+          {selected.isLoading && <CircularProgress />}
+          {selected.isError && <Alert severity="error">No tienes acceso a esta cola o no se pudo cargar.</Alert>}
+          {!selected.isLoading && !selected.isError && (selected.data?.length ?? 0) === 0 && <Alert severity="info">La cola está vacía.</Alert>}
+          <Stack spacing={2}>
+            {(selected.data ?? []).map((record) => <ReviewCard key={stringValue(record['id'])} kind={queue} record={record} />)}
+          </Stack>
+        </>}
         <ProfileMergePanel />
       </Stack>
     </Container>
