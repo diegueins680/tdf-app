@@ -306,10 +306,12 @@ preflight_block_reason() {
 report_blocked() {
   local blocker="$1"
   json_update "blocked" "preflight-blocked" "$blocker" "" "" "$restart_count" "$stale_restart_count"
-  # Log a blocker once, not on every poll.
-  if [ "$blocker" != "$last_logged_blocker" ]; then
+  # Log a blocker once, not on every poll. Numbers are ignored when comparing so a
+  # fluctuating figure (free megabytes) does not count as a new blocker.
+  local blocker_kind="${blocker//[0-9]/}"
+  if [ "$blocker_kind" != "$last_logged_blocker" ]; then
     log "$blocker"
-    last_logged_blocker="$blocker"
+    last_logged_blocker="$blocker_kind"
   fi
 }
 
