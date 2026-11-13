@@ -288,15 +288,16 @@ allowedAgreementPaymentTransition fromStatus toStatus =
       ]
 
 -- | I25 (ADR 0136): commission the platform takes from one charge. The
--- deposit carries as much of the frozen commission as fits in it; the balance
--- carries whatever the deposit could not. Over both charges the platform
--- takes exactly the frozen commission.
-agreementCommissionDue :: AgreementPaymentKind -> Int64 -> Int64 -> Int64
-agreementCommissionDue kind commission deposit =
-  let fromDeposit = max 0 (min commission deposit)
-  in case kind of
-       AgreementDeposit -> fromDeposit
-       AgreementBalance -> max 0 (commission - fromDeposit)
+-- deposit carries as much of the frozen commission as fits in it. The balance
+-- carries whatever the paid deposit did not actually collect for the platform
+-- (the last argument), which is more than the nominal remainder when the
+-- processor fee ate into a deposit smaller than the commission. Over both
+-- charges the platform never takes more than the frozen commission, and takes
+-- exactly that whenever the charges can carry it.
+agreementCommissionDue :: AgreementPaymentKind -> Int64 -> Int64 -> Int64 -> Int64
+agreementCommissionDue kind commission deposit collected = case kind of
+  AgreementDeposit -> max 0 (min commission deposit)
+  AgreementBalance -> max 0 (commission - max 0 collected)
 
 -- | Processor fee estimated for a charge: basis points rounded up plus a fixed
 -- part, never above the charge. @Nothing@ for invalid inputs.

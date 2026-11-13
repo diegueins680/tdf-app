@@ -1343,11 +1343,20 @@ changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStat
     agreementStates <- (if releasesSlot
       then rawSql "SELECT agreement.status FROM marketplace_agreement agreement WHERE agreement.application_id=? FOR UPDATE" [toPersistValue applicationId]
       else pure []) :: SqlPersistT IO [Single Text]
+    -- ADR 0136 I26, under the agreement lock: withdrawing the offer is a
+    -- cancellation of its agreement, so the same rules apply. Collected money
+    -- is settled through a dispute, and nothing is cancelled while a payment
+    -- attempt may still collect money.
+    agreementFunded <- (if releasesSlot
+      then rawSql ("SELECT payment.id FROM marketplace_agreement_payment payment JOIN marketplace_agreement agreement ON agreement.id=payment.agreement_id WHERE agreement.application_id=? AND (payment.status='paid' OR (payment.status='pending' AND EXISTS (SELECT 1 FROM commerce_payment_attempt attempt WHERE attempt.checkout_id=payment.checkout_id AND attempt.status IN " <> liveAttemptStatusesSql <> "))) LIMIT 1") [toPersistValue applicationId]
+      else pure []) :: SqlPersistT IO [Single UUID]
     case (listing, offer) of
       ([(Single lockedClassifiedStatus, Single lockedRemaining, Single lockedLive)], [(Single lockedStatus, Single lockedVersion, Single offerLive)])
         | lockedStatus /= oldStatus -> pure (Left err409 {errBody="the offer changed before this transition; reload and retry"})
         | any (\(Single agreementState) -> agreementState `elem` ["completed","disputed","balance_due"]) agreementStates ->
             pure (Left err409 {errBody="this offer has an agreement that can no longer be withdrawn; use the agreement"})
+        | not (null agreementFunded) ->
+            pure (Left err409 {errBody="a payment was made or is in progress for this offer's agreement; open a dispute on the agreement instead of withdrawing"})
         -- The caller decided on a specific round (version): a newer counter
         -- that landed since, even in another tab, is never accepted unseen.
         | maybe False (/= lockedVersion) expectedVersion -> pure (Left err409 {errBody="the offer changed since it was displayed; review the latest round and retry"})
@@ -1386,6 +1395,9 @@ changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStat
               refreshClassifiedDB classifiedId
               rawExecute "UPDATE marketplace_agreement SET status='cancelled',cancelled_at=now(),cancelled_by_profile_id=(SELECT applicant_profile_id FROM classified_application WHERE id=?),cancellation_reason='offer_withdrawn',updated_at=now(),version=version+1 WHERE application_id=? AND status IN ('pending_deposit','confirmed','in_progress')"
                 [toPersistValue applicationId,toPersistValue applicationId]
+              -- A charge that was never paid dies with the agreement.
+              rawExecute "UPDATE marketplace_agreement_payment SET status='cancelled',updated_at=now(),version=version+1 WHERE status='pending' AND agreement_id IN (SELECT agreement.id FROM marketplace_agreement agreement WHERE agreement.application_id=?)"
+                [toPersistValue applicationId]
             pure (Right ())
       _ -> pure (Left err404)
   either throwError pure outcome
@@ -1776,13 +1788,18 @@ createAgreementPayment user agreementId AgreementPaymentRequest{provider=rawProv
                   [toPersistValue agreementId,PersistText kindText] :: SqlPersistT IO [Single UUID]
                 recipients <- rawSql "SELECT jsonb_build_object('id',account.id,'identifierType',account.identifier_type,'identifier',account.identifier,'feeBps',rule.fee_bps,'feeFixedMinor',rule.fee_fixed_minor,'payer',rule.payer) FROM marketplace_agreement agreement JOIN marketplace_payout_account account ON account.profile_id=agreement.provider_profile_id AND account.provider=? AND account.status='ready' JOIN marketplace_payment_fee_rule rule ON rule.provider=account.provider WHERE agreement.id=?"
                   [PersistText provider,toPersistValue agreementId] :: SqlPersistT IO [Single CMS.AesonValue]
-                let frozen = do
+                -- I25: what the paid charges already collected for the platform
+                -- (its fee, plus the processor fee when the platform bore it).
+                collectedRows <- rawSql "SELECT coalesce(sum(payment.platform_fee_minor + CASE WHEN payment.processing_fee_payer='platform' THEN payment.processing_fee_minor ELSE 0 END),0)::bigint FROM marketplace_agreement_payment payment WHERE payment.agreement_id=? AND payment.status='paid'"
+                  [toPersistValue agreementId] :: SqlPersistT IO [Single Int64]
+                let collected = sum [value | Single value <- collectedRows]
+                    frozen = do
                       recipient <- listToMaybe [CMS.unAesonValue value | Single value <- recipients]
                       feeBps <- valueInt "feeBps" recipient
                       feeFixed <- valueInt64 "feeFixedMinor" recipient
                       fee <- agreementProcessingFee feeBps feeFixed amount
                       let payer = if valueText "payer" recipient == Just "platform" then FeePaidByPlatform else FeePaidByProvider
-                      parts <- agreementPaymentSplit payer fee (agreementCommissionDue kind commission deposit) amount
+                      parts <- agreementPaymentSplit payer fee (agreementCommissionDue kind commission deposit collected) amount
                       accountId <- valueUuid "id" recipient
                       recipientKind <- valueText "identifierType" recipient
                       recipientValue <- valueText "identifier" recipient

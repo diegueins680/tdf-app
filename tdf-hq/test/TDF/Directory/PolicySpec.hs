@@ -164,16 +164,22 @@ spec = describe "music directory formal invariants" $ do
 
   it "I25: the deposit carries the commission and the provider bears the processor fee by default" $ do
     -- 100.00 agreed, 10 % commission, 30 % deposit, 5.75 % processor fee.
-    agreementCommissionDue AgreementDeposit 1000 3000 `shouldBe` 1000
-    agreementCommissionDue AgreementBalance 1000 3000 `shouldBe` 0
+    agreementCommissionDue AgreementDeposit 1000 3000 0 `shouldBe` 1000
+    agreementCommissionDue AgreementBalance 1000 3000 1000 `shouldBe` 0
     agreementProcessingFee 575 0 3000 `shouldBe` Just 173
     agreementProcessingFee 575 0 7000 `shouldBe` Just 403
     agreementPaymentSplit FeePaidByProvider 173 1000 3000 `shouldBe` Just (AgreementPaymentSplit 1000 173 1827)
     agreementPaymentSplit FeePaidByProvider 403 0 7000 `shouldBe` Just (AgreementPaymentSplit 0 403 6597)
     agreementPaymentSplit FeePaidByPlatform 173 1000 3000 `shouldBe` Just (AgreementPaymentSplit 827 173 2000)
     -- A deposit smaller than the commission leaves the rest for the balance.
-    agreementCommissionDue AgreementDeposit 1000 500 `shouldBe` 500
-    agreementCommissionDue AgreementBalance 1000 500 `shouldBe` 500
+    agreementCommissionDue AgreementDeposit 1000 500 0 `shouldBe` 500
+    agreementCommissionDue AgreementBalance 1000 500 500 `shouldBe` 500
+    -- The processor fee ate into a deposit smaller than the commission: the
+    -- platform collected 471 of it, so the balance carries the other 529.
+    agreementProcessingFee 575 0 500 `shouldBe` Just 29
+    agreementPaymentSplit FeePaidByProvider 29 500 500 `shouldBe` Just (AgreementPaymentSplit 471 29 0)
+    agreementCommissionDue AgreementBalance 1000 500 471 `shouldBe` 529
+    agreementCommissionDue AgreementBalance 1000 500 5000 `shouldBe` 0
     agreementPaymentSplit FeePaidByProvider 0 1000 0 `shouldBe` Nothing
     agreementProcessingFee 10001 0 100 `shouldBe` Nothing
 
@@ -184,13 +190,23 @@ spec = describe "music directory formal invariants" $ do
           platform + processing + provider == amount && platform >= 0 && processing >= 0 && provider >= 0 && platform <= commissionDue
         Nothing -> False
 
-  it "I25: over the deposit and the balance the platform takes exactly the frozen commission" $
-    forAll ((,,) <$> choose (0, 10000) <*> choose (0, 10000) <*> choose (1, 1000000000000)) $ \(commissionBps, depositBps, amount) ->
+  it "I25: over the deposit and the balance the platform takes the frozen commission whenever the charges can carry it, and never more" $
+    forAll ((,,,) <$> choose (0, 10000) <*> choose (0, 10000) <*> choose (0, 1000) <*> choose (1, 1000000000000)) $ \(commissionBps, depositBps, feeBps, amount) ->
       case agreementAmounts commissionBps depositBps amount of
         Just (commission, deposit, balance) ->
-          let fromDeposit = agreementCommissionDue AgreementDeposit commission deposit
-              fromBalance = agreementCommissionDue AgreementBalance commission deposit
-          in fromDeposit + fromBalance == commission && fromDeposit <= deposit && fromBalance <= balance
+          let platformOf due charge
+                | charge <= 0 = 0
+                | otherwise = case agreementProcessingFee feeBps 0 charge >>= \fee -> agreementPaymentSplit FeePaidByProvider fee due charge of
+                    Just parts -> splitPlatformFeeMinor parts
+                    Nothing -> 0
+              netOf charge
+                | charge <= 0 = 0
+                | otherwise = maybe 0 (charge -) (agreementProcessingFee feeBps 0 charge)
+              fromDeposit = platformOf (agreementCommissionDue AgreementDeposit commission deposit 0) deposit
+              balanceDue = agreementCommissionDue AgreementBalance commission deposit fromDeposit
+              fromBalance = platformOf balanceDue balance
+              total = fromDeposit + fromBalance
+          in total <= commission && (total == commission || netOf balance < balanceDue)
         Nothing -> False
 
   it "I25: the processor fee is rounded up and never exceeds the charge" $

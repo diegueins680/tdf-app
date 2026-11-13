@@ -42,8 +42,9 @@ Hechos verificados antes de diseñar (fuentes al final):
 2. **Reparto congelado por cobro.** Al crear el cobro se guarda `platform_fee_minor`,
    `provider_amount_minor` y `processing_fee_minor`:
    - depósito: `platform_fee = min(commission_minor, deposit_minor)`;
-   - saldo: `platform_fee = commission_minor − comisión ya cobrada en el depósito` (0 con la tarifa
-     por defecto);
+   - saldo: `platform_fee = commission_minor − lo que los cobros pagados ya recaudaron para la
+     plataforma` (0 con la tarifa por defecto; más que el resto nominal cuando la comisión del
+     procesador se comió parte de un depósito menor que la comisión);
    - `provider_amount = monto − platform_fee − processing_fee`, nunca negativo.
    `processing_fee` sale de `marketplace_payment_fee_rule` (por proveedor: bps + fijo + quién la
    asume). Por defecto la asume el proveedor del servicio, porque en el cobro del saldo TDF no
@@ -76,7 +77,9 @@ Hechos verificados antes de diseñar (fuentes al final):
      split verificable. Se abre registrando evidencia cuando Datafast la contrate, sin código nuevo
      en el marketplace.
 6. **Cancelación con dinero cobrado.** En B1, un acuerdo `platform` con depósito pagado no se
-   cancela por los participantes: abre disputa y un administrador resuelve. El reembolso
+   cancela por los participantes, ni directamente ni retirando la oferta aceptada: abre disputa y
+   un administrador resuelve. Tampoco se cancela ni se retira mientras un intento de pago pueda
+   cobrar todavía. El reembolso
    automático según la política congelada (`cancellation_policy`) llega en B2, cuando exista la
    reversión del reparto por proveedor.
 7. **Orden de bloqueo.** anuncio → oferta → acuerdo → cobro. La reconciliación bloquea checkout e
