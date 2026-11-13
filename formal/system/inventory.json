@@ -1096,6 +1096,8 @@
       "tdf-hq-ui/src/components/__tests__/TicketTransferDialog.test.tsx",
       "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
       "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx",
+      "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx",
+      "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
       "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
       "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.test.tsx",
       "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx",
@@ -9554,6 +9556,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-a2f9b70f811069d7",
+      "path": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx",
+      "sha256": "c9024a33f3df8a9cd9f52feb310210b7c174fa22c92deef8324c3ce6a5b6d0bb",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d7474e771e08a175",
+      "path": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
+      "sha256": "4757fc29b4daeb50f3ed170e90ef56a62b46a5813e764d5b158bc256dbbd2f5d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-615a78e009691805",
       "path": "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
       "sha256": "bb66b7c21afaae45254cdd5170537c61aaf8f47477f4e3a80d356fdab207179c",
@@ -11140,13 +11154,13 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "07a61e85fa89ddb7e1c4de1c1f20617c9ac6bb9690aca35daccd914e1422c81d",
+      "sha256": "e320f4d8a89ddeb92c3d573429ba9c110a725979d97b9974cd356aaf058ee02b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "5ef4e14aa6daa2e314bf2c22f7d242181d100891bffb31cc8ef05911def5d4db",
+      "sha256": "efd16855987a225aaecb430437477786dc0455ba474aeea8e6452e59edf43cdb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31262,6 +31276,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/public-detail-presentation.md",
+      "sha256": "ab9abd7fe8c95f0867fbf51a9bde0edf6faa600a12338de5186e1d15770bb778",
+      "authority": "inferred",
+      "authorityBasis": "Status: requested by the product owner on 2026-11-11.",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/public-intake-routes.md",
       "sha256": "2cfe5ec042426e0faf824cc199032bf9c06a591fb4b86d8dafd0751ea5fe4557",
       "authority": "inferred",
@@ -31333,7 +31354,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ffd3d8eba53468e74dd6d0944ff9cafa9c28f173ac082553e2f442f2b7982f2c",
+      "sha256": "310f71e3c92b9e364b31d6df34b6a1b578f86bfbcb70bc8c4a8c24bdcecc59dc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
