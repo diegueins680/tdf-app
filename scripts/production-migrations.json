@@ -1283,6 +1283,11 @@
       "id": "2026-11-11_event_admin_delegation",
       "path": "tdf-hq/sql/2026-11-11_event_admin_delegation.sql",
       "introducedBy": "2703eb3a1ac1604829e902262fe2dbfbbf4f4ca8"
+    },
+    {
+      "id": "2026-11-13_event_organizer_claim",
+      "path": "tdf-hq/sql/2026-11-13_event_organizer_claim.sql",
+      "introducedBy": "3accdff1e33a2808f6791b75cce52bb8d49d461e"
     }
   ]
 }
