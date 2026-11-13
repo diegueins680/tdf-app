@@ -4836,7 +4836,7 @@
     {
       "id": "SURFACE-b3c3757671de3a8f",
       "path": "scripts/continuous-improvement-loop-supervisor.sh",
-      "sha256": "8f5cb7c9ca1891b7fccf308bb638780e32d8c61b41b66007111ebb0f42e50816",
+      "sha256": "907c0606995740a91672a31a8dab06af614c3bcf7ae5c2da206df972befcbb35",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21855,7 +21855,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "7d28aa04a4e518d50b37cb837fbc295f66e08712500f263c5282f2ea8614aeca",
+      "sha256": "8252db970086aa1f07e8c84485b96ba7000423ecded43809ad4b79667053111b",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

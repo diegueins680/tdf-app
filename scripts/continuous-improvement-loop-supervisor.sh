@@ -24,7 +24,9 @@ RESTART_DELAY_SECONDS="${CONTINUOUS_LOOP_RESTART_DELAY_SECONDS:-30}"
 POLL_INTERVAL_SECONDS="${CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS:-15}"
 # 0 disables the whole-child timeout; individual steps are bounded by stepTimeoutMinutes.
 CHILD_TIMEOUT_SECONDS="${CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS:-0}"
-MIN_FREE_MB="${CONTINUOUS_LOOP_MIN_FREE_MB:-512}"
+# The verification gates and their workers are memory-hungry; on macOS swap grows on the
+# same volume in 1 GB steps, so a thin margin can take the whole machine to a full disk.
+MIN_FREE_MB="${CONTINUOUS_LOOP_MIN_FREE_MB:-3072}"
 
 export PATH="${CONTINUOUS_LOOP_PATH:-/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${HOME}/.local/bin:${PATH:-}}"
 if [ -f "$ROOT/.env" ]; then

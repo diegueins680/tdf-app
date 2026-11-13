@@ -276,6 +276,7 @@ Forever-runner contract:
 - The repository gate needs the pinned `tdf-mobile` sources. Initialise them once in the loop worktree (`git submodule update --init --checkout tdf-mobile`); with `checkoutSubmodules` on, each iteration keeps them at the revision the base records.
 - At most `maxOpenPullRequests` (default 3) loop pull requests stay open; the loop waits for review instead of piling up more.
 - `npm run loop:start` launches a dedicated supervisor (`scripts/continuous-improvement-loop-supervisor.sh`). It enforces a single-instance lock, restarts the loop if the child exits, blocks with a reason in the status file when a precondition is missing (worktree, GitHub auth, Codex CLI, free disk space), and stops restarting after repeated identical crashes until `tmp/continuous-improvement-loop/repair-needed.md` is deleted.
+- The supervisor blocks while less than `CONTINUOUS_LOOP_MIN_FREE_MB` (default 3072) of disk space is free and resumes on its own once space is available.
 - Each worker step runs in its own process group and is stopped, with its children, after `stepTimeoutMinutes` (default 180) or when the loop is stopped.
 - Operator-visible state lives in `tmp/continuous-improvement-loop/status.json` with PID, child PID, phase, heartbeats, restart counters, and last-exit details.
 - Logs stay in `tmp/continuous-improvement-loop.log` and remain tail-able with `npm run loop:tail`.
