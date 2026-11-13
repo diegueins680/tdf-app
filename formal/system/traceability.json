@@ -10311,7 +10311,7 @@
       "id": "MKT-AGREEMENT-PAYMENT-001",
       "title": "Marketplace agreement payments on the canonical checkout with a frozen split per charge",
       "domain": "MKT",
-      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit, the rest on the balance), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly once a deposit was collected. A deposit unpaid at its deadline expires the agreement and releases the slot. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor refuses agreement checkouts until a split-capable provider flow exists.",
+      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit; on the balance, whatever the paid charges did not actually collect for the platform), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money. A deposit unpaid at its deadline expires the agreement and releases the slot. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor refuses agreement checkouts until a split-capable provider flow exists.",
       "authority": "Product owner decisions of 2026-11-12 (Stripe, PayPhone and DataWeb by currency and user choice; automatic provider payout; DataWeb integrated but closed; split on every charge); ADR 0136; ADR 0115",
       "source": "docs/adr/0136-marketplace-agreement-payments.md; docs/adr/0115-provider-neutral-payment-routing.md",
       "contract": "docs/adr/0136-marketplace-agreement-payments.md",
@@ -10368,7 +10368,7 @@
       "failure": "Gate off returns 503; a non-buyer gets 403; no charge due, a passed deadline, a missing account email, an unsupported currency, a charge in progress or an unpayable provider return 409; the shared executor returns 503 for agreement checkouts until a split-capable flow is verified.",
       "recovery": "Rollback 2026-11-12_marketplace_agreement_payments_rollback refuses to run when a paid charge exists; otherwise it returns agreements waiting for a deposit to confirmed off-platform, sends agreements waiting for a balance to dispute, drops charges, payout accounts and fee rules and restores the previous agreement transition relation and notification allowlist.",
       "observability": "directory_audit_event rows agreement.payment.create, agreement.payment.paid, agreement.payment.unapplied, agreement.payment.unexpected_state, payout_account.save and payout_account.disable; notifications marketplace.agreement.deposit_paid, balance_due and expired; release schema verification of the payment objects.",
-      "property": "For every charge amount = platform fee + processor fee + provider amount with no negative part and platform fee <= commission due; over deposit and balance the platform takes exactly the frozen commission; every stored payment status change is a pair of the declared relation; no charge is paid without verified checkout evidence.",
+      "property": "For every charge amount = platform fee + processor fee + provider amount with no negative part and platform fee <= commission due; over deposit and balance the platform takes the frozen commission whenever the charges can carry it and never more; every stored payment status change is a pair of the declared relation; no charge is paid without verified checkout evidence.",
       "implementation": [
         "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
         "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
@@ -27488,7 +27488,7 @@
     "docs/catalog-persistence/catalog-list-decisions.json": "d40705ef516a7fc578a713c4297281b06c6aa71f9b34f00f37033bbfb56a7cc4",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
-    "docs/music-directory/formal-model.yaml": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+    "docs/music-directory/formal-model.yaml": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
     "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
@@ -29113,7 +29113,7 @@
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
-    "tdf-hq/src/TDF/Directory/Policy.hs": "b310138067ea94dcadc2093141e1e1778090e8eb9b0b34d63fa610aa2f5c1b7f",
+    "tdf-hq/src/TDF/Directory/Policy.hs": "79db032542799870ba8bd555c1e1c86b4266001a6bf211b64df9738996049e1a",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
@@ -29158,7 +29158,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "140eca9e6ad0d4a05dd9718600f75fd723cb22bdc2fee74edd0ab7021ba6bb8a",
+    "tdf-hq/src/TDF/Server/Directory.hs": "4510ab70dea9357079d33f39d7f2649a70edc7b96866fd1940739fd8ef394a31",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
@@ -29256,7 +29256,7 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "04d0fee36364ca33b7e56a6540fd19a9015efe0da1492618c5e928762e8a656a",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
-    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "272dbdf5c81d0527214dbd1c2943496257fc9a4497c69c3d8289ddcb4dd99a6e",
+    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "a16a86814dd3421230d0191e53f1e3ce90db78a60f3920b5d40c5b1987f7a108",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "006a2eec086a2d350f9da2e7806eab0fd8846f195b84402557f6d71528e41ecb",
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
@@ -74052,7 +74052,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "b310138067ea94dcadc2093141e1e1778090e8eb9b0b34d63fa610aa2f5c1b7f",
+      "sha256": "79db032542799870ba8bd555c1e1c86b4266001a6bf211b64df9738996049e1a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75213,7 +75213,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "140eca9e6ad0d4a05dd9718600f75fd723cb22bdc2fee74edd0ab7021ba6bb8a",
+      "sha256": "4510ab70dea9357079d33f39d7f2649a70edc7b96866fd1940739fd8ef394a31",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77639,7 +77639,7 @@
     {
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-      "sha256": "272dbdf5c81d0527214dbd1c2943496257fc9a4497c69c3d8289ddcb4dd99a6e",
+      "sha256": "a16a86814dd3421230d0191e53f1e3ce90db78a60f3920b5d40c5b1987f7a108",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85323,7 +85323,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#profile",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85361,7 +85361,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#classified",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85412,7 +85412,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#application",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "submitted",
         "transitions": {
@@ -85474,7 +85474,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#agreement",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "confirmed",
         "transitions": {
@@ -85514,7 +85514,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#agreement_payment",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -85533,7 +85533,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#invitation",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -85567,7 +85567,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#claim",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85604,7 +85604,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#moderation_case",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "open",
         "transitions": {
@@ -85648,7 +85648,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#review",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "b0f388dd8f9e0c1caa68e3b7ea4b83dbf356ccc316480091a2ab93d1da95d7a5",
+      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
       "definition": {
         "initial": "published",
         "transitions": {
@@ -85969,7 +85969,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6081d372419ef3e6c1b94530298d33192fadc1008e525a93b5fcfdf6ffed9bab",
+      "sourceSha256": "d177e532ab44e73ee9f9048c6c4c4eb9f333024a0a5309547d3ad6207eae2667",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85997,7 +85997,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6081d372419ef3e6c1b94530298d33192fadc1008e525a93b5fcfdf6ffed9bab",
+      "sourceSha256": "d177e532ab44e73ee9f9048c6c4c4eb9f333024a0a5309547d3ad6207eae2667",
       "definition": {
         "states": [
           "absent",
@@ -86027,7 +86027,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6081d372419ef3e6c1b94530298d33192fadc1008e525a93b5fcfdf6ffed9bab",
+      "sourceSha256": "d177e532ab44e73ee9f9048c6c4c4eb9f333024a0a5309547d3ad6207eae2667",
       "definition": {
         "export": [
           "queued",
