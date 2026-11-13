@@ -26,10 +26,13 @@ export function validateSignupFields(email: string, password: string | null, t: 
   return errors;
 }
 
+/** The name every account carries until its owner chooses a public one. */
+export const ACCOUNT_PLACEHOLDER_NAME = 'Cuenta TDF';
+
 /**
  * Keep the legacy argument for callers, but never use private contact data
  * as an automatic public identity. People choose their public name later.
  */
 export function deriveSignupDisplayName(_email: string): string {
-  return 'Cuenta TDF';
+  return ACCOUNT_PLACEHOLDER_NAME;
 }

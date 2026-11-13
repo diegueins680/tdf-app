@@ -543,6 +543,23 @@ describe('UpcomingEventsCarousel', () => {
     }
   });
 
+  it('leaves the top of a single-task page to that task', async () => {
+    listMock.mockResolvedValue([event('141', 'PATCH CULTURE vol.1')]);
+    getRsvpMock.mockResolvedValue(null);
+    mockSession = { partyId: 7 };
+
+    for (const path of ['/eventos/216', '/artista/crear', '/mi-artista']) {
+      const view = await render(path);
+      expect(view.container.textContent).toBe('');
+      await view.cleanup();
+    }
+    expect(listMock).not.toHaveBeenCalled();
+
+    const view = await render('/fans');
+    await waitFor(() => view.container.textContent?.includes('PATCH CULTURE vol.1') === true);
+    await view.cleanup();
+  });
+
   it('stays hidden for visitors, on the events page, and after dismissal', async () => {
     listMock.mockResolvedValue([event('141', 'PATCH CULTURE vol.1')]);
     getRsvpMock.mockResolvedValue(null);

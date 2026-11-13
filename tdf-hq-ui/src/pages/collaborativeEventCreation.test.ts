@@ -8,6 +8,7 @@ import {
   createCollaborativeEvent,
   normalizeLineup,
   parseOptionalPriceCents,
+  resolveEventCreatorTimezone,
   validateEventArtFile,
   type CollaborativeEventDraft,
 } from './collaborativeEventCreation';
@@ -64,6 +65,16 @@ describe('collaborative event creation', () => {
       '2026-07-28T11:00',
     );
     expect(end.diff(start, 'minutes').minutes).toBe(120);
+  });
+
+  it('starts in the organizer\'s local zone unless the account chose one', () => {
+    // A new account carries the server placeholder, not a choice.
+    expect(resolveEventCreatorTimezone('UTC', 'America/Guayaquil')).toBe('America/Guayaquil');
+    expect(resolveEventCreatorTimezone('', 'America/Guayaquil')).toBe('America/Guayaquil');
+    expect(resolveEventCreatorTimezone('America/Bogota', 'America/Guayaquil')).toBe('America/Bogota');
+    expect(resolveEventCreatorTimezone('UTC', 'UTC')).toBe('UTC');
+    expect(resolveEventCreatorTimezone('UTC', 'Not/AZone')).toBe('UTC');
+    expect(resolveEventCreatorTimezone('UTC', undefined)).toBe('UTC');
   });
 
   it('uses the event timezone independently of the browser and rejects DST shifts', () => {

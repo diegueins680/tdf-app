@@ -1,4 +1,4 @@
-import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage } from './artistFallbacks';
+import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage, isUnnamedArtistProfile } from './artistFallbacks';
 
 describe('getArtistHeroImage', () => {
   it('uses the verified Quimika Soul artwork for its canonical seeded slug', () => {
@@ -30,5 +30,16 @@ describe('getArtistHeroImage', () => {
   it('preserves artist-provided images', () => {
     expect(getArtistHeroImage(' https://cdn.example/owned.jpg ', null, 'Artist')).toBe('https://cdn.example/owned.jpg');
     expect(isArtistPlaceholderImage('https://cdn.example/owned.jpg')).toBe(false);
+  });
+});
+
+describe('isUnnamedArtistProfile', () => {
+  it('recognises profiles that still carry the account placeholder or no name', () => {
+    expect(isUnnamedArtistProfile({ apDisplayName: 'Cuenta TDF' })).toBe(true);
+    expect(isUnnamedArtistProfile({ apDisplayName: '  Cuenta TDF ' })).toBe(true);
+    expect(isUnnamedArtistProfile({ apDisplayName: '' })).toBe(true);
+    expect(isUnnamedArtistProfile({ apDisplayName: null })).toBe(true);
+    expect(isUnnamedArtistProfile({ apDisplayName: 'Verde 70' })).toBe(false);
+    expect(isUnnamedArtistProfile({ apDisplayName: 'Cuenta TDF Sessions' })).toBe(false);
   });
 });
