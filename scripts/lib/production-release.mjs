@@ -28,23 +28,6 @@ export function validateMigrationRelativePath(value) {
   return normalized;
 }
 
-export function buildDatabaseSqlInvocation(context, sql, options = {}) {
-  const dbApp = validateSafeName(context?.dbApp, 'Fly database app');
-  const database = validateSafeName(context?.database, 'PostgreSQL database');
-  const input = String(sql ?? '');
-  if (!input.trim()) throw new Error('Database SQL input cannot be empty.');
-  const psqlFlags = options.tuplesOnly === true ? '-qAt ' : '';
-  const remoteCommand = `su postgres -c "psql -X -v ON_ERROR_STOP=1 ${psqlFlags}-p 5433 -d ${database}"`;
-  return {
-    argv: [
-      'flyctl', 'ssh', 'console',
-      '--app', dbApp,
-      '--command', remoteCommand,
-    ],
-    input,
-  };
-}
-
 export function requireMigrationIntroductionAncestor({ id, introducedBy }, releaseSha, isAncestor) {
   const migrationId = validateSafeName(id, 'Migration id');
   const introductionSha = normalizeFullSha(introducedBy);
@@ -177,241 +160,101 @@ export function securityEmergencyReadinessBlocker(report, options = {}) {
   return undefined;
 }
 
-function stripTomlComment(line) {
-  let quote;
-  let escaped = false;
-  for (let index = 0; index < line.length; index += 1) {
-    const character = line[index];
-    if (escaped) {
-      escaped = false;
-      continue;
+// Narrow, fail-closed reader for the reviewed `api` service of
+// ops/hetzner/compose.production.yaml. It understands only the block layout
+// that file uses; anything it cannot read is an error, never a default.
+function composeServiceLines(yaml, service) {
+  const lines = String(yaml).split(/\r?\n/)
+    .filter((line) => line.trim() && !line.trim().startsWith('#'))
+    .map((line) => {
+      if (line.includes('\t')) throw new Error('compose.production.yaml must not contain tab indentation.');
+      return { indent: line.length - line.trimStart().length, text: line.trim() };
+    });
+  const childrenOf = (rows, key, indent) => {
+    const starts = rows.flatMap((row, index) => (row.indent === indent && row.text === `${key}:` ? [index] : []));
+    if (starts.length !== 1) {
+      throw new Error(`compose.production.yaml must define exactly one ${key} block.`);
     }
-    if (quote === '"' && character === '\\') {
-      escaped = true;
-      continue;
+    const children = [];
+    for (const row of rows.slice(starts[0] + 1)) {
+      if (row.indent <= indent) break;
+      children.push(row);
     }
-    if (character === '"' || character === "'") {
-      quote = quote === character ? undefined : (quote ?? character);
-      continue;
-    }
-    if (character === '#' && !quote) return line.slice(0, index);
-  }
-  return line;
+    return children;
+  };
+  return { childrenOf, rows: childrenOf(childrenOf(lines, 'services', 0), service, 2) };
 }
 
-function parseTomlScalar(rawValue) {
+function composeScalar(rawValue) {
   const value = rawValue.trim();
-  if (value.startsWith('"') && value.endsWith('"')) {
-    try {
-      return JSON.parse(value);
-    } catch {
-      throw new Error(`Unsupported TOML string: ${value}`);
-    }
+  const quoted = value.match(/^(['"])(.*)\1$/);
+  return quoted ? quoted[2] : value;
+}
+
+export function validateProductionCompose(yaml) {
+  const { childrenOf, rows } = composeServiceLines(yaml, 'api');
+  const env = new Map();
+  for (const row of childrenOf(rows, 'environment', 4)) {
+    const assignment = row.indent === 6 ? row.text.match(/^([A-Za-z_][A-Za-z0-9_]*):\s+(\S.*)$/) : null;
+    if (!assignment) throw new Error(`Unsupported compose environment entry: ${row.text}`);
+    if (env.has(assignment[1])) throw new Error(`Duplicate compose environment key: ${assignment[1]}.`);
+    env.set(assignment[1], composeScalar(assignment[2]));
   }
-  if (value.startsWith("'") && value.endsWith("'")) return value.slice(1, -1);
-  if (/^-?[0-9]+$/.test(value)) return Number(value);
-  if (value === 'true' || value === 'false') return value === 'true';
-  return value;
-}
-
-function parseTomlTables(toml) {
-  const tables = new Map([['', [new Map()]]]);
-  let current = tables.get('')[0];
-
-  for (const rawLine of String(toml).split(/\r?\n/)) {
-    const line = stripTomlComment(rawLine).trim();
-    if (!line) continue;
-    const arrayHeader = line.match(/^\[\[([A-Za-z0-9_.-]+)\]\]$/);
-    const tableHeader = line.match(/^\[([A-Za-z0-9_.-]+)\]$/);
-    if (arrayHeader || tableHeader) {
-      const name = (arrayHeader ?? tableHeader)[1];
-      if (!tables.has(name)) tables.set(name, []);
-      if (!arrayHeader && tables.get(name).length > 0) {
-        throw new Error(`Duplicate TOML table [${name}].`);
-      }
-      current = new Map();
-      tables.get(name).push(current);
-      continue;
-    }
-    const assignment = line.match(/^([A-Za-z0-9_-]+)\s*=\s*(.+)$/);
-    if (!assignment) continue;
-    const [, key, rawValue] = assignment;
-    if (current.has(key)) throw new Error(`Duplicate TOML key: ${key}.`);
-    current.set(key, parseTomlScalar(rawValue));
-  }
-  return tables;
-}
-
-function exactlyOneTable(tables, name) {
-  const matches = tables.get(name) ?? [];
-  if (matches.length !== 1) throw new Error(`fly.toml must define exactly one [${name}] table.`);
-  return matches[0];
-}
-
-export function validateFlyConfig(toml) {
-  const tables = parseTomlTables(toml);
-  const root = exactlyOneTable(tables, '');
-  const env = exactlyOneTable(tables, 'env');
-  const deploy = exactlyOneTable(tables, 'deploy');
-  const services = tables.get('services') ?? [];
-  const healthChecks = tables.get('services.http_checks') ?? [];
-  const mounts = tables.get('mounts') ?? [];
-  const runMigrations = String(env.get('RUN_MIGRATIONS') ?? '').trim().toLowerCase();
-  const autoApplyProductionMigrations = String(
-    env.get('AUTO_APPLY_PRODUCTION_MIGRATIONS') ?? '',
-  ).trim().toLowerCase();
-  const contextualReputation = String(
-    env.get('CONTEXTUAL_REPUTATION_ENABLED') ?? '',
-  ).trim().toLowerCase();
-  const publicReputationProjection = String(
-    env.get('PUBLIC_REPUTATION_PROJECTION_ENABLED') ?? '',
-  ).trim().toLowerCase();
-  const reputationAggregationWorker = String(
-    env.get('REPUTATION_AGGREGATION_WORKER_ENABLED') ?? '',
-  ).trim().toLowerCase();
-  const reputationAggregationEnvironment = String(
-    env.get('REPUTATION_AGGREGATION_ENVIRONMENT') ?? '',
-  ).trim().toLowerCase();
-  const reputationAggregationMode = String(
-    env.get('REPUTATION_AGGREGATION_MODE') ?? '',
-  ).trim().toLowerCase();
-  const singleFeatureOnboardingExperiment = String(
-    env.get('SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED') ?? '',
-  ).trim().toLowerCase();
-  const eventDiscovery = String(env.get('EVENT_DISCOVERY_ENABLED') ?? '').trim().toLowerCase();
-  const eventDiscoveryAutoPublish = String(
-    env.get('EVENT_DISCOVERY_AUTO_PUBLISH') ?? '',
-  ).trim().toLowerCase();
-  const defaultLocale = String(env.get('DEFAULT_LOCALE') ?? '').trim().toLowerCase();
+  const mountTargets = childrenOf(rows, 'volumes', 4).flatMap((row) => {
+    const longForm = row.text.match(/^(?:-\s+)?target:\s+(\S.*)$/);
+    if (longForm) return [composeScalar(longForm[1])];
+    const shortForm = row.indent === 6 ? row.text.match(/^-\s+(\S+)$/) : null;
+    if (!shortForm) return [];
+    const parts = composeScalar(shortForm[1]).split(':');
+    return parts.length >= 2 ? [parts[1]] : [];
+  });
+  const flag = (name) => String(env.get(name) ?? '').trim().toLowerCase();
   const assetsRoot = String(env.get('HQ_ASSETS_DIR') ?? '').trim();
-  const internalFeedbackUploadRoot = String(
-    env.get('TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT') ?? '',
-  ).trim();
+  const internalFeedbackUploadRoot = String(env.get('TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT') ?? '').trim();
   const normalizedAssetsRoot = path.posix.normalize(assetsRoot);
   const normalizedUploadRoot = path.posix.normalize(internalFeedbackUploadRoot);
-  const privateFeedbackRoot = `${normalizedAssetsRoot}/.internal-feedback`;
   const uploadRootIsPrivate = assetsRoot.startsWith('/')
     && normalizedAssetsRoot === assetsRoot
     && internalFeedbackUploadRoot.startsWith('/')
     && normalizedUploadRoot === internalFeedbackUploadRoot
-    && normalizedUploadRoot === privateFeedbackRoot;
-  const uploadRootIsDurable = uploadRootIsPrivate
-    && mounts.some((mount) => {
-      const destination = String(mount.get('destination') ?? '').trim();
-      const normalizedDestination = path.posix.normalize(destination);
-      return destination.startsWith('/')
-        && normalizedDestination === destination
-        && (normalizedUploadRoot === normalizedDestination
-          || normalizedUploadRoot.startsWith(`${normalizedDestination}/`));
-    });
-  const hasHealthCheck = services.length === 1 && healthChecks.some((check) => (
-    String(check.get('path') ?? '').trim() === '/health'
-      && String(check.get('protocol') ?? '').trim().toLowerCase() === 'http'
-      && String(check.get('method') ?? '').trim().toLowerCase() === 'get'
+    && normalizedUploadRoot === `${normalizedAssetsRoot}/.internal-feedback`;
+  const uploadRootIsDurable = uploadRootIsPrivate && mountTargets.some((target) => (
+    target.startsWith('/')
+      && path.posix.normalize(target) === target
+      && (normalizedUploadRoot === target || normalizedUploadRoot.startsWith(`${target}/`))
   ));
-  const rollingStrategy = String(deploy.get('strategy') ?? '').trim().toLowerCase() === 'rolling';
-  const maxUnavailableOne = deploy.get('max_unavailable') === 1;
 
-  if (root.get('app') !== 'tdf-hq') {
-    throw new Error('fly.toml must target the production tdf-hq app.');
+  if (flag('RUN_MIGRATIONS') !== 'false') {
+    throw new Error('compose.production.yaml must set RUN_MIGRATIONS to false for the api service.');
   }
-
-  if (runMigrations !== 'false') {
-    throw new Error('fly.toml must set RUN_MIGRATIONS="false" for production.');
-  }
-  if (autoApplyProductionMigrations !== 'true') {
+  if (flag('AUTO_APPLY_PRODUCTION_MIGRATIONS') !== 'true') {
     throw new Error(
-      'fly.toml must set AUTO_APPLY_PRODUCTION_MIGRATIONS="true" for reviewed SQL migrations.',
+      'compose.production.yaml must set AUTO_APPLY_PRODUCTION_MIGRATIONS to true for reviewed SQL migrations.',
     );
   }
-  if (contextualReputation !== 'false') {
-    throw new Error('fly.toml must keep CONTEXTUAL_REPUTATION_ENABLED="false" until a production cohort gate exists.');
+  if (flag('REPUTATION_AGGREGATION_WORKER_ENABLED') !== 'false') {
+    throw new Error('compose.production.yaml must keep REPUTATION_AGGREGATION_WORKER_ENABLED false in production.');
   }
-  if (publicReputationProjection !== 'true') {
-    throw new Error(
-      'fly.toml must set PUBLIC_REPUTATION_PROJECTION_ENABLED="true" for the separately authorized public-read gate.',
-    );
+  if (flag('EVENT_DISCOVERY_ENABLED') !== 'false') {
+    throw new Error('compose.production.yaml must stage EVENT_DISCOVERY_ENABLED false during rollout.');
   }
-  if (reputationAggregationWorker !== 'false') {
-    throw new Error(
-      'fly.toml must keep REPUTATION_AGGREGATION_WORKER_ENABLED="false" in production.',
-    );
-  }
-  if (reputationAggregationEnvironment !== 'production') {
-    throw new Error(
-      'fly.toml must set REPUTATION_AGGREGATION_ENVIRONMENT="production".',
-    );
-  }
-  if (reputationAggregationMode !== 'simulation') {
-    throw new Error('fly.toml must set REPUTATION_AGGREGATION_MODE="simulation".');
-  }
-  if (singleFeatureOnboardingExperiment !== 'false') {
-    throw new Error('fly.toml must stage SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED="false" until explicit activation approval.');
-  }
-  if (eventDiscovery !== 'false') {
-    throw new Error('fly.toml must stage EVENT_DISCOVERY_ENABLED="false" during rollout.');
-  }
-  if (eventDiscoveryAutoPublish !== 'false') {
-    throw new Error(
-      'fly.toml must stage EVENT_DISCOVERY_AUTO_PUBLISH="false" during rollout.',
-    );
-  }
-  if (defaultLocale !== 'es') {
-    throw new Error('fly.toml must set DEFAULT_LOCALE="es" to match the persisted production default.');
+  if (flag('EVENT_DISCOVERY_AUTO_PUBLISH') !== 'false') {
+    throw new Error('compose.production.yaml must stage EVENT_DISCOVERY_AUTO_PUBLISH false during rollout.');
   }
   if (!uploadRootIsDurable) {
     throw new Error(
-      'fly.toml must place TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT in the reserved private subtree beneath a persistent mount.',
+      'compose.production.yaml must place TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT in the reserved private subtree beneath a mounted volume.',
     );
-  }
-  if (!hasHealthCheck) {
-    throw new Error('fly.toml must define an HTTP /health readiness check.');
-  }
-  if (!rollingStrategy || !maxUnavailableOne) {
-    throw new Error('fly.toml must use rolling deploys with max_unavailable = 1.');
   }
 
   return {
     runMigrations: false,
     autoApplyProductionMigrations: true,
     reputationAggregationWorkerEnabled: false,
-    reputationAggregationEnvironment: 'production',
-    reputationAggregationMode: 'simulation',
     eventDiscoveryEnabled: false,
     eventDiscoveryAutoPublish: false,
-    defaultLocale: 'es',
     internalFeedbackUploadRoot: normalizedUploadRoot,
-    healthCheckPath: '/health',
-    strategy: 'rolling',
-    maxUnavailable: 1,
   };
-}
-
-export function buildMachineRollbackImage(machine) {
-  const normalize = (value) => {
-    if (typeof value !== 'string' || !value.trim()) return undefined;
-    return value
-      .trim()
-      .replace(/^docker-hub-mirror\.fly\.io\//i, '')
-      .replace(/(@sha256:[0-9a-f]{64})(?:\1)+$/i, '$1');
-  };
-  const imageRef = machine?.image_ref;
-  if (typeof imageRef === 'string') return normalize(imageRef);
-
-  const registry = String(imageRef?.registry ?? '').trim();
-  const repository = String(imageRef?.repository ?? '')
-    .trim()
-    .replace(/@sha256:[0-9a-f]{64}$/i, '');
-  if (registry && repository) {
-    const base = registry.toLowerCase() === 'docker-hub-mirror.fly.io'
-      ? repository
-      : `${registry}/${repository}`;
-    if (/^sha256:[0-9a-f]{64}$/i.test(imageRef?.digest ?? '')) {
-      return `${base}@${imageRef.digest}`;
-    }
-    if (imageRef?.tag) return `${base}:${imageRef.tag}`;
-  }
-  return normalize(machine?.config?.image);
 }
 
 function sqlLiteral(value) {
@@ -2863,160 +2706,4 @@ ${marketplaceAgreementsIncluded ? `
   END IF;
 END
 $verify$;`;
-}
-
-export function buildMachineDeployArgs({
-  app,
-  image,
-  sha,
-  onlyMachine,
-  excludeMachine,
-  contextualReputationEnabled = false,
-  publicReputationProjectionEnabled = false,
-  eventDiscoveryEnabled = false,
-  eventDiscoveryAutoPublish = false,
-}) {
-  if (typeof contextualReputationEnabled !== 'boolean') {
-    throw new Error('contextualReputationEnabled must be a boolean.');
-  }
-  if (typeof publicReputationProjectionEnabled !== 'boolean') {
-    throw new Error('publicReputationProjectionEnabled must be a boolean.');
-  }
-  if (typeof eventDiscoveryEnabled !== 'boolean' || typeof eventDiscoveryAutoPublish !== 'boolean') {
-    throw new Error('Event discovery gates must be booleans.');
-  }
-  const args = [
-    'flyctl', 'deploy', '.',
-    '--app', app,
-    '--config', 'fly.toml',
-    '--image', image,
-    '--env', `SOURCE_COMMIT=${sha}`,
-    '--env', `GIT_SHA=${sha}`,
-    '--env', 'RUN_MIGRATIONS=false',
-    '--env', 'AUTO_APPLY_PRODUCTION_MIGRATIONS=true',
-    '--env', `CONTEXTUAL_REPUTATION_ENABLED=${contextualReputationEnabled}`,
-    '--env', `PUBLIC_REPUTATION_PROJECTION_ENABLED=${publicReputationProjectionEnabled}`,
-    '--env', 'REPUTATION_AGGREGATION_WORKER_ENABLED=false',
-    '--env', 'REPUTATION_AGGREGATION_ENVIRONMENT=production',
-    '--env', 'REPUTATION_AGGREGATION_MODE=simulation',
-    '--env', `EVENT_DISCOVERY_ENABLED=${eventDiscoveryEnabled}`,
-    '--env', `EVENT_DISCOVERY_AUTO_PUBLISH=${eventDiscoveryAutoPublish}`,
-    '--env', 'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false',
-    '--strategy', 'rolling',
-    '--max-unavailable', '1',
-    '--wait-timeout', '10m',
-    '--update-only',
-    '--yes',
-  ];
-  if (onlyMachine) args.push('--only-machines', onlyMachine);
-  if (excludeMachine) args.push('--exclude-machines', excludeMachine);
-  return args;
-}
-
-export function buildReleaseSteps(options = {}) {
-  if (options.flyConfig) validateFlyConfig(options.flyConfig);
-  const app = validateSafeName(options.app ?? 'tdf-hq', 'Fly app');
-  const sha = normalizeFullSha(options.sha);
-  const contextualReputationEnabled = false;
-  const publicReputationProjectionEnabled = options.publicReputationProjectionEnabled ?? false;
-  const eventDiscoveryEnabled = options.eventDiscoveryEnabled ?? false;
-  const eventDiscoveryAutoPublish = options.eventDiscoveryAutoPublish ?? false;
-  const image = String(options.image ?? `diegueins680/tdf-hq:${sha}`);
-  const descriptiveOnly = options.dryRun === true && options.execute !== true;
-  const selectedCanary = options.canaryMachineId ?? options.canaryMachine;
-  if (!descriptiveOnly && !selectedCanary) {
-    throw new Error('Executable release steps require an explicit canary Machine.');
-  }
-  const canary = selectedCanary
-    ? validateSafeName(selectedCanary, 'canary Machine')
-    : '<selected-after-preflight>';
-  if (!descriptiveOnly && !Array.isArray(options.remainingMachineIds)) {
-    throw new Error('Executable release steps require the captured remaining Machine ids.');
-  }
-  if (Array.isArray(options.remainingMachineIds) && options.remainingMachineIds.length === 0) {
-    throw new Error('A canary release requires at least two Machines so one remains untouched.');
-  }
-  const remaining = Array.isArray(options.remainingMachineIds)
-    ? options.remainingMachineIds.map((id) => validateSafeName(id, 'remaining Machine'))
-    : ['<each-captured-machine>'];
-  const rawPreviousImage = options.priorImages?.[canary] ?? options.previousImage;
-  const rawPreviousSha = options.priorShas?.[canary] ?? options.previousSha;
-  if (!descriptiveOnly && (!rawPreviousImage || !rawPreviousSha)) {
-    throw new Error('Executable release steps require the canary rollback image and source commit.');
-  }
-  const previousImage = String(rawPreviousImage ?? '<captured-before-canary>');
-  const previousSha = descriptiveOnly && !rawPreviousSha
-    ? '<captured-before-canary>'
-    : normalizeFullSha(rawPreviousSha);
-  const rawPreviousContextualReputationEnabled =
-    options.priorContextualReputationEnabled?.[canary]
-    ?? options.previousContextualReputationEnabled;
-  if (!descriptiveOnly && typeof rawPreviousContextualReputationEnabled !== 'boolean') {
-    throw new Error(
-      'Executable release steps require the captured contextual-reputation flag for rollback.',
-    );
-  }
-  const previousContextualReputationEnabled =
-    typeof rawPreviousContextualReputationEnabled === 'boolean'
-      ? rawPreviousContextualReputationEnabled
-      : false;
-
-  const rollbackCanary = {
-    id: 'rollback-canary',
-    mutating: true,
-    beforeStep: 'deploy-remaining',
-    command: buildMachineDeployArgs({
-      app,
-      image: previousImage,
-      sha: previousSha,
-      contextualReputationEnabled: previousContextualReputationEnabled,
-      publicReputationProjectionEnabled,
-      eventDiscoveryEnabled,
-      eventDiscoveryAutoPublish,
-      onlyMachine: canary,
-    }),
-  };
-
-  const remainingSteps = remaining.flatMap((machineId, index) => [
-    {
-      id: `deploy-remaining-${index + 1}`,
-      machineId,
-      mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, eventDiscoveryEnabled, eventDiscoveryAutoPublish, onlyMachine: machineId }),
-    },
-    { id: `smoke-remaining-${index + 1}`, machineId, mutating: false },
-  ]);
-
-  return [
-    { id: 'local-preflight', mutating: false, sha, image },
-    { id: 'remote-preflight', mutating: false },
-    { id: 'apply-migrations', mutating: true, migrations: options.migrations ?? [] },
-    { id: 'verify-schema', mutating: false },
-    {
-      id: 'deploy-canary',
-      mutating: true,
-      command: buildMachineDeployArgs({ app, image, sha, contextualReputationEnabled, publicReputationProjectionEnabled, eventDiscoveryEnabled, eventDiscoveryAutoPublish, onlyMachine: canary }),
-    },
-    { id: 'smoke-canary', mutating: false, onFailure: [rollbackCanary] },
-    ...remainingSteps,
-    { id: 'verify-fleet', mutating: false },
-  ];
-}
-
-export function buildDeployPlan(options = {}) {
-  if (options.flyConfig) validateFlyConfig(options.flyConfig);
-  const execute = options.execute === true || options.dryRun === false;
-  const steps = buildReleaseSteps(options).map((step) => {
-    if (execute) return step;
-    const { command: _command, onFailure: _onFailure, ...description } = step;
-    return { ...description, mutating: false };
-  });
-  return {
-    dryRun: !execute,
-    mode: execute ? 'execute' : 'dry-run',
-    steps,
-    commands: execute
-      ? steps.flatMap((step) => (step.command ? [step.command] : []))
-      : [],
-  };
 }

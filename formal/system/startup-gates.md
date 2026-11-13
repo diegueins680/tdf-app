@@ -5,7 +5,7 @@ Reconstructed on 2026-10-12 from `buildSchemaVerificationSql` in
 and `tdf-hq/production-entrypoint.sh`, which runs that verification after the
 migration batch and before the server accepts traffic whenever
 `AUTO_APPLY_PRODUCTION_MIGRATIONS` is true (the shipped image, Dockerfile and
-`fly.toml` default; the precheck requires it). With it false the container
+`ops/hetzner/compose.production.yaml` default; the precheck requires it). With it false the container
 starts with no verification at all. The requirement text
 was read against the code, not the other way round.
 

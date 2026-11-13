@@ -1,8 +1,6 @@
 #!/usr/bin/env node
-import { createHash, randomUUID } from 'node:crypto';
-import { execFile, spawn } from 'node:child_process';
-import fs from 'node:fs/promises';
-import net from 'node:net';
+import { createHash } from 'node:crypto';
+import { execFile } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -11,25 +9,15 @@ import { checkDisabledEscrowWrites } from './lib/legacy-escrow-contract.mjs';
 import { loadMigrationContract } from './lib/migration-contract.mjs';
 
 import {
-  buildDatabaseSqlInvocation,
-  buildDeployPlan,
-  buildMachineDeployArgs,
-  buildMachineRollbackImage,
-  buildMigrationBatchSql,
-  buildSchemaPreflightSql,
-  buildSchemaVerificationSql,
   expandMigrationIncludes,
   normalizeFullSha,
-  parseSecurityEmergencyReadinessOutput,
-  securityEmergencyReadinessBlocker,
-  validateFlyConfig,
-  validateSafeName,
+  validateProductionCompose,
 } from './lib/production-release.mjs';
 
 const execFileAsync = promisify(execFile);
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = path.join(rootDir, 'scripts', 'production-migrations.json');
-const flyConfigPath = path.join(rootDir, 'fly.toml');
+const productionComposePath = path.join(rootDir, 'ops', 'hetzner', 'compose.production.yaml');
 const securityEmergencyPreflightPath = path.join(
   rootDir,
   'tdf-hq',
@@ -37,12 +25,6 @@ const securityEmergencyPreflightPath = path.join(
   'preflight_security_emergency_readiness.sql',
 );
 const defaultImageRepo = 'diegueins680/tdf-hq';
-const productionProfile = Object.freeze({
-  app: 'tdf-hq',
-  dbApp: 'tdf-hq-db',
-  database: 'tdf_hq',
-  imageRepo: defaultImageRepo,
-});
 const stagedRuntimeEnv = Object.freeze({
   RUN_MIGRATIONS: 'false',
   AUTO_APPLY_PRODUCTION_MIGRATIONS: 'true',
@@ -55,77 +37,6 @@ const stagedRuntimeEnv = Object.freeze({
   SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED: 'false',
   DEFAULT_LOCALE: 'es',
 });
-const readRuntimeEnvCommand = [
-  "sh -lc '",
-  'printf "RUN_MIGRATIONS=%s\\nAUTO_APPLY_PRODUCTION_MIGRATIONS=%s\\nCONTEXTUAL_REPUTATION_ENABLED=%s\\nPUBLIC_REPUTATION_PROJECTION_ENABLED=%s\\nREPUTATION_AGGREGATION_WORKER_ENABLED=%s\\nREPUTATION_AGGREGATION_ENVIRONMENT=%s\\nREPUTATION_AGGREGATION_MODE=%s\\nEVENT_DISCOVERY_ENABLED=%s\\nEVENT_DISCOVERY_AUTO_PUBLISH=%s\\nSINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=%s\\nDEFAULT_LOCALE=%s\\n" ',
-  '"${RUN_MIGRATIONS-__UNSET__}" ',
-  '"${AUTO_APPLY_PRODUCTION_MIGRATIONS-__UNSET__}" ',
-  '"${CONTEXTUAL_REPUTATION_ENABLED-__UNSET__}" ',
-  '"${PUBLIC_REPUTATION_PROJECTION_ENABLED-__UNSET__}" ',
-  '"${REPUTATION_AGGREGATION_WORKER_ENABLED-__UNSET__}" ',
-  '"${REPUTATION_AGGREGATION_ENVIRONMENT-__UNSET__}" ',
-  '"${REPUTATION_AGGREGATION_MODE-__UNSET__}" ',
-  '"${EVENT_DISCOVERY_ENABLED-__UNSET__}" ',
-  '"${EVENT_DISCOVERY_AUTO_PUBLISH-__UNSET__}" ',
-  '"${SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED-false}" ',
-  '"${DEFAULT_LOCALE-__UNSET__}"',
-  "'",
-].join('');
-
-function usage() {
-  return `Usage:
-  Retired Fly CLI: remote execution is disabled.
-  Prepare artifacts only:
-  npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY
-  Follow ops/hetzner/README.md for production rollout.
-
-Options:
-  --app <name>       Fly API app (default: tdf-hq)
-  --db-app <name>    Fly PostgreSQL app (default: tdf-hq-db)
-  --database <name>  PostgreSQL database (default: tdf_hq)
-  --image <ref>      Immutable image; defaults to diegueins680/tdf-hq:<sha>
-  --recovery-sha <sha> Reviewed ancestor preserving migrations, identity and disabled financial writes
-`;
-}
-
-export function parseArgs(argv) {
-  const args = [...argv];
-  const mode = args[0] && !args[0].startsWith('--') ? args.shift() : 'plan';
-  if (!['plan', 'preflight', 'release'].includes(mode)) {
-    throw new Error(`Unknown release mode: ${mode}`);
-  }
-  const options = {
-    mode,
-    app: 'tdf-hq',
-    dbApp: 'tdf-hq-db',
-    database: 'tdf_hq',
-    execute: false,
-  };
-  while (args.length > 0) {
-    const flag = args.shift();
-    if (flag === '--execute') {
-      options.execute = true;
-      continue;
-    }
-    if (flag === '--help' || flag === '-h') {
-      options.help = true;
-      continue;
-    }
-    const key = {
-      '--sha': 'sha',
-      '--confirm': 'confirm',
-      '--image': 'image',
-      '--app': 'app',
-      '--db-app': 'dbApp',
-      '--database': 'database',
-      '--recovery-sha': 'recoverySha',
-    }[flag];
-    if (!key || args.length === 0) throw new Error(`Unknown or incomplete option: ${flag}`);
-    options[key] = args.shift();
-  }
-  return options;
-}
-
 async function run(argv, options = {}) {
   const [command, ...args] = argv;
   if (options.log !== false) console.error(`$ ${argv.join(' ')}`);
@@ -141,56 +52,6 @@ async function run(argv, options = {}) {
     const detail = [error.stdout, error.stderr].filter(Boolean).join('\n').trim();
     throw new Error(`${argv.join(' ')} failed${detail ? `:\n${detail}` : ''}`, { cause: error });
   }
-}
-
-async function runWithInput(argv, input, options = {}) {
-  const [command, ...args] = argv;
-  if (options.log !== false) console.error(`$ ${argv.join(' ')}`);
-  const maxBuffer = options.maxBuffer ?? 30 * 1024 * 1024;
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd: rootDir,
-      env: process.env,
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    const output = { stdout: '', stderr: '' };
-    let outputBytes = 0;
-    let bufferExceeded = false;
-
-    const capture = (stream) => (chunk) => {
-      outputBytes += chunk.length;
-      if (outputBytes > maxBuffer) {
-        bufferExceeded = true;
-        child.kill();
-        return;
-      }
-      output[stream] += chunk.toString();
-    };
-    child.stdout.on('data', capture('stdout'));
-    child.stderr.on('data', capture('stderr'));
-    child.once('error', (cause) => {
-      reject(new Error(`${argv.join(' ')} failed: ${cause.message}`, { cause }));
-    });
-    child.stdin.once('error', (cause) => {
-      if (cause.code !== 'EPIPE') {
-        reject(new Error(`${argv.join(' ')} input failed: ${cause.message}`, { cause }));
-      }
-    });
-    child.once('close', (code, signal) => {
-      if (bufferExceeded) {
-        reject(new Error(`${argv.join(' ')} exceeded the ${maxBuffer}-byte output limit.`));
-      } else if (code === 0) {
-        resolve(output);
-      } else {
-        const detail = output.stderr.trim();
-        reject(new Error(
-          `${argv.join(' ')} failed with ${signal ? `signal ${signal}` : `exit code ${code}`}`
-            + `${detail ? `:\n${detail}` : ''}`,
-        ));
-      }
-    });
-    child.stdin.end(input);
-  });
 }
 
 async function commandExists(command) {
@@ -212,22 +73,10 @@ async function readGitBlob(sha, relativePath) {
 
 export async function resolveReleaseContext(options) {
   const sha = normalizeFullSha(options.sha);
-  const app = validateSafeName(options.app, 'Fly app');
-  const dbApp = validateSafeName(options.dbApp, 'Fly database app');
-  const database = validateSafeName(options.database, 'PostgreSQL database');
   const image = String(options.image ?? `${defaultImageRepo}:${sha}`).trim();
   if (!image.endsWith(`:${sha}`)) {
     throw new Error('Release image must use the exact full commit SHA tag.');
   }
-  if (options.mode === 'release' && (
-    app !== productionProfile.app
-      || dbApp !== productionProfile.dbApp
-      || database !== productionProfile.database
-      || !image.startsWith(`${productionProfile.imageRepo}:`)
-  )) {
-    throw new Error('Production execution does not allow app, database, or image-repository overrides.');
-  }
-
   await run(['git', 'cat-file', '-e', `${sha}^{commit}`], { log: false });
   const manifestRelativePath = path.relative(rootDir, manifestPath);
   const manifest = JSON.parse(await readGitBlob(sha, manifestRelativePath));
@@ -261,54 +110,20 @@ export async function resolveReleaseContext(options) {
     }
   }
 
-  const flyConfig = await readGitBlob(sha, path.relative(rootDir, flyConfigPath));
+  const productionCompose = await readGitBlob(sha, path.relative(rootDir, productionComposePath));
   const securityEmergencyPreflightSql = await readGitBlob(
     sha,
     path.relative(rootDir, securityEmergencyPreflightPath),
   );
-  validateFlyConfig(flyConfig);
+  validateProductionCompose(productionCompose);
   return {
     ...options,
     sha,
-    app,
-    dbApp,
-    database,
     image,
-    flyConfig,
     migrations,
     recoverySha,
     securityEmergencyPreflightSql,
   };
-}
-
-async function readMachines(app) {
-  const { stdout } = await run(['flyctl', 'machines', 'list', '--app', app, '--json']);
-  const machines = JSON.parse(stdout);
-  if (machines.length < 2) {
-    throw new Error('Production canary requires at least two started API Machines.');
-  }
-  const unavailable = machines.filter((machine) => machine.state !== 'started');
-  if (unavailable.length > 0) {
-    throw new Error(`Every production Machine must be started before release: ${unavailable.map(({ id, state }) => `${id}=${state}`).join(', ')}`);
-  }
-  for (const machine of machines) validateSafeName(machine.id, 'Fly Machine id');
-  return machines.sort((left, right) => left.id.localeCompare(right.id));
-}
-
-async function readEffectiveRuntimeEnv(app, machines) {
-  return Promise.all(machines.map(async (machine) => {
-    const { stdout } = await run([
-      'flyctl', 'machine', 'exec', machine.id,
-      readRuntimeEnvCommand,
-      '--app', app,
-    ], { log: false });
-    const values = Object.fromEntries(stdout.trim().split('\n').map((line) => {
-      const separator = line.indexOf('=');
-      if (separator < 1) throw new Error(`Machine ${machine.id} returned an invalid runtime environment payload.`);
-      return [line.slice(0, separator), line.slice(separator + 1)];
-    }));
-    return { machineId: machine.id, values };
-  }));
 }
 
 export function runtimeEnvBlockers(rows, options = {}) {
@@ -365,15 +180,6 @@ export function captureEventDiscoveryGates(rows) {
   };
 }
 
-async function unchangedEventDiscoveryGates(context, machine) {
-  const current = captureEventDiscoveryGates(await readEffectiveRuntimeEnv(context.app, [machine]));
-  if (current.eventDiscoveryEnabled !== context.eventDiscoveryGates.eventDiscoveryEnabled
-      || current.eventDiscoveryAutoPublish !== context.eventDiscoveryGates.eventDiscoveryAutoPublish) {
-    throw new Error(`Machine ${machine.id} discovery gates changed after preflight; refusing to overwrite them.`);
-  }
-  return current;
-}
-
 export function captureContextualReputationGate(rows) {
   const values = new Set(rows.map(({ values: runtime }) => runtime.CONTEXTUAL_REPUTATION_ENABLED));
   if (values.size !== 1 || !['true', 'false'].includes([...values][0])) {
@@ -382,52 +188,6 @@ export function captureContextualReputationGate(rows) {
     );
   }
   return [...values][0] === 'true';
-}
-
-function capturedContextualReputationGate(machine) {
-  const value = machine.releaseSnapshot?.runtimeEnv?.CONTEXTUAL_REPUTATION_ENABLED;
-  if (!['true', 'false'].includes(value)) {
-    throw new Error(`Machine ${machine.id} has no boolean contextual-reputation rollback gate.`);
-  }
-  return value === 'true';
-}
-
-function capturePublicReputationProjectionGate(rows) {
-  const values = new Set(rows.map(({ values: runtime }) => runtime.PUBLIC_REPUTATION_PROJECTION_ENABLED));
-  if (values.size !== 1 || !['true', 'false', '__UNSET__', undefined].includes([...values][0])) {
-    throw new Error('Every production Machine must report the same boolean PUBLIC_REPUTATION_PROJECTION_ENABLED value.');
-  }
-  // A uniformly unset fleet is the first-rollout upgrade state. The reviewed
-  // manifest deliberately introduces the gate as true; mixed states remain a
-  // hard failure so an incident rollback cannot be silently overwritten.
-  const value = [...values][0];
-  return value === '__UNSET__' || value === undefined || value === 'true';
-}
-
-async function currentPublicReputationProjectionGate(context, machine) {
-  return capturePublicReputationProjectionGate(
-    await readEffectiveRuntimeEnv(context.app, [machine]),
-  );
-}
-
-async function readSecretNames(app) {
-  const { stdout } = await run(['flyctl', 'secrets', 'list', '--app', app, '--json']);
-  const rows = JSON.parse(stdout);
-  return new Set(rows.map((row) => row.Name ?? row.name).filter(Boolean));
-}
-
-async function runDatabaseSql(context, sql, options = {}) {
-  const invocation = buildDatabaseSqlInvocation(context, sql, options);
-  return runWithInput(invocation.argv, invocation.input);
-}
-
-async function readSecurityEmergencyReadiness(context) {
-  const { stdout } = await runDatabaseSql(
-    context,
-    context.securityEmergencyPreflightSql,
-    { tuplesOnly: true },
-  );
-  return parseSecurityEmergencyReadinessOutput(stdout);
 }
 
 export async function verifyImageExists(image, sha) {
@@ -471,200 +231,6 @@ export async function verifyImageExists(image, sha) {
     resolvedImage: `${image.slice(0, image.lastIndexOf(':'))}@${digest}`,
     acceptableDigests: [...acceptableDigests],
   };
-}
-
-async function remotePreflight(context) {
-  if (!(await commandExists('flyctl'))) throw new Error('flyctl is required for production preflight.');
-  await run(['flyctl', 'auth', 'whoami']);
-  const machines = await readMachines(context.app);
-  const runtimeEnv = await readEffectiveRuntimeEnv(context.app, machines);
-  const contextualReputationEnabled = captureContextualReputationGate(runtimeEnv);
-  const eventDiscoveryGates = captureEventDiscoveryGates(runtimeEnv);
-  context.eventDiscoveryGates = eventDiscoveryGates;
-  const publicReputationProjectionEnabled = capturePublicReputationProjectionGate(runtimeEnv);
-  const secrets = await readSecretNames(context.app);
-  const blockers = runtimeEnvBlockers(runtimeEnv, {
-    ...eventDiscoveryGates,
-    allowUnavailableAutomaticRunner: true,
-    allowUnavailableReputationWorker: true,
-  });
-  if (context.recoverySha) {
-    const repository = context.image.slice(0, context.image.lastIndexOf(':'));
-    const artifact = await verifyImageExists(`${repository}:${context.recoverySha}`, context.recoverySha);
-    context.recoveryArtifact = {
-      sha: context.recoverySha,
-      image: artifact.resolvedImage,
-      acceptableImageDigests: artifact.acceptableDigests,
-    };
-  }
-  for (const machine of machines) {
-    const check = await smokeMachine(context, machine.id, null);
-    machine.releaseSnapshot = {
-      image: previousImage(machine),
-      imageDigest: machine.image_ref?.digest,
-      instanceId: machine.instance_id,
-      sha: check.version.commit,
-      runtimeEnv: runtimeEnv.find(({ machineId }) => machineId === machine.id)?.values,
-    };
-    if (!machine.releaseSnapshot.image) blockers.push(`Machine ${machine.id} has no immutable rollback image reference.`);
-    if (!machine.releaseSnapshot.imageDigest) blockers.push(`Machine ${machine.id} has no rollback image digest.`);
-    if (!machine.releaseSnapshot.instanceId) blockers.push(`Machine ${machine.id} has no instance snapshot.`);
-    if (!previousSha(machine)) blockers.push(`Machine ${machine.id} does not report a full rollback source commit.`);
-    else {
-      machine.releaseSnapshot.rollbackPolicy = await rollbackCompatibility(context, previousSha(machine));
-      if (!machine.releaseSnapshot.rollbackPolicy.compatible && !context.recoveryArtifact) {
-        blockers.push(`Machine ${machine.id} has an unsafe prior binary. Supply --recovery-sha with a verified compatible ancestor image before release.`);
-      }
-    }
-  }
-  for (const required of ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) {
-    if (!secrets.has(required)) blockers.push(`Required Fly secret is missing: ${required}`);
-  }
-  const { stdout } = await runDatabaseSql(context, buildSchemaPreflightSql());
-  const securityEmergencyReadiness = await readSecurityEmergencyReadiness(context);
-  const securityBlocker = securityEmergencyReadinessBlocker(securityEmergencyReadiness);
-  if (securityBlocker) blockers.push(`Security emergency readiness: ${securityBlocker}.`);
-  const health = await waitForJson(`https://${context.app}.fly.dev/health`);
-  const version = await waitForJson(`https://${context.app}.fly.dev/version`);
-  if (health.status !== 'ok' || health.db !== 'ok') {
-    throw new Error('Current production health payload is not ready.');
-  }
-  try {
-    const image = await verifyImageExists(context.image, context.sha);
-    context.resolvedImage = image.resolvedImage;
-    context.acceptableImageDigests = new Set(image.acceptableDigests);
-  } catch (error) {
-    blockers.push(error.message.split('\n')[0]);
-  }
-  if (blockers.length > 0) {
-    throw new Error(`Production preflight is blocked:\n- ${blockers.join('\n- ')}`);
-  }
-  return {
-    machines,
-    runtimeEnv,
-    contextualReputationEnabled,
-    publicReputationProjectionEnabled,
-    eventDiscoveryGates,
-    ticketmasterConfigured: secrets.has('TICKETMASTER_API_KEY'),
-    databasePreflight: stdout.trim().split('\n').slice(-3),
-    securityEmergencyReadiness,
-    currentVersion: version.commit,
-    resolvedImage: context.resolvedImage,
-    acceptableImageDigests: [...context.acceptableImageDigests],
-    recovery: machines.map(({ id, releaseSnapshot }) => ({
-      machineId: id,
-      ...releaseSnapshot.rollbackPolicy,
-      mode: releaseSnapshot.rollbackPolicy.compatible ? 'compatible-rollback' : 'compatible-forward-recovery',
-      fallback: context.recoveryArtifact ?? null,
-    })),
-  };
-}
-
-async function reservePort() {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.once('error', reject);
-    server.listen(0, '127.0.0.1', () => {
-      const { port } = server.address();
-      server.close((error) => error ? reject(error) : resolve(port));
-    });
-  });
-}
-
-async function waitForJson(url, timeoutMs = 60_000, headers = undefined) {
-  const deadline = Date.now() + timeoutMs;
-  let lastError;
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(url, {
-        headers,
-        signal: AbortSignal.timeout(3_000),
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      lastError = error;
-      await new Promise((resolve) => setTimeout(resolve, 1_000));
-    }
-  }
-  throw new Error(`Timed out waiting for ${url}: ${lastError?.message ?? 'unknown error'}`);
-}
-
-async function smokeMachine(context, machineId, expectedSha = context.sha) {
-  const port = await reservePort();
-  const proxy = spawn('flyctl', [
-    'proxy', `${port}:8080`, `${machineId}.vm.${context.app}.internal`,
-    '--app', context.app,
-    '--quiet',
-  ], { cwd: rootDir, stdio: ['ignore', 'pipe', 'pipe'] });
-  let proxyError = '';
-  proxy.stderr.on('data', (chunk) => { proxyError += chunk.toString(); });
-  try {
-    const health = await waitForJson(`http://127.0.0.1:${port}/health`, 3_000);
-    if (health.status !== 'ok' || health.db !== 'ok') {
-      throw new Error(`Machine ${machineId} health payload is not ready.`);
-    }
-    const version = await waitForJson(`http://127.0.0.1:${port}/version`, 3_000);
-    let runningSha;
-    try {
-      runningSha = normalizeFullSha(version.commit);
-    } catch {
-      throw new Error(`Machine ${machineId} reports an invalid commit: ${JSON.stringify(version.commit)}.`);
-    }
-    if (expectedSha && runningSha !== expectedSha) {
-      throw new Error(`Machine ${machineId} reports ${runningSha}, expected ${expectedSha}.`);
-    }
-    version.commit = runningSha;
-    return { machineId, health, version };
-  } catch (error) {
-    // `flyctl proxy` depends on Fly's organization tunnel, which can be unavailable
-    // even while the Machine's own Fly health check and public service are healthy.
-    // The deploy command still waits for each selected Machine's HTTP health check;
-    // this fallback preserves a version/health smoke check without treating that
-    // control-plane tunnel outage as an application failure. Pin public
-    // requests to the selected Machine so a canary smoke check cannot be
-    // satisfied by, or fail because of, an untouched fleet member.
-    console.error(`Per-Machine proxy smoke check failed for ${machineId}; using public fallback: ${error.message}`);
-    const headers = { 'fly-force-instance-id': machineId };
-    const health = await waitForJson(`https://${context.app}.fly.dev/health`, 60_000, headers);
-    if (health.status !== 'ok' || health.db !== 'ok') {
-      throw new Error(`Public fallback health payload is not ready after Machine ${machineId} update.`);
-    }
-    const version = await waitForJson(`https://${context.app}.fly.dev/version`, 60_000, headers);
-    let runningSha;
-    try {
-      runningSha = normalizeFullSha(version.commit);
-    } catch {
-      throw new Error(`Public fallback reports an invalid commit: ${JSON.stringify(version.commit)}.`);
-    }
-    if (expectedSha && runningSha !== expectedSha) {
-      throw new Error(`Public fallback reports ${runningSha}, expected ${expectedSha}.`);
-    }
-    version.commit = runningSha;
-    return { machineId, health, version, smokePath: 'public-fallback' };
-  } finally {
-    proxy.kill('SIGTERM');
-    await new Promise((resolve) => {
-      const timer = setTimeout(resolve, 2_000);
-      proxy.once('exit', () => { clearTimeout(timer); resolve(); });
-    });
-    if (proxy.exitCode && proxy.exitCode !== 143 && proxyError) console.error(proxyError.trim());
-  }
-}
-
-function previousImage(machine) {
-  return buildMachineRollbackImage(machine);
-}
-
-function previousSha(machine) {
-  const value = machine.releaseSnapshot?.sha
-    ?? machine.config?.env?.GIT_SHA
-    ?? machine.config?.env?.SOURCE_COMMIT;
-  try {
-    return normalizeFullSha(value);
-  } catch {
-    return undefined;
-  }
 }
 
 // This reviewed commit binds Google authentication to issuer/subject and requires
@@ -770,405 +336,9 @@ export async function recoverReleaseMachines(originalMachines, touchedMachines, 
   return { rollbacks, errors };
 }
 
-async function rollbackMachine(context, machine) {
-  const { image, sha, acceptableImageDigests } = selectRecoveryTarget(machine.releaseSnapshot, context.recoveryArtifact);
-  if (!image || !sha) throw new Error(`Cannot construct rollback for Machine ${machine.id}.`);
-  const contextualReputationEnabled = capturedContextualReputationGate(machine);
-  const eventDiscoveryGates = captureEventDiscoveryGates([{ values: machine.releaseSnapshot?.runtimeEnv ?? {} }]);
-  const projectionGate = await currentPublicReputationProjectionGate(context, machine);
-  // Keep rollback on the same deploy lane as rollout. `flyctl machine update`
-  // duplicates Docker Hub digest references as repo@digest@digest before the API call.
-  await withCompatibleRollback(context, sha, () => run(buildMachineDeployArgs({
-    app: context.app,
-    image,
-    sha,
-    contextualReputationEnabled,
-    ...eventDiscoveryGates,
-    publicReputationProjectionEnabled: projectionGate,
-    onlyMachine: machine.id,
-  })));
-  const restored = (await readMachines(context.app)).find(({ id }) => id === machine.id);
-  if (!restored) throw new Error(`Rolled-back Machine ${machine.id} disappeared.`);
-  if (!acceptableImageDigests.includes(restored.image_ref?.digest)) {
-    throw new Error(`Machine ${machine.id} rollback digest does not match its snapshot.`);
-  }
-  const envBlockers = runtimeEnvBlockers(
-    await readEffectiveRuntimeEnv(context.app, [restored]),
-    { contextualReputationEnabled, ...eventDiscoveryGates },
-  );
-  if (envBlockers.length > 0) {
-    throw new Error(`Machine ${machine.id} rollback environment is unsafe: ${envBlockers.join(' ')}`);
-  }
-  const smoke = await smokeMachine(context, machine.id, sha);
-  return { machineId: machine.id, image, imageDigest: restored.image_ref?.digest, version: smoke.version };
-}
-
-function assertExactMachineSet(current, originalMachines) {
-  const expectedIds = new Set(originalMachines.map((machine) => machine.id));
-  const currentIds = new Set(current.map((machine) => machine.id));
-  const missing = [...expectedIds].filter((id) => !currentIds.has(id));
-  const unexpected = [...currentIds].filter((id) => !expectedIds.has(id));
-  if (missing.length > 0 || unexpected.length > 0) {
-    throw new Error(`Production Machine set changed (missing: ${missing.join(', ') || 'none'}; unexpected: ${unexpected.join(', ') || 'none'}).`);
-  }
-}
-
-async function assertUntouchedSnapshots(context, originalMachines, touchedMachines) {
-  const current = await readMachines(context.app);
-  assertExactMachineSet(current, originalMachines);
-  for (const original of originalMachines) {
-    if (touchedMachines.has(original.id)) continue;
-    const latest = current.find(({ id }) => id === original.id);
-    if (latest.instance_id !== original.releaseSnapshot?.instanceId
-        || latest.image_ref?.digest !== original.releaseSnapshot?.imageDigest) {
-      throw new Error(`Untouched Machine ${original.id} changed after preflight; refusing concurrent rollout.`);
-    }
-  }
-  return current;
-}
-
-async function verifyTargetMachine(context, machineId) {
-  const machine = (await readMachines(context.app)).find(({ id }) => id === machineId);
-  if (!machine) throw new Error(`Target Machine ${machineId} disappeared.`);
-  if (!context.acceptableImageDigests.has(machine.image_ref?.digest)) {
-    throw new Error(`Machine ${machineId} is running unexpected image digest ${machine.image_ref?.digest}.`);
-  }
-  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, [machine]), context.eventDiscoveryGates);
-  if (envBlockers.length > 0) {
-    throw new Error(`Machine ${machineId} runtime environment is unsafe: ${envBlockers.join(' ')}`);
-  }
-  return smokeMachine(context, machineId);
-}
-
-async function verifyFleet(context, originalMachines) {
-  const current = await readMachines(context.app);
-  assertExactMachineSet(current, originalMachines);
-  const envBlockers = runtimeEnvBlockers(await readEffectiveRuntimeEnv(context.app, current), context.eventDiscoveryGates);
-  if (envBlockers.length > 0) {
-    throw new Error(`Fleet runtime environment is unsafe:\n- ${envBlockers.join('\n- ')}`);
-  }
-  for (const machine of current) {
-    if (!context.acceptableImageDigests.has(machine.image_ref?.digest)) {
-      throw new Error(`Machine ${machine.id} has unexpected image digest ${machine.image_ref?.digest}.`);
-    }
-    await smokeMachine(context, machine.id);
-  }
-  const health = await waitForJson(`https://${context.app}.fly.dev/health`);
-  const version = await waitForJson(`https://${context.app}.fly.dev/version`);
-  if (health.status !== 'ok' || health.db !== 'ok' || version.commit !== context.sha) {
-    throw new Error('Public fleet verification did not match the target release.');
-  }
-  return { machines: current.map((machine) => machine.id), health, version };
-}
-
-function sqlLiteral(value) {
-  return `'${String(value).replaceAll("'", "''")}'`;
-}
-
-async function acquireReleaseLease(context, token) {
-  const sql = `
-\\set ON_ERROR_STOP on
-CREATE TABLE IF NOT EXISTS public.tdf_release_lease (
-  singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (singleton),
-  source_commit TEXT NOT NULL CHECK (source_commit ~ '^[0-9a-f]{40}$'),
-  owner_token UUID NOT NULL,
-  acquired_at TIMESTAMPTZ NOT NULL,
-  heartbeat_at TIMESTAMPTZ NOT NULL
-);
-WITH acquired AS (
-  INSERT INTO public.tdf_release_lease (
-    singleton, source_commit, owner_token, acquired_at, heartbeat_at
-  ) VALUES (
-    TRUE, ${sqlLiteral(context.sha)}, ${sqlLiteral(token)}::UUID, NOW(), NOW()
-  )
-  ON CONFLICT (singleton) DO UPDATE
-    SET source_commit = EXCLUDED.source_commit,
-        owner_token = EXCLUDED.owner_token,
-        acquired_at = EXCLUDED.acquired_at,
-        heartbeat_at = EXCLUDED.heartbeat_at
-    WHERE public.tdf_release_lease.heartbeat_at < NOW() - INTERVAL '2 hours'
-  RETURNING owner_token
-)
-SELECT owner_token FROM acquired;
-`.trim();
-  const { stdout } = await runDatabaseSql(context, sql, { tuplesOnly: true });
-  if (stdout.trim() !== token) {
-    throw new Error('Another production release holds the database release lease.');
-  }
-}
-
-async function heartbeatReleaseLease(context, token) {
-  const sql = `
-WITH refreshed AS (
-  UPDATE public.tdf_release_lease
-  SET heartbeat_at = NOW()
-  WHERE singleton AND owner_token = ${sqlLiteral(token)}::UUID
-  RETURNING 1
-)
-SELECT COUNT(*) FROM refreshed;
-`.trim();
-  const { stdout } = await runDatabaseSql(context, sql, { tuplesOnly: true });
-  if (stdout.trim() !== '1') throw new Error('Production release lease was lost.');
-}
-
-async function releaseReleaseLease(context, token) {
-  const sql = `
-WITH released AS (
-  DELETE FROM public.tdf_release_lease
-  WHERE singleton AND owner_token = ${sqlLiteral(token)}::UUID
-  RETURNING 1
-)
-SELECT COUNT(*) FROM released;
-`.trim();
-  const { stdout } = await runDatabaseSql(context, sql, { tuplesOnly: true });
-  if (stdout.trim() !== '1') throw new Error('Production release lease could not be released cleanly.');
-}
-
-async function ensurePlainDirectory(directory) {
-  try {
-    const current = await fs.lstat(directory);
-    if (!current.isDirectory() || current.isSymbolicLink()) {
-      throw new Error(`Release report directory is not a plain directory: ${directory}`);
-    }
-  } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
-    await fs.mkdir(directory);
-    const created = await fs.lstat(directory);
-    if (!created.isDirectory() || created.isSymbolicLink()) {
-      throw new Error(`Release report directory is not a plain directory: ${directory}`);
-    }
-  }
-}
-
-async function writeReport(context, report) {
-  const artifacts = path.join(rootDir, 'artifacts');
-  const releases = path.join(artifacts, 'releases');
-  await ensurePlainDirectory(artifacts);
-  await ensurePlainDirectory(releases);
-  const timestamp = new Date().toISOString().replaceAll(':', '-');
-  const relative = path.join(
-    'artifacts', 'releases',
-    `production-release-${context.sha}-${timestamp}-${randomUUID()}.json`,
-  );
-  const absolute = path.join(rootDir, relative);
-  await fs.writeFile(absolute, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
-  return path.relative(rootDir, absolute);
-}
-
-async function assertReleaseCheckout(context) {
-  const { stdout: headOutput } = await run(['git', 'rev-parse', 'HEAD'], { log: false });
-  const head = normalizeFullSha(headOutput);
-  if (head === context.sha) return;
-
-  try {
-    await run(['git', 'merge-base', '--is-ancestor', context.sha, head], { log: false });
-  } catch {
-    throw new Error('Release SHA must equal the checked-out HEAD or be its ancestor.');
-  }
-
-  const { stdout: changedFiles } = await run(['git', 'diff', '--name-only', `${context.sha}..${head}`], { log: false });
-  const unsupported = changedFiles.split('\n').filter(Boolean).filter((file) => (
-    file !== 'scripts/production-release.mjs' && !file.startsWith('memory/')
-  ));
-  if (unsupported.length > 0) {
-    throw new Error(`Release SHA is behind HEAD and application-affecting files changed: ${unsupported.join(', ')}.`);
-  }
-  console.error(`Releasing ${context.sha} from tooling-only checkout ${head}.`);
-}
-
-async function executeRelease(context) {
-  if (!context.execute || normalizeFullSha(context.confirm) !== context.sha) {
-    throw new Error('Mutating release requires --execute and --confirm <exact-full-sha>.');
-  }
-  await assertReleaseCheckout(context);
-  const { stdout: status } = await run(['git', 'status', '--porcelain'], { log: false });
-  if (status.trim()) throw new Error('Release execution requires a clean worktree.');
-
-  const startedAt = new Date().toISOString();
-  const preflight = await remotePreflight(context);
-  // Preflight validated fleet coherence, including the uniformly unset upgrade
-  // state. Each mutation still re-reads its target below.
-  const originalMachines = preflight.machines;
-  const canary = originalMachines[0];
-  const remaining = originalMachines.slice(1);
-  const report = {
-    status: 'started',
-    startedAt,
-    sha: context.sha,
-    image: context.image,
-    migrations: context.migrations.map(({ id, path: migrationPath, checksum }) => ({ id, path: migrationPath, checksum })),
-    canaryMachine: canary.id,
-    remainingMachines: remaining.map((machine) => machine.id),
-    rollbacks: [],
-    rollout: [],
-    recovery: originalMachines.map(({ id, releaseSnapshot }) => ({
-      machineId: id,
-      ...releaseSnapshot.rollbackPolicy,
-      mode: releaseSnapshot.rollbackPolicy.compatible ? 'compatible-rollback' : 'compatible-forward-recovery',
-      fallback: context.recoveryArtifact ?? null,
-    })),
-  };
-  const touchedMachines = new Set();
-  const leaseToken = randomUUID();
-  let leaseHeld = false;
-  let deploymentComplete = false;
-
-  try {
-    report.resolvedImage = context.resolvedImage;
-    report.acceptableImageDigests = [...context.acceptableImageDigests];
-    await acquireReleaseLease(context, leaseToken);
-    leaseHeld = true;
-    await runDatabaseSql(
-      context,
-      buildMigrationBatchSql(context.migrations, { sourceCommit: context.sha }),
-    );
-    await runDatabaseSql(context, buildSchemaVerificationSql());
-    report.securityEmergencyReadiness = await readSecurityEmergencyReadiness(context);
-    const securityBlocker = securityEmergencyReadinessBlocker(
-      report.securityEmergencyReadiness,
-      { requireCanonical: true },
-    );
-    if (securityBlocker) {
-      throw new Error(`Security emergency readiness: ${securityBlocker}.`);
-    }
-    await heartbeatReleaseLease(context, leaseToken);
-
-    await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
-    const canaryProjectionGate = await currentPublicReputationProjectionGate(context, canary);
-    const canaryDiscoveryGates = await unchangedEventDiscoveryGates(context, canary);
-    touchedMachines.add(canary.id);
-    await run(buildMachineDeployArgs({
-      app: context.app,
-      image: context.resolvedImage,
-      sha: context.sha,
-      contextualReputationEnabled: false,
-      publicReputationProjectionEnabled: canaryProjectionGate,
-      ...canaryDiscoveryGates,
-      onlyMachine: canary.id,
-    }));
-    try {
-      report.canary = await verifyTargetMachine(context, canary.id);
-    } catch (error) {
-      report.canaryVerificationError = error.message;
-      throw new Error(`Canary verification failed; compatible fleet recovery required: ${error.message}`, { cause: error });
-    }
-
-    for (const machine of remaining) {
-      await heartbeatReleaseLease(context, leaseToken);
-      await assertUntouchedSnapshots(context, originalMachines, touchedMachines);
-      const projectionGate = await currentPublicReputationProjectionGate(context, machine);
-      const discoveryGates = await unchangedEventDiscoveryGates(context, machine);
-      touchedMachines.add(machine.id);
-      await run(buildMachineDeployArgs({
-        app: context.app,
-        image: context.resolvedImage,
-        sha: context.sha,
-        contextualReputationEnabled: false,
-        publicReputationProjectionEnabled: projectionGate,
-        ...discoveryGates,
-        onlyMachine: machine.id,
-      }));
-      report.rollout.push(await verifyTargetMachine(context, machine.id));
-    }
-    report.fleet = await verifyFleet(context, originalMachines);
-    deploymentComplete = true;
-    report.status = 'complete';
-    report.finishedAt = new Date().toISOString();
-    try {
-      await releaseReleaseLease(context, leaseToken);
-      leaseHeld = false;
-    } catch (error) {
-      report.status = 'complete_with_warning';
-      report.leaseReleaseError = error.message;
-    }
-    report.reportPath = await writeReport(context, report);
-    return report;
-  } catch (error) {
-    report.status = 'failed';
-    report.error = error.message;
-    report.finishedAt = new Date().toISOString();
-    if (deploymentComplete) {
-      report.status = 'complete_with_warning';
-      report.reportPath = await writeReport(context, report);
-      return report;
-    }
-    const recovery = await recoverReleaseMachines(originalMachines, touchedMachines,
-      machine => rollbackMachine(context, machine));
-    report.rollbacks.push(...recovery.rollbacks);
-    report.rollbackErrors = recovery.errors;
-    if (leaseHeld) {
-      try {
-        await releaseReleaseLease(context, leaseToken);
-        leaseHeld = false;
-      } catch (leaseError) {
-        report.leaseReleaseError = leaseError.message;
-      }
-    }
-    report.reportPath = await writeReport(context, report);
-    throw error;
-  }
-}
-
-async function main() {
-  const options = parseArgs(process.argv.slice(2));
-  if (options.help) {
-    console.log(usage());
-    return;
-  }
-  if (options.mode !== 'plan') {
-    throw new Error('Fly production preflight/release is retired: the verified production target is Hetzner. '
-      + 'See ops/hetzner/README.md. This command performs no remote action.');
-  }
-  if (!options.sha) throw new Error(`--sha is required.\n\n${usage()}`);
-  const context = await resolveReleaseContext(options);
-
-  if (context.mode === 'plan') {
-    const plan = buildDeployPlan({
-      app: context.app,
-      sha: context.sha,
-      image: context.image,
-      migrations: context.migrations.map((migration) => migration.path),
-      flyConfig: context.flyConfig,
-      dryRun: true,
-    });
-    console.log(JSON.stringify({
-      ...plan,
-      recoveryPolicy: {
-        minimumAuthenticationCommit: context.migrations.some(({ id }) => id === '2026-09-18_provider_subject_identity') ? providerIdentityFloor : null,
-        minimumIdentityWriterCommit: requiredIdentityCommit(context),
-        disabledEscrowWrites: 'required source contract on release and recovery revisions',
-        fallbackSource: context.recoverySha ?? null,
-        immutableArtifactVerification: 'required in preflight',
-      },
-    }, null, 2));
-    return;
-  }
-
-  if (context.mode === 'preflight') {
-    const preflight = await remotePreflight(context);
-    console.log(JSON.stringify({
-      status: 'ready',
-      sha: context.sha,
-      image: context.image,
-      migrations: context.migrations.map(({ id, path: migrationPath, checksum }) => ({ id, path: migrationPath, checksum })),
-      machines: preflight.machines.map(({ id, region, state }) => ({ id, region, state })),
-      runtimeEnv: preflight.runtimeEnv,
-      ticketmasterConfigured: preflight.ticketmasterConfigured,
-      securityEmergencyReadiness: preflight.securityEmergencyReadiness,
-      currentVersion: preflight.currentVersion,
-      resolvedImage: preflight.resolvedImage,
-      recovery: preflight.recovery,
-    }, null, 2));
-    return;
-  }
-
-  const result = await executeRelease(context);
-  console.log(JSON.stringify(result, null, 2));
-}
-
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  // Keep the reviewed source/artifact helpers importable by the portable lane,
-  // but never let an old command reach the fenced Fly database after cutover.
-  console.error('The Fly release CLI is retired. Follow ops/hetzner/README.md for the current production procedure. Prepare reviewed artifacts with npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY. Preparation does not deploy or authorize database changes.');
+  // This module only exports the reviewed source/artifact helpers used by the
+  // portable preparation lane. It has no command-line behaviour of its own.
+  console.error('The release CLI is retired. Follow ops/hetzner/README.md for the current production procedure. Prepare reviewed artifacts with npm run release:backend:prepare -- FULL_RELEASE_SHA FULL_RECOVERY_SHA NEW_PRIVATE_DIRECTORY. Preparation does not deploy or authorize database changes.');
   process.exitCode = 1;
 }
