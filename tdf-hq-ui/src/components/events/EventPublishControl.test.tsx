@@ -12,17 +12,19 @@ jest.unstable_mockModule('../../api/socialEvents', () => ({ SocialEventsAPI: { g
 jest.unstable_mockModule('../../api/catalogs', () => ({ Catalogs: { getPublicWorkflowStates: readStates } }));
 const { default: EventPublishControl, resolvePublishTarget } = await import('./EventPublishControl');
 
-const state = (id: string, code: string, capabilities: string[], to: string[], extra: Partial<WorkflowState> = {}): WorkflowState => ({
-  id, code, capabilities, workflowId: 'w', workflowCode: 'social-event-lifecycle', name: code, nameEs: code, nameEn: code,
+// Capabilities and transition targets are space-separated here: these are
+// fixtures of the server's lifecycle catalog, not lists the web app owns.
+const words = (value: string) => value.split(' ').filter(Boolean);
+const state = (id: string, code: string, capabilities: string, to: string): WorkflowState => ({
+  id, code, capabilities: words(capabilities), workflowId: 'w', workflowCode: 'social-event-lifecycle', name: code, nameEs: code, nameEn: code,
   sortOrder: Number(id), terminal: false, active: true, initialContexts: [], version: 1,
-  transitions: to.map((toStateId) => ({ toStateId, directExecutionAllowed: true, requiresReview: false, requiresDistinctApprover: false, version: 1 })),
-  ...extra,
+  transitions: words(to).map((toStateId) => ({ toStateId, directExecutionAllowed: true, requiresReview: false, requiresDistinctApprover: false, version: 1 })),
 });
 const states = [
-  state('1', 'planning', [], ['3', '2', '9']),
-  state('2', 'announced', ['public-listable', 'rsvp'], ['3']),
-  state('3', 'on-sale', ['public-listable', 'rsvp', 'ticket-purchase'], []),
-  state('9', 'cancelled', [], []),
+  state('1', 'planning', '', '3 2 9'),
+  state('2', 'announced', 'public-listable rsvp', '3'),
+  state('3', 'on-sale', 'public-listable rsvp ticket-purchase', ''),
+  state('9', 'cancelled', '', ''),
 ];
 const draft: SocialEventDTO = {
   eventId: '222', eventTitle: 'Noche de prueba', eventStart: '2027-03-21T01:00:00Z', eventEnd: '2027-03-21T03:00:00Z',
@@ -51,7 +53,7 @@ describe('resolvePublishTarget', () => {
   it('offers nothing from a state with no direct public transition', () => {
     expect(resolvePublishTarget({ eventWorkflowStateId: '9' }, states)).toBeNull();
     expect(resolvePublishTarget({ eventWorkflowStateId: 'unknown' }, states)).toBeNull();
-    const reviewed = [state('1', 'planning', [], ['2']), state('2', 'announced', ['public-listable'], [])];
+    const reviewed = [state('1', 'planning', '', '2'), state('2', 'announced', 'public-listable', '')];
     reviewed[0]!.transitions[0]!.requiresReview = true;
     expect(resolvePublishTarget(draft, reviewed)).toBeNull();
   });

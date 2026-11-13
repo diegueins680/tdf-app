@@ -28685,7 +28685,7 @@
     "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx": "08b0537bc66aced315fb85d5413231fbdc71691f091cad285e7d804c82432931",
     "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx": "7dd090e0d630e421a449d7af4789403ab26bedf4aada4ad94f1b2cd666b37f4d",
     "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": "fef66abf570226402f8218edf289b554137342cbe4b2e810a81d3a707f426da0",
-    "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": "f2f7cf7e639d6865bb36006c22301e8ffde9454b6c2831f1d9ec407c15772a3b",
+    "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": "46429b923331f348410e4198c1a356cd2da1a4a86b16fb00f60ffae752b16dc2",
     "tdf-hq-ui/src/components/events/EventPublishControl.tsx": "84413ff4f1187408865a7d1fe98b9e073fa169d2a657fe466d08839f77265d48",
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
@@ -60722,7 +60722,7 @@
     {
       "id": "SURFACE-fe18db8ab1db5749",
       "path": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
-      "sha256": "f2f7cf7e639d6865bb36006c22301e8ffde9454b6c2831f1d9ec407c15772a3b",
+      "sha256": "46429b923331f348410e4198c1a356cd2da1a4a86b16fb00f60ffae752b16dc2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
