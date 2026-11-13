@@ -30737,6 +30737,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "formal/system/invited-first-action.md",
+      "sha256": "55fd166a4c04e30fa110d193122d723d4b274bb91bf442523145451d76f1c297",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "formal/system/invoice-receipts.md",
       "sha256": "325f44f68a6491d38e1782037f83365222ada188ca5a2f2acd74a5de3643e90d",
       "authority": "inferred",
@@ -31305,7 +31312,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "da41ce4b5c5147fc215ac5ab7051dd61b61fc35f3290104149a813e256270264",
+      "sha256": "60ddc3ad417ca252534af0b6d00312e50146142cc111ae992750d7cc652101ce",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
