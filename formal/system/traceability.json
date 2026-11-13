@@ -28593,8 +28593,8 @@
     "tdf-hq-ui/src/components/events/EventMemoryInvitations.tsx": "00701c2a3d06eaa8ffa8d7a30708f7897e2e39d053ae332e423c1edc3c91bc14",
     "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx": "e2576e0d99326e2412cf3095babcbeec6d808facde8c8d0e3fc83fe28eaa2166",
     "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx": "08b0537bc66aced315fb85d5413231fbdc71691f091cad285e7d804c82432931",
-    "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx": "b7cce2b5b45e93c2d66004eb3ea41754c965f1a78bf555bab59db440a1369c24",
-    "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
+    "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx": "7dd090e0d630e421a449d7af4789403ab26bedf4aada4ad94f1b2cd666b37f4d",
+    "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": "fef66abf570226402f8218edf289b554137342cbe4b2e810a81d3a707f426da0",
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
@@ -28602,8 +28602,8 @@
     "tdf-hq-ui/src/components/events/MyEventsPanel.tsx": "239e397d3fafdbf8176572370f759a4d15be707791a9fc0cac4d0793521a1272",
     "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx": "e2e493ac45bdff3c02d9ecf97d71c43f879984079009bda1cdc9582542022ee7",
     "tdf-hq-ui/src/components/events/TicketPricePreview.tsx": "168852f9c75ee621dbc6c673d26d1b48443c85c45fd75f0ec86c1375b425b5e1",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
-    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "49003b106d8c25a66e4378611e2a9427d18d81128195ff3a56f3f3f4685ff187",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx": "5d571852f5782f1e0c4f08acef40b83363bc31ad34209e3047bf24502457b188",
+    "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "bdcfb14c801239f68d83f361f71277a888fdeccb0d8ea021bb330635744befb2",
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
@@ -28723,7 +28723,7 @@
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "eae23d7e3d698f7e26e99225e09098b44d58eed069f8160c01ac328f0982d3ec",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
@@ -28750,7 +28750,7 @@
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
     "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
     "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "183867bef1d5590d1258381ba1dc5bbb662d3e2ed19d8eeb4627558cc5093301",
     "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx": "edceff3b6fe2336ec1b234dbc421fb13a559fbbc56e1156321bb899dcf25ad39",
     "tdf-hq-ui/src/pages/InstagramConnectPage.tsx": "c1e3000474b70b1cfa4a4e41f521762b406d1faaf2ac42966aff9c9df2b87fcf",
     "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx": "3fe5deb295874a99afc50f97d06742fad56c75a7c9a810f3fef5da66d5f4ccc1",
@@ -28812,8 +28812,8 @@
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "86fe863cc9608c5ce0ae086a46f85bb46b559ca823e426345e5fc436226f8fb8",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "59489c52c5b17d71f4cf15de51adec1e3e09c0770a900520dbdd368d174cce7f",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "e9f833d37208a3eebdb70a79f30e21e9fc5518e3efa1ba6f0759d208dc81e49b",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "24321dc96d7161f431d6c6bb9c64f92003c4e67d79d9cb222477c013783faa3a",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
     "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "668a587375c5ef9cfdd3cfc31184d79af112684f54eb4a88271fc64d74993397",
@@ -28828,8 +28828,8 @@
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "d04c9014faf40d54ff34bfdcba72bb77e5812e13437a2b10bdd4d9f97863d891",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "d3a2149f3bdde2e710a920fca3d2dc43e3085615c54b4c3685502bc894f5d7bb",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "7f9de243bbbf242ef286f912a543854c1ed8e6490c342cc303981abd646e6bab",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "4f1db308679b4497877defe86e669196809ad405cf3c8d00cfb4eb0756818015",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
@@ -60532,7 +60532,7 @@
     {
       "id": "SURFACE-2cea66b752634961",
       "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
-      "sha256": "b7cce2b5b45e93c2d66004eb3ea41754c965f1a78bf555bab59db440a1369c24",
+      "sha256": "7dd090e0d630e421a449d7af4789403ab26bedf4aada4ad94f1b2cd666b37f4d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60544,7 +60544,7 @@
     {
       "id": "SURFACE-e16e275f767e9623",
       "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
-      "sha256": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
+      "sha256": "fef66abf570226402f8218edf289b554137342cbe4b2e810a81d3a707f426da0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60552,6 +60552,20 @@
           "relationship": "implementation"
         }
       ]
+    },
+    {
+      "id": "SURFACE-fe18db8ab1db5749",
+      "path": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
+      "sha256": "f2f7cf7e639d6865bb36006c22301e8ffde9454b6c2831f1d9ec407c15772a3b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-dcda7eb130c8a2d6",
+      "path": "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
+      "sha256": "84413ff4f1187408865a7d1fe98b9e073fa169d2a657fe466d08839f77265d48",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
     },
     {
       "id": "SURFACE-7bdff475261102de",
@@ -60661,7 +60675,7 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
+      "sha256": "5d571852f5782f1e0c4f08acef40b83363bc31ad34209e3047bf24502457b188",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60677,7 +60691,7 @@
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "49003b106d8c25a66e4378611e2a9427d18d81128195ff3a56f3f3f4685ff187",
+      "sha256": "bdcfb14c801239f68d83f361f71277a888fdeccb0d8ea021bb330635744befb2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61329,6 +61343,20 @@
           "relationship": "implementation"
         }
       ]
+    },
+    {
+      "id": "SURFACE-46dc5a1b952c5ccc",
+      "path": "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
+      "sha256": "4a9db8ea6c7155008b4aafc9094d80d05fb3e8314df91402a78c44edda048d55",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
+    },
+    {
+      "id": "SURFACE-d4b80b5196ba914e",
+      "path": "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
+      "sha256": "947bea9efc951f911eeaa7ae9f41698ace9a150541c5a18f813637fdb34b2f34",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": []
     },
     {
       "id": "SURFACE-2a073b8f5ad461e7",
@@ -63042,7 +63070,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
+      "sha256": "eae23d7e3d698f7e26e99225e09098b44d58eed069f8160c01ac328f0982d3ec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63675,7 +63703,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
+      "sha256": "183867bef1d5590d1258381ba1dc5bbb662d3e2ed19d8eeb4627558cc5093301",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65092,7 +65120,7 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "86fe863cc9608c5ce0ae086a46f85bb46b559ca823e426345e5fc436226f8fb8",
+      "sha256": "e9f833d37208a3eebdb70a79f30e21e9fc5518e3efa1ba6f0759d208dc81e49b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65124,7 +65152,7 @@
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "59489c52c5b17d71f4cf15de51adec1e3e09c0770a900520dbdd368d174cce7f",
+      "sha256": "24321dc96d7161f431d6c6bb9c64f92003c4e67d79d9cb222477c013783faa3a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65541,7 +65569,7 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
+      "sha256": "7f9de243bbbf242ef286f912a543854c1ed8e6490c342cc303981abd646e6bab",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65557,7 +65585,7 @@
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
+      "sha256": "4f1db308679b4497877defe86e669196809ad405cf3c8d00cfb4eb0756818015",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -83890,6 +83918,8 @@
     "SURFACE-6628113be1d1b41f",
     "SURFACE-ae65f170b258f02b",
     "SURFACE-615a78e009691805",
+    "SURFACE-fe18db8ab1db5749",
+    "SURFACE-dcda7eb130c8a2d6",
     "SURFACE-9b8b12c0260a498e",
     "SURFACE-151891803a9e4745",
     "SURFACE-f29c4e265dd61680",
@@ -83925,6 +83955,8 @@
     "SURFACE-2539d004605fd6d7",
     "SURFACE-eb7bcfe002ea638f",
     "SURFACE-aafae2b28717530f",
+    "SURFACE-46dc5a1b952c5ccc",
+    "SURFACE-d4b80b5196ba914e",
     "SURFACE-2a073b8f5ad461e7",
     "SURFACE-7c87c5ab9df1f3ac",
     "SURFACE-f0b1d4c69d524f12",
