@@ -167,6 +167,16 @@ spec = describe "event-admin-delegation-postgresql" $ do
           status nameless `shouldBe` Just 400
           soldOut <- run pool (issueCourtesy organizer eventId courtesy{ectQuantity = 4})
           status soldOut `shouldBe` Just 409
+          -- A refusal for a closed tier must not count against its inventory.
+          runSqlPool (rawExecute "UPDATE event_ticket_tier SET is_active = false WHERE id = ?"
+            [PersistInt64 tierId]) pool
+          closed <- run pool (issueCourtesy organizer eventId courtesy{ectQuantity = 1})
+          status closed `shouldBe` Just 409
+          runSqlPool (rawExecute "UPDATE event_ticket_tier SET is_active = true WHERE id = ?"
+            [PersistInt64 tierId]) pool
+          soldAfterRefusals <- runSqlPool (rawSql "SELECT quantity_sold FROM event_ticket_tier WHERE id = ?"
+            [PersistInt64 tierId]) pool
+          soldAfterRefusals `shouldBe` [Single (2 :: Int64)]
           now <- getCurrentTime
           codes <- runSqlPool (rawSql
             "SELECT code FROM event_ticket WHERE event_id = ? ORDER BY id" [PersistInt64 eventId]) pool

@@ -82,13 +82,24 @@ function InvitationPanel({ eventId, token }: { eventId: string; token: string })
   // Latest navigation context for the async flow, without re-running it.
   const route = useRef({ location, navigate });
   route.current = { location, navigate };
+  // A real unmount (leaving the page, another event, a replacement token) must
+  // silence late responses; StrictMode's remount turns this back on.
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   useEffect(() => {
     if (loading || !account) return;
     const key = `${account}:${token}:${retry}`;
     if (attempt.current === key) return;
     attempt.current = key;
-    const current = () => attempt.current === key;
+    const current = () => mounted.current && attempt.current === key;
+    // A token the server has settled is dead even if nobody is left to see it.
+    const forgetSettledToken = () => {
+      if (readStoredToken(eventId) === token) clearStoredToken(eventId);
+    };
     // A spent or dead token must not linger in the address bar or history entry.
     const finish = () => {
       clearStoredToken(eventId);
@@ -112,12 +123,14 @@ function InvitationPanel({ eventId, token }: { eventId: string; token: string })
         }
         setPreview(invitation);
         const accepted = await SocialEventsAPI.acceptEventAdminInvitation(token);
+        forgetSettledToken();
         if (!current()) return;
         finish();
         setPhase({ kind: 'accepted', eventId: accepted.eaaEventId });
       } catch (error) {
-        if (!current()) return;
         const status = error instanceof ApiError ? error.status : null;
+        if (status === 404 || status === 409) forgetSettledToken();
+        if (!current()) return;
         if (status === 404 || status === 409) {
           finish();
           setPhase({ kind: status === 404 ? 'unusable' : 'organizer' });
@@ -211,12 +224,19 @@ function InvitationPanel({ eventId, token }: { eventId: string; token: string })
   );
 }
 
-// Reads the token once per event page; `key` restarts the flow when the route
-// moves to another event (including the wrong-event correction).
+// Holds the token for this event page: it outlives the fragment the flow
+// clears, and a fragment arriving later (same tab, no reload) replaces it.
+// `key` restarts the flow per event and per token.
 function InvitationGate({ eventId }: { eventId: string }) {
   const { hash } = useLocation();
-  const [token] = useState(() => resolveToken(eventId, hash));
-  return token ? <InvitationPanel eventId={eventId} token={token} /> : null;
+  const [token, setToken] = useState(() => resolveToken(eventId, hash));
+  const fromHash = readEventAdminInvitationHash(hash);
+  useEffect(() => {
+    if (!fromHash) return;
+    storeToken(eventId, fromHash);
+    setToken(fromHash);
+  }, [eventId, fromHash]);
+  return token ? <InvitationPanel key={token} eventId={eventId} token={token} /> : null;
 }
 
 /**

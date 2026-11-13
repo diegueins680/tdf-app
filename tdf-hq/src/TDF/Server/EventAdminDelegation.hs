@@ -364,10 +364,14 @@ eventAdminsServer currentPartyId EventAdminDeps{..} =
                         || (stillDelegated && isEventManager managerParty lockedEvent)) ->
                         pure (Left eventNotOrganizerError)
                     | otherwise -> do
-                        mTier <- get tierKey
-                        case mTier of
-                            Just tier
-                                | eventTicketTierEventId tier == eventKey -> do
+                        -- Lock the tier before judging it: the row read here is
+                        -- the one the reservation below acts on, so a refusal
+                        -- never follows a reservation that already counted.
+                        lockedTiers <- rawSql
+                            "SELECT ?? FROM event_ticket_tier WHERE id=? AND event_id=? FOR UPDATE"
+                            [toPersistValue tierKey, toPersistValue eventKey]
+                        case lockedTiers of
+                            [Entity _ tier] -> do
                                     let orderRecord = EventTicketOrder
                                             { eventTicketOrderEventId = eventKey
                                             , eventTicketOrderTierId = tierKey
@@ -389,12 +393,13 @@ eventAdminsServer currentPartyId EventAdminDeps{..} =
                                             , eventTicketOrderUpdatedAt = now
                                             }
                                     admissionTime <- TicketInventory.ticketReservationTime
-                                    reserved <- TicketInventory.reserveTicketInventory
-                                        eventKey tierKey ectQuantity admissionTime
                                     if not (isTicketTierSaleOpen admissionTime tier)
                                         then pure (Left err409
                                             { errBody = "Courtesy tickets need an active ticket tier inside its sales window" })
-                                    else if not reserved
+                                    else do
+                                      reserved <- TicketInventory.reserveTicketInventory
+                                          eventKey tierKey ectQuantity admissionTime
+                                      if not reserved
                                         then pure (Left err409{errBody = "Not enough tickets available"})
                                         else do
                                             orderKey <- insert orderRecord

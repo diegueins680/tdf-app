@@ -1,8 +1,8 @@
 /** @jest-environment jsdom */
 import { jest } from '@jest/globals';
 import { StrictMode } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError } from '../../api/client';
 import type { EventAdminAccessDTO, EventAdminInvitationPreviewDTO } from '../../api/socialEvents';
 import { buildEventAdminInvitationLink } from '../../utils/eventAdminInvitationLink';
@@ -44,11 +44,20 @@ function LocationProbe() {
   return <output data-testid="location">{`${location.pathname}${location.search}${location.hash}`}</output>;
 }
 
+let go: (to: string) => void = () => undefined;
+function NavigationProbe() {
+  const navigate = useNavigate();
+  go = (to) => { void navigate(to); };
+  return null;
+}
+
 const tree = (entry: string) => (
   <StrictMode>
     <MemoryRouter initialEntries={[entry]}>
+      <NavigationProbe />
       <Routes>
         <Route path="/eventos/:eventId" element={<><EventAdminInvitationAcceptPanel /><LocationProbe /></>} />
+        <Route path="*" element={<LocationProbe />} />
       </Routes>
     </MemoryRouter>
   </StrictMode>
@@ -184,6 +193,57 @@ describe('EventAdminInvitationAcceptPanel', () => {
     expect(window.sessionStorage.getItem(eventAdminInvitationStorageKey('202'))).toBeNull();
     // Router navigation is a transition and may land after the status text.
     await waitFor(() => expect(currentLocation()).toBe('/eventos/202'));
+  });
+
+  it('accepts an invitation fragment that arrives on an event page already open', async () => {
+    activeSession = { partyId: 9, username: 'ana' };
+    renderPanel('/eventos/141');
+    expect(heading()).toBeNull();
+    act(() => go(`/eventos/141#admin=${token}`));
+    expect(await screen.findByText('Listo: ya eres administrador de este evento.')).toBeTruthy();
+    expect(acceptMock).toHaveBeenCalledTimes(1);
+    expect(acceptMock).toHaveBeenCalledWith(token);
+    await waitFor(() => expect(currentLocation()).toBe('/eventos/141'));
+    // The fragment is gone, the result stays.
+    expect(screen.getByText('Listo: ya eres administrador de este evento.')).toBeTruthy();
+  });
+
+  it('restarts with a replacement invitation opened on the same event page', async () => {
+    activeSession = { partyId: 9, username: 'ana' };
+    const replacement = 'F9e8d7c6'.repeat(8);
+    acceptMock.mockRejectedValueOnce(new ApiError('Not found', 404));
+    renderPanel(`/eventos/141#admin=${token}`);
+    expect(await screen.findByText(/El enlace es inválido, venció, fue revocado o ya fue usado/)).toBeTruthy();
+    act(() => go(`/eventos/141#admin=${replacement}`));
+    expect(await screen.findByText('Listo: ya eres administrador de este evento.')).toBeTruthy();
+    expect(acceptMock).toHaveBeenLastCalledWith(replacement);
+  });
+
+  it('leaves the visitor where they went when the answer arrives after they left', async () => {
+    activeSession = { partyId: 9, username: 'ana' };
+    let settle: (value: EventAdminAccessDTO) => void = () => undefined;
+    acceptMock.mockReturnValue(new Promise((resolve) => { settle = resolve; }));
+    renderPanel(`/eventos/141#admin=${token}`);
+    await waitFor(() => expect(acceptMock).toHaveBeenCalledTimes(1));
+    act(() => go('/tienda'));
+    await waitFor(() => expect(currentLocation()).toBe('/tienda'));
+    await act(async () => { settle({ eaaEventId: '141', eaaAccess: 'admin' }); await Promise.resolve(); });
+    expect(currentLocation()).toBe('/tienda');
+    // The redeemed token is not kept for a later visit to the event.
+    expect(window.sessionStorage.getItem(eventAdminInvitationStorageKey('141'))).toBeNull();
+  });
+
+  it('does not accept after the visitor leaves during the preview', async () => {
+    activeSession = { partyId: 9, username: 'ana' };
+    let settle: (value: EventAdminInvitationPreviewDTO) => void = () => undefined;
+    previewMock.mockReturnValue(new Promise((resolve) => { settle = resolve; }));
+    renderPanel(`/eventos/141#admin=${token}`);
+    await waitFor(() => expect(previewMock).toHaveBeenCalledTimes(1));
+    act(() => go('/tienda'));
+    await waitFor(() => expect(currentLocation()).toBe('/tienda'));
+    await act(async () => { settle(previewFor('141')); await Promise.resolve(); });
+    expect(acceptMock).not.toHaveBeenCalled();
+    expect(currentLocation()).toBe('/tienda');
   });
 
   it('keeps the token and offers a retry after a transient failure', async () => {
