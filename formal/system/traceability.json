@@ -10345,7 +10345,7 @@
         "payment pending -> expired (deposit deadline) or cancelled (replaced charge, cancelled agreement)",
         "agreement pending_deposit -> confirmed (paid deposit) | cancelled (either party) | expired (deadline)",
         "agreement confirmed|in_progress -> balance_due (buyer confirms delivery with a balance owed on the platform)",
-        "agreement balance_due -> completed (paid balance)"
+        "agreement balance_due -> completed (paid balance) | disputed (either party)"
       ],
       "forbiddenTransitions": [
         "Any transition out of a paid, expired or cancelled payment",
@@ -27488,7 +27488,7 @@
     "docs/catalog-persistence/catalog-list-decisions.json": "d40705ef516a7fc578a713c4297281b06c6aa71f9b34f00f37033bbfb56a7cc4",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
-    "docs/music-directory/formal-model.yaml": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+    "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
     "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
@@ -28564,8 +28564,8 @@
     "tdf-hq-ui/src/features/marketplace/OfferCard.tsx": "2291cb88256a1b77446614e804671d74523b23615be7bfd5264a8dbe46df0c68",
     "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "193e8cdfcb1b6561a98cf19cafd20437114fa54e6d70050347e88c45c085db85",
     "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
-    "tdf-hq-ui/src/features/marketplace/agreements.test.ts": "6f92d387a834f9ecb6b963d5cff0ff24f3c6b77aa72d7cdae776ac5cb0c0f186",
-    "tdf-hq-ui/src/features/marketplace/agreements.ts": "241f1940d766a49407db001c2fbefdf669e61cfe01806abd00cc4c3319cc8628",
+    "tdf-hq-ui/src/features/marketplace/agreements.test.ts": "f472301fd6cbba6d1057188031627cbbfa4dc715dedd7ec98d89252cade55efb",
+    "tdf-hq-ui/src/features/marketplace/agreements.ts": "3bc227bd07721912954cf633bf5d0c0b3b56670637e63bcfd0502b0b5fbe9137",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
     "tdf-hq-ui/src/features/marketplace/offers.test.ts": "9d704e2b3595cd1e13300912401d7f3ccdd42a1ef11e3257be5f9c0a9e5e1609",
@@ -29113,7 +29113,7 @@
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "7a7dd24778786ee9d82a687af35f24f05adf9fbdfa4b160e47d742cee9e15ade",
-    "tdf-hq/src/TDF/Directory/Policy.hs": "79db032542799870ba8bd555c1e1c86b4266001a6bf211b64df9738996049e1a",
+    "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
@@ -29158,7 +29158,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "4510ab70dea9357079d33f39d7f2649a70edc7b96866fd1940739fd8ef394a31",
+    "tdf-hq/src/TDF/Server/Directory.hs": "8afd1f9f0e4d7f8d0988a155503fe820c567d4f064ef0b62c1069776b447bbec",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
     "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
@@ -29256,7 +29256,7 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "04d0fee36364ca33b7e56a6540fd19a9015efe0da1492618c5e928762e8a656a",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
-    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "a16a86814dd3421230d0191e53f1e3ce90db78a60f3920b5d40c5b1987f7a108",
+    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "dbdf1ba83c196b2fa26cdbe9af0348da88a562e4cc454cca7198daa590033884",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "006a2eec086a2d350f9da2e7806eab0fd8846f195b84402557f6d71528e41ecb",
     "tdf-hq/test/TDF/EventOperations/DatabaseBoundarySpec.hs": "01a1bacba4c441d49e68162267f0e590b39e2db57f94a29818a7057423ff1065",
@@ -61473,7 +61473,7 @@
     {
       "id": "SURFACE-c03ebdd9cd29f92c",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
-      "sha256": "6f92d387a834f9ecb6b963d5cff0ff24f3c6b77aa72d7cdae776ac5cb0c0f186",
+      "sha256": "f472301fd6cbba6d1057188031627cbbfa4dc715dedd7ec98d89252cade55efb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61489,7 +61489,7 @@
     {
       "id": "SURFACE-fbfd335398170a3a",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.ts",
-      "sha256": "241f1940d766a49407db001c2fbefdf669e61cfe01806abd00cc4c3319cc8628",
+      "sha256": "3bc227bd07721912954cf633bf5d0c0b3b56670637e63bcfd0502b0b5fbe9137",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74052,7 +74052,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "79db032542799870ba8bd555c1e1c86b4266001a6bf211b64df9738996049e1a",
+      "sha256": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75213,7 +75213,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "4510ab70dea9357079d33f39d7f2649a70edc7b96866fd1940739fd8ef394a31",
+      "sha256": "8afd1f9f0e4d7f8d0988a155503fe820c567d4f064ef0b62c1069776b447bbec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77639,7 +77639,7 @@
     {
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-      "sha256": "a16a86814dd3421230d0191e53f1e3ce90db78a60f3920b5d40c5b1987f7a108",
+      "sha256": "dbdf1ba83c196b2fa26cdbe9af0348da88a562e4cc454cca7198daa590033884",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85323,7 +85323,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#profile",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85361,7 +85361,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#classified",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85412,7 +85412,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#application",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "submitted",
         "transitions": {
@@ -85474,7 +85474,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#agreement",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "confirmed",
         "transitions": {
@@ -85514,7 +85514,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#agreement_payment",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -85533,7 +85533,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#invitation",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -85567,7 +85567,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#claim",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85604,7 +85604,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#moderation_case",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "open",
         "transitions": {
@@ -85648,7 +85648,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#review",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "54a05e2bbc61df67f3d191bd8585f47109d3ea656c91cb7039b17025fd7f7ea4",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "published",
         "transitions": {
@@ -85969,7 +85969,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d177e532ab44e73ee9f9048c6c4c4eb9f333024a0a5309547d3ad6207eae2667",
+      "sourceSha256": "d67076014cd4aa065c360cc34ff8726eb1098216bea8f80e6c64996764f50c07",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85997,7 +85997,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d177e532ab44e73ee9f9048c6c4c4eb9f333024a0a5309547d3ad6207eae2667",
+      "sourceSha256": "d67076014cd4aa065c360cc34ff8726eb1098216bea8f80e6c64996764f50c07",
       "definition": {
         "states": [
           "absent",
@@ -86027,7 +86027,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d177e532ab44e73ee9f9048c6c4c4eb9f333024a0a5309547d3ad6207eae2667",
+      "sourceSha256": "d67076014cd4aa065c360cc34ff8726eb1098216bea8f80e6c64996764f50c07",
       "definition": {
         "export": [
           "queued",
