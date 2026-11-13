@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 519,
-    "named": 437,
+    "total": 525,
+    "named": 443,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 519
+    "covered": 525
   },
   "routes": [
     {
@@ -3352,6 +3352,22 @@
     },
     {
       "method": "POST",
+      "path": "/social-events/admin-invitations/accept",
+      "basis": "named",
+      "requirements": [
+        "EVT-ADMIN-DELEGATION-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/admin-invitations/preview",
+      "basis": "named",
+      "requirements": [
+        "EVT-ADMIN-DELEGATION-001"
+      ]
+    },
+    {
+      "method": "POST",
       "path": "/social-events/artists",
       "basis": "named",
       "requirements": [
@@ -3448,6 +3464,30 @@
     },
     {
       "method": "POST",
+      "path": "/social-events/events/{eventId}/admin-invitations",
+      "basis": "named",
+      "requirements": [
+        "EVT-ADMIN-DELEGATION-001"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/{eventId}/admin-invitations/{invitationId}",
+      "basis": "named",
+      "requirements": [
+        "EVT-ADMIN-DELEGATION-001"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/social-events/events/{eventId}/admins/{partyId}",
+      "basis": "named",
+      "requirements": [
+        "EVT-ADMIN-DELEGATION-001"
+      ]
+    },
+    {
+      "method": "POST",
       "path": "/social-events/events/{eventId}/budget-lines",
       "basis": "named",
       "requirements": [
@@ -3462,6 +3502,14 @@
         "PAY-EVENT-REPORT-RANGE-001"
       ],
       "note": "PAY-EVENT-REPORT-RANGE-001 requires rejecting a budget-line edit with an unreportable actual before its first write; updateBudgetLine does so."
+    },
+    {
+      "method": "POST",
+      "path": "/social-events/events/{eventId}/courtesy-tickets",
+      "basis": "named",
+      "requirements": [
+        "EVT-ADMIN-DELEGATION-001"
+      ]
     },
     {
       "method": "POST",

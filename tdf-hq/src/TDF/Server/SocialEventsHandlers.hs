@@ -229,6 +229,8 @@ import Database.PostgreSQL.Simple (SqlError (..))
 import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
+import qualified TDF.Server.EventAdminDelegation as EventAdmin
+import TDF.Server.EventAdminDelegation (eventNotOrganizerError, eventWithoutOrganizerError, isEventManager, isTicketTierSaleOpen, requireEventManager)
 import qualified TDF.Ticketing.Inventory as TicketInventory
 import qualified TDF.Ticketing.Refund as TicketRefund
 import qualified TDF.Server.TicketManualPayments as ManualPayments
@@ -2368,10 +2370,17 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         :<|> budgetServer
         :<|> financeServer
         :<|> logisticsServer
+        :<|> EventAdmin.eventAdminsServer currentPartyId
+            ( EventAdmin.EventAdminDeps parseVisibleEventKey (parseKeyOr400 "administrator invitation") (parseKeyOr400 "ticket tier")
+                lockSocialEventForMutation isImportedEventHidden validateTicketPurchaseBuyerName validateTicketPurchaseBuyerEmail
+                issueMissingTicketsForOrder ticketOrderEntityToDTO sendTicketConfirmationForOrder )
         :<|> memoryInvitationsServer
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
+
+    eventManagerPartyFor = EventAdmin.eventManagerPartyFor currentPartyId
+    isDelegatedEventAdmin eventKey row = (/= currentPartyId) <$> eventManagerPartyFor eventKey row
 
     requireFeatureAction :: T.Text -> T.Text -> AppM ()
     requireFeatureAction featureId action =
@@ -2937,9 +2946,10 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         -- A strict administrator may edit an event without an organizer and is
         -- assigned as its organizer together with the accepted edit, under
         -- the event lock; a refused edit assigns nobody.
+        delegatedAdmin <- isDelegatedEventAdmin eventKey existing
         let editAccess row = case cleanMaybeText (socialEventOrganizerPartyId row) of
                 Just owner
-                    | owner == currentPartyId -> Right False
+                    | owner == currentPartyId || delegatedAdmin -> Right False
                     | otherwise -> Left eventNotOrganizerError
                 Nothing
                     | hasStrictAdminAccess user -> Right True
@@ -3111,9 +3121,10 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                             if any (externalEventRefIsSuppressed . entityVal) refs
                                 then pure (Left err404{errBody = "Event not found"})
                                 else
+                                  EventAdmin.delegatedEventAdminExists eventKey currentPartyId >>= \delegatedAdmin ->
                                     case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
                                         Just owner
-                                            | owner /= currentPartyId ->
+                                            | owner /= currentPartyId && not delegatedAdmin ->
                                                 pure (Left err403{errBody = "Only the event organizer can manage this event"})
                                         Nothing -> pure (Left eventWithoutOrganizerError)
                                         Just _ ->
@@ -4583,7 +4594,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        _ <- requireEventManager currentPartyId eventVal
+        managerParty <- eventManagerPartyFor eventKey eventVal
+        _ <- requireEventManager managerParty eventVal
         let tierName = T.strip (ticketTierName dto)
         when (T.null tierName) $ throwError err400{errBody = "ticket tier name is required"}
         when (ticketTierPriceCents dto < 0) $ throwError err400{errBody = "ticket tier price must be >= 0"}
@@ -4644,7 +4656,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         tierKey <- parseKeyOr400 "ticket tier" tierIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        _ <- requireEventManager currentPartyId eventVal
+        managerParty <- eventManagerPartyFor eventKey eventVal
+        _ <- requireEventManager managerParty eventVal
         mTier <- liftIO $ runSqlPool (get tierKey) envPool
         tier <- maybe (throwError err404{errBody = "Ticket tier not found"}) pure mTier
         when (eventTicketTierEventId tier /= eventKey) $ throwError err400{errBody = "Ticket tier does not belong to this event"}
@@ -4741,7 +4754,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        let manager = isEventManager currentPartyId eventVal
+        managerParty <- eventManagerPartyFor eventKey eventVal
+        let manager = isEventManager managerParty eventVal
         requestedBuyer <-
             either
                 throwError
@@ -4788,7 +4802,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         when (ticketPurchaseQuantity <= 0) $ throwError err400{errBody = "Quantity must be > 0"}
         when (not (isTicketTierSaleOpen now tier)) $ throwError err400{errBody = "Ticket sales are closed for this tier"}
 
-        let manager = isEventManager currentPartyId eventVal
+        managerParty <- eventManagerPartyFor eventKey eventVal
+        let manager = isEventManager managerParty eventVal
         either throwError pure $
             validateDirectTicketOrderPricing manager (eventTicketTierPriceCents tier)
         requestedBuyer <-
@@ -5051,7 +5066,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         eventKey <- parseVisibleEventKey eventIdStr
         mEvent <- liftIO $ runSqlPool (get eventKey) envPool
         eventVal <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
-        let manager = isEventManager currentPartyId eventVal
+        managerParty <- eventManagerPartyFor eventKey eventVal
+        let manager = isEventManager managerParty eventVal
         orderFilters <- case cleanMaybeText mOrderId of
             Nothing -> pure []
             Just rawOrderId -> do
@@ -6409,7 +6425,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         ticket <- maybe (throwError err404{errBody = "Ticket not found"}) pure mTicket
         when (eventTicketEventId ticket /= eventKey) $
             throwError err400{errBody = "Ticket does not belong to this event"}
-        let manager = isEventManager currentPartyId eventVal
+        managerParty <- eventManagerPartyFor eventKey eventVal
+        let manager = isEventManager managerParty eventVal
         when (not manager && eventTicketCurrentHolderPartyId ticket /= Just currentPartyId) $
             throwError err403{errBody = "You can only view QR codes for your own tickets"}
         -- A QR is an opaque ticket credential, never a PII-bearing signed payload.
@@ -7228,6 +7245,15 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
         eventRow <- maybe (throwError err404{errBody = "Event not found"}) pure mEvent
         role <- case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
             Just owner | owner == currentPartyId -> pure "owner"
+            -- A delegated administrator plans logistics with the organizer's
+            -- authority, including the logistics team and its settings.
+            Just _ -> do
+                delegated <- isDelegatedEventAdmin eventKey eventRow
+                if delegated
+                    then pure "owner"
+                    else do
+                        mMember <- liftIO $ runSqlPool (getBy (UniqueEventLogisticsMember eventKey currentPartyId)) envPool
+                        maybe (throwError err403{errBody = "You are not on this event's logistics team"}) (pure . eventLogisticsMemberMemberRole . entityVal) mMember
             -- With no organizer the event has no owner role to hand out;
             -- only its recorded logistics team keeps access.
             _ -> do
@@ -9736,36 +9762,6 @@ invalidSalesWindow _ _ = False
 ticketTierAvailability :: EventTicketTier -> Int
 ticketTierAvailability tier =
     max 0 (eventTicketTierQuantityTotal tier - eventTicketTierQuantitySold tier)
-
-isTicketTierSaleOpen :: UTCTime -> EventTicketTier -> Bool
-isTicketTierSaleOpen now tier =
-    eventTicketTierIsActive tier
-        && maybe True (<= now) (eventTicketTierSalesStart tier)
-        && maybe True (>= now) (eventTicketTierSalesEnd tier)
-
-isEventManager :: T.Text -> SocialEvent -> Bool
-isEventManager currentParty eventRow =
-    case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
-        Nothing -> False
-        Just owner -> owner == currentParty
-
-eventWithoutOrganizerError :: ServerError
-eventWithoutOrganizerError =
-    err403{errBody = "This event has no organizer; \
-                    \a strict administrator must assign one by editing the event"}
-
-eventNotOrganizerError :: ServerError
-eventNotOrganizerError =
-    err403{errBody = "Only the event organizer can manage this event"}
-
--- An event without an organizer is never taken by whoever reaches it first:
--- organizer-only routes refuse it and write nothing.
-requireEventManager :: T.Text -> SocialEvent -> AppM SocialEvent
-requireEventManager currentParty eventRow =
-    case cleanMaybeText (socialEventOrganizerPartyId eventRow) of
-        Just owner | owner == currentParty -> pure eventRow
-        Just _ -> throwError eventNotOrganizerError
-        Nothing -> throwError eventWithoutOrganizerError
 
 -- The one assignment of a missing organizer. The caller has established that
 -- the party may be assigned. Whether the field is empty is judged here with the
