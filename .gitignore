@@ -113,3 +113,8 @@ __pycache__/
 
 # Local Playwright MCP session output (screenshots, exports).
 .playwright-mcp/
+
+# Stray env files (typos/variants); keep only *.example tracked
+.env.*
+!.env.example
+!*.env.example
