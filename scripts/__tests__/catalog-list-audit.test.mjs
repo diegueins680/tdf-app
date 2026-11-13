@@ -962,12 +962,8 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     [searchViewReview.id, searchViewReview.previousDecision]]);
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
     ...desktopReviews.map(row => row.id), ...marketplaceReviewIds, ...authRateLimitReviews, ...agreementReviews]);
-  // The PayPal webhook domain types moved unchanged to TDF.Commerce.PaypalWebhook
-  // (ADR 0133); the historical view sees the exact review its successor carries.
-  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
-  assert.equal(movedPaypalDomains.previousDecision.id, 'a43462622b60606b37d9');
   const historicalAppleView = active.filter(row => !laterMainIds.has(row.id))
-    .map(row => (row === movedPaypalDomains ? row.previousDecision : marketplaceSuccessors.get(row.id) ?? row));
+    .map(row => marketplaceSuccessors.get(row.id) ?? row);
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);
@@ -1055,9 +1051,15 @@ test('event administrator delegation appends one migration to the protected 251-
   const client = active.find(row => row.id === successors.find(row => row.name === 'SocialEventsAPI').currentId);
   assert.equal(client.evidence.valueCount, 86);
   assert.deepEqual(client.previousDecision, priorMain.find(row => row.id === '2511cbba2fc7279bc28a'));
+  // The PayPal webhook domain types moved unchanged to TDF.Commerce.PaypalWebhook
+  // (ADR 0133); the list id follows the file, so its review is a successor that
+  // nests the exact review of protected main.
+  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
+  assert.deepEqual(movedPaypalDomains.previousDecision, priorMain.find(row => row.id === 'a43462622b60606b37d9'));
   // Every other review of protected main is retained exactly; three lists are new.
   const history = new Map(active.map(row => [row.id, row]));
-  const replaced = new Set([current.previousDecision.id, client.previousDecision.id]);
+  const replaced = new Set([current.previousDecision.id, client.previousDecision.id,
+    movedPaypalDomains.previousDecision.id]);
   for (const row of priorMain) {
     if (replaced.has(row.id)) assert.ok(!history.has(row.id));
     else assert.deepEqual(history.get(row.id), row);
