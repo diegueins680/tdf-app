@@ -27480,6 +27480,76 @@
       "historicalStatus": null
     },
     {
+      "id": "UX-PUBLIC-DETAIL-001",
+      "title": "Public detail pages open the full image and follow the application language",
+      "statement": "On a public event, profile, venue or classified page, activating a real preview image opens a viewer with the whole image, and the page's own text and dates use the application language, Spanish by default, not the browser language.",
+      "domain": "UX",
+      "authority": "Product owner requests on 2026-11-11.",
+      "source": "User requests: clicking the event image shows a larger and complete version; the application shows in Spanish by default.",
+      "property": "A visitor can see the entire poster, and a visitor who never chose a language reads the page in Spanish whatever the browser language.",
+      "contract": "formal/system/public-detail-presentation.md",
+      "actors": [
+        "Public visitor",
+        "Signed-in visitor"
+      ],
+      "preconditions": [
+        "The public record is visible under the existing directory visibility rules."
+      ],
+      "inputs": [
+        "Pointer or keyboard activation of the preview image",
+        "Close control, backdrop, image or Escape",
+        "Application language preference"
+      ],
+      "state": {
+        "boundary": "Image viewer visibility and page display language",
+        "states": [
+          "preview",
+          "viewer open",
+          "placeholder"
+        ]
+      },
+      "allowedTransitions": [
+        "preview -> viewer open on activation",
+        "viewer open -> preview on close, backdrop, image activation or Escape",
+        "viewer open -> preview when the full image fails to load"
+      ],
+      "forbiddenTransitions": [
+        "The placeholder opens a viewer.",
+        "The browser language changes the page language when the visitor chose none."
+      ],
+      "effects": [
+        "No request other than loading the already public image URL."
+      ],
+      "authorization": "None beyond the existing public visibility of the record and its image.",
+      "privacy": "The viewer shows only the image URL the page already renders.",
+      "concurrency": "Local view state only.",
+      "idempotency": "Opening and closing change no stored state.",
+      "failure": "A full image that fails to load closes the viewer and leaves the preview.",
+      "recovery": "The preview remains available; a changed image resets the viewer.",
+      "observability": "The control and viewer carry accessible names; the document language reflects the application language.",
+      "implementation": [
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Component tests for opening, closing and the inert placeholder, and a page test that keeps Spanish under an English browser; TypeScript and changed-file lint.",
+      "evidence": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx and tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx.",
+      "confidence": "The component and page behaviors have local test evidence.",
+      "ambiguity": [
+        "Viewer layout on real devices and the deployed public event page require browser verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
+      },
+      "critical": false
+    },
+    {
       "id": "EVT-LOGISTICS-ACCESS-001",
       "title": "The web logistics page of an event opens by record scope, not by the Scheduling module",
       "domain": "EVT",
