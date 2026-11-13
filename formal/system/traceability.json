@@ -27588,6 +27588,76 @@
         "reason": "The grant lifecycle, the single-acceptance race, removal and courtesy issuance are exercised on PostgreSQL (locally; the runner is now a hosted workflow step) and the web flows by Jest; the widened organizer checks on existing routes are covered by reading only, no model exists and the product limits await owner confirmation."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "UX-PUBLIC-DETAIL-001",
+      "title": "Public detail pages open the full image and follow the application language",
+      "statement": "On a public event, profile, venue or classified page, activating a real preview image opens a viewer with the whole image, and the page's own text and dates use the application language, Spanish by default, not the browser language.",
+      "domain": "UX",
+      "authority": "Product owner requests on 2026-11-11.",
+      "source": "User requests: clicking the event image shows a larger and complete version; the application shows in Spanish by default.",
+      "property": "A visitor can see the entire poster, and a visitor who never chose a language reads the page in Spanish whatever the browser language.",
+      "contract": "formal/system/public-detail-presentation.md",
+      "actors": [
+        "Public visitor",
+        "Signed-in visitor"
+      ],
+      "preconditions": [
+        "The public record is visible under the existing directory visibility rules."
+      ],
+      "inputs": [
+        "Pointer or keyboard activation of the preview image",
+        "Close control, backdrop, image or Escape",
+        "Application language preference"
+      ],
+      "state": {
+        "boundary": "Image viewer visibility and page display language",
+        "states": [
+          "preview",
+          "viewer open",
+          "placeholder"
+        ]
+      },
+      "allowedTransitions": [
+        "preview -> viewer open on activation",
+        "viewer open -> preview on close, backdrop, image activation or Escape",
+        "viewer open -> preview when the full image fails to load"
+      ],
+      "forbiddenTransitions": [
+        "The placeholder opens a viewer.",
+        "The browser language changes the page language when the visitor chose none."
+      ],
+      "effects": [
+        "No request other than loading the already public image URL."
+      ],
+      "authorization": "None beyond the existing public visibility of the record and its image.",
+      "privacy": "The viewer shows only the image URL the page already renders.",
+      "concurrency": "Local view state only.",
+      "idempotency": "Opening and closing change no stored state.",
+      "failure": "A full image that fails to load closes the viewer and leaves the preview.",
+      "recovery": "The preview remains available; a changed image resets the viewer.",
+      "observability": "The control and viewer carry accessible names; the document language reflects the application language.",
+      "implementation": [
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Component tests for opening, closing and the inert placeholder, and a page test that keeps Spanish under an English browser; TypeScript and changed-file lint.",
+      "evidence": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx and tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx.",
+      "confidence": "The component and page behaviors have local test evidence.",
+      "ambiguity": [
+        "Viewer layout on real devices and the deployed public event page require browser verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
+      },
+      "critical": false
     }
   ],
   "sourceFingerprints": {
@@ -28612,6 +28682,8 @@
     "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx": "842b3e0d5275029c2eff10337fe546d2ee5afefb16df6b54f8080f3a4fbef850",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx": "55bda163a94847cea6c1b62eda88974f2a31f47be0a149e0d569b67a84f2f1dc",
     "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.tsx": "dee2406544003d535d637f676003536c5268358eb2795bf2156a534da54d1996",
+    "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx": "c9024a33f3df8a9cd9f52feb310210b7c174fa22c92deef8324c3ce6a5b6d0bb",
+    "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx": "4757fc29b4daeb50f3ed170e90ef56a62b46a5813e764d5b158bc256dbbd2f5d",
     "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.test.tsx": "ee95b3e6a45bc1f4e0e18b08846d140e839f7d7e058d572d4e5573df91124afc",
     "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx": "b49157c373d0e5e823b9df4c86804ce5d09afeabd5f009bbeb4cf89b5a851043",
     "tdf-hq-ui/src/components/events/EventAdminsCard.test.tsx": "b40b6519188bc04dee62ca39b1439ed08c8db7741043dfbcc4e0a036638daaf5",
@@ -28772,8 +28844,8 @@
     "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "d48c1b8f09a778fae561feae57637ac5c8793a26add0ad6669fc6b762dbd3616",
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "a6a7ddbdeb0f342d6d3e2b2265e00211452bf51d693e9ce7d7f7ed07cb1eda5f",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "07a61e85fa89ddb7e1c4de1c1f20617c9ac6bb9690aca35daccd914e1422c81d",
-    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "5ef4e14aa6daa2e314bf2c22f7d242181d100891bffb31cc8ef05911def5d4db",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "e320f4d8a89ddeb92c3d573429ba9c110a725979d97b9974cd356aaf058ee02b",
+    "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx": "efd16855987a225aaecb430437477786dc0455ba474aeea8e6452e59edf43cdb",
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "57d4e4708ecadf1e32f5daeaf4c1af8e45c715c88977ecbf6182278850dfcf64",
@@ -36850,6 +36922,10 @@
       {
         "requirement": "WEB-CONTENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-PUBLIC-DETAIL-001",
+        "relationship": "implementation"
       }
     ],
     "scripts/__tests__/ticket-page-preview.test.mjs": [
@@ -38411,6 +38487,10 @@
       },
       {
         "requirement": "SOCIAL-EVENT-MEMORY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "UX-PUBLIC-DETAIL-001",
         "relationship": "tests"
       }
     ],
@@ -47775,6 +47855,18 @@
     "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.test.tsx": [
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx": [
+      {
+        "requirement": "UX-PUBLIC-DETAIL-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx": [
+      {
+        "requirement": "UX-PUBLIC-DETAIL-001",
         "relationship": "tests"
       }
     ]
@@ -60410,6 +60502,30 @@
       ]
     },
     {
+      "id": "SURFACE-a2f9b70f811069d7",
+      "path": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx",
+      "sha256": "c9024a33f3df8a9cd9f52feb310210b7c174fa22c92deef8324c3ce6a5b6d0bb",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-PUBLIC-DETAIL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-d7474e771e08a175",
+      "path": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
+      "sha256": "4757fc29b4daeb50f3ed170e90ef56a62b46a5813e764d5b158bc256dbbd2f5d",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-PUBLIC-DETAIL-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-615a78e009691805",
       "path": "tdf-hq-ui/src/components/directory/OpenStreetMapResults.tsx",
       "sha256": "bb66b7c21afaae45254cdd5170537c61aaf8f47477f4e3a80d356fdab207179c",
@@ -63436,7 +63552,7 @@
     {
       "id": "SURFACE-814a4782598cab3d",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-      "sha256": "07a61e85fa89ddb7e1c4de1c1f20617c9ac6bb9690aca35daccd914e1422c81d",
+      "sha256": "e320f4d8a89ddeb92c3d573429ba9c110a725979d97b9974cd356aaf058ee02b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63446,13 +63562,17 @@
         {
           "requirement": "SOCIAL-EVENT-MEMORY-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-PUBLIC-DETAIL-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-3d4d10b4fbba7c54",
       "path": "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
-      "sha256": "5ef4e14aa6daa2e314bf2c22f7d242181d100891bffb31cc8ef05911def5d4db",
+      "sha256": "efd16855987a225aaecb430437477786dc0455ba474aeea8e6452e59edf43cdb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63477,6 +63597,10 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-PUBLIC-DETAIL-001",
           "relationship": "implementation"
         }
       ]
@@ -86449,7 +86573,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a9243c85df1ada5596d6f5bd81fb7bba1493cac95b4cd54450111c5bc7223774",
+      "sourceSha256": "0150f365f89641df4d1da67e54adc6b013c7bca2e1fb1dabd24c6fe8b6c9852c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86477,7 +86601,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a9243c85df1ada5596d6f5bd81fb7bba1493cac95b4cd54450111c5bc7223774",
+      "sourceSha256": "0150f365f89641df4d1da67e54adc6b013c7bca2e1fb1dabd24c6fe8b6c9852c",
       "definition": {
         "states": [
           "absent",
@@ -86507,7 +86631,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "a9243c85df1ada5596d6f5bd81fb7bba1493cac95b4cd54450111c5bc7223774",
+      "sourceSha256": "0150f365f89641df4d1da67e54adc6b013c7bca2e1fb1dabd24c6fe8b6c9852c",
       "definition": {
         "export": [
           "queued",
@@ -109626,7 +109750,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 217,
+    "PARTIAL": 218,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
