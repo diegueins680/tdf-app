@@ -11,12 +11,7 @@ import {
 } from '../production-release.mjs';
 import {
   MUSIC_RUNTIME_FUNCTION_SIGNATURES,
-  buildDatabaseSqlInvocation,
-  buildDeployPlan,
-  buildMachineDeployArgs,
-  buildMachineRollbackImage,
   buildMigrationBatchSql,
-  buildReleaseSteps,
   buildSchemaPreflightSql,
   buildSchemaVerificationSql,
   expandMigrationIncludes,
@@ -24,103 +19,29 @@ import {
   parseSecurityEmergencyReadinessOutput,
   requireMigrationIntroductionAncestor,
   securityEmergencyReadinessBlocker,
-  validateFlyConfig,
+  validateProductionCompose,
   validateMigrationRelativePath,
 } from '../lib/production-release.mjs';
 
 const releaseSha = 'ABCDEF0123456789ABCDEF0123456789ABCDEF01';
 
-test('retired Fly CLI rejects legacy commands before any provider invocation', () => {
+test('retired release CLI rejects legacy commands before any provider invocation', () => {
   for (const mode of ['plan', 'preflight', 'release']) {
     const result = spawnSync(process.execPath, [
       new URL('../production-release.mjs', import.meta.url).pathname,
       mode, '--sha', releaseSha, '--execute', '--confirm', releaseSha,
     ], { encoding: 'utf8', env: { PATH: '/nonexistent' } });
     assert.equal(result.status, 1, result.stderr);
-    assert.match(result.stderr, /Fly release CLI is retired/);
+    assert.match(result.stderr, /release CLI is retired/);
     assert.match(result.stderr, /ops\/hetzner\/README.md/);
     assert.equal(result.stdout, '');
     assert.doesNotMatch(result.stderr, /ENOENT|\$ /);
   }
 });
 const normalizedReleaseSha = releaseSha.toLowerCase();
-const releaseImage = `diegueins680/tdf-hq:${normalizedReleaseSha}`;
 
 const ticketMigration = 'tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql';
 const discoveryMigration = 'tdf-hq/sql/2026-07-12_event_discovery_imports.sql';
-
-const safeFlyConfig = `
-app = "tdf-hq"
-primary_region = "gru"
-
-[env]
-  APP_PORT = "8080"
-  DEFAULT_LOCALE = "es"
-  RUN_MIGRATIONS = "false"
-  AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"
-  CONTEXTUAL_REPUTATION_ENABLED = "false"
-  PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"
-  REPUTATION_AGGREGATION_WORKER_ENABLED = "false"
-  REPUTATION_AGGREGATION_ENVIRONMENT = "production"
-  REPUTATION_AGGREGATION_MODE = "simulation"
-  SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"
-  EVENT_DISCOVERY_ENABLED = "false"
-  EVENT_DISCOVERY_AUTO_PUBLISH = "false"
-  HQ_ASSETS_DIR = "/data/assets"
-  TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"
-
-[[mounts]]
-  source = "tdf_assets"
-  destination = "/data/assets"
-
-[deploy]
-  strategy = "rolling"
-  max_unavailable = 1
-  wait_timeout = "10m"
-
-[[services]]
-  protocol = "tcp"
-  internal_port = 8080
-
-  [[services.http_checks]]
-    interval = "10s"
-    grace_period = "15s"
-    method = "get"
-    path = "/health"
-    protocol = "http"
-    timeout = "2s"
-`;
-
-function releaseOptions(overrides = {}) {
-  return {
-    app: 'tdf-hq',
-    canaryMachineId: 'canary-machine',
-    dryRun: false,
-    flyConfig: safeFlyConfig,
-    image: releaseImage,
-    migrations: [ticketMigration, discoveryMigration],
-    priorImages: {
-      'canary-machine': 'registry.fly.io/tdf-hq:deployment-old-canary',
-      'remaining-machine': 'registry.fly.io/tdf-hq:deployment-old-remaining',
-    },
-    priorShas: {
-      'canary-machine': '1111111111111111111111111111111111111111',
-      'remaining-machine': '2222222222222222222222222222222222222222',
-    },
-    priorContextualReputationEnabled: {
-      'canary-machine': false,
-      'remaining-machine': false,
-    },
-    remainingMachineIds: ['remaining-machine'],
-    sha: releaseSha,
-    ...overrides,
-  };
-}
-
-function commandText(step) {
-  assert.ok(Array.isArray(step.command), `${step.id} command must be an argv array`);
-  return step.command.join(' ');
-}
 
 test('normalizeFullSha trims and lowercases an immutable full commit SHA', () => {
   assert.equal(normalizeFullSha(`  ${releaseSha}\n`), normalizedReleaseSha);
@@ -365,19 +286,6 @@ test('production release refuses to omit a migration outside the release ancestr
     () => requireMigrationIntroductionAncestor(migration, '2'.repeat(40), false),
     /not an ancestor.*refusing to omit/u,
   );
-});
-
-test('production database SQL streams outside the flyctl argument vector', () => {
-  const sql = `SELECT '${'x'.repeat(1_500_000)}';`;
-  const invocation = buildDatabaseSqlInvocation({
-    dbApp: 'tdf-hq-db',
-    database: 'tdf_hq',
-  }, sql, { tuplesOnly: true });
-
-  assert.equal(invocation.input, sql);
-  assert.ok(invocation.argv.every((argument) => argument.length < 1_024));
-  assert.doesNotMatch(invocation.argv.join(' '), /base64|SELECT 'x/u);
-  assert.match(invocation.argv.at(-1), /psql -X -v ON_ERROR_STOP=1 -qAt -p 5433 -d tdf_hq/u);
 });
 
 test('validateMigrationRelativePath accepts a dated SQL migration inside tdf-hq/sql', () => {
@@ -666,203 +574,75 @@ test('security emergency readiness parser rejects missing, writable, and malform
   );
 });
 
-test('validateFlyConfig accepts reviewed automatic SQL migrations in a staged rolling release', () => {
-  const validation = validateFlyConfig(safeFlyConfig);
+const productionCompose = readFileSync(
+  new URL('../../ops/hetzner/compose.production.yaml', import.meta.url),
+  'utf8',
+);
+function composeWith(search, replacement) {
+  // Only the api service follows the edge-facing CORS override, so anchoring on
+  // it keeps each mutation inside the service the validator reads.
+  const start = productionCompose.indexOf("      CORS_DISABLE_DEFAULTS: 'true'");
+  assert.ok(start > 0, 'compose fixture anchor');
+  const tail = productionCompose.slice(start);
+  assert.ok(tail.includes(search), `compose fixture must contain ${search}`);
+  return productionCompose.slice(0, start) + tail.replace(search, replacement);
+}
 
-  assert.equal(validation.runMigrations, false);
-  assert.equal(validation.autoApplyProductionMigrations, true);
-  assert.equal(validation.reputationAggregationWorkerEnabled, false);
-  assert.equal(validation.reputationAggregationEnvironment, 'production');
-  assert.equal(validation.reputationAggregationMode, 'simulation');
-  assert.equal(validation.eventDiscoveryEnabled, false);
-  assert.equal(validation.eventDiscoveryAutoPublish, false);
-  assert.equal(validation.internalFeedbackUploadRoot, '/data/assets/.internal-feedback');
-  assert.equal(validation.healthCheckPath, '/health');
-  assert.equal(validation.strategy, 'rolling');
-  assert.equal(validation.maxUnavailable, 1);
-});
-
-test('validateFlyConfig requires durable internal feedback evidence storage', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"',
-        'TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/app/uploads/feedback/internal"',
-      ),
-    ),
-    /TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT|persistent mount/i,
-  );
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace('  TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"\n', ''),
-    ),
-    /TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT|persistent mount/i,
-  );
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/.internal-feedback"',
-        'TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT = "/data/assets/public-feedback"',
-      ),
-    ),
-    /TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT|private subtree/i,
-  );
-});
-
-test('validateFlyConfig fails closed when startup migrations are enabled', () => {
-  assert.throws(
-    () => validateFlyConfig(safeFlyConfig.replace('RUN_MIGRATIONS = "false"', 'RUN_MIGRATIONS = "true"')),
-    /RUN_MIGRATIONS|migration/i,
-  );
-});
-
-test('validateFlyConfig requires the reviewed automatic migration runner', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'AUTO_APPLY_PRODUCTION_MIGRATIONS = "true"',
-        'AUTO_APPLY_PRODUCTION_MIGRATIONS = "false"',
-      ),
-    ),
-    /AUTO_APPLY_PRODUCTION_MIGRATIONS|reviewed SQL migrations/i,
-  );
-});
-
-test('validateFlyConfig fails closed when event discovery would start during the initial release', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace('EVENT_DISCOVERY_ENABLED = "false"', 'EVENT_DISCOVERY_ENABLED = "true"'),
-    ),
-    /EVENT_DISCOVERY_ENABLED|discovery/i,
-  );
-});
-
-test('validateFlyConfig fails closed when event discovery could auto-publish during rollout', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'EVENT_DISCOVERY_AUTO_PUBLISH = "false"',
-        'EVENT_DISCOVERY_AUTO_PUBLISH = "true"',
-      ),
-    ),
-    /EVENT_DISCOVERY_AUTO_PUBLISH|auto-publish/i,
-  );
-});
-
-test('validateFlyConfig keeps contextual reputation dark without a production cohort gate', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'CONTEXTUAL_REPUTATION_ENABLED = "false"',
-        'CONTEXTUAL_REPUTATION_ENABLED = "true"',
-      ),
-    ),
-    /CONTEXTUAL_REPUTATION_ENABLED|contextual reputation/i,
-  );
-});
-
-test('validateFlyConfig requires the separately authorized public projection gate', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'PUBLIC_REPUTATION_PROJECTION_ENABLED = "true"',
-        'PUBLIC_REPUTATION_PROJECTION_ENABLED = "false"',
-      ),
-    ),
-    /PUBLIC_REPUTATION_PROJECTION_ENABLED|public-read gate/i,
-  );
-});
-
-test('validateFlyConfig rejects the staging-only reputation worker in production', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'REPUTATION_AGGREGATION_WORKER_ENABLED = "false"',
-        'REPUTATION_AGGREGATION_WORKER_ENABLED = "true"',
-      ),
-    ),
-    /REPUTATION_AGGREGATION_WORKER_ENABLED|reputation worker/i,
-  );
-});
-
-test('validateFlyConfig structurally identifies production reputation configuration', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'REPUTATION_AGGREGATION_ENVIRONMENT = "production"',
-        'REPUTATION_AGGREGATION_ENVIRONMENT = "staging"',
-      ),
-    ),
-    /REPUTATION_AGGREGATION_ENVIRONMENT|production/i,
-  );
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'REPUTATION_AGGREGATION_MODE = "simulation"',
-        'REPUTATION_AGGREGATION_MODE = "publish"',
-      ),
-    ),
-    /REPUTATION_AGGREGATION_MODE|simulation/i,
-  );
-});
-
-test('validateFlyConfig keeps the onboarding experiment paused until activation is approved', () => {
-  assert.throws(
-    () => validateFlyConfig(
-      safeFlyConfig.replace(
-        'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "false"',
-        'SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED = "true"',
-      ),
-    ),
-    /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED|activation approval/i,
-  );
-});
-
-test('validateFlyConfig requires the persisted production default locale', () => {
-  assert.throws(
-    () => validateFlyConfig(safeFlyConfig.replace('DEFAULT_LOCALE = "es"', 'DEFAULT_LOCALE = "en"')),
-    /DEFAULT_LOCALE|persisted production default/i,
-  );
-  assert.throws(
-    () => validateFlyConfig(safeFlyConfig.replace('  DEFAULT_LOCALE = "es"\n', '')),
-    /DEFAULT_LOCALE|persisted production default/i,
-  );
-});
-
-test('buildMachineRollbackImage removes Fly Docker Hub mirror and duplicate digests', () => {
-  const digest = `sha256:${'a'.repeat(64)}`;
-  assert.equal(buildMachineRollbackImage({
-    image_ref: {
-      registry: 'docker-hub-mirror.fly.io',
-      repository: `diegueins680/tdf-hq@${digest}`,
-      digest,
-    },
-  }), `diegueins680/tdf-hq@${digest}`);
-  assert.equal(buildMachineRollbackImage({
-    image_ref: `docker-hub-mirror.fly.io/diegueins680/tdf-hq@${digest}@${digest}`,
-  }), `diegueins680/tdf-hq@${digest}`);
-});
-
-test('buildMachineDeployArgs uses the guarded deploy lane for digest rollbacks', () => {
-  const digest = `sha256:${'b'.repeat(64)}`;
-  const image = `diegueins680/tdf-hq@${digest}`;
-  const args = buildMachineDeployArgs({
-    app: 'tdf-hq',
-    image,
-    sha: normalizedReleaseSha,
-    contextualReputationEnabled: false,
-    onlyMachine: 'canary-machine',
+test('validateProductionCompose accepts the reviewed production api service', () => {
+  assert.deepEqual(validateProductionCompose(productionCompose), {
+    runMigrations: false,
+    autoApplyProductionMigrations: true,
+    reputationAggregationWorkerEnabled: false,
+    eventDiscoveryEnabled: false,
+    eventDiscoveryAutoPublish: false,
+    internalFeedbackUploadRoot: '/data/assets/.internal-feedback',
   });
+});
 
-  assert.deepEqual(args.slice(0, 3), ['flyctl', 'deploy', '.']);
-  assert.equal(args[args.indexOf('--image') + 1], image);
-  assert.equal(args.filter((value) => value === digest).length, 0);
-  assert.equal(args.filter((value) => value === image).length, 1);
-  assert.deepEqual(args.slice(-2), ['--only-machines', 'canary-machine']);
-  assert.ok(args.includes('--update-only'));
-  assert.ok(!args.includes('machine'));
-  assert.ok(!args.includes('update'));
-  assert.ok(args.includes('CONTEXTUAL_REPUTATION_ENABLED=false'));
+test('validateProductionCompose fails closed on unsafe or missing staged flags', () => {
+  for (const [name, safe, unsafe] of [
+    ['RUN_MIGRATIONS', "'false'", "'true'"],
+    ['AUTO_APPLY_PRODUCTION_MIGRATIONS', "'true'", "'false'"],
+    ['EVENT_DISCOVERY_ENABLED', "'false'", "'true'"],
+    ['EVENT_DISCOVERY_AUTO_PUBLISH', "'false'", "'true'"],
+    ['REPUTATION_AGGREGATION_WORKER_ENABLED', "'false'", "'true'"],
+  ]) {
+    const line = `      ${name}: ${safe}\n`;
+    assert.throws(
+      () => validateProductionCompose(composeWith(line, `      ${name}: ${unsafe}\n`)),
+      new RegExp(name),
+      `${name} changed`,
+    );
+    assert.throws(() => validateProductionCompose(composeWith(line, '')), new RegExp(name), `${name} missing`);
+  }
+});
+
+test('validateProductionCompose reads flags only from the api service environment', () => {
+  // The canary service legitimately disables the automatic runner; its value
+  // must neither satisfy nor fail the api check.
+  assert.match(productionCompose, /AUTO_APPLY_PRODUCTION_MIGRATIONS: 'false'/);
+  const duplicated = composeWith("      RUN_MIGRATIONS: 'false'\n", "      RUN_MIGRATIONS: 'true'\n      RUN_MIGRATIONS: 'false'\n");
+  assert.throws(() => validateProductionCompose(duplicated), /Duplicate compose environment key/);
+  assert.throws(() => validateProductionCompose(productionCompose.replace('\n  api:\n', '\n  api-v2:\n')), /exactly one api block/);
+  assert.throws(() => validateProductionCompose(''), /exactly one services block/);
+});
+
+test('validateProductionCompose requires durable private internal feedback storage', () => {
+  const root = '      TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT: /data/assets/.internal-feedback\n';
+  for (const replacement of [
+    '',
+    '      TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT: /data/assets/public-feedback\n',
+    '      TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT: /tmp/assets/.internal-feedback\n',
+  ]) {
+    assert.throws(
+      () => validateProductionCompose(composeWith(root, replacement)),
+      /TDF_INTERNAL_FEEDBACK_UPLOAD_ROOT/,
+    );
+  }
+  assert.throws(
+    () => validateProductionCompose(composeWith('      - ./assets:/data/assets\n', '')),
+    /mounted volume/,
+  );
 });
 
 test('runtime preflight preserves a coherent captured contextual reputation gate', () => {
@@ -903,62 +683,6 @@ test('runtime preflight preserves a coherent captured contextual reputation gate
       { machineId: 'machine-b', values: { ...values, CONTEXTUAL_REPUTATION_ENABLED: 'true' } },
     ]),
     /same boolean CONTEXTUAL_REPUTATION_ENABLED/i,
-  );
-});
-
-test('buildMachineDeployArgs can restore a captured contextual-reputation gate', () => {
-  const args = buildMachineDeployArgs({
-    app: 'tdf-hq',
-    image: releaseImage,
-    sha: normalizedReleaseSha,
-    onlyMachine: 'canary-machine',
-    contextualReputationEnabled: false,
-  });
-
-  assert.equal(
-    args[args.indexOf('CONTEXTUAL_REPUTATION_ENABLED=false')],
-    'CONTEXTUAL_REPUTATION_ENABLED=false',
-  );
-});
-
-test('validateFlyConfig requires an HTTP readiness check on /health', () => {
-  const withoutHealthCheck = safeFlyConfig.replace(/\n  \[\[services\.http_checks\]\][\s\S]*$/, '\n');
-
-  assert.throws(() => validateFlyConfig(withoutHealthCheck), /health|http.*check|readiness/i);
-  assert.throws(
-    () => validateFlyConfig(safeFlyConfig.replace('path = "/health"', 'path = "/version"')),
-    /health|readiness/i,
-  );
-});
-
-test('validateFlyConfig requires a one-at-a-time rolling deployment', () => {
-  assert.throws(
-    () => validateFlyConfig(safeFlyConfig.replace('strategy = "rolling"', 'strategy = "canary"')),
-    /rolling|canary|volume|strategy/i,
-  );
-  assert.throws(
-    () => validateFlyConfig(safeFlyConfig.replace('max_unavailable = 1', 'max_unavailable = 2')),
-    /max_unavailable|unavailable|one/i,
-  );
-});
-
-test('validateFlyConfig reads safety keys from their actual TOML sections', () => {
-  const spoofedEnv = safeFlyConfig
-    .replace('RUN_MIGRATIONS = "false"', 'RUN_MIGRATIONS = "true"')
-    .replace('[env]', '[build.args]\nRUN_MIGRATIONS = "false"\n\n[env]');
-  const spoofedDeploy = safeFlyConfig
-    .replace('strategy = "rolling"', 'strategy = "bluegreen"')
-    .replace('max_unavailable = 1', 'max_unavailable = 2')
-    .replace('[deploy]', '[release.metadata]\nstrategy = "rolling"\nmax_unavailable = 1\n\n[deploy]');
-
-  assert.throws(() => validateFlyConfig(spoofedEnv), /RUN_MIGRATIONS|migration/i);
-  assert.throws(() => validateFlyConfig(spoofedDeploy), /rolling|strategy|max_unavailable/i);
-});
-
-test('validateFlyConfig refuses a different Fly application', () => {
-  assert.throws(
-    () => validateFlyConfig(safeFlyConfig.replace('app = "tdf-hq"', 'app = "not-production"')),
-    /tdf-hq|production|app/i,
   );
 });
 
@@ -1328,135 +1052,6 @@ test('buildSchemaPreflightSql is read-only and accepts unapplied release tables'
   assert.doesNotMatch(sql, /ALTER\s+TABLE|CREATE\s+TABLE|INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM/i);
 });
 
-test('buildReleaseSteps orders schema work before a single-machine canary and fleet rollout', () => {
-  const steps = buildReleaseSteps(releaseOptions());
-  const ids = steps.map(({ id }) => id);
-
-  for (const requiredId of [
-    'local-preflight',
-    'remote-preflight',
-    'apply-migrations',
-    'verify-schema',
-    'deploy-canary',
-    'smoke-canary',
-    'deploy-remaining-1',
-    'smoke-remaining-1',
-    'verify-fleet',
-  ]) {
-    assert.ok(ids.includes(requiredId), `missing ${requiredId} release step`);
-  }
-
-  assert.ok(ids.indexOf('remote-preflight') < ids.indexOf('apply-migrations'));
-  assert.ok(ids.indexOf('apply-migrations') < ids.indexOf('verify-schema'));
-  assert.ok(ids.indexOf('verify-schema') < ids.indexOf('deploy-canary'));
-  assert.ok(ids.indexOf('deploy-canary') < ids.indexOf('smoke-canary'));
-  assert.ok(ids.indexOf('smoke-canary') < ids.indexOf('deploy-remaining-1'));
-  assert.ok(ids.indexOf('deploy-remaining-1') < ids.indexOf('smoke-remaining-1'));
-  assert.ok(ids.indexOf('smoke-remaining-1') < ids.indexOf('verify-fleet'));
-
-  const canaryCommand = commandText(steps.find(({ id }) => id === 'deploy-canary'));
-  assert.match(canaryCommand, /--only-machines canary-machine(?:\s|$)/);
-  assert.match(canaryCommand, new RegExp(`--image ${releaseImage}`));
-  assert.match(canaryCommand, /RUN_MIGRATIONS=false/);
-  assert.match(canaryCommand, /AUTO_APPLY_PRODUCTION_MIGRATIONS=true/);
-  assert.match(canaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
-  assert.match(canaryCommand, /PUBLIC_REPUTATION_PROJECTION_ENABLED=false/);
-  assert.match(canaryCommand, /REPUTATION_AGGREGATION_WORKER_ENABLED=false/);
-  assert.match(canaryCommand, /REPUTATION_AGGREGATION_ENVIRONMENT=production/);
-  assert.match(canaryCommand, /REPUTATION_AGGREGATION_MODE=simulation/);
-  assert.match(canaryCommand, /SINGLE_FEATURE_ONBOARDING_EXPERIMENT_ENABLED=false/);
-  assert.match(canaryCommand, /EVENT_DISCOVERY_ENABLED=false/);
-  assert.match(canaryCommand, /EVENT_DISCOVERY_AUTO_PUBLISH=false/);
-  assert.doesNotMatch(canaryCommand, /--strategy canary(?:\s|$)/);
-
-  const remainingCommand = commandText(steps.find(({ id }) => id === 'deploy-remaining-1'));
-  assert.match(remainingCommand, /--only-machines remaining-machine(?:\s|$)/);
-  assert.doesNotMatch(remainingCommand, /--exclude-machines/);
-  assert.match(remainingCommand, /--strategy rolling(?:\s|$)/);
-  assert.match(remainingCommand, /--max-unavailable 1(?:\s|$)/);
-
-  const attemptedOverride = buildReleaseSteps(releaseOptions({
-    contextualReputationEnabled: true,
-  }));
-  const guardedCanaryCommand = commandText(
-    attemptedOverride.find(({ id }) => id === 'deploy-canary'),
-  );
-  assert.match(guardedCanaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
-  assert.doesNotMatch(guardedCanaryCommand, /CONTEXTUAL_REPUTATION_ENABLED=true/);
-});
-
-test('buildReleaseSteps rolls the canary back to its captured image before any remaining-machine rollout', () => {
-  const steps = buildReleaseSteps(releaseOptions());
-  const smoke = steps.find(({ id }) => id === 'smoke-canary');
-  const rolloutIndex = steps.findIndex(({ id }) => id === 'deploy-remaining-1');
-
-  assert.ok(smoke, 'missing canary smoke step');
-  assert.ok(Array.isArray(smoke.onFailure), 'canary smoke must declare failure actions');
-
-  const rollback = smoke.onFailure.find(({ id }) => id === 'rollback-canary');
-  assert.ok(rollback, 'canary smoke failure must declare a rollback step');
-  assert.equal(rollback.mutating, true);
-  assert.equal(rollback.beforeStep, 'deploy-remaining');
-  assert.ok(steps.indexOf(smoke) < rolloutIndex, 'smoke must run before remaining-machine rollout');
-
-  const rollbackCommand = commandText(rollback);
-  assert.match(rollbackCommand, /--only-machines canary-machine(?:\s|$)/);
-  assert.match(rollbackCommand, /--image registry\.fly\.io\/tdf-hq:deployment-old-canary(?:\s|$)/);
-  assert.match(rollbackCommand, /CONTEXTUAL_REPUTATION_ENABLED=false/);
-  assert.doesNotMatch(rollbackCommand, new RegExp(releaseImage));
-});
-
-test('buildReleaseSteps refuses executable placeholders without rollback metadata', () => {
-  assert.throws(
-    () => buildReleaseSteps({
-      app: 'tdf-hq',
-      dryRun: false,
-      flyConfig: safeFlyConfig,
-      image: releaseImage,
-      migrations: [ticketMigration],
-      sha: releaseSha,
-    }),
-    /canary|explicit|machine/i,
-  );
-  assert.throws(
-    () => buildReleaseSteps(releaseOptions({ priorImages: {}, priorShas: {} })),
-    /rollback|previous|image|commit/i,
-  );
-});
-
-test('buildReleaseSteps refuses a canary when no untouched Machine remains', () => {
-  assert.throws(
-    () => buildReleaseSteps(releaseOptions({ remainingMachineIds: [] })),
-    /canary|remaining|machine|two/i,
-  );
-});
-
-test('buildDeployPlan dry-run is descriptive but contains no mutating commands', () => {
-  const plan = buildDeployPlan(releaseOptions({ dryRun: true }));
-
-  assert.equal(plan.dryRun, true);
-  assert.equal(plan.mode, 'dry-run');
-  assert.ok(plan.steps.length > 0, 'dry-run should still explain the release sequence');
-  assert.deepEqual(plan.commands, []);
-  assert.ok(plan.steps.every((step) => step.mutating !== true));
-  assert.ok(plan.steps.every((step) => step.command === undefined));
-  assert.match(JSON.stringify(plan), new RegExp(normalizedReleaseSha));
-  assert.match(JSON.stringify(plan), /ticket_checkout_idempotency/);
-  assert.match(JSON.stringify(plan), /event_discovery_imports/);
-});
-
-test('buildDeployPlan validates Fly safety settings before producing a release plan', () => {
-  assert.throws(
-    () => buildDeployPlan(
-      releaseOptions({
-        dryRun: true,
-        flyConfig: safeFlyConfig.replace('RUN_MIGRATIONS = "false"', 'RUN_MIGRATIONS = "true"'),
-      }),
-    ),
-    /RUN_MIGRATIONS|migration/i,
-  );
-});
-
 
 test('discovery gates are captured from a coherent fleet without enabling or disabling either flag', () => {
   for (const enabled of [false, true]) {
@@ -1468,11 +1063,6 @@ test('discovery gates are captured from a coherent fleet without enabling or dis
       const rows = [{ machineId: 'a', values }, { machineId: 'b', values: { ...values } }];
       const gates = captureEventDiscoveryGates(rows);
       assert.deepEqual(gates, { eventDiscoveryEnabled: enabled, eventDiscoveryAutoPublish: autoPublish });
-      const args = buildMachineDeployArgs({ app: 'tdf-hq', image: releaseImage, sha: normalizedReleaseSha, ...gates });
-      assert.ok(args.includes(`EVENT_DISCOVERY_ENABLED=${enabled}`));
-      assert.ok(args.includes(`EVENT_DISCOVERY_AUTO_PUBLISH=${autoPublish}`));
-      assert.equal(args.filter((arg) => arg.startsWith('EVENT_DISCOVERY_ENABLED=')).length, 1);
-      assert.equal(args.filter((arg) => arg.startsWith('EVENT_DISCOVERY_AUTO_PUBLISH=')).length, 1);
     }
   }
 });
@@ -1501,21 +1091,7 @@ test('runtime checks accept captured discovery settings and reject subsequent dr
   const changed = [{ machineId: 'a', values: { ...values, EVENT_DISCOVERY_AUTO_PUBLISH: 'false' } }];
   assert.match(runtimeEnvBlockers(changed, gates)[0], /EVENT_DISCOVERY_AUTO_PUBLISH/);
   assert.throws(() => runtimeEnvBlockers(rows, { eventDiscoveryEnabled: 'true' }), /must be a boolean/);
-  assert.throws(() => buildMachineDeployArgs({ app: 'tdf-hq', image: releaseImage, sha: normalizedReleaseSha, eventDiscoveryAutoPublish: 'false' }), /must be booleans/);
-});
-
-test('release planning preserves captured discovery gates for canary, remaining machines and rollback', () => {
-  const steps = buildReleaseSteps({
-    sha: normalizedReleaseSha, image: releaseImage, canaryMachineId: 'canary', remainingMachineIds: ['remaining'],
-    previousImage: 'registry.example/tdf@sha256:' + 'a'.repeat(64), previousSha: 'b'.repeat(40),
-    previousContextualReputationEnabled: false, eventDiscoveryEnabled: true, eventDiscoveryAutoPublish: true,
-  });
-  const commands = steps.flatMap((step) => [step.command, ...(step.onFailure ?? []).map((failure) => failure.command)]).filter(Boolean);
-  assert.equal(commands.length, 3);
-  for (const command of commands) {
-    assert.ok(command.includes('EVENT_DISCOVERY_ENABLED=true'));
-    assert.ok(command.includes('EVENT_DISCOVERY_AUTO_PUBLISH=true'));
-  }
+  assert.throws(() => runtimeEnvBlockers(rows, { eventDiscoveryAutoPublish: 'false' }), /must be a boolean/);
 });
 
 test('schema verification covers every music SQL function called at runtime', () => {

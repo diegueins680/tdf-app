@@ -10,7 +10,7 @@ export function sourceManifest(root) {
     { cwd: root, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }).split('\0').filter(Boolean);
   const selected = paths.filter(p => /^(formal\/|scripts\/|tdf-hq\/|tdf-hq-ui\/|ops\/|\.github\/)/.test(p)
     || /^docs\/.*\.(md|yaml|json)$/.test(p)
-    || /^(package(-lock)?\.json|specs\.yaml|fly[^/]*\.toml|\.gitmodules|FORMAL_VERIFICATION\.md)$/.test(p));
+    || /^(package(-lock)?\.json|specs\.yaml|\.gitmodules|FORMAL_VERIFICATION\.md)$/.test(p));
   const files = {};
   for (const p of [...new Set(selected)].sort()) {
     // Receipts are outputs, not proof inputs; never recursively hash the run's receipt.

@@ -77,7 +77,7 @@ capability is insufficient for a checkout that needs verified capture or query.
 Keep original-attempt recovery available; hiding a method never proves no charge.
 
 1. Identify the exact legal merchant, provider account, environment, USD settlement account and contracted capabilities.
-2. Store provider credentials only in the environment's secret manager. Never put values in `fly.toml`, `.env` examples, issue/PR text, logs, screenshots or the database.
+2. Store provider credentials only in the environment's secret manager. Never put values in tracked configuration, `.env` examples, issue/PR text, logs, screenshots or the database.
 3. Register provider redirect, return and webhook URLs for the same environment. Production URLs must never target a sandbox account and vice versa.
 4. Apply the canonical lifecycle migration. Confirm all `commerce_provider_account` rows are disabled.
 5. Validate credentials with a read-only/authentication request and record the provider request ID, environment and timestamp. Do not record tokens.

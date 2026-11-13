@@ -12,8 +12,8 @@
       "implementation": [
         "scripts/production-release.mjs"
       ],
-      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git, immutable images and Fly execution remain trusted.",
-      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image release plan/preflight/report",
+      "verification": "Actual guard and recovery-loop regression checks, concrete Git ancestry counterexample/recheck; existing bounded ProviderRollback model. Git and immutable images remain trusted; no release executor is implemented.",
+      "evidence": "provider-rollback.test.mjs; formal CI model logs; exact-image portable preparation report",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
       "critical": true,
@@ -2416,7 +2416,7 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane.",
+        "Never treat the retired release CLI as a production lane.",
         "Ambient Docker contexts or libpq service/host settings must not redirect inspection or inventory away from the verified local daemon and database socket.",
         "Accept shadowing database child mounts, noncanonical PGDATA or differing effective server data_directory."
       ],
@@ -2496,7 +2496,7 @@
       ],
       "forbiddenTransitions": [
         "Never infer release readiness from a successful observation.",
-        "Never execute the retired Fly production lane."
+        "Never treat the retired release CLI as a production lane."
       ],
       "effects": [
         "Record allowlisted runtime/ledger facts; preserve provider flags and production data."
@@ -2523,11 +2523,13 @@
       },
       "id": "DEPLOY-TARGET-001",
       "title": "Retired providers cannot receive a production release",
-      "statement": "All invocations of the retired Fly release CLI reject before remote tools. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
-      "property": "Retired Fly commands invoke no git, docker, ssh or flyctl operation before rejecting.",
+      "statement": "All direct invocations of the retired release CLI reject before remote tools. Database commands of the identity reconciliation CLI, whose only transport was the retired provider, reject before any tool or output file. Imported source/artifact preparation helpers do not establish deployment eligibility; the guarded Hetzner executor remains an open release obligation.",
+      "property": "Retired release commands invoke no git, docker or ssh operation before rejecting.",
       "implementation": [
         "scripts/production-release.mjs",
-        "scripts/deploy-stripe-ticketing.sh"
+        "scripts/deploy-stripe-ticketing.sh",
+        "scripts/identity-reconciliation.mjs",
+        "scripts/prepare-portable-restore.mjs"
       ],
       "tests": [
         "scripts/__tests__/hetzner-inspection.test.mjs",
@@ -2987,7 +2989,7 @@
       "concurrency": "Runs once per container start before the server accepts traffic.",
       "idempotency": "Repeated verification of an unchanged database is equivalent.",
       "failure": "A missing gate or enabled staged provider stops startup with a fixed message.",
-      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and fly.toml set it true; the precheck requires it).",
+      "recovery": "Restore the gate row or record an approval and update the verifier; temporary AUTO_APPLY_PRODUCTION_MIGRATIONS=false skips the batch and the verification unconditionally (the shipped image, Dockerfile and ops/hetzner/compose.production.yaml set it true; the precheck requires it).",
       "observability": "Fixed exception text names the violated gate class.",
       "formalModels": [
         "formal/event-operations/StartupGates.tla",
