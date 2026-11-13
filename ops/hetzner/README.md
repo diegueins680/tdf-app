@@ -210,8 +210,35 @@ lock. Pending state and partial publication continue to block admission. It
 does not yet coordinate or verify production effects; source integration does
 not authorize invoking this library against the production journal.
 
-The guarded routine Hetzner release executor remains an open implementation and
-verification obligation. Direct invocation of `scripts/production-release.mjs`
+### Guarded routine release
+
+`ops/hetzner/guarded-release.py` performs a backend release as the release
+journal's twelve stages, driven from the operator's machine. Its contract,
+acceptance checks and limits are in
+[guarded-release.md](../../formal/system/guarded-release.md) (DEPLOY-RELEASE-001).
+
+```sh
+# Derive inputs and verify tools without contacting production:
+node scripts/guarded-release.mjs prepare --dry-run --revision FULL_SHA \
+  --recipient age1... --storage-host uNNN.your-storagebox.de --storage-user uNNN-sub1 \
+  --smoke /music/releases
+# Then, each step only after owner approval:
+node scripts/guarded-release.mjs prepare ...same arguments... --identity-file ~/.ssh/KEY
+node scripts/guarded-release.mjs run backup  --confirm FIRST_12_OF_SHA --identity-file ~/.ssh/KEY
+node scripts/guarded-release.mjs run migrate --confirm FIRST_12_OF_SHA --identity-file ~/.ssh/KEY
+node scripts/guarded-release.mjs run cutover --confirm FIRST_12_OF_SHA --identity-file ~/.ssh/KEY
+# Before traffic reopens only:
+node scripts/guarded-release.mjs rollback --confirm rollback-FIRST_12_OF_SHA --identity-file ~/.ssh/KEY
+```
+
+The custodian creates the recovery key on their own machine with
+`scripts/generate-recovery-key.sh` and shares only the public recipient.
+Before the first production run, the Storage Box acceptance sequence (the
+recovery custody setup proposed in draft PR #721) and a staging rehearsal are
+still required. A rollback leaves the journal interrupted until a reviewed
+`abandon` record exists.
+
+Direct invocation of `scripts/production-release.mjs`
 is retired and rejects before any provider or database action. The former
 `release:backend`, `release:backend:plan` and `release:backend:preflight` commands
 are removed. Its reviewed importable source/artifact helpers remain available to

@@ -69,9 +69,9 @@ restoring would discard it.
   are not fenced.
 - The edge certificate volumes are not captured; certificates are reissued.
 - The Storage Box account, its overwrite/deletion protection and custodian
-  key recovery need the acceptance sequence in
-  `ops/hetzner/recovery-custody-setup.md`. A synthetic decrypt by the custodian
-  is still required.
+  key recovery need the acceptance sequence of the recovery custody setup
+  proposed in draft PR #721. A synthetic decrypt by the custodian is still
+  required.
 - The journal has no `abandon` record. After a rollback the journal stays
   interrupted, and the next release needs a reviewed extension first.
 - Tests drive the real journal, release files and bundle archive against an

@@ -30668,7 +30668,7 @@
     },
     {
       "path": "formal/system/guarded-release.md",
-      "sha256": "f880b0b791154255aeac0064d31bb42e2137ec0f17547ce065fb06baa54c0506",
+      "sha256": "ea2b60ab6b878b5450b91bdba5f6c1ca1f413648dfc213df389644143f74fe81",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31487,7 +31487,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "b34d8b33635e0b75e24e96c153f2fe52ff18d8eb2ec2f39fe12f071e2bd5064c",
+      "sha256": "8b00a2015aadec0d106e79f0bb89aff4237939f9e78bfca647299d2b01acf175",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
