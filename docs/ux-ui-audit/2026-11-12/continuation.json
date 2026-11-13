@@ -110,6 +110,18 @@
       "principle": "Continuidad de tarea y prevención de pérdida de datos",
       "finding": "La prueba real de navegador mostró que salir del campo de código ya verificado iniciaba otra validación, deshabilitaba el formulario y podía descartar la siguiente edición del correo.",
       "change": "El blur conserva la validación vigente del mismo código y permite editar sin interrupción. Un código modificado continúa requiriendo validación exitosa; se mantienen el control de generación, aislamiento de propietario y rechazo de respuestas antiguas."
+    },
+    {
+      "id": "COG-20261113-01",
+      "principle": "Reconocimiento, jerarquía visual y prevención de errores",
+      "finding": "Los métodos locales y alojados se comparaban en dos grupos; algunos botones destacaban el procesador o recibían mayor énfasis sin una recomendación del servidor.",
+      "change": "Una lista visual y accesible reúne las opciones de entradas, reservas, cursos, mezcla y cotizaciones de Domo. El tipo de pago destaca y el procesador queda en texto secundario. Se mantienen el orden, la disponibilidad, los callbacks y los bloqueos originales. No se inventa una recomendación. PayPhone sigue pidiendo datos tras elegirlo; los casos dudosos conservan la recuperación exacta y bloquean alternativas."
+    },
+    {
+      "id": "COG-20261113-02",
+      "principle": "Menos datos repetidos y control explícito",
+      "finding": "Una persona con sesión y contacto completo seguía viendo los tres campos de contacto abiertos en la reserva, aunque bastaba con revisar sus datos.",
+      "change": "El contacto válido se presenta como resumen con Editar datos. Invitados, datos incompletos y ediciones iniciadas siguen abiertos. Abrir y volver al resumen llevan el foco al campo o control correspondiente; no cambian el paso, el consentimiento, los valores escritos ni la creación de la reserva."
     }
   ],
   "measurements": [
@@ -226,8 +238,8 @@
     {
       "id": 15,
       "item": "Lista de métodos de pago",
-      "status": "Parcial",
-      "nextOrEvidence": "PayPhone pide datos tras elegirlo; agrupación completa y recomendación pendientes."
+      "status": "Parcial; lista unificada implementada",
+      "nextOrEvidence": "Tipos de pago en una sola lista y procesador en texto secundario en entradas, reservas, cursos, mezcla y Domo. PayPhone pide datos tras elegirlo. Recomendación pendiente: el contrato actual comunica disponibilidad, no un ranking. Recuperación y bloqueos conservados."
     },
     {
       "id": 16,
@@ -269,7 +281,7 @@
       "id": 22,
       "item": "Reserva y datos repetidos",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Reserva pasa de 3 pasos a 2, con resumen, cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y ahora correo de Live Sessions tras validar su código, con prioridad del borrador y edición. Contacto plegado y otras repeticiones aún pendientes. Horarios sugeridos opcionales plegados."
+      "nextOrEvidence": "Reserva en 2 pasos con cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y correo de Live Sessions tras validar su código. Contacto completo de la cuenta resumido y editable; invitados e incompletos abiertos. Introducción y otras repeticiones aún no revalidadas frente al objetivo de tres líneas; evaluación humana pendiente."
     },
     {
       "id": 23,
@@ -369,9 +381,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 5,
-      "testsPassed": 56,
-      "sourceCommit": "c0ca83d555a327249651f39ab684834b26199dec"
+      "suitesPassed": 8,
+      "testsPassed": 127,
+      "sourceCommit": "693095198d03a83c6d4587c19d51e4b263fd3183"
     },
     "browser": {
       "passed": 22,
@@ -385,9 +397,9 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "c0ca83d555a327249651f39ab684834b26199dec",
+      "sourceCommit": "693095198d03a83c6d4587c19d51e4b263fd3183",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 99,
+      "mappedChangedMaterialSurfaces": 101,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
@@ -401,7 +413,9 @@
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "distinctCases": 62,
+      "cases": 56,
+      "passed": 56,
+      "failed": 0,
       "configurations": [
         "Chromium desktop",
         "Chromium phone",
@@ -412,50 +426,44 @@
         "WebKit critical"
       ],
       "caseGroups": {
-        "commerceMoney": 21,
-        "musicAndOperations": 14,
-        "campaigns": 20,
-        "liveSessionContact": 7
+        "unifiedPaymentsSpanishAndEnglish": 14,
+        "bookingAccountContact": 7,
+        "existingPaymentFieldErrors": 14,
+        "existingBookingCatalogRecovery": 21
       },
-      "runs": [
-        {
-          "scope": "Complete selected matrix on final product source",
-          "passed": 61,
-          "failed": 1,
-          "failure": "New contact screenshot sampled a desktop scroll/focus frame before pointer hit testing settled; contact data assertions passed."
-        },
-        {
-          "scope": "All seven contact cases after synchronizing full viewport/pointer assertions",
-          "passed": 7,
-          "failed": 0
-        }
-      ],
-      "finalDistinctCoverage": "55 other selected cases plus7 final contact cases; not a claim that one62-case run passed simultaneously.",
       "checks": [
-        "Código inválido no habilita ni prellena; sesión ambiental del equipo no se reutiliza",
-        "Edición conservada en recarga tras revalidar el propietario, correo borrado y cambio de cuenta",
-        "Consentimiento sin marcar, identidad de músicos vacía, cero escrituras de intake/CRM",
-        "Etiquetas de revisión y reembolso parcial junto a advertencias financieras",
-        "Regresiones musicales, filtros, importación y revisión manual de campañas con APIs sintéticas",
-        "WCAG A/AA de campos, asociación accesible, visibilidad completa, hit testing sin forzar y ausencia de desbordamiento horizontal"
-      ]
+        "Siete opciones sintéticas en un grupo; métodos no soportados no se ofrecen",
+        "Primer toque de PayPhone solo abre datos y mueve foco, sin request financiero",
+        "Respuesta incierta de pago simulada bloquea tarjeta local, PayPal y transferencia",
+        "Recarga y recuperación repiten exactamente el payload y la clave de la solicitud original",
+        "Contacto editado se resume, mantiene foco y sobrevive Volver/Continuar, sin crear reserva",
+        "WCAG A/AA del grupo/campos, controles completamente visibles y sin obstrucciones, sin clics forzados ni overflow",
+        "Regresiones de catálogo, resize/tooltip y errores de PayPhone/transferencia conservadas"
+      ],
+      "limitations": "All API responses are synthetic. Per payment journey only two intercepted500 payment-session responses are allowed; no real charge, registration, reservation, provider navigation or publication. The first test run had8 fixture hit-test failures because the button text is a child element; the corrected check accepts a target inside the button and still rejects external obstructions. The complete final56-case run passed."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "cfbd8d66447585ef4b178c1ea76004b188cdad46",
-      "ciRun": 43317143712,
-      "ciConclusion": "failure",
+      "commit": "0f3b438319be6e762b202ebc7d0edf81c7b1a06b",
+      "ciRun": 43327861909,
+      "ciConclusion": "success",
       "webJest": {
         "suites": 377,
-        "tests": 4297,
+        "tests": 4306,
         "result": "passed"
       },
       "mainBrowser": {
-        "passed": 902,
+        "passed": 911,
         "skipped": 22,
-        "failed": 2
+        "failed": 0
       },
-      "specialistWorkflows": "all four passed",
-      "failureScope": "Music price screenshot after reload in WebKit iPhone (scroll restoration race); long campaign draft/import/save journey exhausted its30s overall budget before the final unforced click. Scoped test synchronization and60s journey budget fixed; assertion budgets and hit tests retained. New local browser evidence does not establish a hosted result for the new head."
+      "additionalBrowser": {
+        "storage": 8,
+        "torrent": 21,
+        "deletion": 10,
+        "discovery": 25
+      },
+      "specialistWorkflows": "all four passed; catalog43327867600, event43327874292, social43327880433, interaction43327886712",
+      "scope": "These completed hosted results apply to0f3b438319 only, not the new source or published head."
     }
   },
   "limitations": [
@@ -506,6 +514,14 @@
     {
       "path": "figures/live-session-contact.png",
       "scope": "Correo editado en Live Sessions después de validar su propietario y conservar su borrador; datos y APIs sintéticos."
+    },
+    {
+      "path": "figures/payment-method-list-phone.png",
+      "scope": "Siete opciones sintéticas en un solo grupo por tipo y procesador. PayPal conserva su condición deshabilitada del fixture; no demuestra disponibilidad real en producción."
+    },
+    {
+      "path": "figures/booking-contact-summary-phone.png",
+      "scope": "Contacto sintético editado, resumido y accesible por teclado en la reserva; no se envió una reserva."
     }
   ],
   "followups": [
@@ -858,6 +874,93 @@
         "traceability": "passed",
         "semanticConformance": "not established by these checks"
       }
+    },
+    {
+      "date": "2026-11-13",
+      "baseCommit": "0f3b438319be6e762b202ebc7d0edf81c7b1a06b",
+      "scope": "Items15/22: un solo grupo de métodos de pago con tipo destacado y procesador secundario en entradas, reservas, cursos, mezcla y Domo; contacto válido de la cuenta resumido y editable en la reserva. Sin cambios de API/backend, disponibilidad, ejecución financiera, consentimiento, roles ni Mobile. Recomendación de método aún pendiente.",
+      "regressionVerification": {
+        "suites": 8,
+        "tests": 127,
+        "checks": [
+          "Grupo común con métodos locales y alojados, sin envío al renderizar ni al primer toque de PayPhone",
+          "Duda al iniciar un método alojado bloquea las alternativas locales y alojadas; recuperación original sigue disponible",
+          "Retorno, estados pagados, órdenes desactualizadas, restricciones de dominio y confirmación conservados",
+          "Contacto completo resumido, edición persistente, foco al abrir/cerrar, invitado e incompleto abiertos",
+          "Ediciones manuales conservadas cuando llega la sesión más tarde",
+          "Regresiones existentes de entradas, reservas, cursos, mezcla, Domo y evidencia de transferencia"
+        ]
+      },
+      "browserVerification": {
+        "cases": 56,
+        "passed": 56,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "unifiedPaymentsSpanishAndEnglish": 14,
+          "bookingAccountContact": 7,
+          "existingPaymentFieldErrors": 14,
+          "existingBookingCatalogRecovery": 21
+        },
+        "checks": [
+          "Siete opciones sintéticas en un grupo; métodos no soportados no se ofrecen",
+          "Primer toque de PayPhone solo abre datos y mueve foco, sin request financiero",
+          "Respuesta incierta de pago simulada bloquea tarjeta local, PayPal y transferencia",
+          "Recarga y recuperación repiten exactamente el payload y la clave de la solicitud original",
+          "Contacto editado se resume, mantiene foco y sobrevive Volver/Continuar, sin crear reserva",
+          "WCAG A/AA del grupo/campos, controles completamente visibles y sin obstrucciones, sin clics forzados ni overflow",
+          "Regresiones de catálogo, resize/tooltip y errores de PayPhone/transferencia conservadas"
+        ],
+        "limitations": "All API responses are synthetic. Per payment journey only two intercepted500 payment-session responses are allowed; no real charge, registration, reservation, provider navigation or publication. The first test run had8 fixture hit-test failures because the button text is a child element; the corrected check accepts a target inside the button and still rejects external obstructions. The complete final56-case run passed."
+      },
+      "catalogCandidates": 1428,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new decisions required; prior1428 reviews preserved and scanner-generated JSON/CSV refreshed after staging the new files.",
+      "typecheck": "passed",
+      "lint": "passed; Domo formatting cleanup also checked with targeted lint",
+      "previousHostedCheckpoint": {
+        "commit": "0f3b438319be6e762b202ebc7d0edf81c7b1a06b",
+        "ciRun": 43327861909,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 377,
+          "tests": 4306,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 911,
+          "skipped": 22,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed; catalog43327867600, event43327874292, social43327880433, interaction43327886712",
+        "scope": "These completed hosted results apply to0f3b438319 only, not the new source or published head."
+      },
+      "hostedCI": "New published head requires its own hosted verification.",
+      "sourceFreshness": {
+        "sourceCommit": "693095198d03a83c6d4587c19d51e4b263fd3183",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 101,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      }
     }
-  ]
+  ],
+  "lastUpdated": "2026-11-13"
 }
