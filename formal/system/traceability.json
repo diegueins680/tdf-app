@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "44a306ba1fe9361e893688d944b5ce789e364abb",
+  "mobileRevision": "cb5903ac6e4f66e522ed5477accf56a87c80d64c",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -27859,7 +27859,7 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "17e2ba96ed4264bcbc63f67b0aabda91056609201149874b38425b293e01d43f",
+    "formal/system/compiled-api-surface.json": "c49be974f4f0bde95fd1e78de4f06dd23d675dc0b65b57f2d5111afd9a311d2c",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "cd5ce4ecf4944e61c4f2af25e76591ca9ae5717bb02efa218fe2b45a63561514",
@@ -27915,7 +27915,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "ba627351638d33d0bf56361b957a80abb2e426f922665ca9fdfffbbcdef6e06d",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "7c24f0f820212119c59e03a281d47bcf2ffa47a34280a0f95755df65ccf45de3",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -29422,7 +29422,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+    "tdf-mobile/src/api/generated/types.ts": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -49181,7 +49181,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "ba627351638d33d0bf56361b957a80abb2e426f922665ca9fdfffbbcdef6e06d",
+      "sha256": "7c24f0f820212119c59e03a281d47bcf2ffa47a34280a0f95755df65ccf45de3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -81769,7 +81769,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+      "sha256": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
