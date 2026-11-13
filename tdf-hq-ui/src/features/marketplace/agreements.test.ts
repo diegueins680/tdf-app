@@ -12,7 +12,7 @@ describe('agreement actions (ADR 0135)', () => {
   });
 
   it('offers nothing on settled or settlement-owned states and leaves disputes to an admin', () => {
-    for (const status of ['balance_due', 'completed', 'cancelled', 'expired', 'disputed'] as const) {
+    for (const status of ['completed', 'cancelled', 'expired', 'disputed'] as const) {
       expect(agreementActions(status, 'buyer')).toEqual([]);
       expect(agreementActions(status, 'provider')).toEqual([]);
     }
@@ -35,6 +35,9 @@ describe('agreement actions (ADR 0135)', () => {
     expect(agreementActions('pending_deposit', 'buyer')).toEqual(['cancelled']);
     expect(agreementActions('pending_deposit', 'provider')).toEqual(['cancelled']);
     expect(agreementActions('pending_deposit', 'admin')).toEqual([]);
+    expect(agreementActions('balance_due', 'buyer')).toEqual(['disputed']);
+    expect(agreementActions('balance_due', 'provider')).toEqual(['disputed']);
+    expect(agreementActions('balance_due', 'admin')).toEqual([]);
   });
 
   it('names the charge a platform agreement is waiting for', () => {

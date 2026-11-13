@@ -234,6 +234,9 @@ agreementTransitionAllowedFor party fromStatus toStatus =
     (_, AgreementInProgress, AgreementCancelled) -> True
     (_, AgreementConfirmed, AgreementDisputed) -> True
     (_, AgreementInProgress, AgreementDisputed) -> True
+    -- ADR 0136: a contested or unpaid balance is not a dead end; either
+    -- party takes it to an administrator.
+    (_, AgreementBalanceDue, AgreementDisputed) -> True
     _ -> False
 
 -- | I23 (ADR 0135): amounts frozen when an agreement is created, from the

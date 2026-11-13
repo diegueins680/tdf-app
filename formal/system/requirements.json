@@ -10344,7 +10344,7 @@
         "payment pending -> expired (deposit deadline) or cancelled (replaced charge, cancelled agreement)",
         "agreement pending_deposit -> confirmed (paid deposit) | cancelled (either party) | expired (deadline)",
         "agreement confirmed|in_progress -> balance_due (buyer confirms delivery with a balance owed on the platform)",
-        "agreement balance_due -> completed (paid balance)"
+        "agreement balance_due -> completed (paid balance) | disputed (either party)"
       ],
       "forbiddenTransitions": [
         "Any transition out of a paid, expired or cancelled payment",

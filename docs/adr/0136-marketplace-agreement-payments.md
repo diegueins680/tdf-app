@@ -62,6 +62,8 @@ Hechos verificados antes de diseñar (fuentes al final):
    - El proveedor inicia (`in_progress`). El comprador confirma la entrega: con saldo pendiente
      pasa a `balance_due` y se crea el cobro del saldo; el saldo verificado lo lleva a
      `completed` y registra la interacción verificada. Sin saldo, pasa directo a `completed`.
+     Mientras espera el saldo, cualquiera de las partes puede abrir una disputa: el cobro
+     pendiente se cancela y un administrador resuelve.
    - Ningún participante ni administrador puede marcar un cobro como pagado: solo la
      reconciliación con consulta autenticada al proveedor (trigger
      `marketplace_agreement_payment_require_verified_payment`, mismo patrón que reservas y

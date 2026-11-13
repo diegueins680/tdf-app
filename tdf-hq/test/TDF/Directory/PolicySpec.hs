@@ -239,6 +239,12 @@ spec = describe "music directory formal invariants" $ do
     agreementTransitionAllowedFor PartyAdmin AgreementPendingDeposit AgreementConfirmed `shouldBe` False
     allowedAgreementTransition AgreementConfirmed AgreementBalanceDue `shouldBe` True
     agreementTransitionAllowedFor PartyBuyer AgreementConfirmed AgreementBalanceDue `shouldBe` False
+    -- Waiting for the balance is not a dead end: either party may dispute it,
+    -- and nobody completes or cancels it by hand.
+    agreementTransitionAllowedFor PartyBuyer AgreementBalanceDue AgreementDisputed `shouldBe` True
+    agreementTransitionAllowedFor PartyProvider AgreementBalanceDue AgreementDisputed `shouldBe` True
+    agreementTransitionAllowedFor PartyBuyer AgreementBalanceDue AgreementCompleted `shouldBe` False
+    agreementTransitionAllowedFor PartyProvider AgreementBalanceDue AgreementCancelled `shouldBe` False
 
   it "I18: counters stop one round before the limit so the acceptance is always recorded" $ do
     counterRoundAllowed 1 `shouldBe` False

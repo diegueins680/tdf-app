@@ -14,6 +14,8 @@ export type AgreementRole = MarketplaceAgreement['participantRole'];
 export function agreementActions(status: AgreementStatus, role: AgreementRole): AgreementStatus[] {
   if (role === 'admin') return status === 'disputed' ? ['completed', 'cancelled'] : [];
   if (status === 'pending_deposit') return ['cancelled'];
+  // A contested or unpaid balance goes to an administrator.
+  if (status === 'balance_due') return ['disputed'];
   const live = status === 'confirmed' || status === 'in_progress';
   if (!live) return [];
   const actions: AgreementStatus[] = [];

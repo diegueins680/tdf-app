@@ -1560,8 +1560,8 @@ changeAgreementStatus user agreementId DirectoryStatusRequest{status=newStatus,r
         | maybe False (/= lockedVersion) expectedVersion -> pure (Left err409 {errBody="the agreement changed since it was displayed; reload and retry"})
         | cancels && party /= PartyAdmin && not (agreementParticipantCancelAllowed onPlatform (not (null depositPaid))) ->
             pure (Left err409 {errBody="a deposit was already paid for this agreement; open a dispute instead of cancelling"})
-        | cancels && not (null paymentInFlight) ->
-            pure (Left err409 {errBody="a payment for this agreement is in progress; wait for it to finish before cancelling"})
+        | (cancels || to == AgreementDisputed) && not (null paymentInFlight) ->
+            pure (Left err409 {errBody="a payment for this agreement is in progress; wait for it to finish first"})
         | otherwise -> do
             rawExecute "UPDATE marketplace_agreement SET status=?,started_at=CASE WHEN ?='in_progress' THEN now() ELSE started_at END,completed_at=CASE WHEN ?='completed' THEN now() ELSE completed_at END,cancelled_at=CASE WHEN ?='cancelled' THEN now() ELSE cancelled_at END,cancelled_by_profile_id=CASE WHEN ?='cancelled' THEN ?::uuid ELSE cancelled_by_profile_id END,cancellation_reason=CASE WHEN ?='cancelled' THEN ?::text ELSE cancellation_reason END,disputed_at=CASE WHEN ?='disputed' THEN now() ELSE disputed_at END,updated_at=now(),version=version+1 WHERE id=? AND status=?"
               [PersistText effectiveStatus,PersistText effectiveStatus,PersistText effectiveStatus,PersistText effectiveStatus,PersistText effectiveStatus,optionalUuid actingProfile,PersistText effectiveStatus,optionalText statusReason,PersistText effectiveStatus,toPersistValue agreementId,PersistText oldStatus]
@@ -1573,6 +1573,11 @@ changeAgreementStatus user agreementId DirectoryStatusRequest{status=newStatus,r
                 [toPersistValue agreementId]
               rawExecute "UPDATE marketplace_agreement SET interaction_id=(SELECT interaction.id FROM directory_interaction interaction WHERE interaction.interaction_kind='marketplace_agreement' AND interaction.external_id=?) WHERE id=?"
                 [PersistText (UUID.toText agreementId),toPersistValue agreementId]
+            -- A disputed agreement stops collecting: its unpaid charge is
+            -- cancelled and the administrator decides from there.
+            when (to == AgreementDisputed) $
+              rawExecute "UPDATE marketplace_agreement_payment SET status='cancelled',updated_at=now(),version=version+1 WHERE agreement_id=? AND status='pending'"
+                [toPersistValue agreementId]
             when cancels $ do
               -- The deal is off: the accepted offer is withdrawn and its slot
               -- released, reopening a filled listing that has not expired
