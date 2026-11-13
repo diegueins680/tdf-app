@@ -28749,7 +28749,7 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "57d4e4708ecadf1e32f5daeaf4c1af8e45c715c88977ecbf6182278850dfcf64",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
-    "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": "f8c03adce22f25062a731c851d7998d24b0b8f6b119e9f90e26b02977230b385",
+    "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
@@ -63504,7 +63504,7 @@
     {
       "id": "SURFACE-0cf77a2e272d6fba",
       "path": "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
-      "sha256": "f8c03adce22f25062a731c851d7998d24b0b8f6b119e9f90e26b02977230b385",
+      "sha256": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

@@ -25,24 +25,6 @@ jest.unstable_mockModule('../components/party-selector/PartySelector', () => ({
 
 const { default: EventLogisticsPage } = await import('./EventLogisticsPage');
 
-const eventFixture: SocialEventDTO = {
-  eventId: '42',
-  eventOrganizerPartyId: '7',
-  eventTitle: 'Noche de prueba',
-  eventStart: '2026-12-01T20:00:00-05:00',
-  eventArtists: [],
-};
-
-const planFixture: EventLogisticsPlanDTO = {
-  elgEventId: '42',
-  elgAccessRole: 'owner',
-  elgSettings: { elsTimezone: 'America/Guayaquil', elsDefaultTravelMode: 'drive' },
-  elgMembers: [],
-  elgPlaces: [],
-  elgActivities: [],
-  elgIssues: [],
-};
-
 const renderPage = () => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
   return render(
@@ -60,11 +42,25 @@ describe('EventLogisticsPage access', () => {
   beforeEach(() => {
     getEventMock.mockReset();
     getLogisticsPlanMock.mockReset();
-    getEventMock.mockResolvedValue(eventFixture);
+    getEventMock.mockResolvedValue({
+      eventId: '42',
+      eventOrganizerPartyId: '7',
+      eventTitle: 'Noche de prueba',
+      eventStart: '2026-12-01T20:00:00-05:00',
+      eventArtists: [],
+    });
   });
 
   it('gives the owner role returned for a delegated administrator the team and settings controls', async () => {
-    getLogisticsPlanMock.mockResolvedValue(planFixture);
+    getLogisticsPlanMock.mockResolvedValue({
+      elgEventId: '42',
+      elgAccessRole: 'owner',
+      elgSettings: { elsTimezone: 'America/Guayaquil', elsDefaultTravelMode: 'drive' },
+      elgMembers: [],
+      elgPlaces: [],
+      elgActivities: [],
+      elgIssues: [],
+    });
     const view = renderPage();
 
     expect(await screen.findByText('Configuración y equipo')).toBeTruthy();
