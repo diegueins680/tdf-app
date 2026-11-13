@@ -9,7 +9,7 @@ import type { EventAdminAccessDTO, EventAdminRosterDTO, SocialEventDTO, SocialEv
 const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
 const uploadMomentMediaMock = jest.fn<(eventId: string, file: File) => Promise<{ eiuPublicUrl: string }>>();
 const createMomentMock = jest.fn<(eventId: string, body: unknown) => Promise<SocialEventMomentDTO>>();
-let activeSession: { partyId: number } | null = null;
+let activeSession: { partyId: number; modules?: string[] } | null = null;
 jest.unstable_mockModule('../api/eventMemoryInvitations', () => ({ EventMemoryInvitations: { preferences: preferenceMock } }));
 const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
 const listMomentsMock = jest.fn<(eventId: string) => Promise<SocialEventMomentDTO[]>>();
@@ -127,7 +127,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
   });
 
   it.each([403, 404])('keeps a planning event visible when memories return HTTP %i', async (status) => {
-    activeSession = { partyId: 9 };
+    activeSession = { partyId: 9, modules: ['Scheduling'] };
     getEventMock.mockResolvedValue({
       ...eventFixture,
       eventWorkflowStateCode: 'planning',
@@ -157,6 +157,8 @@ describe('SocialEventDetailPage ticket sharing', () => {
 
     expect(await screen.findByRole('button', { name: 'Publicar' })).toBeTruthy();
     expect(screen.getByText('Todavía no hay publicaciones')).toBeTruthy();
+    // Without access to the planning workspace its link would only reach a 403 page.
+    expect(screen.queryByRole('link', { name: 'Logística' })).toBeNull();
     expect(listMomentsMock).toHaveBeenCalledWith('121');
     view.unmount();
   });

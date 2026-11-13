@@ -47,12 +47,14 @@ import EventLineupPicker from '../components/events/EventLineupPicker';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import { useSession } from '../session/SessionContext';
+import { canAccessPath } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import {
   EVENT_ART_ACCEPT,
   buildInitialCollaborativeEventDraft,
   createCollaborativeEvent,
   normalizeLineup,
+  resolveEventCreatorTimezone,
   saveNamedLineup,
   validateEventArtFile,
   type CollaborativeEventCreationResult,
@@ -131,7 +133,12 @@ const roleLabel = (role: EventCollaboratorDraft['role']) =>
 
 export default function CollaborativeEventCreatorPage() {
   const { session } = useSession();
-  const { locale, timezone, currency } = useLocalePreferences();
+  const { locale, timezone: preferredTimezone, currency } = useLocalePreferences();
+  const timezone = useMemo(
+    () => resolveEventCreatorTimezone(preferredTimezone, Intl.DateTimeFormat().resolvedOptions().timeZone),
+    [preferredTimezone],
+  );
+  const canPlanLogistics = canAccessPath('/social/eventos/0/logistica', session?.roles, session?.modules, session?.featureFlags);
   const qc = useQueryClient();
   const [draft, setDraft] = useState<CollaborativeEventDraft>(() => loadDraft(timezone));
   const [creationResult, setCreationResult] =
@@ -465,20 +472,22 @@ export default function CollaborativeEventCreatorPage() {
               )}
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                <Button
-                  component={RouterLink}
-                  to={`/social/eventos/${encodeURIComponent(eventId)}/logistica`}
-                  variant="contained"
-                  startIcon={<RocketLaunchOutlinedIcon />}
-                >
-                  Planificar con el equipo
-                </Button>
+                {canPlanLogistics && (
+                  <Button
+                    component={RouterLink}
+                    to={`/social/eventos/${encodeURIComponent(eventId)}/logistica`}
+                    variant="contained"
+                    startIcon={<RocketLaunchOutlinedIcon />}
+                  >
+                    Planificar con el equipo
+                  </Button>
+                )}
                 <Button
                   component={RouterLink}
                   to={`/social/eventos/${encodeURIComponent(eventId)}`}
-                  variant="outlined"
+                  variant={canPlanLogistics ? 'outlined' : 'contained'}
                 >
-                  Ver evento
+                  {canPlanLogistics ? 'Ver evento' : 'Preparar y publicar evento'}
                 </Button>
                 <Button onClick={startAnotherEvent}>Crear otro</Button>
               </Stack>
