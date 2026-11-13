@@ -58,7 +58,7 @@ import { slugify } from '../utils/slug';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
-import { getArtistHeroImage } from '../utils/artistFallbacks';
+import { getArtistHeroImage, isUnnamedArtistProfile } from '../utils/artistFallbacks';
 import ArtistProfileImage from '../components/ArtistProfileImage';
 import { Records, type RecordsResourceDTO } from '../api/records';
 import {
@@ -284,7 +284,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     queryKey: ['fan-artists'],
     queryFn: Fans.listArtists,
   });
-  const artists = useMemo(() => artistsQuery.data ?? [], [artistsQuery.data]);
+  // Profiles nobody has named yet are left out of the catalog; their owner still sees their own.
+  const artists = useMemo(
+    () => (artistsQuery.data ?? []).filter((artist) => !isUnnamedArtistProfile(artist) || artist.apArtistId === viewerId),
+    [artistsQuery.data, viewerId],
+  );
   const genreOptions = useMemo<CatalogItem[]>(
     () => (genresCatalogQuery.data?.items ?? [])
       .filter((genre) => genre.active && genre.workflowState === 'published')

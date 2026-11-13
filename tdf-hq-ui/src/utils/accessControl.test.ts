@@ -143,6 +143,13 @@ describe('hasSchoolPortalAccess', () => {
 });
 
 describe('canAccessPath', () => {
+  it('opens event planning to any signed-in account: the event record, not a module, decides', () => {
+    // The server admits the event's organizer, delegated administrators and its
+    // logistics team whatever their modules; a brand-new organizer has none.
+    expect(canAccessPath('/social/eventos/222/logistica', ['Customer'], ['Packages'])).toBe(true);
+    expect(canAccessPath('/social/eventos/222/logistica', ['Artist'], ['Scheduling'])).toBe(true);
+  });
+
   it('keeps feature flags and permissions independent for newly discoverable pages', () => {
     expect(canAccessPath('/dashboard/operations', ['Admin'], ['Admin'])).toBe(false);
     expect(canAccessPath('/dashboard/operations', ['Admin'], ['Admin'], ['operations_enabled'])).toBe(true);

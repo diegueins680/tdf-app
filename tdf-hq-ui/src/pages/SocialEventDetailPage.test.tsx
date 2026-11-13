@@ -146,6 +146,16 @@ describe('SocialEventDetailPage ticket sharing', () => {
     view.unmount();
   });
 
+  it('offers planning to the event organizer without any module', async () => {
+    activeSession = { partyId: 7 };
+    getEventMock.mockResolvedValue({ ...eventFixture, eventWorkflowStateCode: 'planning', eventPublicListable: false });
+    const view = renderPage();
+
+    await screen.findByRole('heading', { name: eventFixture.eventTitle });
+    expect(screen.getByRole('link', { name: 'Logística' }).getAttribute('href')).toBe('/social/eventos/121/logistica');
+    view.unmount();
+  });
+
   it('keeps memories available when the API allows access to a planning event', async () => {
     activeSession = { partyId: 9 };
     getEventMock.mockResolvedValue({
@@ -157,7 +167,7 @@ describe('SocialEventDetailPage ticket sharing', () => {
 
     expect(await screen.findByRole('button', { name: 'Publicar' })).toBeTruthy();
     expect(screen.getByText('Todavía no hay publicaciones')).toBeTruthy();
-    // Without access to the planning workspace its link would only reach a 403 page.
+    // A signed-in visitor who neither manages the event nor has scheduling access is not offered planning.
     expect(screen.queryByRole('link', { name: 'Logística' })).toBeNull();
     expect(listMomentsMock).toHaveBeenCalledWith('121');
     view.unmount();

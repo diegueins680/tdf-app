@@ -27562,7 +27562,7 @@
     {
       "id": "GROWTH-FIRST-ACTION-001",
       "title": "An invited visitor reaches the promised first action after signup",
-      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to accounts that can open it; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
+      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; the planning workspace opens for any signed-in account and the event record decides who may use it, with its link offered to the event's managers and scheduling staff; artist profiles that still carry the account placeholder name are left out of the fan hub catalog; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
       "domain": "Growth",
       "authority": "Product owner request on 2026-11-13 to walk the invitation funnel on production and remove what stops invited people.",
       "source": "User request: make an invited person able to get real value in one sitting; walk production as a new organizer, fan and artist from the campaign links and fix every blocker.",
@@ -27602,14 +27602,15 @@
         "Publish without an explicit confirmation",
         "Publish from a state with no direct, review-free transition to a publicly listable state",
         "Write event fields read before the confirmation instead of the latest stored ones",
-        "Show a planning-workspace link to an account that cannot open it",
-        "Override a time zone the account chose with the browser's"
+        "Override a time zone the account chose with the browser's",
+        "Require a module to open the planning workspace of an event the server admits the account to",
+        "List an unnamed placeholder artist profile in the fan hub catalog for other viewers"
       ],
       "effects": [
         "Existing follow and unfollow writes from the starter list",
         "One existing event update that sets visibility and, when needed, the workflow state"
       ],
-      "authorization": "Unchanged: the event update endpoint enforces organizer or delegated-administrator access and the allowed workflow transition; planning-workspace access rules are unchanged.",
+      "authorization": "The event update and logistics endpoints enforce organizer, delegated-administrator and logistics-team access; the web registry no longer adds a Scheduling module requirement on top of them for event planning.",
       "privacy": "Publishing makes the event's title, date, place and poster public, which the confirmation states before the write. No other visibility changes.",
       "concurrency": "The event is read again immediately before the update; the server rejects a workflow state that changed meanwhile and the confirmation stays open with the reason.",
       "idempotency": "Publishing an already public event is not offered. A repeated follow tap is ignored while a follow is being saved.",
@@ -27624,7 +27625,10 @@
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts"
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/utils/artistFallbacks.ts",
+        "tdf-hq-ui/src/utils/signupFields.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
@@ -27632,7 +27636,9 @@
         "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts"
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/utils/accessControl.test.ts",
+        "tdf-hq-ui/src/utils/artistFallbacks.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -27640,14 +27646,16 @@
       "evidence": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx; tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx; formal/system/invited-first-action.md.",
       "confidence": "Local tests cover each behavior. The publish write was not executed against a real server.",
       "ambiguity": [
-        "Whether an event's organizer without the Scheduling module should open the planning workspace is an open product decision.",
-        "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test."
+        "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test.",
+        "The generated Mobile feature registry at the pinned Mobile revision was already stale before this change and is not regenerated here.",
+        "Unnamed artist profiles still appear in the server-side community directory search and on Mobile."
       ],
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Local component tests cover the behavior. A real publication through the deployed page and the fan hub wiring remain to be verified after release."
       },
-      "critical": false
+      "critical": false,
+      "pendingPairedMobileWork": "Regenerate tdf-mobile/src/features/generatedFeatureRegistry.ts from the root registry (npm run generate:features) in the Mobile repository."
     }
   ]
 }

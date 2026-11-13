@@ -25,8 +25,10 @@ the invitation promised, and what this change guarantees instead.
    visibility on, and moves the event to the earliest active state that is
    publicly listable and that the lifecycle allows the organizer to enter
    directly without review. When no such state exists the action is not offered.
-3. Links to the planning workspace are shown only to accounts whose access
-   rules allow opening it.
+3. The planning workspace of an event opens for any signed-in account; the
+   server decides by the event record (organizer, delegated administrator or
+   logistics team), not by a module. Its link is offered to the event's
+   managers and to staff with scheduling access.
 4. A new event starts in the browser's time zone when the account carries the
    server placeholder zone (UTC) and never chose one. A chosen zone wins.
 5. The upcoming-events carousel is not rendered on a single public event page,
@@ -38,9 +40,12 @@ the invitation promised, and what this change guarantees instead.
 - No server behavior changes. Publishing uses the existing event update
   endpoint, whose organizer check, workflow-transition check and event lock
   remain authoritative.
-- Access to the planning workspace is unchanged. Whether an event's organizer
-  without the Scheduling module should be able to open it is an open product
-  decision and is not decided here.
+- The web feature registry no longer requires the Scheduling module for event
+  planning (`social.event.logistics`); the logistics API already admitted the
+  organizer without it. The generated Mobile registry is not regenerated here.
+- Artist profiles that still carry the account placeholder name ("Cuenta TDF")
+  or no name are left out of the fan hub catalog, except for their owner. The
+  server-side community directory search still lists them.
 - Ticket checkout availability, pricing and refund policy are unchanged.
 
 ## Evidence

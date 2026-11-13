@@ -11292,7 +11292,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "183867bef1d5590d1258381ba1dc5bbb662d3e2ed19d8eeb4627558cc5093301",
+      "sha256": "b70938c99ad1b7b0c9144fae21461e775b80aaf01b136dbe60e56ab06bdfd8a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12042,13 +12042,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "e9f833d37208a3eebdb70a79f30e21e9fc5518e3efa1ba6f0759d208dc81e49b",
+      "sha256": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "24321dc96d7161f431d6c6bb9c64f92003c4e67d79d9cb222477c013783faa3a",
+      "sha256": "4d9383f448eb9af782f818e311fd4890216b318e407d27d33ffc36557d1a39c9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12738,7 +12738,7 @@
     {
       "id": "SURFACE-a14b7188c2af7d0c",
       "path": "tdf-hq-ui/src/utils/accessControl.test.ts",
-      "sha256": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
+      "sha256": "be57cad0e4e85b33a1204d7ec6c49200bdac8bbac3f6cd6ebcc305254dbf92e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12762,13 +12762,13 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
+      "sha256": "af8789e3184a41499a645a9bf9bf3d37fc2c27cf1d2812ddb54de565a3f4a6cf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
+      "sha256": "fe7546a72ac86ae2997504b0f43fa1686cfe6fec0ca0c60ce6362f777955e500",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13338,7 +13338,7 @@
     {
       "id": "SURFACE-1db49bff24529d0b",
       "path": "tdf-hq-ui/src/utils/signupFields.ts",
-      "sha256": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
+      "sha256": "af56138c4a10328afa7b1290aa5353a04fd8ed1864fb683bea7afaca31560089",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13560,7 +13560,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
+      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30738,7 +30738,7 @@
     },
     {
       "path": "formal/system/invited-first-action.md",
-      "sha256": "55fd166a4c04e30fa110d193122d723d4b274bb91bf442523145451d76f1c297",
+      "sha256": "463527b178a8a253c8d1bd6863b3a9806202ccc09c1a24517e2594439c5c236f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31312,7 +31312,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "9cc0945280001e1b24cc1a5c38c71ebec8cb0dddcccaa6012b1f7637ef092d31",
+      "sha256": "ecaf494d2ca5c756698484703f80c5fa9d59de9730e9855f43c32064a9d96892",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
