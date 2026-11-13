@@ -612,7 +612,6 @@ export function isTdfManagedImageUrl(rawUrl) {
     const host = url.hostname.toLowerCase();
     return host === 'drive.google.com'
       || host.endsWith('.googleusercontent.com')
-      || host === 'tdf-hq.fly.dev'
       || host === 'api.tdfrecords.net'
       || host === 'tdfrecords.net'
       || host === 'www.tdfrecords.net'

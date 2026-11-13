@@ -7021,7 +7021,8 @@
         "scripts/test-stripe-integration.sh",
         "scripts/upsert-course.mjs",
         "tdf-hq/scripts/create_artists_from_list.sh",
-        "tdf-hq/src/TDF/Config.hs"
+        "tdf-hq/src/TDF/Config.hs",
+        "scripts/check-messaging-token.mjs"
       ],
       "tests": [
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -19874,12 +19875,14 @@
       "implementation": [
         "tdf-hq/src/TDF/ServerInternAudit.hs",
         "tdf-hq/src/TDF/ServerInternships.hs",
-        "tdf-hq/src/TDF/API/InternAudit.hs"
+        "tdf-hq/src/TDF/API/InternAudit.hs",
+        "scripts/lib/studio-audit-safety.mjs"
       ],
       "tests": [
         "scripts/test-studio-internship-audit-api-e2e.mjs",
         "e2e/web/studio-internship-audit.spec.mjs",
-        "scripts/test-studio-internship-audit-migration.sh"
+        "scripts/test-studio-internship-audit-migration.sh",
+        "scripts/__tests__/studio-internship-audit.test.mjs"
       ],
       "formalModels": [],
       "verification": "scripts/test-studio-internship-audit-api-e2e.mjs drives the real API: plan creation races, cancel/activate races, activation refusals, completion with exception justification and immutability, intern 404/403 boundaries, audit-controlled task and project 409s, concurrent executions and terminal immutability, summary authorization and post-completion refusals.",

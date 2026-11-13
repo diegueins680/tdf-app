@@ -667,7 +667,7 @@ test('social diagnostics reject stale or inactive callbacks and accept current a
       : url.includes('/debug_token?') ? { data: { is_valid: true, scopes: [] } } : { username: 'fixture' }
     });`);
     for (const [base, active, repair] of [
-      ['https://tdf-hq.fly.dev', true, true],
+      ['https://retired-api.example.test', true, true],
       ['https://api.tdfrecords.net', false, true],
       ['https://api.tdfrecords.net', true, false],
     ]) {

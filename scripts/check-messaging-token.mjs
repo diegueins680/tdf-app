@@ -3,25 +3,22 @@
  * Messaging Token Health Check
  *
  * Checks if Instagram/Facebook messaging tokens are valid and not expiring soon.
- * Exchanges short-lived tokens for long-lived (60-day) tokens when needed.
- * Pass --check for read-only validation; no arguments retain automatic maintenance.
+ * Pass --check for read-only validation. Automatic credential installation is
+ * retired: rotate credentials in the current deployment (ops/hetzner/README.md).
  *
  * Environment variables:
  *   FACEBOOK_APP_ID       - Meta App ID
  *   FACEBOOK_APP_SECRET   - Meta App Secret
  *   INSTAGRAM_MESSAGING_TOKEN - Current token (Page or User)
  *   FACEBOOK_MESSAGING_TOKEN  - Current token (Page or User)
- *   FLY_APP_NAME          - Fly.io app name (default: tdf-hq)
  */
 
-import { execFileSync } from 'child_process';
 import { pathToFileURL } from 'url';
 
 const APP_ID = process.env.FACEBOOK_APP_ID || process.env.META_APP_ID;
 const APP_SECRET = process.env.FACEBOOK_APP_SECRET || process.env.META_APP_SECRET;
 const IG_TOKEN = process.env.INSTAGRAM_MESSAGING_TOKEN;
 const FB_TOKEN = process.env.FACEBOOK_MESSAGING_TOKEN || IG_TOKEN;
-const FLY_APP = process.env.FLY_APP_NAME || 'tdf-hq';
 
 const GRAPH_BASE = 'https://graph.facebook.com/v18.0';
 
@@ -115,84 +112,13 @@ export async function checkToken(token, name, {
   }
 }
 
-async function exchangeLongLivedToken(shortToken) {
-  log('Exchanging for long-lived token...');
-  try {
-    const data = await graph(
-      `/oauth/access_token?grant_type=fb_exchange_token&client_id=${APP_ID}&client_secret=${APP_SECRET}&fb_exchange_token=${encodeURIComponent(shortToken)}`,
-      `${APP_ID}|${APP_SECRET}`
-    );
-    if (data.error) throw new Error(data.error.message);
-    log('Long-lived token obtained');
-    return data.access_token;
-  } catch (err) {
-    error(`Exchange failed: ${err.message}`);
-    throw err;
-  }
-}
-
-async function getPageToken(userToken) {
-  log('Fetching page tokens...');
-  try {
-    const data = await graph('/me/accounts?fields=name,id,access_token', userToken);
-    if (data.error) throw new Error(data.error.message);
-
-    const pages = data.data || [];
-    const targetPage = pages.find(p =>
-      p.id === '169846481310276' ||
-      p.name === 'TDF Estudio' ||
-      p.name === 'TDF Studio'
-    );
-
-    if (!targetPage) {
-      throw new Error('TDF Estudio page not found. Available pages: ' + pages.map(p => p.name).join(', '));
-    }
-
-    log(`Found page: ${targetPage.name} (${targetPage.id})`);
-    return targetPage.access_token;
-  } catch (err) {
-    error(`Get page token failed: ${err.message}`);
-    throw err;
-  }
-}
-
-async function refreshTokenFlow(currentToken) {
-  log('\n=== Starting Token Refresh ===');
-
-  try {
-    // Step 1: Exchange for long-lived user token
-    const longLivedToken = await exchangeLongLivedToken(currentToken);
-
-    // Step 2: Get page token (should be non-expiring)
-    const pageToken = await getPageToken(longLivedToken);
-
-    // Step 3: Verify the new token
-    const check = await checkToken(pageToken, 'New Page Token');
-    if (!check.ok) {
-      throw new Error('New token validation failed');
-    }
-
-    // Step 4: Update Fly secrets
-    log('\n=== Updating Fly.io Secrets ===');
-    execFileSync(
-      'flyctl',
-      [
-        'secrets',
-        'set',
-        `INSTAGRAM_MESSAGING_TOKEN=${pageToken}`,
-        `FACEBOOK_MESSAGING_TOKEN=${pageToken}`,
-        '--app',
-        FLY_APP,
-      ],
-      { stdio: 'inherit' }
-    );
-
-    log('✅ Secrets updated successfully');
-    return pageToken;
-  } catch (err) {
-    error(`Refresh failed: ${err.message}`);
-    throw err;
-  }
+// Automatic refresh used to install the exchanged token into the previous
+// hosting provider. It now refuses before any token exchange so a new
+// credential is never minted without a reviewed place to store it.
+async function refreshTokenFlow() {
+  throw new Error(
+    'Automatic credential installation is retired; rotate credentials in the current deployment (ops/hetzner/README.md).'
+  );
 }
 
 // Reject unsupported CLI input before either validation or credential mutation.
@@ -223,7 +149,7 @@ export async function runMessagingTokenMaintenance({
   const needsRefresh = !igCheck.ok || igCheck.expiringSoon || !fbCheck.ok || fbCheck.expiringSoon;
 
   if (needsRefresh) {
-    // Fail before reaching any token exchange, Page-token lookup, or Fly update.
+    // Fail before reaching any token exchange or Page-token lookup.
     // An expiring token is not a successful read-only maintenance check.
     if (readOnly) {
       error('Read-only check failed: token maintenance is required; no credentials were changed.');
