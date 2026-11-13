@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "f70c31b85d419806920bf8118ca8056025e2da3eebcdd2230aa39a22d1120ab9",
+    "tdf-hq/tdf-hq.cabal": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -607,6 +607,15 @@
       "currentSha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
       "change": "Password login refuses with 429 once the failures recorded for the identifier use up the window (TDF.Auth.Throttle) and counts each invalid-credential answer, with the count check, runLogin and the count in one transaction under a per-identifier advisory lock; runLogin checks the password before the active flag and answers a disabled account exactly like a wrong password; signup and password-reset requests consume a per-email counter, the reset route answering unchanged and issuing nothing past the limit. Adds the import, authThrottleRefusal and loginInvalidMessage.",
       "semanticReview": "recoveryWindowValid, createPasswordResetToken, the recovery challenge insert and every expression the restricted translator reads are byte-identical to protected main; the edits are confined to login, runLogin, signup and the request half of passwordReset, plus one import and two new top-level helpers. No reset token is issued on a path that did not issue one before; past the limit strictly fewer are issued. The recovery expiry SQL, identity-lifecycle contract and Stack/lock are unchanged. Obligation claims, assumptions, translations and limitations are preserved. Fresh source-bound solver/replay/control execution remains required."
+    },
+    {
+      "reviewedAgainst": "8ec7d85c672e844e28c38e49c087b102032582d8",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "f70c31b85d419806920bf8118ca8056025e2da3eebcdd2230aa39a22d1120ab9",
+      "currentSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "change": "Register the library module TDF.Server.EventAdminDelegation in exposed-modules and the test module TDF.EventAdminDelegationSpec in the tdf-hq-test other-modules list for EVT-ADMIN-DELEGATION-001.",
+      "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds event-delegation handlers only and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
     }
   ]
 }

@@ -12,6 +12,7 @@ module TDF.Ticketing.Admission
 
 import Control.Monad (unless)
 import Data.Char (isAscii, isHexDigit)
+import Data.Maybe (isJust)
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Time (UTCTime)
@@ -47,9 +48,14 @@ admitTicket :: Text -> M.SocialEventId -> AdmissionLookup -> UTCTime
   -> SqlPersistT IO (Either AdmissionError (Entity M.EventTicket))
 admitTicket actor eventKey lookupValue now = do
   events <- rawSql "SELECT ?? FROM social_event WHERE id=? FOR UPDATE" [toPersistValue eventKey]
+  -- Read under the event lock: a delegated administrator admits tickets only
+  -- while the organizer's grant row exists.
+  delegated <- if T.null (T.strip actor) then pure False
+    else isJust <$> getBy (M.UniqueEventAdminMember eventKey actor)
   case events of
     [Entity _ event]
-      | maybe False (\owner -> not (T.null (T.strip actor)) && T.strip owner == actor)
+      | maybe False (\owner -> not (T.null (T.strip actor))
+            && (T.strip owner == actor || (delegated && not (T.null (T.strip owner)))))
           (M.socialEventOrganizerPartyId event) -> findAndLock
       | otherwise -> pure (Left AdmissionForbidden)
     _ -> pure (Left AdmissionNotFound)

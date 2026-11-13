@@ -69,6 +69,15 @@ module TDF.DTO.SocialEventsDTO (
     EventFinanceEntryDTO (..),
     EventFinanceSummaryDTO (..),
     EventLogisticsSettingsDTO (..),
+    EventAdminMemberDTO (..),
+    EventAdminInvitationDTO (..),
+    EventAdminRosterDTO (..),
+    EventAdminAccessDTO (..),
+    EventAdminInvitationCreateDTO (..),
+    EventAdminInvitationIssuedDTO (..),
+    EventAdminInvitationTokenDTO (..),
+    EventAdminInvitationPreviewDTO (..),
+    EventCourtesyTicketDTO (..),
     EventLogisticsMemberDTO (..),
     EventLogisticsPlaceDTO (..),
     EventLogisticsAssignmentDTO (..),
@@ -1787,6 +1796,93 @@ data EventLogisticsMemberDTO = EventLogisticsMemberDTO
     deriving (Show, Eq, Generic)
 instance ToJSON EventLogisticsMemberDTO
 instance FromJSON EventLogisticsMemberDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+-- Delegated event administration. The organizer issues a single-use link;
+-- the account that accepts it administers that one event.
+data EventAdminMemberDTO = EventAdminMemberDTO
+    { eamPartyId :: Text
+    , eamDisplayName :: Maybe Text
+    , eamGrantedAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventAdminMemberDTO
+instance FromJSON EventAdminMemberDTO
+
+data EventAdminInvitationDTO = EventAdminInvitationDTO
+    { eaiId :: Text
+    , eaiInviteeName :: Text
+    , eaiStatus :: Text
+    , eaiCreatedAt :: UTCTime
+    , eaiExpiresAt :: UTCTime
+    , eaiAcceptedAt :: Maybe UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventAdminInvitationDTO
+instance FromJSON EventAdminInvitationDTO
+
+data EventAdminRosterDTO = EventAdminRosterDTO
+    { earAccess :: Text
+    , earAdmins :: [EventAdminMemberDTO]
+    , earInvitations :: [EventAdminInvitationDTO]
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventAdminRosterDTO
+instance FromJSON EventAdminRosterDTO
+
+data EventAdminAccessDTO = EventAdminAccessDTO
+    { eaaEventId :: Text
+    , eaaAccess :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventAdminAccessDTO
+instance FromJSON EventAdminAccessDTO
+
+newtype EventAdminInvitationCreateDTO = EventAdminInvitationCreateDTO
+    { eaicInviteeName :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventAdminInvitationCreateDTO
+instance FromJSON EventAdminInvitationCreateDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+-- The raw token leaves the server once, in this response; only its digest is stored.
+data EventAdminInvitationIssuedDTO = EventAdminInvitationIssuedDTO
+    { eaisInvitation :: EventAdminInvitationDTO
+    , eaisToken :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventAdminInvitationIssuedDTO
+instance FromJSON EventAdminInvitationIssuedDTO
+
+newtype EventAdminInvitationTokenDTO = EventAdminInvitationTokenDTO
+    { eaitToken :: Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventAdminInvitationTokenDTO
+instance FromJSON EventAdminInvitationTokenDTO where
+    parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
+
+data EventAdminInvitationPreviewDTO = EventAdminInvitationPreviewDTO
+    { eaipEventId :: Text
+    , eaipEventTitle :: Text
+    , eaipEventStart :: UTCTime
+    , eaipInviteeName :: Text
+    , eaipExpiresAt :: UTCTime
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventAdminInvitationPreviewDTO
+instance FromJSON EventAdminInvitationPreviewDTO
+
+data EventCourtesyTicketDTO = EventCourtesyTicketDTO
+    { ectTierId :: Text
+    , ectQuantity :: Int
+    , ectHolderName :: Text
+    , ectHolderEmail :: Maybe Text
+    }
+    deriving (Show, Eq, Generic)
+instance ToJSON EventCourtesyTicketDTO
+instance FromJSON EventCourtesyTicketDTO where
     parseJSON = genericParseJSON defaultOptions{rejectUnknownFields = True}
 
 data EventLogisticsPlaceDTO = EventLogisticsPlaceDTO
