@@ -22,6 +22,7 @@ module TDF.API.SocialEventsAPI (
     BudgetRoutes,
     FinanceRoutes,
     LogisticsRoutes,
+    EventAdminRoutes,
     IdParam,
     EventImageUploadForm (..),
     EventMemoryMediaUploadForm (..),
@@ -62,6 +63,13 @@ import TDF.DTO.TicketPaymentReceipt (TicketPaymentReceipt)
 import TDF.API.EventResearchAPI (EventResearchRoutes)
 
 import TDF.DTO.SocialEventsDTO (
+    EventAdminAccessDTO,
+    EventAdminInvitationCreateDTO,
+    EventAdminInvitationIssuedDTO,
+    EventAdminInvitationPreviewDTO,
+    EventAdminInvitationTokenDTO,
+    EventAdminRosterDTO,
+    EventCourtesyTicketDTO,
     ArtistDTO,
     ArtistFollowRequest,
     ArtistFollowerDTO,
@@ -649,6 +657,18 @@ type LogisticsRoutes =
                 :<|> "verify-routes" :> Post '[JSON] [EventRouteVerificationDTO]
            )
 
+-- Delegated administration of one event and the courtesy tickets its
+-- managers issue. Token routes take the secret in the body, never the URL.
+type EventAdminRoutes =
+    "events" :> Capture "eventId" Text :> "admins" :> Get '[JSON] EventAdminRosterDTO
+        :<|> "events" :> Capture "eventId" Text :> "admin-access" :> Get '[JSON] EventAdminAccessDTO
+        :<|> "events" :> Capture "eventId" Text :> "admin-invitations" :> ReqBody '[JSON] EventAdminInvitationCreateDTO :> Post '[JSON] EventAdminInvitationIssuedDTO
+        :<|> "events" :> Capture "eventId" Text :> "admin-invitations" :> Capture "invitationId" Text :> DeleteNoContent
+        :<|> "events" :> Capture "eventId" Text :> "admins" :> Capture "partyId" Text :> DeleteNoContent
+        :<|> "admin-invitations" :> "preview" :> ReqBody '[JSON] EventAdminInvitationTokenDTO :> Post '[JSON] EventAdminInvitationPreviewDTO
+        :<|> "admin-invitations" :> "accept" :> ReqBody '[JSON] EventAdminInvitationTokenDTO :> Post '[JSON] EventAdminAccessDTO
+        :<|> "events" :> Capture "eventId" Text :> "courtesy-tickets" :> ReqBody '[JSON] EventCourtesyTicketDTO :> Post '[JSON] TicketOrderDTO
+
 type SocialEventsAPI =
     EventsRoutes
         :<|> EventCitiesRoutes
@@ -664,4 +684,5 @@ type SocialEventsAPI =
         :<|> BudgetRoutes
         :<|> FinanceRoutes
         :<|> LogisticsRoutes
+        :<|> EventAdminRoutes
         :<|> MemoryInvitationRoutes
