@@ -64,6 +64,7 @@ PROJECT = 'tdf-production'
 DIRECTORY = Path('/opt/tdf/production')
 CONTROL = Path('/opt/tdf/release-control')
 BACKUPS = Path('/opt/tdf/backups')
+TOOLS_ROOT = Path('/opt/tdf/release-tools')
 VOLUME = 'tdf_production_postgres_data'
 VOLUME_DATA = Path('/var/lib/docker/volumes') / VOLUME / '_data'
 PUBLIC = 'https://api.tdfrecords.net'
@@ -352,6 +353,8 @@ class Release:
 
     def confirm_bound(self):
         """params.json and runtime.json must still hash to the journal's plan."""
+        if HERE.parent == TOOLS_ROOT:
+            require(HERE.name == self.params()['toolRevision'], 'tool code differs from the planned tool revision')
         status = self.journal.status()
         plan = journal_plan(self.params(), self.runtime())
         require(sha(canonical(plan)) == status['planHash'], 'release files no longer match the journal plan')
@@ -598,7 +601,7 @@ class Release:
         """Return to the recovery image before traffic reopens. Never after."""
         params, runtime = self.params(), self.runtime()
         require(confirm == 'rollback-' + params['sourceRevision'][:12], 'rollback confirmation does not match')
-        status = self.journal.status()
+        status = self.confirm_bound()
         done, pending = status['completedStages'], status['pendingStage']
         touched = set(done) | ({pending} if pending else set())
         require('reopen' not in touched, 'traffic reopened; restoring now would discard real writes')
