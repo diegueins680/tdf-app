@@ -14283,7 +14283,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction.",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction. Z3 proof stripe_ticket_capture.py covers the legacy ticket webhook's two exception writes (see PAY-STRIPE-WEBHOOK-001). Z3 proof hosted_dead_letter_review.py covers the hosted dead-letter review (see PAY-HOSTED-NOTIFICATIONS-001).",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -14297,7 +14297,9 @@
       "formalModels": [
         "formal/payments/CaptureAccounting.tla",
         "formal/payments/CaptureAccounting.cfg",
-        "formal/payments/CaptureAccountingLegacy.cfg"
+        "formal/payments/CaptureAccountingLegacy.cfg",
+        "formal/payments/stripe_ticket_capture.py",
+        "formal/payments/hosted_dead_letter_review.py"
       ],
       "confidence": "High for the protocol as modelled and the pure decision; handler correspondence by review of the twelve call sites. The provider reconciliation worker, music commerce and the PayPal webhook keep their own reconciliation paths.",
       "ambiguity": [
@@ -16948,8 +16950,10 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/Spec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end.",
+      "formalModels": [
+        "formal/payments/stripe_ticket_capture.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end. Z3 proof stripe_ticket_capture.py (translation of handleStripePaymentIntentSucceeded for a matched ticket order, validateStripeTicketPaymentEvidence, parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview, pinned by the hash of those regions): tickets are issued only with the full binding on a pending order, the answer is 400 exactly when the binding is not admitted, a succeeded positive capture always ends in tickets, a paid redelivery or an open exception, and each comparison, the pending fence, both exception writes and the review of a missing order row are load-bearing. The model first showed one silent case (the order row deleted between lookup and read-back while the stale copy said pending); the read-back now treats a missing row as deleted, which is reviewed.",
       "evidence": "formal/system/social-events-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -23091,8 +23095,10 @@
         "scripts/test-auth-throttle-http.sh",
         "scripts/lib/auth_throttle_http.py"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema).",
+      "formalModels": [
+        "formal/auth/credential_throttle.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): the failure counter equals the failed password checks of the window and never exceeds ten, a locked-out attempt checks no password, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -23167,8 +23173,10 @@
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "formalModels": [
+        "formal/auth/credential_throttle.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Z3 proof credential_throttle.py: reset requests are counted one by one and exactly the first five of an hourly window are admitted (the SQL upsert, the subject hash and the silent answer past the limit are not modelled).",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -24007,14 +24015,16 @@
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one.",
+      "formalModels": [
+        "formal/payments/hosted_dead_letter_review.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one. Z3 proof hosted_dead_letter_review.py (translation of processProviderEventWith, queryAndApply, recordDeadLetterReview, processHostedPayload and markRetry, pinned by the hash of those regions): a bound event that an attempt turns into a dead letter always leaves the dead-letter review or the exception its own stage wrote; the review is written only for a bound event that is a dead letter at that attempt, never for an unbound one and never on top of the stage's own exception; a worker that lost its lease records nothing; guard necessity checked. Added 2026-11-12: a failure thrown after the event is bound keeps the binding (it used to retry without it, so an event that exhausted its retries that way dead-lettered with no exception); ProviderRetrySpec (PostgreSQL) covers it.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue.",
+        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue; that includes a failure thrown before the binding is loaded. An event whose provider state stays unknown until the retries run out ends with two open exceptions of different types (provider_status_unknown and provider_event_dead_letter).",
         "/NotificacionPago is an undocumented alias of the PayPhone handler."
       ],
       "conformance": {
@@ -27671,7 +27681,7 @@
     ".github/workflows/ci.yml": "7f2f2181f1f14f59916ea98da4c6182cdf6f85707e7bae855be49cd7083c6fc6",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
-    ".github/workflows/event-operations-formal.yml": "cd0a03c4bdeec315f0e28bb6373ba1f4dab05aeebfa7c6b4061b84877183e0c1",
+    ".github/workflows/event-operations-formal.yml": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -27739,6 +27749,7 @@
     "formal/auth/LogoutIntent.tla": "1b08e8a1073c5aa73236e42bac4e02dd9ebf5a64bbcf68729101eed15cf34445",
     "formal/auth/LogoutIntentLegacy.cfg": "a89e41350ca46b7e087f4dd3a99858ca54518951d98e653d858051591e788d4e",
     "formal/auth/SessionExpiry.tla": "bc8137a81818acbb2053db4492e7d12f1d07e776778011132b456d2497f94be5",
+    "formal/auth/credential_throttle.py": "7f166f5c25db685cc0206bf06508a213ec25de31316ea2f66773dd81697a6239",
     "formal/auth/meta_webhook_admission.py": "a97549ca7408a57529b348bb71cff0e28508d113edfdfcc231be2cd77c38b741",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
@@ -28043,9 +28054,11 @@
     "formal/payments/deposit_policy_arithmetic.py": "710b7baf9a1b678665a8d43c8d9a95040154717413ea39920ee5ef444fff9324",
     "formal/payments/domo_cancellation_refund.py": "6c0c8bdca1c70caff40c8f46f645aa482cc943ee9f1ac3ec6cef333c41b4bc40",
     "formal/payments/domo_quote_arithmetic.py": "992b9afd58dc3cc30c25754d760624ac6bab041f524d1dfcc885b32fa8b79537",
+    "formal/payments/hosted_dead_letter_review.py": "ea8c7f8e369951d95dcbaf3fc19d8e32c11df3ce1146ae3b61e3e3f6f67c27f9",
     "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
     "formal/payments/placetopay_query_admission.py": "b4564fbbef90dba77d7a0f03d053cf53db753fea3f50102d8efa2457a3d772c8",
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
+    "formal/payments/stripe_ticket_capture.py": "6dee5604a11c82979208ce6c6b111f496e8f227650ae84ddfac3c9ec71ae6511",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -29300,7 +29313,7 @@
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
     "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "edd3db953b7f89b6a79cce9fe5cddcc8711f13169a8558335fc40339634d085f",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
-    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "b01d52481cef28802bdfb167cef1f9f16ec705d6ea68c3c4d18327ff6cce82cb",
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "7bc73d48a3903741855811eff1c285b88ed6241c309a4c75756d1c5817807426",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
@@ -29384,7 +29397,7 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "3960a9ec4a0435fd015e247f4feed0d26705da939823a208723aa0dc5c5e8d24",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -29433,7 +29446,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "c13b38de225abb46a79baac759e283c2fd956d2455edfdfe48bbd02bb12d5577",
+    "tdf-hq/test/Spec.hs": "1556d52061b59dda1fa6e20d5fb1bd5986f4cd7a578545946dc8ceec86dfee4d",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -29451,7 +29464,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "2d9f758af68610173e633370bea4a08a00cb0703d6fa97602fa79c104e97b1f1",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "47d38612aa0a48167ea6dfc83ce3c67a44339a3541632b6c32fb952b4e0d1691",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -44402,6 +44415,26 @@
         "relationship": "formalModels"
       }
     ],
+    "formal/payments/stripe_ticket_capture.py": [
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "PAY-STRIPE-WEBHOOK-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/payments/hosted_dead_letter_review.py": [
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "PAY-HOSTED-NOTIFICATIONS-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": [
       {
         "requirement": "PAY-DOMO-QUOTE-001",
@@ -45910,6 +45943,16 @@
       {
         "requirement": "AUTH-CREDENTIAL-INTAKE-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/auth/credential_throttle.py": [
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "AUTH-PASSWORD-RECOVERY-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/Social/RelationshipWrites.hs": [
@@ -48087,7 +48130,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "cd0a03c4bdeec315f0e28bb6373ba1f4dab05aeebfa7c6b4061b84877183e0c1",
+      "sha256": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74129,7 +74172,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "b01d52481cef28802bdfb167cef1f9f16ec705d6ea68c3c4d18327ff6cce82cb",
+      "sha256": "7bc73d48a3903741855811eff1c285b88ed6241c309a4c75756d1c5817807426",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76324,7 +76367,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "3960a9ec4a0435fd015e247f4feed0d26705da939823a208723aa0dc5c5e8d24",
+      "sha256": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77557,7 +77600,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "c13b38de225abb46a79baac759e283c2fd956d2455edfdfe48bbd02bb12d5577",
+      "sha256": "1556d52061b59dda1fa6e20d5fb1bd5986f4cd7a578545946dc8ceec86dfee4d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78003,7 +78046,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "2d9f758af68610173e633370bea4a08a00cb0703d6fa97602fa79c104e97b1f1",
+      "sha256": "47d38612aa0a48167ea6dfc83ce3c67a44339a3541632b6c32fb952b4e0d1691",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85331,7 +85374,6 @@
     "PKG-PURCHASE-EXPIRY-001",
     "UI-EVENT-FINANCE-PRECISION-001",
     "SYS-UI-TEST-WORKER-001",
-    "PAY-STRIPE-WEBHOOK-001",
     "COURSE-ADMIN-001",
     "PAY-STOREFRONT-ADMIN-001",
     "PAY-PROVIDER-EVENT-REPLAY-001",
@@ -85356,12 +85398,9 @@
     "STORE-PAYPAL-WEBHOOK-001",
     "ART-SELF-SERVICE-001",
     "RADIO-CATALOG-001",
-    "AUTH-CREDENTIAL-INTAKE-001",
-    "AUTH-PASSWORD-RECOVERY-001",
     "AUTH-ACCESS-REQUEST-LIFECYCLE-001",
     "MSG-STAFF-OUTBOUND-001",
     "PAY-HOSTED-SESSION-001",
-    "PAY-HOSTED-NOTIFICATIONS-001",
     "PAY-LEGACY-RECORDS-001",
     "INTEG-GOOGLE-CALENDAR-001",
     "PROPOSAL-AUTHORING-001",
@@ -86573,7 +86612,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0150f365f89641df4d1da67e54adc6b013c7bca2e1fb1dabd24c6fe8b6c9852c",
+      "sourceSha256": "11d88d6ff2176efc8cccdbd9e22c2b6bda1f11df77c2b83407d2f18a9a363a8c",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86601,7 +86640,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0150f365f89641df4d1da67e54adc6b013c7bca2e1fb1dabd24c6fe8b6c9852c",
+      "sourceSha256": "11d88d6ff2176efc8cccdbd9e22c2b6bda1f11df77c2b83407d2f18a9a363a8c",
       "definition": {
         "states": [
           "absent",
@@ -86631,7 +86670,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0150f365f89641df4d1da67e54adc6b013c7bca2e1fb1dabd24c6fe8b6c9852c",
+      "sourceSha256": "11d88d6ff2176efc8cccdbd9e22c2b6bda1f11df77c2b83407d2f18a9a363a8c",
       "definition": {
         "export": [
           "queued",
