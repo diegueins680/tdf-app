@@ -11,3 +11,4 @@ ALTER TABLE event_ticket_checkout_runtime ADD COLUMN checkout_id UUID;
 CREATE TABLE commerce_payment_attempt (id UUID PRIMARY KEY,checkout_id UUID NOT NULL);
 CREATE TABLE commerce_provider_binding (payment_attempt_id UUID NOT NULL,provider TEXT NOT NULL,environment TEXT NOT NULL,merchant_account_ref TEXT NOT NULL,provider_resource_id TEXT NOT NULL,resource_type TEXT NOT NULL);
 CREATE TABLE commerce_reconciliation_exception (provider TEXT NOT NULL,environment TEXT NOT NULL,merchant_account_ref TEXT NOT NULL,provider_reference TEXT NOT NULL,internal_reference TEXT NOT NULL,exception_type TEXT NOT NULL,status TEXT NOT NULL);
+CREATE TABLE event_admin_member (id BIGSERIAL PRIMARY KEY,event_id BIGINT NOT NULL REFERENCES social_event(id) ON DELETE CASCADE,party_id VARCHAR NOT NULL,granted_by VARCHAR NOT NULL,created_at TIMESTAMPTZ NOT NULL,CONSTRAINT unique_event_admin_member UNIQUE (event_id,party_id));

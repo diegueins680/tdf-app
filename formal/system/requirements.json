@@ -4774,7 +4774,7 @@
         "Organizer assigned once",
         "updated_at refreshed on assignment"
       ],
-      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before.",
+      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before. A delegated administrator under EVT-ADMIN-DELEGATION-001 passes the organizer check of the operations that requirement lists, only on an event that has a stored organizer; the stored organizer itself is never changed by a grant.",
       "privacy": "Buyer, refund and invoice data of an event without an organizer are no longer reachable by an arbitrary signed-in account.",
       "concurrency": "Assignment runs under the event row lock together with the accepted edit and is one UPDATE conditional on the organizer still being missing; the row is reread and the edit proceeds only if the stored organizer is the caller.",
       "idempotency": "Repeating the edit as the assigned organizer is an ordinary organizer request; a second assignment changes nothing.",
@@ -4863,7 +4863,7 @@
       "effects": [
         "Atomic ticket/audit or transfer/code update; rollback on failure; public buyer projections omit transferred credentials."
       ],
-      "authorization": "Stored organizer for admission; transfer follows current-holder/organizer checks and authenticated opaque invitation capability, not email identity. Full staff delegation remains unspecified.",
+      "authorization": "Stored organizer, or a delegated administrator of the event under EVT-ADMIN-DELEGATION-001, for admission; transfer follows current-holder/organizer checks and authenticated opaque invitation capability, not email identity. Staff delegation beyond EVT-ADMIN-DELEGATION-001 remains unspecified.",
       "privacy": "Opaque full-UUID credentials replace PII/fixed-HMAC QR. Transfer email is contact data, not delivery or verified identity.",
       "concurrency": "Event/order/ticket/invitation lock order serializes conflicting operations within PostgreSQL; exact transaction wrappers remain required. External-change processing locks the event and order before recording the admission-fencing reconciliation exception.",
       "idempotency": "Second scan/accept rejects; random replacement credential invalidates prior code. Does not provide payment-provider exactly-once behavior.",
@@ -25018,7 +25018,7 @@
         "Show preparation status and poster/campaign destinations",
         "Show activities and dependencies by human-readable names"
       ],
-      "authorization": "Existing organizer-only event preparation and logistics owner/editor roles remain enforced; delegated event administration is out of scope.",
+      "authorization": "Existing organizer-only event preparation and logistics owner/editor roles remain enforced; delegated event administration is out of scope here and specified by EVT-ADMIN-DELEGATION-001, whose administrators pass the same organizer checks.",
       "privacy": "No new event visibility or account permissions; poster attachment uses the existing event endpoint.",
       "concurrency": "Upload endpoint retains its event lock; frontend session guards stop late continuation. Concurrent poster replacement may require refreshing before retry.",
       "idempotency": "A confirmed upload is reused for confirmation retries within the same editor and selected file.",
@@ -27359,6 +27359,200 @@
       "verification": "Deterministic fixture tests for import extraction, layering, both ratchets and configuration errors, plus a test that runs the committed configuration against the repository; no mathematical proof.",
       "evidence": "scripts/__tests__/architecture-boundaries.test.mjs",
       "historicalStatus": null
+    },
+    {
+      "id": "EVT-ADMIN-DELEGATION-001",
+      "title": "Organizer-delegated administrators of one event and courtesy tickets",
+      "domain": "EVT",
+      "statement": "Only the stored organizer of an event issues, revokes and lists single-use administrator invitation links and removes delegated administrators. The first signed-in account that accepts a usable link becomes a delegated administrator of that one event; the grant is one database row, carries no global role, and stops applying when the organizer removes it. While the grant exists and the event has a stored organizer, a delegated administrator passes the organizer check for editing the event, uploading its image, creating and updating ticket tiers, listing orders and tickets, viewing ticket QR credentials, admitting tickets, planning logistics with the owner role and issuing courtesy tickets; every other organizer check, including ticket transfers, is unchanged. A courtesy issue creates one zero-amount paid order of 1 to 10 tickets for a named guest and consumes tier and event inventory through the same reservation a purchase uses, only on an active tier inside its sales window. Routes: GET /social-events/events/{eventId}/admins; GET /social-events/events/{eventId}/admin-access; POST /social-events/events/{eventId}/admin-invitations; DELETE /social-events/events/{eventId}/admin-invitations/{invitationId}; DELETE /social-events/events/{eventId}/admins/{partyId}; POST /social-events/admin-invitations/preview; POST /social-events/admin-invitations/accept; POST /social-events/events/{eventId}/courtesy-tickets.",
+      "authority": "Described from the code of branch feat/event-admin-invitations-20261111 (delegated event administrators and courtesy tickets, 2026-11-11); owner confirmation of the intended behaviour is pending, and the exact limits (14-day expiry, 10 pending links, 10 tickets per courtesy order) and the list of delegated operations are implementation choices. Follows the remaining work named in formal/system/event-planning-ux.md.",
+      "source": "formal/system/event-admin-delegation.md",
+      "contract": "formal/system/event-admin-delegation.md",
+      "property": "An invitation link grants administration of exactly one event to at most one account, only while its issuer is still the stored organizer and the link is neither revoked nor expired; the raw token is never stored. A delegated administrator cannot issue, revoke or list invitations or remove administrators, and loses access when the grant row is deleted. Courtesy issuance never exceeds the inventory the shared reservation allows and never creates a nonzero amount.",
+      "actors": [
+        "Event organizer",
+        "Delegated event administrator",
+        "Invited signed-in account",
+        "Other signed-in account",
+        "Courtesy guest named on the order"
+      ],
+      "preconditions": [
+        "Authenticated bearer session on every route",
+        "Event visible to the caller and not hidden",
+        "Event has a stored organizer; an event without one has no delegated administration",
+        "Migration tdf-hq/sql/2026-11-11_event_admin_delegation.sql applied"
+      ],
+      "inputs": [
+        "GET /social-events/events/{eventId}/admins",
+        "GET /social-events/events/{eventId}/admin-access",
+        "POST /social-events/events/{eventId}/admin-invitations",
+        "DELETE /social-events/events/{eventId}/admin-invitations/{invitationId}",
+        "DELETE /social-events/events/{eventId}/admins/{partyId}",
+        "POST /social-events/admin-invitations/preview",
+        "POST /social-events/admin-invitations/accept",
+        "POST /social-events/events/{eventId}/courtesy-tickets",
+        "Invitee name: trimmed, 1 to 120 characters, no control characters",
+        "Invitation token: 64 hexadecimal characters, sent in the JSON body only",
+        "Courtesy issue: ticket tier of the event, quantity 1 to 10, required guest holder name, optional guest email"
+      ],
+      "state": {
+        "boundary": "event_admin_invitation and event_admin_member rows of one event; event_ticket_order, event_ticket and tier inventory for courtesy issues",
+        "authority": "PostgreSQL rows read and written under the social_event row lock; unique (event_id, party_id) and unique (token_sha256)",
+        "invitationStatus": "Derived on read: accepted, revoked, expired or pending"
+      },
+      "allowedTransitions": [
+        "No invitation -> pending invitation, by the organizer, while fewer than 10 are pending",
+        "Pending invitation -> accepted by the first signed-in account that is not the organizer, creating its grant row",
+        "Pending invitation -> revoked, by the organizer",
+        "Pending invitation -> expired, 14 days after creation",
+        "Grant row -> removed, by the organizer",
+        "Courtesy issue by the organizer or a delegated administrator -> zero-amount paid order with issued tickets and reserved inventory"
+      ],
+      "forbiddenTransitions": [
+        "Issue, revoke or list invitations, or remove an administrator, as a delegated administrator, strict administrator or any account other than the stored organizer",
+        "Accept a revoked, expired, unknown or malformed link, a link another account already accepted, or a link whose issuer no longer organizes the event",
+        "Restore a removed grant by replaying its consumed link",
+        "Obtain access to another event, a global role or a module through a grant",
+        "Act as delegated administrator of an event without a stored organizer",
+        "Create or list transfers of a ticket the caller does not hold, as a delegated administrator",
+        "Issue a courtesy order with a nonzero amount, more than 10 or fewer than 1 tickets, no holder name, a tier of another event, an inactive tier or one outside its sales window, or more tickets than the reservation allows",
+        "Store the raw invitation token in the database"
+      ],
+      "effects": [
+        "Insert event_admin_invitation with the SHA-256 digest of the token; the raw token is returned once",
+        "Set accepted_by and accepted_at and insert event_admin_member on first acceptance",
+        "Set revoked_at on revocation; delete the event_admin_member row on removal",
+        "Courtesy issue: insert one event_ticket_order (amount 0, status paid, no buyer party, metadata courtesy and courtesyIssuedBy), reserve inventory, issue one ticket per unit and send the ticket confirmation to the guest email when one is given",
+        "No notification is sent to the organizer or the invitee; no audit row beyond these rows is written"
+      ],
+      "authorization": "Administrator management (issue, revoke, remove, invitation list) requires the stored organizer through requireEventManager and is rechecked under the event lock; strict administrators receive nothing here. The roster is readable by the organizer and by delegated administrators, who receive no invitations. Accept requires only a session and a usable token. Delegated authority is decided by delegatedEventAdminExists for the caller and event, through eventManagerPartyFor in the handlers and inside admitTicket; it applies only when the event has a stored organizer.",
+      "privacy": "Only the SHA-256 digest of the token is stored; the token is returned once to the organizer and travels to the server in request bodies only. The web client carries it in the URL fragment of the public event page, removes it after use, keeps it out of login return targets and analytics URLs, and holds it across sign-in only in tab-scoped session storage keyed by event. Every unusable link receives the same 404. The link is a bearer capability until first use and the invitee name is not matched to the accepting account. Delegated administrators read order, ticket and buyer data of the event as the organizer does.",
+      "concurrency": "Issue, revoke, remove, preview, accept and courtesy issuance lock the social_event row FOR UPDATE and re-read organizer, invitation and grant under it, so simultaneous acceptances admit exactly one account and acceptance, revocation, removal and courtesy issuance are ordered. Ticket admission reads the grant under the same event lock. Event edit and ticket-tier writes read the grant before their transaction, so a removal committed in between does not stop the one request already in flight.",
+      "idempotency": "The accepting account may accept the same link again without change while its grant exists. Revoking a revoked invitation succeeds without change. Issuing is not idempotent: each call creates a new link. Courtesy issuance has no idempotency key: a repeated request issues another order.",
+      "failure": "400 invalid invitee name, identifier, courtesy quantity, holder name or email; 403 caller is not the organizer or an admitted delegated administrator, or the event has no organizer; 404 event missing or hidden, invitation or administrator not on this event, unusable link, tier not on this event; 409 pending-invitation limit, revoking an accepted invitation, organizer accepting their own link, a courtesy issue on an inactive tier or outside its sales window, or not enough tickets for a courtesy issue. A refused request writes nothing.",
+      "recovery": "The organizer issues a new link after an expired, revoked or misdirected one, and removes an administrator who should not have accepted. No automatic retry; the web client keeps the token and offers a retry after a transient failure. The rollback script refuses to drop the tables while grants or invitations exist.",
+      "observability": "HTTP status; event_admin_invitation and event_admin_member rows (creator, grantor, timestamps); courtesy order metadata naming the issuing party. No metric, log line or audit entry is added.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-11_event_admin_delegation.sql",
+        "tdf-hq/sql/2026-11-11_event_admin_delegation_rollback.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Ticketing/Admission.hs",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/utils/eventAdminInvitationLink.ts",
+        "tdf-hq-ui/src/components/events/EventAdminsCard.tsx",
+        "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.tsx",
+        "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "scripts/test-event-admin-delegation.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventAdminDelegationSpec.hs",
+        "scripts/test-event-admin-delegation.sh",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/components/events/EventAdminsCard.test.tsx",
+        "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.test.tsx",
+        "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/utils/loginRouting.test.ts",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "verification": "Six PostgreSQL Hspec examples in tdf-hq/test/TDF/EventAdminDelegationSpec.hs, run through scripts/test-event-admin-delegation.sh against a fully migrated disposable database: organizer-only issue with digest-only storage; acceptance and its idempotence; binding to one account, one event and the issuer's authority; eight accounts racing for one link; revocation and removal; logistics owner role, courtesy issuance, quantity and capacity refusals and admission by a delegated administrator, refused again after removal. Jest tests cover the client calls, the organizer and delegated views, the courtesy form, the invitation panel and the removal of the token from login and analytics URLs. The hosted workflow runs the script after the organizer runner; without the runner's database variable the Hspec group reports one pending example.",
+      "evidence": "formal/system/event-admin-delegation.md; local PostgreSQL 16 run of scripts/test-event-admin-delegation.sh on 2026-11-11 (6 examples, 0 failures). The runner is a step of .github/workflows/ci.yml; no hosted run of it has been observed yet.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The new handlers, the admission change and every call site of eventManagerPartyFor were read in full (transfer handlers no longer use it) and the grant lifecycle is exercised on PostgreSQL; the existing operations a delegated administrator now passes are established by reading, not by per-route tests, and there is no model.",
+      "ambiguity": [
+        "The list of operations delegated, the 14-day expiry and the limits of 10 pending links and 10 tickets per courtesy order are implementation choices; owner confirmation is pending.",
+        "A delegated administrator can also create a direct zero-price ticket order for another buyer, as the organizer can.",
+        "Courtesy issuance requires an active tier inside its sales window and has no idempotency key; whether courtesy tickets should have their own quota or be reported separately in finance is undecided, and the sales-window refusal has no dedicated test.",
+        "Event edit and ticket-tier writes decide delegation before taking their transaction; one request in flight can complete after the grant is removed.",
+        "The link is a bearer capability until accepted; nobody is notified when it is accepted and the invitee name is not verified.",
+        "The routes are absent from the OpenAPI document and no Mobile client surface exists."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The grant lifecycle, the single-acceptance race, removal and courtesy issuance are exercised on PostgreSQL (locally; the runner is now a hosted workflow step) and the web flows by Jest; the widened organizer checks on existing routes are covered by reading only, no model exists and the product limits await owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "UX-PUBLIC-DETAIL-001",
+      "title": "Public detail pages open the full image and follow the application language",
+      "statement": "On a public event, profile, venue or classified page, activating a real preview image opens a viewer with the whole image, and the page's own text and dates use the application language, Spanish by default, not the browser language.",
+      "domain": "UX",
+      "authority": "Product owner requests on 2026-11-11.",
+      "source": "User requests: clicking the event image shows a larger and complete version; the application shows in Spanish by default.",
+      "property": "A visitor can see the entire poster, and a visitor who never chose a language reads the page in Spanish whatever the browser language.",
+      "contract": "formal/system/public-detail-presentation.md",
+      "actors": [
+        "Public visitor",
+        "Signed-in visitor"
+      ],
+      "preconditions": [
+        "The public record is visible under the existing directory visibility rules."
+      ],
+      "inputs": [
+        "Pointer or keyboard activation of the preview image",
+        "Close control, backdrop, image or Escape",
+        "Application language preference"
+      ],
+      "state": {
+        "boundary": "Image viewer visibility and page display language",
+        "states": [
+          "preview",
+          "viewer open",
+          "placeholder"
+        ]
+      },
+      "allowedTransitions": [
+        "preview -> viewer open on activation",
+        "viewer open -> preview on close, backdrop, image activation or Escape",
+        "viewer open -> preview when the full image fails to load"
+      ],
+      "forbiddenTransitions": [
+        "The placeholder opens a viewer.",
+        "The browser language changes the page language when the visitor chose none."
+      ],
+      "effects": [
+        "No request other than loading the already public image URL."
+      ],
+      "authorization": "None beyond the existing public visibility of the record and its image.",
+      "privacy": "The viewer shows only the image URL the page already renders.",
+      "concurrency": "Local view state only.",
+      "idempotency": "Opening and closing change no stored state.",
+      "failure": "A full image that fails to load closes the viewer and leaves the preview.",
+      "recovery": "The preview remains available; a changed image resets the viewer.",
+      "observability": "The control and viewer carry accessible names; the document language reflects the application language.",
+      "implementation": [
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Component tests for opening, closing and the inert placeholder, and a page test that keeps Spanish under an English browser; TypeScript and changed-file lint.",
+      "evidence": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx and tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx.",
+      "confidence": "The component and page behaviors have local test evidence.",
+      "ambiguity": [
+        "Viewer layout on real devices and the deployed public event page require browser verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
+      },
+      "critical": false
     }
   ]
 }
