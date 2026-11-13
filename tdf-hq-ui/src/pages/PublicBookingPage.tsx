@@ -1,3 +1,4 @@
+import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import { logger } from '../utils/logger';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -388,6 +389,10 @@ export default function PublicBookingPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const bookingIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
+  const [editContact, setEditContact] = useState(false);
+  const contactNameInput = useRef<HTMLInputElement>(null);
+  const contactEditButton = useRef<HTMLButtonElement>(null);
+  const contactFocusTarget = useRef<'fields' | 'summary' | null>(null);
   const [engineers, setEngineers] = useState<PublicEngineer[]>([]);
   const [engineersLoading, setEngineersLoading] = useState(false);
   const [engineersError, setEngineersError] = useState<string | null>(null);
@@ -633,6 +638,17 @@ export default function PublicBookingPage() {
     }
     return null;
   };
+
+  const contactSummarized = Boolean(session) && !editContact && !validateContactStep();
+  useEffect(() => {
+    if (contactFocusTarget.current === 'fields' && !contactSummarized) {
+      contactNameInput.current?.focus();
+      contactFocusTarget.current = null;
+    } else if (contactFocusTarget.current === 'summary' && contactSummarized) {
+      contactEditButton.current?.focus();
+      contactFocusTarget.current = null;
+    }
+  }, [contactSummarized]);
 
   const validateScheduleStep = () => {
     const selectedService = services.find((service) => service.id === form.serviceOfferingId);
@@ -1339,6 +1355,32 @@ export default function PublicBookingPage() {
     const depositPaid = checkoutSuccess?.paymentStatus === 'paid';
     const depositProcessing = checkoutSuccess?.paymentStatus === 'processing';
     const paymentMethods = checkoutSuccess?.paymentMethods ?? [];
+    const legacyPaymentMethods = (paymentMethods.includes('datafast') || (paymentMethods.includes('paypal') && paypalClientId) || paymentMethods.includes('bank_transfer')) ? (<>
+                              {paymentMethods.includes('datafast') && (
+                                <PaymentMethodButton
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handleDatafastDeposit()}
+                                >
+                                  Tarjeta · Datafast
+                                </PaymentMethodButton>
+                              )}
+                              {paymentMethods.includes('paypal') && paypalClientId && (
+                                <PaymentMethodButton
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handlePaypalDeposit()}
+                                >
+                                  Pagar con PayPal
+                                </PaymentMethodButton>
+                              )}
+                              {paymentMethods.includes('bank_transfer') && (
+                                <PaymentMethodButton
+                                  disabled={paymentBusy || hostedPaymentLocked}
+                                  onClick={() => void handleManualDeposit()}
+                                >
+                                  Registrar transferencia
+                                </PaymentMethodButton>
+                              )}
+                            </>) : null;
     const manualPayment = checkoutSuccess?.manualPayment;
 
     return (
@@ -1452,37 +1494,10 @@ export default function PublicBookingPage() {
                             </Alert>
                           )}
                           <Stack spacing={1.5}>
-                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                              {paymentMethods.includes('datafast') && (
-                                <Button
-                                  variant="contained"
-                                  disabled={paymentBusy || hostedPaymentLocked}
-                                  onClick={() => void handleDatafastDeposit()}
-                                >
-                                  Pagar con tarjeta · Datafast
-                                </Button>
-                              )}
-                              {paymentMethods.includes('paypal') && paypalClientId && (
-                                <Button
-                                  variant="outlined"
-                                  disabled={paymentBusy || hostedPaymentLocked}
-                                  onClick={() => void handlePaypalDeposit()}
-                                >
-                                  Pagar con PayPal
-                                </Button>
-                              )}
-                              {paymentMethods.includes('bank_transfer') && (
-                                <Button
-                                  variant="outlined"
-                                  disabled={paymentBusy || hostedPaymentLocked}
-                                  onClick={() => void handleManualDeposit()}
-                                >
-                                  Registrar transferencia
-                                </Button>
-                              )}
-                            </Stack>
+                            {!checkoutLookupToken && legacyPaymentMethods && <PaymentMethodChoices methods={legacyPaymentMethods} />}
                             {checkoutLookupToken && (
                               <HostedProviderCheckout
+                                additionalMethods={legacyPaymentMethods}
                                 checkout={{
                                   checkoutId: checkoutSuccess.checkoutId,
                                   lookupToken: checkoutLookupToken,
@@ -1855,11 +1870,26 @@ export default function PublicBookingPage() {
                       {activeStep === 0 && (
                         <>
                           {serviceField}
+                          {contactSummarized && <Grid item xs={12}>
+                            <Box component="section" aria-label="Datos de contacto" sx={{ p: 2, border: 1, borderColor: 'divider', borderRadius: 2 }}>
+                              <Typography variant="subtitle2">Datos de contacto</Typography>
+                              <Typography sx={{ overflowWrap: 'anywhere' }}>{form.fullName}</Typography>
+                              <Typography sx={{ overflowWrap: 'anywhere' }}>{form.email}</Typography>
+                              {form.phone && <Typography sx={{ overflowWrap: 'anywhere' }}>{form.phone}</Typography>}
+                              <Button ref={contactEditButton} aria-controls="booking-contact-fields" aria-expanded={false}
+                                disabled={formDisabled} onClick={() => { contactFocusTarget.current = 'fields'; setEditContact(true); }}>
+                                Editar datos
+                              </Button>
+                            </Box>
+                          </Grid>}
+                          <Grid item xs={12} id="booking-contact-fields" hidden={contactSummarized} sx={contactSummarized ? { display: 'none' } : undefined}>
+                            <Grid container spacing={2.5}>
                           <Grid item xs={12} sm={6}>
                             <TextField
                               label="Nombre completo"
+                              inputRef={contactNameInput}
                               value={form.fullName}
-                              onChange={(e) => setForm((prev) => ({ ...prev, fullName: e.target.value }))}
+                              onChange={(e) => { setEditContact(true); setForm((prev) => ({ ...prev, fullName: e.target.value })); }}
                               fullWidth
                               required
                               disabled={formDisabled}
@@ -1870,7 +1900,7 @@ export default function PublicBookingPage() {
                               label="Correo"
                               type="email"
                               value={form.email}
-                              onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                              onChange={(e) => { setEditContact(true); setForm((prev) => ({ ...prev, email: e.target.value })); }}
                               fullWidth
                               required
                               disabled={formDisabled}
@@ -1881,7 +1911,7 @@ export default function PublicBookingPage() {
                               type="tel"
                               label="WhatsApp / Teléfono"
                               value={form.phone}
-                              onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+                              onChange={(e) => { setEditContact(true); setForm((prev) => ({ ...prev, phone: e.target.value })); }}
                               fullWidth
                               disabled={formDisabled}
                             />
@@ -1908,6 +1938,13 @@ export default function PublicBookingPage() {
                                 Limpiar datos guardados
                               </Button>
                             </Stack>
+                          </Grid>
+                            </Grid>
+                            {session && editContact && !validateContactStep() && <Button
+                              disabled={formDisabled} aria-controls="booking-contact-fields" aria-expanded={true}
+                              onClick={() => { contactFocusTarget.current = 'summary'; setEditContact(false); }}>
+                              Usar estos datos de contacto
+                            </Button>}
                           </Grid>
                           <Grid item xs={12}>
                             <Stack

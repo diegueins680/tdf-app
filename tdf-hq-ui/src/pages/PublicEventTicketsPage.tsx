@@ -1,3 +1,4 @@
+import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import MarkdownText from '../components/MarkdownText';
 import {
   Alert,
@@ -560,6 +561,11 @@ export default function PublicEventTicketsPage() {
     : null;
   const paid = checkout?.paymentStatus === 'paid';
   const offeredPaymentMethods = orderStale ? [] : (checkout?.paymentMethods ?? []);
+  const legacyPaymentMethods = !paid && (offeredPaymentMethods.includes('datafast') || offeredPaymentMethods.includes('paypal') || (offeredPaymentMethods.includes('bank_transfer') && !checkout?.bankTransfer)) ? (<>
+                        {offeredPaymentMethods.includes('datafast') && <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>{english ? 'Card · Datafast' : 'Tarjeta · Datafast'}</PaymentMethodButton>}
+                        {offeredPaymentMethods.includes('paypal') && <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</PaymentMethodButton>}
+                        {offeredPaymentMethods.includes('bank_transfer') && !checkout?.bankTransfer && <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</PaymentMethodButton>}
+                    </>) : null;
   const issued = checkout?.fulfillmentStatus === 'issued';
   const datafastReturnUrl = checkout && typeof window !== 'undefined'
     ? new URL(`/eventos/${checkout.eventId}/orden/${checkout.orderId}`, window.location.origin).toString()
@@ -835,25 +841,10 @@ export default function PublicEventTicketsPage() {
                     ? 'No real payment provider is enabled for this order. The hold does not mean payment.'
                     : 'Todavía no hay un método de pago en línea para esta orden. La reserva no equivale a pago.'}</Alert>}
                   <Stack spacing={1.5}>
-                    {!paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                        {offeredPaymentMethods.includes('datafast') && <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
-                        {offeredPaymentMethods.includes('paypal') && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                        {offeredPaymentMethods.includes('bank_transfer') && !checkout.bankTransfer && <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={() => void handleBankTransfer()}>{english ? 'Bank transfer' : 'Transferencia bancaria'}</Button>}
-                    </Stack>}
-                    {/* A stale order may already be paid by another rail: no transfer
-                        instructions or evidence form until it is read again. */}
-                    {!paid && !orderStale && checkout.bankTransfer && (
-                      <TicketBankTransferPanel
-                        transfer={checkout.bankTransfer}
-                        english={english}
-                        amountLabel={money(checkout.bankTransfer.amountMinor, checkout.bankTransfer.currency)}
-                        holdExpiresLabel={date(checkout.holdExpiresAt)}
-                        busy={paymentBusy}
-                        onSubmitReference={(reference, receipt) => void handleBankTransferEvidence(reference, receipt)}
-                      />
-                    )}
+                    {!checkoutLookupToken && legacyPaymentMethods && <PaymentMethodChoices methods={legacyPaymentMethods} english={english} />}
                     {checkoutLookupToken && (
                         <HostedProviderCheckout
+                          additionalMethods={legacyPaymentMethods}
                           checkout={{
                             checkoutId: checkout.checkoutId,
                             lookupToken: checkoutLookupToken,
@@ -877,6 +868,18 @@ export default function PublicEventTicketsPage() {
                             ));
                           }}
                         />
+                    )}
+                    {/* A stale order may already be paid by another rail: no transfer
+                        instructions or evidence form until it is read again. */}
+                    {!paid && !orderStale && checkout.bankTransfer && (
+                      <TicketBankTransferPanel
+                        transfer={checkout.bankTransfer}
+                        english={english}
+                        amountLabel={money(checkout.bankTransfer.amountMinor, checkout.bankTransfer.currency)}
+                        holdExpiresLabel={date(checkout.holdExpiresAt)}
+                        busy={paymentBusy}
+                        onSubmitReference={(reference, receipt) => void handleBankTransferEvidence(reference, receipt)}
+                      />
                     )}
                   </Stack>
                   {paid && issued && checkout.tickets.length > 0 && (

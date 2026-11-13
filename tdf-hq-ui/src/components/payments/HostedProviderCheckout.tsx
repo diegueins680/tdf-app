@@ -1,12 +1,13 @@
 import {
   Alert,
   Button,
-  CircularProgress,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import PaymentMethodChoices, { PaymentMethodButton } from './PaymentMethodChoices';
 
 import { ApiError } from '../../api/client';
 import {
@@ -42,6 +43,8 @@ export interface HostedCheckoutContext {
 interface HostedProviderCheckoutProps {
   checkout?: HostedCheckoutContext | null;
   offeredMethods: readonly string[];
+  /** Existing local payment buttons, with availability/handlers owned by the caller. */
+  additionalMethods?: ReactNode;
   disabled?: boolean;
   english?: boolean;
   initialBuyerPhone?: string | null;
@@ -158,6 +161,7 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
 export default function HostedProviderCheckout({
   checkout,
   offeredMethods,
+  additionalMethods,
   disabled = false,
   english = false,
   initialBuyerPhone,
@@ -337,7 +341,7 @@ export default function HostedProviderCheckout({
     return () => onSafetyLockChangeRef.current?.(false);
   }, [safetyLocked]);
 
-  if (methods.length === 0 && !pendingCreation && !selected && !session) return null;
+  if (!additionalMethods && methods.length === 0 && !pendingCreation && !selected && !session) return null;
 
   const navigate = navigateToProvider ?? ((url: string) => window.location.assign(url));
 
@@ -515,10 +519,25 @@ export default function HostedProviderCheckout({
     : null;
 
   return (
-    <Stack spacing={1.5} component="section" aria-label={english ? 'Additional secure payment methods' : 'Métodos de pago seguros adicionales'}>
-      <Typography variant="subtitle2" fontWeight={800}>
-        {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
-      </Typography>
+    <PaymentMethodChoices english={english} methods={<>
+      {additionalMethods}
+      {methods.map((method) => {
+        const isSelected = selected?.label === method.label;
+        const blockedByAttempt = session?.canRetryOrFallback === false;
+        return (
+          <PaymentMethodButton
+            key={method.label}
+            busy={busy && isSelected}
+            disabled={disabled || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
+            onClick={() => {
+              // The first tap on PayPhone only asks for the wallet number.
+              if (method.provider === 'payphone' && !payphoneFieldsVisible) { setPayphoneRequested(true); return; }
+              void startPayment(method);
+            }}
+          >{methodCopy(method.label, english)}</PaymentMethodButton>
+        );
+      })}
+    </>}>
       {payphoneFieldsVisible && methods.some((method) => method.provider === 'payphone') && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <TextField
@@ -554,26 +573,6 @@ export default function HostedProviderCheckout({
           />
         </Stack>
       )}
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-        {methods.map((method) => {
-          const isSelected = selected?.label === method.label;
-          const blockedByAttempt = session?.canRetryOrFallback === false;
-          return (
-            <Button
-              key={method.label}
-              variant={method.provider === 'placetopay' ? 'contained' : 'outlined'}
-              disabled={disabled || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
-              onClick={() => {
-                // The first tap on PayPhone only asks for the wallet number.
-                if (method.provider === 'payphone' && !payphoneFieldsVisible) { setPayphoneRequested(true); return; }
-                void startPayment(method);
-              }}
-            >
-              {busy && isSelected ? <CircularProgress size={20} color="inherit" /> : methodCopy(method.label, english)}
-            </Button>
-          );
-        })}
-      </Stack>
       {pendingCreation && selected && !session && (
         <Button variant="outlined" disabled={busy} onClick={() => void startPayment(selected)}>
           {english ? 'Recover original payment' : 'Recuperar pago original'}
@@ -605,6 +604,6 @@ export default function HostedProviderCheckout({
           ? 'TDF never collects card numbers or security codes here. Payment success is shown only after server verification.'
           : 'TDF no pide aquí números de tarjeta ni códigos de seguridad. Un pago aparece como completado solo cuando está confirmado.'}
       </Typography>
-    </Stack>
+    </PaymentMethodChoices>
   );
 }

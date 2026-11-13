@@ -256,6 +256,14 @@ const renderPage = async (
   });
   return {
     qc,
+    rerender: async () => {
+      await act(async () => {
+        root?.render(<MemoryRouter initialEntries={[options.route ?? '/reservar']}>
+          <QueryClientProvider client={qc}><PublicBookingPage {...options.props} /></QueryClientProvider>
+        </MemoryRouter>);
+        await flushPromises();
+      });
+    },
     cleanup: async () => {
       if (!root) return;
       await act(async () => {
@@ -1076,4 +1084,55 @@ it('skips the optional account card for a visitor who is already signed in', asy
     expect(container.textContent).not.toContain('¿Ya tienes cuenta?');
     expect(Array.from(container.querySelectorAll('a')).some((link) => link.textContent?.trim() === 'Iniciar sesión')).toBe(false);
   } finally { bookingSession = null; await cleanup(); document.body.removeChild(container); }
+});
+
+
+it('summarizes complete account contact, preserves explicit edits and manages focus without creating a booking', async () => {
+  createPublicMock.mockClear(); createPublicCheckoutMock.mockClear();
+  bookingSession = { username: 'contact@example.test', displayName: 'Contacto sintético', roles: ['customer'], partyId: 9 };
+  window.sessionStorage.clear();
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const { cleanup } = await renderPage(container);
+  try {
+    const fields = container.querySelector<HTMLElement>('#booking-contact-fields')!;
+    expect(fields.hidden).toBe(true);
+    expect(container.querySelector('[aria-label="Datos de contacto"]')?.textContent).toContain('contact@example.test');
+    await act(async () => clickButtonByText(container, 'Editar datos'));
+    expect(fields.hidden).toBe(false);
+    expect(document.activeElement).toBe(getInputByLabel(container, 'Nombre completo'));
+    await act(async () => { setInputValue(getInputByLabel(container, 'Correo'), 'edited@example.test'); });
+    expect(fields.hidden).toBe(false);
+    await act(async () => clickButtonByText(container, 'Usar estos datos de contacto'));
+    expect(fields.hidden).toBe(true);
+    const edit = container.querySelector<HTMLButtonElement>('[aria-controls="booking-contact-fields"]')!;
+    expect(edit.getAttribute('aria-expanded')).toBe('false');
+    expect(document.activeElement).toBe(edit);
+    expect(container.querySelector('[aria-label="Datos de contacto"]')?.textContent).toContain('edited@example.test');
+    await act(async () => clickButtonByText(container, 'Continuar'));
+    expect(getInputByLabel(container, 'Fecha y hora')).not.toBeNull();
+    expect(createPublicMock).not.toHaveBeenCalled(); expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+  } finally { bookingSession = null; await cleanup(); container.remove(); }
+});
+
+it('keeps incomplete contacts and manual edits open when a signed-in account arrives later', async () => {
+  createPublicMock.mockClear(); createPublicCheckoutMock.mockClear();
+  bookingSession = null; window.sessionStorage.clear();
+  const container = document.createElement('div'); document.body.appendChild(container);
+  const { cleanup, rerender } = await renderPage(container);
+  try {
+    await act(async () => {
+      setInputValue(getInputByLabel(container, 'Nombre completo'), 'Nombre editado');
+      setInputValue(getInputByLabel(container, 'Correo'), 'invalid');
+      clickButtonByText(container, 'Continuar');
+    });
+    expect(container.querySelector<HTMLElement>('#booking-contact-fields')?.hidden).toBe(false);
+    expect(container.textContent).toContain('Ingresa un correo válido');
+    bookingSession = { username: 'account@example.test', displayName: 'Nombre cuenta', roles: ['customer'], partyId: 9 };
+    await rerender();
+    expect(getInputByLabel(container, 'Nombre completo').value).toBe('Nombre editado');
+    expect(getInputByLabel(container, 'Correo').value).toBe('invalid');
+    await act(async () => setInputValue(getInputByLabel(container, 'Correo'), 'corrected@example.test'));
+    expect(container.querySelector<HTMLElement>('#booking-contact-fields')?.hidden).toBe(false);
+    expect(createPublicMock).not.toHaveBeenCalled(); expect(createPublicCheckoutMock).not.toHaveBeenCalled();
+  } finally { bookingSession = null; await cleanup(); container.remove(); }
 });

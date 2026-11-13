@@ -1,5 +1,7 @@
 /** @jest-environment jsdom */
 import { jest } from '@jest/globals';
+import { useState } from 'react';
+import { PaymentMethodButton } from './PaymentMethodChoices';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 const checkoutId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -37,6 +39,37 @@ describe('HostedProviderCheckout', () => {
     createMock.mockReset();
     getMock.mockReset();
     window.sessionStorage.clear();
+  });
+
+  it('keeps local and hosted choices in one group and locks local alternatives after an ambiguous hosted request', async () => {
+    const localStart = jest.fn();
+    createMock.mockRejectedValue(new Error('Synthetic lost response'));
+    function CombinedMethods() {
+      const [locked, setLocked] = useState(false);
+      return <HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card', 'payphone_wallet']}
+        onSafetyLockChange={setLocked} additionalMethods={<>
+          <PaymentMethodButton disabled={locked} onClick={localStart}>Tarjeta · Datafast</PaymentMethodButton>
+          <PaymentMethodButton disabled={locked} onClick={localStart}>PayPal</PaymentMethodButton>
+          <PaymentMethodButton disabled={locked} onClick={localStart}>Transferencia bancaria</PaymentMethodButton>
+        </>} />;
+    }
+    render(<CombinedMethods />);
+    const group = screen.getByRole('group', { name: 'Métodos de pago disponibles' });
+    expect(group.querySelectorAll('button')).toHaveLength(5);
+    expect(screen.getAllByRole('region', { name: 'Métodos de pago' })).toHaveLength(1);
+    expect(createMock).not.toHaveBeenCalled(); expect(localStart).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Billetera PayPhone', exact: true }));
+    expect(screen.getByRole('textbox', { name: 'Número PayPhone' })).toBeTruthy();
+    expect(createMock).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Tarjeta · PlaceToPay', exact: true }));
+    await screen.findByText(/no sabemos si el pago se completó/);
+    for (const label of ['Tarjeta · Datafast', 'PayPal', 'Transferencia bancaria']) {
+      const button = screen.getByRole('button', { name: label, exact: true });
+      expect(button.hasAttribute('disabled')).toBe(true);
+      fireEvent.click(button);
+    }
+    expect(localStart).not.toHaveBeenCalled(); expect(createMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Recuperar pago original' })).toBeTruthy();
   });
 
   it('shows only server-offered methods and redirects only to the allowlisted host', async () => {

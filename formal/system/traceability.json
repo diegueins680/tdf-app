@@ -26871,7 +26871,7 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation. Payment choices for tickets, studio deposits, courses, mixing and Domo quote deposits share one visual and accessible group, with the payment type prominent and its processor shown as secondary text. Only existing server-offered methods and existing local eligibility checks supply choices; all retain their original handlers and disabled conditions. The client does not invent a recommended provider from list order. Unknown outcomes continue to lock local and hosted alternatives, retain exact retry keys and permit original-attempt recovery even when new payment is disabled or no method is offered. PayPhone still requests its number only after selection and does not send a request on that first selection. For signed-in booking visitors, a complete valid contact is summarized with an explicit edit control; guests, incomplete contacts and in-progress edits remain expanded. Editing and returning to the summary move keyboard focus to the appropriate control without advancing a step, overwriting manual input or accepting terms.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
       "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14-16, 18, 22 and25; continuation 2026-11-11.",
@@ -26930,6 +26930,7 @@
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/components/payments/PaymentMethodChoices.tsx",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.tsx",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
@@ -26982,11 +26983,13 @@
         "e2e/web/event-rsvp-sharing.spec.mjs",
         "e2e/web/live-session-contact.spec.mjs",
         "e2e/web/music-operations-amounts.spec.mjs",
+        "e2e/web/payment-choices-contact.spec.mjs",
         "e2e/web/payment-field-errors.spec.mjs",
         "e2e/web/persona-public.spec.mjs",
         "e2e/web/staff-event-money.spec.mjs",
         "e2e/web/video-campaigns.spec.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
+        "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -27003,6 +27006,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
@@ -27120,6 +27124,7 @@
     "e2e/web/music-player.spec.mjs": "67bc335508139b6555425e0b7b1fde9863887df9fe33d28457860108a7fe7f49",
     "e2e/web/music-search-native.spec.mjs": "6cebd8f6c76d01e42a3eb6690ba71b16a7d24762361068ec16044729fa2fccfa",
     "e2e/web/notification-navigation.spec.mjs": "b2ef0d18e6f08d9610d8a91e24648e4cf1af66b45ab6fca8e9bc2d79b3d02619",
+    "e2e/web/payment-choices-contact.spec.mjs": "6ba982189ab6eb888ab98f2abf76918e27c9a62635d7276275a8cf3573bcf234",
     "e2e/web/payment-field-errors.spec.mjs": "0116b1c7bdbef1d0d296a888ea72de15a5feb944d1c45a903dd8156be4055d67",
     "e2e/web/persona-public.spec.mjs": "dcc349c4129339aaf19b0d80a8a32c35acc83781e331eb3080c44e359c163d73",
     "e2e/web/public-welcome.spec.mjs": "d130bcf12fa24c19e0017fa14806c15f97c414550ab9402b7ccb51b89b1e2b6d",
@@ -27943,8 +27948,8 @@
     "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
     "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx": "205cd4ebacf67f48da978914e77c6ca5c5a0dac6a24b26c557865df5dc587bb1",
-    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "2ed6fbb308d0dbe89c46d4ee407480d9c531351e0f43b0b531db31ceef3c22d8",
-    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "208ff62347774f0c9aa5b1d773c370f3b346e8a98f42a4a77de6065f7796673e",
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "f6956da62c40594524b4362f84ee685fb2a84d33cd9cde0bee190262d92829a7",
+    "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "77978bf71e272a976d21ad62fb8cbeff01eea94442202f33ceee4a1d471d5756",
     "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx": "b27a208c02d62cc6013968ee4971b7729c46e6300aae35fad89576b6371b906b",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "993441525fe795e32865647090cb62ad4ac49e08f14c8c50177e4196ad5192b8",
     "tdf-hq-ui/src/__tests__/bootSafety.test.tsx": "4bb56f2d7f3e557fd60d61e74fad694ab93ca3848fe3b5aceebb3e458d54d59e",
@@ -28101,8 +28106,9 @@
     "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
     "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
-    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "ece68991c3d3ab549b31d328afe3735d2842bf32773ca6b6f72c06d59dfe2aca",
-    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "616d9200231897ba97dc4c1fa9a4f9457378f609d1296b8bd6cd1c0b46f433ea",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "a5706160501a329685f1859112d507fa07f1dda00e79434805c88c08fc9c458f",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "5739b7d586486947e83cc9e89f29f8d8d2b1f3585f3736fa9aa911119a3ced60",
+    "tdf-hq-ui/src/components/payments/PaymentMethodChoices.tsx": "060d5a7a65c486a1bbdd2eb80b98c31bd62a25aadb1babb2b3530a0eb64d565a",
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "33f9c31935e8ce69c04a66ede76b682fa586afda515548093e00707ac45b270a",
@@ -28201,7 +28207,7 @@
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
-    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "bc0a34345baa664cecfa185d1a4051b80772607349f1c61a3866ff8098e4074e",
+    "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "e53e030555dd6fc1e00e9aea06b5ca9ed6eb0b1cc0dd383135f06bc58fabf055",
     "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
     "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
@@ -28213,7 +28219,7 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.music.test.tsx": "10d23697ca3cc48f4b71513a79b9787a3a506022f0feda029dc3a2dc59055d84",
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "6fa7990f5f6b0072eb10cbd811981fd23ddffa0615dc4a20badb8a8da9ec5d34",
-    "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "edc51fcd5cd15ae3959a12ea047bbf40cd2e755b223caa13ed589ab96aa5fdbf",
+    "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "b87b23e795a6d3afc041e9bd6d5d6c11fbaab700ce9b2c610c319cb64329d085",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "ef0bc404a0629dd450f959bfc86230b0d3c7bf08f6de74adb3e73a40b49cd4d9",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "33a335a1602ea6c4ac3ea14cad84261b77454e4be0f31a20ecbca3e2d117ebd3",
@@ -28259,7 +28265,7 @@
     "tdf-hq-ui/src/pages/MerchSellerPage.tsx": "787a3636924f8f097cad2b7bcf5da12637829d30eb4e3f1a26fccccb5bf118e0",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "e257cb0a49e7a7773fc26e24fa9f5f93fb7a68167fca821228f344fa4ced8aa4",
     "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
-    "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": "fae59158de75bb6d333511ea3daa3bef5f28c9057ec4674b632a131cd622353f",
+    "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": "4647f6a17e8ccd2f70174d93365d15792fdf9d59c895fc2961431acfb25d8894",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
     "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx": "b914809cea81f9ff7b4c6f02d95cf01813ae506779335e9113c50d04393c76a9",
     "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
@@ -28287,8 +28293,8 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "ce6ad9db314d718c18736bbd51652b4bc666c9d8df7cc028b482e21c877f25af",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "cd5515ffdf95e8a621791d1b89648d8de171600c9d6292bce8dfc015f0e4b194",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "212b909b23793400907c09696153136b452038d6c8a0f7d48853c01cb09e75f4",
-    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "27203216b717b7668ac25e8a87fabef364aaa472940bd2ad479b8677fc5813b8",
-    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "4e7d476baf70894414b61e68e073fda5e6024ec57b98a883918acce952c07397",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "273f03069994d394fc675eefbfa6daace3fc989e54a477c09a005f276acd0d08",
+    "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "a68ad5aa75a860a661e313875fdae8642c3a4f43ae26fc0fe50eab66ee604bd2",
     "tdf-hq-ui/src/pages/PublicProfilePage.tsx": "231a90d2da08b7eb5049818d418372a6c05d9069b9b874e8cf37c28824e17164",
     "tdf-hq-ui/src/pages/PublicReputationRightsPage.tsx": "f6de05dae2322ea92e05066bf94073a68dcaa1c437c10b1e9524dfb98867268f",
     "tdf-hq-ui/src/pages/PublicWhatsAppConsentPage.tsx": "542102063d3a9fedbb3f5b8bb9f6ac5d8d3846c9657ea03d5ef9a7ef2d381aca",
@@ -40505,6 +40511,10 @@
       {
         "requirement": "LEGAL-CONSENT-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/utils/phone.test.ts": [
@@ -43745,6 +43755,10 @@
       {
         "requirement": "PAY-DOMO-CANCEL-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq/src/TDF/Commerce/DepositPolicy.hs": [
@@ -46697,6 +46711,12 @@
         "relationship": "tests"
       }
     ],
+    "tdf-hq-ui/src/components/payments/PaymentMethodChoices.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/BookingsPage.tsx": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -46788,6 +46808,12 @@
       }
     ],
     "e2e/web/music-operations-amounts.spec.mjs": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/payment-choices-contact.spec.mjs": [
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
@@ -47883,6 +47909,18 @@
         {
           "requirement": "SYS-UI-FIXTURE-001",
           "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f220bdfbcd156403",
+      "path": "e2e/web/payment-choices-contact.spec.mjs",
+      "sha256": "6ba982189ab6eb888ab98f2abf76918e27c9a62635d7276275a8cf3573bcf234",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -56593,6 +56631,10 @@
         {
           "requirement": "PAY-DOMO-CANCEL-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -56641,7 +56683,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "2ed6fbb308d0dbe89c46d4ee407480d9c531351e0f43b0b531db31ceef3c22d8",
+      "sha256": "f6956da62c40594524b4362f84ee685fb2a84d33cd9cde0bee190262d92829a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -56665,7 +56707,7 @@
     {
       "id": "SURFACE-c3848d4be5fc9eba",
       "path": "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
-      "sha256": "208ff62347774f0c9aa5b1d773c370f3b346e8a98f42a4a77de6065f7796673e",
+      "sha256": "77978bf71e272a976d21ad62fb8cbeff01eea94442202f33ceee4a1d471d5756",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59974,7 +60016,7 @@
     {
       "id": "SURFACE-3b9b0b0c805d8c24",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
-      "sha256": "ece68991c3d3ab549b31d328afe3735d2842bf32773ca6b6f72c06d59dfe2aca",
+      "sha256": "a5706160501a329685f1859112d507fa07f1dda00e79434805c88c08fc9c458f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59990,13 +60032,25 @@
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "616d9200231897ba97dc4c1fa9a4f9457378f609d1296b8bd6cd1c0b46f433ea",
+      "sha256": "5739b7d586486947e83cc9e89f29f8d8d2b1f3585f3736fa9aa911119a3ced60",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RECOVERY-001",
           "relationship": "implementation"
         },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7eaa3c14a7771ba6",
+      "path": "tdf-hq-ui/src/components/payments/PaymentMethodChoices.tsx",
+      "sha256": "060d5a7a65c486a1bbdd2eb80b98c31bd62a25aadb1babb2b3530a0eb64d565a",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
         {
           "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
@@ -62084,13 +62138,17 @@
         {
           "requirement": "LEGAL-CONSENT-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-f12bf83921a15e4d",
       "path": "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
-      "sha256": "bc0a34345baa664cecfa185d1a4051b80772607349f1c61a3866ff8098e4074e",
+      "sha256": "e53e030555dd6fc1e00e9aea06b5ca9ed6eb0b1cc0dd383135f06bc58fabf055",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62376,7 +62434,7 @@
     {
       "id": "SURFACE-8f336ec91c101452",
       "path": "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-      "sha256": "edc51fcd5cd15ae3959a12ea047bbf40cd2e755b223caa13ed589ab96aa5fdbf",
+      "sha256": "b87b23e795a6d3afc041e9bd6d5d6c11fbaab700ce9b2c610c319cb64329d085",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63388,7 +63446,7 @@
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "fae59158de75bb6d333511ea3daa3bef5f28c9057ec4674b632a131cd622353f",
+      "sha256": "4647f6a17e8ccd2f70174d93365d15792fdf9d59c895fc2961431acfb25d8894",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63816,7 +63874,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "27203216b717b7668ac25e8a87fabef364aaa472940bd2ad479b8677fc5813b8",
+      "sha256": "273f03069994d394fc675eefbfa6daace3fc989e54a477c09a005f276acd0d08",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63840,7 +63898,7 @@
     {
       "id": "SURFACE-33a2d35447d09cae",
       "path": "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
-      "sha256": "4e7d476baf70894414b61e68e073fda5e6024ec57b98a883918acce952c07397",
+      "sha256": "a68ad5aa75a860a661e313875fdae8642c3a4f43ae26fc0fe50eab66ee604bd2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85053,7 +85111,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f690c15915886ecaed4627932cd616df57f733416229e8bc3e44949d2cbdcb50",
+      "sourceSha256": "6c57432772901126461f06d0885ee7db1f490ed879b77c5a519acdd442ab6352",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85081,7 +85139,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f690c15915886ecaed4627932cd616df57f733416229e8bc3e44949d2cbdcb50",
+      "sourceSha256": "6c57432772901126461f06d0885ee7db1f490ed879b77c5a519acdd442ab6352",
       "definition": {
         "states": [
           "absent",
@@ -85111,7 +85169,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f690c15915886ecaed4627932cd616df57f733416229e8bc3e44949d2cbdcb50",
+      "sourceSha256": "6c57432772901126461f06d0885ee7db1f490ed879b77c5a519acdd442ab6352",
       "definition": {
         "export": [
           "queued",

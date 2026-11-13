@@ -1,3 +1,4 @@
+import PaymentMethodChoices, { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import MarkdownText from '../components/MarkdownText';
 import {
   forwardRef,
@@ -1234,6 +1235,18 @@ function CourseCheckoutCard({
   const paid = checkout.paymentStatus === 'paid';
   const held = checkout.fulfillmentStatus === 'seat_held';
   const quote = checkout.quote;
+  const legacyPaymentMethods = checkout.checkoutAvailable && !paid && (checkout.paymentMethods.includes('datafast') || (checkout.paymentMethods.includes('paypal') && paypalAvailable)) ? (<>
+                {checkout.paymentMethods.includes('datafast') && (
+                  <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
+                    Tarjeta · Datafast
+                  </PaymentMethodButton>
+                )}
+                {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
+                  <PaymentMethodButton disabled={paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
+                    Pagar con PayPal
+                  </PaymentMethodButton>
+                )}
+            </>) : null;
   return (
     <Card
       sx={{
@@ -1298,20 +1311,10 @@ function CourseCheckoutCard({
             </Alert>
           )}
           <Stack spacing={1.5}>
-            {checkout.checkoutAvailable && !paid && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                {checkout.paymentMethods.includes('datafast') && (
-                  <Button variant="contained" disabled={paymentBusy || hostedPaymentLocked} onClick={onDatafast}>
-                    Pagar con Datafast
-                  </Button>
-                )}
-                {checkout.paymentMethods.includes('paypal') && paypalAvailable && (
-                  <Button variant="outlined" disabled={paymentBusy || hostedPaymentLocked} onClick={onPaypal}>
-                    Pagar con PayPal
-                  </Button>
-                )}
-            </Stack>}
+            {(!checkout.checkoutId || !checkoutLookupToken) && legacyPaymentMethods && <PaymentMethodChoices methods={legacyPaymentMethods} />}
             {checkout.checkoutId && checkoutLookupToken && (
                 <HostedProviderCheckout
+                  additionalMethods={legacyPaymentMethods}
                   checkout={{
                     checkoutId: checkout.checkoutId,
                     lookupToken: checkoutLookupToken,

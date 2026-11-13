@@ -287,14 +287,14 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     const labels = () => Array.from(container.querySelectorAll('button')).map((button) => button.textContent ?? '');
     const refresh = () => Array.from(container.querySelectorAll('button'))
       .find((button) => button.textContent === 'Actualizar estado de la orden')!;
-    await waitForExpectation(() => expect(labels()).toContain('Datafast'));
+    await waitForExpectation(() => expect(labels()).toContain('Tarjeta · Datafast'));
     await act(async () => { fireEvent.click(refresh()); });
     await waitForExpectation(() => expect(container.textContent).toContain('No vuelvas a comprar ni a pagar'));
-    expect(labels()).not.toContain('Datafast');
+    expect(labels()).not.toContain('Tarjeta · Datafast');
     expect(labels().some((label) => /paypal/i.test(label))).toBe(false);
     expect(container.textContent).not.toContain('no hay un método de pago en línea');
     await act(async () => { fireEvent.click(refresh()); });
-    await waitForExpectation(() => expect(labels()).toContain('Datafast'));
+    await waitForExpectation(() => expect(labels()).toContain('Tarjeta · Datafast'));
   });
 
   it('keeps an issued ticket on screen when refreshing the order fails', async () => {
@@ -564,13 +564,13 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     const paypalButton = () => Array.from(container.querySelectorAll('button'))
       .find((button) => button.textContent === 'PayPal')!;
     await waitForExpectation(() => expect(paypalButton()?.disabled).toBe(false));
-    expect(labels()).toContain('Datafast');
+    expect(labels()).toContain('Tarjeta · Datafast');
     await act(async () => fireEvent.click(paypalButton()));
     await waitForExpectation(() => expect(render).toHaveBeenCalledTimes(1));
     const options = buttons.mock.calls[0]![0];
     await act(async () => options.onApprove?.({ orderID: 'BOUND-PAYPAL-ORDER' }));
     await waitForExpectation(() => expect(container.textContent).toContain('El servidor no pudo verificar PayPal'));
-    expect(labels()).not.toContain('Datafast');
+    expect(labels()).not.toContain('Tarjeta · Datafast');
     // Reading the order again does not ask PayPal: an unpaid answer must not
     // bring the other rails back.
     const refresh = () => Array.from(container.querySelectorAll('button'))
@@ -579,7 +579,7 @@ describe('PublicEventTicketsPage verified payment boundary', () => {
     await act(async () => { fireEvent.click(refresh()); });
     await waitForExpectation(() => expect(getCheckoutMock.mock.calls.length).toBeGreaterThan(lookups));
     await waitForExpectation(() => expect(refresh().disabled).toBe(false));
-    expect(labels()).not.toContain('Datafast');
+    expect(labels()).not.toContain('Tarjeta · Datafast');
     expect(container.textContent).toContain('No vuelvas a pagar');
     // Only a paid order settles it.
     getCheckoutMock.mockResolvedValue(checkoutFixture({ paymentStatus: 'paid', fulfillmentStatus: 'issued' }));

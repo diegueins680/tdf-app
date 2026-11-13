@@ -1,3 +1,4 @@
+import { PaymentMethodButton } from '../components/payments/PaymentMethodChoices';
 import {
   Alert,
   Box,
@@ -275,6 +276,10 @@ export default function DomoQuoteCheckoutPage() {
   const expired = quote.quoteStatus === 'expired' || quote.paymentStatus === 'expired';
   const canAccept = ['sent', 'viewed'].includes(quote.quoteStatus) && !expired;
   const awaitingPayment = quote.quoteStatus === 'deposit_due' && !paid && !expired;
+  const legacyPaymentMethods = awaitingPayment && (quote.paymentMethods.includes('datafast') || quote.paymentMethods.includes('paypal')) ? (<>
+                    {quote.paymentMethods.includes('datafast') && <PaymentMethodButton disabled={busy || hostedPaymentLocked} onClick={() => void handleDatafast()}>{english ? 'Card · Datafast' : 'Tarjeta · Datafast'}</PaymentMethodButton>}
+                    {quote.paymentMethods.includes('paypal') && <PaymentMethodButton disabled={busy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</PaymentMethodButton>}
+                  </>) : null;
   const cancelled = quote.quoteStatus === 'cancelled';
   const canCancel = !expired && !['cancelled', 'completed', 'expired'].includes(quote.quoteStatus) && quote.paymentStatus !== 'processing';
   const returnUrl = typeof window === 'undefined'
@@ -354,11 +359,9 @@ export default function DomoQuoteCheckoutPage() {
                   ? 'No real payment provider is enabled. The date remains only temporarily held.'
                   : 'Todavía no hay un método de pago en línea. La fecha sigue reservada solo temporalmente.'}</Alert>}
                 <Stack spacing={1.5}>
-                  {awaitingPayment && <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                    {quote.paymentMethods.includes('datafast') && <Button variant="contained" disabled={busy || hostedPaymentLocked} onClick={() => void handleDatafast()}>Datafast</Button>}
-                    {quote.paymentMethods.includes('paypal') && <Button variant="outlined" disabled={busy || hostedPaymentLocked || !paypalClientId || !paypalReady} onClick={() => void handlePaypal()}>PayPal</Button>}
-                  </Stack>}
+
                   <HostedProviderCheckout
+                    additionalMethods={legacyPaymentMethods}
                     checkout={{
                       checkoutId: quote.checkoutId,
                       lookupToken,
