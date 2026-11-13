@@ -17,6 +17,7 @@ import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTier
 import { EventTickets } from '../api/eventTickets';
 import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
+import { canAccessPath } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatCurrency } from '../utils/formatters';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
@@ -233,6 +234,9 @@ export default function SocialEventDetailPage() {
   // Organizer or delegated administrator: event editing, poster, ticket tiers
   // and courtesies. Memory campaigns and moderation stay with `isOrganizer`.
   const canManageEvent = isOrganizer || adminAccess === 'admin';
+  // The planning workspace is a separate, access-controlled section: without
+  // access its links only lead to a 403 page.
+  const canPlanLogistics = canAccessPath(`/social/eventos/${eventId ?? ''}/logistica`, session?.roles, session?.modules, session?.featureFlags);
   const canShareTickets = ticketStorefrontPrerequisitesMet
     && storefrontQuery.data?.checkoutAvailable === true;
   const ticketPurchaseUrl = typeof window === 'undefined'
@@ -394,7 +398,7 @@ export default function SocialEventDetailPage() {
             Compartir entradas
           </Button>
         )}
-        {session && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
+        {session && canPlanLogistics && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
       </Stack>}
     >
       <Stack spacing={2.5}>
@@ -442,7 +446,7 @@ export default function SocialEventDetailPage() {
           </Card>
         )}
 
-        {event && canManageEvent && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} />}
+        {event && canManageEvent && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} canPlanLogistics={canPlanLogistics} />}
         {event && canManageEvent && session?.partyId && <EventLineupEditor key={`lineup:${editorScope}`} event={event} ownerId={session.partyId} />}
         {eventEnded && memories}
         {event && <Card variant="outlined">
