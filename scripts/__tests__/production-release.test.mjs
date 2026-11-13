@@ -1088,8 +1088,14 @@ test('buildMigrationBatchSql verifies the ADR 0135 marketplace agreement schema 
   const agreementCheck = /Marketplace agreement schema \(ADR 0135\) is missing/;
   assert.match(buildMigrationBatchSql([before]), agreementCheck);
   assert.match(buildMigrationBatchSql([before]), /Marketplace agreement default pricing rule is missing/);
-  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false, marketplaceOffersIncluded: false, marketplaceAgreementsIncluded: false });
+  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false, marketplaceOffersIncluded: false, marketplaceAgreementsIncluded: false, marketplaceAgreementPaymentsIncluded: false });
   assert.doesNotMatch(prefix, agreementCheck);
+  const paymentCheck = /Marketplace agreement payment schema \(ADR 0136\) is missing/;
+  assert.doesNotMatch(prefix, paymentCheck);
+  assert.match(prefix, /ADR 0136: marketplace agreement payments verified only when the batch applies 2026-11-12_marketplace_agreement_payments/);
+  assert.match(buildMigrationBatchSql([before]), paymentCheck);
+  assert.match(buildMigrationBatchSql([before], { marketplaceAgreementsIncluded: false }), paymentCheck);
+  assert.match(buildSchemaVerificationSql(), paymentCheck);
   assert.match(prefix, /ADR 0135: marketplace agreements verified only when the batch applies 2026-11-12_marketplace_agreements/);
   // Opting out of agreements alone keeps the offers verification.
   const offersOnly = buildMigrationBatchSql([before], { marketplaceAgreementsIncluded: false });

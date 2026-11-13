@@ -1278,6 +1278,11 @@
       "id": "2026-11-12_marketplace_agreements",
       "path": "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "introducedBy": "5ca1a385177711438a8b0e44336ea2739dbd56f5"
+    },
+    {
+      "id": "2026-11-12_marketplace_agreement_payments",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+      "introducedBy": "26c83d9e6525d859b0da0bebf959ad6d1c806159"
     }
   ]
 }

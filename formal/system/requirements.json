@@ -10307,6 +10307,115 @@
       }
     },
     {
+      "id": "MKT-AGREEMENT-PAYMENT-001",
+      "title": "Marketplace agreement payments on the canonical checkout with a frozen split per charge",
+      "domain": "MKT",
+      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit, the rest on the balance), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly once a deposit was collected. A deposit unpaid at its deadline expires the agreement and releases the slot. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor refuses agreement checkouts until a split-capable provider flow exists.",
+      "authority": "Product owner decisions of 2026-11-12 (Stripe, PayPhone and DataWeb by currency and user choice; automatic provider payout; DataWeb integrated but closed; split on every charge); ADR 0136; ADR 0115",
+      "source": "docs/adr/0136-marketplace-agreement-payments.md; docs/adr/0115-provider-neutral-payment-routing.md",
+      "contract": "docs/adr/0136-marketplace-agreement-payments.md",
+      "actors": [
+        "Buyer (manager of the profile that seeks and pays)",
+        "Provider (manager of the profile that delivers and is paid)",
+        "Directory administrator",
+        "Payment reconciliation (canonical checkout runtime)"
+      ],
+      "preconditions": [
+        "Migration 2026-11-12_marketplace_agreement_payments is applied after 2026-11-12_marketplace_agreements",
+        "The marketplace.agreements and marketplace.agreement_payments runtime flags are on for the environment",
+        "The provider profile has a ready payout account for a payment provider that settles the agreed currency",
+        "A processor fee rule exists for the chosen payment provider"
+      ],
+      "inputs": [
+        "PATCH /directory/applications/{applicationId}/status (acceptance decides the settlement mode of the new agreement)",
+        "POST /directory/agreements/{agreementId}/payments (the buyer starts the deposit or balance charge)",
+        "PATCH /directory/agreements/{agreementId}/status (delivery confirmation, cancellation, dispute)",
+        "GET /directory/payout-accounts (payout accounts of the profiles the caller manages)",
+        "PUT /directory/profiles/{profileId}/payout-accounts/{provider} (declare a payout account)",
+        "DELETE /directory/profiles/{profileId}/payout-accounts/{provider} (disable a payout account)",
+        "commerce_checkout_session status changes written by payment reconciliation"
+      ],
+      "state": {
+        "agreementPayment": "pending, paid, expired, cancelled",
+        "authority": "TDF.Directory.Policy.allowedAgreementPaymentTransition, marketplace_guard_agreement_payment trigger, marketplace_agreement_require_paid_payment trigger and the checkout sync triggers"
+      },
+      "allowedTransitions": [
+        "payment pending -> paid (verified checkout evidence only)",
+        "payment pending -> expired (deposit deadline) or cancelled (replaced charge, cancelled agreement)",
+        "agreement pending_deposit -> confirmed (paid deposit) | cancelled (either party) | expired (deadline)",
+        "agreement confirmed|in_progress -> balance_due (buyer confirms delivery with a balance owed on the platform)",
+        "agreement balance_due -> completed (paid balance)"
+      ],
+      "forbiddenTransitions": [
+        "Any transition out of a paid, expired or cancelled payment",
+        "A payment marked paid by a participant or an administrator, or without verified evidence for its exact amount and currency",
+        "A change of amount, split, recipient or checkout of a payment after creation",
+        "An agreement confirmed without a paid deposit or completed from balance_due without a paid balance",
+        "A direct cancellation by a participant after the deposit was collected, or while a payment attempt may still collect money",
+        "An agreement charge executed by a provider flow that cannot split it"
+      ],
+      "effects": [
+        "One live charge (pending or paid) per agreement and kind, with platform fee + processor fee + provider amount = amount",
+        "A verified paid checkout marks its charge paid, moves the agreement, notifies both parties and writes an audit event; verified money for a charge that is no longer pending is recorded as agreement.payment.unapplied for operations",
+        "Expiry withdraws the accepted offer and releases its slot",
+        "Payout accounts store the recipient and project it masked"
+      ],
+      "authorization": "Only the buyer starts a charge; only managers of a profile with the manage capability read or change its payout accounts; reads of an agreement and its charges stay limited to its two parties and administrators.",
+      "privacy": "The payout recipient (identification or phone) is never returned in full and never appears in agreement projections, audit metadata or analytics; charges are private to the parties and administrators.",
+      "concurrency": "Lock order classified, offer, agreement, payment; reconciliation locks the checkout first and then the agreement and the payment; no marketplace path locks a checkout while holding an agreement (creating the checkout is an insert). Deposit expiry skips agreements with a payment attempt that may still collect money.",
+      "idempotency": "A unique partial index allows one live charge per agreement and kind; asking again replaces a pending charge that has no payment attempt in flight; the checkout idempotency key is derived from the payment id; the sync trigger updates a charge only while it is pending.",
+      "failure": "Gate off returns 503; a non-buyer gets 403; no charge due, a passed deadline, a missing account email, an unsupported currency, a charge in progress or an unpayable provider return 409; the shared executor returns 503 for agreement checkouts until a split-capable flow is verified.",
+      "recovery": "Rollback 2026-11-12_marketplace_agreement_payments_rollback refuses to run when a paid charge exists; otherwise it returns agreements waiting for a deposit to confirmed off-platform, sends agreements waiting for a balance to dispute, drops charges, payout accounts and fee rules and restores the previous agreement transition relation and notification allowlist.",
+      "observability": "directory_audit_event rows agreement.payment.create, agreement.payment.paid, agreement.payment.unapplied, agreement.payment.unexpected_state, payout_account.save and payout_account.disable; notifications marketplace.agreement.deposit_paid, balance_due and expired; release schema verification of the payment objects.",
+      "property": "For every charge amount = platform fee + processor fee + provider amount with no negative part and platform fee <= commission due; over deposit and balance the platform takes exactly the frozen commission; every stored payment status change is a pair of the declared relation; no charge is paid without verified checkout evidence.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/features/marketplace/agreements.ts",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
+        "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
+        "scripts/lib/production-release.mjs",
+        "scripts/production-migrations.json",
+        "docs/music-directory/formal-model.yaml",
+        "formal/system/state-machine-bindings.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
+      ],
+      "formalModels": [
+        "docs/music-directory/formal-model.yaml"
+      ],
+      "verification": "Hspec property tests of the payment transition relation, the split and commission arithmetic, the delivery-confirmation target and the payout identifier shape; routing test that the agreement domain is a marketplace flow; Jest unit tests of the client mirror; static state-machine gate; local PostgreSQL exercise of the migration, rollback, guards and checkout sync triggers with a stubbed evidence function, and of every new statement (PREPARE). No PostgreSQL integration test of the handler transactions and no provider sandbox run yet.",
+      "evidence": "Local static gates and PostgreSQL 16 exercise on 2026-11-12; CI on the candidate.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Policy verified by property tests; SQL verified against a migrated schema; handler transactions verified by review and CI build; no charge can execute because no split-capable provider flow exists and the gate is off in every environment.",
+      "ambiguity": [
+        "Whether the processor fee stays with the service provider or moves to the platform is a configurable rule awaiting a final product decision.",
+        "Deposit expiry runs lazily when a participant loads agreements until a worker exists.",
+        "Automatic refunds under the frozen cancellation policy, the PayPhone button flow with transferTo and the canonical Stripe adapter are part B2."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Domain, guards, handlers and read-side UI are implemented behind the marketplace.agreement_payments flag, which is off in every environment; split-capable provider execution (PayPhone button, Stripe destination charges), payout onboarding UI, refunds, the dispute panel, PostgreSQL handler integration tests and provider sandbox evidence remain open."
+      }
+    },
+    {
       "id": "MSG-WHATSAPP-REDELIVERY-001",
       "title": "A redelivered WhatsApp message changes nothing and is not answered again",
       "domain": "MSG",
