@@ -47,6 +47,7 @@ jobs:
         run: bash scripts/social/check-dm-model.sh
       - name: Regenerate checked DM INSERT outcomes
         run: |
+          python3 scripts/social/test-dm-model-cases.py
           java -cp /tmp/tla2tools-1.7.2.jar tlc2.TLC -workers 1 -deadlock -metadir /tmp/dm-trace-states -dump dot,actionlabels /tmp/dm-traces.dot -config formal/social/LegacyDm.cfg formal/social/LegacyDm.tla
           python3 scripts/social/generate-dm-cases.py /tmp/dm-traces.dot /tmp/dm-model-cases.sql
           diff -u scripts/social/dm-model-cases.sql /tmp/dm-model-cases.sql
