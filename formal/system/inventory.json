@@ -3954,7 +3954,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "74129f80f782492526e618b8ed65df3c802b7d186290991942e3ce3df612e787",
+      "sha256": "6169626d38503aa9cc32e807c264d938472fb55cbbe318022a6d46eed3d4393b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4836,7 +4836,7 @@
     {
       "id": "SURFACE-b3c3757671de3a8f",
       "path": "scripts/continuous-improvement-loop-supervisor.sh",
-      "sha256": "93ac702555b1338b6cf7f8e9d5b424f3204c69a72cd3d78d50541da3bf04ae40",
+      "sha256": "8f5cb7c9ca1891b7fccf308bb638780e32d8c61b41b66007111ebb0f42e50816",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4860,7 +4860,7 @@
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "163dab100e8c62a83e6cf3f2d5de7e042a4230714e28dfee944442e98f554773",
+      "sha256": "31770cdccd1356ce5d83eaadd82d88fadcba5e914bc7077d14989aeee23545b0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4884,7 +4884,7 @@
     {
       "id": "SURFACE-55c2c32700cda24a",
       "path": "scripts/discover-improvement-idea.mjs",
-      "sha256": "9baaef9c2ffaaa7636bbe12f785b9e42cb8603349a822250fa8d9f0d363a45f1",
+      "sha256": "a4fce3753e221d2cb7c1577a15e97719372a686e586234e0af358a98082a9ccf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5118,7 +5118,7 @@
     {
       "id": "SURFACE-5d55ff4fc614658c",
       "path": "scripts/lib/discovery.mjs",
-      "sha256": "a14e9b4b45190816752fdceb69684a059746e0a55344fef3c18f8451dcecdc14",
+      "sha256": "347304302f3a0e0161a6b8fc95d311a1eca12b6cd11bb3ffec378b862878ac4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21855,7 +21855,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "b3ff9c34e283f599d7e2d66f79a6fa78a65f258acf22e4eee18c321e8867f37f",
+      "sha256": "7d28aa04a4e518d50b37cb837fbc295f66e08712500f263c5282f2ea8614aeca",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

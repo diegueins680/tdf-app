@@ -279,7 +279,8 @@ Forever-runner contract:
 - Each worker step runs in its own process group and is stopped, with its children, after `stepTimeoutMinutes` (default 180) or when the loop is stopped.
 - Operator-visible state lives in `tmp/continuous-improvement-loop/status.json` with PID, child PID, phase, heartbeats, restart counters, and last-exit details.
 - Logs stay in `tmp/continuous-improvement-loop.log` and remain tail-able with `npm run loop:tail`.
-- Stop the runner cleanly with `npm run loop:stop`; a stop file is used so the supervisor exits intentionally instead of immediately respawning.
+- Stop the runner cleanly with `npm run loop:stop`. Under launchd, create the stop file (`tmp/continuous-improvement-loop/stop`) instead: the supervisor stops the loop child and idles until the file is removed, so `KeepAlive` cannot resume it behind your back.
+- While a loop pull request for a file is open, or was closed without merging, discovery skips that file, so the same fix is not proposed twice.
 - `scripts/install-continuous-improvement-loop-launchd.sh` installs a macOS LaunchAgent with `RunAtLoad` + `KeepAlive`, which is the durable contract for always-on execution across crashes and reboots.
 
 Notes:

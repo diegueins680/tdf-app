@@ -195,6 +195,7 @@ function buildContext(repoRoot, contextDir, iteration) {
     ux_report_file: path.join(contextDir, 'ux-report.json'),
     ui_report_file: path.join(contextDir, 'ui-report.json'),
     ci_report_file: path.join(contextDir, 'ci-report.json'),
+    excluded_targets_file: path.join(contextDir, 'excluded-targets.json'),
   };
 }
 
@@ -214,6 +215,7 @@ function loopEnvironment(context) {
     CONTINUOUS_LOOP_UX_REPORT_FILE: context.ux_report_file,
     CONTINUOUS_LOOP_UI_REPORT_FILE: context.ui_report_file,
     CONTINUOUS_LOOP_CI_REPORT_FILE: context.ci_report_file,
+    CONTINUOUS_LOOP_EXCLUDED_TARGETS_FILE: context.excluded_targets_file,
   };
 }
 
@@ -645,7 +647,7 @@ async function generateIdea(repoRoot, context, config) {
     };
   }
 
-  const idea = await discoverImprovementIdea(repoRoot);
+  const idea = await discoverImprovementIdea(repoRoot, { excludedFiles: config.pendingTargetFiles ?? [] });
   await fs.writeFile(context.idea_file, idea.markdown, 'utf8');
   const metadata = parseIdeaMarkdown(idea.markdown);
   return {
@@ -933,6 +935,40 @@ async function countOpenLoopPullRequests(repoRoot, config) {
     if (pulls.length < 100) break;
   }
   return count;
+}
+
+function targetFile(target) {
+  // "path/to/file.ext:12" -> "path/to/file.ext"
+  return String(target ?? '').trim().replace(/:\d+(?::\d+)?$/, '');
+}
+
+function parsePullRequestTarget(body) {
+  const match = /^- Target: (.+)$/m.exec(String(body ?? ''));
+  const file = targetFile(match?.[1]);
+  return file && file !== 'unspecified' ? file : '';
+}
+
+// Files the loop has already proposed a change for: open loop pull requests, and ones a
+// person closed without merging (re-proposing a rejected idea would only repeat the noise).
+// A merged proposal removes its finding from the base, so it needs no entry here.
+async function listPendingTargetFiles(repoRoot, config) {
+  const remote = await getGitHubRemote(repoRoot, config.pushRemote);
+  const prefix = resolveBranchPrefix(config);
+  const files = new Set();
+  for (let page = 1; page <= 3; page += 1) {
+    const pulls = await githubJson(
+      `repos/${remote.owner}/${remote.repo}/pulls?state=all&sort=created&direction=desc&per_page=100&page=${page}`,
+    );
+    if (!Array.isArray(pulls) || pulls.length === 0) break;
+    for (const pull of pulls) {
+      if (!String(pull?.head?.ref ?? '').startsWith(prefix)) continue;
+      if (pull.state !== 'open' && pull.merged_at) continue;
+      const file = parsePullRequestTarget(pull.body);
+      if (file) files.add(file);
+    }
+    if (pulls.length < 100) break;
+  }
+  return [...files].sort();
 }
 
 function buildPullRequestBody(config, context, branch) {
@@ -1431,6 +1467,8 @@ async function runIteration(repoRoot, config, iteration) {
   if (config.dryRun) {
     // A dry run never switches branches or discards anything.
     const head = await getHeadSha(repoRoot);
+    config.pendingTargetFiles = [];
+    await writeJson(context.excluded_targets_file, []);
     const dryBranch = { branchName: '', baseBranch: resolveBaseBranch(config), baseRef: head, baseSha: head };
     return runIterationSteps(repoRoot, config, iteration, context, dryBranch);
   }
@@ -1446,6 +1484,9 @@ async function runIteration(repoRoot, config, iteration) {
       return { ok: true, skipped: true, backlog: true, reason };
     }
   }
+
+  config.pendingTargetFiles = config.openPullRequest ? await listPendingTargetFiles(repoRoot, config) : [];
+  await writeJson(context.excluded_targets_file, config.pendingTargetFiles);
 
   await emitLoopStatus({ state: 'running', phase: 'branch-preparation', currentIteration: iteration, contextDir });
   const branch = await prepareIterationBranch(repoRoot, config, iteration);
@@ -1560,6 +1601,11 @@ async function runIterationSteps(repoRoot, config, iteration, context, branch) {
     context.idea_title = idea.title ?? '';
     context.idea_target = idea.target ?? '';
     context.idea_reason = idea.reason ?? '';
+
+    const ideaFile = targetFile(context.idea_target);
+    if (ideaFile && (config.pendingTargetFiles ?? []).includes(ideaFile)) {
+      throw new Error(`Idea targets ${ideaFile}, which already has a loop pull request awaiting review; skipping it.`);
+    }
 
     if (!config.implementationCommand) {
       throw new Error('implementationCommand is required to run the loop unattended.');
@@ -1826,6 +1872,7 @@ export {
   buildPullRequestBody,
   countOpenLoopPullRequests,
   discardIterationChanges,
+  listPendingTargetFiles,
   isLinkedWorktree,
   openPullRequest,
   prepareIterationBranch,

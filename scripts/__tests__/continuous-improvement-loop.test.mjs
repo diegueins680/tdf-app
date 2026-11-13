@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import {
@@ -26,6 +26,7 @@ import {
   buildPullRequestBody,
   countOpenLoopPullRequests,
   isLinkedWorktree,
+  listPendingTargetFiles,
   openPullRequest,
   prepareIterationBranch,
   syncSubmodulesRecursively,
@@ -1069,6 +1070,63 @@ test('pull requests are opened as drafts against the base branch and counted for
   }
 });
 
+test('listPendingTargetFiles returns files with an open or rejected loop pull request', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-pending-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+  const originalFetch = global.fetch;
+  const loopBody = (target) => `Opened automatically.\n\n- Idea: x\n- Target: ${target}\n- Reason: y\n`;
+
+  try {
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repoDir });
+    await execFileAsync('git', ['remote', 'add', 'origin', 'https://github.com/example/project.git'], { cwd: repoDir });
+
+    global.fetch = async (url) => {
+      assert.match(String(url), /pulls\?state=all/);
+      const pulls = [
+        { state: 'open', merged_at: null, head: { ref: 'continuous-improvement-loop/a-1' }, body: loopBody('scripts/open.sql:4') },
+        { state: 'closed', merged_at: null, head: { ref: 'continuous-improvement-loop/b-2' }, body: loopBody('src/rejected.ts:10:2') },
+        { state: 'closed', merged_at: '2026-11-01T00:00:00Z', head: { ref: 'continuous-improvement-loop/c-3' }, body: loopBody('src/merged.ts:1') },
+        { state: 'open', merged_at: null, head: { ref: 'feature/human' }, body: loopBody('src/human.ts:1') },
+        { state: 'open', merged_at: null, head: { ref: 'continuous-improvement-loop/d-4' }, body: '- Target: unspecified' },
+      ];
+      return new Response(JSON.stringify(pulls), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    };
+
+    assert.deepEqual(await listPendingTargetFiles(repoDir, { pushRemote: 'origin' }), [
+      'scripts/open.sql',
+      'src/rejected.ts',
+    ]);
+  } finally {
+    global.fetch = originalFetch;
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('buildDefaultIdea skips files that already have a pending proposal', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-exclude-test-'));
+  const git = async (args) => execFileAsync('git', args, { cwd: tempRoot });
+
+  try {
+    await git(['init', '-b', 'main']);
+    await fs.mkdir(path.join(tempRoot, 'scripts'));
+    await fs.writeFile(path.join(tempRoot, 'scripts', 'a.mjs'), '// TODO: tidy the first helper\n', 'utf8');
+    await fs.writeFile(path.join(tempRoot, 'scripts', 'b.mjs'), '// TODO: tidy the second helper\n', 'utf8');
+    await git(['add', '.']);
+
+    const first = await buildDefaultIdea(tempRoot);
+    assert.match(first.markdown, /Target: scripts\/a\.mjs:1/);
+
+    const second = await buildDefaultIdea(tempRoot, { excludedFiles: ['scripts/a.mjs'] });
+    assert.match(second.markdown, /Target: scripts\/b\.mjs:1/);
+
+    const none = await buildDefaultIdea(tempRoot, { excludedFiles: ['scripts/a.mjs', 'scripts/b.mjs'] });
+    assert.doesNotMatch(none.markdown, /scripts\/[ab]\.mjs/);
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
 test('selectVerificationGates always runs the repository gate and adds UI and backend gates by path', () => {
   assert.deepEqual(selectVerificationGates([]).gates, []);
   assert.deepEqual(selectVerificationGates(['docs/guide.md']).gates, ['repo']);
@@ -1173,9 +1231,11 @@ test('supervisor blocks instead of starting a child when no dedicated worktree i
   const supervisorPath = path.resolve(testDir, '..', 'continuous-improvement-loop-supervisor.sh');
   const env = { ...process.env };
   delete env.CONTINUOUS_LOOP_WORKTREE;
+  let supervisor = null;
 
   try {
-    const supervisor = execFileAsync('bash', [supervisorPath, path.join(tempRoot, 'missing-config.json')], {
+    supervisor = spawn('bash', [supervisorPath, path.join(tempRoot, 'missing-config.json')], {
+      stdio: 'ignore',
       env: {
         ...env,
         CONTINUOUS_LOOP_STATE_DIR: stateDir,
@@ -1189,32 +1249,95 @@ test('supervisor blocks instead of starting a child when no dedicated worktree i
         CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS: '1',
       },
     });
+    const exited = new Promise((resolve) => supervisor.on('exit', resolve));
 
-    let status = null;
-    for (let attempt = 0; attempt < 100; attempt += 1) {
-      try {
-        status = JSON.parse(await fs.readFile(statusFile, 'utf8'));
-        if (status.state === 'blocked') break;
-      } catch {
-        // status file not written yet
+    const waitForState = async (expected) => {
+      let status = null;
+      for (let attempt = 0; attempt < 150; attempt += 1) {
+        try {
+          status = JSON.parse(await fs.readFile(statusFile, 'utf8'));
+          if (status.state === expected) return status;
+        } catch {
+          // status file not written yet, or mid-rename
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    assert.equal(status?.state, 'blocked');
-    assert.match(status.details, /CONTINUOUS_LOOP_WORKTREE is not set/);
-    assert.equal(status.childPid, null);
+      assert.fail(`supervisor never reached state "${expected}" (last: ${status?.state})`);
+    };
 
-    // Let it poll a few times, then ask it to stop; the blocker is logged once, not per poll.
+    const blocked = await waitForState('blocked');
+    assert.match(blocked.details, /CONTINUOUS_LOOP_WORKTREE is not set/);
+    assert.equal(blocked.childPid, null);
+
+    // Let it poll a few times: the blocker is logged once, not once per poll.
     await new Promise((resolve) => setTimeout(resolve, 3500));
-    await fs.writeFile(stopFile, '', 'utf8');
-    await supervisor;
+    assert.equal((await fs.readFile(logFile, 'utf8')).match(/CONTINUOUS_LOOP_WORKTREE is not set/g).length, 1);
 
-    const log = await fs.readFile(logFile, 'utf8');
-    assert.equal(log.match(/CONTINUOUS_LOOP_WORKTREE is not set/g).length, 1);
-    assert.match(log, /stop requested; supervisor exiting/);
+    // A stop request holds: the supervisor stays alive and idle instead of exiting, so a
+    // KeepAlive relaunch cannot resume the loop.
+    await fs.writeFile(stopFile, '', 'utf8');
+    const stopped = await waitForState('stopped');
+    assert.match(stopped.details, /remove .*stop to resume/);
+    assert.equal(supervisor.exitCode, null);
+
+    // Removing the stop file resumes supervision.
+    await fs.rm(stopFile);
+    await waitForState('blocked');
+    assert.match(await fs.readFile(logFile, 'utf8'), /stop file removed; resuming/);
+
+    supervisor.kill('SIGTERM');
+    await exited;
     await assert.rejects(() => fs.access(path.join(stateDir, 'lock')));
   } finally {
-    await fs.writeFile(stopFile, '', 'utf8').catch(() => {});
+    supervisor?.kill('SIGKILL');
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('a supervisor started while a stop file exists stays stopped', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-supervisor-stop-test-'));
+  const stateDir = path.join(tempRoot, 'state');
+  const statusFile = path.join(stateDir, 'status.json');
+  const stopFile = path.join(stateDir, 'stop');
+  const supervisorPath = path.resolve(testDir, '..', 'continuous-improvement-loop-supervisor.sh');
+  let supervisor = null;
+
+  try {
+    await fs.mkdir(stateDir, { recursive: true });
+    await fs.writeFile(stopFile, '', 'utf8');
+    supervisor = spawn('bash', [supervisorPath, path.join(tempRoot, 'missing-config.json')], {
+      stdio: 'ignore',
+      env: {
+        ...process.env,
+        CONTINUOUS_LOOP_STATE_DIR: stateDir,
+        CONTINUOUS_LOOP_LOG_FILE: path.join(tempRoot, 'loop.log'),
+        CONTINUOUS_LOOP_PID_FILE: path.join(tempRoot, 'loop.pid'),
+        CONTINUOUS_LOOP_CHILD_PID_FILE: path.join(stateDir, 'child.pid'),
+        CONTINUOUS_LOOP_STATUS_FILE: statusFile,
+        CONTINUOUS_LOOP_STOP_FILE: stopFile,
+        CONTINUOUS_LOOP_HEARTBEAT_FILE: path.join(stateDir, 'heartbeat.txt'),
+        CONTINUOUS_LOOP_LOCK_DIR: path.join(stateDir, 'lock'),
+        CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS: '1',
+      },
+    });
+    const exited = new Promise((resolve) => supervisor.on('exit', resolve));
+
+    let status = null;
+    for (let attempt = 0; attempt < 150 && status?.state !== 'stopped'; attempt += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      try {
+        status = JSON.parse(await fs.readFile(statusFile, 'utf8'));
+      } catch {
+        // not written yet
+      }
+    }
+    assert.equal(status?.state, 'stopped');
+    await fs.access(stopFile);
+
+    supervisor.kill('SIGTERM');
+    await exited;
+  } finally {
+    supervisor?.kill('SIGKILL');
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });

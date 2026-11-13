@@ -234,7 +234,6 @@ trap 'cleanup' EXIT
 trap 'exit 143' TERM INT HUP
 
 echo "$$" > "$PID_FILE"
-rm -f "$STOP_FILE"
 
 restart_count=0
 stale_restart_count=0
@@ -344,16 +343,28 @@ stop_requested() {
   [ -f "$STOP_FILE" ]
 }
 
+# A stop request holds until the stop file is removed. The supervisor stays alive and idle
+# rather than exiting, because a KeepAlive launchd job would relaunch it immediately and a
+# fresh supervisor must not mistake that relaunch for permission to resume.
 handle_stop() {
-  json_update "stopping" "stop-requested" "Stop requested" "$child_pid" "" "$restart_count" "$stale_restart_count"
-  stop_child "$child_pid"
-  child_pid=""
-  json_update "stopped" "stopped" "Supervisor stopped by operator" "" "" "$restart_count" "$stale_restart_count"
-  log "stop requested; supervisor exiting"
-  exit 0
+  if [ -n "$child_pid" ]; then
+    json_update "stopping" "stop-requested" "Stop requested" "$child_pid" "" "$restart_count" "$stale_restart_count"
+    stop_child "$child_pid"
+    child_pid=""
+    child_started_epoch=0
+    rm -f "$CHILD_PID_FILE"
+  fi
+  log "stop requested; loop child stopped and supervisor idle until $STOP_FILE is removed"
+  while stop_requested; do
+    json_update "stopped" "stopped" "Stopped by operator; remove $STOP_FILE to resume" "" "" "$restart_count" "$stale_restart_count"
+    sleep "$POLL_INTERVAL_SECONDS"
+  done
+  log "stop file removed; resuming"
 }
 
-start_child || true
+if ! stop_requested; then
+  start_child || true
+fi
 
 while true; do
   if stop_requested; then
