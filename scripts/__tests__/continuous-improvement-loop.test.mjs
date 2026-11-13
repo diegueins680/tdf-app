@@ -16,11 +16,18 @@ import {
   summarizeWorkflowRuns,
   verifyImprovementLoopModel,
 } from '../lib/continuous-improvement-loop.mjs';
-import { checkpointDirtyWorktree } from '../lib/continuous-improvement-loop-dirty-worktree.mjs';
 import {
-  reconcileNonMainBranchesOntoMain,
-  resolveLoopPushBranch,
-  syncAndPollLatestRemoteCi,
+  VERIFICATION_GATES,
+  parsePorcelainPaths,
+  selectVerificationGates,
+} from '../lib/continuous-improvement-loop-verify.mjs';
+import {
+  buildIterationBranchName,
+  buildPullRequestBody,
+  countOpenLoopPullRequests,
+  isLinkedWorktree,
+  openPullRequest,
+  prepareIterationBranch,
   syncSubmodulesRecursively,
   validateLoopConfig,
   waitForGreenCi,
@@ -125,46 +132,140 @@ test('buildCommitContext ignores generic idea titles and uses target plus reason
   assert.equal(context.commit_message, 'fix: label icon buttons in label artists page');
 });
 
-test('resolveLoopPushBranch prefers configured pushBranch and otherwise uses the current branch', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-branch-resolve-test-'));
+const LOOP_BRANCH_PREFIX = 'continuous-improvement-loop/';
+
+async function createLoopFixture(prefix) {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
+  const remoteDir = path.join(tempRoot, 'remote.git');
   const repoDir = path.join(tempRoot, 'repo');
   await fs.mkdir(repoDir);
 
   const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+  const remoteGit = async (args) => execFileAsync('git', ['--git-dir', remoteDir, ...args], { cwd: tempRoot });
+
+  await git(['init', '--bare', remoteDir], tempRoot);
+  await git(['init', '-b', 'main']);
+  await git(['config', 'user.name', 'Codex Test']);
+  await git(['config', 'user.email', 'codex@example.com']);
+  await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
+  await git(['add', 'tracked.txt']);
+  await git(['commit', '-m', 'initial']);
+  await git(['remote', 'add', 'origin', remoteDir]);
+  await git(['push', '-u', 'origin', 'main']);
+
+  // The config lives outside the repository so the loop starts from a clean worktree.
+  const writeConfig = async (overrides = {}) => {
+    const configPath = path.join(tempRoot, 'loop-config.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify(
+        {
+          requireLinkedWorktree: false,
+          openPullRequest: false,
+          pollGitHub: false,
+          iterationDelaySeconds: 0,
+          verifyCommand: 'true',
+          ideaCommand:
+            "printf '# Fixture idea\\nSource: test\\nTarget: tracked.txt:1\\nReason: exercise the loop end to end.\\n'",
+          implementationCommand: "printf 'after\\n' >> tracked.txt",
+          uiAuditCommand: "printf '[]\\n'",
+          ...overrides,
+        },
+        null,
+        2,
+      ),
+      'utf8',
+    );
+    return configPath;
+  };
+
+  const runLoop = async (configPath, extraArgs = []) =>
+    execFileAsync('node', [loopScriptPath, '--config', configPath, '--max-iterations', '1', ...extraArgs], {
+      cwd: repoDir,
+    });
+
+  const remoteLoopBranches = async () =>
+    (await remoteGit(['for-each-ref', '--format=%(refname:short)', `refs/heads/${LOOP_BRANCH_PREFIX}`])).stdout
+      .trim()
+      .split('\n')
+      .filter(Boolean);
+
+  const remoteMainSha = async () => (await remoteGit(['rev-parse', 'refs/heads/main'])).stdout.trim();
+
+  const cleanup = async () => fs.rm(tempRoot, { recursive: true, force: true });
+
+  return { tempRoot, remoteDir, repoDir, git, remoteGit, writeConfig, runLoop, remoteLoopBranches, remoteMainSha, cleanup };
+}
+
+test('buildIterationBranchName puts a sortable UTC timestamp and the iteration under the prefix', () => {
+  const now = new Date('2026-11-13T15:04:05.678Z');
+  assert.equal(buildIterationBranchName({}, 3, now), 'continuous-improvement-loop/20261113-150405-3');
+  assert.equal(buildIterationBranchName({ branchPrefix: 'bot/loop-' }, 1, now), 'bot/loop-20261113-150405-1');
+});
+
+test('validateLoopConfig refuses every way of targeting the base branch or skipping verification', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-config-guard-test-');
+  const valid = { verifyCommand: 'true', requireLinkedWorktree: false };
 
   try {
-    await git(['init', '-b', 'feature/test']);
-    assert.equal(await resolveLoopPushBranch(repoDir, {}), 'feature/test');
-    assert.equal(await resolveLoopPushBranch(repoDir, { pushBranch: 'origin/release/train' }), 'release/train');
+    await assert.rejects(
+      () => validateLoopConfig(fixture.repoDir, { ...valid, allowPushToMain: true }),
+      /Pushing to main is no longer supported/,
+    );
+
+    process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN = '1';
+    await assert.rejects(() => validateLoopConfig(fixture.repoDir, valid), /Pushing to main is no longer supported/);
+    delete process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN;
+
+    await assert.rejects(
+      () => validateLoopConfig(fixture.repoDir, { ...valid, pushBranch: 'main' }),
+      /"pushBranch" is no longer supported/,
+    );
+    for (const branchPrefix of ['', 'main', 'loop/../x/', '/loop/']) {
+      await assert.rejects(
+        () => validateLoopConfig(fixture.repoDir, { ...valid, branchPrefix }),
+        /Invalid branchPrefix/,
+      );
+    }
+    await assert.rejects(
+      () => validateLoopConfig(fixture.repoDir, { requireLinkedWorktree: false }),
+      /verifyCommand is required/,
+    );
+
+    const accepted = await validateLoopConfig(fixture.repoDir, valid);
+    assert.deepEqual(accepted, {
+      baseBranch: 'main',
+      branchPrefix: LOOP_BRANCH_PREFIX,
+      pushingEnabled: true,
+      requireLinkedWorktree: false,
+    });
+
+    // A dry run commits nothing, so it needs neither a verification gate nor isolation.
+    const dryRun = await validateLoopConfig(fixture.repoDir, { dryRun: true });
+    assert.equal(dryRun.pushingEnabled, false);
   } finally {
-    await fs.rm(tempRoot, { recursive: true, force: true });
+    delete process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN;
+    await fixture.cleanup();
   }
 });
 
-test('validateLoopConfig blocks main by default and allows explicit overrides', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-config-guard-test-'));
-  const repoDir = path.join(tempRoot, 'repo');
-  await fs.mkdir(repoDir);
-
-  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+test('validateLoopConfig only runs in a dedicated linked worktree by default', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-worktree-guard-test-');
+  const linkedDir = path.join(fixture.tempRoot, 'loop-worktree');
 
   try {
-    await git(['init', '-b', 'main']);
+    assert.equal(await isLinkedWorktree(fixture.repoDir), false);
+    await assert.rejects(
+      () => validateLoopConfig(fixture.repoDir, { verifyCommand: 'true' }),
+      /must run in its own linked git worktree, not the primary checkout/,
+    );
 
-    await assert.rejects(() => validateLoopConfig(repoDir, {}), /refuses to target main by default/);
-
-    const configOverride = await validateLoopConfig(repoDir, { allowPushToMain: true });
-    assert.equal(configOverride.pushBranch, 'main');
-    assert.equal(configOverride.allowPushToMain, true);
-
-    process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN = '1';
-    const envOverride = await validateLoopConfig(repoDir, {});
-    assert.equal(envOverride.pushBranch, 'main');
-    assert.equal(envOverride.allowPushToMain, true);
-    delete process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN;
+    await fixture.git(['worktree', 'add', '--detach', linkedDir, 'origin/main']);
+    assert.equal(await isLinkedWorktree(linkedDir), true);
+    const accepted = await validateLoopConfig(linkedDir, { verifyCommand: 'true' });
+    assert.equal(accepted.requireLinkedWorktree, true);
   } finally {
-    delete process.env.CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN;
-    await fs.rm(tempRoot, { recursive: true, force: true });
+    await fixture.cleanup();
   }
 });
 
@@ -659,384 +760,438 @@ test('buildDefaultIdea surfaces UI audit errors instead of hiding them behind TO
   }
 });
 
+test('continuous-improvement-loop publishes each iteration on its own branch and never moves main', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-branch-test-');
+
+  try {
+    const mainBefore = await fixture.remoteMainSha();
+    const localMainBefore = (await fixture.git(['rev-parse', 'refs/heads/main'])).stdout.trim();
+    const configPath = await fixture.writeConfig();
+
+    await fixture.runLoop(configPath);
+
+    assert.equal(await fixture.remoteMainSha(), mainBefore);
+    assert.equal((await fixture.git(['rev-parse', 'refs/heads/main'])).stdout.trim(), localMainBefore);
+
+    const branches = await fixture.remoteLoopBranches();
+    assert.equal(branches.length, 1);
+    assert.match(branches[0], /^continuous-improvement-loop\/\d{8}-\d{6}-1$/);
+
+    const diff = await fixture.remoteGit(['diff', '--name-only', 'refs/heads/main', `refs/heads/${branches[0]}`]);
+    assert.deepEqual(diff.stdout.trim().split('\n').filter(Boolean), ['tracked.txt']);
+    const parent = (await fixture.remoteGit(['rev-parse', `refs/heads/${branches[0]}~1`])).stdout.trim();
+    assert.equal(parent, mainBefore);
+
+    // The worktree is left clean, detached at the base, with no leftover local loop branch.
+    assert.equal((await fixture.git(['status', '--short'])).stdout.trim(), '');
+    assert.equal((await fixture.git(['branch', '--show-current'])).stdout.trim(), '');
+    assert.equal((await fixture.git(['rev-parse', 'HEAD'])).stdout.trim(), mainBefore);
+    const localLoopBranches = await fixture.git(['for-each-ref', `refs/heads/${LOOP_BRANCH_PREFIX}`]);
+    assert.equal(localLoopBranches.stdout.trim(), '');
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('continuous-improvement-loop branches from the latest remote base, not a stale local one', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-latest-base-test-');
+  const otherDir = path.join(fixture.tempRoot, 'other');
+
+  try {
+    await execFileAsync('git', ['clone', '--branch', 'main', fixture.remoteDir, otherDir], { cwd: fixture.tempRoot });
+    await execFileAsync('git', ['config', 'user.name', 'Remote Writer'], { cwd: otherDir });
+    await execFileAsync('git', ['config', 'user.email', 'remote@example.com'], { cwd: otherDir });
+    await fs.writeFile(path.join(otherDir, 'remote-only.txt'), 'remote\n', 'utf8');
+    await execFileAsync('git', ['add', 'remote-only.txt'], { cwd: otherDir });
+    await execFileAsync('git', ['commit', '-m', 'remote advance'], { cwd: otherDir });
+    await execFileAsync('git', ['push', 'origin', 'main'], { cwd: otherDir });
+    const advancedMain = await fixture.remoteMainSha();
+
+    await fixture.runLoop(await fixture.writeConfig());
+
+    assert.equal(await fixture.remoteMainSha(), advancedMain);
+    const [branch] = await fixture.remoteLoopBranches();
+    const parent = (await fixture.remoteGit(['rev-parse', `refs/heads/${branch}~1`])).stdout.trim();
+    assert.equal(parent, advancedMain);
+    const files = await fixture.remoteGit(['ls-tree', '--name-only', `refs/heads/${branch}`]);
+    assert.deepEqual(files.stdout.trim().split('\n').sort(), ['remote-only.txt', 'tracked.txt']);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test('continuous-improvement-loop honors --allow-dirty for tracked baseline changes without committing them', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-test-'));
-  const remoteDir = path.join(tempRoot, 'remote.git');
-  const repoDir = path.join(tempRoot, 'repo');
-  await fs.mkdir(repoDir);
-
-  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+  const fixture = await createLoopFixture('continuous-improvement-loop-allow-dirty-test-');
 
   try {
-    await git(['init', '--bare', remoteDir], tempRoot);
-    await git(['init', '-b', 'main']);
-    await git(['config', 'user.name', 'Codex Test']);
-    await git(['config', 'user.email', 'codex@example.com']);
-    await fs.writeFile(path.join(repoDir, 'existing.txt'), 'baseline\n', 'utf8');
-    await git(['add', 'existing.txt']);
-    await git(['commit', '-m', 'initial']);
-    await git(['remote', 'add', 'origin', remoteDir]);
-    await git(['push', '-u', 'origin', 'main']);
-
-    await fs.writeFile(path.join(repoDir, 'existing.txt'), 'baseline\nlocal dirty change\n', 'utf8');
-    const configPath = path.join(repoDir, 'loop-config.json');
-    await fs.writeFile(
-      configPath,
-      JSON.stringify(
-        {
-          allowPushToMain: true,
-          pollGitHub: false,
-          iterationDelaySeconds: 0,
-          ideaCommand: "printf '# Dirty baseline test\\nSource: test\\nTarget: new-file.txt:1\\nReason: verify allow-dirty tracked baselines stay out of loop commits.\\n'",
-          implementationCommand: "printf 'created by loop\\n' > new-file.txt",
-          uiAuditCommand: "printf '[]\\n'",
-        },
-        null,
-        2,
-      ),
-      'utf8',
-    );
-
-    await execFileAsync(
-      'node',
-      [loopScriptPath, '--config', 'loop-config.json', '--allow-dirty', '--max-iterations', '1'],
-      { cwd: repoDir },
-    );
-
-    const commitDiff = await git(['diff', '--name-only', 'HEAD~1', 'HEAD']);
-    assert.deepEqual(commitDiff.stdout.trim().split('\n').filter(Boolean), ['new-file.txt']);
-
-    const status = await git(['status', '--short']);
-    assert.match(status.stdout, /^ M existing\.txt$/m);
-    assert.doesNotMatch(status.stdout, /^M  existing\.txt$/m);
-  } finally {
-    await fs.rm(tempRoot, { recursive: true, force: true });
-  }
-});
-
-test('dirty-worktree checkpoint helper commits directly to main and keeps the loop branch clean', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-dirty-checkpoint-test-'));
-  const remoteDir = path.join(tempRoot, 'remote.git');
-  const repoDir = path.join(tempRoot, 'repo');
-  const otherDir = path.join(tempRoot, 'other');
-  await fs.mkdir(repoDir);
-
-  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
-
-  try {
-    await git(['init', '--bare', remoteDir], tempRoot);
-    await git(['init', '-b', 'main']);
-    await git(['config', 'user.name', 'Codex Test']);
-    await git(['config', 'user.email', 'codex@example.com']);
-    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
-    await git(['add', 'tracked.txt']);
-    await git(['commit', '-m', 'initial']);
-    await git(['remote', 'add', 'origin', remoteDir]);
-    await git(['push', '-u', 'origin', 'main']);
-
-    await execFileAsync('git', ['clone', '--branch', 'main', remoteDir, otherDir], { cwd: tempRoot });
-    await execFileAsync('git', ['config', 'user.name', 'Remote Writer'], { cwd: otherDir });
-    await execFileAsync('git', ['config', 'user.email', 'remote@example.com'], { cwd: otherDir });
-    await fs.writeFile(path.join(otherDir, 'remote-only.txt'), 'remote\n', 'utf8');
-    await execFileAsync('git', ['add', 'remote-only.txt'], { cwd: otherDir });
-    await execFileAsync('git', ['commit', '-m', 'remote advance'], { cwd: otherDir });
-    await execFileAsync('git', ['push', 'origin', 'main'], { cwd: otherDir });
-
-    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\ndirty tracked change\n', 'utf8');
-    await fs.writeFile(path.join(repoDir, 'untracked.txt'), 'dirty untracked change\n', 'utf8');
-
-    const result = await checkpointDirtyWorktree({ repoRoot: repoDir, currentBranch: 'main' });
-
-    assert.equal(result.recovered, true);
-    assert.equal(result.branch, 'main');
-    assert.equal((await git(['branch', '--show-current'])).stdout.trim(), 'main');
-    assert.equal((await git(['status', '--short'])).stdout.trim(), '');
-    assert.equal((await git(['rev-parse', 'HEAD'])).stdout.trim(), result.commit);
-    assert.equal(await fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'), 'remote\n');
-
-    const remoteMain = await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', 'refs/heads/main'], {
-      cwd: tempRoot,
-    });
-    assert.equal(remoteMain.stdout.trim(), result.commit);
-
-    const checkpointLog = await git(['log', '-1', '--pretty=%s%n%b', result.commit]);
-    assert.match(checkpointLog.stdout, /^chore\(loop\): checkpoint dirty worktree/m);
-    assert.match(checkpointLog.stdout, /Dirty worktree analysis:/);
-    assert.match(checkpointLog.stdout, /tracked\.txt/);
-    assert.match(checkpointLog.stdout, /untracked\.txt/);
-    assert.match(result.summary, /committed dirty worktree directly to main/);
-    const logSubjects = (await git(['log', '-2', '--pretty=%s'])).stdout.trim().split('\n');
-    assert.deepEqual(logSubjects, ['chore(loop): checkpoint dirty worktree', 'remote advance']);
-  } finally {
-    await fs.rm(tempRoot, { recursive: true, force: true });
-  }
-});
-
-test('dirty-worktree helper rebases onto main before falling back to merge recovery', async () => {
-  const script = await fs.readFile(new URL('../lib/continuous-improvement-loop-dirty-worktree.mjs', import.meta.url), 'utf8');
-  assert.match(script, /function rebaseHeadOntoRemoteBranch\(repoRoot, remoteName, branchName\)/);
-  assert.match(script, /runGit\(repoRoot, \['rebase', remoteRef\], \{ capture: false \}\)/);
-  assert.match(script, /runGit\(repoRoot, \['rebase', '--abort'\], \{ capture: false \}\)/);
-  assert.match(script, /return mergeRefOntoHead\(repoRoot, remoteRef, branchName\);/);
-});
-
-test('continuous-improvement-loop stages tracked files modified during an iteration', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-tracked-test-'));
-  const remoteDir = path.join(tempRoot, 'remote.git');
-  const repoDir = path.join(tempRoot, 'repo');
-  await fs.mkdir(repoDir);
-
-  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
-
-  try {
-    await git(['init', '--bare', remoteDir], tempRoot);
-    await git(['init', '-b', 'main']);
-    await git(['config', 'user.name', 'Codex Test']);
-    await git(['config', 'user.email', 'codex@example.com']);
-    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
-    await git(['add', 'tracked.txt']);
-    await git(['commit', '-m', 'initial']);
-    await git(['remote', 'add', 'origin', remoteDir]);
-    await git(['push', '-u', 'origin', 'main']);
-
-    const configPath = path.join(repoDir, 'loop-config.json');
-    await fs.writeFile(
-      configPath,
-      JSON.stringify(
-        {
-          allowPushToMain: true,
-          pollGitHub: false,
-          iterationDelaySeconds: 0,
-          ideaCommand:
-            "printf '# Tracked file test\\nSource: test\\nTarget: tracked.txt:1\\nReason: verify tracked file edits are staged correctly.\\n'",
-          implementationCommand: "printf 'after\\n' >> tracked.txt",
-          uiAuditCommand: "printf '[]\\n'",
-        },
-        null,
-        2,
-      ),
-      'utf8',
-    );
-
-    await execFileAsync(
-      'node',
-      [loopScriptPath, '--config', 'loop-config.json', '--allow-dirty', '--max-iterations', '1'],
-      { cwd: repoDir },
-    );
-
-    const commitDiff = await git(['diff', '--name-only', 'HEAD~1', 'HEAD']);
-    assert.deepEqual(commitDiff.stdout.trim().split('\n').filter(Boolean), ['tracked.txt']);
-
-    const fileContents = await fs.readFile(path.join(repoDir, 'tracked.txt'), 'utf8');
-    assert.equal(fileContents, 'before\nafter\n');
-  } finally {
-    await fs.rm(tempRoot, { recursive: true, force: true });
-  }
-});
-
-test('continuous-improvement-loop rebases onto the push branch before pushing a stale local branch', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-rebase-push-test-'));
-  const remoteDir = path.join(tempRoot, 'remote.git');
-  const repoDir = path.join(tempRoot, 'repo');
-  const otherDir = path.join(tempRoot, 'other');
-  await fs.mkdir(repoDir);
-
-  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
-
-  try {
-    await git(['init', '--bare', remoteDir], tempRoot);
-    await git(['init', '-b', 'main']);
-    await git(['config', 'user.name', 'Codex Test']);
-    await git(['config', 'user.email', 'codex@example.com']);
-    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
-    await git(['add', 'tracked.txt']);
-    await git(['commit', '-m', 'initial']);
-    await git(['remote', 'add', 'origin', remoteDir]);
-    await git(['push', '-u', 'origin', 'main']);
-
-    await execFileAsync('git', ['clone', '--branch', 'main', remoteDir, otherDir], { cwd: tempRoot });
-    await execFileAsync('git', ['config', 'user.name', 'Remote Writer'], { cwd: otherDir });
-    await execFileAsync('git', ['config', 'user.email', 'remote@example.com'], { cwd: otherDir });
-    await fs.writeFile(path.join(otherDir, 'remote-only.txt'), 'remote\n', 'utf8');
-    await execFileAsync('git', ['add', 'remote-only.txt'], { cwd: otherDir });
-    await execFileAsync('git', ['commit', '-m', 'remote advance'], { cwd: otherDir });
-    await execFileAsync('git', ['push', 'origin', 'main'], { cwd: otherDir });
-
-    const configPath = path.join(repoDir, 'loop-config.json');
-    await fs.writeFile(
-      configPath,
-      JSON.stringify(
-        {
-          allowPushToMain: true,
-          pollGitHub: false,
-          iterationDelaySeconds: 0,
-          ideaCommand:
-            "printf '# Rebase before push test\\nSource: test\\nTarget: tracked.txt:1\\nReason: verify the loop rebases stale local commits onto origin/main before push.\\n'",
-          implementationCommand: "printf 'local\\n' >> tracked.txt",
-          uiAuditCommand: "printf '[]\\n'",
-        },
-        null,
-        2,
-      ),
-      'utf8',
-    );
-    await git(['add', 'loop-config.json']);
-    await git(['commit', '-m', 'config']);
-
-    await execFileAsync(
-      'node',
-      [loopScriptPath, '--config', 'loop-config.json', '--max-iterations', '1'],
-      { cwd: repoDir },
-    );
-
-    const localHead = (await git(['rev-parse', 'HEAD'])).stdout.trim();
-    const remoteHead = (await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', 'refs/heads/main'], { cwd: tempRoot })).stdout.trim();
-    assert.equal(localHead, remoteHead);
-    assert.equal(await fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'), 'remote\n');
-    assert.equal(await fs.readFile(path.join(repoDir, 'tracked.txt'), 'utf8'), 'before\nlocal\n');
-  } finally {
-    await fs.rm(tempRoot, { recursive: true, force: true });
-  }
-});
-
-test('reconcileNonMainBranchesOntoMain merges every non-main branch and prunes merged refs', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-branch-sweep-test-'));
-  const remoteDir = path.join(tempRoot, 'remote.git');
-  const repoDir = path.join(tempRoot, 'repo');
-  const otherDir = path.join(tempRoot, 'other');
-  await fs.mkdir(repoDir);
-
-  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
-
-  try {
-    await git(['init', '--bare', remoteDir], tempRoot);
-    await git(['init', '-b', 'main']);
-    await git(['config', 'user.name', 'Codex Test']);
-    await git(['config', 'user.email', 'codex@example.com']);
-    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
-    await git(['add', 'tracked.txt']);
-    await git(['commit', '-m', 'initial']);
-    await git(['remote', 'add', 'origin', remoteDir]);
-    await git(['push', '-u', 'origin', 'main']);
-
-    await git(['checkout', '-b', 'feature/local']);
-    await fs.writeFile(path.join(repoDir, 'local-only.txt'), 'local\n', 'utf8');
-    await git(['add', 'local-only.txt']);
-    await git(['commit', '-m', 'local branch work']);
-    await git(['checkout', 'main']);
-
-    await execFileAsync('git', ['clone', '--branch', 'main', remoteDir, otherDir], { cwd: tempRoot });
-    await execFileAsync('git', ['config', 'user.name', 'Remote Writer'], { cwd: otherDir });
-    await execFileAsync('git', ['config', 'user.email', 'remote@example.com'], { cwd: otherDir });
-
-    await execFileAsync('git', ['checkout', '-b', 'feat/remote'], { cwd: otherDir });
-    await fs.writeFile(path.join(otherDir, 'remote-only.txt'), 'remote\n', 'utf8');
-    await execFileAsync('git', ['add', 'remote-only.txt'], { cwd: otherDir });
-    await execFileAsync('git', ['commit', '-m', 'remote branch work'], { cwd: otherDir });
-    await execFileAsync('git', ['push', '-u', 'origin', 'feat/remote'], { cwd: otherDir });
-
-    await execFileAsync('git', ['checkout', 'main'], { cwd: otherDir });
-    await execFileAsync(
-      'git',
-      ['checkout', '-b', 'continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z'],
-      { cwd: otherDir },
-    );
-    await fs.writeFile(path.join(otherDir, 'dirty-only.txt'), 'do not replay\n', 'utf8');
-    await execFileAsync('git', ['add', 'dirty-only.txt'], { cwd: otherDir });
-    await execFileAsync('git', ['commit', '-m', 'dirty checkpoint'], { cwd: otherDir });
-    await execFileAsync(
-      'git',
-      ['push', '-u', 'origin', 'continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z'],
-      { cwd: otherDir },
-    );
-
-    const result = await reconcileNonMainBranchesOntoMain(repoDir, {
-      pushRemote: 'origin',
-      pushBranch: 'main',
+    await fs.writeFile(path.join(fixture.repoDir, 'tracked.txt'), 'before\nlocal dirty change\n', 'utf8');
+    const configPath = await fixture.writeConfig({
+      implementationCommand: "printf 'created by loop\\n' > new-file.txt",
     });
 
-    assert.equal(result.ok, true);
-    assert.deepEqual(result.summary.mergedBranches, [
-      'continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z',
-      'feat/remote',
-      'feature/local',
-    ]);
-    assert.equal((await git(['branch', '--show-current'])).stdout.trim(), 'main');
-    assert.equal(await fs.readFile(path.join(repoDir, 'local-only.txt'), 'utf8'), 'local\n');
-    assert.equal(await fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'), 'remote\n');
-    assert.equal((await git(['branch', '--list', 'feature/local'])).stdout.trim(), '');
-    assert.equal((await git(['branch', '-r', '--list', 'origin/feat/remote'])).stdout.trim(), '');
+    await fixture.runLoop(configPath, ['--allow-dirty']);
+
+    const [branch] = await fixture.remoteLoopBranches();
+    const diff = await fixture.remoteGit(['diff', '--name-only', 'refs/heads/main', `refs/heads/${branch}`]);
+    assert.deepEqual(diff.stdout.trim().split('\n').filter(Boolean), ['new-file.txt']);
+
+    const status = await fixture.git(['status', '--short']);
+    assert.match(status.stdout, /^ M tracked\.txt$/m);
     assert.equal(
-      (
-        await git([
-          'branch',
-          '-r',
-          '--list',
-          'origin/continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z',
-        ])
-      ).stdout.trim(),
-      '',
+      await fs.readFile(path.join(fixture.repoDir, 'tracked.txt'), 'utf8'),
+      'before\nlocal dirty change\n',
+    );
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('continuous-improvement-loop discards an iteration whose verification fails and publishes nothing', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-verify-fail-test-');
+
+  try {
+    const mainBefore = await fixture.remoteMainSha();
+    const configPath = await fixture.writeConfig({
+      implementationCommand: "printf 'after\\n' >> tracked.txt && printf 'junk\\n' > junk.txt",
+      verifyCommand: "printf 'tests failed\\n' >&2; exit 3",
+    });
+
+    await assert.rejects(() => fixture.runLoop(configPath), /Verification failed with exit code 3/);
+
+    assert.equal(await fixture.remoteMainSha(), mainBefore);
+    assert.deepEqual(await fixture.remoteLoopBranches(), []);
+    assert.equal((await fixture.git(['status', '--short'])).stdout.trim(), '');
+    assert.equal(await fs.readFile(path.join(fixture.repoDir, 'tracked.txt'), 'utf8'), 'before\n');
+    await assert.rejects(() => fs.access(path.join(fixture.repoDir, 'junk.txt')));
+    assert.equal((await fixture.git(['rev-parse', 'HEAD'])).stdout.trim(), mainBefore);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('continuous-improvement-loop discards partial edits when a worker step fails', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-worker-fail-test-');
+
+  try {
+    const configPath = await fixture.writeConfig({
+      implementationCommand: "printf 'half done\\n' >> tracked.txt; printf 'junk\\n' > junk.txt; exit 75",
+    });
+
+    await assert.rejects(() => fixture.runLoop(configPath), /Implementation failed with exit code 75/);
+
+    assert.deepEqual(await fixture.remoteLoopBranches(), []);
+    assert.equal((await fixture.git(['status', '--short'])).stdout.trim(), '');
+    assert.equal(await fs.readFile(path.join(fixture.repoDir, 'tracked.txt'), 'utf8'), 'before\n');
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('continuous-improvement-loop moves on to the next iteration after a discarded one', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-continue-test-');
+  const marker = path.join(fixture.tempRoot, 'first-attempt-done');
+
+  try {
+    const configPath = await fixture.writeConfig({
+      failureDelaySeconds: 0,
+      implementationCommand: `if [ -f '${marker}' ]; then printf 'after\\n' >> tracked.txt; else : > '${marker}'; printf 'bad\\n' >> tracked.txt; exit 1; fi`,
+    });
+
+    await execFileAsync('node', [loopScriptPath, '--config', configPath, '--max-iterations', '2'], {
+      cwd: fixture.repoDir,
+    });
+
+    const branches = await fixture.remoteLoopBranches();
+    assert.equal(branches.length, 1);
+    assert.match(branches[0], /-2$/);
+    const content = await fixture.remoteGit(['show', `refs/heads/${branches[0]}:tracked.txt`]);
+    assert.equal(content.stdout, 'before\nafter\n');
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('continuous-improvement-loop stops a step that exceeds its timeout, including its children', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-timeout-test-');
+  const pidFile = path.join(fixture.tempRoot, 'grandchild.pid');
+
+  try {
+    const configPath = await fixture.writeConfig({
+      stepTimeoutMinutes: 0.02,
+      implementationCommand: `sh -c 'sleep 300 & echo $! > "${pidFile}"; wait'`,
+    });
+
+    await assert.rejects(() => fixture.runLoop(configPath), /Implementation timed out after/);
+
+    const grandchildPid = Number((await fs.readFile(pidFile, 'utf8')).trim());
+    assert.ok(grandchildPid > 0);
+    assert.throws(() => process.kill(grandchildPid, 0), /ESRCH/);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('continuous-improvement-loop recovers its own worktree after an interrupted run but never cleans a primary checkout', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-recover-test-');
+  const linkedDir = path.join(fixture.tempRoot, 'loop-worktree');
+
+  try {
+    await fixture.git(['worktree', 'add', '--detach', linkedDir, 'origin/main']);
+    await fs.writeFile(path.join(linkedDir, 'tracked.txt'), 'before\ninterrupted\n', 'utf8');
+    await fs.writeFile(path.join(linkedDir, 'leftover.txt'), 'leftover\n', 'utf8');
+    const linkedConfig = await fixture.writeConfig({ requireLinkedWorktree: true });
+
+    await execFileAsync('node', [loopScriptPath, '--config', linkedConfig, '--max-iterations', '1'], { cwd: linkedDir });
+
+    const [branch] = await fixture.remoteLoopBranches();
+    const content = await fixture.remoteGit(['show', `refs/heads/${branch}:tracked.txt`]);
+    assert.equal(content.stdout, 'before\nafter\n');
+    const files = await fixture.remoteGit(['ls-tree', '--name-only', `refs/heads/${branch}`]);
+    assert.deepEqual(files.stdout.trim().split('\n'), ['tracked.txt']);
+
+    // In a primary checkout the same situation is an error and the files are left alone.
+    await fs.writeFile(path.join(fixture.repoDir, 'tracked.txt'), 'before\nmy work\n', 'utf8');
+    const primaryConfig = await fixture.writeConfig();
+    await assert.rejects(() => fixture.runLoop(primaryConfig), /requires a clean tracked worktree/);
+    assert.equal(await fs.readFile(path.join(fixture.repoDir, 'tracked.txt'), 'utf8'), 'before\nmy work\n');
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('prepareIterationBranch clears leftovers from an interrupted iteration', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-prepare-test-');
+
+  try {
+    const mainSha = await fixture.remoteMainSha();
+    await fixture.git(['checkout', '-b', `${LOOP_BRANCH_PREFIX}stale-1`]);
+    await fs.writeFile(path.join(fixture.repoDir, 'tracked.txt'), 'before\nabandoned\n', 'utf8');
+    await fs.writeFile(path.join(fixture.repoDir, 'abandoned.txt'), 'abandoned\n', 'utf8');
+    await fixture.git(['branch', 'feature/keep-me']);
+
+    const branch = await prepareIterationBranch(fixture.repoDir, { pushRemote: 'origin' }, 7);
+
+    assert.equal(branch.baseSha, mainSha);
+    assert.equal(branch.baseRef, 'origin/main');
+    assert.equal((await fixture.git(['branch', '--show-current'])).stdout.trim(), branch.branchName);
+    assert.equal((await fixture.git(['status', '--short'])).stdout.trim(), '');
+    assert.equal(await fs.readFile(path.join(fixture.repoDir, 'tracked.txt'), 'utf8'), 'before\n');
+
+    const localBranches = (await fixture.git(['for-each-ref', '--format=%(refname:short)', 'refs/heads/'])).stdout
+      .trim()
+      .split('\n')
+      .sort();
+    // Only the loop's own stale branch is removed; unrelated branches are never touched.
+    assert.deepEqual(localBranches, [branch.branchName, 'feature/keep-me', 'main'].sort());
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('pull requests are opened as drafts against the base branch and counted for the backlog limit', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-pr-test-'));
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+  const originalFetch = global.fetch;
+  const requests = [];
+
+  try {
+    await execFileAsync('git', ['init', '-b', 'main'], { cwd: repoDir });
+    await execFileAsync('git', ['remote', 'add', 'origin', 'https://github.com/example/project.git'], { cwd: repoDir });
+
+    global.fetch = async (url, options = {}) => {
+      requests.push({ url: String(url), method: options.method, body: options.body ? JSON.parse(options.body) : null });
+      const payload =
+        options.method === 'POST'
+          ? { number: 42, html_url: 'https://github.com/example/project/pull/42' }
+          : [
+              { head: { ref: 'continuous-improvement-loop/20261113-000000-1' } },
+              { head: { ref: 'feature/unrelated' } },
+              { head: { ref: 'continuous-improvement-loop/20261113-000100-2' } },
+            ];
+      return new Response(JSON.stringify(payload), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    };
+
+    const config = { pushRemote: 'origin', verifyCommand: 'npm test' };
+    assert.equal(await countOpenLoopPullRequests(repoDir, config), 2);
+
+    const branch = {
+      branchName: 'continuous-improvement-loop/20261113-000200-3',
+      baseBranch: 'main',
+      baseRef: 'origin/main',
+      baseSha: 'abc123',
+    };
+    const context = {
+      last_commit_message: 'fix(ui): label the close button\n\nbody',
+      idea_title: 'Label the close button',
+      idea_source: 'ui-audit',
+      idea_target: 'tdf-hq-ui/src/Close.tsx:3',
+      idea_reason: 'Icon button has no accessible name.',
+    };
+    const pullRequest = await openPullRequest(repoDir, config, context, branch);
+    assert.deepEqual(pullRequest, { number: 42, url: 'https://github.com/example/project/pull/42' });
+
+    const post = requests.find((request) => request.method === 'POST');
+    assert.match(post.url, /\/repos\/example\/project\/pulls$/);
+    assert.equal(post.body.title, 'fix(ui): label the close button');
+    assert.equal(post.body.head, branch.branchName);
+    assert.equal(post.body.base, 'main');
+    assert.equal(post.body.draft, true);
+    assert.equal(post.body.body, buildPullRequestBody(config, context, branch));
+    assert.match(post.body.body, /stays a draft until a person reviews it/);
+    assert.match(post.body.body, /`npm test` passed/);
+  } finally {
+    global.fetch = originalFetch;
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('selectVerificationGates always runs the repository gate and adds UI and backend gates by path', () => {
+  assert.deepEqual(selectVerificationGates([]).gates, []);
+  assert.deepEqual(selectVerificationGates(['docs/guide.md']).gates, ['repo']);
+  assert.deepEqual(selectVerificationGates(['./tdf-hq-ui/src/App.tsx']).gates, ['repo', 'ui']);
+  assert.deepEqual(selectVerificationGates(['package-lock.json']).gates, ['repo', 'ui']);
+  assert.equal(selectVerificationGates(['package-lock.json']).reinstallDependencies, true);
+  assert.deepEqual(selectVerificationGates(['tdf-hq/src/Main.hs']).gates, ['repo', 'backend']);
+  assert.deepEqual(selectVerificationGates(['tdf-hq/src/Main.hs', 'tdf-hq-ui/src/App.tsx']).gates, [
+    'repo',
+    'ui',
+    'backend',
+  ]);
+
+  const mobile = selectVerificationGates(['scripts/x.mjs', 'tdf-mobile']);
+  assert.equal(mobile.ok, false);
+  assert.match(mobile.reason, /tdf-mobile submodule cannot be verified/);
+
+  assert.equal(VERIFICATION_GATES.backend.env.REQUIRE_STACK, '1');
+  assert.ok(VERIFICATION_GATES.backend.minFreeMegabytes > 0);
+});
+
+test('parsePorcelainPaths reads NUL-separated status entries including both sides of a rename', () => {
+  const status = ' M tdf-hq-ui/src/App.tsx\0?? new file.txt\0R  renamed/to.txt\0renamed/from.txt\0D  gone.txt\0';
+  assert.deepEqual(parsePorcelainPaths(status), [
+    'tdf-hq-ui/src/App.tsx',
+    'new file.txt',
+    'renamed/to.txt',
+    'renamed/from.txt',
+    'gone.txt',
+  ]);
+});
+
+test('loop verify gate refuses to pass submodule changes and reports its plan', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-verify-plan-test-');
+  const verifyScriptPath = path.resolve(testDir, '..', 'continuous-improvement-loop-verify.mjs');
+
+  try {
+    const clean = await execFileAsync('node', [verifyScriptPath, '--plan'], { cwd: fixture.repoDir });
+    assert.match(clean.stdout, /Nothing to verify/);
+
+    await fs.mkdir(path.join(fixture.repoDir, 'tdf-hq-ui'), { recursive: true });
+    await fs.writeFile(path.join(fixture.repoDir, 'tdf-hq-ui', 'App.tsx'), 'export {};\n', 'utf8');
+    const plan = await execFileAsync('node', [verifyScriptPath, '--plan'], { cwd: fixture.repoDir });
+    assert.match(plan.stdout, /gate\(s\): repo, ui/);
+
+    await fs.mkdir(path.join(fixture.repoDir, 'tdf-mobile'), { recursive: true });
+    await fs.writeFile(path.join(fixture.repoDir, 'tdf-mobile', 'index.js'), '\n', 'utf8');
+    await assert.rejects(
+      () => execFileAsync('node', [verifyScriptPath, '--plan'], { cwd: fixture.repoDir }),
+      /Verification refused: changes under the tdf-mobile submodule/,
+    );
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('a second supervisor leaves the running supervisor lock and child PID file alone', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-lock-test-'));
+  const stateDir = path.join(tempRoot, 'state');
+  const lockDir = path.join(stateDir, 'lock');
+  const childPidFile = path.join(stateDir, 'child.pid');
+  const supervisorPath = path.resolve(testDir, '..', 'continuous-improvement-loop-supervisor.sh');
+
+  try {
+    await fs.mkdir(lockDir, { recursive: true });
+    // This test process stands in for the supervisor that already holds the lock.
+    await fs.writeFile(path.join(lockDir, 'pid'), `${process.pid}\n`, 'utf8');
+    await fs.writeFile(childPidFile, '12345\n', 'utf8');
+
+    await assert.rejects(
+      () =>
+        execFileAsync('bash', [supervisorPath, path.join(tempRoot, 'missing-config.json')], {
+          env: {
+            ...process.env,
+            CONTINUOUS_LOOP_STATE_DIR: stateDir,
+            CONTINUOUS_LOOP_LOG_FILE: path.join(tempRoot, 'loop.log'),
+            CONTINUOUS_LOOP_PID_FILE: path.join(tempRoot, 'loop.pid'),
+            CONTINUOUS_LOOP_CHILD_PID_FILE: childPidFile,
+            CONTINUOUS_LOOP_STATUS_FILE: path.join(stateDir, 'status.json'),
+            CONTINUOUS_LOOP_STOP_FILE: path.join(stateDir, 'stop'),
+            CONTINUOUS_LOOP_HEARTBEAT_FILE: path.join(stateDir, 'heartbeat.txt'),
+            CONTINUOUS_LOOP_LOCK_DIR: lockDir,
+          },
+        }),
+      /supervisor already running \(pid \d+/,
     );
 
-    const localHead = (await git(['rev-parse', 'HEAD'])).stdout.trim();
-    const remoteHead = (
-      await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', 'refs/heads/main'], { cwd: tempRoot })
-    ).stdout.trim();
-    assert.equal(localHead, remoteHead);
+    assert.equal((await fs.readFile(path.join(lockDir, 'pid'), 'utf8')).trim(), String(process.pid));
+    assert.equal(await fs.readFile(childPidFile, 'utf8'), '12345\n');
+    await assert.rejects(() => fs.access(path.join(tempRoot, 'loop.pid')));
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });
 
-test('syncAndPollLatestRemoteCi uses the fetched remote head for latest-commit polling when local main is ahead', async () => {
-  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-latest-remote-ci-test-'));
-  const remoteDir = path.join(tempRoot, 'remote.git');
-  const repoDir = path.join(tempRoot, 'repo');
-  const otherDir = path.join(tempRoot, 'other');
-  await fs.mkdir(repoDir);
-
-  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+test('supervisor blocks instead of starting a child when no dedicated worktree is configured', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-supervisor-block-test-'));
+  const stateDir = path.join(tempRoot, 'state');
+  const statusFile = path.join(stateDir, 'status.json');
+  const stopFile = path.join(stateDir, 'stop');
+  const logFile = path.join(tempRoot, 'loop.log');
+  const supervisorPath = path.resolve(testDir, '..', 'continuous-improvement-loop-supervisor.sh');
+  const env = { ...process.env };
+  delete env.CONTINUOUS_LOOP_WORKTREE;
 
   try {
-    await git(['init', '--bare', remoteDir], tempRoot);
-    await git(['init', '-b', 'main']);
-    await git(['config', 'user.name', 'Codex Test']);
-    await git(['config', 'user.email', 'codex@example.com']);
-    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
-    await git(['add', 'tracked.txt']);
-    await git(['commit', '-m', 'initial']);
-    await git(['remote', 'add', 'origin', remoteDir]);
-    await git(['push', '-u', 'origin', 'main']);
-
-    await execFileAsync('git', ['clone', '--branch', 'main', remoteDir, otherDir], { cwd: tempRoot });
-    await execFileAsync('git', ['config', 'user.name', 'Remote Writer'], { cwd: otherDir });
-    await execFileAsync('git', ['config', 'user.email', 'remote@example.com'], { cwd: otherDir });
-    await fs.writeFile(path.join(otherDir, 'remote-only.txt'), 'remote\n', 'utf8');
-    await execFileAsync('git', ['add', 'remote-only.txt'], { cwd: otherDir });
-    await execFileAsync('git', ['commit', '-m', 'remote advance'], { cwd: otherDir });
-    await execFileAsync('git', ['push', 'origin', 'main'], { cwd: otherDir });
-
-    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\nlocal only\n', 'utf8');
-    await git(['add', 'tracked.txt']);
-    await git(['commit', '-m', 'local only']);
-
-    const remoteHead = (
-      await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', 'refs/heads/main'], { cwd: tempRoot })
-    ).stdout.trim();
-
-    const result = await syncAndPollLatestRemoteCi(repoDir, {
-      pollGitHub: false,
-      pushRemote: 'origin',
-      pushBranch: 'main',
+    const supervisor = execFileAsync('bash', [supervisorPath, path.join(tempRoot, 'missing-config.json')], {
+      env: {
+        ...env,
+        CONTINUOUS_LOOP_STATE_DIR: stateDir,
+        CONTINUOUS_LOOP_LOG_FILE: logFile,
+        CONTINUOUS_LOOP_PID_FILE: path.join(tempRoot, 'loop.pid'),
+        CONTINUOUS_LOOP_CHILD_PID_FILE: path.join(stateDir, 'child.pid'),
+        CONTINUOUS_LOOP_STATUS_FILE: statusFile,
+        CONTINUOUS_LOOP_STOP_FILE: stopFile,
+        CONTINUOUS_LOOP_HEARTBEAT_FILE: path.join(stateDir, 'heartbeat.txt'),
+        CONTINUOUS_LOOP_LOCK_DIR: path.join(stateDir, 'lock'),
+        CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS: '1',
+      },
     });
 
-    const localHead = (await git(['rev-parse', 'HEAD'])).stdout.trim();
-    assert.equal(result.sha, remoteHead);
-    assert.equal(result.syncResult.remoteSha, remoteHead);
-    assert.equal(result.syncResult.sha, localHead);
-    assert.notEqual(localHead, remoteHead);
-    assert.equal(await fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'), 'remote\n');
+    let status = null;
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      try {
+        status = JSON.parse(await fs.readFile(statusFile, 'utf8'));
+        if (status.state === 'blocked') break;
+      } catch {
+        // status file not written yet
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    assert.equal(status?.state, 'blocked');
+    assert.match(status.details, /CONTINUOUS_LOOP_WORKTREE is not set/);
+    assert.equal(status.childPid, null);
+
+    // Let it poll a few times, then ask it to stop; the blocker is logged once, not per poll.
+    await new Promise((resolve) => setTimeout(resolve, 3500));
+    await fs.writeFile(stopFile, '', 'utf8');
+    await supervisor;
+
+    const log = await fs.readFile(logFile, 'utf8');
+    assert.equal(log.match(/CONTINUOUS_LOOP_WORKTREE is not set/g).length, 1);
+    assert.match(log, /stop requested; supervisor exiting/);
+    await assert.rejects(() => fs.access(path.join(stateDir, 'lock')));
   } finally {
+    await fs.writeFile(stopFile, '', 'utf8').catch(() => {});
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
 });
@@ -1065,7 +1220,9 @@ test('continuous-improvement-loop blocks custom UI audit failures even when find
       configPath,
       JSON.stringify(
         {
-          allowPushToMain: true,
+          requireLinkedWorktree: false,
+          openPullRequest: false,
+          verifyCommand: 'true',
           pollGitHub: false,
           iterationDelaySeconds: 0,
           ideaCommand:
@@ -1080,6 +1237,7 @@ test('continuous-improvement-loop blocks custom UI audit failures even when find
     );
     await git(['add', 'loop-config.json']);
     await git(['commit', '-m', 'config']);
+    await git(['push', 'origin', 'main']);
 
     await assert.rejects(
       () => execFileAsync('node', [loopScriptPath, '--config', 'loop-config.json', '--max-iterations', '1'], { cwd: repoDir }),
@@ -1117,7 +1275,9 @@ test('continuous-improvement-loop blocks custom formal failures even when findin
       configPath,
       JSON.stringify(
         {
-          allowPushToMain: true,
+          requireLinkedWorktree: false,
+          openPullRequest: false,
+          verifyCommand: 'true',
           pollGitHub: false,
           iterationDelaySeconds: 0,
           ideaCommand:
@@ -1133,6 +1293,7 @@ test('continuous-improvement-loop blocks custom formal failures even when findin
     );
     await git(['add', 'loop-config.json']);
     await git(['commit', '-m', 'config']);
+    await git(['push', 'origin', 'main']);
 
     await assert.rejects(
       () => execFileAsync('node', [loopScriptPath, '--config', 'loop-config.json', '--max-iterations', '1'], { cwd: repoDir }),
@@ -1221,18 +1382,17 @@ test('waitForGreenCi retries transient GitHub polling fetch failures', async () 
   }
 });
 
-test('continuous-improvement-loop repairs the latest remote CI failure before idea discovery', async () => {
+test('continuous-improvement-loop never merges branches into the base and repairs base CI before idea discovery', async () => {
   const script = await fs.readFile(loopScriptPath, 'utf8');
-  assert.equal(typeof reconcileNonMainBranchesOntoMain, 'function');
-  assert.match(script, /export async function reconcileNonMainBranchesOntoMain\(repoRoot, config = \{\}\)/);
-  assert.match(script, /function isLoopCheckpointBranch\(rawBranch\)/);
-  assert.match(script, /\['merge', '-s', 'ours', '--no-ff', '-m', mergeMessage, branchRef\]/);
-  assert.match(script, /phase: 'branch-reconciliation'/);
-  assert.match(script, /const branchSweep = await reconcileNonMainBranchesOntoMain\(repoRoot, config\);/);
-  assert.equal(typeof syncAndPollLatestRemoteCi, 'function');
-  assert.match(script, /export async function syncAndPollLatestRemoteCi\(repoRoot, config, context = null\)/);
-  assert.match(script, /const latestRemote = await syncAndPollLatestRemoteCi\(repoRoot, config, context\);/);
-  assert.match(script, /if \(latestRemote\.ciResult && !latestRemote\.ciResult\.ok\)/);
+  // The branch sweep that merged every branch into main and deleted it is gone for good.
+  assert.doesNotMatch(script, /reconcileNonMainBranchesOntoMain|pruneMergedRefsOnMain|mergeRefOntoMain/);
+  assert.doesNotMatch(script, /'--delete'/);
+  assert.doesNotMatch(script, /\['merge', '(?!--abort)/);
+  assert.doesNotMatch(script, /\['rebase', '--autostash'/);
+  assert.match(script, /await execText\('git', \['push', remoteName, `HEAD:refs\/heads\/\$\{branchName\}`\], repoRoot\);/);
+  assert.match(script, /const branch = await prepareIterationBranch\(repoRoot, config, iteration\);/);
+  assert.match(script, /const baseCiResult = await pollBaseBranchCi\(repoRoot, config, context, branch\);/);
+  assert.match(script, /if \(baseCiResult && !baseCiResult\.ok\)/);
   assert.match(script, /phase: 'latest-commit-ci-repair'/);
   assert.match(script, /await runShellCommand\(config\.ciRepairCommand, repoRoot, context,/);
   assert.match(

@@ -88,21 +88,21 @@ cat "$OUTPUT_FILE"
 cat "$CODEX_STDERR" >&2
 
 if [ "$CODEX_EXIT" -ne 0 ]; then
+  # Known transient Codex failures (usage limits, the image-generation backend defect
+  # below) still fail this step: the loop discards the iteration, waits, and moves on to
+  # the next idea, so a half-finished edit is never mistaken for a completed one.
   if grep -qi 'usage limit' "$OUTPUT_FILE" 2>/dev/null || grep -qi 'usage limit' "$CODEX_STDERR" 2>/dev/null; then
-    echo "RESULT: blocked" >> "$OUTPUT_FILE"
-    exit 0
+    echo "Codex usage limit reached; this iteration will be discarded." >&2
+    exit 75
   fi
-  # Treat the codex backend image-generation defect as a recoverable per-iteration
-  # skip, not a hard crash. codex (gpt-5.5) sometimes offers its built-in
-  # image_generation tool bound to the non-existent model 'gpt-image-2', which the
-  # backend rejects with a 400 (image_generation_user_error). There is no codex
-  # config field to disable that tool, so a hard exit here trips the supervisor
-  # crash-loop breaker and takes the whole evergreen lane (Lane C) down. Soft-fail
-  # this signature so the supervisor cycles to the next idea and the lane stays live.
+  # codex (gpt-5.5) sometimes offers its built-in image_generation tool bound to the
+  # non-existent model 'gpt-image-2', which the backend rejects with a 400
+  # (image_generation_user_error). There is no codex config field to disable that tool.
+  # Report it distinctly; the loop discards the iteration and cycles to the next idea.
   if grep -qiE 'image_generation_user_error|gpt-image-2' "$OUTPUT_FILE" 2>/dev/null \
     || grep -qiE 'image_generation_user_error|gpt-image-2' "$CODEX_STDERR" 2>/dev/null; then
-    echo "RESULT: blocked" >> "$OUTPUT_FILE"
-    exit 0
+    echo "Codex image-generation backend defect; this iteration will be discarded." >&2
+    exit 75
   fi
   exit "$CODEX_EXIT"
 fi

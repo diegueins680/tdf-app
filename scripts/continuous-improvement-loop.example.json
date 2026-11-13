@@ -1,11 +1,17 @@
 {
-  "ideaCommand": "node scripts/discover-improvement-idea.mjs",
+  "ideaCommand": "node {tool_root}/scripts/discover-improvement-idea.mjs",
   "implementationCommand": "./scripts/replace-with-your-implementer.sh {idea_file}",
   "uiFixCommand": "./scripts/replace-with-your-implementer.sh {ui_report_file}",
   "formalFixCommand": "./scripts/replace-with-your-implementer.sh {formal_report_file}",
   "ciRepairCommand": "./scripts/replace-with-your-implementer.sh {ci_report_file}",
+  "verifyCommand": "node {tool_root}/scripts/continuous-improvement-loop-verify.mjs",
   "commitMessageTemplate": "{commit_message}",
   "pushRemote": "origin",
+  "baseBranch": "main",
+  "branchPrefix": "continuous-improvement-loop/",
+  "openPullRequest": true,
+  "draftPullRequest": true,
+  "maxOpenPullRequests": 3,
   "pollGitHub": false,
   "pollIntervalSeconds": 30,
   "ciTimeoutMinutes": 30

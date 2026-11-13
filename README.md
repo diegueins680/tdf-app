@@ -269,23 +269,28 @@ npm run loop:install-launchd
 ```
 
 Forever-runner contract:
-- `npm run loop:start` launches a dedicated supervisor (`scripts/continuous-improvement-loop-supervisor.sh`), not just one backgrounded Node process.
-- The supervisor enforces a single-instance lock, restarts the loop if the child exits, watches the heartbeat emitted by `scripts/continuous-improvement-loop.mjs`, and restarts stale children after the configured timeout.
-- Operator-visible state lives in `tmp/continuous-improvement-loop/status.json` with PID, child PID, phase, heartbeat, restart counters, and last-exit details.
+- The loop never commits to, merges into, or pushes `main`. Each iteration branches from the latest `origin/main`, and a successful one is pushed as `continuous-improvement-loop/<timestamp>-<n>` and opened as a draft pull request for a person to review.
+- It runs only in its own linked git worktree (`CONTINUOUS_LOOP_WORKTREE`), never in a working checkout: `git worktree add --detach ../tdf-app-loop-work origin/main`. It refuses to start anywhere else.
+- Nothing is committed until `verifyCommand` passes. The default gate (`scripts/continuous-improvement-loop-verify.mjs`) always runs `scripts/quality-repo.sh`, adds `scripts/quality-ui.sh` for web changes and `scripts/quality-backend.sh` for backend changes, and refuses changes under the `tdf-mobile` submodule.
+- A failed step, failed verification, or timed-out worker discards that iteration's changes (hard reset of the loop worktree) and the loop moves on to the next idea. Unfinished work is never checkpointed or pushed.
+- The repository gate needs the pinned `tdf-mobile` sources. Initialise them once in the loop worktree (`git submodule update --init --checkout tdf-mobile`); with `checkoutSubmodules` on, each iteration keeps them at the revision the base records.
+- At most `maxOpenPullRequests` (default 3) loop pull requests stay open; the loop waits for review instead of piling up more.
+- `npm run loop:start` launches a dedicated supervisor (`scripts/continuous-improvement-loop-supervisor.sh`). It enforces a single-instance lock, restarts the loop if the child exits, blocks with a reason in the status file when a precondition is missing (worktree, GitHub auth, Codex CLI, free disk space), and stops restarting after repeated identical crashes until `tmp/continuous-improvement-loop/repair-needed.md` is deleted.
+- Each worker step runs in its own process group and is stopped, with its children, after `stepTimeoutMinutes` (default 180) or when the loop is stopped.
+- Operator-visible state lives in `tmp/continuous-improvement-loop/status.json` with PID, child PID, phase, heartbeats, restart counters, and last-exit details.
 - Logs stay in `tmp/continuous-improvement-loop.log` and remain tail-able with `npm run loop:tail`.
 - Stop the runner cleanly with `npm run loop:stop`; a stop file is used so the supervisor exits intentionally instead of immediately respawning.
 - `scripts/install-continuous-improvement-loop-launchd.sh` installs a macOS LaunchAgent with `RunAtLoad` + `KeepAlive`, which is the durable contract for always-on execution across crashes and reboots.
 
 Notes:
-- When the forever runner encounters a dirty worktree, it now commits that work directly onto the live loop branch and pushes it to `main`, resolving sync conflicts in place and only blocking if that direct-to-main recovery fails.
-- Before each new improvement idea, the loop syncs to the latest pushed branch head, polls GitHub Actions for that exact commit, and routes any failing workflow logs through `ciRepairCommand` before starting fresh discovery.
-- `loop:improve` is agent-agnostic: wire `implementationCommand`, `uiFixCommand`, `formalFixCommand`, and `ciRepairCommand` to your preferred coding worker.
+- With `pollGitHub` on, the loop polls GitHub Actions for the latest `origin/main` commit before discovery and routes failing workflow logs through `ciRepairCommand`; the repair is proposed as a pull request like any other iteration.
+- `loop:improve` is agent-agnostic: wire `implementationCommand`, `uiFixCommand`, `formalFixCommand`, and `ciRepairCommand` to your preferred coding worker. Hooks can use `{tool_root}` to reference this tooling from the loop worktree.
 - `commitMessageTemplate` defaults to `{commit_message}` and can use `{commit_type}`, `{commit_summary}`, `{primary_path}`, and `{files_changed}` if you want a custom format.
-- GitHub polling uses `gh api`, so run `gh auth status` first and ensure the repo remote points at GitHub.
-- The checked-in `scripts/continuous-improvement-loop.codex.json` now keeps `pollGitHub` off by default; enable it deliberately once GitHub auth is healthy.
+- Pull requests and GitHub polling use the `gh` login, so run `gh auth status` first and ensure the repo remote points at GitHub.
+- The checked-in `scripts/continuous-improvement-loop.codex.json` keeps `pollGitHub` off by default; enable it deliberately once GitHub auth is healthy.
 - Use `npm run loop:enable-ci-polling` and `npm run loop:disable-ci-polling` instead of hand-editing the JSON when switching modes.
-- The default loop config now inherits the current branch; `loop:start` and direct loop runs refuse `main` unless you explicitly set `allowPushToMain: true` or `CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN=1`.
-- Tuning knobs for the forever runner: `CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS`, `CONTINUOUS_LOOP_RESTART_DELAY_SECONDS`, `CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS`, `CONTINUOUS_LOOP_LOG_FILE`, and `CONTINUOUS_LOOP_STATE_DIR`.
+- `allowPushToMain`, `CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN`, and `pushBranch` are no longer supported and are rejected at startup.
+- Tuning knobs for the forever runner: `CONTINUOUS_LOOP_WORKTREE`, `CONTINUOUS_LOOP_MIN_FREE_MB`, `CONTINUOUS_LOOP_RESTART_DELAY_SECONDS`, `CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS`, `CONTINUOUS_LOOP_LOG_FILE`, and `CONTINUOUS_LOOP_STATE_DIR`.
 
 ### Build for Production
 

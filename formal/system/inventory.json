@@ -303,13 +303,11 @@
       "scripts/codex-logical-correctness-loop.sh",
       "scripts/codex-loop-worker.sh",
       "scripts/content-storage-model.mjs",
-      "scripts/continuous-improvement-loop-dirty-worktree.mjs",
-      "scripts/continuous-improvement-loop-forever.mjs",
       "scripts/continuous-improvement-loop-supervisor.sh",
+      "scripts/continuous-improvement-loop-verify.mjs",
       "scripts/continuous-improvement-loop.codex.json",
       "scripts/continuous-improvement-loop.example.json",
       "scripts/continuous-improvement-loop.mjs",
-      "scripts/continuous-improvement-loop.test.mjs",
       "scripts/deploy-stripe-ticketing.sh",
       "scripts/diagnose-instagram.mjs",
       "scripts/diagnose-social.mjs",
@@ -350,7 +348,7 @@
       "scripts/lib/alloy-controls.mjs",
       "scripts/lib/auth_throttle_http.py",
       "scripts/lib/compiled-api-surface.mjs",
-      "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
+      "scripts/lib/continuous-improvement-loop-verify.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
       "scripts/lib/discovery.mjs",
       "scripts/lib/disposable-postgres-url.mjs",
@@ -3956,7 +3954,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
+      "sha256": "0330448cd917338a8b711de30c3332e19407b9eac3cba16429f9c320494e309e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4826,7 +4824,7 @@
     {
       "id": "SURFACE-6c037a47184dd0e1",
       "path": "scripts/codex-loop-worker.sh",
-      "sha256": "6da47a449c7eebca4b1c1deab3a459a42d72f3472c04b71e5588b800b2c7f405",
+      "sha256": "467cb345b75f0afa7d96e98be460d4225374f3dec1c203c0984f62aef16cc282",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4836,45 +4834,33 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-3b3b7300cb3b148d",
-      "path": "scripts/continuous-improvement-loop-dirty-worktree.mjs",
-      "sha256": "9952689276374049d8eba81df209ea1dd6398b3b58ee201fc5e15aa5cf78c63b",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a5b3501b72738223",
-      "path": "scripts/continuous-improvement-loop-forever.mjs",
-      "sha256": "9efb8aed16f5d26d97f15f32dc53b2c5bc281e3a29b1185a0ec8d21a14f882a6",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-b3c3757671de3a8f",
       "path": "scripts/continuous-improvement-loop-supervisor.sh",
-      "sha256": "7f0c42b1a096a1887825717c8605c265bc6fca268edf8e0a636cc4a95b3dbc3e",
+      "sha256": "93ac702555b1338b6cf7f8e9d5b424f3204c69a72cd3d78d50541da3bf04ae40",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dcc180d2a4916e98",
+      "path": "scripts/continuous-improvement-loop-verify.mjs",
+      "sha256": "73286083f60f46445b2f0f9c9db08797abcf5bbcd11757859163da8eeec23a5c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4866f83da6180efe",
       "path": "scripts/continuous-improvement-loop.codex.json",
-      "sha256": "cca31937bdc0322a70265c25a4256ff968c53784f2c772791da5b23ac215b711",
+      "sha256": "3478074e8ba78d94fb119ebe2143ac51802f1885d69570d3ddcb7d16d9ffd1db",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-587b06f07bbc17e1",
       "path": "scripts/continuous-improvement-loop.example.json",
-      "sha256": "87770e25fc0a34763b9e159e9934aa5025a7c7729611cb1e32495de2355e0830",
+      "sha256": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "ecf7580ba5fa6a19d2937ef5cfd9fc4ae643af7d4349b3ecfb6fd45c00d821f5",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-cb864006a7638836",
-      "path": "scripts/continuous-improvement-loop.test.mjs",
-      "sha256": "defacc8e2687ea746480d89efa942a411845d263e39b37f592d79554149cdae2",
+      "sha256": "de5f91e250baaa71ae199ae133aa7b8b47f9d05f0c13dd52a5c83e6c00e9f9f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5024,7 +5010,7 @@
     {
       "id": "SURFACE-bad721e602863a57",
       "path": "scripts/install-continuous-improvement-loop-launchd.sh",
-      "sha256": "dcebbbc4b020fa157b45903c7c5a343e0e95d1d6777145f76f4489450e301b9d",
+      "sha256": "21408db312b60e4ef2c36cc07796f6f9fb2e342b4f5ab3c3fcd7f59442eaa4f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5118,15 +5104,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-4738d9e01ae03383",
-      "path": "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
-      "sha256": "faf36f605524fb8935e15f5b440fc8ba22dbe4b0cf4606ebca7b466d5555b680",
+      "id": "SURFACE-52387ab4cef049b4",
+      "path": "scripts/lib/continuous-improvement-loop-verify.mjs",
+      "sha256": "d2a9b3157cf62e42a58f9cf353204d873865c54f1dd5cf29aa76e32f1a2bd415",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-596444d6be3be153",
       "path": "scripts/lib/continuous-improvement-loop.mjs",
-      "sha256": "8b56d1d8ff9176a99571c7a8592604022048992f3d9b5b7f9539b39fcc70b422",
+      "sha256": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6020,7 +6006,7 @@
     {
       "id": "SURFACE-6d63ec22f8ea99a7",
       "path": "scripts/start-continuous-improvement-loop.sh",
-      "sha256": "bd3e135520d8df917f6d634b59e3eae56d1eb80a76f9b4f9efad407d2c0ff632",
+      "sha256": "f36c33ec0d9767180c2543c3596964794e02c3e943efa72b3fbb2e970ec81850",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21729,7 +21715,7 @@
   "artifacts": [
     {
       "path": "AI_WORKFLOW.md",
-      "sha256": "3d317430f467a68fdc8541205ce5da725e754113793f5ba88c4aa9c8337fbc76",
+      "sha256": "905a1dbf49d26cc640390b2b278fdfd8f55aba725d0aa0d1559a9a78bece3f1e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -21869,7 +21855,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "0b78d100a1dc87b48523ea9aad7fdc58d513a4c01cd8120d25cefc8bede95f54",
+      "sha256": "b3ff9c34e283f599d7e2d66f79a6fa78a65f258acf22e4eee18c321e8867f37f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
