@@ -17,25 +17,21 @@ case "$(uname -s)-$(uname -m)" in
   Linux-x86_64) platform=linux-amd64 ;;
   *) echo "Unsupported platform $(uname -s)-$(uname -m); add pins to $pins first." >&2; exit 1 ;;
 esac
+version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$pins")"
 
-pin() { python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(eval("d"+sys.argv[2]))' "$pins" "$1"; }
-version="$(pin '["version"]')"
-archive_sha="$(pin "[\"platforms\"][\"$platform\"][\"archiveSha256\"]")"
-keygen_sha="$(pin "[\"platforms\"][\"$platform\"][\"binaries\"][\"age-keygen\"]")"
-
-work="$(mktemp -d)"
+# Physical path: the installer refuses symlinked ancestors such as macOS /var.
+work="$(cd "$(mktemp -d)" && pwd -P)"
 trap 'rm -rf "$work"' EXIT
+chmod 700 "$work"
 archive="$work/age.tar.gz"
 url="https://github.com/FiloSottile/age/releases/download/${version}/age-${version}-${platform}.tar.gz"
 
 echo "Downloading age ${version} for ${platform}..."
 curl -fsSL --proto '=https' --tlsv1.2 -o "$archive" "$url"
-
-sha256() { shasum -a 256 "$1" | awk '{print $1}'; }
-[ "$(sha256 "$archive")" = "$archive_sha" ] || { echo "Archive checksum mismatch; refusing to continue." >&2; exit 1; }
-tar -xzf "$archive" -C "$work"
+# The reviewed installer checks the archive and both binaries against the pins.
+python3 "$repo_root/scripts/install-recovery-tools.py" --archive "$archive" --destination "$work/age" >/dev/null \
+  || { echo "Checksum verification failed; refusing to continue." >&2; exit 1; }
 keygen="$work/age/age-keygen"
-[ "$(sha256 "$keygen")" = "$keygen_sha" ] || { echo "age-keygen checksum mismatch; refusing to continue." >&2; exit 1; }
 
 out="${HOME}/tdf-recovery-key-$(date +%Y%m%d).txt"
 if [ -e "$out" ]; then echo "$out already exists; not overwriting." >&2; exit 1; fi

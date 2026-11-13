@@ -6712,6 +6712,111 @@
       "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
     },
     {
+      "id": "DEPLOY-RELEASE-001",
+      "title": "A routine backend release keeps users fenced until the candidate is verified and an exact off-host copy exists",
+      "domain": "DEPLOY",
+      "statement": "A routine Hetzner backend release shall serve a maintenance response and stop every compose writer before capturing the stopped database and deployment directory, shall verify an encrypted off-host copy through a fresh connection and an isolated start of the captured database before any migration, shall apply only the candidate's reviewed migration batch, and shall reopen traffic only after the candidate reports its own revision, a healthy database and passing smoke checks; rollback shall be refused once traffic reopens.",
+      "authority": "Owner decisions of 13 November 2026 (pragmatic guarded release, Storage Box, owner-held recovery key, at most 30 minutes downtime)",
+      "source": "formal/system/guarded-release.md",
+      "contract": "formal/system/guarded-release.md",
+      "critical": true,
+      "actors": [
+        "Owner approving each production phase",
+        "Release operator",
+        "Recovery key custodian"
+      ],
+      "preconditions": [
+        "Running API and database match the configured immutable images",
+        "Candidate image published for the exact commit",
+        "Storage Box sub-account key and pinned host key installed root-only on the host",
+        "Custodian holds the private age identity off-host"
+      ],
+      "inputs": [
+        "Candidate commit",
+        "Registry-derived image digest",
+        "Manifest-derived migration ids and hash",
+        "Mobile gitlink",
+        "Committed tool revision",
+        "Public age recipient",
+        "Storage target",
+        "Smoke paths"
+      ],
+      "state": {
+        "states": [
+          "planned",
+          "fenced",
+          "captured",
+          "copied-off-host",
+          "migrated",
+          "candidate-verified",
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ],
+        "initial": "planned",
+        "terminal": [
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "planned -> fenced (maintenance, writers stopped, database stopped cleanly)",
+        "fenced -> captured -> copied-off-host (exact read-back) -> isolate verified",
+        "isolate verified -> migrated (every manifest id in ledger) -> candidate-verified -> reopened",
+        "any pre-reopen state -> rolled-back (captured database restored when migrations may have run)"
+      ],
+      "forbiddenTransitions": [
+        "Capture while the API, a database-network peer or a client backend can write",
+        "Migrate before a verified off-host copy and isolated start",
+        "Reopen with a candidate whose revision, health or smoke checks fail",
+        "Roll back after reopen",
+        "Run a phase with tool code or parameters that differ from the journal plan",
+        "Place the private recovery identity on the production host"
+      ],
+      "effects": [
+        "Maintenance edge response",
+        "Compose service stop/start",
+        "Root-private capture and encrypted bundle",
+        "Off-host bundle and record",
+        "Reviewed migrations",
+        "API image change",
+        "Edge restore"
+      ],
+      "authorization": "Each phase needs the candidate revision confirmation given only after owner approval; rollback needs its own confirmation.",
+      "privacy": "Captures stay root-private and leave the host only age-encrypted; outputs carry digests, stage names and fixed messages, never configuration, SQL output or credentials.",
+      "concurrency": "The release journal's permanent lock serializes releases; the physical isolate shares the rehearsal reservation. Privileged host writers outside compose are not fenced.",
+      "idempotency": "Completed stages are skipped; an interrupted stage blocks further phases until rollback or reviewed recovery.",
+      "failure": "Any rejected check stops the phase with a fixed message and leaves a pending journal intent; maintenance stays up.",
+      "recovery": "Rollback before reopen returns to the recovery image, replaying the cold capture when migrations may have run and retaining the post-migration data directory. A journal abandon record is still missing.",
+      "observability": "Per-stage evidence files in the release directory, their hashes in the journal, the trusted bundle record off-host, and a rollback receipt.",
+      "implementation": [
+        "ops/hetzner/guarded-release.py",
+        "scripts/guarded-release.mjs",
+        "scripts/generate-recovery-key.sh"
+      ],
+      "tests": [
+        "scripts/test-guarded-release.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Orchestration controls over the real journal and release files with an in-memory host; seven safety-check mutations detected. No staging or production execution yet.",
+      "ambiguity": [
+        "Storage Box acceptance and custodian decrypt pending",
+        "Journal abandon record missing",
+        "Edge certificates not captured",
+        "Authenticated login probe optional"
+      ],
+      "verification": "20 orchestration tests: full release, ordering and confirmation, interrupted-stage blocking, client/peer fencing, corrupt off-host copy, Caddyfile and parameter drift, missing migration rows, rollback with and without database restore, refusal after reopen and release succession.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executor and driver exist; staging rehearsal and supervised production execution are pending."
+      },
+      "property": "No migration runs before a verified off-host copy of a fenced cold capture, and no traffic reaches a candidate that failed verification.",
+      "evidence": "Synthetic host model only; Docker, PostgreSQL, Caddy and SFTP behaviour need staging and supervised production evidence."
+    },
+    {
       "id": "MOB-ONBOARD-001",
       "title": "Session-bound durable onboarding reconciliation",
       "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
