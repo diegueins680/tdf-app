@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-13T00:20:53.485Z",
+  "generatedAt": "2026-11-13T00:43:55.855Z",
   "repositoryRoot": ".",
   "filesScanned": 2711,
-  "candidateCount": 1459,
+  "candidateCount": 1458,
   "byClassification": {
     "dynamic-business-catalog": 958,
     "genuine-technical-constant": 75,
-    "governed-reference-data": 153,
+    "governed-reference-data": 152,
     "security-system-registry": 273
   },
   "exactDuplicateGroupCount": 194,
@@ -4772,46 +4772,6 @@
       "priority": "P3-retain",
       "risk": "Treating this synthetic creator response as runtime privacy authority would bypass current provider options. The two values are confined to the controlled test response.",
       "justification": "This test-only TikTok creator response supplies public/private protocol options to exercise an empty default, manual selection and paid-content restrictions in the actual JavaScript form. Production options are fetched from the creator API and revalidated before publication; this fixture neither defines a selectable business catalog nor grants publication authority.",
-      "exactDuplicateIds": [],
-      "similarCandidateIds": []
-    },
-    {
-      "id": "929a69219c30d5e3890a",
-      "file": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sourceKind": "test",
-      "surface": "automation",
-      "domain": "music-catalog-cms",
-      "kind": "array",
-      "name": "paymentReviews",
-      "line": 927,
-      "values": [
-        "d580ad14a8f01218c4a9",
-        "fbe5e4e4d0289e1caaf4",
-        "cfa5a05214e95ed07ef0",
-        "203395cfa370d78f86a1",
-        "1f6946049f264576684d",
-        "09d7dc6ebc55642a4bb2",
-        "584b9609b82ad71578ed",
-        "e1a25b160e801cf866df",
-        "32574b309f1d005ed165"
-      ],
-      "valueCount": 9,
-      "recommendedClassification": "governed-reference-data",
-      "lines": [
-        927
-      ],
-      "consumerCount": 0,
-      "backendConsumers": [],
-      "webConsumers": [],
-      "mobileConsumers": [],
-      "automationConsumers": [],
-      "apiAndIntegrationConsumers": [],
-      "decision": "unreviewed",
-      "disposition": "",
-      "specializedModel": "",
-      "priority": "",
-      "risk": "",
-      "justification": "",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },

@@ -56935,7 +56935,7 @@
     ],
     "rawMounts": [
       {
-        "ordinal": 933,
+        "ordinal": 937,
         "path": "/inventory",
         "parameters": [],
         "bodies": [],
@@ -56943,7 +56943,7 @@
         "internalInputs": []
       },
       {
-        "ordinal": 934,
+        "ordinal": 938,
         "path": "/assets/serve",
         "parameters": [],
         "bodies": [],

@@ -924,9 +924,11 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   // types); the historical view sets those aside and steps back once more.
   const paymentsTip = active.find(row => row.id === '8505516291a9e3498d69');
   assert.equal(paymentsTip.evidence.valueCount, 252);
-  const paymentReviews = ['d580ad14a8f01218c4a9', 'fbe5e4e4d0289e1caaf4', 'cfa5a05214e95ed07ef0',
-    '203395cfa370d78f86a1', '1f6946049f264576684d', '09d7dc6ebc55642a4bb2', '584b9609b82ad71578ed',
-    'e1a25b160e801cf866df', '32574b309f1d005ed165'];
+  const payoutReviews = ['d580ad14a8f01218c4a9', 'fbe5e4e4d0289e1caaf4', 'cfa5a05214e95ed07ef0',
+    '203395cfa370d78f86a1', '1f6946049f264576684d'];
+  const chargeReviews = ['09d7dc6ebc55642a4bb2', '584b9609b82ad71578ed', 'e1a25b160e801cf866df',
+    '32574b309f1d005ed165'];
+  const paymentReviews = [...payoutReviews, ...chargeReviews];
   for (const id of paymentReviews) {
     const review = active.find(row => row.id === id);
     assert.ok(review?.reviewed, `the marketplace agreement payments review ${id} must be present and reviewed`);
