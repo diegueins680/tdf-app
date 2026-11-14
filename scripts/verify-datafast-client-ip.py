@@ -41,7 +41,7 @@ def main():
                 content = content.replace(old, new)
             target.write_text(content)
             command = ['stack', '--stack-yaml', str(ROOT / 'tdf-hq/stack.yaml'),
-                       'exec', '--', 'runghc', '-package=iproute', '-package=wai-extra',
+                       'exec', '--', 'runghc', '-XHaskell2010', '-package=iproute', '-package=wai-extra',
                        '-package=servant-server', '-i' + str(variant),
                        '-i' + str(ROOT / 'tdf-hq/src'), '-i' + str(ROOT / 'tdf-hq/test'),
                        str(entry), '--seed=20261114', '--fail-on=empty', '--no-color']

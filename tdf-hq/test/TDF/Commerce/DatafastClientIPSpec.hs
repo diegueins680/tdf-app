@@ -35,7 +35,8 @@ probe :: Maybe String -> Socket.SockAddr -> [Header] -> IO (SResponse, Int)
 probe configured peer headers = do
   policy <- either (fail . T.unpack) pure (parseTrustedDatafastProxies configured)
   calls <- newIORef (0 :: Int)
-  let handler request _body = case resolveDatafastClientIP policy request of
+  let handler :: DatafastClientRequest -> Value -> Handler T.Text
+      handler request _body = case resolveDatafastClientIP policy request of
         Left message -> throwError err503 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
         Right client -> do
           liftIO (modifyIORef' calls (+1))

@@ -28568,7 +28568,7 @@
     "scripts/verify-checkout-money.py": "bf698645e4ca026a168234a99a13371e1d359e26010b3771867158cb0bd47d6d",
     "scripts/verify-cors-boundary.py": "3eaa65583fd4a282cf0cab35afecde249ed7667c9b55e13ead8a11f7db823506",
     "scripts/verify-datafast-cart.py": "fa2f5ebef1b0954c334bc98740264df5685a831d7abbbd828d7e7c586a94870a",
-    "scripts/verify-datafast-client-ip.py": "6fe1778819f5ebbcc8852953f5e8b02ae32e3a99fbb51c1dca61915fd069ea98",
+    "scripts/verify-datafast-client-ip.py": "0fe25bd58b5e21c23b30275ef186e3c00bb63dced439700b5100633256b76c93",
     "scripts/verify-datafast-reference.py": "8c5d503657b82ab6d5508a281ca61d416f76d89c2a15a00f746b9a3718019c9f",
     "scripts/verify-event-operations-formal.sh": "a17b08e8c4d12ee0537ed8707d8675e8fa60fe7a1b2aa985391c204cf6d0351b",
     "scripts/verify-event-operations-pluscal.mjs": "8b7cea941470cf2a3f8b169851a7116b52e6ab9bf51b0026720638afc600de5a",
@@ -29582,7 +29582,7 @@
     "tdf-hq/test/TDF/Commerce/ArtistTipSpec.hs": "ad485e08cc1c0433c8cfeb343d07feff37287d4fc63143126e827580776728c6",
     "tdf-hq/test/TDF/Commerce/ArtistTipStoreSpec.hs": "821455528e37e95f4baab3ec32621766ce289b8eefd5033186d03571c0cd875f",
     "tdf-hq/test/TDF/Commerce/CheckoutMoneySpec.hs": "429f22f2718232f686e1be542c6c29ab6fac7d97d2d029829a1a9328f6141c68",
-    "tdf-hq/test/TDF/Commerce/DatafastClientIPSpec.hs": "c546e87211e623e037fb25861ff8dcb9eca3569043442a6b0583d374e3a3682e",
+    "tdf-hq/test/TDF/Commerce/DatafastClientIPSpec.hs": "5fde8c9e4727c48da2284064470a560a3b66e8573b3032178f766804105b4d7e",
     "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs": "666470ccb0cb34da5456b28da49a666ac67e87b922071acd5efe459c563604f6",
     "tdf-hq/test/TDF/Commerce/DepositPolicySpec.hs": "ff316f0553d2db5290ad5ccebf5a730cb3ef595f42b92694da865e3de4de2e00",
     "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs": "a4f7f070b8f1d569415a4e82b3a9c2671ada7dcd411e2b9ce9ddd9af9e700e8b",
@@ -56353,7 +56353,7 @@
     {
       "id": "SURFACE-61dd07e6dca708d2",
       "path": "scripts/verify-datafast-client-ip.py",
-      "sha256": "6fe1778819f5ebbcc8852953f5e8b02ae32e3a99fbb51c1dca61915fd069ea98",
+      "sha256": "0fe25bd58b5e21c23b30275ef186e3c00bb63dced439700b5100633256b76c93",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78339,7 +78339,7 @@
     {
       "id": "SURFACE-6fdf8dc7c76623ac",
       "path": "tdf-hq/test/TDF/Commerce/DatafastClientIPSpec.hs",
-      "sha256": "c546e87211e623e037fb25861ff8dcb9eca3569043442a6b0583d374e3a3682e",
+      "sha256": "5fde8c9e4727c48da2284064470a560a3b66e8573b3032178f766804105b4d7e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
