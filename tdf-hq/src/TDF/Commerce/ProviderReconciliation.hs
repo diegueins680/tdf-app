@@ -103,7 +103,12 @@ processProviderEventWith fetch appliedAt env@Env{envPool} payload now =
                   case boundResult of
                     Left _ -> pure (retry
                       "Provider callback has no available immutable binding yet" Nothing)
-                    Right payment -> queryAndApply fetch appliedAt env rpaAdapter payload payment now
+                    -- Once the event is bound, a failure of the query or of its
+                    -- application keeps the binding: an event that runs out of
+                    -- retries this way still leaves its review exception.
+                    Right payment ->
+                      either (const (retry "Hosted provider reconciliation failed" (Just payment))) id
+                        <$> tryAny (queryAndApply fetch appliedAt env rpaAdapter payload payment now)
 
 queryAndApply
   :: (AdapterRequest -> IO (Either AdapterTransportError A.Value))

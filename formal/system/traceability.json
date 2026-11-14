@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "44a306ba1fe9361e893688d944b5ce789e364abb",
+  "mobileRevision": "cb5903ac6e4f66e522ed5477accf56a87c80d64c",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -10308,6 +10308,115 @@
       }
     },
     {
+      "id": "MKT-AGREEMENT-PAYMENT-001",
+      "title": "Marketplace agreement payments on the canonical checkout with a frozen split per charge",
+      "domain": "MKT",
+      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit; on the balance, whatever the paid charges did not actually collect for the platform), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money. A deposit unpaid at its deadline expires the agreement and releases the slot. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor refuses agreement checkouts until a split-capable provider flow exists.",
+      "authority": "Product owner decisions of 2026-11-12 (Stripe, PayPhone and DataWeb by currency and user choice; automatic provider payout; DataWeb integrated but closed; split on every charge); ADR 0136; ADR 0115",
+      "source": "docs/adr/0136-marketplace-agreement-payments.md; docs/adr/0115-provider-neutral-payment-routing.md",
+      "contract": "docs/adr/0136-marketplace-agreement-payments.md",
+      "actors": [
+        "Buyer (manager of the profile that seeks and pays)",
+        "Provider (manager of the profile that delivers and is paid)",
+        "Directory administrator",
+        "Payment reconciliation (canonical checkout runtime)"
+      ],
+      "preconditions": [
+        "Migration 2026-11-12_marketplace_agreement_payments is applied after 2026-11-12_marketplace_agreements",
+        "The marketplace.agreements and marketplace.agreement_payments runtime flags are on for the environment",
+        "The provider profile has a ready payout account for a payment provider that settles the agreed currency",
+        "A processor fee rule exists for the chosen payment provider"
+      ],
+      "inputs": [
+        "PATCH /directory/applications/{applicationId}/status (acceptance decides the settlement mode of the new agreement)",
+        "POST /directory/agreements/{agreementId}/payments (the buyer starts the deposit or balance charge)",
+        "PATCH /directory/agreements/{agreementId}/status (delivery confirmation, cancellation, dispute)",
+        "GET /directory/payout-accounts (payout accounts of the profiles the caller manages)",
+        "PUT /directory/profiles/{profileId}/payout-accounts/{provider} (declare a payout account)",
+        "DELETE /directory/profiles/{profileId}/payout-accounts/{provider} (disable a payout account)",
+        "commerce_checkout_session status changes written by payment reconciliation"
+      ],
+      "state": {
+        "agreementPayment": "pending, paid, expired, cancelled",
+        "authority": "TDF.Directory.Policy.allowedAgreementPaymentTransition, marketplace_guard_agreement_payment trigger, marketplace_agreement_require_paid_payment trigger and the checkout sync triggers"
+      },
+      "allowedTransitions": [
+        "payment pending -> paid (verified checkout evidence only)",
+        "payment pending -> expired (deposit deadline) or cancelled (replaced charge, cancelled agreement)",
+        "agreement pending_deposit -> confirmed (paid deposit) | cancelled (either party) | expired (deadline)",
+        "agreement confirmed|in_progress -> balance_due (buyer confirms delivery with a balance owed on the platform)",
+        "agreement balance_due -> completed (paid balance) | disputed (either party)"
+      ],
+      "forbiddenTransitions": [
+        "Any transition out of a paid, expired or cancelled payment",
+        "A payment marked paid by a participant or an administrator, or without verified evidence for its exact amount and currency",
+        "A change of amount, split, recipient or checkout of a payment after creation",
+        "An agreement confirmed without a paid deposit or completed from balance_due without a paid balance",
+        "A direct cancellation by a participant after the deposit was collected, or while a payment attempt may still collect money",
+        "An agreement charge executed by a provider flow that cannot split it"
+      ],
+      "effects": [
+        "One live charge (pending or paid) per agreement and kind, with platform fee + processor fee + provider amount = amount",
+        "A verified paid checkout marks its charge paid, moves the agreement, notifies both parties and writes an audit event; verified money for a charge that is no longer pending is recorded as agreement.payment.unapplied for operations",
+        "Expiry withdraws the accepted offer and releases its slot",
+        "Payout accounts store the recipient and project it masked"
+      ],
+      "authorization": "Only the buyer starts a charge; only managers of a profile with the manage capability read or change its payout accounts; reads of an agreement and its charges stay limited to its two parties and administrators.",
+      "privacy": "The payout recipient (identification or phone) is never returned in full and never appears in agreement projections, audit metadata or analytics; charges are private to the parties and administrators.",
+      "concurrency": "Lock order classified, offer, agreement, payment; reconciliation locks the checkout first and then the agreement and the payment; no marketplace path locks a checkout while holding an agreement (creating the checkout is an insert). Deposit expiry skips agreements with a payment attempt that may still collect money.",
+      "idempotency": "A unique partial index allows one live charge per agreement and kind; asking again replaces a pending charge that has no payment attempt in flight; the checkout idempotency key is derived from the payment id; the sync trigger updates a charge only while it is pending.",
+      "failure": "Gate off returns 503; a non-buyer gets 403; no charge due, a passed deadline, a missing account email, an unsupported currency, a charge in progress or an unpayable provider return 409; the shared executor returns 503 for agreement checkouts until a split-capable flow is verified.",
+      "recovery": "Rollback 2026-11-12_marketplace_agreement_payments_rollback refuses to run when a paid charge exists; otherwise it returns agreements waiting for a deposit to confirmed off-platform, sends agreements waiting for a balance to dispute, drops charges, payout accounts and fee rules and restores the previous agreement transition relation and notification allowlist.",
+      "observability": "directory_audit_event rows agreement.payment.create, agreement.payment.paid, agreement.payment.unapplied, agreement.payment.unexpected_state, payout_account.save and payout_account.disable; notifications marketplace.agreement.deposit_paid, balance_due and expired; release schema verification of the payment objects.",
+      "property": "For every charge amount = platform fee + processor fee + provider amount with no negative part and platform fee <= commission due; over deposit and balance the platform takes the frozen commission whenever the charges can carry it and never more; every stored payment status change is a pair of the declared relation; no charge is paid without verified checkout evidence.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/features/marketplace/agreements.ts",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
+        "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
+        "scripts/lib/production-release.mjs",
+        "scripts/production-migrations.json",
+        "docs/music-directory/formal-model.yaml",
+        "formal/system/state-machine-bindings.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
+      ],
+      "formalModels": [
+        "docs/music-directory/formal-model.yaml"
+      ],
+      "verification": "Hspec property tests of the payment transition relation, the split and commission arithmetic, the delivery-confirmation target and the payout identifier shape; routing test that the agreement domain is a marketplace flow; Jest unit tests of the client mirror; static state-machine gate; local PostgreSQL exercise of the migration, rollback, guards and checkout sync triggers with a stubbed evidence function, and of every new statement (PREPARE). No PostgreSQL integration test of the handler transactions and no provider sandbox run yet.",
+      "evidence": "Local static gates and PostgreSQL 16 exercise on 2026-11-12; CI on the candidate.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Policy verified by property tests; SQL verified against a migrated schema; handler transactions verified by review and CI build; no charge can execute because no split-capable provider flow exists and the gate is off in every environment.",
+      "ambiguity": [
+        "Whether the processor fee stays with the service provider or moves to the platform is a configurable rule awaiting a final product decision.",
+        "Deposit expiry runs lazily when a participant loads agreements until a worker exists.",
+        "Automatic refunds under the frozen cancellation policy, the PayPhone button flow with transferTo and the canonical Stripe adapter are part B2."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Domain, guards, handlers and read-side UI are implemented behind the marketplace.agreement_payments flag, which is off in every environment; split-capable provider execution (PayPhone button, Stripe destination charges), payout onboarding UI, refunds, the dispute panel, PostgreSQL handler integration tests and provider sandbox evidence remain open."
+      }
+    },
+    {
       "id": "MSG-WHATSAPP-REDELIVERY-001",
       "title": "A redelivered WhatsApp message changes nothing and is not answered again",
       "domain": "MSG",
@@ -14174,7 +14283,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction.",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction. Z3 proof stripe_ticket_capture.py covers the legacy ticket webhook's two exception writes (see PAY-STRIPE-WEBHOOK-001). Z3 proof hosted_dead_letter_review.py covers the hosted dead-letter review (see PAY-HOSTED-NOTIFICATIONS-001).",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -14188,7 +14297,9 @@
       "formalModels": [
         "formal/payments/CaptureAccounting.tla",
         "formal/payments/CaptureAccounting.cfg",
-        "formal/payments/CaptureAccountingLegacy.cfg"
+        "formal/payments/CaptureAccountingLegacy.cfg",
+        "formal/payments/stripe_ticket_capture.py",
+        "formal/payments/hosted_dead_letter_review.py"
       ],
       "confidence": "High for the protocol as modelled and the pure decision; handler correspondence by review of the twelve call sites. The provider reconciliation worker, music commerce and the PayPal webhook keep their own reconciliation paths.",
       "ambiguity": [
@@ -16839,8 +16950,10 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/Spec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end.",
+      "formalModels": [
+        "formal/payments/stripe_ticket_capture.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end. Z3 proof stripe_ticket_capture.py (translation of handleStripePaymentIntentSucceeded for a matched ticket order, validateStripeTicketPaymentEvidence, parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview, pinned by the hash of those regions): tickets are issued only with the full binding on a pending order, the answer is 400 exactly when the binding is not admitted, a succeeded positive capture always ends in tickets, a paid redelivery or an open exception, and each comparison, the pending fence, both exception writes and the review of a missing order row are load-bearing. The model first showed one silent case (the order row deleted between lookup and read-back while the stale copy said pending); the read-back now treats a missing row as deleted, which is reviewed.",
       "evidence": "formal/system/social-events-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -22982,8 +23095,10 @@
         "scripts/test-auth-throttle-http.sh",
         "scripts/lib/auth_throttle_http.py"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema).",
+      "formalModels": [
+        "formal/auth/credential_throttle.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): the failure counter equals the failed password checks of the window and never exceeds ten, a locked-out attempt checks no password, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -23058,8 +23173,10 @@
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "formalModels": [
+        "formal/auth/credential_throttle.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Z3 proof credential_throttle.py: reset requests are counted one by one and exactly the first five of an hourly window are admitted (the SQL upsert, the subject hash and the silent answer past the limit are not modelled).",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -23898,14 +24015,16 @@
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one.",
+      "formalModels": [
+        "formal/payments/hosted_dead_letter_review.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one. Z3 proof hosted_dead_letter_review.py (translation of processProviderEventWith, queryAndApply, recordDeadLetterReview, processHostedPayload and markRetry, pinned by the hash of those regions): a bound event that an attempt turns into a dead letter always leaves the dead-letter review or the exception its own stage wrote; the review is written only for a bound event that is a dead letter at that attempt, never for an unbound one and never on top of the stage's own exception; a worker that lost its lease records nothing; guard necessity checked. Added 2026-11-12: a failure thrown after the event is bound keeps the binding (it used to retry without it, so an event that exhausted its retries that way dead-lettered with no exception); ProviderRetrySpec (PostgreSQL) covers it.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue.",
+        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue; that includes a failure thrown before the binding is loaded. An event whose provider state stays unknown until the retries run out ends with two open exceptions of different types (provider_status_unknown and provider_event_dead_letter).",
         "/NotificacionPago is an undocumented alias of the PayPhone handler."
       ],
       "conformance": {
@@ -27554,6 +27673,86 @@
         "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
       },
       "critical": false
+    },
+    {
+      "id": "EVT-LOGISTICS-ACCESS-001",
+      "title": "The web logistics page of an event opens by record scope, not by the Scheduling module",
+      "domain": "EVT",
+      "statement": "The feature-registry entry social.event.logistics (/social/eventos/:eventId/logistica) requires an authenticated session and no module. Its record scopes stay event-member-or-admin for view and event-manager-or-admin for create, edit, delete and assign. The web shell therefore renders the logistics page for any signed-in account, and what that account may read or change is decided per event by the logistics handlers: the stored organizer and a delegated administrator under EVT-ADMIN-DELEGATION-001 receive the owner role, a recorded logistics team member receives its editor or viewer role, and every other account is refused with 403. No other registry entry changes; pages that require the Scheduling module still require it.",
+      "authority": "Repository owner decision of 2026-11-13: remove the module requirement from this record-scoped route and rely on the record scope and the backend authorization, so that an administrator invited to one event (who holds no module) can open its logistics page. Recorded as AUTHORITY-098.",
+      "source": "formal/system/event-admin-delegation.md",
+      "contract": "tdf-hq/assets/feature-registry.json",
+      "property": "For every authenticated session, whatever its modules, the registry decision for discover, view, create, edit, delete and assign on social.event.logistics is allowed; for an unauthenticated session it is not. The logistics plan of an event is returned only to its stored organizer, its delegated administrators and its recorded logistics team.",
+      "actors": [
+        "Event organizer",
+        "Delegated event administrator",
+        "Logistics team member",
+        "Other signed-in account",
+        "Signed-out visitor"
+      ],
+      "preconditions": [
+        "Authenticated session for the page and for every logistics route",
+        "Event visible to the caller"
+      ],
+      "inputs": [
+        "Web route /social/eventos/{eventId}/logistica",
+        "Session roles and modules read by the web shell",
+        "GET /social-events/events/{eventId}/logistics and the logistics write routes under it"
+      ],
+      "state": {
+        "boundary": "Feature-registry entry social.event.logistics; organizer, event_admin_member and event_logistics_member rows of one event",
+        "authority": "tdf-hq/assets/feature-registry.json for page discovery; the logistics handlers and PostgreSQL rows for record access"
+      },
+      "allowedTransitions": [
+        "Signed-in account without the Scheduling module -> logistics page rendered by the web shell",
+        "Organizer or delegated administrator -> plan returned with the owner role",
+        "Recorded logistics team member -> plan returned with its editor or viewer role"
+      ],
+      "forbiddenTransitions": [
+        "Signed-out visitor opening the logistics page without being sent to sign in",
+        "Account that is neither organizer, delegated administrator nor logistics team member reading or changing the plan of an event",
+        "Opening a page that still declares the Scheduling module without holding it"
+      ],
+      "effects": [
+        "The web shell no longer shows the 403 page on the logistics route to an account that lacks the Scheduling module",
+        "No database row, role or module is created or changed"
+      ],
+      "authorization": "Page: authenticated session only (feature registry, enforced by the web shell). Data: requireLogisticsAccess in tdf-hq/src/TDF/Server/SocialEventsHandlers.hs, which never consulted the module: owner for the stored organizer and for a delegated administrator, the stored team role for a logistics team member, 403 otherwise, and 403 for a viewer on a write.",
+      "privacy": "The page shell and its route are visible to any signed-in account; plan data (places, activities, assignees, team) is returned only by the API after the record check. A refused account sees the API error message and no plan content.",
+      "concurrency": "Not applicable to the registry change; logistics writes keep their existing version checks.",
+      "idempotency": "Not applicable; the change is a static access rule.",
+      "failure": "Signed-out: redirected to sign in. Signed-in without access to the event: the page renders the 403 message returned by the API and no plan controls. Unknown or hidden event: 404 from the API.",
+      "recovery": "None needed; the organizer grants access by inviting an administrator or adding a logistics team member.",
+      "observability": "The feature_403_shown analytics event is no longer emitted for this route on a missing module; API 403 responses are unchanged.",
+      "implementation": [
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
+        "tdf-hq/test/TDF/EventAdminDelegationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Jest: the registry allows every action of social.event.logistics to a signed-in session with no modules and refuses a signed-out one, while studio.calendar still reports the missing scheduling module; the web shell renders the logistics route for a Fan/Customer session with no modules and the 403 page for /estudio/calendario; the logistics page shows the owner controls for a plan with the owner role and only the API refusal for an account outside the event. The existing PostgreSQL example in tdf-hq/test/TDF/EventAdminDelegationSpec.hs shows the logistics plan refused with 403 before the grant and returned with the owner role after it.",
+      "evidence": "Local Jest run of the three suites on 2026-11-13 (29 tests, 0 failures); the two registry-dependent tests fail against the previous registry. The backend example was not re-run for this change because no backend source changed.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The web guard (evaluatePathAccess in AppShell) and requireLogisticsAccess were read in full; the backend never applied the registry rule to logistics routes, so only the web shell behaviour changes. The generated Mobile registry copy is not regenerated in this change.",
+      "ambiguity": [
+        "The Mobile copy tdf-mobile/src/features/generatedFeatureRegistry.ts at the pinned submodule revision still lists the Scheduling module for this entry. It was already older than the registry on main (npm run audit:features, which no workflow runs, reports it stale before and after this change), Mobile has no logistics screen, and regenerating it needs a commit in the Mobile repository that is not part of this change.",
+        "The record scopes event-member-or-admin and event-manager-or-admin are labels in the registry; the web shell does not evaluate them and relies on the API.",
+        "Accounts with no relation to an event can now load the page shell and see the API refusal instead of the 403 page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
+      },
+      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -27567,7 +27766,7 @@
     ".github/workflows/ci.yml": "7f2f2181f1f14f59916ea98da4c6182cdf6f85707e7bae855be49cd7083c6fc6",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
-    ".github/workflows/event-operations-formal.yml": "cd0a03c4bdeec315f0e28bb6373ba1f4dab05aeebfa7c6b4061b84877183e0c1",
+    ".github/workflows/event-operations-formal.yml": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -27575,10 +27774,10 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "f2a36b7a36b2e7ec2958bca97bf9e122cbec2239a8a0d88c8153e97007c20999",
+    "docs/catalog-persistence/catalog-list-decisions.json": "6e13657ffa855bfd4264f8612e12225152d0e37e90482068c77146d10bb2b942",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
-    "docs/music-directory/formal-model.yaml": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+    "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
     "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
@@ -27635,6 +27834,7 @@
     "formal/auth/LogoutIntent.tla": "1b08e8a1073c5aa73236e42bac4e02dd9ebf5a64bbcf68729101eed15cf34445",
     "formal/auth/LogoutIntentLegacy.cfg": "a89e41350ca46b7e087f4dd3a99858ca54518951d98e653d858051591e788d4e",
     "formal/auth/SessionExpiry.tla": "bc8137a81818acbb2053db4492e7d12f1d07e776778011132b456d2497f94be5",
+    "formal/auth/credential_throttle.py": "7f166f5c25db685cc0206bf06508a213ec25de31316ea2f66773dd81697a6239",
     "formal/auth/meta_webhook_admission.py": "a97549ca7408a57529b348bb71cff0e28508d113edfdfcc231be2cd77c38b741",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
     "formal/event-operations/AccessGrant.tla": "4d1742db68036d98f63bf2f7afb539698262ab9dd4fc9cffad3aa793efb9e2b4",
@@ -27939,9 +28139,11 @@
     "formal/payments/deposit_policy_arithmetic.py": "710b7baf9a1b678665a8d43c8d9a95040154717413ea39920ee5ef444fff9324",
     "formal/payments/domo_cancellation_refund.py": "6c0c8bdca1c70caff40c8f46f645aa482cc943ee9f1ac3ec6cef333c41b4bc40",
     "formal/payments/domo_quote_arithmetic.py": "992b9afd58dc3cc30c25754d760624ac6bab041f524d1dfcc885b32fa8b79537",
+    "formal/payments/hosted_dead_letter_review.py": "ea8c7f8e369951d95dcbaf3fc19d8e32c11df3ce1146ae3b61e3e3f6f67c27f9",
     "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
     "formal/payments/placetopay_query_admission.py": "b4564fbbef90dba77d7a0f03d053cf53db753fea3f50102d8efa2457a3d772c8",
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
+    "formal/payments/stripe_ticket_capture.py": "6dee5604a11c82979208ce6c6b111f496e8f227650ae84ddfac3c9ec71ae6511",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
     "formal/social/LegacyDm.tla": "82c7adae30ad9df72df8e288948b3fc7c3bae3bc16cc82766d32ccc665167e16",
     "formal/social/SessionBoundary.tla": "f52854a744652bc18f0d9f0fb4c3e6453447d26aff88267dff29ac03924e8ee6",
@@ -27949,15 +28151,15 @@
     "formal/system/api-response-status.json": "ddec38e752e646d9aea03154cac74a1b2c35e2b0d4a8f557fde6588ac39cd41b",
     "formal/system/booking-policy.json": "c07df0f96d7c7053b3dffb62e6d379914dffa875df73219a2b04f1ede3d2a920",
     "formal/system/certificate-tools.json": "869eb6b26b862e5c386ac944307bf247a59cbaba67fd8d95d754109771915b84",
-    "formal/system/compiled-api-surface.json": "69999e61befefada6ea11c09d90cf336ce2f89af7dfa1e6eb3c03dd1a3932efe",
+    "formal/system/compiled-api-surface.json": "e85f6a2071ac4d3a256ec58a1c8564b5db1cef8f04962456497a9e8c3b952c2e",
     "formal/system/music-track-search-model.mjs": "1faf6ac196b29fe548cba54bf222b8cb8875c2fed949b73244cca9909c451f4a",
     "formal/system/proof-certificates.md": "34e9aeacd6629f97b53889503bd89aa5a4a1f211c8badfe6647efce77a97f91e",
     "formal/system/public-routes.json": "cd5ce4ecf4944e61c4f2af25e76591ca9ae5717bb02efa218fe2b45a63561514",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
     "formal/system/recovery-expiry-arithmetic.json": "b45ebeee7a93b1e2f3b6fc7891221c3ed3b1294094ae6b5b2814c5f740aa1bf1",
-    "formal/system/route-requirements.json": "16364725254e82f070e9321a629eaf5acd8844656389c28a803385c273ee9e9c",
-    "formal/system/state-machine-bindings.json": "52636caac41e8b2e13f56e145dc42d4ff5b5e3f1744137994f1bdc5312eb131b",
+    "formal/system/route-requirements.json": "51e768950b165a225e4aed27e511d3979c8e30931b8cc2e2d4125348dedf3a0d",
+    "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
     "functions/_shared/event-preview.mjs": "d45be0fb1ef48cbdaee90223ebf207897a870a218cde64e9ba292db2ad4bc6f4",
@@ -28005,7 +28207,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "9a6291c03022b360f870a231e1c618106f473675b03f3dd1a9543904d2ebe85b",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "b202ba1a669f44e6825b095519041563cceaf2c264af1138464957e7259454e7",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28073,7 +28275,7 @@
     "scripts/__tests__/playwright-image.test.mjs": "dff4fdac0f095e6015f7de4565fa49c52de355720dac9608230f442c8fdabc39",
     "scripts/__tests__/production-catalog-inventory.test.mjs": "364bebeddbef85604ac275967b974b79d6f855e997877c867e491770fdd2ae16",
     "scripts/__tests__/production-entrypoint.test.mjs": "33c168dcb5b4a6b3d9eaccec6683d368a90f1dd9b47c1223f949e5e1d234feac",
-    "scripts/__tests__/production-release.test.mjs": "a8ae9dcd557d2ef1093a9924ba2768a1cb3fda070b293f6242801c3d3722bcc0",
+    "scripts/__tests__/production-release.test.mjs": "05a092b3e5184f54ed8ccc2e94c383ff03057a3e6baa2d9c5d01192562a0517b",
     "scripts/__tests__/provider-rollback.test.mjs": "f1dc29ea2b20a71b88a3ae50552c130a0802c6d8ae00e90075af2bd4d2291910",
     "scripts/__tests__/retired-messaging-refresher.test.mjs": "c7bb7180b1a750099e0744e70b73fac5c46298225744bbc76457d2fe2df2698a",
     "scripts/__tests__/startup-gates-postgres.mjs": "8d32157e81dd8cae73a4669e6587ed04c19f3454e19ee0c6a5d8acd3e407bb07",
@@ -28151,7 +28353,7 @@
     "scripts/lib/music_payment_conformance.py": "2d06c9081c0386dcde94a0f39c381baf2c4e33cc8ae59b34d5a4192163588b49",
     "scripts/lib/operations_conformance.py": "1978873ba86472cc29198bf14fcc428102d69db29e6816a197a1140118ef2654",
     "scripts/lib/postgres-test-database.sh": "cf5ad7192790593e9f3f0a9f15d7ca73b54eccd1fd37875d00746bc83dece3e2",
-    "scripts/lib/production-release.mjs": "ba0eee95b5317f7f5bf65b18a295483410a1555bf42a8f23561eb6986b2c0ac3",
+    "scripts/lib/production-release.mjs": "11a16fd8acd8689ee44b6b59faf959c918e4a96b11230e02cf50ae17e68392f5",
     "scripts/lib/public_routes_conformance.py": "6a8b5ab35d9d821673605daed962bf3fd91f3ea28e8757c1ce702563b6bd2977",
     "scripts/lib/readiness_conformance.py": "13fbab1532035292f10da69eb1019970aab4299831a096f66ef7ffb98e5c1459",
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
@@ -28171,7 +28373,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "b41069a3aef3d03668c5243367edb01f716bf77526561408cf6ed167be152a0e",
+    "scripts/production-migrations.json": "1949fdf9335db01f3c8e8a84bd863f1df84d61b8aa02019247a0f470ed34971b",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -28231,7 +28433,7 @@
     "scripts/test-event-memory-recovery-browser.mjs": "1a5c39899720aaaf94277504ba848a10fdce790cf00ce037ef49359e2be54938",
     "scripts/test-event-memory-signup-browser.mjs": "53325a4eec001efb223ce5a3913518b7a8dd658dea6ea8f2d19f46df0fca2a86",
     "scripts/test-event-memory-source-browser.mjs": "5b25aaed221efa05e59d42f8281467ba99ac656dd859d58fa7c3ae99d0f5a4b9",
-    "scripts/test-event-memory-source-moderation.sh": "667a63493e8d56bd6cf0ccf2584f52be2543a52e8c5193c20feff06774e12613",
+    "scripts/test-event-memory-source-moderation.sh": "325bc11e8fbe697906f8ecf417d739f6ad71171a568d7602e96da06bc23bcac2",
     "scripts/test-event-memory-source-permissions.py": "97d8944b7f043879ca56fa4503027195ed99fbf2482ea874634bbbdcdb67d30c",
     "scripts/test-event-operations-api-migration.sh": "1f922530f655fb6477a7c634cd9d35aa6e5113744e40fc81ef80c41b656540f1",
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
@@ -28476,7 +28678,7 @@
     "tdf-hq-ui/src/api/contentStorage.ts": "9cb3ce56f763354e9651e4f32d0066b73d6deaf409b306b7c440305b9a0d56e1",
     "tdf-hq-ui/src/api/courses.ts": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
     "tdf-hq-ui/src/api/directory.test.ts": "ee9c96a31856a1945af7e3f238974a43533d8ebf7f32f0cdadea2dcf834fa9ed",
-    "tdf-hq-ui/src/api/directory.ts": "12bdec65e9f52df1889e9215414c43cd020c50af8c8b957b86ef0e8b97db6426",
+    "tdf-hq-ui/src/api/directory.ts": "7496bc77a9b61354cd0072e727134bd21d04ccd4bd224c8da2c21614705767f3",
     "tdf-hq-ui/src/api/domoQuotes.test.ts": "667cea36c2f98a12b4bc7355019a31ba5028cdfc29d8a7b0481da566ff6d40af",
     "tdf-hq-ui/src/api/domoQuotes.ts": "d1353a1cd98093582b6d90df3fd061ea759d003bc1b7d4112809f9789af32373",
     "tdf-hq-ui/src/api/drive.ts": "6bff25b244765346986e765a7ae1685a732656d296f0c0e3be75f1619844b934",
@@ -28490,7 +28692,7 @@
     "tdf-hq-ui/src/api/fans.ts": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+    "tdf-hq-ui/src/api/generated/types.ts": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "6ae18f71871c7dfcebff6c55180ecadb1791feb220e35e6c24009f59b2030799",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -28648,7 +28850,7 @@
     "tdf-hq-ui/src/features/fans/useFanProfile.ts": "5d5117b2bc97d999546a3ea417cb38ee797883744f4329c113b791e6bde0b53f",
     "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx": "25dd9ecaae73b53767c97e79e71f4a1f89aa41efb58ae42baa6de7a9b6da968e",
     "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": "945dc8892a1e1cb88fbf8cd725535d402a2032dfa9a31b13c5b8c76ec2a0f004",
-    "tdf-hq-ui/src/features/featureRegistry.test.ts": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
+    "tdf-hq-ui/src/features/featureRegistry.test.ts": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
     "tdf-hq-ui/src/features/featureRegistry.ts": "d709057904f96995ef7f5b734952b3c588b93dece56ed510f56e409ad035c955",
     "tdf-hq-ui/src/features/interactions/AccountControls.tsx": "a0a9d06ab76c3b18b8ebdca452c45d5455611772e27a7bd08601db5fdc19fc1b",
     "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx": "96ac5ff77378b010affd5fd635182087d08a96aff85d3f153932fa16dd6e828a",
@@ -28656,15 +28858,15 @@
     "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx": "05fcda4385711ddd958c53037446fadd41081fe70e4879ededc9c9638e3e809e",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx": "34d38e97a9e6c27509256ce7182b50a883de6942b5038887b2bab8d089821fd4",
-    "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx": "1fa60ea04595a4315ee739142efd2d98c889af584844b6c39f8a9d22e50bc5d8",
+    "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx": "6eb367f0c4978e2a7f4a6de724ea863134bdb5124f240821d1c9173ed47bf505",
     "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx": "eb7f1eb13f345b656751be082638b185fc86132af05fca7c2bcd402f505bf38b",
     "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx": "7bbcb643b3c7d4e8384a7e3d697309aae846b8d8b685f753b3c49f4b850e9904",
     "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx": "f35d51716ccd0fb15ab2d115e984a7de5c59a117898a422b9a3cdf2e401f6e4b",
     "tdf-hq-ui/src/features/marketplace/OfferCard.tsx": "2291cb88256a1b77446614e804671d74523b23615be7bfd5264a8dbe46df0c68",
     "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "193e8cdfcb1b6561a98cf19cafd20437114fa54e6d70050347e88c45c085db85",
     "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
-    "tdf-hq-ui/src/features/marketplace/agreements.test.ts": "f3278e2f5bc2bd62776b3f931c1a3d0dd61fa301cb34336d18a9c79d992ab3ed",
-    "tdf-hq-ui/src/features/marketplace/agreements.ts": "3276d73bc416130c4e35f01346b72311be9f5d32b225c267c40c7eac3ecf2d06",
+    "tdf-hq-ui/src/features/marketplace/agreements.test.ts": "f472301fd6cbba6d1057188031627cbbfa4dc715dedd7ec98d89252cade55efb",
+    "tdf-hq-ui/src/features/marketplace/agreements.ts": "3bc227bd07721912954cf633bf5d0c0b3b56670637e63bcfd0502b0b5fbe9137",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
     "tdf-hq-ui/src/features/marketplace/offers.test.ts": "9d704e2b3595cd1e13300912401d7f3ccdd42a1ef11e3257be5f9c0a9e5e1609",
@@ -28696,8 +28898,8 @@
     "tdf-hq-ui/src/i18n/locales/en.ts": "49154a85f27738ba723dba0c559d834a9a97fa1f1b2e6e47c1994751dd046d03",
     "tdf-hq-ui/src/i18n/locales/es.ts": "725221c145af964391a67eb53d2304830a6bcd456c1ed688f7d1da56c3f81127",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
-    "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": "7af47a4af4e01c8f61127ee48dfc88a9da941c07e4e998970e0b1ff41a77f73f",
-    "tdf-hq-ui/src/i18n/locales/marketplace.es.ts": "18f1a13142035e017c86dc79f94849ace4ffccc74d613f6e3ee40412fa13e1d0",
+    "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": "e1cbea09d3e4e6bf5df65d0b655c9aba7e1e9c0d7cee81d63273e002a59bad9e",
+    "tdf-hq-ui/src/i18n/locales/marketplace.es.ts": "809a5ef0700ef96a66ba6a1486b0501d65d28a51e8ed80878f31dfb529d6c48d",
     "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
     "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
     "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
@@ -28746,6 +28948,7 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "57d4e4708ecadf1e32f5daeaf4c1af8e45c715c88977ecbf6182278850dfcf64",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
+    "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
@@ -28855,7 +29058,7 @@
     "tdf-hq-ui/src/player/sourceMetadata.ts": "2d2f6271f7718eb899b75b8afd5c1e1b73d77bf5db665438e42c5d3eea3dd55a",
     "tdf-hq-ui/src/player/types.ts": "469cc2cbcd256ea4f59b510e82e8d54927ca4081f372575822e0f2c375fd558f",
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": "35baba4fecaee526716c5a6cf97e24dd48c38528c3616a6ae47d4aa8c894cf87",
-    "tdf-hq-ui/src/routes/AppShell.test.tsx": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
+    "tdf-hq-ui/src/routes/AppShell.test.tsx": "971562ddbfb8770bb528148b612cb348d4d598f95fdbb3fe80e834090f4f8297",
     "tdf-hq-ui/src/routes/AppShell.tsx": "44a60a3805ce0af4a4c5a1254482b9bcc140e2b247a120bb5b98abc5b9ad8bc2",
     "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx": "2fc7c33171062bda3a6d8093ca4acee827f99b22b9a5a6bb9548e644a4db8c48",
     "tdf-hq-ui/src/routes/EventCommunityEntry.tsx": "be5a99606b34511d8706f80f4b185c5f287d71c6fa6c92f837982b525a718315",
@@ -28960,10 +29163,10 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
+    "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
     "tdf-hq/config/default.env.example": "3c7d42b92d6b894c6ae8689552438b0d42badb31a28efc944b41f22220ab364b",
-    "tdf-hq/docs/openapi/api.yaml": "2e42ef0a3c3979ed55e3a8af94f1e5bbf7e70d3be6e75570f0141656cae957de",
-    "tdf-hq/docs/openapi/directory.yaml": "d6054e9b9a87004a98114c1cf04e689dde6dec820a1f9b456831b11a994b598b",
+    "tdf-hq/docs/openapi/api.yaml": "78ae2294893772b3387c30ba9e70a3966af021695946dc0818a7f4fa8cf18040",
+    "tdf-hq/docs/openapi/directory.yaml": "7c9355fb09332d08d32f089bff8f6afb5047c189f6e501d2e964126531712c10",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
     "tdf-hq/docs/openapi/music-search.yaml": "c30074f26eb529b6f3843c87615dd1c213fbd840cf8af6239b9f06f49c90fe32",
     "tdf-hq/docs/openapi/reviews.yaml": "3c05bc6db0ebdbe04b72feb910a3f51e9c8631873c4de9a22c7beb52bb41e411",
@@ -29133,6 +29336,8 @@
     "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql": "c5e0cf83c9179be4d56e75767f0274e2e94d50ab73a3b3deee93a3af6cd5f149",
     "tdf-hq/sql/2026-11-11_event_admin_delegation.sql": "deb011ded6e3b47b4a1b947455758ce8037de408a9f1c8278c57a386d406f1a1",
     "tdf-hq/sql/2026-11-11_event_admin_delegation_rollback.sql": "6bb0755421bc1be115399ee20cd6a624b453b9af67aa6f6c639599df1d0f6e2e",
+    "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql": "ce54f9d614327db9a52028829f369b63876eb2e61c16b5bc8ef00246249137ff",
+    "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
@@ -29142,7 +29347,7 @@
     "tdf-hq/src/TDF/API/Catalog.hs": "a062b9681db64a9f68114888a0c296935944903efcbfedd672de2a3991e9d781",
     "tdf-hq/src/TDF/API/ContentStorage.hs": "252b724cba9b5a963757472792a4073f8562e7e1819b6e6840ca270dc5bf9f9b",
     "tdf-hq/src/TDF/API/DDEX.hs": "fabccc8cc1a53dd1eda3d9d743f6b40d85c882c32e5a4d938cc0d55415a9675d",
-    "tdf-hq/src/TDF/API/Directory.hs": "9e0fcbc872de32141d2e8d7b66c4f841d2aa7980ee8367193fe0493f73a1ba9d",
+    "tdf-hq/src/TDF/API/Directory.hs": "1031c60ab106a070f2baa2ba9aaacdf3656aa601afd8c65dfebd32ce76601a09",
     "tdf-hq/src/TDF/API/Drive.hs": "d8ff95acf253404a8f83d28885b4107b89c60a9ee37da3364737bab07c15ceea",
     "tdf-hq/src/TDF/API/Feedback.hs": "cc2586f885751ab3265217830e11b30c97cf5a77739955b1e24ae565abe7e8cf",
     "tdf-hq/src/TDF/API/Instagram.hs": "d31bf02a6a69cab1c0122699eb890fcc32e4809234b41246f3185bec76c8c1ef",
@@ -29186,7 +29391,7 @@
     "tdf-hq/src/TDF/Commerce/Merch.hs": "94e7b371a6a77ccf4ab2884d9a28b7d7155c3f3dfad7154e54dad8b42cf5d7e4",
     "tdf-hq/src/TDF/Commerce/Money.hs": "52545229a4f9015140658ded13b2e708a541187b47d6dfd3143e32914dae136c",
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4a655de2a4eb6ad5edb36749d3001f32e9320aa326d9c8c7a84d3ae01cb9617a",
-    "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
+    "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "d8b27ce401b562c8e24bd3889080ab3e5990e7cd826b2c39d6b54add53f935a1",
     "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs": "c12568bfac60b5734339eeec886cb23c0fe010a4d75df7f5d779480807805518",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
@@ -29195,7 +29400,7 @@
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
     "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "0e1b0135876e275cb5131236e7907060dca3f128b9e6341b2d6221141fee21e5",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "8aa336a90bef5184592fb3d468b69bfa67e92875f05748044d2943bb632c3ac7",
-    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "b01d52481cef28802bdfb167cef1f9f16ec705d6ea68c3c4d18327ff6cce82cb",
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "7bc73d48a3903741855811eff1c285b88ed6241c309a4c75756d1c5817807426",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
@@ -29216,7 +29421,7 @@
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
     "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs": "c6300e48bff308344021f7a61cbc00c7859459d087668afe8bdf3a094092f5f3",
     "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
-    "tdf-hq/src/TDF/Directory/Policy.hs": "66b1fa1f3049652819edd28cac9492af97df515bd45b0dcc94f10f770627bfa0",
+    "tdf-hq/src/TDF/Directory/Policy.hs": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
     "tdf-hq/src/TDF/Email.hs": "c78541cf24459f3c9d7e49c30bad5ce5248fd905ab52a8cfb759844e5edeef38",
     "tdf-hq/src/TDF/EventOperations/DatabaseBoundary.hs": "1b3937abe97b188d3dcd1f330485332651295a5e75e65d14702091c193245d27",
     "tdf-hq/src/TDF/EventOperations/Server.hs": "52efa5b303a134cf22fdbe5df9240b6c53620664b9283982e4e29c4ee7cfeed6",
@@ -29261,7 +29466,7 @@
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
-    "tdf-hq/src/TDF/Server/Directory.hs": "eb080034aad1b6ecda2c9da03ffc17345e96f536ce996c41e018780bc34446d4",
+    "tdf-hq/src/TDF/Server/Directory.hs": "8afd1f9f0e4d7f8d0988a155503fe820c567d4f064ef0b62c1069776b447bbec",
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventAdminDelegation.hs": "46d53f55d6b570e2dbdc7f077549a34d629cef8f157ee0cda991951c36456a2d",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
@@ -29275,13 +29480,13 @@
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "f0e50cb9103b6da489980440202a50e7c4431bc19f0fdce666be6f738bb763ef",
-    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "14ff9f888212e5a78d41708c1e61a68c3983bbfb794a9a57f837cf59bc57a56e",
+    "tdf-hq/src/TDF/Server/ProviderExecution.hs": "d50b351b163c882e69ff5bd23b8fcae5843ca70fd4959bd8f702768f090df8c2",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "ad338e7fb54bcf415d0b2a87f653a2855ab0f0f92219a09c1c22125ab02b7d19",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "5c768777ff2af905d3f74f6309f63123e6e81400896233839aed8687ae879bc0",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -29332,7 +29537,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "9b60bdece7575e65ab3146756184ace18545de34d33c39dc1629e608580d0514",
+    "tdf-hq/test/Spec.hs": "16d5ee619523893449b1f199beb354f075ccee05eb1fea0c374f8849d27d02df",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -29350,7 +29555,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "2d9f758af68610173e633370bea4a08a00cb0703d6fa97602fa79c104e97b1f1",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "47d38612aa0a48167ea6dfc83ce3c67a44339a3541632b6c32fb952b4e0d1691",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -29362,7 +29567,7 @@
     "tdf-hq/test/TDF/CredentialLifecycleSpec.hs": "04d0fee36364ca33b7e56a6540fd19a9015efe0da1492618c5e928762e8a656a",
     "tdf-hq/test/TDF/DDEX/ERN/V432/BusinessRulesSpec.hs": "dd1168717766515274065c45da50d0f6da23e824ccc7a2e49055e2977fb95ddd",
     "tdf-hq/test/TDF/DDEX/ERN/V432/ParseSpec.hs": "cdf133bc96409a0c3a56abb7a2023b0d3dc9dd0237bdb50d9a4f46b97f72ab55",
-    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "5b2555b902ebbfeb435a4d7159e47f24380a3abb2b12ee681e5ba854f5511474",
+    "tdf-hq/test/TDF/Directory/PolicySpec.hs": "dbdf1ba83c196b2fa26cdbe9af0348da88a562e4cc454cca7198daa590033884",
     "tdf-hq/test/TDF/DisposableTicketDatabase.hs": "f1c1b9227060dab62db7b84721558d4294d3e5780cee71c0b7e52bd82fcde748",
     "tdf-hq/test/TDF/DriveReplaySpec.hs": "006a2eec086a2d350f9da2e7806eab0fd8846f195b84402557f6d71528e41ecb",
     "tdf-hq/test/TDF/EventAdminDelegationSpec.hs": "73b13ff14472e7f3df54cbc44718263313bf255244a71bc9534326998ca63f20",
@@ -29529,7 +29734,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+    "tdf-mobile/src/api/generated/types.ts": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -30174,6 +30379,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
       },
       {
@@ -31173,6 +31382,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
       },
@@ -31216,6 +31429,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
       },
       {
@@ -31351,6 +31568,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "MEDIA-VIDEO-CAMPAIGN-001",
         "relationship": "tests"
       },
@@ -31372,6 +31593,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -31441,6 +31666,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "DIR-AGE-ASSURANCE-001",
         "relationship": "implementation"
       },
@@ -31496,6 +31725,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
       },
       {
@@ -31562,6 +31795,14 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "formalModels"
       }
     ],
@@ -31697,6 +31938,10 @@
       {
         "requirement": "CAMP-SERVER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": [
@@ -31810,6 +32055,10 @@
       },
       {
         "requirement": "CAMP-SERVER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
     ],
@@ -31946,6 +32195,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
       },
       {
@@ -32241,6 +32494,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
       }
@@ -32340,6 +32597,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
       },
       {
@@ -32516,6 +32777,10 @@
       },
       {
         "requirement": "PRIV-INTAKE-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "tests"
       },
       {
@@ -33307,6 +33572,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "PAY-HOSTED-SESSION-001",
         "relationship": "implementation"
       },
@@ -33518,6 +33787,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "tests"
       }
     ],
@@ -34533,6 +34806,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "PAY-DOMO-CANCEL-001",
         "relationship": "implementation"
       },
@@ -35482,6 +35759,10 @@
       },
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "implementation"
       }
     ],
@@ -41381,6 +41662,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": [
@@ -41414,6 +41699,10 @@
     "tdf-hq-ui/src/routes/AppShell.test.tsx": [
       {
         "requirement": "EVT-DISCOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
     ],
@@ -41773,6 +42062,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
       },
@@ -41967,6 +42260,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
       }
@@ -42013,6 +42310,10 @@
       {
         "requirement": "MKT-AGREEMENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": [
@@ -42022,6 +42323,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -42038,6 +42343,10 @@
       },
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "tests"
       },
       {
@@ -42123,11 +42432,19 @@
       {
         "requirement": "MKT-AGREEMENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx": [
       {
         "requirement": "MKT-AGREEMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
       }
     ],
@@ -42141,12 +42458,28 @@
       {
         "requirement": "MKT-AGREEMENT-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx": [
       {
         "requirement": "MKT-AGREEMENT-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql": [
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": [
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/WhatsApp/History.hs": [
@@ -43132,6 +43465,10 @@
     "tdf-hq-ui/src/features/featureRegistry.ts": [
       {
         "requirement": "NAV-MENU-COVERAGE-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "implementation"
       }
     ],
@@ -44193,6 +44530,26 @@
         "relationship": "formalModels"
       }
     ],
+    "formal/payments/stripe_ticket_capture.py": [
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "PAY-STRIPE-WEBHOOK-001",
+        "relationship": "formalModels"
+      }
+    ],
+    "formal/payments/hosted_dead_letter_review.py": [
+      {
+        "requirement": "PAY-CAPTURE-RECON-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "PAY-HOSTED-NOTIFICATIONS-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/src/TDF/Commerce/DomoQuotes.hs": [
       {
         "requirement": "PAY-DOMO-QUOTE-001",
@@ -44768,6 +45125,10 @@
       },
       {
         "requirement": "EVT-PLANNING-UX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "implementation"
       }
     ],
@@ -45701,6 +46062,16 @@
       {
         "requirement": "AUTH-CREDENTIAL-INTAKE-001",
         "relationship": "tests"
+      }
+    ],
+    "formal/auth/credential_throttle.py": [
+      {
+        "requirement": "AUTH-CREDENTIAL-INTAKE-001",
+        "relationship": "formalModels"
+      },
+      {
+        "requirement": "AUTH-PASSWORD-RECOVERY-001",
+        "relationship": "formalModels"
       }
     ],
     "tdf-hq/src/TDF/Social/RelationshipWrites.hs": [
@@ -47659,6 +48030,10 @@
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/components/events/EventAdminsCard.test.tsx": [
@@ -47688,6 +48063,12 @@
     "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx": [
       {
         "requirement": "UX-PUBLIC-DETAIL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": [
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
     ]
@@ -47908,7 +48289,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "cd0a03c4bdeec315f0e28bb6373ba1f4dab05aeebfa7c6b4061b84877183e0c1",
+      "sha256": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49370,7 +49751,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "9a6291c03022b360f870a231e1c618106f473675b03f3dd1a9543904d2ebe85b",
+      "sha256": "b202ba1a669f44e6825b095519041563cceaf2c264af1138464957e7259454e7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49383,6 +49764,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "tests"
         },
         {
@@ -50547,7 +50932,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "a8ae9dcd557d2ef1093a9924ba2768a1cb3fda070b293f6242801c3d3722bcc0",
+      "sha256": "05a092b3e5184f54ed8ccc2e94c383ff03057a3e6baa2d9c5d01192562a0517b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -50568,6 +50953,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "tests"
         }
       ]
@@ -52067,7 +52456,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "ba0eee95b5317f7f5bf65b18a295483410a1555bf42a8f23561eb6986b2c0ac3",
+      "sha256": "11a16fd8acd8689ee44b6b59faf959c918e4a96b11230e02cf50ae17e68392f5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52112,6 +52501,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -52462,7 +52855,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "b41069a3aef3d03668c5243367edb01f716bf77526561408cf6ed167be152a0e",
+      "sha256": "1949fdf9335db01f3c8e8a84bd863f1df84d61b8aa02019247a0f470ed34971b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52495,6 +52888,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -54127,7 +54524,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "667a63493e8d56bd6cf0ccf2584f52be2543a52e8c5193c20feff06774e12613",
+      "sha256": "325bc11e8fbe697906f8ecf417d739f6ad71171a568d7602e96da06bc23bcac2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58050,7 +58447,7 @@
     {
       "id": "SURFACE-eea9abd0a36ffd69",
       "path": "tdf-hq-ui/src/api/directory.ts",
-      "sha256": "12bdec65e9f52df1889e9215414c43cd020c50af8c8b957b86ef0e8b97db6426",
+      "sha256": "7496bc77a9b61354cd0072e727134bd21d04ccd4bd224c8da2c21614705767f3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58059,6 +58456,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -58336,7 +58737,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+      "sha256": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -58365,6 +58766,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -61491,7 +61896,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
+      "sha256": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61513,6 +61918,10 @@
         {
           "requirement": "CAMP-SERVER-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -61524,6 +61933,10 @@
       "requirements": [
         {
           "requirement": "NAV-MENU-COVERAGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -61674,11 +62087,15 @@
     {
       "id": "SURFACE-0ba61d7e94897ebf",
       "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
-      "sha256": "1fa60ea04595a4315ee739142efd2d98c889af584844b6c39f8a9d22e50bc5d8",
+      "sha256": "6eb367f0c4978e2a7f4a6de724ea863134bdb5124f240821d1c9173ed47bf505",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -61762,11 +62179,15 @@
     {
       "id": "SURFACE-c03ebdd9cd29f92c",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
-      "sha256": "f3278e2f5bc2bd62776b3f931c1a3d0dd61fa301cb34336d18a9c79d992ab3ed",
+      "sha256": "f472301fd6cbba6d1057188031627cbbfa4dc715dedd7ec98d89252cade55efb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "tests"
         }
       ]
@@ -61774,11 +62195,15 @@
     {
       "id": "SURFACE-fbfd335398170a3a",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.ts",
-      "sha256": "3276d73bc416130c4e35f01346b72311be9f5d32b225c267c40c7eac3ecf2d06",
+      "sha256": "3bc227bd07721912954cf633bf5d0c0b3b56670637e63bcfd0502b0b5fbe9137",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -62468,7 +62893,7 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "7af47a4af4e01c8f61127ee48dfc88a9da941c07e4e998970e0b1ff41a77f73f",
+      "sha256": "e1cbea09d3e4e6bf5df65d0b655c9aba7e1e9c0d7cee81d63273e002a59bad9e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62477,6 +62902,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -62484,7 +62913,7 @@
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "18f1a13142035e017c86dc79f94849ace4ffccc74d613f6e3ee40412fa13e1d0",
+      "sha256": "809a5ef0700ef96a66ba6a1486b0501d65d28a51e8ed80878f31dfb529d6c48d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62493,6 +62922,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         }
       ]
@@ -63539,6 +63972,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-0cf77a2e272d6fba",
+      "path": "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
+      "sha256": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-bc6d085a2f18921b",
       "path": "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
       "sha256": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
@@ -63550,6 +63995,10 @@
         },
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -65973,11 +66422,15 @@
     {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
-      "sha256": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
+      "sha256": "971562ddbfb8770bb528148b612cb348d4d598f95fdbb3fe80e834090f4f8297",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-DISCOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "tests"
         }
       ]
@@ -65994,6 +66447,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -67896,7 +68353,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
+      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67933,6 +68390,10 @@
         },
         {
           "requirement": "CAMP-SERVER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -68003,7 +68464,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "2e42ef0a3c3979ed55e3a8af94f1e5bbf7e70d3be6e75570f0141656cae957de",
+      "sha256": "78ae2294893772b3387c30ba9e70a3966af021695946dc0818a7f4fa8cf18040",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68051,6 +68512,10 @@
           "relationship": "implementation"
         },
         {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "implementation"
+        },
+        {
           "requirement": "PAY-MUSIC-MONEY-WIRE-001",
           "relationship": "implementation"
         },
@@ -68083,7 +68548,7 @@
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "d6054e9b9a87004a98114c1cf04e689dde6dec820a1f9b456831b11a994b598b",
+      "sha256": "7c9355fb09332d08d32f089bff8f6afb5047c189f6e501d2e964126531712c10",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68100,6 +68565,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -72518,6 +72987,30 @@
       ]
     },
     {
+      "id": "SURFACE-74155b1d59e66530",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+      "sha256": "ce54f9d614327db9a52028829f369b63876eb2e61c16b5bc8ef00246249137ff",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-fd5051c48e295e02",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
+      "sha256": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-df68b39756932536",
       "path": "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "sha256": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
@@ -72729,7 +73222,7 @@
     {
       "id": "SURFACE-9f19f644ef35d148",
       "path": "tdf-hq/src/TDF/API/Directory.hs",
-      "sha256": "9e0fcbc872de32141d2e8d7b66c4f841d2aa7980ee8367193fe0493f73a1ba9d",
+      "sha256": "1031c60ab106a070f2baa2ba9aaacdf3656aa601afd8c65dfebd32ce76601a09",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -72742,6 +73235,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -73721,11 +74218,15 @@
     {
       "id": "SURFACE-f215d4911e9d9bef",
       "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
-      "sha256": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
+      "sha256": "d8b27ce401b562c8e24bd3889080ab3e5990e7cd826b2c39d6b54add53f935a1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RETRY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -73878,7 +74379,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "b01d52481cef28802bdfb167cef1f9f16ec705d6ea68c3c4d18327ff6cce82cb",
+      "sha256": "7bc73d48a3903741855811eff1c285b88ed6241c309a4c75756d1c5817807426",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74389,7 +74890,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "66b1fa1f3049652819edd28cac9492af97df515bd45b0dcc94f10f770627bfa0",
+      "sha256": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -74406,6 +74907,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -75550,7 +76055,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "eb080034aad1b6ecda2c9da03ffc17345e96f536ce996c41e018780bc34446d4",
+      "sha256": "8afd1f9f0e4d7f8d0988a155503fe820c567d4f064ef0b62c1069776b447bbec",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75579,6 +76084,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -75941,7 +76450,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "14ff9f888212e5a78d41708c1e61a68c3983bbfb794a9a57f837cf59bc57a56e",
+      "sha256": "d50b351b163c882e69ff5bd23b8fcae5843ca70fd4959bd8f702768f090df8c2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75950,6 +76459,10 @@
         },
         {
           "requirement": "AUTH-PUBLIC-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -76085,7 +76598,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "5c768777ff2af905d3f74f6309f63123e6e81400896233839aed8687ae879bc0",
+      "sha256": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76226,6 +76739,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -77342,7 +77859,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "9b60bdece7575e65ab3146756184ace18545de34d33c39dc1629e608580d0514",
+      "sha256": "16d5ee619523893449b1f199beb354f075ccee05eb1fea0c374f8849d27d02df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77391,6 +77908,10 @@
         },
         {
           "requirement": "PRIV-INTAKE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "tests"
         },
         {
@@ -77784,7 +78305,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "2d9f758af68610173e633370bea4a08a00cb0703d6fa97602fa79c104e97b1f1",
+      "sha256": "47d38612aa0a48167ea6dfc83ce3c67a44339a3541632b6c32fb952b4e0d1691",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78012,7 +78533,7 @@
     {
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-      "sha256": "5b2555b902ebbfeb435a4d7159e47f24380a3abb2b12ee681e5ba854f5511474",
+      "sha256": "dbdf1ba83c196b2fa26cdbe9af0348da88a562e4cc454cca7198daa590033884",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78021,6 +78542,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "tests"
         },
         {
@@ -78096,6 +78621,10 @@
       "requirements": [
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "tests"
         }
       ]
@@ -82150,7 +82679,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+      "sha256": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -82171,6 +82700,10 @@
         },
         {
           "requirement": "MKT-AGREEMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
           "relationship": "implementation"
         },
         {
@@ -85104,7 +85637,6 @@
     "PKG-PURCHASE-EXPIRY-001",
     "UI-EVENT-FINANCE-PRECISION-001",
     "SYS-UI-TEST-WORKER-001",
-    "PAY-STRIPE-WEBHOOK-001",
     "COURSE-ADMIN-001",
     "PAY-STOREFRONT-ADMIN-001",
     "PAY-PROVIDER-EVENT-REPLAY-001",
@@ -85129,12 +85661,9 @@
     "STORE-PAYPAL-WEBHOOK-001",
     "ART-SELF-SERVICE-001",
     "RADIO-CATALOG-001",
-    "AUTH-CREDENTIAL-INTAKE-001",
-    "AUTH-PASSWORD-RECOVERY-001",
     "AUTH-ACCESS-REQUEST-LIFECYCLE-001",
     "MSG-STAFF-OUTBOUND-001",
     "PAY-HOSTED-SESSION-001",
-    "PAY-HOSTED-NOTIFICATIONS-001",
     "PAY-LEGACY-RECORDS-001",
     "INTEG-GOOGLE-CALENDAR-001",
     "PROPOSAL-AUTHORING-001",
@@ -85700,7 +86229,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#profile",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85738,7 +86267,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#classified",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85789,7 +86318,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#application",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "submitted",
         "transitions": {
@@ -85851,7 +86380,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#agreement",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "confirmed",
         "transitions": {
@@ -85862,6 +86391,7 @@
           ],
           "confirmed": [
             "in_progress",
+            "balance_due",
             "completed",
             "cancelled",
             "disputed"
@@ -85888,9 +86418,28 @@
       "correspondence": "states checked against migrated marketplace_agreement.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
     },
     {
+      "id": "docs/music-directory/formal-model.yaml#agreement_payment",
+      "source": "docs/music-directory/formal-model.yaml",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
+      "definition": {
+        "initial": "pending",
+        "transitions": {
+          "pending": [
+            "paid",
+            "expired",
+            "cancelled"
+          ],
+          "paid": [],
+          "expired": [],
+          "cancelled": []
+        }
+      },
+      "correspondence": "states checked against migrated marketplace_agreement_payment.status by scripts/check-state-machines.py; application-enforced transitions require separate evidence"
+    },
+    {
       "id": "docs/music-directory/formal-model.yaml#invitation",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "pending",
         "transitions": {
@@ -85924,7 +86473,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#claim",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "draft",
         "transitions": {
@@ -85961,7 +86510,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#moderation_case",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "open",
         "transitions": {
@@ -86005,7 +86554,7 @@
     {
       "id": "docs/music-directory/formal-model.yaml#review",
       "source": "docs/music-directory/formal-model.yaml",
-      "sourceSha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sourceSha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "definition": {
         "initial": "published",
         "transitions": {
@@ -86326,7 +86875,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3bec33db9af967c0cc9ed53a392f1e98523d54157c04ab7ba18a4d0cd51d3204",
+      "sourceSha256": "de150a9bd536e21ea14a8833b9147adab3eea13dc116f3eefa17558f9b0aee12",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86354,7 +86903,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3bec33db9af967c0cc9ed53a392f1e98523d54157c04ab7ba18a4d0cd51d3204",
+      "sourceSha256": "de150a9bd536e21ea14a8833b9147adab3eea13dc116f3eefa17558f9b0aee12",
       "definition": {
         "states": [
           "absent",
@@ -86384,7 +86933,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "3bec33db9af967c0cc9ed53a392f1e98523d54157c04ab7ba18a4d0cd51d3204",
+      "sourceSha256": "de150a9bd536e21ea14a8833b9147adab3eea13dc116f3eefa17558f9b0aee12",
       "definition": {
         "export": [
           "queued",
@@ -92793,6 +93342,70 @@
       "conformance": "not-established-by-client-generation"
     },
     {
+      "id": "POST /directory/agreements/{agreementId}/payments",
+      "operationId": "createAgreementPayment",
+      "source": "tdf-hq/docs/openapi/directory.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "201",
+        "403",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "GET /directory/payout-accounts",
+      "operationId": "listPayoutAccounts",
+      "source": "tdf-hq/docs/openapi/directory.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "PUT /directory/profiles/{profileId}/payout-accounts/{provider}",
+      "operationId": "savePayoutAccount",
+      "source": "tdf-hq/docs/openapi/directory.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "400",
+        "404",
+        "409",
+        "503"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
+      "id": "DELETE /directory/profiles/{profileId}/payout-accounts/{provider}",
+      "operationId": "disablePayoutAccount",
+      "source": "tdf-hq/docs/openapi/directory.yaml",
+      "security": [
+        {
+          "bearerAuth": []
+        }
+      ],
+      "responses": [
+        "200",
+        "404"
+      ],
+      "conformance": "not-established-by-client-generation"
+    },
+    {
       "id": "GET /directory/invitations",
       "operationId": "listDirectoryInvitations",
       "source": "tdf-hq/docs/openapi/directory.yaml",
@@ -98149,9 +98762,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "none",
@@ -98173,9 +98784,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-member-or-admin",
@@ -98197,9 +98806,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-manager-or-admin",
@@ -98221,9 +98828,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-manager-or-admin",
@@ -98245,9 +98850,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-manager-or-admin",
@@ -98269,9 +98872,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-manager-or-admin",
@@ -109439,7 +110040,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 217,
+    "PARTIAL": 219,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

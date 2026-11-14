@@ -103,6 +103,14 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
       (EventTicketCheckout.ticketOrderSalesOpen (Store.ceDomainOrderId checkout)) envPool)
     unless salesOpen $
       throwError (conflict "Tickets are no longer on sale for this event; this order cannot be paid")
+  -- ADR 0136: an agreement charge must be split between the platform and the
+  -- service provider in the same provider operation. No executor on this path
+  -- sends a split yet, so the charge is refused before any provider is
+  -- contacted instead of collecting the provider's share into the platform
+  -- account (ADR 0115 rejects that custody).
+  when (Store.ceDomainType checkout == "marketplace_agreement") $
+    throwError unavailable
+      { errBody = "Agreement payments are not available until a split-capable provider flow is verified" }
   flow <- maybe
     (throwError (conflict "Checkout domain does not support shared provider execution"))
     pure

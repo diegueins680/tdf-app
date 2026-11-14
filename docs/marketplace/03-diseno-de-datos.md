@@ -248,7 +248,15 @@ La parte A está implementada en `tdf-hq/sql/2026-11-12_marketplace_agreements.s
 migración es la fuente de verdad del esquema. Respecto del borrador de abajo añade
 `marketplace_agreement_pricing`, `deposit_bps`, `settlement_mode` (`off_platform` en la parte A),
 `started_at`, `disputed_at`, `cancellation_reason` y la relación de transiciones con su trigger;
-`deposit_due_at` es opcional hasta que exista el cobro. Borrador original:
+`deposit_due_at` es opcional hasta que exista el cobro.
+
+La parte B1 está en `tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql` (ADR 0136):
+`marketplace_payment_fee_rule` (comisión del procesador por proveedor de pagos y quién la asume),
+`marketplace_payout_account` (una cuenta de cobro por perfil y proveedor; el receptor nunca se
+proyecta completo) y `marketplace_agreement_payment` (un cobro vivo por acuerdo y tipo, con
+`amount = platform_fee + processing_fee + provider_amount`, receptor y checkout congelados). Los
+triggers sobre `commerce_checkout_session` exigen evidencia verificada y sincronizan el cobro y el
+acuerdo; la relación del acuerdo suma `confirmed -> balance_due`. Borrador original de la parte A:
 
 ```sql
 CREATE TABLE marketplace_agreement (

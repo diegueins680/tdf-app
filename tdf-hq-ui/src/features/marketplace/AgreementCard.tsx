@@ -6,7 +6,7 @@ import { Alert, Button, Chip, Divider, Paper, Stack, TextField, Typography } fro
 import HandshakeIcon from '@mui/icons-material/Handshake';
 
 import { Directory, type AgreementStatus, type DirectoryTaxonomyItem, type MarketplaceAgreement } from '../../api/directory';
-import { agreementActions, bpsToPercent } from './agreements';
+import { agreementActions, agreementChargeDue, bpsToPercent, visibleAgreementPayments } from './agreements';
 import { describeTerms, formatMinor } from './offers';
 
 interface AgreementCardProps {
@@ -37,6 +37,11 @@ export default function AgreementCard({ agreement, currencies }: AgreementCardPr
   const terms = describeTerms(agreement.terms, t);
   const counterpart = agreement.participantRole === 'provider' ? agreement.buyerProfile : agreement.providerProfile;
   const needsReason = confirming === 'cancelled' || confirming === 'disputed';
+  const chargeDue = agreementChargeDue(agreement);
+  const payments = visibleAgreementPayments(agreement);
+  const depositDeadline = agreement.status === 'pending_deposit' && agreement.depositDueAt
+    ? new Intl.DateTimeFormat(i18n.language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(agreement.depositDueAt))
+    : null;
 
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }} data-testid="agreement-card">
@@ -63,6 +68,25 @@ export default function AgreementCard({ agreement, currencies }: AgreementCardPr
           <Row label={t('marketplace.agreement.providerNet')} value={money(agreement.providerNetMinor)} />
         </Stack>
         {agreement.settlementMode === 'off_platform' && <Alert severity="info">{t('marketplace.agreement.offPlatform')}</Alert>}
+        {chargeDue && (
+          <Alert severity="warning" data-testid="agreement-charge-due">
+            {t(`marketplace.agreement.chargeDue.${chargeDue}.${agreement.participantRole === 'buyer' ? 'buyer' : 'other'}`)}
+            {depositDeadline ? ` ${t('marketplace.agreement.depositDeadline', { date: depositDeadline })}` : ''}
+          </Alert>
+        )}
+        {payments.length > 0 && (
+          <Stack spacing={0.75} data-testid="agreement-payments">
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>{t('marketplace.agreement.payments')}</Typography>
+            {payments.map((payment) => (
+              <Stack key={payment.id} spacing={0.25} divider={<Divider flexItem />}>
+                <Row label={`${t(`marketplace.agreement.paymentKind.${payment.kind}`)} · ${t(`marketplace.agreement.paymentStatus.${payment.status}`)}`} value={money(payment.amountMinor)} />
+                <Row label={t('marketplace.agreement.paymentPlatformFee')} value={money(payment.platformFeeMinor)} />
+                <Row label={t(`marketplace.agreement.paymentProcessingFee.${payment.processingFeePayer}`)} value={money(payment.processingFeeMinor)} />
+                <Row label={t('marketplace.agreement.paymentProviderAmount')} value={money(payment.providerAmountMinor)} />
+              </Stack>
+            ))}
+          </Stack>
+        )}
 
         {terms.length > 0 && (
           <Stack spacing={0.25} data-testid="agreement-terms">

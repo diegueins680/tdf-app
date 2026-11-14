@@ -1028,7 +1028,7 @@ handleStripePaymentIntentSucceeded now payload =
                                         pure (True, codes)
                                     else do
                                         currentStatus <-
-                                            maybe (eventTicketOrderStatus order) eventTicketOrderStatus
+                                            maybe "deleted" eventTicketOrderStatus -- a missing row is reviewed, never assumed pending
                                                 <$> get orderKey
                                         when (stripeTicketClosedOrderNeedsReview currentStatus) $
                                             for_ mCapture (recordCapture "verified_payment_on_closed_order")
