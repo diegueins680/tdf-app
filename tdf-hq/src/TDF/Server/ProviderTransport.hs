@@ -17,12 +17,13 @@ import qualified Data.Aeson.KeyMap as KM
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
-import Data.Char (isAsciiLower, isAsciiUpper, isDigit)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import Network.HTTP.Client (Manager, Request(..), RequestBody(..))
 import Servant
+
+import TDF.Commerce.PaypalWebhook (isProviderReference)
 import System.Environment (lookupEnv)
 import TDF.DB (Env)
 import TDF.Internationalization (formatMinorUnitsDecimal)
@@ -182,13 +183,6 @@ issuePaypalRefundWithTokenRemote manager token baseUrl captureId refundRecord = 
   value <- providerResponse manager Checkout.ProviderPayPal req
   either (throwError . providerValidationError) pure (parsePaypalRefundOutcome value)
 
-
-isProviderReference :: Text -> Bool
-isProviderReference value =
-  not (T.null value)
-    && T.length value <= 256
-    && T.any (\c -> isAsciiLower c || isAsciiUpper c || isDigit c) value
-    && T.all (\c -> isAsciiLower c || isAsciiUpper c || isDigit c || c `elem` ("-_." :: String)) value
 
 -- | Encode Basic auth header.
 encodeBasicAuth :: Text -> Text -> ByteString

@@ -26,7 +26,7 @@ import           Data.Time (UTCTime)
 import           GHC.Generics (Generic)
 import           Servant
 
-import TDF.Server.TicketPaymentReceipt (TicketPaymentReceipt)
+import TDF.DTO.TicketPaymentReceipt (TicketPaymentReceipt)
 
 import qualified TDF.API.Types as APITypes
 import           TDF.API.Types (rejectNullOptionalFields)

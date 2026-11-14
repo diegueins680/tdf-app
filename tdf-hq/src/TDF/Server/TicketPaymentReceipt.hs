@@ -11,7 +11,6 @@ import Control.Monad (unless, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import Crypto.Hash (Digest, SHA256, hash)
-import Data.Aeson (FromJSON(..), ToJSON, defaultOptions, genericParseJSON, rejectUnknownFields)
 import qualified Data.ByteArray.Encoding as BAE
 import qualified Data.ByteString as BS
 import Data.Int (Int64)
@@ -20,7 +19,6 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
-import GHC.Generics (Generic)
 import Servant (Handler, err404, err503, ServerError(..), throwError)
 import System.Directory
 import System.Environment (lookupEnv)
@@ -29,16 +27,7 @@ import System.IO (hClose, openBinaryTempFile)
 
 import TDF.Config (assetsRootDir, isProductionRuntime, productionRuntimeKeys)
 import TDF.DB (Env(..))
-
--- Returned only by the authorized event handler, never by public assets.
-data TicketPaymentReceipt = TicketPaymentReceipt
-  { contentType :: Text
-  , base64 :: Text
-  } deriving (Eq, Show, Generic)
-
-instance ToJSON TicketPaymentReceipt
-instance FromJSON TicketPaymentReceipt where
-  parseJSON = genericParseJSON defaultOptions { rejectUnknownFields = True }
+import TDF.DTO.TicketPaymentReceipt (TicketPaymentReceipt(..))
 
 validateReceipt :: TicketPaymentReceipt -> Either Text (Text, BS.ByteString)
 validateReceipt TicketPaymentReceipt{..}

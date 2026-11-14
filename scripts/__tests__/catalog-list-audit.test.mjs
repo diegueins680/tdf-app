@@ -1073,9 +1073,15 @@ test('event administrator delegation appends one migration to the protected 251-
   const client = active.find(row => row.id === successors.find(row => row.name === 'SocialEventsAPI').currentId);
   assert.equal(client.evidence.valueCount, 86);
   assert.deepEqual(client.previousDecision, priorMain.find(row => row.id === '2511cbba2fc7279bc28a'));
+  // The PayPal webhook domain types moved unchanged to TDF.Commerce.PaypalWebhook
+  // (ADR 0133); the list id follows the file, so its review is a successor that
+  // nests the exact review of protected main.
+  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
+  assert.deepEqual(movedPaypalDomains.previousDecision, priorMain.find(row => row.id === 'a43462622b60606b37d9'));
   // Every other review of protected main is retained exactly; three lists are new.
   const history = new Map(active.map(row => [row.id, row]));
-  const replaced = new Set([current.previousDecision.id, client.previousDecision.id]);
+  const replaced = new Set([current.previousDecision.id, client.previousDecision.id,
+    movedPaypalDomains.previousDecision.id]);
   for (const row of priorMain) {
     if (replaced.has(row.id)) assert.ok(!history.has(row.id));
     else assert.deepEqual(history.get(row.id), row);
@@ -1125,9 +1131,14 @@ test('marketplace agreement payments append one migration to the protected 252-e
   // Every other review of protected main is retained exactly; nine lists are
   // new (payment provider, fee payer, payout and payment CHECK lists and the
   // two Policy sum types) and reviewed by the deterministic policy.
+  // The PayPal webhook domain types moved unchanged to TDF.Commerce.PaypalWebhook
+  // (ADR 0133); that review is a successor nesting the exact review of protected main.
+  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
+  assert.deepEqual(movedPaypalDomains.previousDecision, priorMain.find(row => row.id === 'a43462622b60606b37d9'));
   const history = new Map(active.map(row => [row.id, row]));
+  const replaced = new Set([current.previousDecision.id, movedPaypalDomains.previousDecision.id]);
   for (const row of priorMain) {
-    if (row.id === current.previousDecision.id) assert.ok(!history.has(row.id));
+    if (replaced.has(row.id)) assert.ok(!history.has(row.id));
     else assert.deepEqual(history.get(row.id), row);
   }
   const payoutReviews = ['d580ad14a8f01218c4a9', 'fbe5e4e4d0289e1caaf4', 'cfa5a05214e95ed07ef0',
