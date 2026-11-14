@@ -38,7 +38,6 @@ module TDF.Server.SocialEventsHandlers (
     validateDirectTicketOrderPricing,
     validateTicketPurchaseEventEligibility,
     eventTicketPurchaseEnabledFor,
-    ticketSalesOpenBeforeEventEnd,
     isTicketTierSaleOpen,
     issueMissingTicketsForOrder,
     finalizePaidTicketOrder,
@@ -338,6 +337,7 @@ import TDF.Models.SocialEventsModels hiding (venueAddress, venueCapacity, venueC
 import qualified TDF.Models.SocialEventsModels as SM
 import qualified TDF.Profiles.Artist as ArtistProfiles
 import qualified TDF.ModelsExtra as ME
+import TDF.Server.TicketSalesWindow (eventTicketPurchaseEnabledFor)
 import qualified TDF.SocialEventLifecycle as EventLifecycle
 import TDF.ServerRadio (nativeBroadcastUnavailable)
 import TDF.Server.StripeTicketCapture (StripeTicketCapture (..), parseStripeTicketCapture, recordStripeTicketCapture, stripeTicketClosedOrderNeedsReview)
@@ -8455,22 +8455,6 @@ validateTicketPurchaseEventEligibility rawMetadata purchaseEnabled = do
         Left err403{errBody = "Tickets are not available for private events"}
     unless purchaseEnabled $
         Left err409{errBody = "Tickets are not on sale for this event"}
-
-eventTicketPurchaseEnabledFor :: SocialEvent -> SqlPersistT IO Bool
-eventTicketPurchaseEnabledFor eventRow =
-    case socialEventWorkflowStateId eventRow of
-        Nothing -> pure False
-        Just stateId -> do
-            now <- liftIO getCurrentTime
-            if ticketSalesOpenBeforeEventEnd now (socialEventEndTime eventRow)
-                then EventLifecycle.socialEventStateHasCapability stateId "ticket-purchase"
-                else pure False
-
--- | An event that has already ended sells no more tickets, whatever workflow
--- state it was left in. An event without an end time is governed by its
--- workflow state alone.
-ticketSalesOpenBeforeEventEnd :: UTCTime -> Maybe UTCTime -> Bool
-ticketSalesOpenBeforeEventEnd now = maybe True (now <)
 
 normalizeTicketStatus :: Maybe T.Text -> T.Text
 normalizeTicketStatus mStatus =

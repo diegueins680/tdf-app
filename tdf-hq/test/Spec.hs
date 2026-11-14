@@ -481,6 +481,7 @@ import TDF.Server.SocialSync
       validateSocialSyncCaption,
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
+import TDF.Server.TicketSalesWindow (ticketSalesOpenBeforeEventEnd)
 import TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
     replaceLogisticsActivityDependencies,
@@ -515,7 +516,6 @@ import TDF.Server.SocialEventsHandlers (
     validateDirectTicketOrderPricing,
     validateTicketCheckoutAmount,
     validateTicketPurchaseEventEligibility,
-    ticketSalesOpenBeforeEventEnd,
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,

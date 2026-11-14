@@ -4911,7 +4911,9 @@
         "tdf-hq-ui/src/i18n/locales/fr.ts",
         "tdf-hq-ui/src/i18n/locales/pt.ts",
         "tdf-hq-ui/src/utils/checkoutStripe.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
+        "tdf-hq/tdf-hq.cabal"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
