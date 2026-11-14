@@ -4820,7 +4820,7 @@
     {
       "id": "EVT-TICKET-001",
       "title": "Consolidate authoritative ticket admission, inventory and transfer boundaries",
-      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects. Legacy Stripe inventory completion requires a positive order quantity and one atomic event/tier-bound decrement guarded by sufficient current sold stock; an unsuccessful release rolls back completion while retaining processing and observed evidence. Legacy refund request creation must serialize the absence check and insertion with current event/order authority and paid amount, preserving one-request rejection on the legacy route and canonical successive allocations. New direct, legacy Stripe and public canonical ticket reservations must validate current sale and promotion windows against the same fresh database wall-time sample after their final admission locks, retaining inclusive endpoints, stored orders and existing reuse behavior.",
+      "statement": "Ticket admission must consume a paid issued unused event-scoped ticket at most once with its audit in the same transaction; inventory holds must respect tier/event capacity; accepted transfer must rotate the credential and revoke former-holder projection. Checkout quantity must not exceed the approved versioned per-order limit; approved/retired commercial policies cannot regress to draft or lose immutable history. Approved tax-inclusive pricing must preserve advertised integer totals for every accepted quantity, conserve total = organizer payable + platform fees + tax, and retain the purchased mode immutably; an event-specific tax rate is independently authorized. An unresolved signed-provider refund or reversal bound to the same checkout/capture/merchant must fence admission even when legacy rows still say paid and issued. PayPal capture requires an authenticated readback of the original provider order, with unchanged internal-order, merchant, amount and currency validation before marking paid. Zero platform fees must create no zero-valued ledger entry while cash, organizer payable, tax and nonzero fees conserve the captured total. A verified external refund/reversal received before capture binding leaves durable merchant-scoped evidence after inbox retry exhaustion; later binding must fence admission without a webhook replay. Canonical orders reject legacy bulk status mutations. Refund routing follows the unique succeeded provider, retaining existing non-PayPal request behavior. Retained issued tickets of partially refunded orders remain transferable under the purchased policy. OAuth failure before a refund POST leaves the request retryable; ambiguous POST outcomes retain the no-repeat fence. Accepted provider refund identities survive mismatched monetary responses so exact authenticated readback can reconcile without another POST. Whole-ticket partial refunds accept any eligible subset matching the stable cent allocation. An authorized guest order receipt remains accessible when public ticket sales close; receipt lookup failure must not offer a replacement purchase. Ticket Stripe initialization failures return a bounded generic service-unavailable response instead of exposing upstream diagnostic bodies to buyers; existing automatic method selection is preserved. Legacy Stripe refund approval must commit a single pending-to-processing claim before provider execution; ambiguous responses never reopen the request, and rejection must condition its write on current pending state. Legacy Stripe completion additionally requires a succeeded refund object with exact requested amount, currency and PaymentIntent; observed provider IDs are retained while unverified evidence remains processing without ticket or inventory completion effects. Legacy Stripe inventory completion requires a positive order quantity and one atomic event/tier-bound decrement guarded by sufficient current sold stock; an unsuccessful release rolls back completion while retaining processing and observed evidence. Legacy refund request creation must serialize the absence check and insertion with current event/order authority and paid amount, preserving one-request rejection on the legacy route and canonical successive allocations. New direct, legacy Stripe and public canonical ticket reservations must validate current sale and promotion windows against the same fresh database wall-time sample after their final admission locks, retaining inclusive endpoints, stored orders and existing reuse behavior. An event whose end time has passed sells no more tickets whatever workflow state it was left in: the storefront lists no tiers, no order is created and no payment is started; an event without an end time is governed by its workflow state alone.",
       "authority": "Current main b06a4d392 merged reviewed PR480; formal/ticket-admission/README.md; approved PR482 main9abd8551b",
       "domain": "EVT",
       "actors": [
@@ -4912,7 +4912,9 @@
         "tdf-hq-ui/src/i18n/locales/fr.ts",
         "tdf-hq-ui/src/i18n/locales/pt.ts",
         "tdf-hq-ui/src/utils/checkoutStripe.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
+        "tdf-hq/tdf-hq.cabal"
       ],
       "tests": [
         "tdf-hq/test/TicketAdmissionMain.hs",
@@ -28152,7 +28154,7 @@
     "formal/system/public-routes.json": "cd5ce4ecf4944e61c4f2af25e76591ca9ae5717bb02efa218fe2b45a63561514",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "b30b145da094281a604f6b3b4b26bde4335549768132e0181077e481977b658e",
+    "formal/system/recovery-expiry-arithmetic.json": "ec7c19b6451ae8a25e56a11d77f7095e0dae7fd8ae9cbc40665cb9a1a4ff6eeb",
     "formal/system/route-requirements.json": "51e768950b165a225e4aed27e511d3979c8e30931b8cc2e2d4125348dedf3a0d",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
@@ -29478,12 +29480,13 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "c4ff34bfa8fcd815471d022c0080be7a9899e69795a88f0a97d6ccf79d34bbf7",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
+    "tdf-hq/src/TDF/Server/TicketSalesWindow.hs": "fd215386f1396fb5dc12414bae565889b31f196de8efcc431037df4f9517fa9a",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
     "tdf-hq/src/TDF/ServerAdmin.hs": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
     "tdf-hq/src/TDF/ServerAuth.hs": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
@@ -29519,7 +29522,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+    "tdf-hq/tdf-hq.cabal": "6fcc5204a168ada4ed520ddc399015deb7de48718716b21e9efbf4ac865d4c19",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -29527,7 +29530,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "1556d52061b59dda1fa6e20d5fb1bd5986f4cd7a578545946dc8ceec86dfee4d",
+    "tdf-hq/test/Spec.hs": "23d8d8bc010bf2be60f61d70e808822491877fd0f0737c4efa6fff6322bdeee5",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -32948,6 +32951,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "EVT-TICKET-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "PAY-INVOICE-001",
         "relationship": "implementation"
       },
@@ -36261,6 +36268,12 @@
       },
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/TicketSalesWindow.hs": [
+      {
+        "requirement": "EVT-TICKET-001",
         "relationship": "implementation"
       }
     ],
@@ -76522,7 +76535,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
+      "sha256": "c4ff34bfa8fcd815471d022c0080be7a9899e69795a88f0a97d6ccf79d34bbf7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76731,6 +76744,18 @@
       "id": "SURFACE-2531a758cf6e10bc",
       "path": "tdf-hq/src/TDF/Server/TicketRefunds.hs",
       "sha256": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-55053ce2c5c673dc",
+      "path": "tdf-hq/src/TDF/Server/TicketSalesWindow.hs",
+      "sha256": "fd215386f1396fb5dc12414bae565889b31f196de8efcc431037df4f9517fa9a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77576,7 +77601,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "sha256": "6fcc5204a168ada4ed520ddc399015deb7de48718716b21e9efbf4ac865d4c19",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77589,6 +77614,10 @@
         },
         {
           "requirement": "MEDIA-DRIVE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-001",
           "relationship": "implementation"
         },
         {
@@ -77759,7 +77788,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1556d52061b59dda1fa6e20d5fb1bd5986f4cd7a578545946dc8ceec86dfee4d",
+      "sha256": "23d8d8bc010bf2be60f61d70e808822491877fd0f0737c4efa6fff6322bdeee5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86775,7 +86804,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "c6f91454493e97c6f0dbf8b4045d081b9f98c3b342dd5cc82b1cb1cd1d12722f",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86803,7 +86832,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "c6f91454493e97c6f0dbf8b4045d081b9f98c3b342dd5cc82b1cb1cd1d12722f",
       "definition": {
         "states": [
           "absent",
@@ -86833,7 +86862,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "c6f91454493e97c6f0dbf8b4045d081b9f98c3b342dd5cc82b1cb1cd1d12722f",
       "definition": {
         "export": [
           "queued",

@@ -481,6 +481,7 @@ import TDF.Server.SocialSync
       validateSocialSyncCaption,
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
+import TDF.Server.TicketSalesWindow (ticketSalesOpenBeforeEventEnd)
 import TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
     replaceLogisticsActivityDependencies,
@@ -13053,6 +13054,15 @@ main = hspec $ do
                 , "{\"isPublic\":true,\"_discoveryOwned\":true}"
                 , "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}"
                 ] $ \raw -> (EventMetadataServer.emIsPublic <$> EventMetadataServer.decodeStoredEventMetadata (Just raw)) `shouldSatisfy` isLeft
+
+    describe "ticket sales close when the event ends" $ do
+        let eventEnd = UTCTime (fromGregorian 2026 10 24) 0
+        it "sells until the end time and not from it on" $ do
+            ticketSalesOpenBeforeEventEnd (addUTCTime (-1) eventEnd) (Just eventEnd) `shouldBe` True
+            ticketSalesOpenBeforeEventEnd eventEnd (Just eventEnd) `shouldBe` False
+            ticketSalesOpenBeforeEventEnd (addUTCTime 86400 eventEnd) (Just eventEnd) `shouldBe` False
+        it "leaves an event without an end time to its workflow state" $
+            ticketSalesOpenBeforeEventEnd eventEnd Nothing `shouldBe` True
 
     describe "ticket purchase event eligibility" $ do
         it "allows only public events in buyer-facing sale states" $ do
