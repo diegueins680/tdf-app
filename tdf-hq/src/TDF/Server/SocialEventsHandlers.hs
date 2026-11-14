@@ -39,6 +39,8 @@ module TDF.Server.SocialEventsHandlers (
     validateTicketPurchaseEventEligibility,
     eventTicketPurchaseEnabledFor,
     isTicketTierSaleOpen,
+    PublicTicketCardSummary (..),
+    summarizePublicTicketTiers,
     issueMissingTicketsForOrder,
     finalizePaidTicketOrder,
     sendTicketConfirmationForOrder,
@@ -469,7 +471,11 @@ publicUpcomingEventRow canonicalCity (Entity eventKey eventRow) = do
         (Right metadata, Just workflowStateId) -> do
             workflow <- EventLifecycle.loadActiveSocialEventState workflowStateId
             publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+            now <- liftIO getCurrentTime
+            tiers <- map entityVal <$> selectList [EventTicketTierEventId ==. eventKey] []
             let city = canonicalCity
+                ticketSummary =
+                    summarizePublicTicketTiers now (socialEventEndTime eventRow) (socialEventCapacity eventRow) tiers
             pure $
                 if publicListable && emIsPublic metadata /= Just False
                     then do
@@ -488,9 +494,48 @@ publicUpcomingEventRow canonicalCity (Entity eventKey eventRow) = do
                             , publicUpcomingEventTicketUrl = emTicketUrl metadata
                             , publicUpcomingEventImageUrl = emImageUrl metadata
                             , publicUpcomingEventWorkflowStateCode = stateCode
+                            , publicUpcomingEventTicketFromPriceCents = ptcsFromPriceCents ticketSummary
+                            , publicUpcomingEventTicketCurrency = ptcsCurrency ticketSummary
+                            , publicUpcomingEventTicketsSoldOut = ptcsSoldOut ticketSummary
                             }
                     else Nothing
         _ -> pure Nothing
+
+-- | What a public event card may say about tickets.
+data PublicTicketCardSummary = PublicTicketCardSummary
+    { ptcsFromPriceCents :: Maybe Int
+    , ptcsCurrency :: Maybe T.Text
+    , ptcsSoldOut :: Bool
+    }
+    deriving (Show, Eq)
+
+-- | Summarize ticket tiers for a public card with the storefront's own rules:
+-- a tier counts when it is active, priced, inside its sale window, and the
+-- event has not ended. Remaining stock is capped by the event capacity.
+-- The card never infers "free" or "sold out" from a reference price.
+summarizePublicTicketTiers :: UTCTime -> Maybe UTCTime -> Maybe Int -> [EventTicketTier] -> PublicTicketCardSummary
+summarizePublicTicketTiers now eventEnd capacity tiers =
+    case inStock of
+        [] -> PublicTicketCardSummary Nothing Nothing (not (null onSale))
+        _ -> case nub (map (T.toUpper . eventTicketTierCurrency) inStock) of
+            [currency] ->
+                PublicTicketCardSummary (Just (minimum (map eventTicketTierPriceCents inStock))) (Just currency) False
+            _ -> PublicTicketCardSummary Nothing Nothing False
+  where
+    eventOpen = maybe True (now <) eventEnd
+    onSale =
+        [ tier
+        | eventOpen
+        , tier <- tiers
+        , eventTicketTierPriceCents tier > 0
+        , isTicketTierSaleOpen now tier
+        ]
+    totalSold = sum (map eventTicketTierQuantitySold tiers)
+    eventRemaining = (\limit -> max 0 (limit - totalSold)) <$> capacity
+    remaining tier =
+        let tierRemaining = max 0 (eventTicketTierQuantityTotal tier - eventTicketTierQuantitySold tier)
+         in maybe tierRemaining (min tierRemaining) eventRemaining
+    inStock = filter ((> 0) . remaining) onSale
 
 validateSocialEventsFeatureAction :: T.Text -> T.Text -> AuthedUser -> Either ServerError ()
 validateSocialEventsFeatureAction featureId action user =
