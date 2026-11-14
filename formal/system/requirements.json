@@ -10374,6 +10374,7 @@
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/API/Directory.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
         "tdf-hq/docs/openapi/directory.yaml",
