@@ -113,3 +113,26 @@ advisory lock achieves this is PostgreSQL behaviour and is assumed.
 Not modelled: the subject hash, the SQL upsert, a timestamp read before the
 lock is granted, the silent answer of the reset route past its limit, and any
 per-address limit (there is none).
+
+## Sealed calendar token storage (`INTEG-GOOGLE-CALENDAR-001`)
+
+`calendar_token_storage.py` (Z3 4.13.3, pinned) encodes the length of a sealed
+Google Calendar token (`sealedCalendarTokenLength`, `calendarTokenStoredLimit`
+of `tdf-hq/src/TDF/Calendar/TokenCipher.hs`), which token is sealed at all
+(`sealCalendarTokenForStorage`) and which stored value is accepted on read
+(`validateStoredGoogleCalendarOAuthToken`, both in `tdf-hq/src/TDF/Server.hs`).
+It refuses to run when the text of any of those regions changes.
+
+| Obligation | Result |
+|---|---|
+| Every token that is sealed for storage yields a stored value the validator accepts | proved (UNSAT of the negation) |
+| Only a clean token of 1 to 4096 characters that does not already look sealed is sealed | proved |
+| A sealed value is longer than its token; sealed length is monotone | proved |
+| The stored limit admits no sealed value holding more than 4097 bytes; an unsealed value keeps 4096 | proved |
+| Previous rule: a 3039-character token is stored and then refused on read; 3038 is the last that survived | witness found |
+| Current rule: no admissible token is stranded | no witness exists |
+| Dropping the sealed-value limit, the intake length check or the refusal of a sealed-looking token | each breaks at least one proof |
+
+Not modelled: AES-GCM, the nonce source, the key derivation, and that every
+write of the token columns goes through `sealCalendarTokenForStorage`. The
+sealed value carries no associated data.
