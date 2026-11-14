@@ -1,4 +1,4 @@
-import type { AgreementPayment, AgreementStatus, MarketplaceAgreement } from '../../api/directory';
+import type { AgreementPayment, AgreementStatus, MarketplaceAgreement, PayoutAccountRequest } from '../../api/directory';
 
 export type AgreementRole = MarketplaceAgreement['participantRole'];
 
@@ -50,4 +50,15 @@ export function agreementChargeDue(agreement: Pick<MarketplaceAgreement, 'status
 /** Charges worth showing: paid ones and the one still pending, oldest first. */
 export function visibleAgreementPayments(agreement: Pick<MarketplaceAgreement, 'payments'>): AgreementPayment[] {
   return (agreement.payments ?? []).filter((payment) => payment.status === 'paid' || payment.status === 'pending');
+}
+
+/**
+ * Shape of a PayPhone payout recipient (ADR 0136), mirroring
+ * TDF.Directory.Policy.payoutIdentifierValid: an identification is a cédula
+ * (10 digits) or a RUC (13 digits); a phone is in international format. The
+ * server is the authority; this only spares a round trip.
+ */
+export function payoutIdentifierValid(kind: PayoutAccountRequest['identifierType'], identifier: string): boolean {
+  if (kind === 'identification') return /^(\d{10}|\d{13})$/.test(identifier);
+  return /^\+[1-9]\d{7,14}$/.test(identifier);
 }
