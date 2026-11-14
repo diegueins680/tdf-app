@@ -112,6 +112,48 @@ printf 'WORKER_DONE\\n'
       });
   }
 }
+test('heartbeat stops within moments when the first group signal is lost entirely', { timeout: 10_000 }, async () => {
+  const f = fixture();
+  // A TERM delivered while the heartbeat or its sleep is still being forked
+  // reaches nobody. Model it by dropping the first group signal: without a
+  // repeated signal the worker waits out the whole 60 s heartbeat interval.
+  const observed = observeTestChild(spawn('bash', ['-c', `${f.prelude}
+kill() {
+  if [ "$#" = 3 ] && [ "$1" = -TERM ] && [ "$2" = -- ] && [ ! -e "$working_dir/first-term-lost" ]; then
+    : > "$working_dir/first-term-lost"
+    return 0
+  fi
+  builtin kill "$@"
+}
+heartbeat &
+heartbeat_pid=$!
+printf 'HEARTBEAT_PID=%s\\n' "$heartbeat_pid"
+for ((i=0; i<300; i++)); do
+  [ ! -f "$TDF_HEARTBEAT_READY" ] || break
+  /bin/sleep 0.01
+done
+[ -f "$TDF_HEARTBEAT_READY" ] || exit 91
+stop_heartbeat
+[ -e "$working_dir/first-term-lost" ] || exit 92
+printf 'WORKER_DONE\\n'
+`], { detached: true, stdio: ['ignore', 'pipe', 'pipe'], env: { ...f.env, TDF_HEARTBEAT_PHASE: 'sleep' } }));
+  try {
+    const outcome = await completedTestChild(observed, { timeoutMs: 4000 });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.match(outcome.stdout, /WORKER_DONE/);
+    const native = JSON.parse(readFileSync(f.ready, 'utf8'));
+    assert.equal(native.kind, 'sleep');
+    assert.equal(isAlive(native.pid), false, 'native heartbeat child must already be reaped');
+    assert.equal(observed.snapshot().processState, 'closed');
+  } finally {
+    const heartbeatPid = Number(observed.snapshot().stdout.match(/HEARTBEAT_PID=(\d+)/)?.[1]);
+    if (observed.snapshot().processState !== 'closed') {
+      signalGroup(heartbeatPid, 'SIGKILL'); signalGroup(observed.child.pid, 'SIGKILL');
+      await completedTestChild(observed, { timeoutMs: 1000 }).catch(() => {});
+    }
+    rmSync(f.directory, { recursive: true, force: true });
+  }
+});
 for (const status of [0, 7]) {
   test(`normal and supervised SQL preserve guard, input, options and status ${status}`, { timeout: 10_000 }, async () => {
     const captures = [];

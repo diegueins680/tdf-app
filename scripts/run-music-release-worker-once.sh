@@ -404,7 +404,20 @@ heartbeat_pid=''
 stop_heartbeat() {
   if [ -n "$heartbeat_pid" ]; then
     kill -TERM -- "-$heartbeat_pid" 2>/dev/null || true
+    # A TERM that lands while the heartbeat, or the sleep it is starting, is
+    # still being forked is lost, and the wait below would then last a whole
+    # heartbeat interval. Repeat the signal until the group is gone.
+    # `command -p` keeps the short delay on the system sleep.
+    (
+      trap - EXIT
+      while command -p sleep 0.1; do
+        kill -TERM -- "-$heartbeat_pid" 2>/dev/null || exit 0
+      done
+    ) &
+    local heartbeat_resender=$!
     wait "$heartbeat_pid" 2>/dev/null || true
+    kill -KILL -- "-$heartbeat_resender" 2>/dev/null || kill -KILL "$heartbeat_resender" 2>/dev/null || true
+    wait "$heartbeat_resender" 2>/dev/null || true
     heartbeat_pid=''
   fi
 }
