@@ -62,7 +62,10 @@ assert sum(PHASES.values(), ()) == STAGES, 'phases must cover the journal stages
 
 PROJECT = 'tdf-production'
 DIRECTORY = Path('/opt/tdf/production')
-CONTROL = Path('/opt/tdf/release-control')
+# The single global release journal. It admits only its records and lock, so
+# operator configuration (storage key, pinned host key, login probe) lives apart.
+JOURNAL = Path('/opt/tdf/release-control')
+CONFIG = Path('/opt/tdf/release-config')
 BACKUPS = Path('/opt/tdf/backups')
 TOOLS_ROOT = Path('/opt/tdf/release-tools')
 VOLUME = 'tdf_production_postgres_data'
@@ -153,6 +156,40 @@ def journal_plan(params, runtime):
     }
 
 
+BARE_IMAGE = re.compile(r'sha256:[a-f0-9]{64}')
+OVERRIDE_PREFIX = 'services:\n  api:\n    image: '
+
+
+def admit_compose_files(api_label, other_labels):
+    """The API's compose file list, which every other service's list must be within."""
+    require(isinstance(api_label, str) and api_label, 'API has no compose file label')
+    files = api_label.split(',')
+    require(files[0] == str(DIRECTORY / 'compose.yaml'), 'API was not created from the production compose file')
+    require(len(files) == len(set(files)) and len(files) <= 2, 'unexpected compose override count')
+    for name in files[1:]:
+        path = Path(name)
+        require(path.is_absolute() and '..' not in path.parts and str(path).startswith('/opt/')
+                and path.suffix in ('.yaml', '.yml'), 'unexpected compose override path')
+    for label in other_labels:
+        require(isinstance(label, str) and set(label.split(',')) <= set(files),
+                'services were created from different compose files')
+    return files
+
+
+def parse_image_override(text):
+    """Admit only an override that sets the API image and nothing else."""
+    require(text.startswith(OVERRIDE_PREFIX) and text.endswith('\n') and text.count('\n') == 3,
+            'compose override has an unreviewed shape')
+    image = text[len(OVERRIDE_PREFIX):-1]
+    require(IMAGE_REF.fullmatch(image) is not None or BARE_IMAGE.fullmatch(image) is not None,
+            'compose override image is not immutable')
+    return image
+
+
+def render_image_override(image):
+    return (OVERRIDE_PREFIX + image + '\n').encode()
+
+
 def replace_env_value(text, key, expected, new):
     """Replace exactly one KEY=expected line, preserving every other byte."""
     lines = text.split('\n')
@@ -189,9 +226,11 @@ class Host:
     def docker(self, *args, **kwargs):
         return self.run(self.DOCKER + list(args), **kwargs)
 
-    def compose(self, *args, **kwargs):
+    def compose(self, files, *args, **kwargs):
+        # Always the exact file set the running services were created from.
+        selection = [option for name in files for option in ('-f', name)]
         return self.docker('compose', '--project-name', PROJECT, '--project-directory', str(DIRECTORY),
-                           '-f', str(DIRECTORY / 'compose.yaml'), '--profile', 'serve', *args, **kwargs)
+                           *selection, '--profile', 'serve', *args, **kwargs)
 
     def container(self, service):
         ids = self.docker('ps', '--all', '--quiet', '--no-trunc',
@@ -252,19 +291,45 @@ class Host:
         time.sleep(seconds)
 
     # -- observations -----------------------------------------------------
+    def compose_identity(self, container, service):
+        labels = container['Config'].get('Labels') or {}
+        require(labels.get('com.docker.compose.project') == PROJECT
+                and labels.get('com.docker.compose.service') == service
+                and labels.get('com.docker.compose.project.working_dir') == str(DIRECTORY),
+                service + ' is not the production compose service')
+        require(container['State']['Running'], service + ' is not running')
+        return labels.get('com.docker.compose.project.config_files')
+
+    def admin_file(self, path):
+        info = os.lstat(path)
+        require(stat.S_ISREG(info.st_mode) and info.st_uid == 0 and info.st_mode & 0o022 == 0,
+                'compose override is not a root-owned regular file')
+        return self.read_bytes(path)
+
     def observe_runtime(self):
-        api, db = self.container('api'), self.container('db')
-        api_summary = self._runtime.summarize_container('api', api)
+        api, db, edge = self.container('api'), self.container('db'), self.container('edge')
+        files = admit_compose_files(self.compose_identity(api, 'api'),
+                                    [self.compose_identity(db, 'db'), self.compose_identity(edge, 'edge')])
+        override = None
+        if len(files) == 2:
+            raw = self.admin_file(files[1])
+            override = {'path': files[1], 'sha256': sha(raw), 'image': parse_image_override(raw.decode())}
         db_summary = self._runtime.summarize_container('db', db)
-        require(api_summary['running'] and db_summary['running'], 'api and database must be running')
         env = dict(line.split('=', 1) for line in self.read_bytes(DIRECTORY / '.env').decode().splitlines()
                    if '=' in line and not line.lstrip().startswith('#'))
-        require(env.get('TDF_IMAGE') == api_summary['image'], 'running API differs from configured TDF_IMAGE')
+        configured = env.get('TDF_IMAGE', '')
+        require(IMAGE_REF.fullmatch(configured) is not None, 'TDF_IMAGE is not an immutable reference')
+        # The override, when present, decides the API image; it must be the same image as TDF_IMAGE.
+        effective = override['image'] if override else configured
+        require(api['Config']['Image'] == effective, 'running API was not created from the configured image')
+        digests = json.loads(self.docker('image', 'inspect', '--format', '{{json .RepoDigests}}', api['Image']))
+        require(configured in digests, 'running API image does not carry the TDF_IMAGE digest')
         require(env.get('POSTGRES_IMAGE') == db_summary['image'], 'running database differs from POSTGRES_IMAGE')
         status, _, body = self.http(PUBLIC + '/version')
         require(status == 200, 'public version endpoint unavailable')
         public = json.loads(body)
-        return {'apiContainer': api['Id'], 'apiImage': api_summary['image'],
+        return {'apiContainer': api['Id'], 'apiImage': configured, 'composeFiles': files,
+                'apiImageOverride': override,
                 'databaseContainer': db['Id'], 'databaseImage': db_summary['image'],
                 'databaseImageId': db['Image'], 'publicCommit': public['commit'],
                 'caddyfileSha256': sha(self.read_bytes(DIRECTORY / 'Caddyfile'))}
@@ -309,8 +374,8 @@ class Host:
         return self._envelope.encrypt(str(binary), str(source), str(destination), recipient)
 
     def sftp(self, storage, batch):
-        key = CONTROL / 'storage-transfer-key'
-        known = CONTROL / 'storage-known-hosts'
+        key = CONFIG / 'storage-transfer-key'
+        known = CONFIG / 'storage-known-hosts'
         self.run(['sftp', '-q', '-b', '-', '-P', str(storage['port']), '-i', str(key),
                   '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
                   '-o', 'UserKnownHostsFile=' + str(known), '-o', 'ConnectTimeout=15',
@@ -337,6 +402,9 @@ class Release:
         self.host, self.journal, self.dir = host, journal, Path(release_dir)
 
     # -- small helpers ----------------------------------------------------
+    def compose(self, *args, **kwargs):
+        return self.host.compose(self.runtime()['composeFiles'], *args, **kwargs)
+
     def record(self, name, value):
         raw = canonical(value)
         self.host.write_new(self.dir / name, raw)
@@ -403,7 +471,7 @@ class Release:
         self.host.systemctl('stop', BACKUP_TIMER)
         service = self.host.systemctl('is-active', 'tdf-postgres-backup.service').stdout.strip()
         require(service != 'active', 'a scheduled backup is running; retry after it completes')
-        self.host.compose('stop', '--timeout', '60', 'api', timeout=180)
+        self.compose('stop', '--timeout', '60', 'api', timeout=180)
         require(not self.host.container('api')['State']['Running'], 'API did not stop')
         peers = self.host.database_network_peers()
         require(peers == [runtime['databaseContainer']], 'other containers are attached to the database network')
@@ -416,7 +484,7 @@ class Release:
     def stage_stop_database(self):
         runtime = self.runtime()
         writers = self.load('stop-writers.json')
-        self.host.compose('stop', '--timeout', '120', 'db', timeout=240)
+        self.compose('stop', '--timeout', '120', 'db', timeout=240)
         require(not self.host.container('db')['State']['Running'], 'database did not stop')
         control = self.host.control_identity(self.host.cold_control(runtime['databaseImage']),
                                              writers['systemIdentifier'])
@@ -429,13 +497,20 @@ class Release:
         database = self.host.capture_tree(VOLUME_DATA, self.dir / 'database.tar')
         self.host.admit_cold_manifest(database)
         production = self.host.capture_tree(DIRECTORY, self.dir / 'production.tar')
+        override = self.runtime()['apiImageOverride']
+        bundled = ['database.tar', 'production.tar', 'manifests.json', 'Caddyfile.original']
+        if override:
+            raw = self.host.admin_file(override['path'])
+            require(sha(raw) == override['sha256'], 'compose override changed since the plan')
+            self.host.write_new(self.dir / 'compose-override.original', raw)
+            bundled.append('compose-override.original')
         manifests = {'database': database, 'production': production}
         self.host.write_new(self.dir / 'manifests.json', canonical(manifests))
         bundle = self.dir / 'bundle.tar'
         fd = os.open(bundle, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         with os.fdopen(fd, 'wb') as handle:
             with tarfile.open(fileobj=handle, mode='w', format=tarfile.PAX_FORMAT) as archive:
-                for name in ('database.tar', 'production.tar', 'manifests.json', 'Caddyfile.original'):
+                for name in bundled:
                     archive.add(str(self.dir / name), arcname=name, recursive=False)
             handle.flush()
             os.fsync(handle.fileno())
@@ -488,7 +563,7 @@ class Release:
 
     def stage_start_database(self):
         writers = self.load('stop-writers.json')
-        self.host.compose('start', 'db', timeout=180)
+        self.compose('start', 'db', timeout=180)
 
         def healthy():
             state = self.host.container('db')['State']
@@ -518,8 +593,14 @@ class Release:
         original = self.host.read_bytes(DIRECTORY / '.env')
         self.host.write_new(self.dir / 'env.original', original)
         updated = replace_env_value(original.decode(), 'TDF_IMAGE', runtime['apiImage'], params['candidateImage'])
+        override = runtime['apiImageOverride']
+        if override:
+            current = self.host.admin_file(override['path'])
+            require(sha(current) == override['sha256'], 'compose override changed since the plan')
         self.host.write_in_place(DIRECTORY / '.env', updated.encode())
-        self.host.compose('up', '--detach', '--no-deps', 'api', timeout=300)
+        if override:
+            self.host.write_in_place(override['path'], render_image_override(params['candidateImage']))
+        self.compose('up', '--detach', '--no-deps', 'api', timeout=300)
 
         def running():
             api = self.host.container('api')
@@ -550,7 +631,7 @@ class Release:
             code, _, _ = self.host.http(base + path)
             require(code == 200, 'smoke check failed for ' + path)
             smoke[path] = code
-        login = CONTROL / 'smoke-login.json'
+        login = CONFIG / 'smoke-login.json'
         login_verified = False
         if login.exists():
             spec = json.loads(self.host.read_bytes(login))
@@ -609,11 +690,21 @@ class Release:
         restore_database = bool(touched & {'migrate', 'start-candidate', 'verify-candidate'})
         steps = []
         if self.host.container('api')['State']['Running']:
-            self.host.compose('stop', '--timeout', '60', 'api', timeout=180)
+            self.compose('stop', '--timeout', '60', 'api', timeout=180)
             steps.append('stopped-api')
         if (self.dir / 'env.original').exists():
             self.host.write_in_place(DIRECTORY / '.env', self.host.read_bytes(self.dir / 'env.original'))
             steps.append('restored-env')
+        override = runtime['apiImageOverride']
+        if override and (self.dir / 'compose-override.original').exists():
+            original = self.host.read_bytes(self.dir / 'compose-override.original')
+            require(sha(original) == override['sha256'], 'saved compose override does not match the plan')
+            if self.host.admin_file(override['path']) != original:
+                self.host.write_in_place(override['path'], original)
+                steps.append('restored-override')
+        if override:
+            require(parse_image_override(self.host.admin_file(override['path']).decode()) == override['image'],
+                    'compose override does not name the recovery image')
         configured = self.host.read_bytes(DIRECTORY / '.env').decode()
         require(('TDF_IMAGE=' + runtime['apiImage']) in configured.split('\n'), '.env does not name the recovery image')
         if restore_database:
@@ -623,7 +714,7 @@ class Release:
             require(sha(canonical(manifests['database'])) == capture['databaseManifestSha256'],
                     'database manifest changed')
             if self.host.container('db')['State']['Running']:
-                self.host.compose('stop', '--timeout', '120', 'db', timeout=240)
+                self.compose('stop', '--timeout', '120', 'db', timeout=240)
             require(not self.host.container('db')['State']['Running'], 'database did not stop')
             staged = self.dir / 'restored-data'
             self.host.restore_tree(self.dir / 'database.tar', manifests['database'], staged)
@@ -632,14 +723,14 @@ class Release:
             os.rename(staged, VOLUME_DATA)
             steps.append('restored-database')
         if not self.host.container('db')['State']['Running']:
-            self.host.compose('start', 'db', timeout=180)
+            self.compose('start', 'db', timeout=180)
             self.wait_for(lambda: self.host.container('db')['State'].get('Health', {}).get('Status') == 'healthy',
                           'database did not become healthy')
             steps.append('started-database')
         if (self.dir / 'stop-writers.json').exists():
             writers = self.load('stop-writers.json')
             require(self.host.ledger() == writers['ledger'], 'ledger does not match the pre-release capture')
-        self.host.compose('up', '--detach', '--no-deps', 'api', timeout=300)
+        self.compose('up', '--detach', '--no-deps', 'api', timeout=300)
         self.wait_for(lambda: self.host.container('api')['State']['Running'], 'recovery API did not start')
         base = self.api_base()
         self.wait_for(lambda: self.host.http(base + '/health')[0] == 200, 'recovery API is unhealthy')
@@ -705,12 +796,12 @@ def main(argv):
     os.umask(0o077)
     require(os.geteuid() == 0, 'run as root on the production host')
     host = Host()
-    for directory in (CONTROL, CONTROL / 'journal', BACKUPS):
+    for directory in (JOURNAL, CONFIG, BACKUPS):
         directory.mkdir(mode=0o700, exist_ok=True)
         info = directory.lstat()
         require(stat.S_ISDIR(info.st_mode) and info.st_uid == 0 and info.st_mode & 0o077 == 0,
                 str(directory) + ' must be a root-private directory')
-    with journal_module.open_journal(str(CONTROL / 'journal')) as journal:
+    with journal_module.open_journal(str(JOURNAL)) as journal:
         if args.command == 'plan':
             result = plan(host, journal, json.loads(sys.stdin.read(1024 * 1024)))
         else:

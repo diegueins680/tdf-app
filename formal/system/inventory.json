@@ -3748,7 +3748,7 @@
     {
       "id": "SURFACE-05424790f9d7fc44",
       "path": "ops/hetzner/guarded-release.py",
-      "sha256": "ee1d80a045dd32c61583f05ebbbac9622a0499ffba2956d667356b69e2bbcded",
+      "sha256": "d59f941a6f64eed1d913433e106ad80d5e65080524dfd47670a4a63351d09e4d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6478,7 +6478,7 @@
     {
       "id": "SURFACE-b3d437c938c87672",
       "path": "scripts/test-guarded-release.py",
-      "sha256": "03d7a728a03dde57ef5e7c8b6fad1b2e8f201c0d27c7f441269562144480933f",
+      "sha256": "98bef5b8c838f31cd9850435cf6aad2053ce3e725d65b2bb32cb355124dd280f",
       "semanticConformance": "not-established-by-discovery"
     },
     {

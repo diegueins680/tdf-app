@@ -35,6 +35,8 @@ PARAMS = {
     'smokePaths': ['/music/releases'],
 }
 CONFIRM = NEW_REV[:12]
+OVERRIDE = '/opt/tdf-mail/api-smtp-image-override.yaml'
+COMPOSE_FILES = ['/opt/tdf/production/compose.yaml', OVERRIDE]
 
 
 def digest(data):
@@ -46,7 +48,10 @@ class FakeHost:
         self.root = root
         self.tools = root / 'tools'
         self.files = {gr.DIRECTORY / 'Caddyfile': ORIGINAL_CADDY,
-                      gr.DIRECTORY / '.env': ('POSTGRES_IMAGE=' + PG_IMAGE + '\nTDF_IMAGE=' + OLD_IMAGE + '\n').encode()}
+                      gr.DIRECTORY / '.env': ('POSTGRES_IMAGE=' + PG_IMAGE + '\nTDF_IMAGE=' + OLD_IMAGE + '\n').encode(),
+                      # As in production: an override pins the API image by its bare id.
+                      Path(OVERRIDE): gr.render_image_override('sha256:' + 'a' * 64)}
+        self.compose_calls = []
         self.edge_config = ORIGINAL_CADDY
         self.running = {'api': True, 'db': True, 'edge': True}
         self.api_image = OLD_IMAGE
@@ -61,7 +66,11 @@ class FakeHost:
 
     # observations used by plan()
     def observe_runtime(self):
-        return {'apiContainer': self.api_id, 'apiImage': self.api_image, 'databaseContainer': 'f' * 64,
+        raw = self.files[Path(OVERRIDE)]
+        return {'apiContainer': self.api_id, 'apiImage': self.api_image, 'composeFiles': list(COMPOSE_FILES),
+                'apiImageOverride': {'path': OVERRIDE, 'sha256': digest(raw),
+                                     'image': gr.parse_image_override(raw.decode())},
+                'databaseContainer': 'f' * 64,
                 'databaseImage': PG_IMAGE, 'databaseImageId': 'sha256:' + '9' * 64, 'publicCommit': OLD_REV,
                 'caddyfileSha256': digest(self.files[gr.DIRECTORY / 'Caddyfile'])}
 
@@ -95,7 +104,11 @@ class FakeHost:
             return ''
         raise AssertionError('unexpected docker call %r' % (args,))
 
-    def compose(self, *args, **kwargs):
+    def admin_file(self, path):
+        return self.files[Path(path)]
+
+    def compose(self, files, *args, **kwargs):
+        self.compose_calls.append(list(files))
         self.events.append(('compose',) + args)
         verb, service = args[0], args[-1]
         if verb == 'stop':
@@ -103,8 +116,14 @@ class FakeHost:
         elif verb == 'start':
             self.running[service] = True
         elif verb == 'up':
+            # Compose applies the override last, so its image wins over TDF_IMAGE.
+            image = gr.parse_image_override(self.files[Path(OVERRIDE)].decode()) if OVERRIDE in files else None
             env = self.files[gr.DIRECTORY / '.env'].decode()
-            self.api_image = [line for line in env.split('\n') if line.startswith('TDF_IMAGE=')][0][10:]
+            configured = [line for line in env.split('\n') if line.startswith('TDF_IMAGE=')][0][10:]
+            if image is None:
+                self.api_image = configured
+            else:
+                self.api_image = image if '@' in image else {'a' * 64: OLD_IMAGE, 'b' * 64: NEW_IMAGE}[image[7:]]
             self.running['api'] = True
         return ''
 
@@ -219,8 +238,8 @@ class GuardedReleaseTests(unittest.TestCase):
         for name in ('backups', 'journal', 'tools', 'volume'):
             (self.root / name).mkdir(mode=0o700)
         (self.root / 'volume' / '_data').mkdir(mode=0o700)
-        self.originals = {k: getattr(gr, k) for k in ('BACKUPS', 'VOLUME_DATA', 'CONTROL')}
-        gr.BACKUPS, gr.VOLUME_DATA, gr.CONTROL = self.root / 'backups', self.root / 'volume' / '_data', self.root
+        self.originals = {k: getattr(gr, k) for k in ('BACKUPS', 'VOLUME_DATA', 'CONFIG')}
+        gr.BACKUPS, gr.VOLUME_DATA, gr.CONFIG = self.root / 'backups', self.root / 'volume' / '_data', self.root
         self.addCleanup(lambda: [setattr(gr, k, v) for k, v in self.originals.items()])
         self.host = FakeHost(self.root)
 
@@ -260,6 +279,9 @@ class GuardedReleaseTests(unittest.TestCase):
         self.assertEqual(self.host.timer, 'active')
         env = self.host.files[gr.DIRECTORY / '.env'].decode()
         self.assertIn('TDF_IMAGE=' + NEW_IMAGE, env)
+        self.assertEqual(self.host.files[Path(OVERRIDE)], gr.render_image_override(NEW_IMAGE))
+        self.assertTrue(self.host.compose_calls and all(f == COMPOSE_FILES for f in self.host.compose_calls))
+        self.assertTrue((release / 'compose-override.original').exists())
         self.assertIn('POSTGRES_IMAGE=' + PG_IMAGE, env)
         record = json.loads((release / 'bundle-record.json').read_bytes())
         self.assertEqual(record['sourceRevision'], NEW_REV)
@@ -383,6 +405,8 @@ class GuardedReleaseTests(unittest.TestCase):
         receipt = self.rollback(release)
         self.assertTrue(receipt['databaseRestored'])
         self.assertIn('restored-env', receipt['steps'])
+        self.assertIn('restored-override', receipt['steps'])
+        self.assertEqual(self.host.files[Path(OVERRIDE)], gr.render_image_override('sha256:' + 'a' * 64))
         self.assertIn('TDF_IMAGE=' + OLD_IMAGE, self.host.files[gr.DIRECTORY / '.env'].decode())
         self.assertEqual(self.host.api_image, OLD_IMAGE)
 
@@ -409,6 +433,126 @@ class GuardedReleaseTests(unittest.TestCase):
         self.assertEqual(second['releaseNonce'], self.status()['releaseNonce'])
         self.assertEqual(self.status()['completedStages'], [])
         self.assertEqual(self.status()['priorReleases'], 1)
+
+
+class OverrideTests(unittest.TestCase):
+    def test_compose_files_follow_the_api_label(self):
+        label = ','.join(COMPOSE_FILES)
+        self.assertEqual(gr.admit_compose_files(label, ['/opt/tdf/production/compose.yaml'] * 2), COMPOSE_FILES)
+        self.assertEqual(gr.admit_compose_files('/opt/tdf/production/compose.yaml', []),
+                         ['/opt/tdf/production/compose.yaml'])
+        for bad_label, others in [
+                ('/srv/other/compose.yaml', []),
+                (label + ',/opt/tdf-mail/second.yaml', []),
+                ('/opt/tdf/production/compose.yaml,/opt/../etc/x.yaml', []),
+                ('/opt/tdf/production/compose.yaml,/tmp/x.yaml', []),
+                (label, ['/opt/tdf/production/compose.yaml,/opt/tdf-mail/edge.yaml'])]:
+            with self.assertRaises(gr.Rejected):
+                gr.admit_compose_files(bad_label, others)
+
+    def test_only_an_exact_image_override_is_admitted(self):
+        for image in (NEW_IMAGE, 'sha256:' + 'a' * 64):
+            self.assertEqual(gr.parse_image_override(gr.render_image_override(image).decode()), image)
+        for text in ['services:\n  api:\n    image: diegueins680/tdf-hq:latest\n',
+                     'services:\n  api:\n    image: ' + NEW_IMAGE + '\n    environment:\n      A: b\n',
+                     'services:\n  db:\n    image: ' + NEW_IMAGE + '\n',
+                     'services:\n  api:\n    image: ' + NEW_IMAGE]:
+            with self.assertRaises(gr.Rejected):
+                gr.parse_image_override(text)
+
+
+def production_shaped(service, *, files=None, image=None, running=True):
+    """Container inspect output shaped like the live host on 13 November 2026."""
+    labels = {'com.docker.compose.project': 'tdf-production', 'com.docker.compose.service': service,
+              'com.docker.compose.project.working_dir': '/opt/tdf/production',
+              'com.docker.compose.project.config_files': files or '/opt/tdf/production/compose.yaml'}
+    networks = {'db': ['tdf-production_database'], 'api': ['tdf-production_database', 'tdf-production_outbound'],
+                'edge': ['tdf-production_outbound']}[service]
+    container = {'Id': {'api': 'e', 'db': 'f', 'edge': 'd'}[service] * 64, 'Image': 'sha256:' + '9' * 64,
+                 'State': {'Running': running, 'Health': {'Status': 'healthy'}},
+                 'Config': {'Image': image, 'Labels': labels, 'Env': ['PGDATA=/var/lib/postgresql/data']},
+                 'NetworkSettings': {'Networks': {n: {} for n in networks}, 'Ports': {}},
+                 'Mounts': []}
+    if service == 'db':
+        container['Mounts'] = [{'Type': 'volume', 'Name': gr.VOLUME, 'Destination': '/var/lib/postgresql/data'}]
+    return container
+
+
+class ObservedRuntimeTests(unittest.TestCase):
+    """The real Host.observe_runtime against production-shaped inspect output."""
+
+    def host(self, *, api_files=','.join(COMPOSE_FILES), api_image='sha256:' + 'a' * 64,
+             override=None, env_image=OLD_IMAGE, repo_digests=(OLD_IMAGE,)):
+        test = self
+
+        class Observed(gr.Host):
+            def __init__(self):
+                self._runtime = gr.load('observed_runtime', 'inspect-runtime.py')
+
+            def container(self, service):
+                return {'api': production_shaped('api', files=api_files, image=api_image),
+                        'db': production_shaped('db', image=PG_IMAGE),
+                        'edge': production_shaped('edge', image='caddy@sha256:' + '8' * 64)}[service]
+
+            def read_bytes(self, path):
+                if Path(path) == gr.DIRECTORY / '.env':
+                    return ('POSTGRES_IMAGE=' + PG_IMAGE + '\nTDF_IMAGE=' + env_image + '\n').encode()
+                return ORIGINAL_CADDY
+
+            def admin_file(self, path):
+                test.assertEqual(path, OVERRIDE)
+                return override if override is not None else gr.render_image_override(api_image)
+
+            def docker(self, *args, **kwargs):
+                test.assertEqual(args[:2], ('image', 'inspect'))
+                return json.dumps(list(repo_digests))
+
+            def http(self, url, **kwargs):
+                return 200, {}, json.dumps({'commit': OLD_REV}).encode()
+        return Observed()
+
+    def test_live_shape_with_image_override_is_admitted(self):
+        runtime = self.host().observe_runtime()
+        self.assertEqual(runtime['composeFiles'], COMPOSE_FILES)
+        self.assertEqual(runtime['apiImage'], OLD_IMAGE)
+        self.assertEqual(runtime['apiImageOverride']['image'], 'sha256:' + 'a' * 64)
+
+    def test_plain_compose_without_override_is_admitted(self):
+        runtime = self.host(api_files='/opt/tdf/production/compose.yaml', api_image=OLD_IMAGE).observe_runtime()
+        self.assertIsNone(runtime['apiImageOverride'])
+
+    def test_override_naming_a_different_image_than_running_is_rejected(self):
+        with self.assertRaisesRegex(gr.Rejected, 'configured image'):
+            self.host(override=gr.render_image_override('sha256:' + 'c' * 64)).observe_runtime()
+
+    def test_running_image_without_the_tdf_image_digest_is_rejected(self):
+        with self.assertRaisesRegex(gr.Rejected, 'TDF_IMAGE digest'):
+            self.host(repo_digests=(NEW_IMAGE,)).observe_runtime()
+
+    def test_override_with_extra_settings_is_rejected(self):
+        extra = gr.render_image_override('sha256:' + 'a' * 64) + b'    environment:\n      SMTP_HOST: x\n'
+        with self.assertRaisesRegex(gr.Rejected, 'unreviewed shape'):
+            self.host(override=extra).observe_runtime()
+
+    def test_compose_commands_name_every_planned_file(self):
+        calls = []
+
+        class Recording(gr.Host):
+            def __init__(self):
+                pass
+
+            def docker(self, *args, **kwargs):
+                calls.append(args)
+                return ''
+        Recording().compose(COMPOSE_FILES, 'up', '--detach', '--no-deps', 'api')
+        args = calls[0]
+        self.assertEqual([args[i + 1] for i, a in enumerate(args) if a == '-f'], COMPOSE_FILES)
+        self.assertEqual(args[-4:], ('up', '--detach', '--no-deps', 'api'))
+
+    def test_journal_is_the_single_global_directory(self):
+        self.assertEqual(gr.JOURNAL, Path('/opt/tdf/release-control'))
+        self.assertNotIn(gr.JOURNAL, [gr.CONFIG, *gr.CONFIG.parents][:-3])
+        self.assertFalse(str(gr.CONFIG).startswith(str(gr.JOURNAL) + '/'))
 
 
 class ParameterTests(unittest.TestCase):

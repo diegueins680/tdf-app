@@ -28005,7 +28005,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
-    "ops/hetzner/guarded-release.py": "ee1d80a045dd32c61583f05ebbbac9622a0499ffba2956d667356b69e2bbcded",
+    "ops/hetzner/guarded-release.py": "d59f941a6f64eed1d913433e106ad80d5e65080524dfd47670a4a63351d09e4d",
     "ops/hetzner/inspect-runtime.py": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
     "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
@@ -28270,7 +28270,7 @@
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
-    "scripts/test-guarded-release.py": "03d7a728a03dde57ef5e7c8b6fad1b2e8f201c0d27c7f441269562144480933f",
+    "scripts/test-guarded-release.py": "98bef5b8c838f31cd9850435cf6aad2053ce3e725d65b2bb32cb355124dd280f",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
@@ -49023,7 +49023,7 @@
     {
       "id": "SURFACE-05424790f9d7fc44",
       "path": "ops/hetzner/guarded-release.py",
-      "sha256": "ee1d80a045dd32c61583f05ebbbac9622a0499ffba2956d667356b69e2bbcded",
+      "sha256": "d59f941a6f64eed1d913433e106ad80d5e65080524dfd47670a4a63351d09e4d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54361,7 +54361,7 @@
     {
       "id": "SURFACE-b3d437c938c87672",
       "path": "scripts/test-guarded-release.py",
-      "sha256": "03d7a728a03dde57ef5e7c8b6fad1b2e8f201c0d27c7f441269562144480933f",
+      "sha256": "98bef5b8c838f31cd9850435cf6aad2053ce3e725d65b2bb32cb355124dd280f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
