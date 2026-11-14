@@ -18882,7 +18882,7 @@
     {
       "id": "SURFACE-b88bd7d333ae2b44",
       "path": "tdf-hq/test/TDF/TicketPaymentGateSpec.hs",
-      "sha256": "79ee5e669a2e4f14adc869ed26d3828bd2ef174ed8fb1472d81a206303a4fbcb",
+      "sha256": "fcca9f3e8d3252d503d51b5de03c2d280792cb1dadfa96878c3ff266fbdbecf3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30521,7 +30521,7 @@
     },
     {
       "path": "formal/system/datafast-merchant-metadata.md",
-      "sha256": "6ec888c25c0630a192fbf5bb0c032f07ace5084cb3857c87e5ec53743a542346",
+      "sha256": "d1f6b8421b962e1f87d7431fd073d23fcfefa0e088f1910bde4b1d9876b9cae4",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31354,7 +31354,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0a6f60eca6dd2aeb4c2b7c246b4f11dbe109de7ba478bb961098ccdec53f07ab",
+      "sha256": "b2757494c70224d82f756cd372d27163bac07b9ce3a9d7c72987844b7a484f47",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

@@ -214,3 +214,10 @@ latest-resource preference and missing-cache refusal; the native concurrent
 storefront case observes an actual PostgreSQL lock waiter and verifies the
 published financial snapshot remains unchanged after reuse. This is a specific
 observed interleaving, not a general exactly-once gateway or concurrency proof.
+
+The existing ticket sales-gate runner retains its handler assertions with the
+new internal argument obtained through an actual WAI/Servant transport probe.
+It does not expose a constructor or synthesize a verified customer IP. Its
+loopback peer has no forwarded assertion, so a fresh gateway request remains
+unavailable regardless of inherited merchant configuration; closed-sales
+refusals must still precede network preflight.
