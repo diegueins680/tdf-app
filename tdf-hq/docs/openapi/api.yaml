@@ -8642,6 +8642,7 @@ paths:
   /directory/admin/claims/{claimId}/status: { $ref: './directory.yaml#/paths/~1directory~1admin~1claims~1{claimId}~1status' }
   /directory/admin/verifications: { $ref: './directory.yaml#/paths/~1directory~1admin~1verifications' }
   /directory/admin/verifications/{verificationId}/status: { $ref: './directory.yaml#/paths/~1directory~1admin~1verifications~1{verificationId}~1status' }
+  /directory/admin/agreements/disputes: { $ref: './directory.yaml#/paths/~1directory~1admin~1agreements~1disputes' }
   /directory/admin/moderation: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation' }
   /directory/admin/moderation/{caseId}/decisions: { $ref: './directory.yaml#/paths/~1directory~1admin~1moderation~1{caseId}~1decisions' }
   /directory/admin/merges: { $ref: './directory.yaml#/paths/~1directory~1admin~1merges' }

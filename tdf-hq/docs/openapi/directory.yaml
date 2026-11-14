@@ -474,6 +474,15 @@ paths:
       parameters: [{ name: verificationId, in: path, required: true, schema: { type: string, format: uuid } }]
       requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StatusRequest' } } } }
       responses: { '200': { description: Independent verification decision } }
+  /directory/admin/agreements/disputes:
+    get:
+      tags: [Music directory administration]
+      operationId: listAgreementDisputes
+      summary: Disputed marketplace agreements waiting for an administrator, oldest dispute first (ADR 0136)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: Disputed agreements with who opened the dispute and why, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MarketplaceAgreement' } } } } }
+        '403': { description: Requires the Admin role and module }
   /directory/admin/moderation:
     get:
       tags: [Music directory administration]
@@ -961,6 +970,7 @@ components:
         depositDueAt: { type: string, format: date-time, nullable: true, description: Deadline to pay the deposit of an agreement settled on the platform (ADR 0136) }
         payments: { type: array, items: { $ref: '#/components/schemas/AgreementPayment' }, description: Charges of the agreement that were not replaced }
         payoutProviders: { type: array, items: { type: string, enum: [payphone, stripe] }, description: Payment providers through which the provider profile can be paid }
+        dispute: { $ref: '#/components/schemas/AgreementDispute' }
     AgreementPayment:
       type: object
       description: One charge of an agreement with its frozen split. amountMinor = platformFeeMinor + processingFeeMinor + providerAmountMinor (ADR 0136).
@@ -979,6 +989,14 @@ components:
         dueAt: { type: string, format: date-time }
         paidAt: { type: string, format: date-time, nullable: true }
         createdAt: { type: string, format: date-time }
+    AgreementDispute:
+      type: object
+      description: Who opened the dispute of an agreement, from which state and why. Present only in the administrator dispute queue (ADR 0136).
+      properties:
+        reason: { type: string, nullable: true }
+        openedBy: { type: string, enum: [buyer, provider, admin], nullable: true }
+        previousStatus: { type: string, nullable: true }
+        openedAt: { type: string, format: date-time, nullable: true }
     AgreementPaymentRequest:
       type: object
       required: [provider]

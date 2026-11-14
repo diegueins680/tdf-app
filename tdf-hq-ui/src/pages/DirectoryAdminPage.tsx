@@ -18,6 +18,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { Directory } from '../api/directory';
+import AgreementDisputesPanel from '../features/marketplace/AgreementDisputesPanel';
 
 type ReviewRecord = Record<string, unknown>;
 type QueueKind = 'claims' | 'verifications' | 'moderation';
@@ -54,6 +55,7 @@ export default function DirectoryAdminPage() {
         <Stack spacing={2}>
           {(selected.data ?? []).map((record) => <ReviewCard key={stringValue(record['id'])} kind={queue} record={record} />)}
         </Stack>
+        <AgreementDisputesPanel />
         <ProfileMergePanel />
       </Stack>
     </Container>

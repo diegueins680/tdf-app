@@ -222,6 +222,7 @@ library
     TDF.Server.EventResearch
     TDF.Server.DDEX
     TDF.Server.Directory
+    TDF.Server.DirectoryAgreementText
     TDF.Server.Merch
     TDF.Server.Reviews
     TDF.Server.MerchReputation
