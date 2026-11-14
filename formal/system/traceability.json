@@ -10385,6 +10385,7 @@
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
@@ -28776,15 +28777,16 @@
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx": "34d38e97a9e6c27509256ce7182b50a883de6942b5038887b2bab8d089821fd4",
     "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx": "6eb367f0c4978e2a7f4a6de724ea863134bdb5124f240821d1c9173ed47bf505",
+    "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx": "b8c4e7e02c7334bc51bc562b07c56ac72805549cfa3ef2c5826b2f0e7655de32",
     "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx": "eb7f1eb13f345b656751be082638b185fc86132af05fca7c2bcd402f505bf38b",
     "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx": "7bbcb643b3c7d4e8384a7e3d697309aae846b8d8b685f753b3c49f4b850e9904",
     "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx": "f35d51716ccd0fb15ab2d115e984a7de5c59a117898a422b9a3cdf2e401f6e4b",
     "tdf-hq-ui/src/features/marketplace/OfferCard.tsx": "2291cb88256a1b77446614e804671d74523b23615be7bfd5264a8dbe46df0c68",
     "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "193e8cdfcb1b6561a98cf19cafd20437114fa54e6d70050347e88c45c085db85",
     "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
-    "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx": "8c30370a4721343216bcb479ddbaf6efb6b0721cab61e33ba590dc25b5832f6c",
+    "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx": "c79a98df646ecf1c975ac23972fc06af6c7f8b9dfe8dbe9540211d6ca1d55fed",
     "tdf-hq-ui/src/features/marketplace/agreements.test.ts": "744aa19c4bfe2232c3090f4f908590197908be95c95ac9b2bd4c0a7044ed5203",
-    "tdf-hq-ui/src/features/marketplace/agreements.ts": "2f9fb2534cb45a2057cc39d92a1f84e0299a79a82372aa7f60c89955a609e1a2",
+    "tdf-hq-ui/src/features/marketplace/agreements.ts": "a24989e84d57b01b99145e147e2aa1116245d36bbf962b82b9256c66f42f85c0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.ts": "fc714335e3d96208fc3ac9f7ec246f94066c4fb744013df330223b515f020ee9",
     "tdf-hq-ui/src/features/marketplace/offers.test.ts": "9d704e2b3595cd1e13300912401d7f3ccdd42a1ef11e3257be5f9c0a9e5e1609",
@@ -28816,8 +28818,8 @@
     "tdf-hq-ui/src/i18n/locales/en.ts": "49154a85f27738ba723dba0c559d834a9a97fa1f1b2e6e47c1994751dd046d03",
     "tdf-hq-ui/src/i18n/locales/es.ts": "725221c145af964391a67eb53d2304830a6bcd456c1ed688f7d1da56c3f81127",
     "tdf-hq-ui/src/i18n/locales/fr.ts": "d319cd470e1e2843ef5af496d917c1d15fbfe44f73cc9fdd7a501318a4ec19c6",
-    "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": "57a17942787728a567d80263c428b33df0f269abd7bd86a2e4fe5e696df26c24",
-    "tdf-hq-ui/src/i18n/locales/marketplace.es.ts": "3588520bc07f7ed3f9c1bb1809bb8c707b8d76754681da55f89fb248a100b7dd",
+    "tdf-hq-ui/src/i18n/locales/marketplace.en.ts": "5a7cce5525e8388e7628c8f01a049d77abe51a6c780776e58facb4450f24c6c3",
+    "tdf-hq-ui/src/i18n/locales/marketplace.es.ts": "f25b169e9dcdf7ede7c3c6017078998a092c87c9b10147e7c4864fbe74dd0440",
     "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts": "e99993b766505ad368038b768dd19f31032e7b4f0854376a10e78eaa7b6acb96",
     "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts": "6500275d794c925824d4fe895a8503f53384e2d48c15f9dacacd4532c9ce085d",
     "tdf-hq-ui/src/i18n/locales/pt.ts": "a85d098abc9c9e1d1a5b035622cb219b0dd3fd56fdcd8d38156800f4567cc0e5",
@@ -28856,8 +28858,8 @@
     "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx": "769a23d6403d4c2cd9d9e31c676e4d9a4174c3057b381f4ca374ceb0d78f0e59",
     "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "cbd2e7e62f3c5f709b74795f43d75df15b7a902ad802fa529750c7145253d081",
     "tdf-hq-ui/src/pages/DatafastReturnPage.tsx": "e4655f18a338cd79919471b1d37caad44f01943101cb45b2d27d40530f8bb5b1",
-    "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
-    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "4d26a24ef65c071d7fadb03d2bfd5752cd66be500b9c283617acd8977b94670d",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
+    "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
     "tdf-hq-ui/src/pages/DirectoryManagePage.test.ts": "b68dae2863db9239158b04f5a6638623980b1eb23204a96c5cefe4512a50f9f3",
     "tdf-hq-ui/src/pages/DirectoryManagePage.tsx": "da3194d624efc791af6152788a87d684b9ff8cb5737fa0574c236497286b2093",
     "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx": "e320f4d8a89ddeb92c3d573429ba9c110a725979d97b9974cd356aaf058ee02b",
@@ -42383,6 +42385,12 @@
       }
     ],
     "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx": [
+      {
+        "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx": [
       {
         "requirement": "MKT-AGREEMENT-PAYMENT-001",
         "relationship": "implementation"
@@ -61951,6 +61959,18 @@
       ]
     },
     {
+      "id": "SURFACE-07e4fb9b8baadb99",
+      "path": "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
+      "sha256": "b8c4e7e02c7334bc51bc562b07c56ac72805549cfa3ef2c5826b2f0e7655de32",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-1b27c584cae1f8d6",
       "path": "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
       "sha256": "eb7f1eb13f345b656751be082638b185fc86132af05fca7c2bcd402f505bf38b",
@@ -62029,7 +62049,7 @@
     {
       "id": "SURFACE-c50428b63aa94e4d",
       "path": "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
-      "sha256": "8c30370a4721343216bcb479ddbaf6efb6b0721cab61e33ba590dc25b5832f6c",
+      "sha256": "c79a98df646ecf1c975ac23972fc06af6c7f8b9dfe8dbe9540211d6ca1d55fed",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62057,7 +62077,7 @@
     {
       "id": "SURFACE-fbfd335398170a3a",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.ts",
-      "sha256": "2f9fb2534cb45a2057cc39d92a1f84e0299a79a82372aa7f60c89955a609e1a2",
+      "sha256": "a24989e84d57b01b99145e147e2aa1116245d36bbf962b82b9256c66f42f85c0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62755,7 +62775,7 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "57a17942787728a567d80263c428b33df0f269abd7bd86a2e4fe5e696df26c24",
+      "sha256": "5a7cce5525e8388e7628c8f01a049d77abe51a6c780776e58facb4450f24c6c3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62775,7 +62795,7 @@
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "3588520bc07f7ed3f9c1bb1809bb8c707b8d76754681da55f89fb248a100b7dd",
+      "sha256": "f25b169e9dcdf7ede7c3c6017078998a092c87c9b10147e7c4864fbe74dd0440",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63564,7 +63584,7 @@
     {
       "id": "SURFACE-bf406241ca9e0491",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
-      "sha256": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
+      "sha256": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63576,7 +63596,7 @@
     {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "4d26a24ef65c071d7fadb03d2bfd5752cd66be500b9c283617acd8977b94670d",
+      "sha256": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86649,7 +86669,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5376579a398fbc31aaa2ba236d22ea6462d7e6e5fcc1ddc976ac54cad46f1c28",
+      "sourceSha256": "5a30a7638831ebd5e99d4441d7b5cc8e96cd0a31732a46adaf4d977409a7c634",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86677,7 +86697,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5376579a398fbc31aaa2ba236d22ea6462d7e6e5fcc1ddc976ac54cad46f1c28",
+      "sourceSha256": "5a30a7638831ebd5e99d4441d7b5cc8e96cd0a31732a46adaf4d977409a7c634",
       "definition": {
         "states": [
           "absent",
@@ -86707,7 +86727,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "5376579a398fbc31aaa2ba236d22ea6462d7e6e5fcc1ddc976ac54cad46f1c28",
+      "sourceSha256": "5a30a7638831ebd5e99d4441d7b5cc8e96cd0a31732a46adaf4d977409a7c634",
       "definition": {
         "export": [
           "queued",

@@ -1221,6 +1221,7 @@
       "tdf-hq-ui/src/features/interactions/model.ts",
       "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
       "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+      "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
@@ -10299,6 +10300,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-07e4fb9b8baadb99",
+      "path": "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
+      "sha256": "b8c4e7e02c7334bc51bc562b07c56ac72805549cfa3ef2c5826b2f0e7655de32",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1b27c584cae1f8d6",
       "path": "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
       "sha256": "eb7f1eb13f345b656751be082638b185fc86132af05fca7c2bcd402f505bf38b",
@@ -10337,7 +10344,7 @@
     {
       "id": "SURFACE-c50428b63aa94e4d",
       "path": "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
-      "sha256": "8c30370a4721343216bcb479ddbaf6efb6b0721cab61e33ba590dc25b5832f6c",
+      "sha256": "c79a98df646ecf1c975ac23972fc06af6c7f8b9dfe8dbe9540211d6ca1d55fed",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10349,7 +10356,7 @@
     {
       "id": "SURFACE-fbfd335398170a3a",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.ts",
-      "sha256": "2f9fb2534cb45a2057cc39d92a1f84e0299a79a82372aa7f60c89955a609e1a2",
+      "sha256": "a24989e84d57b01b99145e147e2aa1116245d36bbf962b82b9256c66f42f85c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10673,13 +10680,13 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "57a17942787728a567d80263c428b33df0f269abd7bd86a2e4fe5e696df26c24",
+      "sha256": "5a7cce5525e8388e7628c8f01a049d77abe51a6c780776e58facb4450f24c6c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "3588520bc07f7ed3f9c1bb1809bb8c707b8d76754681da55f89fb248a100b7dd",
+      "sha256": "f25b169e9dcdf7ede7c3c6017078998a092c87c9b10147e7c4864fbe74dd0440",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11099,13 +11106,13 @@
     {
       "id": "SURFACE-bf406241ca9e0491",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
-      "sha256": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
+      "sha256": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "4d26a24ef65c071d7fadb03d2bfd5752cd66be500b9c283617acd8977b94670d",
+      "sha256": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31305,7 +31312,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5376579a398fbc31aaa2ba236d22ea6462d7e6e5fcc1ddc976ac54cad46f1c28",
+      "sha256": "5a30a7638831ebd5e99d4441d7b5cc8e96cd0a31732a46adaf4d977409a7c634",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

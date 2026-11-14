@@ -10384,6 +10384,7 @@
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
