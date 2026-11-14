@@ -1138,7 +1138,7 @@ createPublicDomoDatafastCheckout rawQuoteId mLookupToken = do
       )
     Nothing -> ServiceStorefront.requestDatafastCheckoutForService
       (dpcCheckout context)
-      (domoReference context) (fromIntegral (dpcAmountMinor context))
+      attempt (fromIntegral (dpcAmountMinor context))
       (dpcCurrency context) (dpcCustomerName context) (dpcCustomerEmail context)
       (dpcCustomerPhone context)
       `catchError` failDomoPaymentAttempt context attempt
@@ -1190,9 +1190,11 @@ confirmPublicDomoDatafastStatus rawQuoteId mLookupToken rawResourcePath = do
             (ServiceStorefront.sdfEnvironment datafast) resultCode
           pending = resultCode == "000.200.000"
       if success then do
-        case ServiceStorefront.validateDatafastSuccessfulPayment
-            (domoReference context) (fromIntegral (dpcAmountMinor context))
-            (dpcCurrency context) providerStatus of
+        validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+          (dpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+          (ServiceStorefront.sdfEntityId datafast) checkoutId
+          (fromIntegral (dpcAmountMinor context)) (dpcCurrency context) providerStatus
+        case validation of
           Left validationMessage -> do
             let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                   >>= either (const Nothing) (Just . fromIntegral)

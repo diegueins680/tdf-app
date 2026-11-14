@@ -25666,14 +25666,17 @@
       "forbiddenTransitions": [
         "API credentials alone imply certified merchant readiness.",
         "Missing creation metadata disables the base configuration used for existing status queries.",
-        "A buyer value changes the HTTP form parameter structure."
+        "A buyer value changes the HTTP form parameter structure.",
+        "An arbitrary response reference, another saved attempt or a missing checkout binding becomes verified payment evidence."
       ],
       "invariants": [
         "Metadata field names and environment checks remain consistent across creation handlers.",
         "Validation diagnostics do not echo configured values.",
         "Free-text buyer name projection never adds or removes a supplied name token; absent name components stay empty without a fictitious fallback.",
         "Dataweb cart quantity times unit cents conserves each stored subtotal and the exact charged total, without floating point or inferred VAT.",
-        "Live product records and client prices never supply or overwrite canonical Dataweb cart lines."
+        "Live product records and client prices never supply or overwrite canonical Dataweb cart lines.",
+        "New Dataweb request references are the persisted creation-attempt UUID, stable on exact replay and distinct for distinct attempts.",
+        "Status verification admits only the exact bound creation-attempt UUID or its saved legacy domain-order reference, with matching checkout, provider resource, environment, merchant, amount and currency; settlement still uses the domain-order binding."
       ],
       "authorization": "Existing customer, merchant, capability and payment-attempt authorization is unchanged; this contract grants no provider activation.",
       "privacy": "Merchant values and customer payloads are not verification receipts; synthetic test values only.",
@@ -25702,10 +25705,11 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "scripts/verify-datafast-cart.py",
         "scripts/test-datafast-cart.sh",
-        "tdf-hq/test/integration/DatafastCart.hs"
+        "tdf-hq/test/integration/DatafastCart.hs",
+        "scripts/verify-datafast-reference.py"
       ],
       "formalModels": [],
-      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately.",
+      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof.",
       "evidence": "Exact-candidate local test logs retained in the operator workspace; public secrets excluded.",
       "status": "specified and implemented",
       "critical": true,
@@ -25723,7 +25727,8 @@
         "Validate merchant metadata before a new provider attempt or checkout request; keep existing status configuration independent of creation metadata.",
         "Project the optional stored ticket buyer_phone to the Datafast payment request without fallback or new collection.",
         "Use one supplied-name projection in shared service and marketplace Datafast request builders, preserving existing multi-component behavior without invented data.",
-        "Project validated ordered canonical USD checkout items through the shared provider form; refuse unqualified line adjustments instead of fabricating a balancing item or tax base."
+        "Project validated ordered canonical USD checkout items through the shared provider form; refuse unqualified line adjustments instead of fabricating a balancing item or tax base.",
+        "Send the creation-attempt UUID as the Dataweb merchantTransactionId across all seven checkout domains, preserving existing checkout reuse and legacy reference verification without changing settlement identities."
       ]
     },
     {

@@ -57,6 +57,7 @@ STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-google-account-name.p
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-checkout-money.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-datafast-cart.py"
 STACK_ROOT="$STACK_ROOT_DIR" sh "$ROOT/scripts/test-datafast-cart.sh"
+STACK_ROOT="$STACK_ROOT_DIR" sh "$ROOT/scripts/test-datafast-cart.sh" --reference-controls
 
 # Exercise the real contact handler and financial overview query against a
 # disposable PostgreSQL database using the executable just built above.

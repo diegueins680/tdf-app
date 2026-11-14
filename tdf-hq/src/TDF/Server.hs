@@ -11080,7 +11080,7 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
       )
     Nothing -> ServiceStorefront.requestDatafastCheckoutForService
       (sbpcCheckout context)
-      (toPathPiece (sbpcBookingKey context))
+      attempt
       (fromIntegral (sbpcDepositMinor context))
       (sbpcCurrency context)
       (sbpcBuyerName context)
@@ -11152,11 +11152,11 @@ confirmPublicBookingDatafastStatus rawBookingId mLookupToken rawResourcePath = d
           pending = resultCode == "000.200.000"
       if success
         then do
-          case ServiceStorefront.validateDatafastSuccessfulPayment
-              (toPathPiece (sbpcBookingKey context))
-              (fromIntegral (sbpcDepositMinor context))
-              (sbpcCurrency context)
-              providerStatus of
+          validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+            (sbpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+            (ServiceStorefront.sdfEntityId datafast) checkoutId
+            (fromIntegral (sbpcDepositMinor context)) (sbpcCurrency context) providerStatus
+          case validation of
             Left validationMessage -> do
               let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                     >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
@@ -17355,7 +17355,7 @@ createDatafastCheckout rawId mIdempotency payload = do
     Nothing ->
       requestDatafastCheckout
         (msccCheckout context)
-        (msccOrderKey context)
+        attempt
         (msccTotalCents context)
         (msccCurrency context)
         (ME.marketplaceOrderBuyerName order)
@@ -17427,10 +17427,6 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
         (ME.marketplaceOrderCurrency order)
         (dfpAmount statusResp)
         (dfpCurrency statusResp)
-    unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey)) $
-      throwError err502
-        { errBody = "Datafast merchant transaction reference does not match this order"
-        }
   paymentId <- either throwError pure (validateOptionalDatafastPaymentIdField (dfpId statusResp))
   resultDescription <- either throwError pure $
     validateOptionalDatafastMetadataField
@@ -17481,6 +17477,19 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
       attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
       if success
         then do
+          validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment checkout
+            checkoutEnvironment (dfEntityId dfEnv)
+            (fromMaybe "" (ME.marketplaceOrderDatafastCheckoutId order))
+            (ME.marketplaceOrderTotalUsdCents order) (ME.marketplaceOrderCurrency order)
+            ServiceStorefront.ServiceDatafastPaymentStatus
+              { ServiceStorefront.sdfpsPaymentId = dfpId statusResp
+              , ServiceStorefront.sdfpsAmount = dfpAmount statusResp
+              , ServiceStorefront.sdfpsCurrency = dfpCurrency statusResp
+              , ServiceStorefront.sdfpsMerchantTransactionId = dfpMerchantTransactionId statusResp
+              , ServiceStorefront.sdfpsResultCode = code
+              }
+          either (\message -> throwError err502
+            { errBody = BL.fromStrict (TE.encodeUtf8 message) }) pure validation
           verified <- liftIO $ flip runSqlPool envPool $
             Checkout.recordVerifiedPaymentOrReconcile Checkout.VerifiedPayment
               { Checkout.vpAttempt = attempt
@@ -17506,7 +17515,10 @@ confirmDatafastPayment mLookupToken mOrderId mResourcePath = do
               ("marketplace-datafast:" <> toPathPiece orderKey) now
             else Checkout.recordPaymentFailure checkout attempt Checkout.ProviderDatafast code
               ("marketplace-datafast:" <> toPathPiece orderKey) now
-    [] -> pure ()
+    [] -> when success $
+      unless (dfpMerchantTransactionId statusResp == Just (toPathPiece orderKey)) $
+        throwError err502
+          { errBody = "Datafast merchant transaction reference does not match this order" }
     _ -> throwError (marketplaceCheckoutInternal
       "Marketplace Datafast runtime lookup was ambiguous")
   let nextStatus
@@ -17839,8 +17851,8 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
   either throwError pure $
     requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
-requestDatafastCheckout :: Checkout.CheckoutReference -> Key ME.MarketplaceOrder -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
-requestDatafastCheckout checkout orderKey totalCents currency name email mPhone = do
+requestDatafastCheckout :: Checkout.CheckoutReference -> Checkout.PaymentAttemptReference -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
+requestDatafastCheckout checkout attempt totalCents currency name email mPhone = do
   dfEnv <- loadDatafastCheckoutEnv
   cartParameters <- ServiceStorefront.loadDatafastCartParameters checkout totalCents currency
   let manager = sharedProviderManager
@@ -17853,7 +17865,7 @@ requestDatafastCheckout checkout orderKey totalCents currency name email mPhone 
         , ("amount", TE.encodeUtf8 amountTxt)
         , ("currency", TE.encodeUtf8 currencyTxt)
         , ("paymentType", "DB")
-        , ("merchantTransactionId", TE.encodeUtf8 (toPathPiece orderKey))
+        , ("merchantTransactionId", TE.encodeUtf8 (Checkout.paymentAttemptReferenceId attempt))
         , ("customer.givenName", TE.encodeUtf8 givenName)
         , ("customer.surname", TE.encodeUtf8 surname)
         , ("customer.email", TE.encodeUtf8 email)

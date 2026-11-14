@@ -1059,7 +1059,7 @@ createPublicCourseDatafastCheckout rawSlug rawRegistrationId mLookupToken = do
       )
     Nothing -> ServiceStorefront.requestDatafastCheckoutForService
       (cpcCheckout context)
-      (registrationReference context)
+      attempt
       (fromIntegral (cpcDueNowMinor context))
       (cpcCurrency context)
       (cpcBuyerName context)
@@ -1133,9 +1133,11 @@ confirmPublicCourseDatafastStatus rawSlug rawRegistrationId mLookupToken rawReso
           orderReference = registrationReference context
       if success
         then do
-          case ServiceStorefront.validateDatafastSuccessfulPayment
-              orderReference (fromIntegral (cpcDueNowMinor context))
-              (cpcCurrency context) providerStatus of
+          validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+            (cpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+            (ServiceStorefront.sdfEntityId datafast) checkoutId
+            (fromIntegral (cpcDueNowMinor context)) (cpcCurrency context) providerStatus
+          case validation of
             Left validationMessage -> do
               let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                     >>= either (const Nothing) Just . ServiceStorefront.parseDatafastCents
