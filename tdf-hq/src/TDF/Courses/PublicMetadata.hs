@@ -12,6 +12,7 @@ module TDF.Courses.PublicMetadata
   , validateCoursePublicUrlField
   , sanitizeStoredCoursePublicUrl
   , isInternationalWhatsappCtaNumber
+  , cleanOptional
   ) where
 
 import Control.Applicative ((<|>))

@@ -69,6 +69,7 @@ library
     TDF.Contracts.API
     TDF.Contracts.Server
     TDF.Contracts.Types
+    TDF.Courses.Metadata
     TDF.Courses.Production
     TDF.Courses.PublicMetadata
     TDF.PublicUrl
@@ -137,6 +138,7 @@ library
     TDF.DTO.EventResearchDTO
     TDF.DTO.SocialDiscoveryDTO
     TDF.DTO.SocialSyncDTO
+    TDF.DTO.TicketPaymentReceipt
     TDF.Distribution.StateMachine
     TDF.Email
     TDF.Email.Headers
@@ -191,6 +193,7 @@ library
     TDF.API.RecordsIngestion
     TDF.SocialEventLifecycle
     TDF.Services.EventLogisticsRoutes
+    TDF.Services.LlmChat
     TDF.Services.Stripe
     TDF.RagStore
     TDF.Reputation
