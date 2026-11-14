@@ -1288,6 +1288,11 @@
       "id": "2026-11-12_marketplace_agreement_payments",
       "path": "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
       "introducedBy": "26c83d9e6525d859b0da0bebf959ad6d1c806159"
+    },
+    {
+      "id": "2026-11-14_latam_venue_discovery_sources",
+      "path": "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql",
+      "introducedBy": "9cacfd762b5e332805dcc45d2cb412a7f16a2469"
     }
   ]
 }
