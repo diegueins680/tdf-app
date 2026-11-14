@@ -6656,9 +6656,62 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Offers received on a classified (author only), sortable for comparison */
         get: operations["listClassifiedApplications"];
         put?: never;
+        /** Submit an offer (initial negotiation round) on a classified */
         post: operations["createClassifiedApplication"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Offers made through profiles the caller manages (ADR 0132) */
+        get: operations["listMyApplications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/applications/{applicationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One offer with its full negotiation chain (participants and admins) */
+        get: operations["getClassifiedApplication"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/applications/{applicationId}/counter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a counter-offer round from the author or the offerer (ADR 0132) */
+        post: operations["counterClassifiedApplication"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6679,6 +6732,112 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["transitionClassifiedApplication"];
+        trace?: never;
+    };
+    "/directory/agreements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Agreements where the caller manages the buyer or the provider profile (ADR 0135) */
+        get: operations["listMyAgreements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/agreements/{agreementId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One agreement (participants and admins) */
+        get: operations["getAgreement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/agreements/{agreementId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Start or complete or cancel or dispute an agreement (ADR 0135) */
+        patch: operations["transitionAgreement"];
+        trace?: never;
+    };
+    "/directory/agreements/{agreementId}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The buyer starts the deposit or balance charge the agreement is waiting for (ADR 0136)
+         * @description Freezes the split of the charge and creates a canonical checkout of domain marketplace_agreement. The lookup token is returned only here; asking again replaces a charge that has no payment attempt in flight.
+         */
+        post: operations["createAgreementPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/payout-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payout accounts of the profiles the caller manages (ADR 0136) */
+        get: operations["listPayoutAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{profileId}/payout-accounts/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Declare where a profile is paid for its agreements (ADR 0136) */
+        put: operations["savePayoutAccount"];
+        post?: never;
+        /** Stop using a payout account for new agreements and charges (ADR 0136) */
+        delete: operations["disablePayoutAccount"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/directory/invitations": {
@@ -15976,6 +16135,11 @@ export interface components {
                 relationship: components["schemas"]["SocialV2State"];
             }[];
         };
+        /**
+         * @description seeking = busco (demand); offering = ofrezco (supply)
+         * @enum {string}
+         */
+        ClassifiedIntent: "seeking" | "offering";
         /** @enum {string} */
         DirectoryEntityType: "profile" | "classified" | "event" | "venue";
         /** @description Safe public location; exact residential address and private coordinates are structurally absent. */
@@ -16025,6 +16189,11 @@ export interface components {
             effectiveAt?: string | null;
             /** Format: date-time */
             expiresAt?: string | null;
+            /**
+             * @description Present on classifieds (ADR 0132)
+             * @enum {string|null}
+             */
+            intent?: "seeking" | "offering" | null;
             /** @description Present on listings derived automatically from a public artist profile; links back to that canonical profile. */
             sourceProfile?: {
                 /** Format: uuid */
@@ -16221,6 +16390,35 @@ export interface components {
             /** Format: uuid */
             nextCursor?: string | null;
         };
+        /**
+         * @description open: offers only; suggested: reference price, counters allowed; fixed: offers must accept the exact price
+         * @enum {string}
+         */
+        PriceMode: "open" | "suggested" | "fixed";
+        /** @description Structured terms proposed or agreed; free-form keys allowed, these are the known ones. */
+        OfferTerms: {
+            durationMinutes?: number;
+            capacity?: number;
+            equipmentProvided?: string;
+            equipmentRequired?: string;
+            /** @description Textual place (never an exact private address) */
+            placeLabel?: string;
+            timezone?: string;
+            paymentNotes?: string;
+            recurrence?: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description Anonymous aggregate visible to everyone; the range appears only with at least three offers (I20). */
+        OfferStats: {
+            count: number;
+            /** Format: int64 */
+            minMinor?: number | null;
+            /** Format: int64 */
+            maxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+        };
         /** @description Published, current, moderated classified. */
         PublicClassified: {
             /** Format: uuid */
@@ -16256,6 +16454,14 @@ export interface components {
             startsAt?: string | null;
             /** Format: date-time */
             endsAt?: string | null;
+            intent?: components["schemas"]["ClassifiedIntent"];
+            priceMode?: components["schemas"]["PriceMode"];
+            slots?: number;
+            slotsRemaining?: number;
+            /** Format: date-time */
+            offerDeadlineAt?: string | null;
+            terms?: components["schemas"]["OfferTerms"];
+            offerStats?: components["schemas"]["OfferStats"];
             /**
              * Format: date-time
              * @description Null for listings derived from artist profiles, which follow the profile lifecycle instead of expiring
@@ -16473,7 +16679,21 @@ export interface components {
         StatusRequest: {
             status: string;
             reason?: string;
+            /**
+             * Format: int64
+             * @description Optimistic concurrency: the entity version the caller decided on; the transition is refused with 409 when the entity has moved on since (offers)
+             */
+            expectedVersion?: number;
         };
+        OfferBudget: {
+            /** Format: int64 */
+            minMinor?: number | null;
+            /** Format: int64 */
+            maxMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            negotiable?: boolean;
+        } | null;
         ManagedClassified: {
             /** Format: uuid */
             id: string;
@@ -16492,6 +16712,15 @@ export interface components {
             expiresAt?: string | null;
             /** Format: int64 */
             version: number;
+            intent: components["schemas"]["ClassifiedIntent"];
+            slots: number;
+            slotsRemaining: number;
+            priceMode: components["schemas"]["PriceMode"];
+            /** Format: date-time */
+            offerDeadlineAt?: string | null;
+            budget?: components["schemas"]["OfferBudget"];
+            offerCount: number;
+            openOfferCount: number;
         };
         ClassifiedCreate: {
             /** Format: uuid */
@@ -16530,11 +16759,118 @@ export interface components {
             serviceAdId?: number;
             /** Format: date-time */
             expiresAt?: string;
+            /** @description ADR 0132: how many offers may be accepted (default 1) */
+            slots?: number;
+            priceMode?: components["schemas"]["PriceMode"];
+            /**
+             * Format: date-time
+             * @description Last moment to submit offers; defaults to expiresAt
+             */
+            offerDeadlineAt?: string;
+            terms?: components["schemas"]["OfferTerms"];
         };
-        /** @description Private to participants and authorized admins */
+        OfferReputation: {
+            ratingAvg?: number | null;
+            ratingCount?: number;
+            completedCount?: number;
+        } | null;
+        OfferRound: {
+            roundNumber: number;
+            /** @enum {string} */
+            actorRole: "applicant" | "author";
+            /** @enum {string} */
+            kind: "initial" | "counter" | "accept";
+            /** Format: int64 */
+            amountMinor?: number | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            terms?: components["schemas"]["OfferTerms"];
+            message?: string | null;
+            /** Format: date-time */
+            expiresAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Private to participants and authorized admins. An offer with its current negotiation state; rounds are included on every offer endpoint. */
         ClassifiedApplication: {
-            [key: string]: unknown;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            classifiedId: string;
+            classified?: {
+                /** Format: uuid */
+                id?: string;
+                /** Format: uuid */
+                authorProfileId?: string;
+                title?: string;
+                slug?: string;
+                status?: string;
+                priceMode?: components["schemas"]["PriceMode"];
+                slots?: number;
+                slotsRemaining?: number;
+                /** Format: date-time */
+                offerDeadlineAt?: string | null;
+                budget?: components["schemas"]["OfferBudget"];
+            } & {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            applicantProfileId: string;
+            applicantProfile: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                slug: string;
+                kind?: string;
+            };
+            message: string;
+            portfolio?: {
+                [key: string]: unknown;
+            }[];
+            availability?: string | null;
+            /** Format: uuid */
+            currencyId?: string | null;
+            /**
+             * Format: int64
+             * @description Initial offered amount
+             */
+            proposedAmountMinor?: number | null;
+            /**
+             * Format: int64
+             * @description Amount of the latest round
+             */
+            currentAmountMinor?: number | null;
+            /** Format: int64 */
+            acceptedAmountMinor?: number | null;
+            currentRound: number;
+            /** @enum {string} */
+            lastActorRole: "applicant" | "author";
+            terms?: components["schemas"]["OfferTerms"];
+            /** Format: date-time */
+            offerExpiresAt?: string | null;
+            /** @enum {string} */
+            status: "submitted" | "viewed" | "shortlisted" | "countered_by_author" | "countered_by_applicant" | "accepted" | "rejected" | "withdrawn" | "expired" | "conversation_open" | "converted";
+            /** @enum {string|null} */
+            rejectionReason?: "author_decision" | "slots_filled" | "classified_closed" | null;
+            /** @enum {string} */
+            participantRole: "author" | "applicant" | "admin";
+            reputation?: components["schemas"]["OfferReputation"];
+            rounds?: components["schemas"]["OfferRound"][];
+            /** Format: date-time */
+            submittedAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /**
+             * Format: uuid
+             * @description Agreement created when this offer was accepted (ADR 0135)
+             */
+            agreementId?: string | null;
+            /** Format: date-time */
+            acceptedAt?: string | null;
+            /** Format: int64 */
+            version: number;
         };
+        /** @description An offer on a classified. amountMinor is the offered price (proposedAmountMinor is its legacy alias and still accepted). */
         ApplicationCreate: {
             /** Format: uuid */
             applicantProfileId: string;
@@ -16544,9 +16880,186 @@ export interface components {
             }[];
             availability?: string;
             /** Format: int64 */
+            amountMinor?: number;
+            /**
+             * Format: int64
+             * @deprecated
+             */
             proposedAmountMinor?: number;
             /** Format: uuid */
             currencyId?: string;
+            terms?: components["schemas"]["OfferTerms"];
+            /**
+             * Format: date-time
+             * @description Offer validity; defaults to 7 days, capped by the classified offer deadline
+             */
+            expiresAt?: string;
+        };
+        OfferCounterRequest: {
+            /** Format: int64 */
+            amountMinor: number;
+            /** Format: uuid */
+            currencyId: string;
+            terms?: components["schemas"]["OfferTerms"];
+            message?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+        };
+        AgreementProfile: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        /** @description One charge of an agreement with its frozen split. amountMinor = platformFeeMinor + processingFeeMinor + providerAmountMinor (ADR 0136). */
+        AgreementPayment: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "deposit" | "balance";
+            /** @enum {string} */
+            provider: "payphone" | "stripe" | "datafast";
+            /** @enum {string} */
+            status: "pending" | "paid" | "expired" | "cancelled";
+            /** Format: int64 */
+            amountMinor: number;
+            currency: string;
+            /**
+             * Format: int64
+             * @description TDF commission taken from this charge
+             */
+            platformFeeMinor: number;
+            /**
+             * Format: int64
+             * @description Estimated payment processor fee
+             */
+            processingFeeMinor: number;
+            /** @enum {string} */
+            processingFeePayer: "provider" | "platform";
+            /**
+             * Format: int64
+             * @description Amount sent to the service provider
+             */
+            providerAmountMinor: number;
+            /** Format: date-time */
+            dueAt: string;
+            /** Format: date-time */
+            paidAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Private to its two parties and authorized admins. Amounts and terms are frozen when the offer is accepted (ADR 0135). */
+        MarketplaceAgreement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            applicationId: string;
+            classified: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                slug: string;
+            };
+            buyerProfile: components["schemas"]["AgreementProfile"];
+            providerProfile: components["schemas"]["AgreementProfile"];
+            /** Format: int64 */
+            amountMinor: number;
+            /** Format: uuid */
+            currencyId: string;
+            commissionBps: number;
+            /** Format: int64 */
+            commissionMinor: number;
+            /**
+             * Format: int64
+             * @description Amount minus the TDF commission
+             */
+            providerNetMinor: number;
+            depositBps: number;
+            /** Format: int64 */
+            depositMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            terms: components["schemas"]["OfferTerms"];
+            cancellationPolicy?: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            settlementMode: "off_platform" | "platform";
+            /** @enum {string} */
+            status: "pending_deposit" | "confirmed" | "in_progress" | "balance_due" | "completed" | "cancelled" | "disputed" | "expired";
+            /** @enum {string} */
+            participantRole: "buyer" | "provider" | "admin";
+            /** Format: date-time */
+            startsAt?: string | null;
+            /** Format: date-time */
+            endsAt?: string | null;
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
+            cancelledAt?: string | null;
+            cancellationReason?: string | null;
+            /**
+             * Format: uuid
+             * @description Verified interaction that makes reviews eligible once the agreement is completed
+             */
+            interactionId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version: number;
+            /**
+             * Format: date-time
+             * @description Deadline to pay the deposit of an agreement settled on the platform (ADR 0136)
+             */
+            depositDueAt?: string | null;
+            /** @description Charges of the agreement that were not replaced */
+            payments?: components["schemas"]["AgreementPayment"][];
+            /** @description Payment providers through which the provider profile can be paid */
+            payoutProviders?: ("payphone" | "stripe")[];
+        };
+        AgreementPaymentRequest: {
+            /** @enum {string} */
+            provider: "payphone" | "stripe" | "datafast";
+        };
+        AgreementPaymentCheckout: {
+            agreement: components["schemas"]["MarketplaceAgreement"];
+            /** Format: uuid */
+            paymentId: string;
+            /** Format: uuid */
+            checkoutId: string;
+            /** @description Secret needed to open a payment session on the checkout; returned only once */
+            lookupToken: string;
+            /** @enum {string} */
+            provider: "payphone" | "stripe" | "datafast";
+        };
+        PayoutAccount: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            profileId: string;
+            profileName: string;
+            /** @enum {string} */
+            provider: "payphone" | "stripe";
+            /** @enum {string} */
+            identifierType: "identification" | "phone" | "account";
+            /** @description Only the last four characters of the recipient are shown */
+            identifierMasked: string;
+            /** @enum {string} */
+            status: "pending" | "ready" | "disabled";
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: int64 */
+            version: number;
+        };
+        PayoutAccountRequest: {
+            /** @enum {string} */
+            identifierType: "identification" | "phone";
+            /** @description Cédula (10 digits), RUC (13 digits) or a phone in international format */
+            identifier: string;
         };
         DirectoryClassifiedReference: {
             /** Format: uuid */
@@ -32991,6 +33504,8 @@ export interface operations {
                 q?: components["parameters"]["SearchQuery"];
                 entityType?: "profile" | "artist" | "classified" | "event" | "venue";
                 profileKind?: "person" | "artist" | "band" | "project";
+                /** @description ADR 0132: restricts results to classifieds whose category intent is seeking (busco) or offering (ofrezco) */
+                intent?: components["schemas"]["ClassifiedIntent"];
                 cityId?: string;
                 /** @description Consented ephemeral search latitude */
                 latitude?: number;
@@ -33412,7 +33927,9 @@ export interface operations {
     };
     listClassifiedApplications: {
         parameters: {
-            query?: never;
+            query?: {
+                sort?: "recent" | "price_asc" | "price_desc" | "reputation";
+            };
             header?: never;
             path: {
                 classifiedId: components["parameters"]["ClassifiedId"];
@@ -33421,7 +33938,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Private participant-scoped applications */
+            /** @description Private participant-scoped offers with their negotiation state and the offerer's reputation */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -33449,7 +33966,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Idempotent application */
+            /** @description Idempotent offer */
             201: {
                 headers: {
                     [name: string]: unknown;
@@ -33457,6 +33974,99 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ClassifiedApplication"];
                 };
+            };
+            /** @description No slot left, offer deadline passed, fixed price not matched, derived listing, or an active offer already exists for this profile */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyApplications: {
+        parameters: {
+            query?: {
+                status?: "open" | "accepted" | "closed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Offers where the caller is the offerer, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"][];
+                };
+            };
+        };
+    };
+    getClassifiedApplication: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Offer detail with rounds */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"];
+                };
+            };
+            /** @description Not a participant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    counterClassifiedApplication: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["parameters-IdempotencyKey"];
+            };
+            path: {
+                applicationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferCounterRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated offer with the new round */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassifiedApplication"];
+                };
+            };
+            /** @description Not this participant's turn, offer closed or expired, fixed-price classified, or round limit reached */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -33477,6 +34087,249 @@ export interface operations {
         responses: {
             /** @description Participant-authorized transition */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyAgreements: {
+        parameters: {
+            query?: {
+                status?: "open" | "closed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Agreements of the caller, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"][];
+                };
+            };
+        };
+    };
+    getAgreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Agreement detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"];
+                };
+            };
+            /** @description Not a participant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    transitionAgreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated agreement */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"];
+                };
+            };
+            /** @description Transition not permitted for this participant, or the agreement changed since it was displayed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The marketplace.agreements gate is off in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createAgreementPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgreementPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description Charge and checkout created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgreementPaymentCheckout"];
+                };
+            };
+            /** @description Only the buyer pays an agreement */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No payment is due, the deadline passed, a payment is in progress, or the provider cannot be paid with this payment provider */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The marketplace.agreement_payments gate is off in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPayoutAccounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payout accounts with the recipient masked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutAccount"][];
+                };
+            };
+        };
+    };
+    savePayoutAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+                provider: "payphone" | "stripe";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Saved payout account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutAccount"];
+                };
+            };
+            /** @description The identifier is not a valid identification or phone */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The caller does not manage this profile */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This payment provider does not accept payout accounts yet */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The marketplace.agreement_payments gate is off in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    disablePayoutAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+                provider: "payphone" | "stripe";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disabled payout account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutAccount"];
+                };
+            };
+            /** @description The caller does not manage this profile or it has no such account */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

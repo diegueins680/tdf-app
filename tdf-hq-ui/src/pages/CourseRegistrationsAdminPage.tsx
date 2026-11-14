@@ -245,8 +245,8 @@ const systemEmailHistoryHelperText = 'Historial persistente de correos del siste
 const emptySystemEmailHistoryMessage = 'Todavía no hay correos del sistema registrados para esta inscripción. Cuando se envíe el primero, aparecerá aquí.';
 const emptyFollowUpAlertMessage = 'Aún no hay seguimiento manual. Documenta llamadas, mensajes o próximos pasos desde aquí. Los cambios de estado y los comprobantes nuevos también quedarán registrados aquí.';
 const markPaidEmptyFollowUpHelperText = 'Agrega seguimiento solo si necesitas dejar contexto manual aparte del comprobante o del cambio de estado.';
-const firstFollowUpComposerHelpText = 'Este formulario ya está abierto para registrar el primer seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
-const followUpComposerHelpText = 'Este formulario ya está abierto para registrar seguimiento. Escribe la nota y aparecerá Guardar seguimiento.';
+const firstFollowUpComposerHelpText = 'Escribe una nota para registrar el primer seguimiento.';
+const followUpComposerHelpText = 'Escribe una nota para registrar el seguimiento.';
 const editingFollowUpComposerHelpText = 'Edita el seguimiento y guarda los cambios para actualizar el historial.';
 const markPaidOptionalFollowUpActionLabel = 'Agregar seguimiento';
 const markPaidOptionalFollowUpAccessibleLabel = 'Agregar seguimiento opcional';
@@ -7186,16 +7186,14 @@ export default function CourseRegistrationsAdminPage() {
     && !hasSavedNotes;
   const showEmptyNotesState = !showNotesComposer && !hasSavedNotes;
   const showEditNotesAction = !hasOpenDossierComposer && hasSavedNotes;
-  const showNotesSaveAction = hasNotesDraftChanges;
   const notesComposerIdleHelperText = hasSavedNotes
-    ? 'Edita el contenido para mostrar Guardar notas.'
-    : 'Escribe una nota para mostrar Guardar notas.';
+    ? 'Edita el contenido para habilitar el guardado.'
+    : 'Escribe una nota para habilitar el guardado.';
   const emptyNotesSectionHelperText = showCompactMarkPaidNotesState
     ? markPaidEmptyNotesHelperText
     : emptyNotesHelperText;
   const showReceiptCountChip = receipts.length > 1;
   const canSubmitReceipt = Boolean(trimToNull(receiptForm.fileUrl));
-  const showReceiptSaveAction = canSubmitReceipt || receiptForm.editingId != null;
   const hasReceiptMetadataDraft = Boolean(trimToNull(receiptForm.fileName)) || Boolean(trimToNull(receiptForm.notes));
   const receiptSectionHelpText = isOptionalPaymentEvidenceComposer
     ? markPaidEvidenceComposerHelpText
@@ -7263,7 +7261,6 @@ export default function CourseRegistrationsAdminPage() {
   const showAddFollowUpAction = !hasOpenDossierComposer && followUps.length > 0;
   const isCreatingFirstFollowUp = showFollowUpComposer && followUpForm.editingId == null && followUps.length === 0;
   const canSubmitFollowUp = Boolean(trimToNull(followUpForm.notes));
-  const showFollowUpSaveAction = canSubmitFollowUp || followUpForm.editingId != null;
   const showCompactMarkPaidFollowUpState = selectedDossier?.intent === 'markPaid'
     && followUps.length === 0
     && !showFollowUpComposer;
@@ -7427,17 +7424,15 @@ export default function CourseRegistrationsAdminPage() {
               />
               <Stack spacing={0.75} alignItems="flex-start">
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {showNotesSaveAction && (
-                    <Button
-                      variant="contained"
-                      size="small"
-                      startIcon={<SaveIcon />}
-                      onClick={handleSaveNotes}
-                      disabled={updateNotesMutation.isPending}
-                    >
-                      Guardar notas
-                    </Button>
-                  )}
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSaveNotes}
+                    disabled={!hasNotesDraftChanges || updateNotesMutation.isPending}
+                  >
+                    Guardar notas
+                  </Button>
                   <Button variant="text" size="small" onClick={handleHideNotesComposer}>
                     Cancelar notas
                   </Button>
@@ -7610,16 +7605,14 @@ export default function CourseRegistrationsAdminPage() {
                       />
                     </Stack>
                   </Collapse>
-                  <Stack direction="row" spacing={1}>
-                    {showReceiptSaveAction && (
-                      <Button
-                        variant="contained"
-                        onClick={handleSubmitReceipt}
-                        disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending || !canSubmitReceipt}
-                      >
-                        {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
-                      </Button>
-                    )}
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Button
+                      variant="contained"
+                      onClick={handleSubmitReceipt}
+                      disabled={createReceiptMutation.isPending || updateReceiptMutation.isPending || !canSubmitReceipt}
+                    >
+                      {receiptForm.editingId == null ? 'Guardar comprobante' : 'Actualizar comprobante'}
+                    </Button>
                     <Button variant="text" onClick={handleCancelReceiptComposer}>
                       {receiptCancelLabel}
                     </Button>
@@ -9486,16 +9479,14 @@ export default function CourseRegistrationsAdminPage() {
                                   )}
                                 </Stack>
                               </Collapse>
-                              <Stack direction="row" spacing={1}>
-                                {showFollowUpSaveAction && (
-                                  <Button
-                                    variant="contained"
-                                    onClick={handleSubmitFollowUp}
-                                    disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending || !canSubmitFollowUp}
-                                  >
-                                    {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
-                                  </Button>
-                                )}
+                              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                                <Button
+                                  variant="contained"
+                                  onClick={handleSubmitFollowUp}
+                                  disabled={createFollowUpMutation.isPending || updateFollowUpMutation.isPending || !canSubmitFollowUp}
+                                >
+                                  {followUpForm.editingId == null ? 'Guardar seguimiento' : 'Actualizar seguimiento'}
+                                </Button>
                                 <Button variant="text" onClick={resetFollowUpComposer}>
                                   {followUpForm.editingId == null ? 'Cancelar seguimiento' : 'Cancelar edición de seguimiento'}
                                 </Button>

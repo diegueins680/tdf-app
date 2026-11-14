@@ -8,6 +8,8 @@
 module TDF.Commerce.ProviderReconciliation
   ( ReconciliationDisposition(..)
   , ProviderReconciliationResult(..)
+  , recordDeadLetterReview
+  , deadLetterReviewExceptionType
   , processProviderEventIO
   , processProviderEventWith
   , applyQueryResult
@@ -54,6 +56,10 @@ data ProviderReconciliationResult = ProviderReconciliationResult
   , prrSummary     :: Text
   , prrCheckoutId  :: Maybe Text
   , prrAttemptId   :: Maybe Text
+    -- | The bound payment of an outcome that recorded no reconciliation
+    -- exception of its own. If the inbox event ends as a dead letter the
+    -- worker records one from it (PAY-CAPTURE-RECON-001).
+  , prrReview      :: Maybe Execution.BoundProviderPayment
   } deriving (Eq, Show)
 
 processProviderEventIO
@@ -97,7 +103,12 @@ processProviderEventWith fetch appliedAt env@Env{envPool} payload now =
                   case boundResult of
                     Left _ -> pure (retry
                       "Provider callback has no available immutable binding yet" Nothing)
-                    Right payment -> queryAndApply fetch appliedAt env rpaAdapter payload payment now
+                    -- Once the event is bound, a failure of the query or of its
+                    -- application keeps the binding: an event that runs out of
+                    -- retries this way still leaves its review exception.
+                    Right payment ->
+                      either (const (retry "Hosted provider reconciliation failed" (Just payment))) id
+                        <$> tryAny (queryAndApply fetch appliedAt env rpaAdapter payload payment now)
 
 queryAndApply
   :: (AdapterRequest -> IO (Either AdapterTransportError A.Value))
@@ -119,14 +130,21 @@ queryAndApply fetch appliedAt Env{envPool} adapter payload payment now = do
       case queried of
         Left QueryBindingMismatch -> do
           runSqlPool (recordQueryMismatch payment observedAt) envPool
+          -- The mismatch exception was just recorded; no second one is needed.
           pure (deadLetter "Authoritative query did not match its immutable binding" (Just payment))
+            { prrReview = Nothing }
         Left QueryUnsupported -> pure (deadLetter "Stored binding cannot form a safe query" (Just payment))
         Left QueryUnavailable -> pure (retry "Authoritative provider query is temporarily unavailable" (Just payment))
         Right result -> do
           applied <- runSqlPool (applyQueryResult payment result
             (ProviderEvent.providerEventReferenceId (ProviderEvent.pepReference payload)) observedAt) envPool
+          -- A committed dead letter recorded its own exception and a processed
+          -- event needs none. A refused application, and a payment the provider
+          -- still reports as pending or unknown, keep the binding: if the event
+          -- runs out of retries the worker records the review from it.
           pure $ either (\problem -> retry problem (Just payment))
-            (\disposition -> resultFor disposition (Just payment)) applied
+            (\disposition -> (resultFor disposition (Just payment))
+              { prrReview = if disposition == ReconciliationRetry then Just payment else Nothing }) applied
 
 data QueryFailure = QueryUnsupported | QueryUnavailable | QueryBindingMismatch
 
@@ -525,7 +543,45 @@ resultFor disposition payment = ProviderReconciliationResult
       ReconciliationDeadLetter -> "Provider event requires operator review"
   , prrCheckoutId = Checkout.checkoutReferenceId . Execution.bppCheckout <$> payment
   , prrAttemptId = Checkout.paymentAttemptReferenceId . Execution.bppAttempt <$> payment
+  , prrReview = payment
   }
+
+deadLetterReviewExceptionType :: Text
+deadLetterReviewExceptionType = "provider_event_dead_letter"
+
+-- | Leave an open reconciliation exception for a hosted-provider event that
+-- ended as a dead letter while bound to a real payment: the provider may hold
+-- captured money that no checkout admitted. It is written only if the inbox
+-- row is a dead letter at this attempt, so a former lease holder whose late
+-- write was fenced out records nothing; the open-exception fingerprint keeps
+-- replays to one row.
+recordDeadLetterReview
+  :: ProviderEvent.ProviderEventReference
+  -> Int
+  -> Execution.BoundProviderPayment
+  -> UTCTime
+  -> SqlPersistT IO ()
+recordDeadLetterReview eventRef attemptCount payment now = do
+  deadLettered <- rawSql
+    "SELECT 1 FROM commerce_provider_event_inbox\
+    \ WHERE id = ?::uuid AND processing_status = 'dead_letter' AND attempt_count = ?"
+    [ PersistText (ProviderEvent.providerEventReferenceId eventRef)
+    , PersistInt64 (fromIntegral attemptCount)
+    ]
+  case (deadLettered :: [Single Int]) of
+    [] -> pure ()
+    _ ->
+      Checkout.recordReconciliationException
+        (Execution.bppProvider payment)
+        (Execution.bppEnvironment payment)
+        (Execution.bppMerchantRef payment)
+        deadLetterReviewExceptionType
+        (Checkout.checkoutReferenceId (Execution.bppCheckout payment))
+        (Execution.bppProviderResourceId payment)
+        (Execution.bppAmountMinor payment)
+        Nothing
+        (Execution.bppCurrency payment)
+        now
 
 retry :: Text -> Maybe Execution.BoundProviderPayment -> ProviderReconciliationResult
 retry summary payment = (resultFor ReconciliationRetry payment) { prrSummary = summary }

@@ -25,22 +25,55 @@ state_machines:
       pending_moderation: [published, rejected, withdrawn]
       published: [paused, filled, expired, withdrawn, moderated]
       paused: [published, filled, expired, withdrawn, moderated]
-      filled: []
+      filled: [published]
       expired: [published, withdrawn]
       withdrawn: []
       rejected: [draft, withdrawn]
       moderated: [draft, withdrawn]
   application:
+    # ADR 0134: an application is a negotiable offer. Counter states alternate
+    # actors and are entered only through the counter endpoint, which records
+    # a round; expired is a system closure (offer_expires_at elapsed).
     initial: submitted
     transitions:
-      submitted: [viewed, shortlisted, accepted, rejected, withdrawn]
-      viewed: [shortlisted, accepted, rejected, withdrawn]
-      shortlisted: [accepted, rejected, withdrawn]
+      submitted: [viewed, shortlisted, countered_by_author, accepted, rejected, withdrawn, expired]
+      viewed: [shortlisted, countered_by_author, accepted, rejected, withdrawn, expired]
+      shortlisted: [countered_by_author, accepted, rejected, withdrawn, expired]
+      countered_by_author: [countered_by_applicant, accepted, rejected, withdrawn, expired]
+      countered_by_applicant: [countered_by_author, accepted, rejected, withdrawn, expired]
       accepted: [conversation_open, converted, withdrawn]
       conversation_open: [converted, withdrawn]
       converted: []
       rejected: []
       withdrawn: []
+      expired: []
+  agreement:
+    # ADR 0135: created when an offer with an amount is accepted and the
+    # marketplace.agreements gate is on. pending_deposit, balance_due and
+    # expired belong to platform settlement (checkout) and are never entered
+    # by a participant request; off-platform agreements start at confirmed.
+    # ADR 0136: with the marketplace.agreement_payments gate on and a ready
+    # payout account, the agreement starts at pending_deposit instead and only
+    # verified payments move it out of pending_deposit and balance_due.
+    initial: confirmed
+    transitions:
+      pending_deposit: [confirmed, cancelled, expired]
+      confirmed: [in_progress, balance_due, completed, cancelled, disputed]
+      in_progress: [balance_due, completed, cancelled, disputed]
+      balance_due: [completed, disputed]
+      disputed: [completed, cancelled]
+      completed: []
+      cancelled: []
+      expired: []
+  agreement_payment:
+    # ADR 0136: one charge (deposit or balance) of an agreement settled on the
+    # platform. Only reconciliation with verified provider evidence pays it.
+    initial: pending
+    transitions:
+      pending: [paid, expired, cancelled]
+      paid: []
+      expired: []
+      cancelled: []
   invitation:
     initial: pending
     transitions:
@@ -130,6 +163,33 @@ invariants:
   I14_merge_preserves_references:
     statement: Merge records source->target, preserves immutable child references and source slug resolution, records before/after counts and audit, and never deletes historical rows.
     enforcement: locked idempotent merge transaction, canonical resolution view and reconciliation-count integration test
+  I18_alternating_negotiation:
+    statement: Counter-offers alternate strictly between the author and the offerer, occupy at most rounds 2 to 9, and an acceptance (always recorded, at most round 10) closes the chain; counter states are unreachable through the generic status endpoint.
+    enforcement: TDF.Directory.Policy (counterAllowedFor, acceptAllowedFor, participantTransitionAllowed, negotiationRoundsValid), classified_offer_round unique (application_id, round_number) and property tests (ADR 0134)
+  I19_slot_accounting:
+    statement: Accepting an offer consumes exactly one slot in the same transaction; slots_remaining is never negative nor above slots; when it reaches zero the classified is filled and every open offer is rejected with reason slots_filled; withdrawing an accepted offer releases one slot.
+    enforcement: CHECK (slots_remaining BETWEEN 0 AND slots), guarded decrement, handler transaction and property tests
+  I20_offer_confidentiality_aggregates:
+    statement: Offerers see only their own offer and rounds; the public and other offerers see only the offer count and, with at least three offers, an anonymous amount range.
+    enforcement: participant-scoped queries and offerStats projection
+  I21_agreement_transitions:
+    statement: Every agreement state change belongs to the declared relation; completed, cancelled and expired agreements never move again; amounts, parties and terms are frozen at creation.
+    enforcement: Policy relation, marketplace_agreement_transition_allowed trigger, static state-machine gate and property tests
+  I22_agreement_authority:
+    statement: The provider marks the start, only the buyer confirms completion, either party cancels or disputes a live agreement, only an administrator resolves a dispute, and settlement states (pending_deposit, balance_due, expired) are never requested by a participant nor used by off-platform agreements.
+    enforcement: agreementTransitionAllowedFor, participant-scoped role resolution, CHECK on settlement_mode and property tests
+  I23_agreement_accounting:
+    statement: For every agreement deposit + balance = amount, 0 <= commission <= amount, and the commission and deposit are the pricing rule in force when the offer was accepted; a payment state never implies the service was delivered.
+    enforcement: CHECK constraints, agreementAmounts property tests and the frozen-values trigger
+  I24_agreement_payment_transitions:
+    statement: Every agreement payment state change belongs to the declared relation; a paid, expired or cancelled payment never moves again; its amount, split, recipient and checkout are frozen at creation; and it becomes paid only with verified provider evidence bound to its own canonical checkout for the exact amount and currency.
+    enforcement: Policy relation, marketplace_guard_agreement_payment trigger (commerce_checkout_has_verified_payment), static state-machine gate and property tests
+  I25_agreement_payment_split:
+    statement: For every agreement payment platform fee + processor fee + provider amount = amount with no negative part; the platform never takes more than the commission due on that charge; the balance carries whatever the paid charges did not collect for the platform, so over deposit and balance it takes the frozen commission whenever the charges can carry it and never more; TDF never holds the provider's part.
+    enforcement: CHECK constraint, agreementPaymentSplit and agreementCommissionDue property tests, marketplace product flow capability gates (ADR 0115)
+  I26_agreement_settlement_progress:
+    statement: An agreement settled on the platform is confirmed only with a paid deposit and completed from balance_due only with a paid balance; the buyer's confirmation of delivery waits for the balance when one is owed; a participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money; either party may dispute an agreement that waits for its balance; an unpaid deposit expires the agreement and releases the slot.
+    enforcement: marketplace_agreement_require_paid_payment trigger, agreementCompletionTarget and agreementParticipantCancelAllowed, reconciliation hook and property tests
   I15_no_public_sensitive_data:
     statement: No public endpoint returns PII, credentials, tokens, private evidence, moderation notes or administrative fields.
     enforcement: DTO allowlists, OpenAPI schema audit and endpoint tests
@@ -158,7 +218,9 @@ preconditions:
     - moderation and spam policy choose a declared transition
   submit_application:
     - caller manages applicant profile with contact capability
-    - classified is published and unexpired
+    - classified is published, unexpired, not derived from an artist profile, has a slot left and its offer deadline has not passed
+    - a fixed-price classified admits only its exact amount and currency
+    - the applicant profile has no other active offer on the classified
     - neither profile blocks the other, target preferences and minimum completeness pass, and age controls pass
     - uniqueness/idempotency scope is unused or payload-identical
   send_invitation:
@@ -205,9 +267,26 @@ postconditions:
     - public search document is refreshed
     - audit event records actor, transition and correlation id
   accept_application:
-    - only target-profile managers may accept
+    - the author accepts an offer waiting on the author; the offerer accepts an author counter
+    - the classified is published, unexpired and has a slot left; the offer state and the slot are re-read under row locks and one slot is consumed atomically (concurrent acceptances of the same offer consume one slot)
+    - accepted_amount_minor freezes the last round's amount and an accept round is recorded
+    - with the marketplace.agreements gate on and a positive amount, the agreement is created in the same transaction with frozen amounts (ADR 0135)
+    - when no slot is left the classified becomes filled and open offers are rejected (slots_filled)
     - application remains private
     - conversation context may be created exactly once
+  transition_agreement:
+    - caller manages the buyer or provider profile, or is an administrator resolving a dispute
+    - the marketplace.agreements gate is on and the transition is permitted for that party
+    - the agreement is re-read under a row lock (order classified, offer, agreement) and matches the version the caller saw
+    - completing records a verified directory_interaction of kind marketplace_agreement
+    - cancelling withdraws the accepted offer and releases its slot
+  counter_offer:
+    - caller is the author or the offerer and it is their turn
+    - the offer is open, unexpired, the classified is published and its price mode is not fixed
+    - the round number is current_round + 1 and at most 9; round 10 is reserved for the acceptance
+    - the round expiry never exceeds the classified offer deadline or expiry
+    - the round and the offer's current amount, terms and expiry change in one transaction
+    - the counterpart is notified
   accept_invitation:
     - only target-profile managers may accept
     - an expired pending invitation transitions to expired instead of accepted
@@ -228,6 +307,7 @@ postconditions:
 idempotency_scopes:
   - invitation(sender_profile_id, target_profile_id, context_kind, context_id, idempotency_key)
   - application(classified_id, applicant_profile_id, idempotency_key)
+  - offer_round(actor_party_id, idempotency_key, request_fingerprint)
   - saved_search_alert(saved_search_id, result_kind, result_id, result_version)
   - contact_context(thread_id, context_kind, context_id)
   - review_create(actor_party_id, idempotency_key, request_fingerprint)
