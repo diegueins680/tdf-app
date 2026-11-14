@@ -2240,8 +2240,8 @@ validateDiscoverySourceWrite DiscoverySourceWriteDTO{..} = do
         )
         "source name must be a safe value between 1 and 160 characters"
     unlessEither
-        (sourceType `elem` ["ticketmaster", "buenplan", "ical", "json", "web"])
-        "source type must be one of: ticketmaster, buenplan, ical, json, web"
+        (sourceType `elem` ["ticketmaster", "buenplan", "ical", "json", "jsonld", "web"])
+        "source type must be one of: ticketmaster, buenplan, ical, json, jsonld, web"
     unlessEither
         (discoverySourceWritePriority >= 0 && discoverySourceWritePriority <= 10000)
         "source priority must be between 0 and 10000"
@@ -2282,7 +2282,9 @@ validateDiscoverySourceWrite DiscoverySourceWriteDTO{..} = do
                     && TrialsServer.isValidHttpUrl url
                 )
                 "Venue feed URL must be a valid HTTPS URL"
-            unlessEither (isJust cityKey) "Venue feeds require an event city"
+            unlessEither
+                (isJust cityKey || sourceType == "jsonld")
+                "Venue feeds require an event city"
     pure
         ( sourceKey
         , sourceName

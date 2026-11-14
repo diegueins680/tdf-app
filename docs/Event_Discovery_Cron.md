@@ -1,8 +1,11 @@
-# Ecuador event discovery
+# Ecuador and Colombia event discovery
 
-The backend discovers events for Ecuador cities in the canonical city registry,
-prioritizing Quito, while retaining previously supported followed destinations.
-Ecuador discovery does not require user subscriptions or change them.
+The backend discovers events for Ecuador and Colombia cities in the canonical
+city registry, prioritizing Quito, while retaining previously supported followed
+destinations. Registry discovery does not require user subscriptions or change
+them. Quito, Guayaquil, Cuenca, Bogotá, Cali and Medellín are registered by
+`2026-11-14_latam_venue_discovery_sources.sql`; see
+[venue sources](#venue-sources-for-the-six-registered-cities).
 The mobile Events tab still uses followed cities for personalized display and
 offers **Explore** for other public events. Registered coverage is not proof
 that every Ecuador city or official source has an automated interface.
@@ -14,11 +17,13 @@ The source registry is stored in `event_discovery_source`. V1 supports:
 - Ticketmaster Discovery API (`ticketmaster`);
 - Buen Plan Ecuador's public catalogue (`buenplan`);
 - venue-owned HTTPS iCalendar feeds (`ical`);
-- venue-owned HTTPS JSON feeds (`json`).
+- venue-owned HTTPS JSON feeds (`json`);
+- schema.org `Event` JSON-LD published on venue or ticketing pages (`jsonld`).
 
 Ticketmaster and Buen Plan are seeded by the production migration. A venue feed
 must have a unique source key, an HTTPS URL, and one `event_city`. HTML scraping
-is deliberately not supported.
+is deliberately not supported: a `jsonld` source reads only link targets and the
+embedded JSON-LD blocks, never page markup.
 
 Strict administrators can manage these records at
 `/configuracion/fuentes-eventos`. As an operational fallback, a verified venue
@@ -73,6 +78,41 @@ The venue JSON contract accepts either an array or `{ "events": [...] }`:
 
 Venue feeds reject non-HTTPS/private-looking URLs, do not follow redirects, and
 have response-size and timeout limits.
+
+iCalendar times in UTC are used as published. Local times (`TZID=` or floating)
+are resolved with the property's zone or the feed city's zone, but only for
+zones without daylight saving (`America/Guayaquil`, `America/Bogota`,
+`America/Lima`, `America/Panama`, `UTC`); any other local time and all-day
+values are dropped rather than guessed. An event without `LOCATION` takes the
+source name as its venue, so name a single-venue source after the venue.
+`CATEGORIES` are mapped to the `concert`, `festival` or `other` catalog types.
+
+### Linked-data (`jsonld`) sources
+
+`feed_url` is an index document: an XML sitemap or an HTML listing. The worker
+imports schema.org events embedded in the index itself and in every linked page
+under `linkPrefix`. The `configuration` column holds a JSON object:
+
+| Key | Meaning |
+| --- | --- |
+| `linkPrefix` | HTTPS prefix an event page URL must start with. Omit to read only the index document. |
+| `rewriteFrom` / `rewriteTo` | Optional replacement applied to each link (Meet2Go lists `/ev/…` but publishes JSON-LD at `/seo/ev/…`). |
+| `maxPages` | Page budget, 1–400, default 60. An index listing more links fails the run instead of importing a truncated inventory. |
+| `venueName` | Venue used when an event has no named `Place` (single-venue sources). |
+| `dateOnlyLocalTime` | Local time the publisher uses as a date-only marker (TuBoleta: `07:00`). Matching events keep the date and get “Hora por confirmar” in the description. |
+
+A source with a city is one venue: every event is filed under that city, even
+when the page names a suburb. A source without a city is a platform: an event
+is imported only when its `addressLocality` (or street address) names a
+registered discovery city in the matching country. Events without a start time,
+a venue name, or a resolvable city are skipped. Requests are spaced about one
+second apart, redirects are followed manually (at most three, each validated as
+a public HTTPS host), `404`/`410` pages are treated as removed events, and any
+other failure fails the source run so absent pages are never mistaken for
+cancelled events. `jsonld` rows carry configuration that the administration
+screen does not edit, so register new ones with SQL; the screen can still
+enable, disable, re-prioritize or re-point existing rows. `jsonld` sources
+cannot receive automatic publication approval.
 
 ## Canonical events and purchase options
 
@@ -281,3 +321,42 @@ forward-only: preserve the private snapshot and suppression predicates; restorin
 the older allowlist would hide otherwise public imported events. If ingestion
 must be paused operationally, use its existing source enablement controls and
 retain all canonical/editorial data. This change does not activate any source.
+
+## Venue sources for the six registered cities
+
+Researched and probed on 2026-11-14. Every row below answered the worker's own
+user agent and its `robots.txt` allows the paths read. No platform's terms of
+service were reviewed; do that before treating a source as permanent.
+
+| Source key | Type | Covers |
+| --- | --- | --- |
+| `teatro-sucre-ical` | `ical` | Quito: Teatro Nacional Sucre, Teatro México, Teatro Variedades |
+| `teatro-centro-de-arte-jsonld` | `jsonld` | Guayaquil: Teatro Centro de Arte |
+| `meet2go-jsonld` | `jsonld` | Quito, Guayaquil, Cuenca: clubs and mid-size shows sold on Meet2Go |
+| `buenplan` (existing) | `buenplan` | Quito, Guayaquil, Cuenca |
+| `teatro-colon-bogota-ical` | `ical` | Bogotá: Teatro Colón / Centro Nacional de las Artes |
+| `tuboleta-movistar-arena` | `jsonld` | Bogotá: Movistar Arena (El Corazón de Bogotá) |
+| `tuboleta-teatro-mayor` | `jsonld` | Bogotá: Teatro Mayor Julio Mario Santo Domingo |
+| `tuboleta-jorge-eliecer-gaitan` | `jsonld` | Bogotá: Teatro Jorge Eliécer Gaitán |
+| `tuboleta-daviarena` | `jsonld` | Medellín: DAVIarena |
+| `tuboleta-teatro-metropolitano` | `jsonld` | Medellín: Teatro Metropolitano |
+| `latiquetera-jsonld` | `jsonld` | Medellín, Cali, Bogotá: events La Tiquetera lists on its home page |
+
+Known gaps, none of which has a structured public feed today:
+
+- **Cali** has no venue-owned feed; only La Tiquetera's nationwide list reaches it.
+- **Cuenca** has no venue-owned feed; coverage is Meet2Go and Buen Plan.
+- **Stadiums and arenas sold through TicketShow, Feel The Tickets, Taquilla Live
+  or ticketmaster.co** (Coliseo Rumiñahui, Estadio Atahualpa, Coliseo Voltaire
+  Paladines, Coliseo MedPlus, Vive Claro, El Campín, Arena Cañaveralejo) sit
+  behind authenticated APIs, queue pages or bot challenges and are not read.
+- **Clubs** (Video Club, Kaputt, Salón Amador, La Topa Tolondra and similar)
+  announce on Instagram and Resident Advisor, which offers no public API.
+- Most TuBoleta pages publish a date, not a start time or venue; those events
+  arrive flagged “Hora por confirmar” under the venue the source is bound to.
+- `elcorazondebogota.com`, `teatropablotobon.com`, `medellin.travel` and
+  `api.buenplan.com.ec` publish `robots.txt` rules disallowing all crawling. The
+  first three are not read. The existing Buen Plan adapter does call that API
+  host; resolve its permission before relying on it.
+- Ticketmaster's Discovery API now receives the three Colombian cities as well;
+  whether it carries Colombian inventory is unverified.
