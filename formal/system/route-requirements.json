@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 525,
-    "named": 443,
+    "total": 528,
+    "named": 446,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 525
+    "covered": 528
   },
   "routes": [
     {
@@ -1103,11 +1103,20 @@
       ]
     },
     {
+      "method": "POST",
+      "path": "/directory/agreements/{agreementId}/payments",
+      "basis": "named",
+      "requirements": [
+        "MKT-AGREEMENT-PAYMENT-001"
+      ]
+    },
+    {
       "method": "PATCH",
       "path": "/directory/agreements/{agreementId}/status",
       "basis": "named",
       "requirements": [
-        "MKT-AGREEMENT-001"
+        "MKT-AGREEMENT-001",
+        "MKT-AGREEMENT-PAYMENT-001"
       ]
     },
     {
@@ -1125,6 +1134,7 @@
       "requirements": [
         "DIR-ENGAGEMENT-001",
         "MKT-AGREEMENT-001",
+        "MKT-AGREEMENT-PAYMENT-001",
         "MKT-DEMAND-OFFER-001"
       ]
     },
@@ -1225,6 +1235,22 @@
       "basis": "named",
       "requirements": [
         "DIR-PROFILE-AUTHORING-001"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "path": "/directory/profiles/{profileId}/payout-accounts/{provider}",
+      "basis": "named",
+      "requirements": [
+        "MKT-AGREEMENT-PAYMENT-001"
+      ]
+    },
+    {
+      "method": "PUT",
+      "path": "/directory/profiles/{profileId}/payout-accounts/{provider}",
+      "basis": "named",
+      "requirements": [
+        "MKT-AGREEMENT-PAYMENT-001"
       ]
     },
     {

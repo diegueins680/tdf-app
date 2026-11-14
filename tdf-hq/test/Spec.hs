@@ -2847,6 +2847,9 @@ main = hspec $ do
               `shouldBe` Just ProviderCapabilities.FlowEventTicket
             PaymentRuntimeStore.productFlowForDomain "marketplace_rental"
               `shouldBe` Just ProviderCapabilities.FlowMarketplace
+            -- ADR 0136: agreement charges need the marketplace capabilities.
+            PaymentRuntimeStore.productFlowForDomain "marketplace_agreement"
+              `shouldBe` Just ProviderCapabilities.FlowMarketplace
             PaymentRuntimeStore.productFlowForDomain "unknown"
               `shouldBe` Nothing
 
@@ -4385,8 +4388,8 @@ main = hspec $ do
             parseStripeTicketCapture (A.object []) `shouldBe` Nothing
 
         it "reviews a valid Stripe capture only when the ticket order is closed" $ do
-            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded"]
-                `shouldBe` [False, False, False, True, True, True]
+            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded", "deleted"]
+                `shouldBe` [False, False, False, True, True, True, True]
 
         it "recovers marketplace order ids from Stripe metadata context" $ do
             let webhookPayload =

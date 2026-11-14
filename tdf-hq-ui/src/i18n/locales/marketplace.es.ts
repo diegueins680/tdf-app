@@ -101,6 +101,26 @@ const marketplace = {
     commission: 'Comisión TDF ({{percent}} %)',
     providerNet: 'Neto para el proveedor',
     offPlatform: 'Por ahora el pago se coordina directamente entre las partes; TDF todavía no cobra el depósito ni la comisión.',
+    chargeDue: {
+      deposit: {
+        buyer: 'Paga el depósito para confirmar el acuerdo.',
+        other: 'El acuerdo se confirma cuando el cliente pague el depósito.',
+      },
+      balance: {
+        buyer: 'Confirmaste la entrega. Paga el saldo para completar el acuerdo.',
+        other: 'El cliente confirmó la entrega. El acuerdo se completa cuando pague el saldo.',
+      },
+    },
+    depositDeadline: 'Plazo: {{date}}. Si no se paga a tiempo, el acuerdo vence y el cupo se libera.',
+    payments: 'Cobros',
+    paymentKind: { deposit: 'Depósito', balance: 'Saldo' },
+    paymentStatus: { pending: 'pendiente', paid: 'pagado', expired: 'vencido', cancelled: 'cancelado' },
+    paymentPlatformFee: 'Comisión TDF en este cobro',
+    paymentProcessingFee: {
+      provider: 'Comisión del procesador de pagos (a cargo del proveedor)',
+      platform: 'Comisión del procesador de pagos (a cargo de TDF)',
+    },
+    paymentProviderAmount: 'Recibe el proveedor',
     cancelReason: 'Motivo de cancelación: {{reason}}',
     reviewHint: 'Acuerdo completado: ambas partes pueden dejarse una reseña verificada desde el perfil de la otra.',
     reason: 'Motivo',
