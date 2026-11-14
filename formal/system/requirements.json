@@ -27671,6 +27671,86 @@
         "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
       },
       "critical": false
+    },
+    {
+      "id": "EVT-LOGISTICS-ACCESS-001",
+      "title": "The web logistics page of an event opens by record scope, not by the Scheduling module",
+      "domain": "EVT",
+      "statement": "The feature-registry entry social.event.logistics (/social/eventos/:eventId/logistica) requires an authenticated session and no module. Its record scopes stay event-member-or-admin for view and event-manager-or-admin for create, edit, delete and assign. The web shell therefore renders the logistics page for any signed-in account, and what that account may read or change is decided per event by the logistics handlers: the stored organizer and a delegated administrator under EVT-ADMIN-DELEGATION-001 receive the owner role, a recorded logistics team member receives its editor or viewer role, and every other account is refused with 403. No other registry entry changes; pages that require the Scheduling module still require it.",
+      "authority": "Repository owner decision of 2026-11-13: remove the module requirement from this record-scoped route and rely on the record scope and the backend authorization, so that an administrator invited to one event (who holds no module) can open its logistics page. Recorded as AUTHORITY-098.",
+      "source": "formal/system/event-admin-delegation.md",
+      "contract": "tdf-hq/assets/feature-registry.json",
+      "property": "For every authenticated session, whatever its modules, the registry decision for discover, view, create, edit, delete and assign on social.event.logistics is allowed; for an unauthenticated session it is not. The logistics plan of an event is returned only to its stored organizer, its delegated administrators and its recorded logistics team.",
+      "actors": [
+        "Event organizer",
+        "Delegated event administrator",
+        "Logistics team member",
+        "Other signed-in account",
+        "Signed-out visitor"
+      ],
+      "preconditions": [
+        "Authenticated session for the page and for every logistics route",
+        "Event visible to the caller"
+      ],
+      "inputs": [
+        "Web route /social/eventos/{eventId}/logistica",
+        "Session roles and modules read by the web shell",
+        "GET /social-events/events/{eventId}/logistics and the logistics write routes under it"
+      ],
+      "state": {
+        "boundary": "Feature-registry entry social.event.logistics; organizer, event_admin_member and event_logistics_member rows of one event",
+        "authority": "tdf-hq/assets/feature-registry.json for page discovery; the logistics handlers and PostgreSQL rows for record access"
+      },
+      "allowedTransitions": [
+        "Signed-in account without the Scheduling module -> logistics page rendered by the web shell",
+        "Organizer or delegated administrator -> plan returned with the owner role",
+        "Recorded logistics team member -> plan returned with its editor or viewer role"
+      ],
+      "forbiddenTransitions": [
+        "Signed-out visitor opening the logistics page without being sent to sign in",
+        "Account that is neither organizer, delegated administrator nor logistics team member reading or changing the plan of an event",
+        "Opening a page that still declares the Scheduling module without holding it"
+      ],
+      "effects": [
+        "The web shell no longer shows the 403 page on the logistics route to an account that lacks the Scheduling module",
+        "No database row, role or module is created or changed"
+      ],
+      "authorization": "Page: authenticated session only (feature registry, enforced by the web shell). Data: requireLogisticsAccess in tdf-hq/src/TDF/Server/SocialEventsHandlers.hs, which never consulted the module: owner for the stored organizer and for a delegated administrator, the stored team role for a logistics team member, 403 otherwise, and 403 for a viewer on a write.",
+      "privacy": "The page shell and its route are visible to any signed-in account; plan data (places, activities, assignees, team) is returned only by the API after the record check. A refused account sees the API error message and no plan content.",
+      "concurrency": "Not applicable to the registry change; logistics writes keep their existing version checks.",
+      "idempotency": "Not applicable; the change is a static access rule.",
+      "failure": "Signed-out: redirected to sign in. Signed-in without access to the event: the page renders the 403 message returned by the API and no plan controls. Unknown or hidden event: 404 from the API.",
+      "recovery": "None needed; the organizer grants access by inviting an administrator or adding a logistics team member.",
+      "observability": "The feature_403_shown analytics event is no longer emitted for this route on a missing module; API 403 responses are unchanged.",
+      "implementation": [
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
+        "tdf-hq/test/TDF/EventAdminDelegationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Jest: the registry allows every action of social.event.logistics to a signed-in session with no modules and refuses a signed-out one, while studio.calendar still reports the missing scheduling module; the web shell renders the logistics route for a Fan/Customer session with no modules and the 403 page for /estudio/calendario; the logistics page shows the owner controls for a plan with the owner role and only the API refusal for an account outside the event. The existing PostgreSQL example in tdf-hq/test/TDF/EventAdminDelegationSpec.hs shows the logistics plan refused with 403 before the grant and returned with the owner role after it.",
+      "evidence": "Local Jest run of the three suites on 2026-11-13 (29 tests, 0 failures); the two registry-dependent tests fail against the previous registry. The backend example was not re-run for this change because no backend source changed.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The web guard (evaluatePathAccess in AppShell) and requireLogisticsAccess were read in full; the backend never applied the registry rule to logistics routes, so only the web shell behaviour changes. The generated Mobile registry copy is not regenerated in this change.",
+      "ambiguity": [
+        "The Mobile copy tdf-mobile/src/features/generatedFeatureRegistry.ts at the pinned submodule revision still lists the Scheduling module for this entry. It was already older than the registry on main (npm run audit:features, which no workflow runs, reports it stale before and after this change), Mobile has no logistics screen, and regenerating it needs a commit in the Mobile repository that is not part of this change.",
+        "The record scopes event-member-or-admin and event-manager-or-admin are labels in the registry; the web shell does not evaluate them and relies on the API.",
+        "Accounts with no relation to an event can now load the page shell and see the API refusal instead of the 403 page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
+      },
+      "historicalStatus": null
     }
   ]
 }
