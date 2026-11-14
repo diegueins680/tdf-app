@@ -10383,6 +10383,18 @@ spec = describe "TDF.Server helpers" $ do
             TokenCipher.openCalendarToken (Just key) (T.init sealed <> (if T.last sealed == 'A' then "B" else "A"))
                 `shouldBe` Left TokenCipher.CalendarTokenUnreadable
             TokenCipher.openCalendarToken (Just key) "enc:v1:not-base64!" `shouldBe` Left TokenCipher.CalendarTokenUnreadable
+        it "accepts back every sealed token of an admissible length, and no longer one" $ do
+            let sealedOf n = maybe "" id (TokenCipher.sealCalendarTokenWithNonce key nonce (T.replicate n "t"))
+            map (T.length . sealedOf) [0, 1, 2, 3, 20, 3038, 3039, 4096]
+                `shouldBe` map TokenCipher.sealedCalendarTokenLength [0, 1, 2, 3, 20, 3038, 3039, 4096]
+            TokenCipher.sealedCalendarTokenLength 4096 `shouldBe` 5507
+            -- 3039 characters is the first token whose sealed form passes 4096; base64
+            -- rounding lets the sealed form of 4097 share the length of 4096.
+            NotificationServer.validateStoredGoogleCalendarOAuthToken "access token" (sealedOf 3039) `shouldBe` Right (sealedOf 3039)
+            NotificationServer.validateStoredGoogleCalendarOAuthToken "access token" (sealedOf 4096) `shouldBe` Right (sealedOf 4096)
+            isLeft (NotificationServer.validateStoredGoogleCalendarOAuthToken "access token" (sealedOf 4098)) `shouldBe` True
+            isLeft (NotificationServer.validateStoredGoogleCalendarOAuthToken "access token" (T.replicate 4097 "t")) `shouldBe` True
+            TokenCipher.calendarTokenStoredLimit 4096 "1//legacy-refresh-token" `shouldBe` 4096
         it "still reads a token stored before encryption existed" $ do
             TokenCipher.openCalendarToken Nothing "1//legacy-refresh-token" `shouldBe` Right "1//legacy-refresh-token"
             TokenCipher.openCalendarToken (Just key) "1//legacy-refresh-token" `shouldBe` Right "1//legacy-refresh-token"
