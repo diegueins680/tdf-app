@@ -19,8 +19,10 @@ module TDF.Server.ServiceStorefront
   , loadServiceDatafastEnv
   , loadServiceDatafastCheckoutEnv
   , requestDatafastCheckoutForService
+  , loadDatafastCartParameters
   , checkDatafastPaymentStatus
   , validateDatafastSuccessfulPayment
+  , validateBoundDatafastSuccessfulPayment
   , parseDatafastCents
   , validateIdempotencyKey
   , validateServiceFulfillmentTransition
@@ -380,7 +382,7 @@ createDatafastCheckoutHandler orderIdText mLookupToken = do
           let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
           pure (existingCheckoutId, baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack existingCheckoutId)
         _ -> requestDatafastCheckoutForService
-          (toPathPiece oid) totalCents currency buyerName buyerEmail buyerPhone
+          checkout attempt totalCents currency buyerName buyerEmail buyerPhone
           `catchError` failCanonicalPaymentAttempt
             checkout attempt Checkout.ProviderDatafast "datafast_checkout_create"
       
@@ -452,9 +454,7 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
               currency = ME.serviceStorefrontOrderCurrency order
           result <- if providerSuccess
             then do
-              let validation = validateDatafastSuccessfulPayment
-                    (toPathPiece oid) totalCents currency paymentStatus
-                  actualAmount = sdfpsAmount paymentStatus >>= either (const Nothing) Just . parseDatafastCents
+              let actualAmount = sdfpsAmount paymentStatus >>= either (const Nothing) Just . parseDatafastCents
               paymentId <- maybe
                 (pure resourcePath)
                 pure
@@ -464,6 +464,10 @@ confirmDatafastStatusHandler mOrderId mResourcePath mLookupToken = do
                 -- Datafast DB checkout already charges at the hosted widget;
                 -- this GET verifies that original sale, it does not capture.
                 Checkout.OperationCreate (sdfEntityId dfEnv) "create"
+              validation <- validateBoundDatafastSuccessfulPayment checkout
+                (sdfEnvironment dfEnv) (sdfEntityId dfEnv)
+                (fromMaybe "" (ME.serviceStorefrontOrderDatafastCheckoutId order))
+                totalCents currency paymentStatus
               case validation of
                 Left message -> providerVerificationMismatch
                   checkout attempt Checkout.ProviderDatafast (sdfEnvironment dfEnv)
@@ -1682,15 +1686,16 @@ reconcileServiceOrderHandler orderNumber = do
       requireReconciliationBinding paidCheckout
         (sdfEnvironment datafast) (sdfEntityId datafast)
       providerStatus <- checkDatafastPaymentStatus resourcePath
+      validation <- validateBoundDatafastSuccessfulPayment
+        (Checkout.CheckoutReference (spcCheckoutId paidCheckout))
+        (sdfEnvironment datafast) (sdfEntityId datafast)
+        (fromMaybe "" (ME.serviceStorefrontOrderDatafastCheckoutId order))
+        (fromIntegral (spcPaidMinor paidCheckout)) (spcCurrency paidCheckout) providerStatus
       let actualMinor = sdfpsAmount providerStatus
             >>= either (const Nothing) Just . parseDatafastCents
           matched = isDatafastPaymentSuccess
               (sdfEnvironment datafast) (sdfpsResultCode providerStatus)
-            && either (const False) (const True)
-              (validateDatafastSuccessfulPayment
-                (toPathPiece oid)
-                (fromIntegral (spcPaidMinor paidCheckout))
-                (spcCurrency paidCheckout) providerStatus)
+            && either (const False) (const True) validation
           providerReference = fromMaybe resourcePath (sdfpsPaymentId providerStatus)
       unless matched $ liftIO $ flip runSqlPool envPool $
         Checkout.recordReconciliationException
@@ -2327,17 +2332,58 @@ loadServiceDatafastCheckoutEnv = do
     >>= either (throwError . configurationError) pure
   pure (configured, parameters)
 
--- | Request a Datafast checkout session for a service order.
+-- | Read only the immutable checkout snapshot. Nonzero line adjustments need
+-- an explicit, qualified provider projection; never absorb them into a fake
+-- item or infer VAT from the amount charged.
+loadDatafastCartParameters
+  :: Checkout.CheckoutReference -> Int -> Text -> AppM [(ByteString, ByteString)]
+loadDatafastCartParameters checkout expectedCents expectedCurrency = do
+  Env{ envPool } <- ask
+  (headers, rows) <- liftIO $ flip runSqlPool envPool $ do
+    headers <- rawSql
+      "SELECT total_minor, currency,\
+      \ (subtotal_minor = total_minor AND discount_minor = 0 AND tax_minor = 0 AND fee_minor = 0)\
+      \ FROM commerce_checkout_session WHERE id=?::uuid"
+      [PersistText (Checkout.checkoutReferenceId checkout)]
+      :: SqlPersistT IO [(Single Int64, Single Text, Single Bool)]
+    rows <- rawSql
+      "SELECT description, quantity, unit_amount_minor,\
+      \ (subtotal_minor::numeric = quantity::numeric * unit_amount_minor::numeric\
+      \ AND total_minor = subtotal_minor AND discount_minor = 0\
+      \ AND tax_minor = 0 AND fee_minor = 0)\
+      \ FROM commerce_checkout_line_item WHERE checkout_id=?::uuid ORDER BY line_number"
+      [PersistText (Checkout.checkoutReferenceId checkout)]
+      :: SqlPersistT IO [(Single Text, Single Int, Single Int64, Single Bool)]
+    pure (headers, rows)
+  let reject :: Text -> AppM a
+      reject message = throwError err409 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+  case headers of
+    [(Single amount, Single currency, Single parentValid)] -> do
+      unless (amount == fromIntegral expectedCents
+          && currency == T.toUpper (T.strip expectedCurrency)) $
+        reject "Dataweb cart does not match the immutable checkout amount and currency"
+      unless (parentValid && all (\(_, _, _, Single valid) -> valid) rows) $
+        reject "Dataweb cart adjustments require a qualified line and tax projection"
+      let linesToSend =
+            [ DatafastConfig.DatafastCartLine description quantity unit
+            | (Single description, Single quantity, Single unit, _) <- rows
+            ]
+      either reject pure (DatafastConfig.datafastCartParameters amount currency linesToSend)
+    _ -> reject "Dataweb requires one canonical checkout snapshot"
+
+-- | Request a Datafast checkout session for a canonical service order.
 requestDatafastCheckoutForService
-  :: Text  -- ^ Transaction ID (order UUID)
+  :: Checkout.CheckoutReference
+  -> Checkout.PaymentAttemptReference  -- ^ Persisted attempt, stable on replay
   -> Int   -- ^ Amount in cents
   -> Text  -- ^ Currency
   -> Text  -- ^ Buyer name
   -> Text  -- ^ Buyer email
   -> Maybe Text  -- ^ Buyer phone
   -> AppM (Text, String)  -- ^ (checkoutId, widgetUrl)
-requestDatafastCheckoutForService txnId totalCents currency name email mPhone = do
+requestDatafastCheckoutForService checkout attempt totalCents currency name email mPhone = do
   (dfEnv, merchantParameters) <- loadServiceDatafastCheckoutEnv
+  cartParameters <- loadDatafastCartParameters checkout totalCents currency
   let manager = ProviderHttp.sharedProviderManager
   let amountTxt = T.pack $ show (totalCents `div` 100) <> "." <> pad2 (totalCents `mod` 100)
       currencyTxt = T.toUpper (T.strip currency)
@@ -2348,14 +2394,14 @@ requestDatafastCheckoutForService txnId totalCents currency name email mPhone = 
         , ("amount", TE.encodeUtf8 amountTxt)
         , ("currency", TE.encodeUtf8 currencyTxt)
         , ("paymentType", "DB")
-        , ("merchantTransactionId", TE.encodeUtf8 txnId)
+        , ("merchantTransactionId", TE.encodeUtf8 (Checkout.paymentAttemptReferenceId attempt))
         , ("customer.givenName", TE.encodeUtf8 givenName)
         , ("customer.surname", TE.encodeUtf8 surname)
         , ("customer.email", TE.encodeUtf8 email)
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (sdfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam <> merchantParameters
+      allParams = baseParams <> phoneParam <> testModeParam <> merchantParameters <> cartParameters
       body = renderFormBody allParams
       baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
   req0 <- providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
@@ -2448,6 +2494,51 @@ isDatafastPaymentSuccess environment rawCode =
 providerValidationError :: Text -> ServerError
 providerValidationError message =
   err502 { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
+-- | The provider's wire reference is the saved creation attempt UUID. Older
+-- checkouts used their domain order ID. Both identifiers must come from the
+-- exact immutable checkout binding, never from a client or another attempt.
+-- Keep merchant_reference on the binding as the domain order ID: the ledger
+-- and domain settlement triggers use that relationship independently.
+validateBoundDatafastSuccessfulPayment
+  :: Checkout.CheckoutReference
+  -> Checkout.CheckoutEnvironment
+  -> Text
+  -> Text
+  -> Int
+  -> Text
+  -> ServiceDatafastPaymentStatus
+  -> AppM (Either Text ())
+validateBoundDatafastSuccessfulPayment checkout environment merchantRef checkoutId amount currency status = do
+  Env{envPool} <- ask
+  references <- liftIO $ flip runSqlPool envPool $ rawSql
+    "SELECT attempt.id::text, checkout.domain_order_id\
+    \ FROM commerce_checkout_session checkout\
+    \ JOIN commerce_payment_attempt attempt ON attempt.checkout_id = checkout.id\
+    \ JOIN commerce_provider_binding binding ON binding.payment_attempt_id = attempt.id\
+    \ WHERE checkout.id = ?::uuid AND checkout.environment = ?\
+    \ AND checkout.total_minor = ? AND checkout.currency = ?\
+    \ AND attempt.provider = 'datafast' AND attempt.operation = 'create'\
+    \ AND attempt.environment = checkout.environment AND attempt.merchant_account_ref = ?\
+    \ AND attempt.amount_minor = checkout.total_minor AND attempt.currency = checkout.currency\
+    \ AND binding.provider = attempt.provider AND binding.environment = attempt.environment\
+    \ AND binding.merchant_account_ref = attempt.merchant_account_ref\
+    \ AND binding.resource_type = 'checkout' AND binding.provider_resource_id = ?\
+    \ AND binding.merchant_reference = checkout.domain_order_id\
+    \ AND binding.amount_minor = checkout.total_minor AND binding.currency = checkout.currency"
+    [ PersistText (Checkout.checkoutReferenceId checkout)
+    , PersistText (Checkout.checkoutEnvironmentText environment)
+    , PersistInt64 (fromIntegral amount)
+    , PersistText currency
+    , PersistText merchantRef
+    , PersistText checkoutId
+    ]
+  pure $ case references of
+    [(Single attemptId, Single orderId)] ->
+      let expected = if fmap T.strip (sdfpsMerchantTransactionId status) == Just attemptId
+            then attemptId else orderId
+      in validateDatafastSuccessfulPayment expected amount currency status
+    _ -> Left "Datafast payment does not match one immutable checkout binding"
 
 validateDatafastSuccessfulPayment
   :: Text

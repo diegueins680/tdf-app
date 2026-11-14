@@ -7,11 +7,14 @@ module TDF.Commerce.DatafastConfig
   , validateDatafastMerchantParameters
   , encodeDatafastForm
   , splitDatafastBuyerName
+  , DatafastCartLine(..)
+  , datafastCartParameters
   ) where
 
 import Control.Monad (unless)
 import Data.ByteString (ByteString)
 import Data.Char (isAsciiLower, isAsciiUpper, isControl)
+import Data.Int (Int64)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes)
 import Data.Text (Text)
@@ -19,6 +22,50 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import System.Environment (lookupEnv)
 import Network.HTTP.Types.URI (renderSimpleQuery)
+import TDF.Commerce.Money (checkedCheckoutSubtotals)
+
+-- | Provider projection of a persisted checkout line. Prices are minor units,
+-- never a recomputation from the live product catalogue or client form.
+data DatafastCartLine = DatafastCartLine
+  { dfclDescription :: Text
+  , dfclQuantity :: Int
+  , dfclUnitAmountMinor :: Int64
+  } deriving (Eq, Show)
+
+-- | Render the documented Dataweb cart only when every integer line conserves
+-- the exact charged amount. This does not classify tax or infer a zero rate.
+datafastCartParameters
+  :: Int64 -> Text -> [DatafastCartLine]
+  -> Either Text [(ByteString, ByteString)]
+datafastCartParameters amount currency linesToSend = do
+  unless (T.toUpper (T.strip currency) == "USD") $
+    Left "Dataweb cart requires a USD checkout"
+  unless (amount <= 999999999999) $
+    Left "Dataweb cart amount exceeds the provider decimal field"
+  _ <- checkedCheckoutSubtotals amount
+    [(dfclQuantity line, dfclUnitAmountMinor line) | line <- linesToSend]
+  mapM_ validateLine linesToSend
+  pure (concat (zipWith renderLine [0 :: Int ..] linesToSend))
+  where
+    validateLine line = do
+      let description = dfclDescription line
+      unless (not (T.null (T.strip description)) && T.length description <= 255
+          && not (T.any isControl description) && not (T.any (== '&') description)) $
+        Left "Dataweb cart description must be nonempty bounded text without controls or ampersands"
+      unless (dfclQuantity line <= 99999) $
+        Left "Dataweb cart quantity exceeds the provider field"
+    renderLine index line =
+      let prefix = "cart.items[" <> T.pack (show index) <> "]."
+          textPair key value = (TE.encodeUtf8 (prefix <> key), TE.encodeUtf8 value)
+          cents = dfclUnitAmountMinor line
+          fraction = T.pack (show (cents `mod` 100))
+          decimal = T.pack (show (cents `div` 100)) <> "." <> T.justifyRight 2 '0' fraction
+          description = T.strip (dfclDescription line)
+      in [ textPair "name" description
+         , textPair "description" description
+         , textPair "price" decimal
+         , textPair "quantity" (T.pack (show (dfclQuantity line)))
+         ]
 
 -- HTTP form encoding works on UTF-8 bytes, never Unicode code points.
 encodeDatafastForm :: [(ByteString, ByteString)] -> ByteString

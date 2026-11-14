@@ -270,7 +270,7 @@ createMusicDatafastCheckout user orderId idempotencyHeader = do
         (Provider.sdfEntityId datafast) Checkout.OperationCreate idempotencyKey now
       amount <- safeIntAmount (purchaseAmountMinor context)
       (providerId, widgetUrl) <- Provider.requestDatafastCheckoutForService
-        (UUID.toText orderId) amount (purchaseCurrency context)
+        checkout attempt amount (purchaseCurrency context)
         (purchaseBuyerName context) (purchaseBuyerEmail context) Nothing
         `catchError` failAttempt checkout attempt Checkout.ProviderDatafast "datafast_create" now
       bindResult <- runDB $ Checkout.bindProviderResource Checkout.ProviderBindingCreation
@@ -316,8 +316,10 @@ confirmMusicDatafastPayment user orderId idempotencyHeader MusicDatafastStatusRe
     if Provider.isDatafastPaymentSuccess (Provider.sdfEnvironment datafast) (Provider.sdfpsResultCode status)
       then do
         amount <- safeIntAmount (purchaseAmountMinor context)
-        either (throwError . providerError) pure
-          (Provider.validateDatafastSuccessfulPayment (UUID.toText orderId) amount (purchaseCurrency context) status)
+        validation <- Provider.validateBoundDatafastSuccessfulPayment checkout
+          (Provider.sdfEnvironment datafast) (Provider.sdfEntityId datafast)
+          providerCheckoutId amount (purchaseCurrency context) status
+        either (throwError . providerError) pure validation
         paymentId <- maybe (throwError (providerError "Datafast response omitted the payment ID")) pure
           (Provider.sdfpsPaymentId status)
         bindAndVerify context checkout attempt Checkout.ProviderDatafast (Provider.sdfEnvironment datafast)

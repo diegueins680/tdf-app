@@ -1380,7 +1380,8 @@ createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
     Nothing -> ServiceStorefront.requestDatafastCheckoutForService
-      (ticketReference context)
+      (tpcCheckout context)
+      attempt
       (fromIntegral (tpcAmountMinor context))
       (tpcCurrency context)
       (tpcBuyerName context)
@@ -1450,9 +1451,11 @@ confirmPublicEventTicketDatafastStatus rawEventId rawOrderId mLookupToken rawRes
             (ServiceStorefront.sdfEnvironment datafast) resultCode
           pending = resultCode == "000.200.000"
       if success then do
-        case ServiceStorefront.validateDatafastSuccessfulPayment
-            (ticketReference context) (fromIntegral (tpcAmountMinor context))
-            (tpcCurrency context) providerStatus of
+        validation <- ServiceStorefront.validateBoundDatafastSuccessfulPayment
+          (tpcCheckout context) (ServiceStorefront.sdfEnvironment datafast)
+          (ServiceStorefront.sdfEntityId datafast) checkoutId
+          (fromIntegral (tpcAmountMinor context)) (tpcCurrency context) providerStatus
+        case validation of
           Left validationMessage -> do
             let actualAmount = ServiceStorefront.sdfpsAmount providerStatus
                   >>= either (const Nothing) (Just . fromIntegral)

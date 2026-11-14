@@ -422,6 +422,7 @@ spec = do
         adminServiceOrderUpdateSpec
         closedCheckoutEvidenceSpec
         captureReplaySpec
+        datafastBoundReferenceSpec
         ticketLedgerSpec
         ticketAllocationSpec
         legacyStripeRefundSpec
@@ -2387,6 +2388,47 @@ ticketLedgerSpec = describe "ticket capture ledger" $
         "SELECT count(*) FROM commerce_receipt WHERE checkout_id=?::uuid AND kind='credit_note'"
         [captureCheckoutParameter payment]) pool :: IO [Single Int64]
       receiptCounts `shouldBe` [Single 3]
+
+datafastBoundReferenceSpec :: SpecWith ConnectionPool
+datafastBoundReferenceSpec = describe "Dataweb bound reference settlement" $
+  it "admits a saved attempt reference while retaining domain settlement and read-only replay" $ \pool -> do
+    payment <- captureFixture pool Checkout.ProviderDatafast
+    let attemptReference = Checkout.paymentAttemptReferenceId (Checkout.vpAttempt payment)
+        domainReference = Checkout.vpOrderReference payment
+        status reference = Storefront.ServiceDatafastPaymentStatus
+          { Storefront.sdfpsPaymentId = Just "synthetic-dataweb-payment"
+          , Storefront.sdfpsAmount = Just "125.15"
+          , Storefront.sdfpsCurrency = Just "USD"
+          , Storefront.sdfpsMerchantTransactionId = Just reference
+          , Storefront.sdfpsResultCode = "000.100.112"
+          }
+        verify reference = runHandler $ runReaderT
+          (Storefront.validateBoundDatafastSuccessfulPayment (Checkout.vpCheckout payment)
+            Checkout.CheckoutSandbox (Checkout.vpMerchantRef payment)
+            (Checkout.vpProviderResource payment) 12515 "USD" (status reference))
+          (Env pool (error "Reference verification must not read creation configuration"))
+        expectVerified reference = do
+          result <- verify reference
+          fmap (either (const False) (const True)) result `shouldBe` Right True
+    expectVerified attemptReference
+    runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right True
+    posted <- runSqlPool (rawSql
+      "SELECT checkout.status, checkout.paid_minor,\
+      \ (SELECT count(*) FROM commerce_receipt receipt WHERE receipt.checkout_id=checkout.id),\
+      \ (SELECT count(*) FROM commerce_ledger_transaction txn\
+      \ WHERE txn.source_type='payment_attempt' AND txn.source_id=? AND txn.status='posted')\
+      \ FROM commerce_checkout_session checkout WHERE checkout.id=?::uuid"
+      [PersistText attemptReference, captureCheckoutParameter payment]) pool
+      :: IO [(Single Text, Single Int64, Single Int64, Single Int64)]
+    posted `shouldBe` [(Single "paid", Single 12515, Single 1, Single 1)]
+    snapshot <- runSqlPool (captureSnapshot payment) pool
+    forM_ [attemptReference, domainReference] $ \reference -> do
+      expectVerified reference
+      runSqlPool (Checkout.recordVerifiedPayment payment) pool `shouldReturn` Right False
+      runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
+    rejected <- verify "synthetic-unrelated-reference"
+    fmap isLeft rejected `shouldBe` Right True
+    runSqlPool (captureSnapshot payment) pool `shouldReturn` snapshot
 
 captureReplaySpec :: SpecWith ConnectionPool
 captureReplaySpec = describe "verified capture replay integrity" $
