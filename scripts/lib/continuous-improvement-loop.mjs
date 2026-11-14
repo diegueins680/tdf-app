@@ -323,12 +323,16 @@ export function buildImprovementLoopModel() {
       implement: ['uxAudit'],
       uxAudit: ['uxFix', 'uiAudit'],
       uxFix: ['uiAudit'],
-      uiAudit: ['uiFix', 'commit'],
-      uiFix: ['commit'],
+      uiAudit: ['uiFix', 'verify'],
+      uiFix: ['verify'],
+      // A failed verification discards the iteration; nothing unverified is committed.
+      verify: ['commit', 'discard'],
+      discard: ['logicalAudit'],
       commit: ['push'],
-      push: ['pollCi'],
+      push: ['openPullRequest'],
+      openPullRequest: ['pollCi'],
       pollCi: ['logicalAudit', 'ciRepair'],
-      ciRepair: ['commit'],
+      ciRepair: ['verify'],
     },
   };
 }
@@ -410,6 +414,18 @@ export function verifyImprovementLoopModel() {
 
   if (isReachable(model, model.initial, 'pollCi', { blocked: ['push'] })) {
     findings.push('CI polling is reachable without a push.');
+  }
+
+  if (isReachable(model, model.initial, 'commit', { blocked: ['verify'] })) {
+    findings.push('Commit is reachable without passing verification.');
+  }
+
+  if (isReachable(model, 'discard', 'push', { blocked: ['verify'] })) {
+    findings.push('A discarded iteration can still be pushed.');
+  }
+
+  if (isReachable(model, model.initial, 'openPullRequest', { blocked: ['push'] })) {
+    findings.push('A pull request is reachable without a push.');
   }
 
   if (isReachable(model, model.initial, 'commit', { blocked: ['uiAudit'] })) {

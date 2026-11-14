@@ -27748,6 +27748,83 @@
         "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "SYS-LOOP-001",
+      "title": "The continuous improvement loop only proposes verified changes as draft pull requests",
+      "statement": "The continuous improvement loop works in its own linked worktree, puts each change on a new branch cut from the remote base branch, runs the configured verification command before committing, and publishes the result only as a draft pull request. It never pushes, merges, rebases or deletes the base branch or any branch it did not create, and it discards a change whose implementation or verification fails.",
+      "domain": "SYS",
+      "actors": [
+        "Maintainer",
+        "Loop supervisor",
+        "Loop runner"
+      ],
+      "preconditions": [
+        "A linked git worktree dedicated to the loop exists and its configuration names a verification command."
+      ],
+      "inputs": [
+        "Loop configuration file",
+        "Remote base branch",
+        "Open and closed loop pull requests"
+      ],
+      "state": {
+        "iteration": "idle | proposing | implementing | verifying | published | discarded",
+        "supervisor": "running | blocked | held by stop file"
+      },
+      "allowedTransitions": [
+        "idle -> proposing -> implementing -> verifying -> published",
+        "proposing | implementing | verifying -> discarded",
+        "blocked -> running once the blocking condition clears"
+      ],
+      "forbiddenTransitions": [
+        "verification failed, missing or skipped -> published",
+        "any state -> push, merge, rebase or deletion of the base branch",
+        "any state -> merge or deletion of a branch the loop did not create",
+        "stop file present -> a new iteration"
+      ],
+      "effects": [
+        "A verified change exists as one commit on a new branch under the loop prefix and as one draft pull request.",
+        "A failed iteration leaves the worktree clean on the remote base commit and publishes nothing."
+      ],
+      "authorization": "The loop may open draft pull requests; it cannot approve or merge them. Merging stays with a maintainer under the protected-branch rules.",
+      "privacy": "Logs and status files hold repository paths, commands and exit codes; credentials are never written to them.",
+      "concurrency": "One supervisor per worktree, enforced by a lock directory with a pid file. At most the configured number of loop pull requests stay open; the loop waits while that limit is reached.",
+      "idempotency": "A target file that already has an open or closed-unmerged loop pull request is not proposed again.",
+      "failure": "Reject the configuration, or discard the iteration and report the failing step; stop after the configured number of consecutive failures. Refuse to start an iteration when free disk space is below the configured minimum.",
+      "recovery": "On start, leftover changes in the loop's own worktree are discarded and the worktree is returned to the remote base commit. A stop file holds the supervisor idle until it is removed.",
+      "observability": "Supervisor log, status file with phase, last result and last error, and the pull request body naming the idea and the verification gates that ran.",
+      "authority": "Owner instruction of 2026-11-13 to review, correct and start the self-improvement loop; pull request #750.",
+      "source": "Owner instruction of 2026-11-13; AI_WORKFLOW.md and README.md sections on the continuous improvement loop",
+      "property": "No loop run changes the base branch or publishes an unverified change.",
+      "contract": "AI_WORKFLOW.md",
+      "implementation": [
+        "scripts/continuous-improvement-loop.mjs",
+        "scripts/lib/continuous-improvement-loop.mjs",
+        "scripts/continuous-improvement-loop-verify.mjs",
+        "scripts/lib/continuous-improvement-loop-verify.mjs",
+        "scripts/continuous-improvement-loop-supervisor.sh",
+        "scripts/start-continuous-improvement-loop.sh",
+        "scripts/install-continuous-improvement-loop-launchd.sh",
+        "scripts/codex-loop-worker.sh",
+        "scripts/discover-improvement-idea.mjs",
+        "scripts/lib/discovery.mjs",
+        "scripts/continuous-improvement-loop.codex.json",
+        "scripts/continuous-improvement-loop.example.json"
+      ],
+      "tests": [
+        "scripts/__tests__/continuous-improvement-loop.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Executable tests against temporary git repositories, including refusal controls; not a whole-program proof.",
+      "evidence": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs on the candidate commit; hosted CI on pull request #750.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "high for the tested git and configuration boundaries; the quality of proposed changes is outside this requirement",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local tests pass; the supervisor's launchd behaviour and disk guard are exercised by shell tests only, and hosted gates remain pending."
+      }
     }
   ],
   "sourceFingerprints": {
@@ -27769,7 +27846,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "073fc6082c9186384dcac0000dceee15d15ad2665e7b1c29fda75ab911339363",
+    "docs/catalog-persistence/catalog-list-decisions.json": "75cee6cb8f3fe2b71ce609b60c85249bcd74b6486e0214f619440d8bfe567c55",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28202,7 +28279,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "d4ef8dc3fc0b755297bbb76375e14010b68d840e8aacd1804c5658eb0b98eb7f",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "a2e6d99f20d0007b59ddbd879a24388062e651c8b7ab2f98e22aeb7e2546ea87",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28211,6 +28288,7 @@
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
+    "scripts/__tests__/continuous-improvement-loop.test.mjs": "aacffc9e12b37667b7154909d599029d214f530a9c94b0ac426d336ce4819a11",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
@@ -28309,10 +28387,17 @@
     "scripts/check-webhook-signatures.py": "d19a35c65b5827cba3947286778cfa0bfa18dcf230b5d3539df8cff28920e4d5",
     "scripts/ci-change-scope.mjs": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
+    "scripts/codex-loop-worker.sh": "467cb345b75f0afa7d96e98be460d4225374f3dec1c203c0984f62aef16cc282",
     "scripts/content-storage-model.mjs": "9334e46e43c6b6e8dde89381f7fffd024af979e073dd659176f73add943892c8",
+    "scripts/continuous-improvement-loop-supervisor.sh": "352b0dfa8f7475d5555549089cacdbd3b547836cfc5f5c82897d20ca97de3151",
+    "scripts/continuous-improvement-loop-verify.mjs": "9d3c18b77cc6e93a7d6a1e38621e7ccfe5eb6a8521f20e1f19520511bf3c9e19",
+    "scripts/continuous-improvement-loop.codex.json": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
+    "scripts/continuous-improvement-loop.example.json": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
+    "scripts/continuous-improvement-loop.mjs": "06372ab7010ba6fbfb2d64bfd40c1dacc22b71c82122da6812499a75183dbf58",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
+    "scripts/discover-improvement-idea.mjs": "a4fce3753e221d2cb7c1577a15e97719372a686e586234e0af358a98082a9ccf",
     "scripts/event-planning-ux-model.mjs": "2b95df24f81b818fa00017e2a00e1a6c0397c212ebebcc3bb9af26869fc60406",
     "scripts/fetch-ddex-ern432-schema.sh": "9a7e2da809fd59d0709067b8fdd75f71a21dd474449d62c28551d1ac1b1f3a84",
     "scripts/generate-app-icons.mjs": "0d85263b6dc6e4d6909b7e7f6378a13c499446521b69eccd7e089ab7b68d5cc0",
@@ -28321,6 +28406,7 @@
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+    "scripts/install-continuous-improvement-loop-launchd.sh": "21408db312b60e4ef2c36cc07796f6f9fb2e342b4f5ab3c3fcd7f59442eaa4f0",
     "scripts/install-proof-checkers.py": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
     "scripts/install-recovery-tools.py": "87e21bcbbf08076148d6b5d0aca5464afedad77ec209a5cf95439ab440e286a0",
     "scripts/interactions/test-api.py": "585bea6f29fe51db5f460d60ae24e5b91f625ddaf1c8aeb3c1a2e7f2ce064dd4",
@@ -28328,6 +28414,9 @@
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
     "scripts/lib/auth_throttle_http.py": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
+    "scripts/lib/continuous-improvement-loop-verify.mjs": "1eaed1475f7c723968185ae3b16e3d3b0c0fa379c27a4a1704de08ced938ad75",
+    "scripts/lib/continuous-improvement-loop.mjs": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
+    "scripts/lib/discovery.mjs": "347304302f3a0e0161a6b8fc95d311a1eca12b6cd11bb3ffec378b862878ac4b",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
     "scripts/lib/formal-methods-audit.mjs": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
@@ -28393,6 +28482,7 @@
     "scripts/social/test-http.sh": "79cb3fc47fc8b191182fbe21dd8294acce64697796bdd12a753f7da7821ba457",
     "scripts/specification-conformance.py": "2c9aa59e5ae08fb6357d1fed83e2591e45d7e6fd1791ebfb6dc52dccab5e0fb0",
     "scripts/specification-inventory.py": "89b5afa51ac9efb2dd5a504b763bd0eddfc8503b592b9d929af7125126c2eb9b",
+    "scripts/start-continuous-improvement-loop.sh": "f36c33ec0d9767180c2543c3596964794e02c3e943efa72b3fbb2e970ec81850",
     "scripts/test-account-deletion-api.mjs": "917c2ec0721f5b2d22d9d11fa7c68d2e84579350dabb87f329d9845d6da5d244",
     "scripts/test-api-token-session-expiry-migration.sh": "af72a6da6641bdb8ecd8ba35d70c9f2586ae3b5e056b42ad63dbd07bcdac7036",
     "scripts/test-artist-invitation-auto-approval-migration.sh": "e3fb40179c83358082f9cb82afaa7950c6ceb019af862e7eea4e12ed09df83aa",
@@ -48031,6 +48121,84 @@
         "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/continuous-improvement-loop.mjs": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/continuous-improvement-loop.mjs": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/continuous-improvement-loop-verify.mjs": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/continuous-improvement-loop-verify.mjs": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/continuous-improvement-loop-supervisor.sh": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/start-continuous-improvement-loop.sh": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/install-continuous-improvement-loop-launchd.sh": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/codex-loop-worker.sh": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/discover-improvement-idea.mjs": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/discovery.mjs": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/continuous-improvement-loop.codex.json": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/continuous-improvement-loop.example.json": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/continuous-improvement-loop.test.mjs": [
+      {
+        "requirement": "SYS-LOOP-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -49711,7 +49879,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "d4ef8dc3fc0b755297bbb76375e14010b68d840e8aacd1804c5658eb0b98eb7f",
+      "sha256": "a2e6d99f20d0007b59ddbd879a24388062e651c8b7ab2f98e22aeb7e2546ea87",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49911,9 +50079,14 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
+      "sha256": "aacffc9e12b37667b7154909d599029d214f530a9c94b0ac426d336ce4819a11",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d2b75d1a49667e24",
@@ -51608,9 +51781,14 @@
     {
       "id": "SURFACE-6c037a47184dd0e1",
       "path": "scripts/codex-loop-worker.sh",
-      "sha256": "6da47a449c7eebca4b1c1deab3a459a42d72f3472c04b71e5588b800b2c7f405",
+      "sha256": "467cb345b75f0afa7d96e98be460d4225374f3dec1c203c0984f62aef16cc282",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-83f641016de23f49",
@@ -51629,53 +51807,64 @@
       ]
     },
     {
-      "id": "SURFACE-3b3b7300cb3b148d",
-      "path": "scripts/continuous-improvement-loop-dirty-worktree.mjs",
-      "sha256": "9952689276374049d8eba81df209ea1dd6398b3b58ee201fc5e15aa5cf78c63b",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-a5b3501b72738223",
-      "path": "scripts/continuous-improvement-loop-forever.mjs",
-      "sha256": "9efb8aed16f5d26d97f15f32dc53b2c5bc281e3a29b1185a0ec8d21a14f882a6",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-b3c3757671de3a8f",
       "path": "scripts/continuous-improvement-loop-supervisor.sh",
-      "sha256": "7f0c42b1a096a1887825717c8605c265bc6fca268edf8e0a636cc4a95b3dbc3e",
+      "sha256": "352b0dfa8f7475d5555549089cacdbd3b547836cfc5f5c82897d20ca97de3151",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dcc180d2a4916e98",
+      "path": "scripts/continuous-improvement-loop-verify.mjs",
+      "sha256": "9d3c18b77cc6e93a7d6a1e38621e7ccfe5eb6a8521f20e1f19520511bf3c9e19",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-4866f83da6180efe",
       "path": "scripts/continuous-improvement-loop.codex.json",
-      "sha256": "cca31937bdc0322a70265c25a4256ff968c53784f2c772791da5b23ac215b711",
+      "sha256": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-587b06f07bbc17e1",
       "path": "scripts/continuous-improvement-loop.example.json",
-      "sha256": "87770e25fc0a34763b9e159e9934aa5025a7c7729611cb1e32495de2355e0830",
+      "sha256": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "ecf7580ba5fa6a19d2937ef5cfd9fc4ae643af7d4349b3ecfb6fd45c00d821f5",
+      "sha256": "06372ab7010ba6fbfb2d64bfd40c1dacc22b71c82122da6812499a75183dbf58",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-cb864006a7638836",
-      "path": "scripts/continuous-improvement-loop.test.mjs",
-      "sha256": "defacc8e2687ea746480d89efa942a411845d263e39b37f592d79554149cdae2",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-45b3849f78ceb2dd",
@@ -51716,9 +51905,14 @@
     {
       "id": "SURFACE-55c2c32700cda24a",
       "path": "scripts/discover-improvement-idea.mjs",
-      "sha256": "9baaef9c2ffaaa7636bbe12f785b9e42cb8603349a822250fa8d9f0d363a45f1",
+      "sha256": "a4fce3753e221d2cb7c1577a15e97719372a686e586234e0af358a98082a9ccf",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-e6406d56712d5de9",
@@ -51907,9 +52101,14 @@
     {
       "id": "SURFACE-bad721e602863a57",
       "path": "scripts/install-continuous-improvement-loop-launchd.sh",
-      "sha256": "dcebbbc4b020fa157b45903c7c5a343e0e95d1d6777145f76f4489450e301b9d",
+      "sha256": "21408db312b60e4ef2c36cc07796f6f9fb2e342b4f5ab3c3fcd7f59442eaa4f0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-14082aef6c304d37",
@@ -52056,25 +52255,40 @@
       ]
     },
     {
-      "id": "SURFACE-4738d9e01ae03383",
-      "path": "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
-      "sha256": "faf36f605524fb8935e15f5b440fc8ba22dbe4b0cf4606ebca7b466d5555b680",
+      "id": "SURFACE-52387ab4cef049b4",
+      "path": "scripts/lib/continuous-improvement-loop-verify.mjs",
+      "sha256": "1eaed1475f7c723968185ae3b16e3d3b0c0fa379c27a4a1704de08ced938ad75",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-596444d6be3be153",
       "path": "scripts/lib/continuous-improvement-loop.mjs",
-      "sha256": "8b56d1d8ff9176a99571c7a8592604022048992f3d9b5b7f9539b39fcc70b422",
+      "sha256": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5d55ff4fc614658c",
       "path": "scripts/lib/discovery.mjs",
-      "sha256": "a14e9b4b45190816752fdceb69684a059746e0a55344fef3c18f8451dcecdc14",
+      "sha256": "347304302f3a0e0161a6b8fc95d311a1eca12b6cd11bb3ffec378b862878ac4b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-7e5d877bbcc438aa",
@@ -53765,9 +53979,14 @@
     {
       "id": "SURFACE-6d63ec22f8ea99a7",
       "path": "scripts/start-continuous-improvement-loop.sh",
-      "sha256": "bd3e135520d8df917f6d634b59e3eae56d1eb80a76f9b4f9efad407d2c0ff632",
+      "sha256": "f36c33ec0d9767180c2543c3596964794e02c3e943efa72b3fbb2e970ec81850",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "SYS-LOOP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-2f7dfeebba9005ba",
@@ -84049,7 +84268,6 @@
     "SURFACE-0da2aa9657386c51",
     "SURFACE-039bc8d278e3dafc",
     "SURFACE-d96822f506e6f794",
-    "SURFACE-2a6db69bcc12b984",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
     "SURFACE-97975ba39673dd5b",
@@ -84096,15 +84314,6 @@
     "SURFACE-74289e89f4a7d171",
     "SURFACE-ccd62b2a303eba94",
     "SURFACE-254fa49d7ac82af7",
-    "SURFACE-6c037a47184dd0e1",
-    "SURFACE-3b3b7300cb3b148d",
-    "SURFACE-a5b3501b72738223",
-    "SURFACE-b3c3757671de3a8f",
-    "SURFACE-4866f83da6180efe",
-    "SURFACE-587b06f07bbc17e1",
-    "SURFACE-655b9679c92bd422",
-    "SURFACE-cb864006a7638836",
-    "SURFACE-55c2c32700cda24a",
     "SURFACE-e6406d56712d5de9",
     "SURFACE-0540f4b62e8a5c1d",
     "SURFACE-ee3c76cc57db7814",
@@ -84117,7 +84326,6 @@
     "SURFACE-6efdc7705573cc29",
     "SURFACE-e10a3732c19671ff",
     "SURFACE-7762cc1d53f882c8",
-    "SURFACE-bad721e602863a57",
     "SURFACE-14082aef6c304d37",
     "SURFACE-865e33190c6c6efa",
     "SURFACE-8ae2a3dbc74bbcd0",
@@ -84126,9 +84334,6 @@
     "SURFACE-837e02c297524cce",
     "SURFACE-f7cfb7f13090b47a",
     "SURFACE-b7108336da7c8a87",
-    "SURFACE-4738d9e01ae03383",
-    "SURFACE-596444d6be3be153",
-    "SURFACE-5d55ff4fc614658c",
     "SURFACE-6f9017626e33d004",
     "SURFACE-a38198fb9ee3c45e",
     "SURFACE-49f6227b405af138",
@@ -84211,7 +84416,6 @@
     "SURFACE-d043b92d718bcc7b",
     "SURFACE-16d8def719a85cfa",
     "SURFACE-328feb70fab0c3c6",
-    "SURFACE-6d63ec22f8ea99a7",
     "SURFACE-2f7dfeebba9005ba",
     "SURFACE-a7f318be5cea52e5",
     "SURFACE-35cee8013045146d",
@@ -86775,7 +86979,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "42ed1ac18c2515e66517e6b590f5b40bd2347a7c90bf078bbf2307e82c1213c3",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86803,7 +87007,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "42ed1ac18c2515e66517e6b590f5b40bd2347a7c90bf078bbf2307e82c1213c3",
       "definition": {
         "states": [
           "absent",
@@ -86833,7 +87037,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "42ed1ac18c2515e66517e6b590f5b40bd2347a7c90bf078bbf2307e82c1213c3",
       "definition": {
         "export": [
           "queued",
@@ -109940,7 +110144,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 219,
+    "PARTIAL": 220,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

@@ -396,7 +396,23 @@ function setCandidate(candidates, candidate) {
   }
 }
 
+function normalizeExcludedFiles(excludedFiles) {
+  return new Set([...(excludedFiles ?? [])].map((file) => String(file).trim().replace(/\\/g, '/')).filter(Boolean));
+}
+
+// Files that already have a pending proposal are skipped, so discovery moves on to the
+// next finding instead of proposing the same fix again while the first one awaits review.
+function withoutExcludedFiles(repoRoot, findings, excludedFiles) {
+  if (excludedFiles.size === 0) return findings;
+  return findings.filter((finding) => {
+    const file = String(finding?.file ?? '');
+    const relativeFile = path.isAbsolute(file) ? path.relative(repoRoot, file) : file;
+    return !excludedFiles.has(relativeFile.replace(/\\/g, '/'));
+  });
+}
+
 async function collectDiscoveryCandidates(repoRoot, options = {}) {
+  const excludedFiles = normalizeExcludedFiles(options.excludedFiles);
   const candidates = {
     [DISCOVERY_LANE_LOGICAL]: null,
     [DISCOVERY_LANE_FORMAL]: null,
@@ -406,7 +422,7 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
   };
 
   // 1. Logical correctness audit (highest priority, whole codebase)
-  const logicalFindings = await collectLogicalFindings(repoRoot);
+  const logicalFindings = withoutExcludedFiles(repoRoot, await collectLogicalFindings(repoRoot), excludedFiles);
   const criticalLogical = logicalFindings.find((f) => f.severity === 'critical');
   const errorLogical = logicalFindings.find((f) => f.severity === 'error');
   const firstLogical = criticalLogical || errorLogical || logicalFindings[0];
@@ -419,7 +435,7 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
   }
 
   // 2. Formal methods audit (second highest)
-  const formalFindings = await collectFormalFindings(repoRoot);
+  const formalFindings = withoutExcludedFiles(repoRoot, await collectFormalFindings(repoRoot), excludedFiles);
   const criticalFormal = formalFindings.find((f) => f.severity === 'critical');
   const errorFormal = formalFindings.find((f) => f.severity === 'error');
   const firstFormal = criticalFormal || errorFormal || formalFindings[0];
@@ -434,7 +450,7 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
   // 3. UX quality audit (third)
   const uxRoot = path.join(repoRoot, 'tdf-hq-ui', 'src');
   if (await pathExists(uxRoot)) {
-    const uxFindings = await collectUxFindings(uxRoot);
+    const uxFindings = withoutExcludedFiles(repoRoot, await collectUxFindings(uxRoot), excludedFiles);
     const criticalUx = uxFindings.find((f) => f.severity === 'critical');
     const errorUx = uxFindings.find((f) => f.severity === 'error');
     const firstUx = criticalUx || errorUx || uxFindings[0];
@@ -450,7 +466,7 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
   // 4. Legacy UI accessibility audit (fourth)
   const uiRoot = path.join(repoRoot, 'tdf-hq-ui', 'src');
   if (await pathExists(uiRoot)) {
-    const uiFindings = await collectUiFindings(uiRoot);
+    const uiFindings = withoutExcludedFiles(repoRoot, await collectUiFindings(uiRoot), excludedFiles);
     if (uiFindings.length > 0) {
       setCandidate(
         candidates,
@@ -460,7 +476,7 @@ async function collectDiscoveryCandidates(repoRoot, options = {}) {
   }
 
   // 5. TODO scan
-  const todoMatches = await scanTodoMatches(repoRoot);
+  const todoMatches = withoutExcludedFiles(repoRoot, await scanTodoMatches(repoRoot), excludedFiles);
   for (const match of todoMatches) {
     const lane = classifyTodoLane(match.file);
     setCandidate(candidates, createCandidate(lane, DISCOVERY_PRIORITY_REAL, buildTodoIdea(match, lane)));
@@ -712,7 +728,10 @@ export function verifyDiscoveryPolicyModel() {
 // ─── Public API ───
 
 export async function buildDefaultIdea(repoRoot, options = {}) {
-  const candidates = await collectDiscoveryCandidates(repoRoot, { counts: options.counts });
+  const candidates = await collectDiscoveryCandidates(repoRoot, {
+    counts: options.counts,
+    excludedFiles: options.excludedFiles,
+  });
   const lane = chooseDiscoveryLane(candidates, { lastLane: options.lastLane, counts: options.counts });
   const selectedCandidate = lane ? candidates[lane] : null;
 
@@ -729,7 +748,11 @@ export async function buildDefaultIdea(repoRoot, options = {}) {
 
 export async function discoverImprovementIdea(repoRoot, options = {}) {
   const { statePath, state } = await readDiscoveryState(repoRoot, options);
-  const idea = await buildDefaultIdea(repoRoot, { lastLane: state.lastLane, counts: state.counts });
+  const idea = await buildDefaultIdea(repoRoot, {
+    lastLane: state.lastLane,
+    counts: state.counts,
+    excludedFiles: options.excludedFiles,
+  });
 
   if (options.persistState === false) {
     return idea;

@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Supervises the continuous improvement loop.
+#
+# ROOT is the checkout that holds this tooling. WORKTREE is a separate linked git worktree
+# that the loop owns: every iteration branches from the remote base branch there, and
+# failed attempts are discarded there. The supervisor never commits, merges, or pushes.
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG="${1:-${CONTINUOUS_LOOP_CONFIG:-$ROOT/scripts/continuous-improvement-loop.codex.json}}"
+WORKTREE="${CONTINUOUS_LOOP_WORKTREE:-}"
 STATE_DIR="${CONTINUOUS_LOOP_STATE_DIR:-$ROOT/tmp/continuous-improvement-loop}"
 LOG_FILE="${CONTINUOUS_LOOP_LOG_FILE:-$ROOT/tmp/continuous-improvement-loop.log}"
 LOG_MAX_SIZE_BYTES="${CONTINUOUS_LOOP_LOG_MAX_SIZE_BYTES:-104857600}"  # 100 MB default
@@ -12,10 +19,14 @@ STATUS_FILE="${CONTINUOUS_LOOP_STATUS_FILE:-$STATE_DIR/status.json}"
 STOP_FILE="${CONTINUOUS_LOOP_STOP_FILE:-$STATE_DIR/stop}"
 HEARTBEAT_FILE="${CONTINUOUS_LOOP_HEARTBEAT_FILE:-$STATE_DIR/heartbeat.txt}"
 LOCK_DIR="${CONTINUOUS_LOOP_LOCK_DIR:-$STATE_DIR/lock}"
+REPAIR_FILE="$STATE_DIR/repair-needed.md"
 RESTART_DELAY_SECONDS="${CONTINUOUS_LOOP_RESTART_DELAY_SECONDS:-30}"
-HEARTBEAT_TIMEOUT_SECONDS="${CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS:-1800}"
 POLL_INTERVAL_SECONDS="${CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS:-15}"
-CHILD_TIMEOUT_SECONDS="${CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS:-10800}"
+# 0 disables the whole-child timeout; individual steps are bounded by stepTimeoutMinutes.
+CHILD_TIMEOUT_SECONDS="${CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS:-0}"
+# The verification gates and their workers are memory-hungry; on macOS swap grows on the
+# same volume in 1 GB steps, so a thin margin can take the whole machine to a full disk.
+MIN_FREE_MB="${CONTINUOUS_LOOP_MIN_FREE_MB:-3072}"
 
 export PATH="${CONTINUOUS_LOOP_PATH:-/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${HOME}/.local/bin:${PATH:-}}"
 if [ -f "$ROOT/.env" ]; then
@@ -32,24 +43,32 @@ export CONTINUOUS_LOOP_CHILD_PID_FILE="$CHILD_PID_FILE"
 export CONTINUOUS_LOOP_STATUS_FILE="$STATUS_FILE"
 export CONTINUOUS_LOOP_STOP_FILE="$STOP_FILE"
 export CONTINUOUS_LOOP_HEARTBEAT_FILE="$HEARTBEAT_FILE"
-export CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS="$HEARTBEAT_TIMEOUT_SECONDS"
 export CONTINUOUS_LOOP_RESTART_DELAY_SECONDS="$RESTART_DELAY_SECONDS"
 export CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS="$POLL_INTERVAL_SECONDS"
 export CONTINUOUS_LOOP_CONFIG="$CONFIG"
 export CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS="$CHILD_TIMEOUT_SECONDS"
+export CONTINUOUS_LOOP_WORKTREE="$WORKTREE"
 
-log() {
-  if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
+file_size_bytes() {
+  stat -f%z "$1" 2>/dev/null || stat -c%s "$1" 2>/dev/null || echo 0
+}
+
+rotate_log_if_oversized() {
+  if [ -f "$LOG_FILE" ] && [ "$(file_size_bytes "$LOG_FILE")" -gt "$LOG_MAX_SIZE_BYTES" ]; then
     mv "$LOG_FILE" "$LOG_FILE.$(date -u +%Y%m%dT%H%M%SZ).old"
   fi
+}
+
+log() {
+  rotate_log_if_oversized
   printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >> "$LOG_FILE"
 }
 
-# POSIX-compatible log rotation: keep at most N .old backups, remove oldest first
+# Keep at most N rotated logs, removing the oldest first.
 rotate_old_logs() {
   local max_backups="${CONTINUOUS_LOOP_LOG_MAX_BACKUPS:-3}"
   local count=0
-  # Count existing .old files (newest first by filename timestamp order)
+  local f
   for f in "$LOG_FILE."*.old; do
     [ -f "$f" ] || continue
     count=$((count + 1))
@@ -87,7 +106,7 @@ json_update() {
   local last_exit_code="${5:-}"
   local restart_count="$6"
   local stale_restarts="$7"
-  python3 - "$STATUS_FILE" "$state" "$phase" "$details" "$child_pid" "$last_exit_code" "$restart_count" "$stale_restarts" "$CONFIG" "$$" "$LOG_FILE" "$PID_FILE" "$CHILD_PID_FILE" "$STOP_FILE" "$HEARTBEAT_TIMEOUT_SECONDS" "$POLL_INTERVAL_SECONDS" "$RESTART_DELAY_SECONDS" "$HEARTBEAT_FILE" <<'PY'
+  python3 - "$STATUS_FILE" "$state" "$phase" "$details" "$child_pid" "$last_exit_code" "$restart_count" "$stale_restarts" "$CONFIG" "$$" "$LOG_FILE" "$PID_FILE" "$CHILD_PID_FILE" "$STOP_FILE" "$POLL_INTERVAL_SECONDS" "$RESTART_DELAY_SECONDS" "$HEARTBEAT_FILE" "$WORKTREE" <<'PY'
 import datetime, json, os, sys
 (
     status_file,
@@ -104,10 +123,10 @@ import datetime, json, os, sys
     pid_file,
     child_pid_file,
     stop_file,
-    heartbeat_timeout,
     poll_interval,
     restart_delay,
     heartbeat_file,
+    worktree,
 ) = sys.argv[1:19]
 try:
     with open(status_file, 'r', encoding='utf-8') as fh:
@@ -117,24 +136,30 @@ except Exception:
 now = datetime.datetime.now(datetime.timezone.utc).isoformat()
 data.update({
     'updatedAt': now,
+    # Liveness of the supervisor itself; the loop child reports "runnerHeartbeat".
     'lastHeartbeat': now,
-    'state': state,
-    'phase': phase,
+    'supervisorState': state,
+    'supervisorPhase': phase,
     'details': details,
     'lastMessage': details,
     'supervisorPid': int(supervisor_pid),
     'configPath': config_path,
+    'worktree': worktree,
     'logFile': log_file,
     'pidFile': pid_file,
     'childPidFile': child_pid_file,
     'stopFile': stop_file,
     'heartbeatFile': heartbeat_file,
-    'heartbeatTimeoutSeconds': int(heartbeat_timeout or '0'),
     'pollIntervalSeconds': int(poll_interval or '0'),
     'restartDelaySeconds': int(restart_delay or '0'),
     'restartCount': int(restart_count or '0'),
     'staleRestartCount': int(stale_restarts or '0'),
 })
+# While the child is healthy it owns "state"/"phase"; the supervisor only overrides them
+# when it changes what is happening.
+if phase != 'supervising':
+    data['state'] = state
+    data['phase'] = phase
 if child_pid:
     data['childPid'] = int(child_pid)
 elif state in {'starting', 'stopping', 'stopped', 'blocked'}:
@@ -150,11 +175,9 @@ if last_exit_code:
         data['lastExitCode'] = int(last_exit_code)
     except Exception:
         data['lastExitCode'] = last_exit_code
-if state in {'running', 'starting'}:
-    data.pop('lastError', None)
 if 'startedAt' not in data:
     data['startedAt'] = now
-tmp = status_file + '.tmp'
+tmp = '%s.supervisor-%d.tmp' % (status_file, os.getpid())
 with open(tmp, 'w', encoding='utf-8') as fh:
     json.dump(data, fh, indent=2)
     fh.write('\n')
@@ -169,65 +192,72 @@ is_pid_alive() {
   [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
 }
 
-heartbeat_age_seconds() {
-  python3 - "$STATUS_FILE" <<'PY'
-import datetime, json, sys
-path = sys.argv[1]
-try:
-    with open(path, 'r', encoding='utf-8') as fh:
-        data = json.load(fh)
-    stamp = data.get('lastHeartbeat') or data.get('updatedAt')
-    if not stamp:
-        print(-1)
-        raise SystemExit
-    dt = datetime.datetime.fromisoformat(stamp.replace('Z', '+00:00'))
-    now = datetime.datetime.now(datetime.timezone.utc)
-    print(int((now - dt).total_seconds()))
-except Exception:
-    print(-1)
-PY
-}
-
-cleanup() {
-  rm -f "$CHILD_PID_FILE"
-  rm -rf "$LOCK_DIR"
-}
-
 stop_child() {
-  local child_pid="${1:-}"
-  if ! is_pid_alive "$child_pid"; then
+  local pid="${1:-}"
+  if ! is_pid_alive "$pid"; then
     return 0
   fi
-  kill "$child_pid" 2>/dev/null || true
-  for _ in $(seq 1 20); do
-    if ! is_pid_alive "$child_pid"; then
+  # The child forwards SIGTERM to the process group of its running step.
+  kill "$pid" 2>/dev/null || true
+  for _ in $(seq 1 30); do
+    if ! is_pid_alive "$pid"; then
       return 0
     fi
     sleep 1
   done
-  kill -9 "$child_pid" 2>/dev/null || true
+  kill -9 "$pid" 2>/dev/null || true
 }
 
-trap 'cleanup' EXIT
-
+# Take the lock before installing the cleanup trap, so a supervisor that loses the race
+# cannot delete the running supervisor's lock or child PID file on its way out.
 if ! mkdir "$LOCK_DIR" 2>/dev/null; then
-  echo "Continuous improvement loop supervisor lock exists at $LOCK_DIR" >&2
-  exit 1
+  lock_owner="$(cat "$LOCK_DIR/pid" 2>/dev/null || true)"
+  if is_pid_alive "$lock_owner"; then
+    echo "Continuous improvement loop supervisor already running (pid $lock_owner, lock $LOCK_DIR)" >&2
+    exit 1
+  fi
+  # Stale lock from a supervisor that was killed without running its cleanup.
+  rm -rf "$LOCK_DIR"
+  if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+    echo "Continuous improvement loop supervisor lock exists at $LOCK_DIR" >&2
+    exit 1
+  fi
 fi
+echo "$$" > "$LOCK_DIR/pid"
+
+child_pid=""
+
+cleanup() {
+  stop_child "$child_pid"
+  rm -f "$CHILD_PID_FILE"
+  rm -rf "$LOCK_DIR"
+}
+trap 'cleanup' EXIT
+trap 'exit 143' TERM INT HUP
 
 echo "$$" > "$PID_FILE"
-rm -f "$STOP_FILE"
 
 restart_count=0
 stale_restart_count=0
-child_pid=""
 child_started_epoch=0
 last_error_signature=""
 last_error_time=0
 error_repeat_count=0
+last_logged_blocker=""
 
 json_update "starting" "startup" "Supervisor booting" "" "" "$restart_count" "$stale_restart_count"
-log "continuous-improvement-loop supervisor started pid=$$ config=$CONFIG"
+log "continuous-improvement-loop supervisor started pid=$$ config=$CONFIG worktree=${WORKTREE:-unset}"
+
+config_flag_enabled() {
+  # Usage: config_flag_enabled <key> <default: true|false>
+  python3 - "$CONFIG" "$1" "$2" <<'PY' >/dev/null 2>&1
+import json, sys
+with open(sys.argv[1], 'r', encoding='utf-8') as fh:
+    config = json.load(fh)
+default = sys.argv[3] == 'true'
+raise SystemExit(0 if config.get(sys.argv[2], default) else 1)
+PY
+}
 
 preflight_block_reason() {
   if [ -f "$STATE_DIR/.pause-codex" ]; then
@@ -235,95 +265,54 @@ preflight_block_reason() {
     return 0
   fi
 
+  if [ -z "$WORKTREE" ]; then
+    echo "blocked: CONTINUOUS_LOOP_WORKTREE is not set; point it at a dedicated linked git worktree for the loop"
+    return 0
+  fi
+
+  if [ ! -d "$WORKTREE" ] || ! git -C "$WORKTREE" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "blocked: loop worktree $WORKTREE does not exist or is not a git worktree"
+    return 0
+  fi
+
   local config_check=""
-  if ! config_check="$(node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only 2>&1)"; then
+  if ! config_check="$(cd "$WORKTREE" && node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only 2>&1)"; then
     echo "blocked: ${config_check}"
     return 0
   fi
 
-  if grep -q 'codex-loop-worker\\|\\bcodex\\b' "$CONFIG" 2>/dev/null && ! command -v codex >/dev/null 2>&1; then
+  if grep -Eq 'codex-loop-worker|(^|[^[:alnum:]_-])codex([^[:alnum:]_-]|$)' "$CONFIG" 2>/dev/null && ! command -v codex >/dev/null 2>&1; then
     echo 'blocked: Codex CLI is required by the configured worker but is not available in PATH'
     return 0
   fi
 
-  if python3 - "$CONFIG" <<'PY' >/dev/null 2>&1
-import json, sys
-with open(sys.argv[1], 'r', encoding='utf-8') as fh:
-    config = json.load(fh)
-raise SystemExit(0 if config.get('pollGitHub', True) else 1)
-PY
-  then
+  if config_flag_enabled pollGitHub true || config_flag_enabled openPullRequest true; then
     if ! gh_auth_token_available; then
-      echo 'blocked: GitHub polling is enabled but neither token env vars nor `gh auth token` are available'
+      echo 'blocked: GitHub access is required (pull requests or CI polling) but neither token env vars nor `gh auth token` are available'
       return 0
     fi
   fi
 
-  local dirty
-  dirty="$(git -C "$ROOT" status --porcelain 2>/dev/null || true)"
-  if [ -n "$dirty" ]; then
-    local checkpoint_json=""
-    if checkpoint_json="$(node "$ROOT/scripts/continuous-improvement-loop-dirty-worktree.mjs" --repo-root "$ROOT" 2>>"$LOG_FILE")"; then
-      local summary
-      summary="$(printf '%s' "$checkpoint_json" | python3 - <<'PY'
-import json, sys
-raw = sys.stdin.read().strip()
-try:
-    payload = json.loads(raw) if raw else {}
-except Exception:
-    payload = {}
-print(payload.get('summary') or 'checkpointed dirty worktree before restarting bounded loop')
-PY
-)"
-      log "$summary"
-      return 1
-    fi
-
-    local reason
-    reason="$(printf '%s' "$checkpoint_json" | python3 - <<'PY'
-import json, sys
-raw = sys.stdin.read().strip()
-try:
-    payload = json.loads(raw) if raw else {}
-except Exception:
-    payload = {}
-print(payload.get('reason') or 'dirty worktree checkpoint failed')
-PY
-)"
-    echo "blocked: ${reason}"
+  local free_mb
+  free_mb="$(df -Pm "$WORKTREE" 2>/dev/null | awk 'NR==2 {print $4}')"
+  if [ -n "$free_mb" ] && [ "$free_mb" -lt "$MIN_FREE_MB" ]; then
+    echo "blocked: only ${free_mb} MB of disk space is free (minimum ${MIN_FREE_MB} MB); free space to resume"
     return 0
   fi
 
-  # Preflight divergence guard: detect local commits that would cause rebase conflicts
-  local git_remote git_branch merge_base merge_tree_output conflict_files
-  git_remote="$(git -C "$ROOT" config --get branch.main.remote 2>/dev/null || echo "origin")"
-  git_branch="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")"
-  if [ -n "$git_remote" ] && [ -n "$git_branch" ]; then
-    git -C "$ROOT" fetch "$git_remote" "$git_branch" >/dev/null 2>&1 || true
-    merge_base="$(git -C "$ROOT" merge-base HEAD "${git_remote}/${git_branch}" 2>/dev/null || true)"
-    if [ -n "$merge_base" ]; then
-      merge_tree_output="$(git -C "$ROOT" merge-tree "$merge_base" HEAD "${git_remote}/${git_branch}" 2>/dev/null || true)"
-      if [ -n "$merge_tree_output" ]; then
-        conflict_files="$(printf '%s' "$merge_tree_output" | grep -E '^[^<>]*$' | grep -v '^$' | head -n 20 || true)"
-        if [ -n "$conflict_files" ]; then
-          local repair_file="$STATE_DIR/repair-needed.md"
-          cat > "$repair_file" <<REPAIR
-# CIL Supervisor Repair Needed
-
-**Detected:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
-**Reason:** Preflight divergence guard detected that local commits would cause rebase conflicts with ${git_remote}/${git_branch}.
-**Conflict files:**
-${conflict_files}
-**Suggested action:** Reset local branch to ${git_remote}/${git_branch} or resolve conflicts manually before resuming.
-REPAIR
-          echo "blocked: Preflight divergence guard detected rebase conflicts with ${git_remote}/${git_branch}; repair artifact written to ${repair_file}"
-          return 0
-        fi
-      fi
-    fi
-  fi
-
   return 1
+}
+
+report_blocked() {
+  local blocker="$1"
+  json_update "blocked" "preflight-blocked" "$blocker" "" "" "$restart_count" "$stale_restart_count"
+  # Log a blocker once, not on every poll. Numbers are ignored when comparing so a
+  # fluctuating figure (free megabytes) does not count as a new blocker.
+  local blocker_kind="${blocker//[0-9]/}"
+  if [ "$blocker_kind" != "$last_logged_blocker" ]; then
+    log "$blocker"
+    last_logged_blocker="$blocker_kind"
+  fi
 }
 
 start_child() {
@@ -333,63 +322,64 @@ start_child() {
     child_pid=""
     child_started_epoch=0
     rm -f "$CHILD_PID_FILE"
-    json_update "blocked" "preflight-blocked" "$blocker" "" "" "$restart_count" "$stale_restart_count"
-    log "$blocker"
+    report_blocked "$blocker"
     return 1
   fi
+  last_logged_blocker=""
 
-  json_update "starting" "launching-child" "Starting bounded loop child" "" "" "$restart_count" "$stale_restart_count"
-  # Rotate log if oversized before spawning child, so the >> redirect always appends to a fresh file
-  if [ -f "$LOG_FILE" ] && [ "$(stat -f%z "$LOG_FILE" 2>/dev/null || stat -c%s "$LOG_FILE" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
-    mv "$LOG_FILE" "$LOG_FILE.$(date -u +%Y%m%dT%H%M%SZ).old"
-  fi
-  # Rotate old backups: keep at most N and remove any oversized
+  json_update "starting" "launching-child" "Starting loop child" "" "" "$restart_count" "$stale_restart_count"
+  rotate_log_if_oversized
   rotate_old_logs
-  local old_log
-  old_log=""
-  for f in "$LOG_FILE."*.old; do
-    [ -f "$f" ] || continue
-    old_log="$f"
-    break
-  done
-  if [ -n "$old_log" ] && [ "$(stat -f%z "$old_log" 2>/dev/null || stat -c%s "$old_log" 2>/dev/null || echo 0)" -gt "$LOG_MAX_SIZE_BYTES" ]; then
-    rm -f "$old_log"
-  fi
-  CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE="$STATUS_FILE" \
-  CONTINUOUS_LOOP_LOG_FILE="$LOG_FILE" \
-  CONTINUOUS_LOOP_PID_FILE="$PID_FILE" \
-  CONTINUOUS_LOOP_CHILD_PID_FILE="$CHILD_PID_FILE" \
-  CONTINUOUS_LOOP_STOP_FILE="$STOP_FILE" \
-  CONTINUOUS_LOOP_HEARTBEAT_TIMEOUT_SECONDS="$HEARTBEAT_TIMEOUT_SECONDS" \
-  CONTINUOUS_LOOP_RESTART_DELAY_SECONDS="$RESTART_DELAY_SECONDS" \
-  CONTINUOUS_LOOP_SUPERVISOR_POLL_SECONDS="$POLL_INTERVAL_SECONDS" \
-  node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" >> "$LOG_FILE" 2>&1 &
+  (
+    cd "$WORKTREE"
+    CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE="$STATUS_FILE" \
+      exec node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG"
+  ) >> "$LOG_FILE" 2>&1 &
   child_pid=$!
   child_started_epoch="$(date +%s)"
   echo "$child_pid" > "$CHILD_PID_FILE"
-  json_update "running" "child-running" "Bounded loop child running" "$child_pid" "" "$restart_count" "$stale_restart_count"
+  json_update "running" "child-running" "Loop child running" "$child_pid" "" "$restart_count" "$stale_restart_count"
   log "child started pid=$child_pid"
   return 0
 }
 
-start_child || true
+stop_requested() {
+  [ -f "$STOP_FILE" ]
+}
 
-while true; do
-  if [ -f "$STOP_FILE" ]; then
+# A stop request holds until the stop file is removed. The supervisor stays alive and idle
+# rather than exiting, because a KeepAlive launchd job would relaunch it immediately and a
+# fresh supervisor must not mistake that relaunch for permission to resume.
+handle_stop() {
+  if [ -n "$child_pid" ]; then
     json_update "stopping" "stop-requested" "Stop requested" "$child_pid" "" "$restart_count" "$stale_restart_count"
     stop_child "$child_pid"
-    json_update "stopped" "stopped" "Supervisor stopped by operator" "" "" "$restart_count" "$stale_restart_count"
-    log "stop requested; supervisor exiting"
-    exit 0
+    child_pid=""
+    child_started_epoch=0
+    rm -f "$CHILD_PID_FILE"
+  fi
+  log "stop requested; loop child stopped and supervisor idle until $STOP_FILE is removed"
+  while stop_requested; do
+    json_update "stopped" "stopped" "Stopped by operator; remove $STOP_FILE to resume" "" "" "$restart_count" "$stale_restart_count"
+    sleep "$POLL_INTERVAL_SECONDS"
+  done
+  log "stop file removed; resuming"
+}
+
+if ! stop_requested; then
+  start_child || true
+fi
+
+while true; do
+  if stop_requested; then
+    handle_stop
   fi
 
   if [ -z "$child_pid" ]; then
-    blocker="$(preflight_block_reason || true)"
-    if [ -z "$blocker" ]; then
-      blocker="Supervisor waiting for preflight blockers to clear"
-    fi
-    json_update "blocked" "preflight-blocked" "$blocker" "" "" "$restart_count" "$stale_restart_count"
     sleep "$POLL_INTERVAL_SECONDS"
+    if stop_requested; then
+      handle_stop
+    fi
     start_child || true
     continue
   fi
@@ -399,9 +389,11 @@ while true; do
     wait "$child_pid" || exit_code=$?
     child_pid=""
     child_started_epoch=0
+    rm -f "$CHILD_PID_FILE"
     restart_count=$((restart_count + 1))
 
-    # Crash-loop detection: if same error signature repeats >3 times in 10 min, block
+    # Crash-loop detection: the same exit code more than 3 times within 10 minutes of
+    # each other means restarting is not helping.
     now_epoch="$(date +%s)"
     error_sig="exit:${exit_code}"
     if [ "$error_sig" = "$last_error_signature" ] && [ $((now_epoch - last_error_time)) -le 600 ]; then
@@ -413,20 +405,22 @@ while true; do
     last_error_time="$now_epoch"
 
     if [ "$error_repeat_count" -gt 3 ]; then
-      repair_file="$STATE_DIR/repair-needed.md"
-      cat > "$repair_file" <<REPAIR
+      cat > "$REPAIR_FILE" <<REPAIR
 # CIL Supervisor Repair Needed
 
 **Detected:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 **Reason:** Child exited with the same error signature ${error_repeat_count} times within 10 minutes.
 **Last exit code:** ${exit_code}
 **Restart count:** ${restart_count}
-**Suggested action:** Inspect the child log at ${LOG_FILE} and resolve the root cause before resuming.
+**Suggested action:** Inspect the child log at ${LOG_FILE}, resolve the root cause, then delete this file to resume.
 REPAIR
-      json_update "blocked" "crash-loop-detected" "Child crashed ${error_repeat_count} times with same error; repair artifact written to ${repair_file}" "" "$exit_code" "$restart_count" "$stale_restart_count"
-      log "CRASH-LOOP BLOCKED: child exited ${error_repeat_count} times with ${error_sig}; repair artifact at ${repair_file}"
-      # Stay in blocked state until operator removes repair file or restarts supervisor
-      while [ -f "$repair_file" ]; do
+      log "CRASH-LOOP BLOCKED: child exited ${error_repeat_count} times with ${error_sig}; repair artifact at ${REPAIR_FILE}"
+      # Stay blocked until the operator removes the repair file or requests a stop.
+      while [ -f "$REPAIR_FILE" ]; do
+        if stop_requested; then
+          handle_stop
+        fi
+        json_update "blocked" "crash-loop-detected" "Child crashed ${error_repeat_count} times with same error; delete ${REPAIR_FILE} to resume" "" "$exit_code" "$restart_count" "$stale_restart_count"
         sleep "$POLL_INTERVAL_SECONDS"
       done
       log "crash-loop repair artifact removed; resuming"
@@ -437,13 +431,16 @@ REPAIR
     json_update "restarting" "child-exited" "Loop child exited; restarting after delay" "" "$exit_code" "$restart_count" "$stale_restart_count"
     log "child exited code=$exit_code; restarting in ${RESTART_DELAY_SECONDS}s"
     sleep "$RESTART_DELAY_SECONDS"
+    if stop_requested; then
+      handle_stop
+    fi
     start_child || true
     sleep "$POLL_INTERVAL_SECONDS"
     continue
   fi
 
   now_epoch="$(date +%s)"
-  if [ "$child_started_epoch" -gt 0 ] && [ $((now_epoch - child_started_epoch)) -gt "$CHILD_TIMEOUT_SECONDS" ]; then
+  if [ "$CHILD_TIMEOUT_SECONDS" -gt 0 ] && [ "$child_started_epoch" -gt 0 ] && [ $((now_epoch - child_started_epoch)) -gt "$CHILD_TIMEOUT_SECONDS" ]; then
     stale_restart_count=$((stale_restart_count + 1))
     restart_count=$((restart_count + 1))
     json_update "restarting" "child-timeout" "Loop child exceeded timeout; forcing restart" "$child_pid" "124" "$restart_count" "$stale_restart_count"

@@ -13,6 +13,7 @@ PID_FILE="${CONTINUOUS_LOOP_PID_FILE:-$ROOT/tmp/continuous-improvement-loop.pid}
 STATE_DIR="${CONTINUOUS_LOOP_STATE_DIR:-$ROOT/tmp/continuous-improvement-loop}"
 STATUS_FILE="${CONTINUOUS_LOOP_STATUS_FILE:-$STATE_DIR/status.json}"
 STOP_FILE="${CONTINUOUS_LOOP_STOP_FILE:-$STATE_DIR/stop}"
+WORKTREE="${CONTINUOUS_LOOP_WORKTREE:-}"
 SUPERVISOR="$ROOT/scripts/continuous-improvement-loop-supervisor.sh"
 LAUNCHD_INSTALLER="$ROOT/scripts/install-continuous-improvement-loop-launchd.sh"
 
@@ -38,6 +39,7 @@ status() {
     echo "pid: ${pid:-none}"
   fi
   echo "config: $CONFIG"
+  echo "worktree: ${WORKTREE:-unset}"
   echo "log: $LOG_FILE"
   echo "status file: $STATUS_FILE"
   if [ -f "$STATUS_FILE" ]; then
@@ -60,6 +62,21 @@ rotate_log_if_needed() {
   fi
 }
 
+# The loop owns a dedicated linked worktree: it branches from the remote base branch there
+# and discards failed attempts there, so it must never be pointed at a working checkout.
+require_worktree() {
+  if [ -z "$WORKTREE" ]; then
+    echo "CONTINUOUS_LOOP_WORKTREE is not set. Create a dedicated worktree, for example:" >&2
+    echo "  git -C \"$ROOT\" worktree add --detach ../tdf-app-loop-work origin/main" >&2
+    echo "and export CONTINUOUS_LOOP_WORKTREE with its absolute path." >&2
+    exit 1
+  fi
+  if [ ! -d "$WORKTREE" ]; then
+    echo "Loop worktree does not exist: $WORKTREE" >&2
+    exit 1
+  fi
+}
+
 start() {
   local existing_pid
   existing_pid="$(read_pid)"
@@ -69,12 +86,13 @@ start() {
     return 0
   fi
 
-  node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only
+  require_worktree
+  (cd "$WORKTREE" && node "$ROOT/scripts/continuous-improvement-loop.mjs" --config "$CONFIG" --validate-config-only)
 
   rotate_log_if_needed
 
   rm -f "$STOP_FILE" "$PID_FILE"
-  nohup "$SUPERVISOR" "$CONFIG" >> "$LOG_FILE" 2>&1 < /dev/null &
+  CONTINUOUS_LOOP_WORKTREE="$WORKTREE" nohup "$SUPERVISOR" "$CONFIG" >> "$LOG_FILE" 2>&1 < /dev/null &
   local supervisor_pid=$!
   sleep 1
   if ! is_pid_alive "$supervisor_pid"; then
@@ -131,7 +149,8 @@ case "$ACTION" in
     tail -f "$LOG_FILE"
     ;;
   install-launchd)
-    "$LAUNCHD_INSTALLER" "$CONFIG"
+    require_worktree
+    CONTINUOUS_LOOP_WORKTREE="$WORKTREE" "$LAUNCHD_INSTALLER" "$CONFIG"
     ;;
   *)
     echo "Usage: $0 [start|stop|restart|status|tail|install-launchd] [config-path]" >&2
