@@ -6,7 +6,7 @@
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711"
+    "tdf-hq/tdf-hq.cabal": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1"
   },
   "obligations": [
     {
@@ -573,6 +573,15 @@
       "currentSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
       "change": "Register the library module TDF.Server.EventAdminDelegation in exposed-modules and the test module TDF.EventAdminDelegationSpec in the tdf-hq-test other-modules list for EVT-ADMIN-DELEGATION-001.",
       "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds event-delegation handlers only and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "7d3a394d76ff1e637b1de9c34f785cacc2223d2d",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "currentSha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "change": "Register the library module TDF.Server.DirectoryAgreementText in exposed-modules for MKT-AGREEMENT-PAYMENT-001.",
+      "semanticReview": "Removing exactly that one module line reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds pure marketplace agreement SQL projection and notification text only and is not imported by any reviewed source.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
     }
   ]
