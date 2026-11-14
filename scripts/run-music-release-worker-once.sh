@@ -440,9 +440,13 @@ run_heartbeat_child() {
   fi
   wait "$heartbeat_child" || heartbeat_child_status=$?
   if [ "$heartbeat_stopping" = true ]; then
-    # A trapped signal can interrupt wait before the native process exits.
-    # Reap outside the signal handler, including on macOS Bash 3.2.
-    wait "$heartbeat_child" 2>/dev/null || true
+    # A trapped signal can interrupt wait before the native process exits, and
+    # the stop signal is repeated, so it can interrupt this wait as well. Keep
+    # reaping outside the signal handler until the child is really gone,
+    # including on macOS Bash 3.2.
+    while kill -0 "$heartbeat_child" 2>/dev/null; do
+      wait "$heartbeat_child" 2>/dev/null || true
+    done
     heartbeat_child=''
     return 143
   fi
