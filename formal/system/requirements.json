@@ -27452,7 +27452,9 @@
         "package.json",
         "tdf-hq-ui/src/utils/eventLineup.ts",
         "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx"
+        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+        "tdf-hq/src/TDF/Courses/Metadata.hs",
+        "tdf-hq/src/TDF/Services/LlmChat.hs"
       ],
       "tests": [
         "scripts/__tests__/architecture-boundaries.test.mjs"
