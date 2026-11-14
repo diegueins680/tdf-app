@@ -91,6 +91,8 @@ export default function EventRsvpControls({
   const labels = copyFor(locale);
   const [showOnProfile, setShowOnProfile] = useState(session?.preferences?.showEventRsvpsOnProfile ?? true);
   const [feedback, setFeedback] = useState<{ severity: 'success' | 'info' | 'error'; message: string } | null>(null);
+  // The plain link is the fallback for a browser that can neither share nor copy; it stays out of the way otherwise.
+  const [shareFailed, setShareFailed] = useState(false);
   const [showSharePrompt, setShowSharePrompt] = useState(false);
   const [mutationPending, setMutationPending] = useState(false);
   const resumedNonce = useRef<string | null>(null);
@@ -303,6 +305,7 @@ export default function EventRsvpControls({
         captureGrowthEvent(analytics, 'event_share_cancelled', { platform: 'web', event_id: eventId, method });
       } else {
         setFeedback({ severity: 'error', message: labels.shareError });
+        setShareFailed(true);
         captureGrowthEvent(analytics, 'event_share_failed', { platform: 'web', event_id: eventId, method });
       }
     }
@@ -369,7 +372,7 @@ export default function EventRsvpControls({
         <Button startIcon={<ContentCopyIcon />} disabled={!publicShareEligible} onClick={() => { void share('copy'); }}>{labels.copy}</Button>
         {whatsapp && <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />} onClick={() => captureGrowthEvent(analytics, 'event_share_started', { platform: 'web', event_id: eventId, method: 'whatsapp' })}>WhatsApp</Button>}
       </Stack>
-      {!compact && publicUrl && (
+      {!compact && publicUrl && shareFailed && (
         <TextField
           label={labels.manualLink}
           value={publicUrl}

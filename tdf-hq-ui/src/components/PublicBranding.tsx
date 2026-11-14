@@ -41,6 +41,11 @@ const PUBLIC_NAV_ITEMS = [
   { label: 'authEntry.releases', to: '/records' },
 ] as const;
 
+// The header row on wide screens shows these five; search is the header icon. Every item is listed under
+// "Más opciones", which is the whole navigation on phones.
+const isHeaderRowPath = (path: string) =>
+  path === EVENTS_PATH || path === '/tdf' || path === '/fans' || path === '/marketplace' || path === '/reservar';
+
 interface FooterAction {
   label: string;
   kind: 'route' | 'external';
@@ -227,7 +232,7 @@ export default function PublicBranding({
                   spacing={0.5}
                   sx={{ display: { xs: 'none', md: 'flex' }, flexWrap: 'wrap' }}
                 >
-                  {PUBLIC_NAV_ITEMS.map((item) => (
+                  {PUBLIC_NAV_ITEMS.filter((item) => isHeaderRowPath(item.to)).map((item) => (
                     <Button
                       key={item.to}
                       component={RouterLink}
@@ -253,7 +258,7 @@ export default function PublicBranding({
               </Stack>
               <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
                 {!focusedPurchase && <MarketplaceCartButton />}
-                {!focusedPurchase && <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>}
+                {!focusedPurchase && <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44 }}><SearchIcon /></IconButton>}
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
@@ -282,14 +287,14 @@ export default function PublicBranding({
                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 >
-                  {/* The main navigation already shows these from md up; here they serve phones only. */}
+                  {/* From md up the header row already shows the primary items and the search icon. */}
                   {PUBLIC_NAV_ITEMS.map((item) => (
                     <MenuItem
                       key={item.to}
                       component={RouterLink}
                       to={navItemProps(item).to}
                       onClick={() => { navItemProps(item).onClick?.(); setMenuAnchor(null); }}
-                      sx={{ display: focusedPurchase ? undefined : { md: 'none' } }}
+                      sx={{ display: focusedPurchase || !(isHeaderRowPath(item.to) || item.to === '/buscar') ? undefined : { md: 'none' } }}
                     >
                       {t(item.label)}
                     </MenuItem>

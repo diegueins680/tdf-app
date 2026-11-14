@@ -108,4 +108,16 @@ describe('EventRsvpControls', () => {
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('http://localhost/eventos/42?utm_source=tdf_web&utm_medium=copy&utm_campaign=event_rsvp'));
   });
+
+  it('shows the plain event link only after copying fails', async () => {
+    const writeText = jest.fn<() => Promise<void>>().mockRejectedValue(new Error('blocked'));
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    renderControls();
+
+    expect(screen.queryByLabelText('Enlace público del evento')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar enlace' }));
+
+    const link = await screen.findByLabelText('Enlace público del evento');
+    expect((link as HTMLInputElement).value).toContain('/eventos/42');
+  });
 });
