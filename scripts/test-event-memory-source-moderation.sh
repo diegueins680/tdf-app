@@ -28,7 +28,7 @@ const migrations=await Promise.all(prefix.map(async entry=>{
 // The prefix ends before 2026-11-01_social_sync_account_delivery_designation (AUTHORITY-094)
 // and before 2026-11-08_marketplace_offers (ADR 0134) and
 // 2026-11-12_marketplace_agreements (ADR 0135).
-process.stdout.write(buildMigrationBatchSql(migrations,{sourceCommit:'0'.repeat(40),socialDesignationIncluded:false,marketplaceOffersIncluded:false,marketplaceAgreementsIncluded:false})+'\n');
+process.stdout.write(buildMigrationBatchSql(migrations,{sourceCommit:'0'.repeat(40),socialDesignationIncluded:false,marketplaceOffersIncluded:false,marketplaceAgreementsIncluded:false,marketplaceAgreementPaymentsIncluded:false})+'\n');
 JS
 tdf_test_psql -f "$batch" >/dev/null
 tdf_test_psql -f "$repo_root/tdf-hq/sql/2026-10-25_event_memory_source_moderation.sql" >/dev/null
