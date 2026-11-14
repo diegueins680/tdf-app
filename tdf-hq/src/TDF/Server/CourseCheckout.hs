@@ -1052,10 +1052,13 @@ createPublicCourseDatafastCheckout rawSlug rawRegistrationId mLookupToken client
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   existing <- loadCourseProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
-  checkoutRequest <- maybe
+  preflight <- maybe
     (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
   attempt <- beginCoursePaymentAttempt context Checkout.ProviderDatafast
     Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadCourseProviderBinding context Checkout.ProviderDatafast
+      (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
   (checkoutId, widgetUrl) <- case checkoutRequest of
     Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId

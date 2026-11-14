@@ -25684,11 +25684,12 @@
         "Status verification admits only the exact bound creation-attempt UUID or its saved legacy domain-order reference, with matching checkout, provider resource, environment, merchant, amount and currency; settlement still uses the domain-order binding.",
         "Only an explicit trusted socket peer may supply one dedicated client IP header; malformed or ambiguous provenance denies fresh creation before attempt allocation.",
         "Both Dataweb form builders require a validated opaque client IP and emit exactly one customer.ip; no browser field or authentication grant is added.",
-        "Saved checkout reuse and payment status do not depend on new IP or proxy configuration."
+        "Saved checkout reuse and payment status do not depend on new IP or proxy configuration.",
+        "After payment admission, a newly committed saved checkout supersedes an earlier fresh-creation decision; disappearance of a previously saved resource is a conflict, never fresh request authority without IP preflight."
       ],
       "authorization": "Existing customer, merchant, capability and payment-attempt authorization is unchanged; this contract grants no provider activation.",
       "privacy": "Merchant values and customer payloads are not verification receipts; synthetic test values only. Client address exists transiently for the gateway request, without new local persistence or logging.",
-      "concurrency": "No cross-process environment rotation or payment state-machine guarantee is introduced.",
+      "concurrency": "Recheck saved provider resources after checkout-row admission waits; a native storefront case observes the blocked reader and concurrently published binding. No universal exactly-once gateway or cross-process configuration-rotation proof is introduced.",
       "idempotency": "Existing operation identities, attempt locks and replay behavior remain unchanged.",
       "failure": "Reject invalid metadata before creating a provider attempt or contacting the gateway.",
       "recovery": "Use existing authenticated status verification; removing creation metadata is not a refund, no-charge proof or fallback authorization.",
@@ -25731,7 +25732,7 @@
         "scripts/__tests__/compiled-api-surface.test.mjs"
       ],
       "formalModels": [],
-      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof. Transport provenance has actual Servant/WAI examples, generated spoofing cases and six assertion-rejecting source controls. The native storefront route additionally checks pre-attempt refusal, authorization precedence and cached reuse without provider HTTP; other domains retain compiler/type wiring scope.",
+      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof. Transport provenance has actual Servant/WAI examples, generated spoofing cases and six assertion-rejecting source controls. The native storefront route additionally checks pre-attempt refusal, authorization precedence and cached reuse without provider HTTP; other domains retain compiler/type wiring scope. Two direct recheck cases cover latest-resource selection and missing-cache refusal. A native storefront interleaving observes a real PostgreSQL lock waiter and reuses the concurrently published binding without changing its financial snapshot.",
       "evidence": "Exact-candidate local test logs retained in the operator workspace; public secrets excluded.",
       "status": "specified and implemented",
       "critical": true,
@@ -29497,22 +29498,22 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "dc02d69c3604b978656c7b2a6fb02404dcb302c1eff07e2c9fd72b3d00416b31",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "0e6979ff0abf74b2288278853fa28c6642648e70d10cdf094bafad34dd801d80",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "47d201a76825bbec5fd95d532cfe949cc0d0be4b65eb66564d8d58fd672fe4b8",
+    "tdf-hq/src/TDF/Server.hs": "3e97ca6c60a8831898cfc5ceed0909304e77d88852b62045e10babd879d10f87",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
-    "tdf-hq/src/TDF/Server/CourseCheckout.hs": "88d90c587a4ec0da9c83a1c3408d1be6f18101322eb7b00fd58261d7c7237e4e",
+    "tdf-hq/src/TDF/Server/CourseCheckout.hs": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
     "tdf-hq/src/TDF/Server/DDEX.hs": "745907d1f8c1d965bd3c095a9acc6784d0cda2aaee0589460d31a0e9a3d99ea0",
     "tdf-hq/src/TDF/Server/Directory.hs": "8afd1f9f0e4d7f8d0988a155503fe820c567d4f064ef0b62c1069776b447bbec",
-    "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "53597e1e2969130aa27f03585d4069579a37c2a9f6e54a9f04b2bd2c395b2d25",
+    "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "fa39efff149548a881181b653d5e0e0fd11040911bb912804051a2f707b4605c",
     "tdf-hq/src/TDF/Server/EventAdminDelegation.hs": "46d53f55d6b570e2dbdc7f077549a34d629cef8f157ee0cda991951c36456a2d",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "046220bdffa90774c4df14654476146b08ce8ce824c25bcba1e87fa783ba2274",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "b362371ce735b8b560670b30fd19fce3e977370c761557d2209f955ecb042f7c",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "7e350af012396bb5a846a13f29c91cf2a2f6b8a0d3498f73a050aa2d1d401fd9",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ef9e613714411c9f7388714b7b80d49e4a0001d440472fa74fbbd83047ced199",
     "tdf-hq/src/TDF/Server/MusicReleaseAssets.hs": "b8a242ab8938a53cefac018e4b8c5b0c529b3fbeb7752876549ebd1078cdc8d0",
     "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs": "2c848527dfcff004e724d1c32ce61ecc1b7279a996de43195b348de088e324f2",
-    "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "399f04cc56b5d251cc5aeb59972a2772e1d7b487adf99d66cac7454685e86c10",
+    "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "603e2bc8e39a6fac1f8814fc7c5ce3e9440e47b76ce033bbe68fa9875fdbed8d",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "f0e50cb9103b6da489980440202a50e7c4431bc19f0fdce666be6f738bb763ef",
@@ -29520,7 +29521,7 @@
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
-    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "94ddb947b2525069f7837e5c570de5236bfa82b17228fab1200a55ce11686066",
+    "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "eaca29f0b6da92edc826500f13681365be069a661c6568cba74968631cb508f4",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
     "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
@@ -29590,7 +29591,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "407fabc72a9c195886fefdfb6b3d20f0b709a6dd18e69487f7ae5f06c33a5501",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "be9a02b5b53547a29e1266d6e907fe3c33ca2f8d0150a064bdb442eab2d2138c",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "7873ead3fede392b789c47c78f28b0275644116caf2a475bc233efd2655e2d59",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -75869,7 +75870,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "47d201a76825bbec5fd95d532cfe949cc0d0be4b65eb66564d8d58fd672fe4b8",
+      "sha256": "3e97ca6c60a8831898cfc5ceed0909304e77d88852b62045e10babd879d10f87",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76181,7 +76182,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "88d90c587a4ec0da9c83a1c3408d1be6f18101322eb7b00fd58261d7c7237e4e",
+      "sha256": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76305,7 +76306,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "53597e1e2969130aa27f03585d4069579a37c2a9f6e54a9f04b2bd2c395b2d25",
+      "sha256": "fa39efff149548a881181b653d5e0e0fd11040911bb912804051a2f707b4605c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76357,7 +76358,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "046220bdffa90774c4df14654476146b08ce8ce824c25bcba1e87fa783ba2274",
+      "sha256": "b362371ce735b8b560670b30fd19fce3e977370c761557d2209f955ecb042f7c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76541,7 +76542,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "399f04cc56b5d251cc5aeb59972a2772e1d7b487adf99d66cac7454685e86c10",
+      "sha256": "603e2bc8e39a6fac1f8814fc7c5ce3e9440e47b76ce033bbe68fa9875fdbed8d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76704,7 +76705,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "94ddb947b2525069f7837e5c570de5236bfa82b17228fab1200a55ce11686066",
+      "sha256": "eaca29f0b6da92edc826500f13681365be069a661c6568cba74968631cb508f4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78467,7 +78468,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "be9a02b5b53547a29e1266d6e907fe3c33ca2f8d0150a064bdb442eab2d2138c",
+      "sha256": "7873ead3fede392b789c47c78f28b0275644116caf2a475bc233efd2655e2d59",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87046,7 +87047,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d25cb4c50edfed06dcc76ac96e490bad2e1133f2e9aa575de576f9a48b45a91b",
+      "sourceSha256": "0a6f60eca6dd2aeb4c2b7c246b4f11dbe109de7ba478bb961098ccdec53f07ab",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -87074,7 +87075,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d25cb4c50edfed06dcc76ac96e490bad2e1133f2e9aa575de576f9a48b45a91b",
+      "sourceSha256": "0a6f60eca6dd2aeb4c2b7c246b4f11dbe109de7ba478bb961098ccdec53f07ab",
       "definition": {
         "states": [
           "absent",
@@ -87104,7 +87105,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "d25cb4c50edfed06dcc76ac96e490bad2e1133f2e9aa575de576f9a48b45a91b",
+      "sourceSha256": "0a6f60eca6dd2aeb4c2b7c246b4f11dbe109de7ba478bb961098ccdec53f07ab",
       "definition": {
         "export": [
           "queued",

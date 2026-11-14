@@ -1374,10 +1374,13 @@ createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken clien
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   existing <- loadTicketProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
-  checkoutRequest <- maybe
+  preflight <- maybe
     (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
   attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast
     Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadTicketProviderBinding context Checkout.ProviderDatafast
+      (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
   (checkoutId, widgetUrl) <- case checkoutRequest of
     Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId

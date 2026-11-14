@@ -17754,7 +17754,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "47d201a76825bbec5fd95d532cfe949cc0d0be4b65eb66564d8d58fd672fe4b8",
+      "sha256": "3e97ca6c60a8831898cfc5ceed0909304e77d88852b62045e10babd879d10f87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17772,7 +17772,7 @@
     {
       "id": "SURFACE-2834bdf776fa3c23",
       "path": "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-      "sha256": "88d90c587a4ec0da9c83a1c3408d1be6f18101322eb7b00fd58261d7c7237e4e",
+      "sha256": "9f2007243635c0ae0294961ea3cf69cdc98cff0da88f2af86f5484bbdd764544",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17790,7 +17790,7 @@
     {
       "id": "SURFACE-436c77cb88490332",
       "path": "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-      "sha256": "53597e1e2969130aa27f03585d4069579a37c2a9f6e54a9f04b2bd2c395b2d25",
+      "sha256": "fa39efff149548a881181b653d5e0e0fd11040911bb912804051a2f707b4605c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17808,7 +17808,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "046220bdffa90774c4df14654476146b08ce8ce824c25bcba1e87fa783ba2274",
+      "sha256": "b362371ce735b8b560670b30fd19fce3e977370c761557d2209f955ecb042f7c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17844,7 +17844,7 @@
     {
       "id": "SURFACE-49f08c89b93fed12",
       "path": "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-      "sha256": "399f04cc56b5d251cc5aeb59972a2772e1d7b487adf99d66cac7454685e86c10",
+      "sha256": "603e2bc8e39a6fac1f8814fc7c5ce3e9440e47b76ce033bbe68fa9875fdbed8d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17898,7 +17898,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "94ddb947b2525069f7837e5c570de5236bfa82b17228fab1200a55ce11686066",
+      "sha256": "eaca29f0b6da92edc826500f13681365be069a661c6568cba74968631cb508f4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18468,7 +18468,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "be9a02b5b53547a29e1266d6e907fe3c33ca2f8d0150a064bdb442eab2d2138c",
+      "sha256": "7873ead3fede392b789c47c78f28b0275644116caf2a475bc233efd2655e2d59",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30521,7 +30521,7 @@
     },
     {
       "path": "formal/system/datafast-merchant-metadata.md",
-      "sha256": "f53b7dc8920ff9d2964316775350d74889c1357f685b369d08781ed162b225b9",
+      "sha256": "6ec888c25c0630a192fbf5bb0c032f07ace5084cb3857c87e5ec53743a542346",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31354,7 +31354,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "d25cb4c50edfed06dcc76ac96e490bad2e1133f2e9aa575de576f9a48b45a91b",
+      "sha256": "0a6f60eca6dd2aeb4c2b7c246b4f11dbe109de7ba478bb961098ccdec53f07ab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

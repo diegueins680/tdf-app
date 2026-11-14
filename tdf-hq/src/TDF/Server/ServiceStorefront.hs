@@ -21,6 +21,7 @@ module TDF.Server.ServiceStorefront
   , requestDatafastCheckoutForService
   , loadDatafastCartParameters
   , loadDatafastClientIP
+  , recheckDatafastCheckout
   , checkDatafastPaymentStatus
   , validateDatafastSuccessfulPayment
   , validateBoundDatafastSuccessfulPayment
@@ -376,13 +377,14 @@ createDatafastCheckoutHandler orderIdText mLookupToken clientRequest = do
           buyerPhone = ME.serviceStorefrontOrderBuyerPhone order
 
       (dfEnv, _) <- loadServiceDatafastCheckoutEnv
-      checkoutRequest <- case (status, ME.serviceStorefrontOrderDatafastCheckoutId order) of
+      preflight <- case (status, ME.serviceStorefrontOrderDatafastCheckoutId order) of
         ("datafast_pending", Just existingCheckoutId) -> pure (Left existingCheckoutId)
         _ -> Right <$> loadDatafastClientIP clientRequest
       (checkout, attempt) <- beginCanonicalPaymentAttempt
         oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
         Checkout.OperationCreate (sdfEntityId dfEnv) "create"
       
+      checkoutRequest <- recheckDatafastCheckout (loadServiceDatafastCheckoutReuse oid) preflight
       (checkoutId, widgetUrl) <- case checkoutRequest of
         Left existingCheckoutId -> do
           let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
@@ -2376,6 +2378,32 @@ loadDatafastCartParameters checkout expectedCents expectedCurrency = do
             ]
       either reject pure (DatafastConfig.datafastCartParameters amount currency linesToSend)
     _ -> reject "Dataweb requires one canonical checkout snapshot"
+
+-- Recheck after payment admission: a concurrent request may publish a saved
+-- checkout while admission waits for its checkout row lock. Missing a previously
+-- saved resource is a conflict, never permission to create without preflight.
+recheckDatafastCheckout
+  :: AppM (Maybe saved)
+  -> Either saved ClientIP.DatafastClientIP
+  -> AppM (Either saved ClientIP.DatafastClientIP)
+recheckDatafastCheckout reload preflight = do
+  latest <- reload
+  case (latest, preflight) of
+    (Just saved, _) -> pure (Left saved)
+    (Nothing, Right clientIP) -> pure (Right clientIP)
+    (Nothing, Left _) -> throwError err409
+      { errBody = "Saved Datafast checkout is no longer available" }
+
+loadServiceDatafastCheckoutReuse :: ME.ServiceStorefrontOrderId -> AppM (Maybe Text)
+loadServiceDatafastCheckoutReuse orderId = do
+  Env{..} <- ask
+  current <- liftIO (runSqlPool (get orderId) envPool)
+    >>= maybe (throwError err404 { errBody = "Order not found" }) pure
+  let status = ME.serviceStorefrontOrderStatus current
+  when (status `notElem` ["awaiting_payment", "pending_payment", "payment_failed", "datafast_pending"]) $
+    throwError err400 { errBody = "Order is not in a payable state" }
+  pure $ if status == "datafast_pending"
+    then ME.serviceStorefrontOrderDatafastCheckoutId current else Nothing
 
 -- | Called only for a fresh checkout, before allocating its payment attempt.
 -- Cached widgets and status/reconciliation never require a new client address.

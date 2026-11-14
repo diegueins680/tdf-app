@@ -1130,10 +1130,13 @@ createPublicDomoDatafastCheckout rawQuoteId mLookupToken clientRequest = do
   requireDomoProvider context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   existing <- loadDomoProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
-  checkoutRequest <- maybe
+  preflight <- maybe
     (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
   attempt <- beginDomoPaymentAttempt context Checkout.ProviderDatafast
     Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadDomoProviderBinding context Checkout.ProviderDatafast
+      (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
   (checkoutId, widgetUrl) <- case checkoutRequest of
     Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId

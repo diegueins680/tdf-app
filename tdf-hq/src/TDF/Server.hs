@@ -11076,11 +11076,14 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken clientRequest = do
     context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
   existing <- loadServiceBookingProviderBinding
     context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
-  checkoutRequest <- maybe
+  preflight <- maybe
     (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
   attempt <- beginServiceBookingPaymentAttempt
     context Checkout.ProviderDatafast Checkout.OperationCreate
     (ServiceStorefront.sdfEntityId datafast) "create"
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (loadServiceBookingProviderBinding
+      context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout") preflight
   (checkoutId, widgetUrl) <- case checkoutRequest of
     Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
@@ -17336,9 +17339,9 @@ createDatafastCheckout rawId mIdempotency payload clientRequest = do
     Checkout.providerEnabledForEnvironment (msccEnvironment context) Checkout.ProviderDatafast
   unless providerEnabled $
     throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
-  mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
-  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
-  checkoutRequest <- case ME.marketplaceOrderDatafastCheckoutId order of
+  mPreflightOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  preflightOrder <- maybe (throwError marketplaceOrderNotFound) pure mPreflightOrder
+  preflight <- case ME.marketplaceOrderDatafastCheckoutId preflightOrder of
     Just storedCheckoutId -> Left <$> either throwError pure
       (validateStoredDatafastCheckoutId storedCheckoutId)
     Nothing -> Right <$> ServiceStorefront.loadDatafastClientIP clientRequest
@@ -17356,6 +17359,11 @@ createDatafastCheckout rawId mIdempotency payload clientRequest = do
       , Checkout.pacCorrelationId = "marketplace-datafast:" <> toPathPiece (msccOrderKey context)
       }
   attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
+  mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
+  checkoutRequest <- ServiceStorefront.recheckDatafastCheckout
+    (traverse (either throwError pure . validateStoredDatafastCheckoutId)
+      (ME.marketplaceOrderDatafastCheckoutId order)) preflight
   (checkoutId, widgetUrl) <- case checkoutRequest of
     Left validatedCheckoutId ->
       pure

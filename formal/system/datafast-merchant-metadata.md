@@ -193,10 +193,24 @@ boundary in eleven cases plus a 100-case spoofing property and six
 behavior-changing source controls. Controls must finish the test group and fail
 an assertion; compilation failures and empty runs are not accepted. The native
 `Dataweb client IP HTTP preflight` PostgreSQL group exercises the real storefront
-route: pre-attempt refusal, lookup authorization, and saved checkout reuse with
-invalid proxy configuration. An independently unsendable synthetic cart prevents
+route: pre-attempt refusal, lookup authorization, saved checkout reuse with
+invalid proxy configuration, and a checkout published concurrently while
+admission waits for its row lock. An independently unsendable synthetic cart prevents
 provider HTTP even if an IP refusal regresses. This is one domain's execution
 proof; the seven-route compiler declaration and shared builder types do not
 establish seven-domain provider certification. Buyer identity, digital-delivery
 address handling, authoritative taxes, production proxy installation and external
 certification remain separate obligations.
+
+Before requesting a fresh provider resource, every domain rechecks its saved
+checkout after payment admission. An initial read exists only to determine
+whether IP preflight is needed; it cannot authorize gateway creation from a
+snapshot taken before a checkout-row lock wait. A newly published resource wins
+over the earlier fresh-creation decision. A previously saved resource that is
+no longer available yields a conflict and never becomes authority to create
+without preflight. Existing replay and binding checks still run. The storefront
+also reloads the current payable order state. Two direct helper cases cover
+latest-resource preference and missing-cache refusal; the native concurrent
+storefront case observes an actual PostgreSQL lock waiter and verifies the
+published financial snapshot remains unchanged after reuse. This is a specific
+observed interleaving, not a general exactly-once gateway or concurrency proof.
