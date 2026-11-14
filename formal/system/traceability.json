@@ -27748,6 +27748,80 @@
         "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "OPS-LOOP-BRANCH-OWNERSHIP-001",
+      "title": "The continuous improvement loop merges and deletes only its own branches",
+      "domain": "OPS",
+      "statement": "The branch sweep of the continuous improvement loop merges into its base and prunes, locally and on the remote, only branches under continuous-improvement-loop/ or under a namespace listed in reconcileBranchPrefixes. Every other branch is left unmerged and undeleted. A conflicting merge is aborted and reported; no conflict is resolved by keeping the loop's copy of a file.",
+      "property": "A branch outside the owned namespaces keeps its local and remote ref across a sweep, whether or not the base already contains it. After a sweep in which a merge conflicted, HEAD is unchanged, the worktree is clean and the conflicting branch still exists.",
+      "authority": "Owner instruction of 2026-11-11 to fix the loop after it closed 24 pull requests by deleting their head branches and dropped changes to 258 files.",
+      "source": "AI_WORKFLOW.md",
+      "contract": "AI_WORKFLOW.md",
+      "actors": [
+        "Continuous improvement loop",
+        "Contributors with open pull requests"
+      ],
+      "preconditions": [
+        "The loop runs from a local checkout with push access to the remote."
+      ],
+      "inputs": [
+        "Local and remote branch lists relative to the loop's base",
+        "reconcileBranchPrefixes configuration"
+      ],
+      "state": {
+        "branch": [
+          "foreign",
+          "owned-unmerged",
+          "owned-merged",
+          "conflict-skipped",
+          "pruned"
+        ]
+      },
+      "allowedTransitions": [
+        "owned-unmerged -> owned-merged by a clean merge",
+        "owned-unmerged -> conflict-skipped by an aborted merge",
+        "owned-merged -> pruned"
+      ],
+      "forbiddenTransitions": [
+        "foreign -> merged into the loop base",
+        "foreign -> pruned",
+        "any conflicting merge -> committed with the loop's copy of the conflicting files"
+      ],
+      "effects": [
+        "Merge commits on the loop base for owned branches",
+        "Deletion of owned merged refs",
+        "Sweep summary listing merged, conflict-skipped and left-alone branches"
+      ],
+      "authorization": "Local git credentials of the operator; the rule limits what the loop does with them.",
+      "privacy": "Branch names only.",
+      "concurrency": "One loop per checkout; a branch pushed during a sweep is classified on the next sweep.",
+      "idempotency": "Re-running a sweep leaves foreign and conflict-skipped branches unchanged.",
+      "failure": "A prefix entry that is empty, a wildcard or has no namespace separator fails the sweep before any merge. A merge error without conflicts fails the sweep.",
+      "recovery": "A branch deleted by the earlier behaviour is restored by pushing its recorded head commit and reopening its pull request.",
+      "observability": "conflictSkippedBranches, leftAloneBranches and ownedBranchPrefixes in the sweep summary.",
+      "implementation": [
+        "scripts/continuous-improvement-loop.mjs",
+        "AI_WORKFLOW.md"
+      ],
+      "tests": [
+        "scripts/__tests__/continuous-improvement-loop.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Tests on real temporary git repositories with a bare remote cover foreign unmerged and already-contained branches, a conflicting owned branch and prefix validation.",
+      "ambiguity": [
+        "The loop does not ask GitHub whether a branch has an open pull request; ownership is by namespace only.",
+        "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs still resolves a conflict between the loop's branch and its own remote by keeping the local copy.",
+        "continuous-improvement/auto still contains the lossy merges made before this rule."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The sweep is tested locally; the dirty-worktree helper keeps the earlier conflict rule and the running launchd instance is outside the tests."
+      },
+      "verification": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs: the sweep merges and prunes only the loop namespace, never deletes a foreign branch the base already contains, aborts a conflicting merge leaving HEAD and the branch intact, and refuses catch-all prefixes.",
+      "evidence": "scripts/__tests__/continuous-improvement-loop.test.mjs"
     }
   ],
   "sourceFingerprints": {
@@ -27766,6 +27840,7 @@
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
     ".github/workflows/social-verification.yml": "6545620102535bc14e16ffca634b05054d49862d083f84a9ccd534bbb2fe087e",
+    "AI_WORKFLOW.md": "b466572c350f798d4878363fb1c0e42a2a5292499968436ae515f8eb8f9d23a6",
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
@@ -28211,6 +28286,7 @@
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
+    "scripts/__tests__/continuous-improvement-loop.test.mjs": "bd4b374d210d7a1a3efca191434048c1227ccc7f39b5c3d03f497249ed55b640",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
@@ -28310,6 +28386,7 @@
     "scripts/ci-change-scope.mjs": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/content-storage-model.mjs": "9334e46e43c6b6e8dde89381f7fffd024af979e073dd659176f73add943892c8",
+    "scripts/continuous-improvement-loop.mjs": "018eee8fc5fe792b5983ca28f191962be51eb0fa18a2d92e2eb0c81ce8f17174",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -48031,6 +48108,24 @@
         "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
+    ],
+    "scripts/continuous-improvement-loop.mjs": [
+      {
+        "requirement": "OPS-LOOP-BRANCH-OWNERSHIP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "AI_WORKFLOW.md": [
+      {
+        "requirement": "OPS-LOOP-BRANCH-OWNERSHIP-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/__tests__/continuous-improvement-loop.test.mjs": [
+      {
+        "requirement": "OPS-LOOP-BRANCH-OWNERSHIP-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -49911,9 +50006,14 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
+      "sha256": "bd4b374d210d7a1a3efca191434048c1227ccc7f39b5c3d03f497249ed55b640",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-LOOP-BRANCH-OWNERSHIP-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d2b75d1a49667e24",
@@ -51666,9 +51766,14 @@
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "ecf7580ba5fa6a19d2937ef5cfd9fc4ae643af7d4349b3ecfb6fd45c00d821f5",
+      "sha256": "018eee8fc5fe792b5983ca28f191962be51eb0fa18a2d92e2eb0c81ce8f17174",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "OPS-LOOP-BRANCH-OWNERSHIP-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-cb864006a7638836",
@@ -84049,7 +84154,6 @@
     "SURFACE-0da2aa9657386c51",
     "SURFACE-039bc8d278e3dafc",
     "SURFACE-d96822f506e6f794",
-    "SURFACE-2a6db69bcc12b984",
     "SURFACE-d42db507e3322402",
     "SURFACE-fb39164e1682672b",
     "SURFACE-97975ba39673dd5b",
@@ -84102,7 +84206,6 @@
     "SURFACE-b3c3757671de3a8f",
     "SURFACE-4866f83da6180efe",
     "SURFACE-587b06f07bbc17e1",
-    "SURFACE-655b9679c92bd422",
     "SURFACE-cb864006a7638836",
     "SURFACE-55c2c32700cda24a",
     "SURFACE-e6406d56712d5de9",
@@ -85576,7 +85679,8 @@
     "UI-EVENT-FINANCE-CSV-CURRENCY-001",
     "UI-CSV-STRING-PREFIX-001",
     "AUTH-APPLE-SIGNIN-001",
-    "SYS-DESKTOP-001"
+    "SYS-DESKTOP-001",
+    "OPS-LOOP-BRANCH-OWNERSHIP-001"
   ],
   "stateMachines": [
     {
@@ -86775,7 +86879,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "b83d4f73600fc09ea4c74f8b89d832b65f35c140d0d0da44a32103c4bcca12a3",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86803,7 +86907,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "b83d4f73600fc09ea4c74f8b89d832b65f35c140d0d0da44a32103c4bcca12a3",
       "definition": {
         "states": [
           "absent",
@@ -86833,7 +86937,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "b83d4f73600fc09ea4c74f8b89d832b65f35c140d0d0da44a32103c4bcca12a3",
       "definition": {
         "export": [
           "queued",
@@ -109940,7 +110044,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 219,
+    "PARTIAL": 220,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
