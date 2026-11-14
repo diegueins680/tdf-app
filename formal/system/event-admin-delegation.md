@@ -85,6 +85,15 @@ order for another buyer, viewing ticket QR credentials, admitting tickets at
 the door, planning logistics with the `owner` role, and issuing courtesy
 tickets. They can read the administrator roster but not the invitations.
 
+The web page for logistics (`/social/eventos/:eventId/logistica`, registry
+entry `social.event.logistics`) requires a signed-in session and no module
+(`EVT-LOGISTICS-ACCESS-001`, `AUTHORITY-098`). A delegated administrator holds
+no module, and the registry formerly required `Scheduling`, so the web shell
+refused the page although the API allowed the plan. The record scopes of the
+entry are unchanged and the API still refuses, with 403, an account that is
+neither the organizer, a delegated administrator nor a member of the event's
+logistics team.
+
 Every other organizer check is unchanged by this feature and still compares
 the stored organizer (or applies the strict-administrator rule it already had).
 In particular issuing and revoking invitations, removing administrators,

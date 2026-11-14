@@ -23,6 +23,11 @@ export type ClassifiedApplication = components['schemas']['ClassifiedApplication
 export type OfferRound = components['schemas']['OfferRound'];
 export type MarketplaceAgreement = components['schemas']['MarketplaceAgreement'];
 export type AgreementStatus = MarketplaceAgreement['status'];
+export type AgreementPayment = components['schemas']['AgreementPayment'];
+export type AgreementPaymentProvider = AgreementPayment['provider'];
+export type AgreementPaymentCheckout = components['schemas']['AgreementPaymentCheckout'];
+export type PayoutAccount = components['schemas']['PayoutAccount'];
+export type PayoutAccountRequest = components['schemas']['PayoutAccountRequest'];
 export type MyAgreementsStatus = 'open' | 'closed';
 export type OfferCounterRequest = components['schemas']['OfferCounterRequest'];
 export type OfferTerms = components['schemas']['OfferTerms'];
@@ -109,6 +114,16 @@ export const Directory = {
       ...(reason ? { reason } : {}),
       ...(typeof expectedVersion === 'number' ? { expectedVersion } : {}),
     } satisfies components['schemas']['StatusRequest']),
+  /** ADR 0136: the buyer starts the deposit or balance charge; the lookup token is returned only here. */
+  createAgreementPayment: (agreementId: string, provider: AgreementPaymentProvider) =>
+    post<AgreementPaymentCheckout>(`/directory/agreements/${encodeURIComponent(agreementId)}/payments`, {
+      provider,
+    } satisfies components['schemas']['AgreementPaymentRequest']),
+  payoutAccounts: () => get<PayoutAccount[]>('/directory/payout-accounts'),
+  savePayoutAccount: (profileId: string, provider: PayoutAccount['provider'], body: PayoutAccountRequest) =>
+    put<PayoutAccount>(`/directory/profiles/${encodeURIComponent(profileId)}/payout-accounts/${encodeURIComponent(provider)}`, body),
+  disablePayoutAccount: (profileId: string, provider: PayoutAccount['provider']) =>
+    del<PayoutAccount>(`/directory/profiles/${encodeURIComponent(profileId)}/payout-accounts/${encodeURIComponent(provider)}`),
   contact: (body: components['schemas']['DirectoryContact'], idempotencyKey?: string) =>
     post<Record<string, unknown>>('/directory/contact', body, idempotencyHeaders(idempotencyKey)),
   reviewEligibility: (authorProfileId?: string) =>

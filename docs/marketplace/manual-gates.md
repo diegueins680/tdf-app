@@ -70,3 +70,14 @@ tasa de aceptación, RAS) en PostHog antes de la campaña.
 | Producción | `revenue_feature_flag` | `marketplace.agreements` sigue en FALSE hasta decidir el lanzamiento; con el gate apagado no se crean acuerdos y las ofertas funcionan como en la Fase 1 |
 | `introducedBy` del ledger | `scripts/production-migrations.json` | Apunta al commit que introdujo `2026-11-12_marketplace_agreements.sql`; fusionar con merge commit |
 
+## Fase 2, parte B1 (ADR 0136)
+
+| Gate | Dónde | Qué verificar |
+| --- | --- | --- |
+| Gate apagado | `revenue_feature_flag` | `marketplace.agreement_payments` es FALSE en producción, staging y sandbox; no se enciende hasta que exista un flujo de proveedor que reparta el cobro (B2) y su evidencia de capacidad esté registrada |
+| Autorización de split de PayPhone | Formulario de PayPhone (docs.payphone.app/split-de-pagos) | Requiere Botón, Cajita o Link operando en producción; pedir la modalidad «al día siguiente»; los datos legales y las declaraciones los firma TDF |
+| Comisión del procesador | `marketplace_payment_fee_rule` | PayPhone 5,75 % a cargo del proveedor del servicio por defecto; confirmar el porcentaje contratado y quién la asume antes de encender el gate (es un `UPDATE`) |
+| Datos del receptor | `marketplace_payout_account.identifier` | Cédula, RUC o teléfono guardados en claro; revisar con privacidad si deben cifrarse antes de abrir el registro de cuentas a usuarios |
+| Vencimiento del depósito | `marketplace_agreement.deposit_due_at` | Vence al cargar los acuerdos de un participante; hasta que exista el worker (B2), un acuerdo que nadie abre conserva el cupo |
+| Dinero sin aplicar | `directory_audit_event` | Una fila `agreement.payment.unapplied` significa que llegó dinero verificado para un cobro que ya no estaba pendiente: hay que devolverlo a mano |
+| `introducedBy` del ledger | `scripts/production-migrations.json` | Apunta al commit que introdujo `2026-11-12_marketplace_agreement_payments.sql`; fusionar con merge commit |
