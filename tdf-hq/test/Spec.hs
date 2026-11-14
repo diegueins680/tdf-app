@@ -481,6 +481,7 @@ import TDF.Server.SocialSync
       validateSocialSyncCaption,
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
+import TDF.Server.PublicEventTicketSummary (PublicTicketCardSummary (..), summarizePublicTicketTiers)
 import TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
     replaceLogisticsActivityDependencies,
@@ -13053,6 +13054,54 @@ main = hspec $ do
                 , "{\"isPublic\":true,\"_discoveryOwned\":true}"
                 , "{\"isPublic\":true,\"_discoveryOwned\":{},\"_discoveryOwned\":{}}"
                 ] $ \raw -> (EventMetadataServer.emIsPublic <$> EventMetadataServer.decodeStoredEventMetadata (Just raw)) `shouldSatisfy` isLeft
+
+    describe "public event card ticket summary" $ do
+        let cardNow = UTCTime (fromGregorian 2026 11 14) 0
+            cardTier price total sold =
+                EventTicketTier
+                    { eventTicketTierEventId = toSqlKey 1
+                    , eventTicketTierCode = "GEN"
+                    , eventTicketTierName = "General"
+                    , eventTicketTierDescription = Nothing
+                    , eventTicketTierPriceCents = price
+                    , eventTicketTierCurrency = "usd"
+                    , eventTicketTierCurrencyId = Nothing
+                    , eventTicketTierQuantityTotal = total
+                    , eventTicketTierQuantitySold = sold
+                    , eventTicketTierSalesStart = Nothing
+                    , eventTicketTierSalesEnd = Nothing
+                    , eventTicketTierIsActive = True
+                    , eventTicketTierPosition = Nothing
+                    , eventTicketTierEnableWaitlist = False
+                    , eventTicketTierAllowTransfers = True
+                    , eventTicketTierRefundPolicy = "full"
+                    , eventTicketTierRefundDeadline = Nothing
+                    , eventTicketTierCreatedAt = cardNow
+                    , eventTicketTierUpdatedAt = cardNow
+                    }
+            summarize = summarizePublicTicketTiers cardNow Nothing Nothing
+            nothingToSay = PublicTicketCardSummary Nothing Nothing False
+        it "reports the lowest price among tiers that are on sale and in stock" $
+            summarize [cardTier 2500 10 0, cardTier 1500 10 10, cardTier 2000 10 3]
+                `shouldBe` PublicTicketCardSummary (Just 2000) (Just "USD") False
+        it "says sold out only when tiers are on sale and none has stock" $ do
+            summarize [cardTier 1500 10 10, cardTier 2000 5 5]
+                `shouldBe` PublicTicketCardSummary Nothing Nothing True
+            summarize [] `shouldBe` nothingToSay
+        it "ignores inactive, unpriced and out-of-window tiers" $ do
+            summarize [(cardTier 1000 10 0){eventTicketTierIsActive = False}] `shouldBe` nothingToSay
+            summarize [cardTier 0 10 0] `shouldBe` nothingToSay
+            summarize [(cardTier 1000 10 0){eventTicketTierSalesStart = Just (addUTCTime 60 cardNow)}] `shouldBe` nothingToSay
+            summarize [(cardTier 1000 10 0){eventTicketTierSalesEnd = Just (addUTCTime (-60) cardNow)}] `shouldBe` nothingToSay
+        it "caps stock by the event capacity across all tiers" $
+            summarizePublicTicketTiers cardNow Nothing (Just 8) [cardTier 1000 10 5, cardTier 3000 10 3]
+                `shouldBe` PublicTicketCardSummary Nothing Nothing True
+        it "says nothing about tickets once the event has ended" $
+            summarizePublicTicketTiers cardNow (Just (addUTCTime (-3600) cardNow)) Nothing [cardTier 1000 10 0]
+                `shouldBe` nothingToSay
+        it "gives no single price when in-stock tiers use different currencies" $
+            summarize [cardTier 1000 10 0, (cardTier 900 10 0){eventTicketTierCurrency = "EUR"}]
+                `shouldBe` nothingToSay
 
     describe "ticket purchase event eligibility" $ do
         it "allows only public events in buyer-facing sale states" $ do

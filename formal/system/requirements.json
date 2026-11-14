@@ -27747,6 +27747,81 @@
         "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "EVT-CARD-TICKETS-001",
+      "title": "Public event cards state ticket price and sold-out status from ticket tiers",
+      "statement": "Each row of the public upcoming-events list carries the lowest price among the event's ticket tiers that are active, priced above zero, inside their sale window and still in stock (capped by the event capacity), together with its currency, and a sold-out flag that is true only when such tiers are on sale and none has stock. An event that has ended, or whose in-stock tiers use more than one currency, reports no price. The public agenda card shows the venue with the city, and one ticket line: the starting price or the sold-out notice. With no tier data the card shows no ticket line; it never derives a price, a free label or a sold-out label from the event's reference price.",
+      "domain": "EVT",
+      "critical": false,
+      "actors": [
+        "Visitor",
+        "Signed-in user"
+      ],
+      "preconditions": [
+        "The event is publicly listable under the existing visibility rules.",
+        "Ticket tiers and event capacity remain the inventory authority."
+      ],
+      "inputs": [
+        "GET /social-events/upcoming",
+        "Event ticket tiers, event capacity and event end time",
+        "Current instant"
+      ],
+      "state": {
+        "boundary": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs"
+      },
+      "allowedTransitions": [
+        "No ticket line to starting price when a tier goes on sale with stock",
+        "Starting price to sold out when the last on-sale stock is taken",
+        "Any ticket line to none when the event ends or sales close"
+      ],
+      "forbiddenTransitions": [
+        "Show a price, free label or sold-out label inferred from the event reference price",
+        "Report sold out for an event that has no tier on sale",
+        "Compare prices across different currencies",
+        "Expose tier quantities, sold counts or organizer data in the public list"
+      ],
+      "effects": [
+        "Three additive fields on the public upcoming-event row",
+        "One read of the event's ticket tiers per listed event",
+        "Venue and ticket line on the public agenda card"
+      ],
+      "authorization": "Unchanged: the list stays public and limited to publicly listable events. The new fields disclose only what the public ticket storefront of the same event already shows.",
+      "privacy": "No buyer, organizer, inventory count or finance data is added; only a lowest price, its currency and a boolean.",
+      "concurrency": "Read-only summary computed at request time; the checkout re-validates price and stock, so a stale card cannot sell an unavailable ticket.",
+      "idempotency": "Read-only; repeated requests have no effect.",
+      "failure": "A client that receives no ticket fields, an unsafe amount or an unknown currency renders no ticket line.",
+      "recovery": "Reload the agenda; the event page and checkout remain the authority for price and availability.",
+      "observability": "Visible ticket line on each card; existing event_impression funnel event unchanged.",
+      "source": "Cognitive-load audit of 2026-11-10, plan item 26; user instruction of 2026-11-14 to implement the audit's fixes.",
+      "contract": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
+      "implementation": [
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Hspec cases cover the pure tier summary and a React test covers the card; the handler wiring is exercised only by compilation and the existing list test.",
+      "ambiguity": [
+        "Free events have no tier-based signal because the public storefront sells only priced tiers; the card stays silent for them.",
+        "The summary does not check the payment policy or checkout environment, so a card can show a price for an event whose checkout is not yet enabled."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Unit and component tests exist; no database-backed handler test, hosted browser run or production verification of the new fields."
+      },
+      "authority": "approved by user",
+      "property": "fromPrice = min price over tiers that are active, priced, in window, in stock and single-currency, for an event that has not ended; soldOut = on-sale tiers exist and none is in stock; the card renders only these.",
+      "verification": "Hspec unit cases for the tier summary and a React Testing Library case for the card.",
+      "evidence": "tdf-hq/test/Spec.hs; tdf-hq-ui/src/pages/UpcomingEventsPublicPage.test.tsx"
     }
   ]
 }

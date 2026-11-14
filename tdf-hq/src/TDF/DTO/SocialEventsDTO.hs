@@ -527,6 +527,12 @@ data PublicUpcomingEventDTO = PublicUpcomingEventDTO
     , publicUpcomingEventTicketUrl :: Maybe Text
     , publicUpcomingEventImageUrl :: Maybe Text
     , publicUpcomingEventWorkflowStateCode :: Text
+    , -- Lowest price among ticket tiers that are on sale and in stock right now.
+      -- Absent when nothing is on sale, or when tiers use different currencies.
+      publicUpcomingEventTicketFromPriceCents :: Maybe Int
+    , publicUpcomingEventTicketCurrency :: Maybe Text
+    , -- True only when tiers are on sale and none has inventory left.
+      publicUpcomingEventTicketsSoldOut :: Bool
     }
     deriving (Show, Eq, Generic)
 instance ToJSON PublicUpcomingEventDTO

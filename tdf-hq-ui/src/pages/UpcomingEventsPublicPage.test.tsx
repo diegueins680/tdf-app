@@ -127,4 +127,37 @@ describe('UpcomingEventsPublicPage', () => {
     await screen.findByText('Sesión en Nueva York');
     view.unmount();
   });
+
+  it('shows venue with city and what the ticket tiers support, and nothing when they are silent', async () => {
+    const base = { publicUpcomingEventStart: '2030-08-20T22:00:00Z', publicUpcomingEventWorkflowStateCode: 'published' };
+    listPublicUpcomingEventsMock.mockResolvedValue([
+      { ...base, publicUpcomingEventId: '1', publicUpcomingEventTitle: 'Con entradas', publicUpcomingEventVenueName: 'Sala Uno',
+        publicUpcomingEventCity: 'Quito', publicUpcomingEventTicketFromPriceCents: 1500, publicUpcomingEventTicketCurrency: 'usd',
+        publicUpcomingEventTicketsSoldOut: false },
+      { ...base, publicUpcomingEventId: '2', publicUpcomingEventTitle: 'Sin cupos', publicUpcomingEventCity: 'Cuenca',
+        publicUpcomingEventTicketFromPriceCents: null, publicUpcomingEventTicketsSoldOut: true },
+      // A reference price alone is not a ticket price, and an old API sends no ticket fields at all.
+      { ...base, publicUpcomingEventId: '3', publicUpcomingEventTitle: 'Solo referencia', publicUpcomingEventVenueName: 'Loja',
+        publicUpcomingEventCity: 'loja', publicUpcomingEventPriceCents: 0, publicUpcomingEventCurrency: 'USD' },
+      { ...base, publicUpcomingEventId: '4', publicUpcomingEventTitle: 'Moneda rara', publicUpcomingEventTicketFromPriceCents: 1500,
+        publicUpcomingEventTicketCurrency: 'no-es-moneda', publicUpcomingEventTicketsSoldOut: false },
+    ]);
+    renderPage();
+
+    const withTickets = (await screen.findByRole('link', { name: /Con entradas/ }));
+    expect(withTickets.textContent).toContain('Sala Uno · Quito');
+    expect(withTickets.textContent).toMatch(/Entradas desde \$\s?15,00/);
+
+    const soldOut = screen.getByRole('link', { name: /Sin cupos/ });
+    expect(soldOut.textContent).toContain('Cuenca');
+    expect(soldOut.textContent).toContain('Agotado');
+    expect(soldOut.textContent).not.toContain('Entradas desde');
+
+    const referenceOnly = screen.getByRole('link', { name: /Solo referencia/ });
+    expect(referenceOnly.textContent).toContain('Loja');
+    expect(referenceOnly.textContent).not.toContain(' · ');
+    for (const silent of [referenceOnly, screen.getByRole('link', { name: /Moneda rara/ })]) {
+      expect(silent.textContent).not.toMatch(/Entradas desde|Agotado|Gratis/);
+    }
+  });
 });

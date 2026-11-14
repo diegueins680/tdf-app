@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+    "tdf-hq/tdf-hq.cabal": "78aff2bfc0573838f5be3072161efa079dd416c74df5b9e67fa97d67228b8d2e",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -615,6 +615,15 @@
       "currentSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
       "change": "Register the library module TDF.Server.EventAdminDelegation in exposed-modules and the test module TDF.EventAdminDelegationSpec in the tdf-hq-test other-modules list for EVT-ADMIN-DELEGATION-001.",
       "semanticReview": "Removing exactly those two module lines reproduces protected main Cabal bytes. Every other reviewed source byte and hash matches protected main. No dependency, flag, resolver, lock, source-path, authorization predicate or recovery expression is changed; the added library module holds event-delegation handlers only and is not imported by any reviewed source.",
+      "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
+    },
+    {
+      "reviewedAgainst": "5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b",
+      "source": "tdf-hq/tdf-hq.cabal",
+      "previousSha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "currentSha256": "78aff2bfc0573838f5be3072161efa079dd416c74df5b9e67fa97d67228b8d2e",
+      "change": "Register one new library module, TDF.Server.PublicEventTicketSummary (read-only summary of an event's ticket tiers for the public upcoming-events list, kept out of SocialEventsHandlers to respect its size ceiling). No other line changes.",
+      "semanticReview": "Removing exactly the one added exposed-module line reproduces the Cabal bytes of main at 5084d8a8a4d7. No dependency, flag, extension, source path or existing registration changes; the module uses packages already listed (base, text, time, persistent). Its only project imports are the social event models and isTicketTierSaleOpen from TDF.Server.EventAdminDelegation; it does not import or redefine an authorization predicate, RoleEnum, ingestion admission or recovery arithmetic. Auth.hs, Models.hs, Server/RecordsIngestion.hs, the recovery expiry SQL and Stack/lock are byte-identical to that revision. Obligation claims, assumptions and translations are unchanged.",
       "qualification": "Source-context correspondence only. Fresh source-bound solver/replay/control execution, hosted checks and independent protected review remain required. No production, provider certification or activation claim."
     }
   ]

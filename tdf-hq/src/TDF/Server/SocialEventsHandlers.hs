@@ -230,6 +230,7 @@ import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import qualified TDF.Server.EventAdminDelegation as EventAdmin
+import TDF.Server.PublicEventTicketSummary (PublicTicketCardSummary (..), loadPublicTicketCardSummary)
 import TDF.Server.EventAdminDelegation (eventNotOrganizerError, eventWithoutOrganizerError, isEventManager, isTicketTierSaleOpen, requireEventManager)
 import qualified TDF.Ticketing.Inventory as TicketInventory
 import qualified TDF.Ticketing.Refund as TicketRefund
@@ -469,6 +470,7 @@ publicUpcomingEventRow canonicalCity (Entity eventKey eventRow) = do
         (Right metadata, Just workflowStateId) -> do
             workflow <- EventLifecycle.loadActiveSocialEventState workflowStateId
             publicListable <- EventLifecycle.socialEventStateHasCapability workflowStateId "public-listable"
+            ticketSummary <- loadPublicTicketCardSummary eventKey eventRow
             let city = canonicalCity
             pure $
                 if publicListable && emIsPublic metadata /= Just False
@@ -488,6 +490,9 @@ publicUpcomingEventRow canonicalCity (Entity eventKey eventRow) = do
                             , publicUpcomingEventTicketUrl = emTicketUrl metadata
                             , publicUpcomingEventImageUrl = emImageUrl metadata
                             , publicUpcomingEventWorkflowStateCode = stateCode
+                            , publicUpcomingEventTicketFromPriceCents = ptcsFromPriceCents ticketSummary
+                            , publicUpcomingEventTicketCurrency = ptcsCurrency ticketSummary
+                            , publicUpcomingEventTicketsSoldOut = ptcsSoldOut ticketSummary
                             }
                     else Nothing
         _ -> pure Nothing

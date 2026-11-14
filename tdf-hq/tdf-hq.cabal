@@ -217,6 +217,7 @@ library
     TDF.ServerInternships
     TDF.ServerInternAudit
     TDF.Server.EventAdminDelegation
+    TDF.Server.PublicEventTicketSummary
     TDF.Server.SocialEventsHandlers
     TDF.Server.StripeTicketCapture
     TDF.Server.EventResearch
