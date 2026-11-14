@@ -101,6 +101,26 @@ const marketplace = {
     commission: 'TDF commission ({{percent}}%)',
     providerNet: 'Provider net',
     offPlatform: 'For now payment is arranged directly between the parties; TDF does not collect the deposit or the commission yet.',
+    chargeDue: {
+      deposit: {
+        buyer: 'Pay the deposit to confirm the agreement.',
+        other: 'The agreement is confirmed once the client pays the deposit.',
+      },
+      balance: {
+        buyer: 'You confirmed delivery. Pay the balance to complete the agreement.',
+        other: 'The client confirmed delivery. The agreement is completed once the balance is paid.',
+      },
+    },
+    depositDeadline: 'Deadline: {{date}}. If it is not paid in time, the agreement expires and the slot is released.',
+    payments: 'Charges',
+    paymentKind: { deposit: 'Deposit', balance: 'Balance' },
+    paymentStatus: { pending: 'pending', paid: 'paid', expired: 'expired', cancelled: 'cancelled' },
+    paymentPlatformFee: 'TDF commission on this charge',
+    paymentProcessingFee: {
+      provider: 'Payment processor fee (borne by the provider)',
+      platform: 'Payment processor fee (borne by TDF)',
+    },
+    paymentProviderAmount: 'Provider receives',
     cancelReason: 'Cancellation reason: {{reason}}',
     reviewHint: 'Agreement completed: both parties can leave each other a verified review from the other profile.',
     reason: 'Reason',

@@ -69,8 +69,18 @@ Entrega en dos partes (decisión del 2026-11-12):
   `marketplace_agreement_pricing`, estados y autoridad por parte, cierre con interacción verificada
   para reseñas, cancelación que libera el cupo, pestaña «Acuerdos». Sin cobro: el acuerdo nace
   `confirmed` y `off_platform`.
-- **Parte B — pagos (pendiente):** checkout del depósito y del saldo, vencimiento del depósito,
-  liquidación al proveedor, reembolsos según la política congelada y panel de disputas.
+- **Parte B1 — cobros del acuerdo (ADR 0136, implementada y apagada):** cada cobro (depósito o
+  saldo) es un `marketplace_agreement_payment` con reparto congelado sobre un checkout canónico de
+  dominio `marketplace_agreement`; cuentas de cobro del proveedor; el acuerdo nace
+  `pending_deposit` cuando el proveedor puede cobrar en la plataforma; solo la evidencia verificada
+  del proveedor de pagos marca un cobro pagado; el depósito sin pagar vence y libera el cupo. Gate
+  `marketplace.agreement_payments` en FALSE en todos los entornos: todavía ningún flujo de proveedor
+  reparte el cobro, y el ejecutor compartido rechaza estos checkouts.
+- **Parte B2 — ejecución y reembolsos (pendiente):** Botón de PayPhone con `transferTo`, adaptador
+  Stripe canónico con cargo destino y onboarding de cuentas conectadas, pantalla de pago y de
+  cuenta de cobro, reembolsos automáticos según la política congelada, worker de vencimiento y
+  panel de disputas. DataWeb (Datafast) queda conectado al ruteo y cerrado hasta que contrate un
+  split verificable.
 
 Alcance:
 - Tabla `marketplace_agreement` creada al aceptar una oferta cuando el gate está activo: partes,
