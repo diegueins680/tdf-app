@@ -145,9 +145,12 @@
         "formal/system/proof-certificates.md",
         "scripts/lib/alloy-controls.mjs",
         "scripts/verify-alloy-controls.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/delivery-matrix.mjs",
+        "scripts/lib/delivery-matrix.mjs",
+        "docs/release/delivery-evidence-matrix.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs. The delivery evidence inventory rejects missing, skipped, source-mismatched and wrong-level receipts, preserves BLOCKED formal decisions and never authorizes a release. Receipt consistency does not authenticate execution or prove implementation/refinement. The shared source manifest includes desktop, auxiliary services, edge and media source roots.",
       "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -190,7 +193,8 @@
         "formal/system/receipt-admission-counterexample.json",
         "scripts/test-proof-certificates.py",
         "scripts/__tests__/alloy-controls.test.mjs",
-        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
+        "scripts/__tests__/delivery-matrix.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",
@@ -27761,7 +27765,7 @@
     ".github/workflows/ci.yml": "7f2f2181f1f14f59916ea98da4c6182cdf6f85707e7bae855be49cd7083c6fc6",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
-    ".github/workflows/event-operations-formal.yml": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
+    ".github/workflows/event-operations-formal.yml": "8c324110865c620869587f3ade3e5c9d51fb097e694b24aa93b73bbdc3992443",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -27769,10 +27773,11 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "073fc6082c9186384dcac0000dceee15d15ad2665e7b1c29fda75ab911339363",
+    "docs/catalog-persistence/catalog-list-decisions.json": "4846399469b9eba69e196507526246fcfb162fa0c08edd9333fde0acdc893c4a",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
+    "docs/release/delivery-evidence-matrix.md": "6044ad469758e8e6459c413acd7d3fe290920af123a3ed29d388e88d133b2015",
     "docs/revenue-platform/formal-model.yaml": "9119bfe4dc9a50812b91b298bab6a6add0f936249f966d460bcd5aba1a217c01",
     "e2e/desktop/helpers/api-fixture.mjs": "67b6cd86c8383a4c7c6e8c228f5340aef5c43559c4987015ab031cc5e8792071",
     "e2e/desktop/helpers/shell.mjs": "75eb52ddb9d0823965f816cced846d2a164eb45971612aacad9bf98980d482d5",
@@ -28184,7 +28189,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
-    "package.json": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+    "package.json": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
     "playwright.config.mjs": "37eb4ab6c22dc0a3f2e575361426a045ad760a32920fe4a3b36a1f50e660e71b",
     "playwright.desktop.config.mjs": "74292833e979da0f81610adcedcddcfe6a7053cd5dfa6a34b36b2f1ddbddeb92",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -28202,7 +28207,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "d4ef8dc3fc0b755297bbb76375e14010b68d840e8aacd1804c5658eb0b98eb7f",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "d91b16e9174714c26698910ffbd0765f193d522b528abf810cb854e06e9778bb",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28211,6 +28216,7 @@
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
+    "scripts/__tests__/delivery-matrix.test.mjs": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
@@ -28282,7 +28288,7 @@
     "scripts/__tests__/torrent-fixture-lifecycle.test.mjs": "fd7a2afdb437fe48c4b91da21a53494c804efcf4692c8c326f0c8a1b7689a5e0",
     "scripts/__tests__/torrent-worker-routing.test.mjs": "39cf49236f79edeb7a9599dc07c37965cfe824725cb452a71c32ff7890fef784",
     "scripts/__tests__/ui-worker-memory.test.mjs": "159c331fe6c0ae0817b2e4eb3479e62409c44ceec8efe4dca73a2813ed583183",
-    "scripts/__tests__/verification-evidence.test.mjs": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+    "scripts/__tests__/verification-evidence.test.mjs": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
     "scripts/__tests__/video-campaign-access.test.mjs": "618dec9d2f28c82b786b66403ad33350ca97949a9abb37cb32f9ff03c9522b04",
     "scripts/__tests__/video-campaign-postgres-runner.test.mjs": "72e9e3fe9f0dad70d85a921b9b479465dcc60ba09dd34c7c564eb56af054c0a3",
     "scripts/artist-enrichment.mjs": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
@@ -28310,6 +28316,7 @@
     "scripts/ci-change-scope.mjs": "63627c3365378a56d1cfdb1b1ea3d72222ca9aa0880eb5367d99ff16667609ce",
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/content-storage-model.mjs": "9334e46e43c6b6e8dde89381f7fffd024af979e073dd659176f73add943892c8",
+    "scripts/delivery-matrix.mjs": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -28328,6 +28335,7 @@
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
     "scripts/lib/auth_throttle_http.py": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
+    "scripts/lib/delivery-matrix.mjs": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
     "scripts/lib/formal-methods-audit.mjs": "301296514fcc6671134fff772258867d7a6f3ca1fddffb99ed1cd7d2579c3361",
     "scripts/lib/formal-result-summary.mjs": "fa378d768a1c4e8ff6fe67e8d18d61367cd1b272339107e71c497798fb657167",
@@ -28354,7 +28362,7 @@
     "scripts/lib/requirement_declarations.py": "ebaa157a7a67ad2fa1f2ff57ea8d611c33866d1dd455162f72a0fe9c3375e0a6",
     "scripts/lib/test-child-completion.mjs": "73f6d1e064be16aed833091c25a0dcf526b9e59dd6c19dc4a5712f5afe7c1da0",
     "scripts/lib/test-process-session.mjs": "a72afc0f71c80033d4e231db77c8e9e288a2b9bc70c43242c2451015c56797ef",
-    "scripts/lib/verification-evidence.mjs": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+    "scripts/lib/verification-evidence.mjs": "b2155d28b8f6885dfef9efd2ba44e0be4fd9bd8714c7aa0cd33e75c62b137a9d",
     "scripts/lib/whatsapp_consent_conformance.py": "e7e6f0221bb7bcf5ef631827e2dfa6c329d5b4c16733fa5bca6e61bdb748c4a8",
     "scripts/load-payment-test-schema.sh": "8f8e8385a59b6b118c049ab7ac5f48e5525152c45fc8a15d882c37f78b0330d7",
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
@@ -28373,7 +28381,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
+    "scripts/quality-repo.sh": "76005d9ebad188fbfe397b77d9ef1aee5e6a1c8ea7001e243741fbbb56d37810",
     "scripts/quality-ui.sh": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -30124,6 +30132,24 @@
         "relationship": "implementation"
       }
     ],
+    "scripts/delivery-matrix.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/lib/delivery-matrix.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
+    "docs/release/delivery-evidence-matrix.md": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "implementation"
+      }
+    ],
     "scripts/__tests__/verification-evidence.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
@@ -30161,6 +30187,12 @@
       }
     ],
     "scripts/__tests__/event-raci-editor-context-runner.test.mjs": [
+      {
+        "requirement": "SYS-VERIFY-002",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/__tests__/delivery-matrix.test.mjs": [
       {
         "requirement": "SYS-VERIFY-002",
         "relationship": "tests"
@@ -48249,7 +48281,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
+      "sha256": "8c324110865c620869587f3ade3e5c9d51fb097e694b24aa93b73bbdc3992443",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49542,7 +49574,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49711,7 +49743,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "d4ef8dc3fc0b755297bbb76375e14010b68d840e8aacd1804c5658eb0b98eb7f",
+      "sha256": "d91b16e9174714c26698910ffbd0765f193d522b528abf810cb854e06e9778bb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49914,6 +49946,18 @@
       "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-16a9cdb8e79980cc",
+      "path": "scripts/__tests__/delivery-matrix.test.mjs",
+      "sha256": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d2b75d1a49667e24",
@@ -51121,7 +51165,7 @@
     {
       "id": "SURFACE-ba099638d09bac1d",
       "path": "scripts/__tests__/verification-evidence.test.mjs",
-      "sha256": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+      "sha256": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -51678,6 +51722,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-5a0c7f10ee9b584c",
+      "path": "scripts/delivery-matrix.mjs",
+      "sha256": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-45b3849f78ceb2dd",
       "path": "scripts/deploy-stripe-ticketing.sh",
       "sha256": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
@@ -52068,6 +52124,18 @@
       "sha256": "8b56d1d8ff9176a99571c7a8592604022048992f3d9b5b7f9539b39fcc70b422",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-ee31b4ec099109f8",
+      "path": "scripts/lib/delivery-matrix.mjs",
+      "sha256": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "SYS-VERIFY-002",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-5d55ff4fc614658c",
@@ -52580,7 +52648,7 @@
     {
       "id": "SURFACE-51ff2aecc0e6e208",
       "path": "scripts/lib/verification-evidence.mjs",
-      "sha256": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+      "sha256": "b2155d28b8f6885dfef9efd2ba44e0be4fd9bd8714c7aa0cd33e75c62b137a9d",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52998,7 +53066,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
+      "sha256": "76005d9ebad188fbfe397b77d9ef1aee5e6a1c8ea7001e243741fbbb56d37810",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86775,7 +86843,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "eb486e64e8141938dc836032be222f47a8b12a6de1d65230457c17938f09576d",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86803,7 +86871,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "eb486e64e8141938dc836032be222f47a8b12a6de1d65230457c17938f09576d",
       "definition": {
         "states": [
           "absent",
@@ -86833,7 +86901,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
+      "sourceSha256": "eb486e64e8141938dc836032be222f47a8b12a6de1d65230457c17938f09576d",
       "definition": {
         "export": [
           "queued",

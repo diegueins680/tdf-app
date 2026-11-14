@@ -1082,7 +1082,7 @@ test('event administrator delegation appends one migration to the protected 251-
   }
   assert.equal(priorMain.length, 1449);
   // 1452 after this review, plus the nine agreement payments reviews (ADR 0136).
-  assert.equal(active.length, 1461);
+  assert.equal(active.filter(row => row.id !== '755cf14ac92e4f590879').length, 1461);
 });
 
 test('marketplace agreement payments append one migration to the protected 252-entry manifest', async () => {
@@ -1140,5 +1140,23 @@ test('marketplace agreement payments append one migration to the protected 252-e
     assert.match(history.get(id).reviewMethod, /^deterministic-policy-v\d+$/);
   }
   assert.equal(priorMain.length, 1452);
-  assert.equal(active.length, 1461);
+  assert.equal(active.filter(row => row.id !== '755cf14ac92e4f590879').length, 1461);
+});
+
+// One explicit successor to the reviewed main inventory; no historical review
+// may disappear or silently change when the delivery protocol is classified.
+test('delivery evidence protocol adds exactly one review and preserves protected main', async () => {
+  const file = 'docs/catalog-persistence/catalog-list-decisions.json';
+  const baseline = await reviewedJson('5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b', file);
+  const current = JSON.parse(await fs.readFile(path.join(workspaceRoot, file), 'utf8'));
+  const id = '755cf14ac92e4f590879';
+  const additions = current.decisions.filter(row => row.id === id);
+  assert.equal(additions.length, 1);
+  assert.equal(additions[0].classification, 'genuine-technical-constant');
+  assert.equal(additions[0].disposition, 'explicit-allowlist');
+  assert.equal(additions[0].reviewed, true);
+  assert.equal(additions[0].evidence.file, 'scripts/lib/delivery-matrix.mjs');
+  assert.equal(additions[0].evidence.name, 'DELIVERY_CHECKS');
+  assert.match(additions[0].justification, /SYS-VERIFY-002/);
+  assert.deepEqual({ ...current, decisions: current.decisions.filter(row => row.id !== id) }, baseline);
 });
