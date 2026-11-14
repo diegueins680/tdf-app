@@ -8,10 +8,13 @@ module TDF.Server.Directory
   ( directoryPublicServer
   , directoryProtectedServer
   , consumeRate
+  , startAgreementDepositExpiryJob
   ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (forM_, unless, when)
+import Control.Concurrent (forkIO, threadDelay)
+import Control.Exception (SomeException, try)
+import Control.Monad (forM_, forever, unless, void, when)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (ReaderT, asks)
 import Crypto.Hash (Digest, SHA256, hash)
@@ -33,6 +36,7 @@ import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
 import System.Environment (lookupEnv)
+import System.IO (hPutStrLn, stderr)
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import Data.Scientific (base10Exponent, toBoundedInteger, toRealFloat)
@@ -462,6 +466,7 @@ directoryProtectedServer user =
   :<|> changeClaimStatus user
   :<|> listAdminVerifications user
   :<|> changeVerificationStatus user
+  :<|> listAdminAgreementDisputes user
   :<|> listModerationQueue user
   :<|> createModerationDecision user
   :<|> mergeProfiles user
@@ -1487,7 +1492,7 @@ listMyAgreements user mStatus = do
   let statusFilter = normalizeOptional mStatus
   when (maybe False (`notElem` ["open","closed"]) statusFilter) $
     throwError err400 {errBody="status must be open or closed"}
-  runDB (expireOverdueDepositsDB (toPersistValue (auPartyId user)))
+  runDB (expireOverdueDepositsDB (Just (toPersistValue (auPartyId user))))
   jsonRows ("SELECT " <> agreementProjectionSql "CASE WHEN EXISTS (SELECT 1 FROM directory_profile_manager manager WHERE manager.profile_id=agreement.buyer_profile_id AND manager.account_party_id=? AND manager.active) THEN 'buyer' ELSE 'provider' END" <> agreementFromSql <> "WHERE EXISTS (SELECT 1 FROM directory_profile_manager manager WHERE manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.account_party_id=? AND manager.active) AND (?::text IS NULL OR (?::text='open' AND agreement.status IN ('pending_deposit','confirmed','in_progress','balance_due','disputed')) OR (?::text='closed' AND agreement.status IN ('completed','cancelled','expired'))) ORDER BY agreement.updated_at DESC,agreement.id")
     [toPersistValue (auPartyId user),toPersistValue (auPartyId user),optionalText statusFilter,optionalText statusFilter,optionalText statusFilter]
 
@@ -1497,7 +1502,7 @@ agreementParticipantRole user agreementId = do
 
 getAgreement user agreementId = do
   role <- agreementParticipantRole user agreementId
-  runDB (expireOverdueDepositsDB (toPersistValue (auPartyId user)))
+  runDB (expireOverdueDepositsDB (Just (toPersistValue (auPartyId user))))
   -- The role comes from agreementParticipantRole (a closed set), so it is
   -- safe to interpolate as a SQL literal.
   jsonOne err404 ("SELECT " <> agreementProjectionSql ("'" <> role <> "'") <> agreementFromSql <> "WHERE agreement.id=?") [toPersistValue agreementId]
@@ -1662,14 +1667,15 @@ requireAgreementPayments = do
     { errBody = "Feature marketplace.agreement_payments is not enabled in this environment" }
 
 -- I26: an agreement whose deposit was not paid by its deadline expires and
--- releases its slot. Runs lazily for the agreements the caller takes part in,
--- in its own transaction, in a stable order (classified, offer, agreement,
--- payment). An agreement with a payment attempt that may still collect money
--- is left alone until that attempt settles.
-expireOverdueDepositsDB :: PersistValue -> SqlPersistT IO ()
-expireOverdueDepositsDB partyParam = do
-  overdue <- rawSql ("SELECT agreement.id,agreement.classified_id,agreement.application_id FROM marketplace_agreement agreement WHERE agreement.status='pending_deposit' AND agreement.deposit_due_at<=now() AND EXISTS (SELECT 1 FROM directory_profile_manager manager WHERE manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.account_party_id=? AND manager.active) AND NOT EXISTS (SELECT 1 FROM marketplace_agreement_payment payment JOIN commerce_payment_attempt attempt ON attempt.checkout_id=payment.checkout_id WHERE payment.agreement_id=agreement.id AND attempt.status IN " <> liveAttemptStatusesSql <> ") ORDER BY agreement.classified_id,agreement.application_id LIMIT 20")
-    [partyParam] :: SqlPersistT IO [(Single UUID, Single UUID, Single UUID)]
+-- releases its slot. Runs lazily for the agreements the caller takes part in
+-- (@Just party@) and periodically for every agreement (@Nothing@, the expiry
+-- job), in its own transaction, in a stable order (classified, offer,
+-- agreement, payment). An agreement with a payment attempt that may still
+-- collect money is left alone until that attempt settles.
+expireOverdueDepositsDB :: Maybe PersistValue -> SqlPersistT IO ()
+expireOverdueDepositsDB participant = do
+  overdue <- rawSql ("SELECT agreement.id,agreement.classified_id,agreement.application_id FROM marketplace_agreement agreement WHERE agreement.status='pending_deposit' AND agreement.deposit_due_at<=now()" <> (if isJust participant then " AND EXISTS (SELECT 1 FROM directory_profile_manager manager WHERE manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.account_party_id=? AND manager.active)" else "") <> " AND NOT EXISTS (SELECT 1 FROM marketplace_agreement_payment payment JOIN commerce_payment_attempt attempt ON attempt.checkout_id=payment.checkout_id WHERE payment.agreement_id=agreement.id AND attempt.status IN " <> liveAttemptStatusesSql <> ") ORDER BY agreement.classified_id,agreement.application_id LIMIT 20")
+    (toList participant) :: SqlPersistT IO [(Single UUID, Single UUID, Single UUID)]
   forM_ overdue $ \(Single agreementId, Single classifiedId, Single applicationId) -> do
     _ <- (rawSql "SELECT classified.status FROM classified WHERE classified.id=? FOR UPDATE" [toPersistValue classifiedId] :: SqlPersistT IO [Single Text])
     _ <- (rawSql "SELECT application.status FROM classified_application application WHERE application.id=? FOR UPDATE" [toPersistValue applicationId] :: SqlPersistT IO [Single Text])
@@ -1683,6 +1689,18 @@ expireOverdueDepositsDB partyParam = do
         [PersistText (UUID.toText agreementId),PersistText ("agreement-expire-"<>UUID.toText agreementId)]
       rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',?::text,FALSE,now() FROM marketplace_agreement agreement JOIN directory_profile_manager manager ON manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.active AND manager.can_contact WHERE agreement.id=?"
         [PersistText (agreementNotificationType AgreementExpired),PersistText (agreementNotificationTitle AgreementExpired),PersistText (agreementNotificationBody AgreementExpired),PersistText (UUID.toText applicationId),toPersistValue agreementId]
+
+-- ADR 0136 I26: an agreement nobody opens must not hold its slot forever, so
+-- the same expiry runs for every agreement every five minutes. Any number of
+-- instances may run it: each batch takes row locks in the stable order and
+-- rechecks the state it expires. A failed pass is logged and retried.
+startAgreementDepositExpiryJob :: Env -> IO ()
+startAgreementDepositExpiryJob Env{envPool} = void . forkIO . forever $ do
+  outcome <- try (runSqlPool (expireOverdueDepositsDB Nothing) envPool) :: IO (Either SomeException ())
+  case outcome of
+    Left problem -> hPutStrLn stderr ("[Marketplace][AgreementExpiry] pass failed: " <> show problem)
+    Right () -> pure ()
+  threadDelay (5 * 60 * 1000000)
 
 -- Payout account as its managers see it: the recipient is masked.
 payoutAccountProjectionSql :: Text
@@ -1758,7 +1776,7 @@ createAgreementPayment user agreementId AgreementPaymentRequest{provider=rawProv
       lookupHash = T.pack (show (hash (TE.encodeUtf8 lookupToken) :: Digest SHA256))
       paymentText = UUID.toText paymentId
       agreementText = UUID.toText agreementId
-  runDB (expireOverdueDepositsDB (toPersistValue (auPartyId user)))
+  runDB (expireOverdueDepositsDB (Just (toPersistValue (auPartyId user))))
   outcome <- runDB $ do
     locked <- rawSql "SELECT jsonb_build_object('status',agreement.status,'settlementMode',agreement.settlement_mode,'commissionMinor',agreement.commission_minor,'depositMinor',agreement.deposit_minor,'balanceMinor',agreement.balance_minor,'currency',currency.code,'depositDueAt',agreement.deposit_due_at,'title',classified.title,'email',coalesce(party.primary_email,'')) FROM marketplace_agreement agreement JOIN currency_reference currency ON currency.id=agreement.currency_id JOIN classified ON classified.id=agreement.classified_id JOIN party ON party.id=? WHERE agreement.id=? FOR UPDATE OF agreement"
       [toPersistValue (auPartyId user),toPersistValue agreementId] :: SqlPersistT IO [Single CMS.AesonValue]
@@ -2246,6 +2264,15 @@ requireMarketplaceOffers = do
 
 requireDirectoryAdmin :: AuthedUser -> AppM ()
 requireDirectoryAdmin user = unless (isDirectoryAdmin user) (throwError err403 {errBody="directory administration requires the Admin role and module"})
+
+-- ADR 0136: disputed agreements wait for an administrator, oldest dispute
+-- first. Each row is the agreement as an administrator sees it (with its
+-- charges, never the payout recipient) plus who opened the dispute, from
+-- which state and why, as recorded in the audit trail. The administrator
+-- resolves it with the agreement status route (completed or cancelled).
+listAdminAgreementDisputes user = do
+  requireDirectoryAdmin user
+  jsonRows ("SELECT " <> agreementProjectionSql "'admin'" <> "||jsonb_build_object('dispute',(SELECT jsonb_build_object('reason',event.metadata->>'reason','openedBy',event.metadata->>'participant','previousStatus',event.previous_state,'openedAt',event.created_at) FROM directory_audit_event event WHERE event.entity_kind='agreement' AND event.entity_id=agreement.id::text AND event.action='agreement.status' AND event.new_state='disputed' ORDER BY event.created_at DESC,event.id DESC LIMIT 1))" <> agreementFromSql <> "WHERE agreement.status='disputed' ORDER BY agreement.disputed_at NULLS LAST,agreement.id") []
 
 listAdminClaims user = do
   requireDirectoryAdmin user

@@ -51,3 +51,14 @@ export function agreementChargeDue(agreement: Pick<MarketplaceAgreement, 'status
 export function visibleAgreementPayments(agreement: Pick<MarketplaceAgreement, 'payments'>): AgreementPayment[] {
   return (agreement.payments ?? []).filter((payment) => payment.status === 'paid' || payment.status === 'pending');
 }
+
+/**
+ * Shape of a PayPhone payout recipient (ADR 0136), mirroring
+ * TDF.Directory.Policy.payoutIdentifierValid: an identification is a cédula
+ * (10 digits) or a RUC (13 digits); a phone is in international format. The
+ * server is the authority; this only spares a round trip.
+ */
+export function payoutIdentifierValid(kind: 'identification' | 'phone', identifier: string): boolean {
+  if (kind === 'identification') return /^(\d{10}|\d{13})$/.test(identifier);
+  return /^\+[1-9]\d{7,14}$/.test(identifier);
+}

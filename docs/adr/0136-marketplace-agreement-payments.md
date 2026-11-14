@@ -58,12 +58,15 @@ Hechos verificados antes de diseñar (fuentes al final):
    acuerdo nace `pending_deposit` + `platform`, con `deposit_due_at` según la tarifa.
    - Depósito verificado → `confirmed`.
    - Depósito sin pagar al vencer → `expired`: retira la oferta y libera el cupo (misma rutina
-     que cancelar).
+     que cancelar). Corre al cargar los acuerdos de un participante y, para todos los acuerdos,
+     cada cinco minutos en un job del servidor (`startAgreementDepositExpiryJob`).
    - El proveedor inicia (`in_progress`). El comprador confirma la entrega: con saldo pendiente
      pasa a `balance_due` y se crea el cobro del saldo; el saldo verificado lo lleva a
      `completed` y registra la interacción verificada. Sin saldo, pasa directo a `completed`.
      Mientras espera el saldo, cualquiera de las partes puede abrir una disputa: el cobro
-     pendiente se cancela y un administrador resuelve.
+     pendiente se cancela y un administrador resuelve. Las disputas abiertas se listan para
+     administración en `GET /directory/admin/agreements/disputes` (más antigua primero, con quién
+     la abrió, desde qué estado y por qué) y se resuelven con la ruta de estado del acuerdo.
    - Ningún participante ni administrador puede marcar un cobro como pagado: solo la
      reconciliación con consulta autenticada al proveedor (trigger
      `marketplace_agreement_payment_require_verified_payment`, mismo patrón que reservas y

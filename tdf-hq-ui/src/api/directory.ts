@@ -119,6 +119,8 @@ export const Directory = {
     post<AgreementPaymentCheckout>(`/directory/agreements/${encodeURIComponent(agreementId)}/payments`, {
       provider,
     } satisfies components['schemas']['AgreementPaymentRequest']),
+  /** ADR 0136: disputed agreements waiting for an administrator, oldest dispute first. */
+  adminAgreementDisputes: () => get<MarketplaceAgreement[]>('/directory/admin/agreements/disputes'),
   payoutAccounts: () => get<PayoutAccount[]>('/directory/payout-accounts'),
   savePayoutAccount: (profileId: string, provider: PayoutAccount['provider'], body: PayoutAccountRequest) =>
     put<PayoutAccount>(`/directory/profiles/${encodeURIComponent(profileId)}/payout-accounts/${encodeURIComponent(provider)}`, body),
