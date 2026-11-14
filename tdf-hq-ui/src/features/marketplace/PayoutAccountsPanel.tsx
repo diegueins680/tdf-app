@@ -1,17 +1,15 @@
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Alert, Button, Chip, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Button, Chip, FormControl, FormControlLabel, InputLabel, MenuItem, Paper, Select, Stack, Switch, TextField, Typography } from '@mui/material';
 
 import { ApiError } from '../../api/client';
-import { Directory, type ManagedDirectoryProfile, type PayoutAccount } from '../../api/directory';
+import { Directory, type ManagedDirectoryProfile, type PayoutAccount, type PayoutAccountRequest } from '../../api/directory';
 import { payoutIdentifierValid } from './agreements';
 
 interface PayoutAccountsPanelProps {
   profiles: ManagedDirectoryProfile[];
 }
-
-type IdentifierKind = 'identification' | 'phone';
 
 /**
  * Where the profiles the user manages are paid for their agreements (ADR
@@ -23,7 +21,8 @@ export default function PayoutAccountsPanel({ profiles }: PayoutAccountsPanelPro
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [profileId, setProfileId] = useState('');
-  const [kind, setKind] = useState<IdentifierKind>('identification');
+  const [usePhone, setUsePhone] = useState(false);
+  const kind: PayoutAccountRequest['identifierType'] = usePhone ? 'phone' : 'identification';
   const [identifier, setIdentifier] = useState('');
   const accounts = useQuery({ queryKey: ['directory', 'payout-accounts'], queryFn: Directory.payoutAccounts });
   const selectedProfile = profileId !== '' ? profileId : profiles[0]?.id ?? '';
@@ -70,13 +69,10 @@ export default function PayoutAccountsPanel({ profiles }: PayoutAccountsPanelPro
               </Select>
             </FormControl>
           )}
-          <FormControl size="small">
-            <InputLabel id="payout-kind-label">{t('marketplace.payout.kind')}</InputLabel>
-            <Select labelId="payout-kind-label" label={t('marketplace.payout.kind')} value={kind} onChange={(event) => setKind(event.target.value === 'phone' ? 'phone' : 'identification')}>
-              <MenuItem value="identification">{t('marketplace.payout.kinds.identification')}</MenuItem>
-              <MenuItem value="phone">{t('marketplace.payout.kinds.phone')}</MenuItem>
-            </Select>
-          </FormControl>
+          <FormControlLabel
+            control={<Switch checked={usePhone} onChange={(event) => setUsePhone(event.target.checked)} />}
+            label={t('marketplace.payout.usePhone')}
+          />
           <TextField
             size="small"
             label={t(`marketplace.payout.identifier.${kind}`)}

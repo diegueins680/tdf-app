@@ -1,4 +1,4 @@
-import type { AgreementPayment, AgreementStatus, MarketplaceAgreement } from '../../api/directory';
+import type { AgreementPayment, AgreementStatus, MarketplaceAgreement, PayoutAccountRequest } from '../../api/directory';
 
 export type AgreementRole = MarketplaceAgreement['participantRole'];
 
@@ -58,7 +58,7 @@ export function visibleAgreementPayments(agreement: Pick<MarketplaceAgreement, '
  * (10 digits) or a RUC (13 digits); a phone is in international format. The
  * server is the authority; this only spares a round trip.
  */
-export function payoutIdentifierValid(kind: 'identification' | 'phone', identifier: string): boolean {
+export function payoutIdentifierValid(kind: PayoutAccountRequest['identifierType'], identifier: string): boolean {
   if (kind === 'identification') return /^(\d{10}|\d{13})$/.test(identifier);
   return /^\+[1-9]\d{7,14}$/.test(identifier);
 }

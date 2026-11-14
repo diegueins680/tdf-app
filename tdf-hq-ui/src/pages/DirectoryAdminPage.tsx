@@ -17,12 +17,11 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { Directory, type MarketplaceAgreement } from '../api/directory';
-import AgreementCard from '../features/marketplace/AgreementCard';
+import { Directory } from '../api/directory';
+import AgreementDisputesPanel from '../features/marketplace/AgreementDisputesPanel';
 
 type ReviewRecord = Record<string, unknown>;
-type ReviewKind = 'claims' | 'verifications' | 'moderation';
-type QueueKind = ReviewKind | 'disputes';
+type QueueKind = 'claims' | 'verifications' | 'moderation';
 const moderationDecisionValues = ['dismiss', 'warn', 'pause', 'remove', 'suspend', 'close'] as const;
 type ModerationDecision = typeof moderationDecisionValues[number];
 
@@ -30,42 +29,12 @@ const stringValue = (value: unknown, fallback = ''): string => typeof value === 
 const isModerationDecision = (value: string): value is ModerationDecision =>
   (moderationDecisionValues as readonly string[]).includes(value);
 
-const disputeOpener: Record<string, string> = { buyer: 'el cliente', provider: 'el proveedor', admin: 'administración' };
-
-/**
- * One disputed marketplace agreement (ADR 0136): who opened the dispute, from
- * which state and why, and the agreement card with the two administrator
- * resolutions (complete or cancel), each bound to the version shown.
- */
-function DisputeCard({ agreement, currencies }: { agreement: MarketplaceAgreement; currencies?: Parameters<typeof AgreementCard>[0]['currencies'] }) {
-  const dispute = agreement.dispute;
-  const openedAt = dispute?.openedAt ? new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(dispute.openedAt)) : null;
-  return (
-    <Stack spacing={1} data-testid="agreement-dispute">
-      <Alert severity="warning">
-        <Typography fontWeight={700}>
-          Cliente: {agreement.buyerProfile.name} · Proveedor: {agreement.providerProfile.name}
-        </Typography>
-        <Typography variant="body2">
-          Disputa abierta por {disputeOpener[dispute?.openedBy ?? ''] ?? 'una de las partes'}{openedAt ? ` el ${openedAt}` : ''}{dispute?.previousStatus ? ` (estado anterior: ${dispute.previousStatus})` : ''}.
-        </Typography>
-        <Typography variant="body2">Motivo: {dispute?.reason?.trim() ? dispute.reason : 'sin motivo registrado'}</Typography>
-        <Typography variant="body2">Completar habilita las reseñas; cancelar libera el cupo del anuncio. Ninguna de las dos mueve dinero: una devolución se gestiona con el proveedor de pagos.</Typography>
-      </Alert>
-      <AgreementCard agreement={agreement} currencies={currencies} />
-    </Stack>
-  );
-}
-
 export default function DirectoryAdminPage() {
   const [queue, setQueue] = useState<QueueKind>('claims');
   const claims = useQuery({ queryKey: ['directory', 'admin', 'claims'], queryFn: Directory.adminClaims, enabled: queue === 'claims' });
   const verifications = useQuery({ queryKey: ['directory', 'admin', 'verifications'], queryFn: Directory.adminVerifications, enabled: queue === 'verifications' });
   const moderation = useQuery({ queryKey: ['directory', 'admin', 'moderation'], queryFn: Directory.moderationQueue, enabled: queue === 'moderation' });
-  const disputes = useQuery({ queryKey: ['directory', 'admin', 'disputes'], queryFn: Directory.adminAgreementDisputes, enabled: queue === 'disputes' });
-  const taxonomies = useQuery({ queryKey: ['directory', 'taxonomies'], queryFn: () => Directory.taxonomies(), enabled: queue === 'disputes' });
-  const review = queue === 'claims' ? claims : queue === 'verifications' ? verifications : moderation;
-  const selected = queue === 'disputes' ? disputes : review;
+  const selected = queue === 'claims' ? claims : queue === 'verifications' ? verifications : moderation;
 
   return (
     <Container component="main" id="main-content" maxWidth="xl" sx={{ py: 4 }}>
@@ -75,19 +44,18 @@ export default function DirectoryAdminPage() {
           <Typography color="text.secondary" mt={1}>Las decisiones requieren el rol y el módulo Admin, quedan auditadas y nunca convierten una profesión pública en permiso interno.</Typography>
         </Box>
         <Alert severity="warning">No apruebes identidad, propiedad, créditos ni consentimiento sin revisar la evidencia y la política operativa vigente. La fusión de duplicados permanece fuera de esta acción genérica.</Alert>
-        <Tabs value={queue} onChange={(_, value: unknown) => { if (value === 'claims' || value === 'verifications' || value === 'moderation' || value === 'disputes') setQueue(value); }} aria-label="Colas administrativas del directorio">
+        <Tabs value={queue} onChange={(_, value: unknown) => { if (value === 'claims' || value === 'verifications' || value === 'moderation') setQueue(value); }} aria-label="Colas administrativas del directorio">
           <Tab value="claims" label="Reclamos" />
           <Tab value="verifications" label="Verificaciones" />
           <Tab value="moderation" label="Moderación" />
-          <Tab value="disputes" label="Disputas" />
         </Tabs>
         {selected.isLoading && <CircularProgress />}
         {selected.isError && <Alert severity="error">No tienes acceso a esta cola o no se pudo cargar.</Alert>}
         {!selected.isLoading && !selected.isError && (selected.data?.length ?? 0) === 0 && <Alert severity="info">La cola está vacía.</Alert>}
         <Stack spacing={2}>
-          {queue !== 'disputes' && (review.data ?? []).map((record) => <ReviewCard key={stringValue(record['id'])} kind={queue} record={record} />)}
-          {queue === 'disputes' && (disputes.data ?? []).map((agreement) => <DisputeCard key={agreement.id} agreement={agreement} currencies={taxonomies.data?.currencies} />)}
+          {(selected.data ?? []).map((record) => <ReviewCard key={stringValue(record['id'])} kind={queue} record={record} />)}
         </Stack>
+        <AgreementDisputesPanel />
         <ProfileMergePanel />
       </Stack>
     </Container>
@@ -123,7 +91,7 @@ function ProfileMergePanel() {
   );
 }
 
-function ReviewCard({ kind, record }: { kind: ReviewKind; record: ReviewRecord }) {
+function ReviewCard({ kind, record }: { kind: QueueKind; record: ReviewRecord }) {
   const client = useQueryClient();
   const [notes, setNotes] = useState('Decisión revisada según la política operativa del directorio.');
   const id = stringValue(record['id']);
