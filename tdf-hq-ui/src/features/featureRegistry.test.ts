@@ -20,6 +20,26 @@ describe('featureRegistry', () => {
     expect(getFeatureByPath('/social/campanas')?.recordScope).toBe('owner-and-explicit-team');
   });
 
+  it('opens event logistics by record scope instead of the Scheduling module', () => {
+    const feature = getFeatureByPath('/social/eventos/42/logistica');
+    expect(feature?.id).toBe('social.event.logistics');
+    expect(feature?.requiredModules).toEqual([]);
+    expect(feature?.permissions.view?.recordScope).toBe('event-member-or-admin');
+    const roles = ['Fan', 'Customer'];
+    for (const action of ['discover', 'view'] as const) {
+      expect(evaluateFeatureAccess('social.event.logistics', { authenticated: true, roles, modules: [] }, action).state).toBe('allowed');
+      expect(evaluateFeatureAccess('social.event.logistics', { authenticated: false }, action).state).not.toBe('allowed');
+    }
+    for (const action of ['create', 'edit', 'delete', 'assign'] as const) {
+      expect(evaluateFeatureAccess('social.event.logistics', { authenticated: true, roles, modules: [] }, action).state).toBe('allowed');
+      expect(feature?.permissions[action]?.recordScope).toBe('event-manager-or-admin');
+      expect(feature?.permissions[action]?.modulesAll).toBeUndefined();
+    }
+    const calendar = evaluateFeatureAccess('studio.calendar', { authenticated: true, roles, modules: [] }, 'view');
+    expect(calendar.state).not.toBe('allowed');
+    expect(calendar.missingModules).toEqual(['scheduling']);
+  });
+
   it('discovers account deletion in both languages and requires an authenticated owner', () => {
     const feature = getFeatureByPath('/cuenta/eliminar');
     expect(feature?.id).toBe('account.deletion');
