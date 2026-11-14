@@ -18,6 +18,8 @@ module TDF.Server.EventTicketCheckout
   , ticketUnverifiedCaptureRefusal
   ) where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import           Control.Exception
   ( SomeAsyncException, SomeException, fromException, throwIO, try )
 import           Control.Monad (forM, forM_, unless, void, when)
@@ -1359,8 +1361,9 @@ createPublicEventTicketDatafastCheckout
   :: Int64
   -> Int64
   -> Maybe Text
+  -> ClientIP.DatafastClientRequest
   -> AppM APITypes.DatafastCheckoutDTO
-createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
+createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken clientRequest = do
   context <- requireTicketPaymentContext rawEventId rawOrderId mLookupToken
   requireTicketSalesOpen context
   when (tpcCheckoutStatus context == "paid") $
@@ -1369,19 +1372,21 @@ createPublicEventTicketDatafastCheckout rawEventId rawOrderId mLookupToken = do
   (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireTicketProvider context
     (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
-  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast
-    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
   existing <- loadTicketProviderBinding context Checkout.ProviderDatafast
     (ServiceStorefront.sdfEntityId datafast) "checkout"
-  (checkoutId, widgetUrl) <- case existing of
-    Just (storedCheckoutId, _) -> pure
+  checkoutRequest <- maybe
+    (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
+  attempt <- beginSalesGatedTicketPaymentAttempt context Checkout.ProviderDatafast
+    Checkout.OperationCreate (ServiceStorefront.sdfEntityId datafast) "create"
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
       , stripTrailingSlash (ServiceStorefront.sdfBaseUrl datafast)
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
-    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
+    Right clientIP -> ServiceStorefront.requestDatafastCheckoutForService
       (tpcCheckout context)
-      attempt
+      attempt clientIP
       (fromIntegral (tpcAmountMinor context))
       (tpcCurrency context)
       (tpcBuyerName context)

@@ -42,6 +42,8 @@ module TDF.API.MusicRelease
   , MusicUploadConfirmRequest(..)
   ) where
 
+import TDF.Commerce.DatafastClientIP (DatafastClientRequest)
+
 import Data.Aeson
   ( FromJSON(..)
   , Options
@@ -139,7 +141,7 @@ type MusicReleaseProtectedAPI = "music" :>
          :> ReqBody '[JSON] MusicPurchaseCreateRequest :> PostCreated '[JSON] Value
   :<|> "purchases" :> Get '[JSON] [Value]
   :<|> "purchases" :> Capture "purchaseId" UUID :> "datafast" :> "checkout"
-         :> Header "Idempotency-Key" Text :> Post '[JSON] Value
+         :> Header "Idempotency-Key" Text :> DatafastClientRequest :> Post '[JSON] Value
   :<|> "purchases" :> Capture "purchaseId" UUID :> "datafast" :> "status"
          :> Header "Idempotency-Key" Text :> ReqBody '[JSON] MusicDatafastStatusRequest :> Post '[JSON] Value
   :<|> "purchases" :> Capture "purchaseId" UUID :> "paypal" :> "create"

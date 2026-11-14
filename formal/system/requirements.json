@@ -25639,12 +25639,12 @@
     },
     {
       "id": "PAY-DATAFAST-001",
-      "title": "Shared Dataweb metadata, immutable cart and saved ticket contact",
-      "statement": "New Datafast checkout creation requires configured merchant MID, TID, PSERV and USER_DATA2, sends the same validated protocol metadata in every domain, preserves UTF-8 form values and does not make existing payment status configuration depend on creation metadata. Ticket payment creation retains the validated optional phone saved at order creation; absent or invalid stored phones stay absent. Both Datafast request builders preserve supplied buyer name tokens without placeholder names or duplicated single-name surnames. Fresh gateway requests additionally project ordered canonical checkout lines into Dataweb cart fields only when the stored parent currency/total, exact integer line products and sum agree; nonzero economic adjustments, invalid provider text/field bounds and unsupported currency refuse the request without inventing prices or VAT classification.",
+      "title": "Shared Dataweb metadata, immutable cart and transport-owned customer IP",
+      "statement": "New Datafast checkout creation requires configured merchant MID, TID, PSERV and USER_DATA2, sends the same validated protocol metadata in every domain, preserves UTF-8 form values and does not make existing payment status configuration depend on creation metadata. Ticket payment creation retains the validated optional phone saved at order creation; absent or invalid stored phones stay absent. Both Datafast request builders preserve supplied buyer name tokens without placeholder names or duplicated single-name surnames. Fresh gateway requests additionally project ordered canonical checkout lines into Dataweb cart fields only when the stored parent currency/total, exact integer line products and sum agree; nonzero economic adjustments, invalid provider text/field bounds and unsupported currency refuse the request without inventing prices or VAT classification. Fresh creation in all seven domains requires a verified transport-derived customer IP before allocating a payment attempt; client JSON and untrusted forwarded headers cannot supply it.",
       "domain": "PAY",
       "authority": "User request to finish Datafast payments and prepare onboarding; published Datafast Dataweb field requirements.",
       "source": "User request 2026-10-29; https://developers.datafast.com.ec/Index.aspx",
-      "property": "Incomplete merchant metadata denies a fresh checkout before provider attempt allocation or gateway creation; existing status configuration remains usable. Stored ticket phone input survives the payment context and uses the initial order validation boundary. Immutable cart projection precedes a fresh gateway call; saved provider checkout reuse and status verification retain their existing behavior.",
+      "property": "Incomplete merchant metadata denies a fresh checkout before provider attempt allocation or gateway creation; existing status configuration remains usable. Stored ticket phone input survives the payment context and uses the initial order validation boundary. Immutable cart projection precedes a fresh gateway call; saved provider checkout reuse and status verification retain their existing behavior. A trusted proxy is an explicitly listed exact socket peer and must supply one valid dedicated header; empty trust admits only an eligible direct peer. Saved checkout reuse and status do not require new IP context.",
       "contract": "formal/system/datafast-merchant-metadata.md",
       "actors": [
         "Checkout customer",
@@ -25657,7 +25657,8 @@
       ],
       "inputs": [
         "Required merchant configuration, optional protocol version, UTF-8 checkout form fields",
-        "Canonical checkout parent and ordered immutable line descriptions, quantities and unit amounts"
+        "Canonical checkout parent and ordered immutable line descriptions, quantities and unit amounts",
+        "Opaque WAI socket provenance, dedicated proxy header occurrences and bounded explicit exact-peer proxy configuration"
       ],
       "state": {
         "boundary": "Pure metadata admission and create-versus-status configuration; no additional lifecycle states."
@@ -25679,10 +25680,13 @@
         "Dataweb cart quantity times unit cents conserves each stored subtotal and the exact charged total, without floating point or inferred VAT.",
         "Live product records and client prices never supply or overwrite canonical Dataweb cart lines.",
         "New Dataweb request references are the persisted creation-attempt UUID, stable on exact replay and distinct for distinct attempts.",
-        "Status verification admits only the exact bound creation-attempt UUID or its saved legacy domain-order reference, with matching checkout, provider resource, environment, merchant, amount and currency; settlement still uses the domain-order binding."
+        "Status verification admits only the exact bound creation-attempt UUID or its saved legacy domain-order reference, with matching checkout, provider resource, environment, merchant, amount and currency; settlement still uses the domain-order binding.",
+        "Only an explicit trusted socket peer may supply one dedicated client IP header; malformed or ambiguous provenance denies fresh creation before attempt allocation.",
+        "Both Dataweb form builders require a validated opaque client IP and emit exactly one customer.ip; no browser field or authentication grant is added.",
+        "Saved checkout reuse and payment status do not depend on new IP or proxy configuration."
       ],
       "authorization": "Existing customer, merchant, capability and payment-attempt authorization is unchanged; this contract grants no provider activation.",
-      "privacy": "Merchant values and customer payloads are not verification receipts; synthetic test values only.",
+      "privacy": "Merchant values and customer payloads are not verification receipts; synthetic test values only. Client address exists transiently for the gateway request, without new local persistence or logging.",
       "concurrency": "No cross-process environment rotation or payment state-machine guarantee is introduced.",
       "idempotency": "Existing operation identities, attempt locks and replay behavior remain unchanged.",
       "failure": "Reject invalid metadata before creating a provider attempt or contacting the gateway.",
@@ -25700,7 +25704,18 @@
         "tdf-hq/config/default.env.example",
         "tdf-hq/tdf-hq.cabal",
         "tdf-hq/src/TDF/Commerce/TicketBuyerContact.hs",
-        "scripts/quality-backend.sh"
+        "scripts/quality-backend.sh",
+        "tdf-hq/src/TDF/Commerce/DatafastClientIP.hs",
+        "tdf-hq/src/TDF/API.hs",
+        "tdf-hq/src/TDF/API/Marketplace.hs",
+        "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Routes/Courses.hs",
+        "tdf-hq/src/TDF/Routes/DomoQuotes.hs",
+        "tdf-hq/src/TDF/Routes/EventTickets.hs",
+        "ops/hetzner/Caddyfile.production",
+        "scripts/lib/compiled-api-surface.mjs",
+        "formal/system/compiled-api-surface.json"
       ],
       "tests": [
         "tdf-hq/test/TDF/Commerce/DatafastConfigSpec.hs",
@@ -25709,16 +25724,19 @@
         "scripts/verify-datafast-cart.py",
         "scripts/test-datafast-cart.sh",
         "tdf-hq/test/integration/DatafastCart.hs",
-        "scripts/verify-datafast-reference.py"
+        "scripts/verify-datafast-reference.py",
+        "tdf-hq/test/TDF/Commerce/DatafastClientIPSpec.hs",
+        "scripts/verify-datafast-client-ip.py",
+        "scripts/__tests__/compiled-api-surface.test.mjs"
       ],
       "formalModels": [],
-      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof.",
+      "verification": "Local Hspec field/UTF-8 cases and SQLite-backed runtime availability tests; no whole-system proof or provider certification. Immutable cart Hspec examples and generated conservation cases cover exact cents, provider field bounds, UTF-8 and refusals; current PostgreSQL/compiled integration evidence is recorded separately. The compiled PostgreSQL reader additionally exercises new and legacy bound references, independent immutable-field faults, read-only replay and behavior-changing source controls; this is not an all-domain handler or settlement execution proof. Transport provenance has actual Servant/WAI examples, generated spoofing cases and six assertion-rejecting source controls. The native storefront route additionally checks pre-attempt refusal, authorization precedence and cached reuse without provider HTTP; other domains retain compiler/type wiring scope.",
       "evidence": "Exact-candidate local test logs retained in the operator workspace; public secrets excluded.",
       "status": "specified and implemented",
       "critical": true,
       "confidence": "Scoped local contract only; actual merchant sandbox and all-domain request qualification remain unverified.",
       "ambiguity": [
-        "Structured buyer identity, address/IP and authoritative tax fields still require applicable implementation review and provider certification; the new immutable cart projection does not establish a fully certifiable payload.",
+        "Structured buyer identity, delivery address handling, authoritative tax fields and actual proxy installation/provider IP certification remain outstanding; local transport admission does not establish a fully certifiable payload.",
         "No production activation, credentialed sandbox transaction, 3DS result or charge is established.",
         "Free-text first/rest name projection is not structured or verified legal identity; provider handling of incomplete or single-name profiles remains unqualified."
       ],
@@ -25731,7 +25749,8 @@
         "Project the optional stored ticket buyer_phone to the Datafast payment request without fallback or new collection.",
         "Use one supplied-name projection in shared service and marketplace Datafast request builders, preserving existing multi-component behavior without invented data.",
         "Project validated ordered canonical USD checkout items through the shared provider form; refuse unqualified line adjustments instead of fabricating a balancing item or tax base.",
-        "Send the creation-attempt UUID as the Dataweb merchantTransactionId across all seven checkout domains, preserving existing checkout reuse and legacy reference verification without changing settlement identities."
+        "Send the creation-attempt UUID as the Dataweb merchantTransactionId across all seven checkout domains, preserving existing checkout reuse and legacy reference verification without changing settlement identities.",
+        "Derive customer.ip from verified transport context in all seven fresh-creation flows, before attempt allocation, preserving existing checkout reuse and status."
       ]
     },
     {

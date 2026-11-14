@@ -20,6 +20,7 @@ module TDF.Server.ServiceStorefront
   , loadServiceDatafastCheckoutEnv
   , requestDatafastCheckoutForService
   , loadDatafastCartParameters
+  , loadDatafastClientIP
   , checkDatafastPaymentStatus
   , validateDatafastSuccessfulPayment
   , validateBoundDatafastSuccessfulPayment
@@ -55,6 +56,8 @@ module TDF.Server.ServiceStorefront
   , providerRequest
   , providerResponse
   ) where
+
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
 
 import           Control.Monad (when, unless)
 import           Control.Monad.Except (catchError)
@@ -349,8 +352,8 @@ createStripePaymentIntentHandler _ _ =
   throwError err503
     { errBody = "Stripe checkout is not configured for the service storefront. Use an enabled payment provider." }
 
-createDatafastCheckoutHandler :: Text -> Maybe Text -> AppM DatafastCheckoutDTO
-createDatafastCheckoutHandler orderIdText mLookupToken = do
+createDatafastCheckoutHandler :: Text -> Maybe Text -> ClientIP.DatafastClientRequest -> AppM DatafastCheckoutDTO
+createDatafastCheckoutHandler orderIdText mLookupToken clientRequest = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
   
@@ -373,16 +376,19 @@ createDatafastCheckoutHandler orderIdText mLookupToken = do
           buyerPhone = ME.serviceStorefrontOrderBuyerPhone order
 
       (dfEnv, _) <- loadServiceDatafastCheckoutEnv
+      checkoutRequest <- case (status, ME.serviceStorefrontOrderDatafastCheckoutId order) of
+        ("datafast_pending", Just existingCheckoutId) -> pure (Left existingCheckoutId)
+        _ -> Right <$> loadDatafastClientIP clientRequest
       (checkout, attempt) <- beginCanonicalPaymentAttempt
         oid order (sdfEnvironment dfEnv) Checkout.ProviderDatafast
         Checkout.OperationCreate (sdfEntityId dfEnv) "create"
       
-      (checkoutId, widgetUrl) <- case (status, ME.serviceStorefrontOrderDatafastCheckoutId order) of
-        ("datafast_pending", Just existingCheckoutId) -> do
+      (checkoutId, widgetUrl) <- case checkoutRequest of
+        Left existingCheckoutId -> do
           let baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
           pure (existingCheckoutId, baseUrlClean ++ "/v1/paymentWidgets.js?checkoutId=" ++ T.unpack existingCheckoutId)
-        _ -> requestDatafastCheckoutForService
-          checkout attempt totalCents currency buyerName buyerEmail buyerPhone
+        Right clientIP -> requestDatafastCheckoutForService
+          checkout attempt clientIP totalCents currency buyerName buyerEmail buyerPhone
           `catchError` failCanonicalPaymentAttempt
             checkout attempt Checkout.ProviderDatafast "datafast_checkout_create"
       
@@ -2371,17 +2377,29 @@ loadDatafastCartParameters checkout expectedCents expectedCurrency = do
       either reject pure (DatafastConfig.datafastCartParameters amount currency linesToSend)
     _ -> reject "Dataweb requires one canonical checkout snapshot"
 
+-- | Called only for a fresh checkout, before allocating its payment attempt.
+-- Cached widgets and status/reconciliation never require a new client address.
+loadDatafastClientIP :: ClientIP.DatafastClientRequest -> AppM ClientIP.DatafastClientIP
+loadDatafastClientIP request = do
+  configured <- liftIO (lookupEnv "DATAFAST_TRUSTED_PROXY_IPS")
+  policy <- either reject pure (ClientIP.parseTrustedDatafastProxies configured)
+  either reject pure (ClientIP.resolveDatafastClientIP policy request)
+  where
+    reject message = throwError err503
+      { errBody = BL.fromStrict (TE.encodeUtf8 message) }
+
 -- | Request a Datafast checkout session for a canonical service order.
 requestDatafastCheckoutForService
   :: Checkout.CheckoutReference
   -> Checkout.PaymentAttemptReference  -- ^ Persisted attempt, stable on replay
+  -> ClientIP.DatafastClientIP -- ^ Verified transport-owned customer address
   -> Int   -- ^ Amount in cents
   -> Text  -- ^ Currency
   -> Text  -- ^ Buyer name
   -> Text  -- ^ Buyer email
   -> Maybe Text  -- ^ Buyer phone
   -> AppM (Text, String)  -- ^ (checkoutId, widgetUrl)
-requestDatafastCheckoutForService checkout attempt totalCents currency name email mPhone = do
+requestDatafastCheckoutForService checkout attempt clientIP totalCents currency name email mPhone = do
   (dfEnv, merchantParameters) <- loadServiceDatafastCheckoutEnv
   cartParameters <- loadDatafastCartParameters checkout totalCents currency
   let manager = ProviderHttp.sharedProviderManager
@@ -2401,7 +2419,8 @@ requestDatafastCheckoutForService checkout attempt totalCents currency name emai
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (sdfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam <> merchantParameters <> cartParameters
+      allParams = baseParams <> ClientIP.datafastClientIPParameters clientIP
+        <> phoneParam <> testModeParam <> merchantParameters <> cartParameters
       body = renderFormBody allParams
       baseUrlClean = stripTrailingSlash (sdfBaseUrl dfEnv)
   req0 <- providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")

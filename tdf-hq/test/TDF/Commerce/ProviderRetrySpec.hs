@@ -4,6 +4,11 @@
 module TDF.Commerce.ProviderRetrySpec (spec) where
 
 import Data.List (nub)
+import Data.Proxy (Proxy(..))
+import Network.HTTP.Types (status200, status404, status503)
+import qualified Network.Wai as Wai
+import qualified Network.Wai.Test as WaiTest
+import qualified TDF.API.ServiceStorefront as StorefrontAPI
 import           Control.Concurrent (MVar, ThreadId, forkFinally, killThread, newEmptyMVar, putMVar, readMVar, takeMVar, threadDelay, tryPutMVar)
 import           Control.Exception (AsyncException(..), IOException, bracket, throwIO, toException, try)
 import           Control.Monad (forM, forM_, unless, when)
@@ -31,9 +36,10 @@ import           Database.Persist.Postgresql (createPostgresqlPool)
 import           Database.Persist.Sql (ConnectionPool, Single(..), SqlPersistT, rawExecute, rawSql, runSqlPool, toSqlKey)
 import           Database.PostgreSQL.Simple (SqlError(..))
 import           Network.Socket (SockAddr(..))
+import qualified Network.Socket as Socket
 import           Numeric (readHex)
 import qualified Network.HTTP.Client as HC
-import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, (:<|>)(..))
+import           Servant (Handler, NoContent, ServerError, errHTTPCode, errBody, errHeaders, runHandler, getResponse, getHeaders, serve, hoistServer, (:<|>)(..))
 import           System.Environment (lookupEnv, setEnv, unsetEnv)
 import qualified System.Timeout as Timeout
 import           Test.Hspec
@@ -423,6 +429,7 @@ spec = do
         closedCheckoutEvidenceSpec
         captureReplaySpec
         datafastBoundReferenceSpec
+        datafastClientPreflightSpec
         ticketLedgerSpec
         ticketAllocationSpec
         legacyStripeRefundSpec
@@ -2389,6 +2396,119 @@ ticketLedgerSpec = describe "ticket capture ledger" $
         [captureCheckoutParameter payment]) pool :: IO [Single Int64]
       receiptCounts `shouldBe` [Single 3]
 
+-- The immutable cart contains '&', which the actual cart projection refuses.
+-- This independent backstop prevents gateway HTTP even if an IP-gate
+-- regression gets as far as the builder. The expected IP error and row counts
+-- still distinguish the preflight from that later cart refusal.
+datafastClientFixture :: ConnectionPool -> IO (Text, Text, Checkout.CheckoutReference)
+datafastClientFixture pool = do
+  orderId <- toText <$> nextRandom
+  now <- getCurrentTime
+  let token = "synthetic-client-ip-" <> orderId
+  checkout <- runSqlPool (Checkout.createCheckout Checkout.CheckoutCreation
+    { Checkout.ccDomainType = "mixing_mastering", Checkout.ccDomainOrderId = orderId
+    , Checkout.ccEnvironment = Checkout.CheckoutSandbox, Checkout.ccCurrency = "USD"
+    , Checkout.ccAmountMinor = 12515, Checkout.ccCustomerEmail = "synthetic@example.invalid"
+    , Checkout.ccLookupTokenHash = digestText token, Checkout.ccIdempotencyKey = orderId
+    , Checkout.ccExpiresAt = addUTCTime 1800 now, Checkout.ccProductType = "mixing_mastering"
+    , Checkout.ccProductId = orderId, Checkout.ccProductVersion = "synthetic-v1"
+    , Checkout.ccDescription = "Unsendable & synthetic cart"
+    , Checkout.ccSnapshot = A.object [], Checkout.ccCorrelationId = "synthetic-client-ip"
+    }) pool
+  rows <- runSqlPool (rawSql
+    "INSERT INTO service_storefront_order\
+    \ (id,order_number,buyer_name,buyer_email,package_id,service_kind,tier,\
+    \ price_usd_cents,currency,status,checkout_id,lookup_token_hash)\
+    \ SELECT ?::uuid,?,'Synthetic buyer','synthetic@example.invalid',id,'Mixing','Basic',\
+    \ 12515,'USD','awaiting_payment',?::uuid,?\
+    \ FROM service_storefront_package ORDER BY id LIMIT 1 RETURNING id::text"
+    [PersistText orderId, PersistText orderId,
+     PersistText (Checkout.checkoutReferenceId checkout), PersistText (digestText token)]) pool
+    :: IO [Single Text]
+  rows `shouldBe` [Single orderId]
+  pure (orderId, token, checkout)
+
+datafastClientHttp :: ConnectionPool -> Text -> Text -> IO WaiTest.SResponse
+datafastClientHttp pool orderId token = do
+  config <- Config.loadConfig
+  let proxy = Proxy :: Proxy StorefrontAPI.ServiceStorefrontPublicAPI
+      app = serve proxy (hoistServer proxy
+        (\action -> runReaderT action (Env pool config)) Storefront.serviceStorefrontPublicServer)
+      request = Wai.defaultRequest
+        { Wai.requestMethod = "POST"
+        , Wai.rawPathInfo = TE.encodeUtf8 ("/services/storefront/order/" <> orderId <> "/datafast/checkout")
+        , Wai.pathInfo = ["services","storefront","order",orderId,"datafast","checkout"]
+        , Wai.remoteHost = SockAddrInet 12345 (Socket.tupleToHostAddress (172,18,0,3))
+        , Wai.requestHeaders = [("X-Order-Lookup-Token",TE.encodeUtf8 token),
+            ("X-TDF-Client-IP","1.1.1.1"), ("Content-Type","application/json")]
+        }
+  WaiTest.runSession (WaiTest.srequest (WaiTest.SRequest request "{}")) app
+
+datafastCreationRows :: Checkout.CheckoutReference -> SqlPersistT IO [Single Text]
+datafastCreationRows checkout = rawSql
+  "SELECT jsonb_build_object('attempts',\
+  \ (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.id) FROM commerce_payment_attempt a WHERE a.checkout_id=?::uuid),\
+  \ 'intents',(SELECT jsonb_agg(to_jsonb(i) ORDER BY i.id) FROM commerce_payment_intent i WHERE i.checkout_id=?::uuid),\
+  \ 'bindings',(SELECT jsonb_agg(to_jsonb(b) ORDER BY b.id) FROM commerce_provider_binding b\
+  \ JOIN commerce_payment_attempt a ON a.id=b.payment_attempt_id WHERE a.checkout_id=?::uuid))::text"
+  (replicate 3 (PersistText (Checkout.checkoutReferenceId checkout)))
+
+datafastClientPreflightSpec :: SpecWith ConnectionPool
+datafastClientPreflightSpec = describe "Dataweb client IP HTTP preflight" $ do
+  it "rejects an untrusted proxy before allocating a payment attempt or intent" $ \pool ->
+    withCompletionEnvironment $ do
+      (orderId, token, checkout) <- datafastClientFixture pool
+      before <- runSqlPool (datafastCreationRows checkout) pool
+      response <- datafastClientHttp pool orderId token
+      WaiTest.simpleStatus response `shouldBe` status503
+      WaiTest.simpleBody response `shouldBe` "Datafast customer network address could not be verified"
+      runSqlPool (datafastCreationRows checkout) pool `shouldReturn` before
+      counts <- runSqlPool (rawSql
+        "SELECT count(*) FROM commerce_payment_attempt WHERE checkout_id=?::uuid"
+        [PersistText (Checkout.checkoutReferenceId checkout)]) pool :: IO [Single Int64]
+      counts `shouldBe` [Single 0]
+
+  it "preserves order lookup authorization before network preflight" $ \pool ->
+    withCompletionEnvironment $ do
+      (orderId, _, checkout) <- datafastClientFixture pool
+      before <- runSqlPool (datafastCreationRows checkout) pool
+      response <- datafastClientHttp pool orderId "synthetic-wrong-token"
+      WaiTest.simpleStatus response `shouldBe` status404
+      runSqlPool (datafastCreationRows checkout) pool `shouldReturn` before
+
+  it "reuses the saved checkout without a new address, valid proxy configuration or new attempt" $ \pool ->
+    withCompletionEnvironment $ do
+      (orderId, token, checkout) <- datafastClientFixture pool
+      now <- getCurrentTime
+      let correlation = "service-storefront:" <> orderId <> ":datafast:create"
+      attempt <- runSqlPool (Runtime.beginPaymentAttempt Checkout.PaymentAttemptCreation
+        { Checkout.pacCheckout = checkout, Checkout.pacProvider = Checkout.ProviderDatafast
+        , Checkout.pacEnvironment = Checkout.CheckoutSandbox, Checkout.pacOperation = Checkout.OperationCreate
+        , Checkout.pacAmountMinor = 12515, Checkout.pacCurrency = "USD"
+        , Checkout.pacMerchantRef = "synthetic-provider-retry-merchant"
+        , Checkout.pacIdempotencyKey = correlation, Checkout.pacCreatedAt = now
+        , Checkout.pacCorrelationId = correlation }) pool >>= requireRight
+      let resource = "synthetic-" <> Checkout.paymentAttemptReferenceId attempt
+      runSqlPool (Checkout.bindProviderResource Checkout.ProviderBindingCreation
+        { Checkout.pbcAttempt = attempt, Checkout.pbcCheckout = checkout
+        , Checkout.pbcProvider = Checkout.ProviderDatafast, Checkout.pbcEnvironment = Checkout.CheckoutSandbox
+        , Checkout.pbcMerchantRef = "synthetic-provider-retry-merchant", Checkout.pbcResourceType = "checkout"
+        , Checkout.pbcProviderResource = resource, Checkout.pbcResourcePath = Just ("/v1/checkouts/" <> resource)
+        , Checkout.pbcOrderReference = orderId, Checkout.pbcAmountMinor = 12515, Checkout.pbcCurrency = "USD"
+        , Checkout.pbcStage = Checkout.AttemptRequiresCustomerAction, Checkout.pbcOccurredAt = now
+        , Checkout.pbcCorrelationId = correlation }) pool `shouldReturn` Right ()
+      runSqlPool (rawExecute
+        "UPDATE service_storefront_order SET status='datafast_pending',payment_provider='datafast',\
+        \ datafast_checkout_id=? WHERE id=?::uuid" [PersistText resource,PersistText orderId]) pool
+      before <- runSqlPool (datafastCreationRows checkout) pool
+      setEnv "DATAFAST_TRUSTED_PROXY_IPS" "synthetic-invalid-proxy-setting"
+      response <- datafastClientHttp pool orderId token
+      WaiTest.simpleStatus response `shouldBe` status200
+      case A.eitherDecode (WaiTest.simpleBody response) of
+        Right (A.Object payload) -> KM.lookup "checkoutId" payload `shouldBe` Just (A.String resource)
+        _ -> expectationFailure "Cached Dataweb response is not a checkout object"
+      runSqlPool (datafastCreationRows checkout) pool `shouldReturn` before
+
 datafastBoundReferenceSpec :: SpecWith ConnectionPool
 datafastBoundReferenceSpec = describe "Dataweb bound reference settlement" $
   it "admits a saved attempt reference while retaining domain settlement and read-only replay" $ \pool -> do
@@ -3521,7 +3641,7 @@ withCompletionEnvironment action = bracket
       , ("DATAFAST_BEARER_TOKEN", "synthetic-token"), ("DATAFAST_BASE_URL", "https://test.oppwa.com")
       , ("DATAFAST_MID", "1234567890"), ("DATAFAST_TID", "PD123456")
       , ("DATAFAST_PSERV", "12345678"), ("DATAFAST_USER_DATA2", "Synthetic Merchant")
-      , ("DATAFAST_VERSIONDF", "2")
+      , ("DATAFAST_VERSIONDF", "2"), ("DATAFAST_TRUSTED_PROXY_IPS", "")
       , ("DATAFAST_TEST_MODE", "EXTERNAL"), ("PAYPAL_ENV", "sandbox")
       , ("PAYPAL_MERCHANT_ID", "synthetic-provider-retry-merchant"), ("PAYPAL_CLIENT_ID", "synthetic-client")
       , ("PAYPAL_CLIENT_SECRET", "synthetic-secret"), ("PAYPAL_WEBHOOK_ID", "synthetic-webhook")

@@ -56,6 +56,7 @@ STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-invoice-receipts.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-google-account-name.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-checkout-money.py"
 STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-datafast-cart.py"
+STACK_ROOT="$STACK_ROOT_DIR" python3 "$ROOT/scripts/verify-datafast-client-ip.py"
 STACK_ROOT="$STACK_ROOT_DIR" sh "$ROOT/scripts/test-datafast-cart.sh"
 STACK_ROOT="$STACK_ROOT_DIR" sh "$ROOT/scripts/test-datafast-cart.sh" --reference-controls
 

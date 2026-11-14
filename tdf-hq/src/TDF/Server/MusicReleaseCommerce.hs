@@ -14,6 +14,8 @@ module TDF.Server.MusicReleaseCommerce
   , recordMusicVerifiedPayment
   ) where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import Control.Monad (unless)
 import Control.Monad.Except (catchError)
 import Control.Monad.IO.Class (liftIO)
@@ -253,8 +255,8 @@ listMusicEntitlements user = do
     "SELECT jsonb_build_object('id',entitlement.id,'releaseVersionId',entitlement.release_version_id,'assetId',entitlement.asset_id,'sourceKind',entitlement.source_kind,'status',entitlement.status,'maxDownloads',entitlement.max_downloads,'downloadCount',(SELECT count(*) FROM music_download_event event WHERE event.entitlement_id=entitlement.id),'expiresAt',entitlement.expires_at,'grantedAt',entitlement.granted_at,'revokedAt',entitlement.revoked_at) FROM music_entitlement entitlement WHERE entitlement.buyer_party_id=? ORDER BY entitlement.granted_at DESC"
     [PersistInt64 (currentPartyId user)]
 
-createMusicDatafastCheckout :: AuthedUser -> UUID -> Maybe Text -> AppM Value
-createMusicDatafastCheckout user orderId idempotencyHeader = do
+createMusicDatafastCheckout :: AuthedUser -> UUID -> Maybe Text -> ClientIP.DatafastClientRequest -> AppM Value
+createMusicDatafastCheckout user orderId idempotencyHeader clientRequest = do
   requireCommerceFeature
   idempotencyKey <- requireIdempotencyKey idempotencyHeader
   context <- loadPurchaseContext user orderId
@@ -265,12 +267,13 @@ createMusicDatafastCheckout user orderId idempotencyHeader = do
   case existing of
     Just (providerId, _) -> datafastCheckoutJson context datafast providerId
     Nothing -> do
+      clientIP <- Provider.loadDatafastClientIP clientRequest
       now <- liftIO getCurrentTime
       attempt <- beginAttempt context checkout Checkout.ProviderDatafast (Provider.sdfEnvironment datafast)
         (Provider.sdfEntityId datafast) Checkout.OperationCreate idempotencyKey now
       amount <- safeIntAmount (purchaseAmountMinor context)
       (providerId, widgetUrl) <- Provider.requestDatafastCheckoutForService
-        checkout attempt amount (purchaseCurrency context)
+        checkout attempt clientIP amount (purchaseCurrency context)
         (purchaseBuyerName context) (purchaseBuyerEmail context) Nothing
         `catchError` failAttempt checkout attempt Checkout.ProviderDatafast "datafast_create" now
       bindResult <- runDB $ Checkout.bindProviderResource Checkout.ProviderBindingCreation

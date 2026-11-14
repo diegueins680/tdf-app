@@ -143,3 +143,60 @@ store, asserts the paid amount, one receipt and one posted payment journal, then
 checks both reference formats and a rejected unrelated reference against an
 unchanged financial snapshot. This qualifies the shared verifier-to-store
 boundary, not all seven public handler or fulfillment paths.
+
+## Transport-owned customer address
+
+Every fresh Dataweb creation in all seven existing domains must obtain
+`customer.ip` from transport context before allocating a payment attempt. The
+private `DatafastClientRequest :>` Servant combinator observes the WAI socket
+peer and all occurrences of the dedicated `X-TDF-Client-IP` header. Its
+constructor is private; JSON, URL, authentication and browser inputs cannot
+construct the peer. The compiled API declaration records an internal input only;
+public paths, payloads, parameters and authorization do not change.
+
+An untrusted public peer supplies its own address; forwarded headers are ignored,
+including malformed values. `DATAFAST_TRUSTED_PROXY_IPS` is an optional bounded
+list of at most sixteen exact numeric peer IPs (1024 characters), empty by
+default. Only an explicitly listed peer may supply exactly one dedicated header.
+Missing, duplicate, chained, invalid UTF-8, control-bearing, hostname, URL,
+port-suffixed and scoped values are refused. No X-Forwarded-For, Forwarded,
+CF-Connecting-IP, server-address or JSON fallback exists. Mapped IPv4 is
+normalized consistently for trust and customer admission. The outbound shared
+form emits exactly one canonical `customer.ip` parameter.
+
+The customer-address filter conservatively rejects local/private, documentation,
+multicast and selected reserved ranges. Native IPv6 is restricted to 2000::/3,
+excluding the IETF 2001::/23 and documentation prefixes 2001:db8::/32 and
+3fff::/20. This is a documented admission policy, not a complete IANA registry,
+a route lookup, customer ownership proof or provider IPv6 certification. Policy
+references: [IANA IPv4 special registry](https://www.iana.org/assignments/iana-ipv4-special-registry/)
+and [IANA IPv6 special registry](https://www.iana.org/assignments/iana-ipv6-special-registry/).
+
+The checked-in Caddy input overwrites the dedicated header with `{client_ip}`.
+A future installation must identify the actual TCP peer and explicitly configure
+that peer in the API. Never trust an entire container/private subnet or accept
+an arbitrary browser header. If another CDN/proxy precedes Caddy, its trusted
+upstream handling must first be configured and verified according to
+[Caddy's client IP rules](https://caddyserver.com/docs/caddyfile/options#trusted-proxies).
+This source change does not install configuration, rotate a container address,
+change production environment variables or authorize a deployment.
+
+Invalid or unavailable fresh-creation context returns a generic 503 without
+storing a client address or allocating a provider attempt. Existing authorization,
+merchant configuration, immutable checkout binding and capability gates remain.
+Saved checkout reuse bypasses the new address/configuration preflight and keeps
+its prior payment binding checks. Status and settlement do not collect a new
+address. There is no new database column, IP logging or local retention.
+
+`python3 scripts/verify-datafast-client-ip.py` executes the actual Servant/WAI
+boundary in eleven cases plus a 100-case spoofing property and six
+behavior-changing source controls. Controls must finish the test group and fail
+an assertion; compilation failures and empty runs are not accepted. The native
+`Dataweb client IP HTTP preflight` PostgreSQL group exercises the real storefront
+route: pre-attempt refusal, lookup authorization, and saved checkout reuse with
+invalid proxy configuration. An independently unsendable synthetic cart prevents
+provider HTTP even if an IP refusal regresses. This is one domain's execution
+proof; the seven-route compiler declaration and shared builder types do not
+establish seven-domain provider certification. Buyer identity, digital-delivery
+address handling, authoritative taxes, production proxy installation and external
+certification remain separate obligations.

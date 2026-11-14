@@ -11,6 +11,8 @@
 
 module TDF.Server where
 
+import qualified TDF.Commerce.DatafastClientIP as ClientIP
+
 import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.ContentStorage as ContentStorage
 import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
@@ -11062,8 +11064,9 @@ bindServiceBookingProviderResource
 createPublicBookingDatafastCheckout
   :: Int64
   -> Maybe Text
+  -> ClientIP.DatafastClientRequest
   -> AppM DatafastCheckoutDTO
-createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
+createPublicBookingDatafastCheckout rawBookingId mLookupToken clientRequest = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
   when (sbpcCheckoutStatus context == "paid") $
     throwError err409 { errBody = "This booking deposit is already paid" }
@@ -11071,20 +11074,22 @@ createPublicBookingDatafastCheckout rawBookingId mLookupToken = do
   (datafast, _) <- ServiceStorefront.loadServiceDatafastCheckoutEnv
   requireServiceBookingProvider
     context (ServiceStorefront.sdfEnvironment datafast) Checkout.ProviderDatafast
+  existing <- loadServiceBookingProviderBinding
+    context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
+  checkoutRequest <- maybe
+    (Right <$> ServiceStorefront.loadDatafastClientIP clientRequest) (pure . Left) existing
   attempt <- beginServiceBookingPaymentAttempt
     context Checkout.ProviderDatafast Checkout.OperationCreate
     (ServiceStorefront.sdfEntityId datafast) "create"
-  existing <- loadServiceBookingProviderBinding
-    context Checkout.ProviderDatafast (ServiceStorefront.sdfEntityId datafast) "checkout"
-  (checkoutId, widgetUrl) <- case existing of
-    Just (storedCheckoutId, _) -> pure
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left (storedCheckoutId, _) -> pure
       ( storedCheckoutId
       , normalizeBaseUrl (ServiceStorefront.sdfBaseUrl datafast)
           <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack storedCheckoutId
       )
-    Nothing -> ServiceStorefront.requestDatafastCheckoutForService
+    Right clientIP -> ServiceStorefront.requestDatafastCheckoutForService
       (sbpcCheckout context)
-      attempt
+      attempt clientIP
       (fromIntegral (sbpcDepositMinor context))
       (sbpcCurrency context)
       (sbpcBuyerName context)
@@ -17317,8 +17322,8 @@ isMarketplaceActiveStripeOrderConflict exception =
           `BS8.isInfixOf` (sqlErrorMsg sqlErr <> " " <> sqlErrorDetail sqlErr)
     Nothing -> False
 
-createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> AppM DatafastCheckoutDTO
-createDatafastCheckout rawId mIdempotency payload = do
+createDatafastCheckout :: Text -> Maybe Text -> MarketplaceCheckoutReq -> ClientIP.DatafastClientRequest -> AppM DatafastCheckoutDTO
+createDatafastCheckout rawId mIdempotency payload clientRequest = do
   context <- prepareMarketplaceSaleCheckout "datafast" rawId mIdempotency payload
   dfEnv <- loadDatafastCheckoutEnv
   unless (dfEnvironment dfEnv == msccEnvironment context) $
@@ -17331,6 +17336,12 @@ createDatafastCheckout rawId mIdempotency payload = do
     Checkout.providerEnabledForEnvironment (msccEnvironment context) Checkout.ProviderDatafast
   unless providerEnabled $
     throwError err503 { errBody = "Datafast checkout is disabled in this environment" }
+  mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
+  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
+  checkoutRequest <- case ME.marketplaceOrderDatafastCheckoutId order of
+    Just storedCheckoutId -> Left <$> either throwError pure
+      (validateStoredDatafastCheckoutId storedCheckoutId)
+    Nothing -> Right <$> ServiceStorefront.loadDatafastClientIP clientRequest
   attemptResult <- liftIO $ flip runSqlPool envPool $
     PaymentRuntime.beginPaymentAttempt Checkout.PaymentAttemptCreation
       { Checkout.pacCheckout = msccCheckout context
@@ -17345,21 +17356,17 @@ createDatafastCheckout rawId mIdempotency payload = do
       , Checkout.pacCorrelationId = "marketplace-datafast:" <> toPathPiece (msccOrderKey context)
       }
   attempt <- either (throwError . marketplaceCheckoutConflict) pure attemptResult
-  mOrder <- liftIO $ flip runSqlPool envPool $ get (msccOrderKey context)
-  order <- maybe (throwError marketplaceOrderNotFound) pure mOrder
-  (checkoutId, widgetUrl) <- case ME.marketplaceOrderDatafastCheckoutId order of
-    Just storedCheckoutId -> do
-      validatedCheckoutId <- either throwError pure
-        (validateStoredDatafastCheckoutId storedCheckoutId)
+  (checkoutId, widgetUrl) <- case checkoutRequest of
+    Left validatedCheckoutId ->
       pure
         ( validatedCheckoutId
         , normalizeBaseUrl (dfBaseUrl dfEnv)
             <> "/v1/paymentWidgets.js?checkoutId=" <> T.unpack validatedCheckoutId
         )
-    Nothing ->
+    Right clientIP ->
       requestDatafastCheckout
         (msccCheckout context)
-        attempt
+        attempt clientIP
         (msccTotalCents context)
         (msccCurrency context)
         (ME.marketplaceOrderBuyerName order)
@@ -17855,8 +17862,8 @@ captureLegacyPaypalOrder orderKey order paypalOrderId = do
   either throwError pure $
     requireLoadedMarketplacePublicOrderResponse "Marketplace order" mDto
 
-requestDatafastCheckout :: Checkout.CheckoutReference -> Checkout.PaymentAttemptReference -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
-requestDatafastCheckout checkout attempt totalCents currency name email mPhone = do
+requestDatafastCheckout :: Checkout.CheckoutReference -> Checkout.PaymentAttemptReference -> ClientIP.DatafastClientIP -> Int -> Text -> Text -> Text -> Maybe Text -> AppM (Text, String)
+requestDatafastCheckout checkout attempt clientIP totalCents currency name email mPhone = do
   dfEnv <- loadDatafastCheckoutEnv
   cartParameters <- ServiceStorefront.loadDatafastCartParameters checkout totalCents currency
   let manager = sharedProviderManager
@@ -17876,7 +17883,8 @@ requestDatafastCheckout checkout attempt totalCents currency name email mPhone =
         ]
       phoneParam = maybe [] (\p -> [("customer.phone", TE.encodeUtf8 p)]) mPhone
       testModeParam = maybe [] (\tm -> [("testMode", TE.encodeUtf8 tm)]) (dfTestMode dfEnv)
-      allParams = baseParams <> phoneParam <> testModeParam <> dfExtraParams dfEnv <> cartParameters
+      allParams = baseParams <> ClientIP.datafastClientIPParameters clientIP
+        <> phoneParam <> testModeParam <> dfExtraParams dfEnv <> cartParameters
       body = RequestBodyBS (renderSimpleQuery False allParams)
       baseUrlClean = normalizeBaseUrl (dfBaseUrl dfEnv)
   req0 <- ServiceStorefront.providerRequest Checkout.ProviderDatafast (baseUrlClean ++ "/v1/checkouts")
