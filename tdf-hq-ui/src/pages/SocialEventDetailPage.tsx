@@ -237,6 +237,11 @@ export default function SocialEventDetailPage() {
   // The planning workspace is a separate, access-controlled section: without
   // access its links only lead to a 403 page.
   const canPlanLogistics = canAccessPath(`/social/eventos/${eventId ?? ''}/logistica`, session?.roles, session?.modules, session?.featureFlags);
+  // The server admits the organizer, delegated administrators and the logistics
+  // team. Offer the link to those this page can recognise (managers, and staff
+  // with scheduling access, as before), not to every signed-in visitor.
+  const showPlanningLink = canPlanLogistics
+    && (canManageEvent || (session?.modules ?? []).some((module) => module.toLowerCase() === 'scheduling'));
   const canShareTickets = ticketStorefrontPrerequisitesMet
     && storefrontQuery.data?.checkoutAvailable === true;
   const ticketPurchaseUrl = typeof window === 'undefined'
@@ -398,7 +403,7 @@ export default function SocialEventDetailPage() {
             Compartir entradas
           </Button>
         )}
-        {session && canPlanLogistics && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
+        {session && showPlanningLink && <Button component={RouterLink} to={`/social/eventos/${eventId}/logistica`} startIcon={<RouteIcon />} variant="contained">Logística</Button>}
       </Stack>}
     >
       <Stack spacing={2.5}>

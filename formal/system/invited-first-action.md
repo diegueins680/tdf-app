@@ -25,8 +25,8 @@ the invitation promised, and what this change guarantees instead.
    visibility on, and moves the event to the earliest active state that is
    publicly listable and that the lifecycle allows the organizer to enter
    directly without review. When no such state exists the action is not offered.
-3. Links to the planning workspace are shown only to accounts whose access
-   rules allow opening it.
+3. Links to the planning workspace are shown only to the event's managers and
+   to accounts with the Scheduling module.
 4. A new event starts in the browser's time zone when the account carries the
    server placeholder zone (UTC) and never chose one. A chosen zone wins.
 5. The upcoming-events carousel is not rendered on a single public event page,
@@ -38,9 +38,10 @@ the invitation promised, and what this change guarantees instead.
 - No server behavior changes. Publishing uses the existing event update
   endpoint, whose organizer check, workflow-transition check and event lock
   remain authoritative.
-- Access to the planning workspace is unchanged. Whether an event's organizer
-  without the Scheduling module should be able to open it is an open product
-  decision and is not decided here.
+- Access to the planning workspace is not decided here. EVT-LOGISTICS-ACCESS-001
+  removed the Scheduling module requirement from that page; this requirement
+  only limits who is offered the link, to the event's managers and to accounts
+  with the Scheduling module.
 - Ticket checkout availability, pricing and refund policy are unchanged.
 
 ## Evidence

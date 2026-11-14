@@ -27674,7 +27674,7 @@
     {
       "id": "GROWTH-FIRST-ACTION-001",
       "title": "An invited visitor reaches the promised first action after signup",
-      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to accounts that can open it; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
+      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to the event's managers and to accounts with the Scheduling module; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
       "domain": "Growth",
       "authority": "Product owner request on 2026-11-13 to walk the invitation funnel on production and remove what stops invited people.",
       "source": "User request: make an invited person able to get real value in one sitting; walk production as a new organizer, fan and artist from the campaign links and fix every blocker.",
@@ -27714,7 +27714,7 @@
         "Publish without an explicit confirmation",
         "Publish from a state with no direct, review-free transition to a publicly listable state",
         "Write event fields read before the confirmation instead of the latest stored ones",
-        "Show a planning-workspace link to an account that cannot open it",
+        "Show a planning-workspace link to a signed-in visitor who neither manages the event nor holds the Scheduling module",
         "Override a time zone the account chose with the browser's"
       ],
       "effects": [
@@ -27752,7 +27752,7 @@
       "evidence": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx; tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx; formal/system/invited-first-action.md.",
       "confidence": "Local tests cover each behavior. The publish write was not executed against a real server.",
       "ambiguity": [
-        "Whether an event's organizer without the Scheduling module should open the planning workspace is an open product decision.",
+        "A logistics team member who is neither a manager of the event nor holds the Scheduling module can open the planning workspace (EVT-LOGISTICS-ACCESS-001) but is not offered the link on the event page.",
         "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test."
       ],
       "conformance": {

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "44a306ba1fe9361e893688d944b5ce789e364abb",
+  "mobileRevision": "cb5903ac6e4f66e522ed5477accf56a87c80d64c",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -12051,13 +12051,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "e9f833d37208a3eebdb70a79f30e21e9fc5518e3efa1ba6f0759d208dc81e49b",
+      "sha256": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "24321dc96d7161f431d6c6bb9c64f92003c4e67d79d9cb222477c013783faa3a",
+      "sha256": "4d9383f448eb9af782f818e311fd4890216b318e407d27d33ffc36557d1a39c9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20787,7 +20787,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+      "sha256": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30766,7 +30766,7 @@
     },
     {
       "path": "formal/system/invited-first-action.md",
-      "sha256": "55fd166a4c04e30fa110d193122d723d4b274bb91bf442523145451d76f1c297",
+      "sha256": "6617c701b1141a20eb09b77228fb246d8ddf0b3c5bae32c1f5caf7df53cc1cb9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31340,7 +31340,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "af0d6fdc125744fc063b410a648c3b3093c2e87ced29e3a6acb44b93ace42311",
+      "sha256": "6caf1e10a219ffd9b3bfdc38f541814dfb70b2fc3611189bf3775d3495b03df3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
