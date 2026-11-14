@@ -16,6 +16,8 @@ module TDF.Calendar.TokenCipher
   , calendarTokenKeyFromText
   , loadCalendarTokenKey
   , calendarTokenIsSealed
+  , sealedCalendarTokenLength
+  , calendarTokenStoredLimit
   , sealCalendarTokenWithNonce
   , sealCalendarToken
   , openCalendarToken
@@ -68,6 +70,20 @@ loadCalendarTokenKey =
 
 calendarTokenIsSealed :: Text -> Bool
 calendarTokenIsSealed = T.isPrefixOf sealedPrefix
+
+-- | Characters of the sealed form of a token of that many UTF-8 bytes: the
+-- prefix, then base64 of nonce (12), tag (16) and ciphertext.
+sealedCalendarTokenLength :: Int -> Int
+sealedCalendarTokenLength plainBytes =
+  T.length sealedPrefix + 4 * ((12 + 16 + plainBytes + 2) `div` 3)
+
+-- | Longest stored value to accept for a token of at most @plainLimit@
+-- characters: a sealed value is longer than the token it holds, so the limit
+-- of the plain token must not be applied to it.
+calendarTokenStoredLimit :: Int -> Text -> Int
+calendarTokenStoredLimit plainLimit stored
+  | calendarTokenIsSealed stored = sealedCalendarTokenLength plainLimit
+  | otherwise = plainLimit
 
 -- | Deterministic sealing for a caller-supplied 12-byte nonce.
 sealCalendarTokenWithNonce :: CalendarTokenKey -> BS.ByteString -> Text -> Maybe Text

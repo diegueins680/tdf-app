@@ -24117,15 +24117,18 @@
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: the cipher (key admission, sealing, tamper and wrong-key refusal, legacy plaintext passthrough) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the handler wiring is read from the code.",
+      "formalModels": [
+        "formal/auth/calendar_token_storage.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: the cipher (key admission, sealing, tamper and wrong-key refusal, legacy plaintext passthrough) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the handler wiring is read from the code. Added 2026-11-14: the stored-token validator applied the 4096-character token limit to the sealed value, which is about a third longer, so a token of 3039 characters or more was stored and then refused on every read; the limit for a sealed value is now the sealed length of the token limit, and a token is validated before it is sealed (502 if Google returns one that is blank, too long, not ASCII or already looks sealed). Z3 proof calendar_token_storage.py (translation of sealedCalendarTokenLength, calendarTokenStoredLimit, sealCalendarTokenForStorage and validateStoredGoogleCalendarOAuthToken, pinned by the hash of those regions): every token that is sealed yields a stored value the validator accepts; guard necessity checked. Unit tests compare the real sealed lengths with the formula at the boundaries.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
         "Rows written before encryption keep plaintext tokens until their next refresh; there is no backfill migration.",
-        "Key rotation is not supported: changing GOOGLE_CALENDAR_TOKEN_KEY makes stored tokens unreadable until the calendar is reconnected."
+        "Key rotation is not supported: changing GOOGLE_CALENDAR_TOKEN_KEY makes stored tokens unreadable until the calendar is reconnected.",
+        "The sealed value carries no associated data: it is not bound to its calendar row or to the access/refresh column, so someone who can write the table can move a sealed token between rows or columns. A stored value without the prefix is still read as plaintext, so the same writer can also replace a sealed token with a plaintext one."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",

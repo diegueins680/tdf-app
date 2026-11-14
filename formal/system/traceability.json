@@ -24118,15 +24118,18 @@
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: the cipher (key admission, sealing, tamper and wrong-key refusal, legacy plaintext passthrough) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the handler wiring is read from the code.",
+      "formalModels": [
+        "formal/auth/calendar_token_storage.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: the cipher (key admission, sealing, tamper and wrong-key refusal, legacy plaintext passthrough) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; the handler wiring is read from the code. Added 2026-11-14: the stored-token validator applied the 4096-character token limit to the sealed value, which is about a third longer, so a token of 3039 characters or more was stored and then refused on every read; the limit for a sealed value is now the sealed length of the token limit, and a token is validated before it is sealed (502 if Google returns one that is blank, too long, not ASCII or already looks sealed). Z3 proof calendar_token_storage.py (translation of sealedCalendarTokenLength, calendarTokenStoredLimit, sealCalendarTokenForStorage and validateStoredGoogleCalendarOAuthToken, pinned by the hash of those regions): every token that is sealed yields a stored value the validator accepts; guard necessity checked. Unit tests compare the real sealed lengths with the formula at the boundaries.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
         "Rows written before encryption keep plaintext tokens until their next refresh; there is no backfill migration.",
-        "Key rotation is not supported: changing GOOGLE_CALENDAR_TOKEN_KEY makes stored tokens unreadable until the calendar is reconnected."
+        "Key rotation is not supported: changing GOOGLE_CALENDAR_TOKEN_KEY makes stored tokens unreadable until the calendar is reconnected.",
+        "The sealed value carries no associated data: it is not bound to its calendar row or to the access/refresh column, so someone who can write the table can move a sealed token between rows or columns. A stored value without the prefix is still read as plaintext, so the same writer can also replace a sealed token with a plaintext one."
       ],
       "conformance": {
         "classification": "IMPLEMENTED BUT UNSPECIFIED",
@@ -27572,7 +27575,7 @@
     ".github/workflows/ci.yml": "7f2f2181f1f14f59916ea98da4c6182cdf6f85707e7bae855be49cd7083c6fc6",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
     ".github/workflows/desktop.yml": "ebe24b5faa892133cb7150fe1d2830c0d0654ae005f03f41d1ff6c00be7ff13a",
-    ".github/workflows/event-operations-formal.yml": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
+    ".github/workflows/event-operations-formal.yml": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
     ".github/workflows/event-raci-browser.yml": "31f61022d65f338c58980aa0bc052a38f81ec70f15fa98ef62d1604ddb8da401",
     ".github/workflows/interaction-verification.yml": "2a62b01d774c7c75653cf265251824a829fa3c4f189a01eca79ac7f1f44e75f0",
     ".github/workflows/merge-admission.yml": "78bcdd5dc870c8f63e8679d456985316cdc97f93391fd8176766fa60690c9452",
@@ -27640,6 +27643,7 @@
     "formal/auth/LogoutIntent.tla": "1b08e8a1073c5aa73236e42bac4e02dd9ebf5a64bbcf68729101eed15cf34445",
     "formal/auth/LogoutIntentLegacy.cfg": "a89e41350ca46b7e087f4dd3a99858ca54518951d98e653d858051591e788d4e",
     "formal/auth/SessionExpiry.tla": "bc8137a81818acbb2053db4492e7d12f1d07e776778011132b456d2497f94be5",
+    "formal/auth/calendar_token_storage.py": "cb26bc885fd084694c46974db37a300406584e2ff716f85f021b425292fb3595",
     "formal/auth/credential_throttle.py": "7f166f5c25db685cc0206bf06508a213ec25de31316ea2f66773dd81697a6239",
     "formal/auth/meta_webhook_admission.py": "a97549ca7408a57529b348bb71cff0e28508d113edfdfcc231be2cd77c38b741",
     "formal/event-memories/check.py": "e743d51920053e82ad3cf007b18028a2f4b702a5200772246186c2249636597e",
@@ -29174,7 +29178,7 @@
     "tdf-hq/src/TDF/Auth/Throttle.hs": "462dd51867cf0f6634fc2450e7723e297721dbc4544775aa9d2fcbcf12eb0533",
     "tdf-hq/src/TDF/CMS/Models.hs": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
     "tdf-hq/src/TDF/Calendar/Models.hs": "ade52945cff1553e3e6e88edbd3a67457bda196364df216a62a8d1d69e8bcee8",
-    "tdf-hq/src/TDF/Calendar/TokenCipher.hs": "926c4158eee01f8eaf46ee5786c4208da3dd2a62b9f99dd9bada1af87e8bf656",
+    "tdf-hq/src/TDF/Calendar/TokenCipher.hs": "663078efb750b0158d3af8b7bdba30b8b874473f33f9a676425bcc0ee05e5b3b",
     "tdf-hq/src/TDF/CampaignAutomation.hs": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "e918ed18cf1351d63b16a111af524f6f42541c873974da43299cc5134ce990d0",
     "tdf-hq/src/TDF/Catalog/Security.hs": "bf5ec6b5b0a740ca58709fac5a04118d29cfacf1002ecd4299c35d8a142313e0",
@@ -29261,7 +29265,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "e763088f9f6b12314a36b103f5b76cdb1b888c27fd34aca37d8624aecaa03c2e",
+    "tdf-hq/src/TDF/Server.hs": "9529471ff6dbcb9a97da7c9b8aa73bc72a00a205b0533aaaf6b0bbce3d764d7a",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
@@ -29404,7 +29408,7 @@
     "tdf-hq/test/TDF/ServerExtraSpec.hs": "4746db879d19f0d2387b5198f6d402b7262b7ed2f50b4ec7772b6585172ae474",
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
-    "tdf-hq/test/TDF/ServerSpec.hs": "c72a8012846d356f910c69b504e0fe49a13261c680948983e1918237c703a484",
+    "tdf-hq/test/TDF/ServerSpec.hs": "c91224ef9cacdc0991b1a1d0f2edba10a1da577673ec80314b878d0908447cd4",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -45784,6 +45788,12 @@
         "relationship": "implementation"
       }
     ],
+    "formal/auth/calendar_token_storage.py": [
+      {
+        "requirement": "INTEG-GOOGLE-CALENDAR-001",
+        "relationship": "formalModels"
+      }
+    ],
     "tdf-hq/src/TDF/ContentStorage.hs": [
       {
         "requirement": "MEDIA-STORAGE-WRITES-001",
@@ -47911,7 +47921,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
+      "sha256": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -73330,7 +73340,7 @@
     {
       "id": "SURFACE-57235d95566bd74b",
       "path": "tdf-hq/src/TDF/Calendar/TokenCipher.hs",
-      "sha256": "926c4158eee01f8eaf46ee5786c4208da3dd2a62b9f99dd9bada1af87e8bf656",
+      "sha256": "663078efb750b0158d3af8b7bdba30b8b874473f33f9a676425bcc0ee05e5b3b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75157,7 +75167,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "e763088f9f6b12314a36b103f5b76cdb1b888c27fd34aca37d8624aecaa03c2e",
+      "sha256": "9529471ff6dbcb9a97da7c9b8aa73bc72a00a205b0533aaaf6b0bbce3d764d7a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78741,7 +78751,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "c72a8012846d356f910c69b504e0fe49a13261c680948983e1918237c703a484",
+      "sha256": "c91224ef9cacdc0991b1a1d0f2edba10a1da577673ec80314b878d0908447cd4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85075,7 +85085,6 @@
     "MSG-STAFF-OUTBOUND-001",
     "PAY-HOSTED-SESSION-001",
     "PAY-LEGACY-RECORDS-001",
-    "INTEG-GOOGLE-CALENDAR-001",
     "PROPOSAL-AUTHORING-001",
     "EVT-OPERATIONS-COMMANDS-001",
     "CONTRACT-STORE-001",
@@ -86265,7 +86274,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "639ea38b1b118e2139c0231c756523388ce2474534c46ae4fcb913426c849b39",
+      "sourceSha256": "a8e48b21e6436bbd9c1a8c5844c34333d43512908676315822b44fb7b587e7cc",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86293,7 +86302,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "639ea38b1b118e2139c0231c756523388ce2474534c46ae4fcb913426c849b39",
+      "sourceSha256": "a8e48b21e6436bbd9c1a8c5844c34333d43512908676315822b44fb7b587e7cc",
       "definition": {
         "states": [
           "absent",
@@ -86323,7 +86332,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "639ea38b1b118e2139c0231c756523388ce2474534c46ae4fcb913426c849b39",
+      "sourceSha256": "a8e48b21e6436bbd9c1a8c5844c34333d43512908676315822b44fb7b587e7cc",
       "definition": {
         "export": [
           "queued",

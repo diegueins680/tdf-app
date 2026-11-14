@@ -98,6 +98,8 @@ jobs:
         run: python formal/auth/meta_webhook_admission.py
       - name: Prove credential throttle windows, lockout bound and guard necessity
         run: python formal/auth/credential_throttle.py
+      - name: Prove sealed calendar tokens are accepted back and guard necessity
+        run: python formal/auth/calendar_token_storage.py
       - name: Prove legacy Stripe ticket capture outcomes and guard necessity
         run: python formal/payments/stripe_ticket_capture.py
       - name: Prove hosted dead-letter review coverage and guard necessity
