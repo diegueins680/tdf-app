@@ -206,6 +206,18 @@
         "renderer": "parseAgreementStatus",
         "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
       }
+    },
+    "docs/music-directory/formal-model.yaml#agreement_payment": {
+      "source": "docs/music-directory/formal-model.yaml",
+      "table": "marketplace_agreement_payment",
+      "column": "status",
+      "decision": "ADR-0136-marketplace-agreement-payments",
+      "code": {
+        "file": "tdf-hq/src/TDF/Directory/Policy.hs",
+        "relation": "allowedAgreementPaymentTransition",
+        "renderer": "parseAgreementPaymentStatus",
+        "rendererFile": "tdf-hq/src/TDF/Server/Directory.hs"
+      }
     }
   },
   "unbound": {

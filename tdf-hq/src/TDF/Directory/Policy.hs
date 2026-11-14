@@ -22,6 +22,17 @@ module TDF.Directory.Policy
   , allowedAgreementTransition
   , agreementTransitionAllowedFor
   , agreementAmounts
+  , AgreementPaymentStatus(..)
+  , AgreementPaymentKind(..)
+  , ProcessingFeePayer(..)
+  , AgreementPaymentSplit(..)
+  , allowedAgreementPaymentTransition
+  , agreementCommissionDue
+  , agreementProcessingFee
+  , agreementPaymentSplit
+  , agreementCompletionTarget
+  , agreementParticipantCancelAllowed
+  , payoutIdentifierValid
   , openApplicationStatuses
   , applicationIsOpen
   , counterAllowedFor
@@ -187,6 +198,9 @@ allowedAgreementTransition fromStatus toStatus =
       , (AgreementPendingDeposit, AgreementCancelled)
       , (AgreementPendingDeposit, AgreementExpired)
       , (AgreementConfirmed, AgreementInProgress)
+      -- ADR 0136: the buyer may confirm delivery before the provider marked
+      -- the start; with a balance owed on the platform that waits for it.
+      , (AgreementConfirmed, AgreementBalanceDue)
       , (AgreementConfirmed, AgreementCompleted)
       , (AgreementConfirmed, AgreementCancelled)
       , (AgreementConfirmed, AgreementDisputed)
@@ -214,10 +228,15 @@ agreementTransitionAllowedFor party fromStatus toStatus =
     (PartyBuyer, AgreementInProgress, AgreementCompleted) -> True
     (PartyAdmin, AgreementDisputed, _) -> True
     (PartyAdmin, _, _) -> False
+    -- ADR 0136: either party may walk away before the deposit is paid.
+    (_, AgreementPendingDeposit, AgreementCancelled) -> True
     (_, AgreementConfirmed, AgreementCancelled) -> True
     (_, AgreementInProgress, AgreementCancelled) -> True
     (_, AgreementConfirmed, AgreementDisputed) -> True
     (_, AgreementInProgress, AgreementDisputed) -> True
+    -- ADR 0136: a contested or unpaid balance is not a dead end; either
+    -- party takes it to an administrator.
+    (_, AgreementBalanceDue, AgreementDisputed) -> True
     _ -> False
 
 -- | I23 (ADR 0135): amounts frozen when an agreement is created, from the
@@ -234,6 +253,117 @@ agreementAmounts commissionBps depositBps amount
       let commission = fromInteger ((toInteger amount * toInteger commissionBps) `div` 10000)
           deposit = fromInteger ((toInteger amount * toInteger depositBps + 5000) `div` 10000)
       in Just (commission, deposit, amount - deposit)
+
+-- | ADR 0136: state of one charge (deposit or balance) of an agreement.
+data AgreementPaymentStatus
+  = AgreementPaymentPending
+  | AgreementPaymentPaid
+  | AgreementPaymentExpired
+  | AgreementPaymentCancelled
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+data AgreementPaymentKind = AgreementDeposit | AgreementBalance
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | Who bears the payment processor's fee on a charge.
+data ProcessingFeePayer = FeePaidByProvider | FeePaidByPlatform
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | Frozen split of one charge. The three parts always add up to the charge.
+data AgreementPaymentSplit = AgreementPaymentSplit
+  { splitPlatformFeeMinor :: Int64
+  , splitProcessingFeeMinor :: Int64
+  , splitProviderAmountMinor :: Int64
+  } deriving (Eq, Show)
+
+-- I24 (ADR 0136): every agreement payment state change belongs to this
+-- relation; it mirrors marketplace_agreement_payment_transition_allowed in the
+-- database and docs/music-directory/formal-model.yaml#agreement_payment. A
+-- paid, expired or cancelled payment never moves again.
+allowedAgreementPaymentTransition :: AgreementPaymentStatus -> AgreementPaymentStatus -> Bool
+allowedAgreementPaymentTransition fromStatus toStatus =
+  fromStatus == toStatus || (fromStatus, toStatus) `Set.member` transitions
+  where
+    transitions = Set.fromList
+      [ (AgreementPaymentPending, AgreementPaymentPaid)
+      , (AgreementPaymentPending, AgreementPaymentExpired)
+      , (AgreementPaymentPending, AgreementPaymentCancelled)
+      ]
+
+-- | I25 (ADR 0136): commission the platform takes from one charge. The
+-- deposit carries as much of the frozen commission as fits in it. The balance
+-- carries whatever the paid deposit did not actually collect for the platform
+-- (the last argument), which is more than the nominal remainder when the
+-- processor fee ate into a deposit smaller than the commission. Over both
+-- charges the platform never takes more than the frozen commission, and takes
+-- exactly that whenever the charges can carry it.
+agreementCommissionDue :: AgreementPaymentKind -> Int64 -> Int64 -> Int64 -> Int64
+agreementCommissionDue kind commission deposit collected = case kind of
+  AgreementDeposit -> max 0 (min commission deposit)
+  AgreementBalance -> max 0 (commission - max 0 collected)
+
+-- | Processor fee estimated for a charge: basis points rounded up plus a fixed
+-- part, never above the charge. @Nothing@ for invalid inputs.
+agreementProcessingFee :: Int -> Int64 -> Int64 -> Maybe Int64
+agreementProcessingFee feeBps feeFixed amount
+  | amount <= 0 = Nothing
+  | feeBps < 0 || feeBps > 10000 = Nothing
+  | feeFixed < 0 = Nothing
+  | otherwise =
+      let proportional = (toInteger amount * toInteger feeBps + 9999) `div` 10000
+      in Just (fromInteger (min (toInteger amount) (proportional + toInteger feeFixed)))
+
+-- | I25 (ADR 0136): split one charge between the platform, the processor and
+-- the service provider. Arguments: who bears the processor fee, the processor
+-- fee, the commission due on this charge and the charge amount. When the
+-- provider bears the fee it comes out of the provider's part; when the
+-- platform bears it, it comes out of the commission and only the excess, if
+-- any, reaches the provider's part. No part is negative and the parts add up
+-- to the charge. @Nothing@ for a non-positive charge or negative inputs.
+agreementPaymentSplit :: ProcessingFeePayer -> Int64 -> Int64 -> Int64 -> Maybe AgreementPaymentSplit
+agreementPaymentSplit payer processingFee commissionDue amount
+  | amount <= 0 || processingFee < 0 || commissionDue < 0 = Nothing
+  | otherwise =
+      let processing = min amount processingFee
+          afterProcessing = amount - processing
+          platform = case payer of
+            FeePaidByProvider -> min commissionDue afterProcessing
+            FeePaidByPlatform -> min (max 0 (commissionDue - processing)) afterProcessing
+      in Just AgreementPaymentSplit
+           { splitPlatformFeeMinor = platform
+           , splitProcessingFeeMinor = processing
+           , splitProviderAmountMinor = afterProcessing - platform
+           }
+
+-- | I26 (ADR 0136): where the buyer's confirmation of delivery takes a live
+-- agreement. Settled on the platform with a balance still owed, it waits for
+-- the balance (the buyer never requests a settlement state directly);
+-- otherwise it completes.
+agreementCompletionTarget :: Bool -> Int64 -> AgreementStatus
+agreementCompletionTarget settledOnPlatform balance
+  | settledOnPlatform && balance > 0 = AgreementBalanceDue
+  | otherwise = AgreementCompleted
+
+-- | I26 (ADR 0136): a participant cancels an agreement directly only while no
+-- money was collected on the platform. With a paid deposit the way out is a
+-- dispute resolved by an administrator, until automatic refunds exist.
+agreementParticipantCancelAllowed :: Bool -> Bool -> Bool
+agreementParticipantCancelAllowed settledOnPlatform depositPaid =
+  not (settledOnPlatform && depositPaid)
+
+-- | ADR 0136: shape of a PayPhone payout recipient. An identification is an
+-- Ecuadorian cédula (10 digits) or RUC (13 digits); a phone is E.164 with a
+-- leading plus sign. Anything else, or another identifier kind, is rejected.
+payoutIdentifierValid :: Text -> Text -> Bool
+payoutIdentifierValid kind identifier = case kind of
+  "identification" -> T.length identifier `elem` [10, 13] && T.all isAsciiDigit identifier
+  "phone" -> case T.uncons identifier of
+    Just ('+', digits) ->
+      T.length digits >= 8 && T.length digits <= 15 && T.all isAsciiDigit digits && T.take 1 digits /= "0"
+    _ -> False
+  _ -> False
+  where
+    isAsciiDigit character = character >= '0' && character <= '9'
 
 -- I18 (ADR 0134): every offer state change belongs to this relation. Open
 -- states can always be closed by the system (rejected/expired) and by the
