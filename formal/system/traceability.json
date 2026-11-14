@@ -28047,7 +28047,7 @@
     "tdf-hq-ui/src/components/NotificationBell.tsx": "14f8f702675e5922530c6599ab0677ba2e6d084d809ac2d969410a3c054e6715",
     "tdf-hq-ui/src/components/NotificationNavigation.test.tsx": "9596ad73723f9a44acbed461617a5f03f5e0f40f968cc71b36b2534980d294d1",
     "tdf-hq-ui/src/components/PublicBranding.test.tsx": "95415cab3816b561f35af86ae94f76d29c116d1e3b2a859f5692d376209e20eb",
-    "tdf-hq-ui/src/components/PublicBranding.tsx": "ee7cee30783e18871af7a1fe8ab7a13970d64f5585c0d66ddd2800156c7329ae",
+    "tdf-hq-ui/src/components/PublicBranding.tsx": "06d452b2517eaa46148f93379340dcd3b5836674adbf5bdf3a0fa2def02b923a",
     "tdf-hq-ui/src/components/PublicWelcome.tsx": "dfb4222b07e9831fe37f9339d83ae073a6a74bb20c9a9c0bc849515e6f4cd0c7",
     "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "0f61ba07e4d1c71af5f550af67ada13232f96b00104a7a6f353582991353db61",
     "tdf-hq-ui/src/components/RadioWidget.tsx": "ecb3980cf1338692699e0d95e528fa6e5a629d644a1fdb09a81bda9be12c7084",
@@ -58954,7 +58954,7 @@
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "ee7cee30783e18871af7a1fe8ab7a13970d64f5585c0d66ddd2800156c7329ae",
+      "sha256": "06d452b2517eaa46148f93379340dcd3b5836674adbf5bdf3a0fa2def02b923a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

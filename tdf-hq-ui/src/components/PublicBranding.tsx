@@ -28,20 +28,23 @@ import {
 
 const FeatureMenu = lazy(() => import('./SidebarNav'));
 
-// `primary` items form the header row on wide screens; search is the header icon. Every item, primary or
-// not, is listed under "Más opciones", which is the whole navigation on phones.
 const PUBLIC_NAV_ITEMS = [
-  { label: 'authEntry.search', to: '/buscar', primary: false },
-  { label: 'authEntry.events', to: EVENTS_PATH, primary: true },
-  { label: 'TDF', to: '/tdf', primary: true },
-  { label: 'app.title', to: '/app', surface: 'nav', primary: false },
-  { label: 'authEntry.services', to: '/comercio', primary: false },
-  { label: 'authEntry.community', to: '/fans', primary: true },
-  { label: 'authEntry.shop', to: '/marketplace', primary: true },
-  { label: 'Domo', to: '/domo-del-pululahua', primary: false },
-  { label: 'authEntry.book', to: '/reservar', primary: true },
-  { label: 'authEntry.releases', to: '/records', primary: false },
+  { label: 'authEntry.search', to: '/buscar' },
+  { label: 'authEntry.events', to: EVENTS_PATH },
+  { label: 'TDF', to: '/tdf' },
+  { label: 'app.title', to: '/app', surface: 'nav' },
+  { label: 'authEntry.services', to: '/comercio' },
+  { label: 'authEntry.community', to: '/fans' },
+  { label: 'authEntry.shop', to: '/marketplace' },
+  { label: 'Domo', to: '/domo-del-pululahua' },
+  { label: 'authEntry.book', to: '/reservar' },
+  { label: 'authEntry.releases', to: '/records' },
 ] as const;
+
+// The header row on wide screens shows these five; search is the header icon. Every item is listed under
+// "Más opciones", which is the whole navigation on phones.
+const isHeaderRowPath = (path: string) =>
+  path === EVENTS_PATH || path === '/tdf' || path === '/fans' || path === '/marketplace' || path === '/reservar';
 
 interface FooterAction {
   label: string;
@@ -229,7 +232,7 @@ export default function PublicBranding({
                   spacing={0.5}
                   sx={{ display: { xs: 'none', md: 'flex' }, flexWrap: 'wrap' }}
                 >
-                  {PUBLIC_NAV_ITEMS.filter((item) => item.primary).map((item) => (
+                  {PUBLIC_NAV_ITEMS.filter((item) => isHeaderRowPath(item.to)).map((item) => (
                     <Button
                       key={item.to}
                       component={RouterLink}
@@ -291,7 +294,7 @@ export default function PublicBranding({
                       component={RouterLink}
                       to={navItemProps(item).to}
                       onClick={() => { navItemProps(item).onClick?.(); setMenuAnchor(null); }}
-                      sx={{ display: focusedPurchase || !(item.primary || item.to === '/buscar') ? undefined : { md: 'none' } }}
+                      sx={{ display: focusedPurchase || !(isHeaderRowPath(item.to) || item.to === '/buscar') ? undefined : { md: 'none' } }}
                     >
                       {t(item.label)}
                     </MenuItem>
