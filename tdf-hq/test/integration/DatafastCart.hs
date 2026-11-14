@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- Actual PostgreSQL reader boundary; no HTTP requests, credentials or live data.
-import Control.Monad (forM_)
+import Control.Monad (forM_, unless)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Reader (runReaderT)
@@ -90,6 +90,10 @@ main :: IO ()
 main = do
   connection <- getEnv "TDF_DATAFAST_CART_TEST_DB"
   runNoLoggingT $ withPostgresqlPool (BS.pack connection) 1 $ \pool -> liftIO $ do
+    names <- flip runSqlPool pool (rawSql "SELECT current_database()" [])
+      :: IO [Single Text]
+    unless (names == [Single "tdf_dataweb_cart_test"]) $
+      fail "Dataweb reader tests require their dedicated disposable database"
     let readCart amount currency = runHandler $ runReaderT
           (loadDatafastCartParameters (CheckoutReference checkoutId) amount currency)
           (Env pool (error "Cart must not read unrelated configuration"))
