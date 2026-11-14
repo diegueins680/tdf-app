@@ -27668,6 +27668,86 @@
         "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
       },
       "critical": false
+    },
+    {
+      "id": "EVT-LOGISTICS-ACCESS-001",
+      "title": "The web logistics page of an event opens by record scope, not by the Scheduling module",
+      "domain": "EVT",
+      "statement": "The feature-registry entry social.event.logistics (/social/eventos/:eventId/logistica) requires an authenticated session and no module. Its record scopes stay event-member-or-admin for view and event-manager-or-admin for create, edit, delete and assign. The web shell therefore renders the logistics page for any signed-in account, and what that account may read or change is decided per event by the logistics handlers: the stored organizer and a delegated administrator under EVT-ADMIN-DELEGATION-001 receive the owner role, a recorded logistics team member receives its editor or viewer role, and every other account is refused with 403. No other registry entry changes; pages that require the Scheduling module still require it.",
+      "authority": "Repository owner decision of 2026-11-13: remove the module requirement from this record-scoped route and rely on the record scope and the backend authorization, so that an administrator invited to one event (who holds no module) can open its logistics page. Recorded as AUTHORITY-098.",
+      "source": "formal/system/event-admin-delegation.md",
+      "contract": "tdf-hq/assets/feature-registry.json",
+      "property": "For every authenticated session, whatever its modules, the registry decision for discover, view, create, edit, delete and assign on social.event.logistics is allowed; for an unauthenticated session it is not. The logistics plan of an event is returned only to its stored organizer, its delegated administrators and its recorded logistics team.",
+      "actors": [
+        "Event organizer",
+        "Delegated event administrator",
+        "Logistics team member",
+        "Other signed-in account",
+        "Signed-out visitor"
+      ],
+      "preconditions": [
+        "Authenticated session for the page and for every logistics route",
+        "Event visible to the caller"
+      ],
+      "inputs": [
+        "Web route /social/eventos/{eventId}/logistica",
+        "Session roles and modules read by the web shell",
+        "GET /social-events/events/{eventId}/logistics and the logistics write routes under it"
+      ],
+      "state": {
+        "boundary": "Feature-registry entry social.event.logistics; organizer, event_admin_member and event_logistics_member rows of one event",
+        "authority": "tdf-hq/assets/feature-registry.json for page discovery; the logistics handlers and PostgreSQL rows for record access"
+      },
+      "allowedTransitions": [
+        "Signed-in account without the Scheduling module -> logistics page rendered by the web shell",
+        "Organizer or delegated administrator -> plan returned with the owner role",
+        "Recorded logistics team member -> plan returned with its editor or viewer role"
+      ],
+      "forbiddenTransitions": [
+        "Signed-out visitor opening the logistics page without being sent to sign in",
+        "Account that is neither organizer, delegated administrator nor logistics team member reading or changing the plan of an event",
+        "Opening a page that still declares the Scheduling module without holding it"
+      ],
+      "effects": [
+        "The web shell no longer shows the 403 page on the logistics route to an account that lacks the Scheduling module",
+        "No database row, role or module is created or changed"
+      ],
+      "authorization": "Page: authenticated session only (feature registry, enforced by the web shell). Data: requireLogisticsAccess in tdf-hq/src/TDF/Server/SocialEventsHandlers.hs, which never consulted the module: owner for the stored organizer and for a delegated administrator, the stored team role for a logistics team member, 403 otherwise, and 403 for a viewer on a write.",
+      "privacy": "The page shell and its route are visible to any signed-in account; plan data (places, activities, assignees, team) is returned only by the API after the record check. A refused account sees the API error message and no plan content.",
+      "concurrency": "Not applicable to the registry change; logistics writes keep their existing version checks.",
+      "idempotency": "Not applicable; the change is a static access rule.",
+      "failure": "Signed-out: redirected to sign in. Signed-in without access to the event: the page renders the 403 message returned by the API and no plan controls. Unknown or hidden event: 404 from the API.",
+      "recovery": "None needed; the organizer grants access by inviting an administrator or adding a logistics team member.",
+      "observability": "The feature_403_shown analytics event is no longer emitted for this route on a missing module; API 403 responses are unchanged.",
+      "implementation": [
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
+        "tdf-hq/test/TDF/EventAdminDelegationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Jest: the registry allows every action of social.event.logistics to a signed-in session with no modules and refuses a signed-out one, while studio.calendar still reports the missing scheduling module; the web shell renders the logistics route for a Fan/Customer session with no modules and the 403 page for /estudio/calendario; the logistics page shows the owner controls for a plan with the owner role and only the API refusal for an account outside the event. The existing PostgreSQL example in tdf-hq/test/TDF/EventAdminDelegationSpec.hs shows the logistics plan refused with 403 before the grant and returned with the owner role after it.",
+      "evidence": "Local Jest run of the three suites on 2026-11-13 (29 tests, 0 failures); the two registry-dependent tests fail against the previous registry. The backend example was not re-run for this change because no backend source changed.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The web guard (evaluatePathAccess in AppShell) and requireLogisticsAccess were read in full; the backend never applied the registry rule to logistics routes, so only the web shell behaviour changes. The generated Mobile registry copy is not regenerated in this change.",
+      "ambiguity": [
+        "The Mobile copy tdf-mobile/src/features/generatedFeatureRegistry.ts at the pinned submodule revision still lists the Scheduling module for this entry. It was already older than the registry on main (npm run audit:features, which no workflow runs, reports it stale before and after this change), Mobile has no logistics screen, and regenerating it needs a commit in the Mobile repository that is not part of this change.",
+        "The record scopes event-member-or-admin and event-manager-or-admin are labels in the registry; the web shell does not evaluate them and relies on the API.",
+        "Accounts with no relation to an event can now load the page shell and see the API refusal instead of the 403 page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
+      },
+      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -28765,7 +28845,7 @@
     "tdf-hq-ui/src/features/fans/useFanProfile.ts": "5d5117b2bc97d999546a3ea417cb38ee797883744f4329c113b791e6bde0b53f",
     "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.authEpoch.test.tsx": "25dd9ecaae73b53767c97e79e71f4a1f89aa41efb58ae42baa6de7a9b6da968e",
     "tdf-hq-ui/src/features/fans/useOwnedProfileDraft.ts": "945dc8892a1e1cb88fbf8cd725535d402a2032dfa9a31b13c5b8c76ec2a0f004",
-    "tdf-hq-ui/src/features/featureRegistry.test.ts": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
+    "tdf-hq-ui/src/features/featureRegistry.test.ts": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
     "tdf-hq-ui/src/features/featureRegistry.ts": "d709057904f96995ef7f5b734952b3c588b93dece56ed510f56e409ad035c955",
     "tdf-hq-ui/src/features/interactions/AccountControls.tsx": "a0a9d06ab76c3b18b8ebdca452c45d5455611772e27a7bd08601db5fdc19fc1b",
     "tdf-hq-ui/src/features/interactions/DiscussionControls.tsx": "96ac5ff77378b010affd5fd635182087d08a96aff85d3f153932fa16dd6e828a",
@@ -28863,6 +28943,7 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "57d4e4708ecadf1e32f5daeaf4c1af8e45c715c88977ecbf6182278850dfcf64",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
+    "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
     "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx": "d8d5134c875321d2eea888ded85779b1c27c1a4941d2008d4bfc04ded41fdc0e",
@@ -28972,7 +29053,7 @@
     "tdf-hq-ui/src/player/sourceMetadata.ts": "2d2f6271f7718eb899b75b8afd5c1e1b73d77bf5db665438e42c5d3eea3dd55a",
     "tdf-hq-ui/src/player/types.ts": "469cc2cbcd256ea4f59b510e82e8d54927ca4081f372575822e0f2c375fd558f",
     "tdf-hq-ui/src/routes/AppErrorBoundary.tsx": "35baba4fecaee526716c5a6cf97e24dd48c38528c3616a6ae47d4aa8c894cf87",
-    "tdf-hq-ui/src/routes/AppShell.test.tsx": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
+    "tdf-hq-ui/src/routes/AppShell.test.tsx": "971562ddbfb8770bb528148b612cb348d4d598f95fdbb3fe80e834090f4f8297",
     "tdf-hq-ui/src/routes/AppShell.tsx": "44a60a3805ce0af4a4c5a1254482b9bcc140e2b247a120bb5b98abc5b9ad8bc2",
     "tdf-hq-ui/src/routes/EventCommunityEntry.test.tsx": "2fc7c33171062bda3a6d8093ca4acee827f99b22b9a5a6bb9548e644a4db8c48",
     "tdf-hq-ui/src/routes/EventCommunityEntry.tsx": "be5a99606b34511d8706f80f4b185c5f287d71c6fa6c92f837982b525a718315",
@@ -29077,7 +29158,7 @@
     "tdf-hq/Dockerfile.runtime": "945d52f3dac740265e86c63ee8456f961e1414838cc1205de644a52adb58273a",
     "tdf-hq/app/Main.hs": "145b31d78e8edfa941efe858c7066bb3b014ea9bc5a9ec67763b625f3a6f4928",
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
-    "tdf-hq/assets/feature-registry.json": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
+    "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
     "tdf-hq/config/default.env.example": "3c7d42b92d6b894c6ae8689552438b0d42badb31a28efc944b41f22220ab364b",
     "tdf-hq/docs/openapi/api.yaml": "78ae2294893772b3387c30ba9e70a3966af021695946dc0818a7f4fa8cf18040",
     "tdf-hq/docs/openapi/directory.yaml": "7c9355fb09332d08d32f089bff8f6afb5047c189f6e501d2e964126531712c10",
@@ -31847,6 +31928,10 @@
       {
         "requirement": "CAMP-SERVER-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-mobile/src/features/generatedFeatureRegistry.ts": [
@@ -31960,6 +32045,10 @@
       },
       {
         "requirement": "CAMP-SERVER-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
     ],
@@ -35660,6 +35749,10 @@
       },
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "implementation"
       }
     ],
@@ -41559,6 +41652,10 @@
       {
         "requirement": "DISCOVERY-NAV-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": [
@@ -41592,6 +41689,10 @@
     "tdf-hq-ui/src/routes/AppShell.test.tsx": [
       {
         "requirement": "EVT-DISCOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
     ],
@@ -43355,6 +43456,10 @@
       {
         "requirement": "NAV-MENU-COVERAGE-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/utils/accessControl.ts": [
@@ -45010,6 +45115,10 @@
       },
       {
         "requirement": "EVT-PLANNING-UX-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "implementation"
       }
     ],
@@ -47881,6 +47990,10 @@
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/components/events/EventAdminsCard.test.tsx": [
@@ -47910,6 +48023,12 @@
     "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx": [
       {
         "requirement": "UX-PUBLIC-DETAIL-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": [
+      {
+        "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
     ]
@@ -61737,7 +61856,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
+      "sha256": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61759,6 +61878,10 @@
         {
           "requirement": "CAMP-SERVER-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "tests"
         }
       ]
     },
@@ -61770,6 +61893,10 @@
       "requirements": [
         {
           "requirement": "NAV-MENU-COVERAGE-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -63805,6 +63932,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-0cf77a2e272d6fba",
+      "path": "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
+      "sha256": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-bc6d085a2f18921b",
       "path": "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
       "sha256": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
@@ -63816,6 +63955,10 @@
         },
         {
           "requirement": "EVT-PLANNING-UX-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -66239,11 +66382,15 @@
     {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
-      "sha256": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
+      "sha256": "971562ddbfb8770bb528148b612cb348d4d598f95fdbb3fe80e834090f4f8297",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "EVT-DISCOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "tests"
         }
       ]
@@ -66260,6 +66407,10 @@
         },
         {
           "requirement": "DISCOVERY-NAV-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -68162,7 +68313,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
+      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68199,6 +68350,10 @@
         },
         {
           "requirement": "CAMP-SERVER-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "implementation"
         }
       ]
@@ -76509,6 +76664,10 @@
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "implementation"
         }
       ]
     },
@@ -78362,6 +78521,10 @@
       "requirements": [
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-LOGISTICS-ACCESS-001",
           "relationship": "tests"
         }
       ]
@@ -86612,7 +86775,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "11d88d6ff2176efc8cccdbd9e22c2b6bda1f11df77c2b83407d2f18a9a363a8c",
+      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86640,7 +86803,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "11d88d6ff2176efc8cccdbd9e22c2b6bda1f11df77c2b83407d2f18a9a363a8c",
+      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
       "definition": {
         "states": [
           "absent",
@@ -86670,7 +86833,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "11d88d6ff2176efc8cccdbd9e22c2b6bda1f11df77c2b83407d2f18a9a363a8c",
+      "sourceSha256": "e882836e871fa3ec71d9ec79161b34614ce5437d222a3265b80a5b8ac69d308e",
       "definition": {
         "export": [
           "queued",
@@ -98499,9 +98662,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "none",
@@ -98523,9 +98684,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-member-or-admin",
@@ -98547,9 +98706,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-manager-or-admin",
@@ -98571,9 +98728,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-manager-or-admin",
@@ -98595,9 +98750,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-manager-or-admin",
@@ -98619,9 +98772,7 @@
       "authentication": "authenticated",
       "rolesAny": [],
       "rolesAll": [],
-      "modulesAll": [
-        "Scheduling"
-      ],
+      "modulesAll": [],
       "modulesAny": [],
       "strictAdmin": false,
       "scope": "event-manager-or-admin",
@@ -109789,7 +109940,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 218,
+    "PARTIAL": 219,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
