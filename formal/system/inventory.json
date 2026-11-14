@@ -2481,6 +2481,7 @@
       "tdf-hq/src/TDF/Server/PaymentCapabilities.hs",
       "tdf-hq/src/TDF/Server/ProviderExecution.hs",
       "tdf-hq/src/TDF/Server/ProviderTransport.hs",
+      "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
       "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Server/Reviews.hs",
       "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
@@ -17847,6 +17848,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-47563c71827743f5",
+      "path": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
+      "sha256": "d58bad1bebac6a2678128556f290369a01201f5980226130da8bc100b435b6f9",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f67b06f0b5eec0fc",
       "path": "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "sha256": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
@@ -17873,7 +17880,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "c710031c2ed4345915bee973036316bb363192158a8d36368e1824b23cc3093b",
+      "sha256": "cc2ce7b3c36b75fd25f1451610c5f470413d4e17dd3577261745beaac6924033",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18227,7 +18234,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "sha256": "78aff2bfc0573838f5be3072161efa079dd416c74df5b9e67fa97d67228b8d2e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18305,7 +18312,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e15bc5d7b653a69c85fb5a95a075493875dfa90c8692fb44c6146dd8661321dc",
+      "sha256": "7603b05c304ecafee795da5cea16ea5822aac697710531163690c94881b1444a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31305,7 +31312,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "7f255801694697405437220523cf144b410299f78d5cde4fb608405a9ed75227",
+      "sha256": "813ce7ba2637f6c8022b3900aa00872852a8ddfde2513f8efa33c0280472a18e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

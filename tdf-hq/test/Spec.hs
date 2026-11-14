@@ -481,6 +481,7 @@ import TDF.Server.SocialSync
       validateSocialSyncCaption,
       validateSocialSyncPermalink,
       validateSocialSyncMediaUrls )
+import TDF.Server.PublicEventTicketSummary (PublicTicketCardSummary (..), summarizePublicTicketTiers)
 import TDF.Server.SocialEventsHandlers (
     collectMatchingRows,
     replaceLogisticsActivityDependencies,
@@ -515,8 +516,6 @@ import TDF.Server.SocialEventsHandlers (
     validateDirectTicketOrderPricing,
     validateTicketCheckoutAmount,
     validateTicketPurchaseEventEligibility,
-    PublicTicketCardSummary (..),
-    summarizePublicTicketTiers,
     normalizeTicketStatus,
     parseNearQueryEither,
     parseInvitationIdsEither,

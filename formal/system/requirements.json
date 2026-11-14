@@ -27768,7 +27768,7 @@
         "Current instant"
       ],
       "state": {
-        "boundary": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs"
+        "boundary": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs"
       },
       "allowedTransitions": [
         "No ticket line to starting price when a tier goes on sale with stock",
@@ -27794,10 +27794,12 @@
       "recovery": "Reload the agenda; the event page and checkout remain the authority for price and availability.",
       "observability": "Visible ticket line on each card; existing event_impression funnel event unchanged.",
       "source": "Cognitive-load audit of 2026-11-10, plan item 26; user instruction of 2026-11-14 to implement the audit's fixes.",
-      "contract": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+      "contract": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
       "implementation": [
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx"
       ],

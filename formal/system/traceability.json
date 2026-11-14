@@ -27769,7 +27769,7 @@
         "Current instant"
       ],
       "state": {
-        "boundary": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs"
+        "boundary": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs"
       },
       "allowedTransitions": [
         "No ticket line to starting price when a tier goes on sale with stock",
@@ -27795,10 +27795,12 @@
       "recovery": "Reload the agenda; the event page and checkout remain the authority for price and availability.",
       "observability": "Visible ticket line on each card; existing event_impression funnel event unchanged.",
       "source": "Cognitive-load audit of 2026-11-10, plan item 26; user instruction of 2026-11-14 to implement the audit's fixes.",
-      "contract": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+      "contract": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
       "implementation": [
+        "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/tdf-hq.cabal",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx"
       ],
@@ -29547,11 +29549,12 @@
     "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "f0e50cb9103b6da489980440202a50e7c4431bc19f0fdce666be6f738bb763ef",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "d50b351b163c882e69ff5bd23b8fcae5843ca70fd4959bd8f702768f090df8c2",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
+    "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs": "d58bad1bebac6a2678128556f290369a01201f5980226130da8bc100b435b6f9",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "c710031c2ed4345915bee973036316bb363192158a8d36368e1824b23cc3093b",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "cc2ce7b3c36b75fd25f1451610c5f470413d4e17dd3577261745beaac6924033",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -29592,7 +29595,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+    "tdf-hq/tdf-hq.cabal": "78aff2bfc0573838f5be3072161efa079dd416c74df5b9e67fa97d67228b8d2e",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -29600,7 +29603,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "e15bc5d7b653a69c85fb5a95a075493875dfa90c8692fb44c6146dd8661321dc",
+    "tdf-hq/test/Spec.hs": "7603b05c304ecafee795da5cea16ea5822aac697710531163690c94881b1444a",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -33062,6 +33065,10 @@
       },
       {
         "requirement": "AUTH-APPLE-SIGNIN-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-CARD-TICKETS-001",
         "relationship": "implementation"
       }
     ],
@@ -48127,6 +48134,12 @@
       {
         "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
+      }
+    ],
+    "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs": [
+      {
+        "requirement": "EVT-CARD-TICKETS-001",
+        "relationship": "implementation"
       }
     ]
   },
@@ -76525,6 +76538,18 @@
       ]
     },
     {
+      "id": "SURFACE-47563c71827743f5",
+      "path": "tdf-hq/src/TDF/Server/PublicEventTicketSummary.hs",
+      "sha256": "d58bad1bebac6a2678128556f290369a01201f5980226130da8bc100b435b6f9",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-CARD-TICKETS-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-f67b06f0b5eec0fc",
       "path": "tdf-hq/src/TDF/Server/RecordsIngestion.hs",
       "sha256": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
@@ -76635,7 +76660,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "c710031c2ed4345915bee973036316bb363192158a8d36368e1824b23cc3093b",
+      "sha256": "cc2ce7b3c36b75fd25f1451610c5f470413d4e17dd3577261745beaac6924033",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77693,7 +77718,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "sha256": "78aff2bfc0573838f5be3072161efa079dd416c74df5b9e67fa97d67228b8d2e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77746,6 +77771,10 @@
         },
         {
           "requirement": "AUTH-APPLE-SIGNIN-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-CARD-TICKETS-001",
           "relationship": "implementation"
         }
       ]
@@ -77876,7 +77905,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "e15bc5d7b653a69c85fb5a95a075493875dfa90c8692fb44c6146dd8661321dc",
+      "sha256": "7603b05c304ecafee795da5cea16ea5822aac697710531163690c94881b1444a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86896,7 +86925,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7f255801694697405437220523cf144b410299f78d5cde4fb608405a9ed75227",
+      "sourceSha256": "813ce7ba2637f6c8022b3900aa00872852a8ddfde2513f8efa33c0280472a18e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86924,7 +86953,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7f255801694697405437220523cf144b410299f78d5cde4fb608405a9ed75227",
+      "sourceSha256": "813ce7ba2637f6c8022b3900aa00872852a8ddfde2513f8efa33c0280472a18e",
       "definition": {
         "states": [
           "absent",
@@ -86954,7 +86983,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7f255801694697405437220523cf144b410299f78d5cde4fb608405a9ed75227",
+      "sourceSha256": "813ce7ba2637f6c8022b3900aa00872852a8ddfde2513f8efa33c0280472a18e",
       "definition": {
         "export": [
           "queued",
