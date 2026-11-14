@@ -1227,6 +1227,7 @@
       "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
       "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
       "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
+      "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
       "tdf-hq-ui/src/features/marketplace/agreements.ts",
       "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
@@ -8278,7 +8279,7 @@
     {
       "id": "SURFACE-eea9abd0a36ffd69",
       "path": "tdf-hq-ui/src/api/directory.ts",
-      "sha256": "7496bc77a9b61354cd0072e727134bd21d04ccd4bd224c8da2c21614705767f3",
+      "sha256": "06b552832eadde716e47ff63ec5edc3ae19f1530369f96206eeaecf2bf438588",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8446,7 +8447,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
+      "sha256": "c2a349198cc22efe3a7d0e4d15ba8ff5351886c9e6d827d7261324f2f5047f2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10334,15 +10335,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c50428b63aa94e4d",
+      "path": "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+      "sha256": "8c30370a4721343216bcb479ddbaf6efb6b0721cab61e33ba590dc25b5832f6c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c03ebdd9cd29f92c",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
-      "sha256": "f472301fd6cbba6d1057188031627cbbfa4dc715dedd7ec98d89252cade55efb",
+      "sha256": "744aa19c4bfe2232c3090f4f908590197908be95c95ac9b2bd4c0a7044ed5203",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-fbfd335398170a3a",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.ts",
-      "sha256": "3bc227bd07721912954cf633bf5d0c0b3b56670637e63bcfd0502b0b5fbe9137",
+      "sha256": "2f9fb2534cb45a2057cc39d92a1f84e0299a79a82372aa7f60c89955a609e1a2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10666,13 +10673,13 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "e1cbea09d3e4e6bf5df65d0b655c9aba7e1e9c0d7cee81d63273e002a59bad9e",
+      "sha256": "57a17942787728a567d80263c428b33df0f269abd7bd86a2e4fe5e696df26c24",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "809a5ef0700ef96a66ba6a1486b0501d65d28a51e8ed80878f31dfb529d6c48d",
+      "sha256": "3588520bc07f7ed3f9c1bb1809bb8c707b8d76754681da55f89fb248a100b7dd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11098,7 +11105,7 @@
     {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "d48c1b8f09a778fae561feae57637ac5c8793a26add0ad6669fc6b762dbd3616",
+      "sha256": "4d26a24ef65c071d7fadb03d2bfd5752cd66be500b9c283617acd8977b94670d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11110,7 +11117,7 @@
     {
       "id": "SURFACE-b1d115adebe79a56",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-      "sha256": "a6a7ddbdeb0f342d6d3e2b2265e00211452bf51d693e9ce7d7f7ed07cb1eda5f",
+      "sha256": "da3194d624efc791af6152788a87d684b9ff8cb5737fa0574c236497286b2093",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13594,13 +13601,13 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "78ae2294893772b3387c30ba9e70a3966af021695946dc0818a7f4fa8cf18040",
+      "sha256": "78b2cfcd35e9054679a1835f1623aff3c78a35b736bd725a0e6e7c70622c9968",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "7c9355fb09332d08d32f089bff8f6afb5047c189f6e501d2e964126531712c10",
+      "sha256": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16642,7 +16649,7 @@
     {
       "id": "SURFACE-9f19f644ef35d148",
       "path": "tdf-hq/src/TDF/API/Directory.hs",
-      "sha256": "1031c60ab106a070f2baa2ba9aaacdf3656aa601afd8c65dfebd32ce76601a09",
+      "sha256": "460dac1b074c653d2d77f8fa1c4727664f3c27b36d3f04fd3536fbd340b9d31c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16870,7 +16877,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "c4c60bc92c8a1c91034bb028240a397e02b5ee2e08a87cda7fd6296f904fde47",
+      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17740,7 +17747,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "8afd1f9f0e4d7f8d0988a155503fe820c567d4f064ef0b62c1069776b447bbec",
+      "sha256": "c1117c37025e114281599f7a86c53b3f37ce9594dae2a8d92dfca42c10d9c77c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21995,7 +22002,7 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "sha256": "798c36b2de97c56a461648484af5e9a275fa0df599510d433fb4943601999795",
+      "sha256": "5d47d013cfb27413bc4a55c95149f97ac66e24f6f845f103f6f8ff1731de4721",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22352,7 +22359,7 @@
     },
     {
       "path": "docs/adr/0136-marketplace-agreement-payments.md",
-      "sha256": "9486eee07a956370c8bcabc9cc2102a07407a0efccdd0408886fc0c6e26b9e85",
+      "sha256": "2d569df4885e986d1b97d373cbc0fb3c0bf48b6505c8e237594f33a54284ee85",
       "authority": "inferred",
       "authorityBasis": "Estado: propuesto; diseño aprobado por el dueño del producto el 2026-11-12, implementación en curso.",
       "kind": "requirement-candidate"
@@ -23801,7 +23808,7 @@
     },
     {
       "path": "docs/marketplace/01-plan-por-fases.md",
-      "sha256": "9b42aca9b4e38b422b190518225ad72703d6a4a30057addd8de2f26dc2056a31",
+      "sha256": "bb20b865bdb1155114eff59c027b5a8d78ffa4daeafbf2de3febc827e34cf25e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23829,7 +23836,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "aa1c5fb20dce1f1bbba3df449ee6c09bbd355d5c8897eaf953bfe6add29b55d5",
+      "sha256": "88d0692633a914b7017a4e9bf91e0b670e5b5fed0934573559a8a9c74e2ee756",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31298,7 +31305,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "11d88d6ff2176efc8cccdbd9e22c2b6bda1f11df77c2b83407d2f18a9a363a8c",
+      "sha256": "5376579a398fbc31aaa2ba236d22ea6462d7e6e5fcc1ddc976ac54cad46f1c28",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31725,14 +31732,14 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "78ae2294893772b3387c30ba9e70a3966af021695946dc0818a7f4fa8cf18040",
+      "sha256": "78b2cfcd35e9054679a1835f1623aff3c78a35b736bd725a0e6e7c70622c9968",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
     },
     {
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "7c9355fb09332d08d32f089bff8f6afb5047c189f6e501d2e964126531712c10",
+      "sha256": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -33132,8 +33139,8 @@
       "gap": "Per-clause implementation correspondence not discharged by inventory"
     },
     {
-      "id": "0136-marketplace-agreement-payments:e47503af4b15",
-      "statement": "1. **El cobro usa el checkout canónico.** Cada cobro de un acuerdo es una fila `marketplace_agreement_payment` (`kind` = `deposit` | `balance`) con su `commerce_checkout_session` de `domain_type='marketplace_agreement'` y `domain_order_id` = id del cobro. `productFlowForDomain` lo mapea a `FlowMarketplace`, de modo que el ruteo existente solo ofrece un proveedor cuando su cuenta, contrato, credenciales y las tres capacidades de marketplace están verificadas para ese método y entorno. Ningún módulo del marketplace llama a un proveedor directamente. 2. **Reparto congelado por cobro.** Al crear el cobro se guarda `platform_fee_minor`, `provider_amount_minor` y `processing_fee_minor`: - depósito: `platform_fee = min(commission_minor, deposit_minor)`; - saldo: `platform_fee = commission_minor − lo que los cobros pagados ya recaudaron para la plataforma` (0 con la tarifa por defecto; más que el resto nominal cuando la comisión del procesador se comió parte de un depósito menor que la comisión); - `provider_amount = monto − platform_fee − processing_fee`, nunca negativo. `processing_fee` sale de `marketplace_payment_fee_rule` (por proveedor: bps + fijo + quién la asume). Por defecto la asume el proveedor del servicio, porque en el cobro del saldo TDF no recibe nada de lo que descontarla. La regla es editable sin desplegar. 3. **Cuenta de cobro del proveedor.** `marketplace_payout_account` (perfil, proveedor, referencia, estado). PayPhone: el proveedor declara su identificación (tipo 3) o teléfono (tipo 4). Stripe: cuenta Express con onboarding alojado (reutiliza `Services.Stripe`). Sin una cuenta lista para algún proveedor ofrecible en la moneda del acuerdo, el acuerdo nace como en la parte A (`off_platform`, `confirmed`); no se bloquea la aceptación. 4. **Estados.** Con el gate `marketplace.agreement_payments` activo y cuenta de cobro lista, el acuerdo nace `pending_deposit` + `platform`, con `deposit_due_at` según la tarifa. - Depósito verificado → `confirmed`. - Depósito sin pagar al vencer → `expired`: retira la oferta y libera el cupo (misma rutina que cancelar). - El proveedor inicia (`in_progress`). El comprador confirma la entrega: con saldo pendiente pasa a `balance_due` y se crea el cobro del saldo; el saldo verificado lo lleva a `completed` y registra la interacción verificada. Sin saldo, pasa directo a `completed`. Mientras espera el saldo, cualquiera de las partes puede abrir una disputa: el cobro pendiente se cancela y un administrador resuelve. - Ningún participante ni administrador puede marcar un cobro como pagado: solo la reconciliación con consulta autenticada al proveedor (trigger `marketplace_agreement_payment_require_verified_payment`, mismo patrón que reservas y entradas). 5. **Proveedores.** - **PayPhone:** el adaptador añade `transferTo` cifrado cuando el checkout trae reparto. Queda cerrado hasta que PayPhone autorice el split para la tienda y se registre la evidencia de capacidad; se exige la modalidad «al día siguiente» para conservar el reverso del primer día. - **Stripe:** adaptador canónico con Checkout Session alojada y cargo destino (`transfer_data.destination`, `application_fee_amount`); se entrega en un segundo PR (B2) junto con reembolsos y panel de disputas, porque incorpora Stripe al runtime canónico. - **DataWeb:** el dominio queda conectado al ruteo, y por tanto cerrado: no hay capacidad de split verificable. Se abre registrando evidencia cuando Datafast la contrate, sin código nuevo en el marketplace. 6. **Cancelación con dinero cobrado.** En B1, un acuerdo `platform` con depósito pagado no se cancela por los participantes, ni directamente ni retirando la oferta aceptada: abre disputa y un administrador resuelve. Tampoco se cancela ni se retira mientras un intento de pago pueda cobrar todavía. El reembolso automático según la política congelada (`cancellation_policy`) llega en B2, cuando exista la reversión del reparto por proveedor. 7. **Orden de bloqueo.** anuncio → oferta → acuerdo → cobro. La reconciliación bloquea checkout e intento primero (regla existente) y después el cobro y el acuerdo; ningún camino del marketplace toma un bloqueo de checkout mientras sostiene el acuerdo, salvo la creación del checkout, que es una inserción.",
+      "id": "0136-marketplace-agreement-payments:aeeffac10501",
+      "statement": "1. **El cobro usa el checkout canónico.** Cada cobro de un acuerdo es una fila `marketplace_agreement_payment` (`kind` = `deposit` | `balance`) con su `commerce_checkout_session` de `domain_type='marketplace_agreement'` y `domain_order_id` = id del cobro. `productFlowForDomain` lo mapea a `FlowMarketplace`, de modo que el ruteo existente solo ofrece un proveedor cuando su cuenta, contrato, credenciales y las tres capacidades de marketplace están verificadas para ese método y entorno. Ningún módulo del marketplace llama a un proveedor directamente. 2. **Reparto congelado por cobro.** Al crear el cobro se guarda `platform_fee_minor`, `provider_amount_minor` y `processing_fee_minor`: - depósito: `platform_fee = min(commission_minor, deposit_minor)`; - saldo: `platform_fee = commission_minor − lo que los cobros pagados ya recaudaron para la plataforma` (0 con la tarifa por defecto; más que el resto nominal cuando la comisión del procesador se comió parte de un depósito menor que la comisión); - `provider_amount = monto − platform_fee − processing_fee`, nunca negativo. `processing_fee` sale de `marketplace_payment_fee_rule` (por proveedor: bps + fijo + quién la asume). Por defecto la asume el proveedor del servicio, porque en el cobro del saldo TDF no recibe nada de lo que descontarla. La regla es editable sin desplegar. 3. **Cuenta de cobro del proveedor.** `marketplace_payout_account` (perfil, proveedor, referencia, estado). PayPhone: el proveedor declara su identificación (tipo 3) o teléfono (tipo 4). Stripe: cuenta Express con onboarding alojado (reutiliza `Services.Stripe`). Sin una cuenta lista para algún proveedor ofrecible en la moneda del acuerdo, el acuerdo nace como en la parte A (`off_platform`, `confirmed`); no se bloquea la aceptación. 4. **Estados.** Con el gate `marketplace.agreement_payments` activo y cuenta de cobro lista, el acuerdo nace `pending_deposit` + `platform`, con `deposit_due_at` según la tarifa. - Depósito verificado → `confirmed`. - Depósito sin pagar al vencer → `expired`: retira la oferta y libera el cupo (misma rutina que cancelar). Corre al cargar los acuerdos de un participante y, para todos los acuerdos, cada cinco minutos en un job del servidor (`startAgreementDepositExpiryJob`). - El proveedor inicia (`in_progress`). El comprador confirma la entrega: con saldo pendiente pasa a `balance_due` y se crea el cobro del saldo; el saldo verificado lo lleva a `completed` y registra la interacción verificada. Sin saldo, pasa directo a `completed`. Mientras espera el saldo, cualquiera de las partes puede abrir una disputa: el cobro pendiente se cancela y un administrador resuelve. Las disputas abiertas se listan para administración en `GET /directory/admin/agreements/disputes` (más antigua primero, con quién la abrió, desde qué estado y por qué) y se resuelven con la ruta de estado del acuerdo. - Ningún participante ni administrador puede marcar un cobro como pagado: solo la reconciliación con consulta autenticada al proveedor (trigger `marketplace_agreement_payment_require_verified_payment`, mismo patrón que reservas y entradas). 5. **Proveedores.** - **PayPhone:** el adaptador añade `transferTo` cifrado cuando el checkout trae reparto. Queda cerrado hasta que PayPhone autorice el split para la tienda y se registre la evidencia de capacidad; se exige la modalidad «al día siguiente» para conservar el reverso del primer día. - **Stripe:** adaptador canónico con Checkout Session alojada y cargo destino (`transfer_data.destination`, `application_fee_amount`); se entrega en un segundo PR (B2) junto con reembolsos y panel de disputas, porque incorpora Stripe al runtime canónico. - **DataWeb:** el dominio queda conectado al ruteo, y por tanto cerrado: no hay capacidad de split verificable. Se abre registrando evidencia cuando Datafast la contrate, sin código nuevo en el marketplace. 6. **Cancelación con dinero cobrado.** En B1, un acuerdo `platform` con depósito pagado no se cancela por los participantes, ni directamente ni retirando la oferta aceptada: abre disputa y un administrador resuelve. Tampoco se cancela ni se retira mientras un intento de pago pueda cobrar todavía. El reembolso automático según la política congelada (`cancellation_policy`) llega en B2, cuando exista la reversión del reparto por proveedor. 7. **Orden de bloqueo.** anuncio → oferta → acuerdo → cobro. La reconciliación bloquea checkout e intento primero (regla existente) y después el cobro y el acuerdo; ningún camino del marketplace toma un bloqueo de checkout mientras sostiene el acuerdo, salvo la creación del checkout, que es una inserción.",
       "source": "docs/adr/0136-marketplace-agreement-payments.md#decisión",
       "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
