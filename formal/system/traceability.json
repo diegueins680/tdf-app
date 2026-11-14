@@ -26871,7 +26871,7 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation. Payment choices for tickets, studio deposits, courses, mixing and Domo quote deposits share one visual and accessible group, with the payment type prominent and its processor shown as secondary text. Only existing server-offered methods and existing local eligibility checks supply choices; all retain their original handlers and disabled conditions. The client does not invent a recommended provider from list order. Unknown outcomes continue to lock local and hosted alternatives, retain exact retry keys and permit original-attempt recovery even when new payment is disabled or no method is offered. PayPhone still requests its number only after selection and does not send a request on that first selection. For signed-in booking visitors, a complete valid contact is summarized with an explicit edit control; guests, incomplete contacts and in-progress edits remain expanded. Editing and returning to the summary move keyboard focus to the appropriate control without advancing a step, overwriting manual input or accepting terms.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation. Payment choices for tickets, studio deposits, courses, mixing and Domo quote deposits share one visual and accessible group, with the payment type prominent and its processor shown as secondary text. Only existing server-offered methods and existing local eligibility checks supply choices; all retain their original handlers and disabled conditions. The client does not invent a recommended provider from list order. Unknown outcomes continue to lock local and hosted alternatives, retain exact retry keys and permit original-attempt recovery even when new payment is disabled or no method is offered. PayPhone still requests its number only after selection and does not send a request on that first selection. For signed-in booking visitors, a complete valid contact is summarized with an explicit edit control; guests, incomplete contacts and in-progress edits remain expanded. Editing and returning to the summary move keyboard focus to the appropriate control without advancing a step, overwriting manual input or accepting terms. Course authoring preserves decimal currency prices as exact safe integer cents when loading legacy cent drafts, editing with dot/comma and writing CourseUpsert.priceCents. Its public major-unit numeric metadata is accepted only when a cent can be recovered unambiguously; invalid, fractional-cent, missing and unsafe prices cannot become a free course or reach publication. Zero remains an explicit valid free price. Drafts preserve raw invalid/blank price text separately from the API payload, retain explicit empty lists/descriptive fields, and are restored before local writes. A successful save clears the draft only if its edit revision still matches; newer edits remain local and do not show an outdated published status. Booking bank-transfer reference errors appear beside the bounded3–120-character field with an accessible helper and focus in the opened dialog. Invalid input never submits evidence; a failed request retains the reference, and the field is disabled while evidence is in flight. Submission remains review-only and never confirms payment. Before clearing a saved course draft, cleanup compares the stored snapshot with the one observed when saving; a replacement observed at response time is preserved.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
       "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14-16, 18, 22 and25; continuation 2026-11-11.",
@@ -26939,6 +26939,7 @@
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
         "tdf-hq-ui/src/pages/BookingsPage.tsx",
         "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx",
@@ -26966,6 +26967,7 @@
         "tdf-hq-ui/src/pages/TrialsPage.tsx",
         "tdf-hq-ui/src/session/sessionContactDefaults.ts",
         "tdf-hq-ui/src/utils/bookingStatusLabel.ts",
+        "tdf-hq-ui/src/utils/coursePriceInput.ts",
         "tdf-hq-ui/src/utils/directoryStatusLabel.ts",
         "tdf-hq-ui/src/utils/eventFinanceMoney.ts",
         "tdf-hq-ui/src/utils/eventTicketPricing.ts",
@@ -26980,6 +26982,7 @@
         "e2e/web/booking-catalog-recovery.spec.mjs",
         "e2e/web/booking-timezone.spec.mjs",
         "e2e/web/commerce-money-input.spec.mjs",
+        "e2e/web/course-price-booking-transfer.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
         "e2e/web/live-session-contact.spec.mjs",
         "e2e/web/music-operations-amounts.spec.mjs",
@@ -27006,6 +27009,7 @@
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
@@ -27031,6 +27035,7 @@
         "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx",
         "tdf-hq-ui/src/session/sessionContactDefaults.test.ts",
         "tdf-hq-ui/src/utils/bookingStatusLabel.test.ts",
+        "tdf-hq-ui/src/utils/coursePriceInput.test.ts",
         "tdf-hq-ui/src/utils/directoryStatusLabel.test.ts",
         "tdf-hq-ui/src/utils/eventFinanceMoney.test.ts",
         "tdf-hq-ui/src/utils/eventTicketPricing.test.ts",
@@ -27103,6 +27108,7 @@
     "e2e/web/commerce-money-input.spec.mjs": "411cd75a53aec38cab811e230c0d29c962342827ab2871c490232ed7b9a63902",
     "e2e/web/community-discovery.spec.mjs": "76a926af7673919cab66ae667ae27d4d81802d2b16c320fccf0290c15cc3af28",
     "e2e/web/course-enrollment.spec.mjs": "5330e8d056e9ef1407f7a3e711bd7b88fde84795896409db2b43164c69efc161",
+    "e2e/web/course-price-booking-transfer.spec.mjs": "334f4c9233dc0dc424be0f3d247570f1afac83d3f7f982ca54b2176d8fe5c84b",
     "e2e/web/directory-entry.spec.mjs": "08cbc831a6260271171aa65121ec655f0b3f916d0c468e670278157032d387a3",
     "e2e/web/directory-favorite-recovery.spec.mjs": "08dd8f020ec9c1f0ab75f00a2af230764e57acf65a224826c54b2201b5670fe3",
     "e2e/web/directory-language.spec.mjs": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
@@ -27948,7 +27954,7 @@
     "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx": "4f7755520e4175cc0d5ffb57e233fc4268a375a9dd85422716db07841b5610c1",
     "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
     "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx": "205cd4ebacf67f48da978914e77c6ca5c5a0dac6a24b26c557865df5dc587bb1",
-    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "f6956da62c40594524b4362f84ee685fb2a84d33cd9cde0bee190262d92829a7",
+    "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx": "ebe885636c5118082f1b3d87416290e5fab11e1ebe933ef93a8bf8d9a63ead01",
     "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx": "77978bf71e272a976d21ad62fb8cbeff01eea94442202f33ceee4a1d471d5756",
     "tdf-hq-ui/src/__tests__/TrialsPage.test.tsx": "b27a208c02d62cc6013968ee4971b7729c46e6300aae35fad89576b6371b906b",
     "tdf-hq-ui/src/__tests__/analytics.test.ts": "993441525fe795e32865647090cb62ad4ac49e08f14c8c50177e4196ad5192b8",
@@ -28206,6 +28212,8 @@
     "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "fcf0947582d727c0aadc422ced35811a2262c2791d9729ee5abdadec14597ac8",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
+    "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx": "e3038bcd8c6f70f1daf8acb8c148f2e7266cf1239aa1a6bbcb316f5dd75ef7d2",
+    "tdf-hq-ui/src/pages/CourseBuilderPage.tsx": "8becae891de1375f77aee74823def67a63453f1fb89f9d116c59c9bbead1d986",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": "e53e030555dd6fc1e00e9aea06b5ca9ed6eb0b1cc0dd383135f06bc58fabf055",
     "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": "7d8b4f8bc8495e0257fb52e5168cec3b40f6006f140098c048d5550925da1d6c",
@@ -28293,7 +28301,7 @@
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "ce6ad9db314d718c18736bbd51652b4bc666c9d8df7cc028b482e21c877f25af",
     "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "cd5515ffdf95e8a621791d1b89648d8de171600c9d6292bce8dfc015f0e4b194",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "212b909b23793400907c09696153136b452038d6c8a0f7d48853c01cb09e75f4",
-    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "273f03069994d394fc675eefbfa6daace3fc989e54a477c09a005f276acd0d08",
+    "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "c0fc81815927e1ae10b84d6dcf42983494020e4bab109e5d7b40fd4b630e3d7f",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "a68ad5aa75a860a661e313875fdae8642c3a4f43ae26fc0fe50eab66ee604bd2",
     "tdf-hq-ui/src/pages/PublicProfilePage.tsx": "231a90d2da08b7eb5049818d418372a6c05d9069b9b874e8cf37c28824e17164",
     "tdf-hq-ui/src/pages/PublicReputationRightsPage.tsx": "f6de05dae2322ea92e05066bf94073a68dcaa1c437c10b1e9524dfb98867268f",
@@ -28400,6 +28408,8 @@
     "tdf-hq-ui/src/utils/bottomDock.test.tsx": "cd6a5f4017090e3d6073f7cb0b097a7d0ee8c03c393446eb3b50d973076b1a44",
     "tdf-hq-ui/src/utils/bottomDock.ts": "9191d50ba61638b5025ee27bdff3bed3b02a049cd348a0535a401cf691102f0c",
     "tdf-hq-ui/src/utils/checkoutStripe.ts": "1c074e0363401634344800112291a32552aba9a1244dd7986c54257f05af24b2",
+    "tdf-hq-ui/src/utils/coursePriceInput.test.ts": "a7008935fcbb61d875c0a6a6c45ce5eada7a6470fbbca0f086299abba761b1be",
+    "tdf-hq-ui/src/utils/coursePriceInput.ts": "c90990c0191b99fa901720634b241e9d1dff5c4c3989dbe32a33a8db83050b4c",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.test.ts": "b4a6a6e54eef828d5795ca8ffd8d30db2599429eaf6ecdfafa3bfbff2894763b",
     "tdf-hq-ui/src/utils/courseRegistrationErrors.ts": "e1363bf4bc181a089249899b5ab81cdcaae74ff61fcefa1c9d1b1bcfcc86e7dc",
     "tdf-hq-ui/src/utils/csv.test.ts": "4fb5e4404dd09e5883c0628b01d25235e6c5296a4c514ce7ca4b8e7e888809ba",
@@ -46729,6 +46739,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/pages/CourseBuilderPage.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/pages/LabelTracksPage.tsx": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -46783,6 +46799,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/utils/coursePriceInput.ts": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/utils/directoryStatusLabel.ts": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -46796,6 +46818,12 @@
       }
     ],
     "e2e/web/commerce-money-input.spec.mjs": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "e2e/web/course-price-booking-transfer.spec.mjs": [
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
@@ -46850,6 +46878,12 @@
       }
     ],
     "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx": [
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
@@ -46934,6 +46968,12 @@
       }
     ],
     "tdf-hq-ui/src/utils/bookingStatusLabel.test.ts": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/utils/coursePriceInput.test.ts": [
       {
         "requirement": "UX-COGLOAD-001",
         "relationship": "tests"
@@ -47609,6 +47649,18 @@
       "requirements": [
         {
           "requirement": "COURSE-ENROLL-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-5536617b95247007",
+      "path": "e2e/web/course-price-booking-transfer.spec.mjs",
+      "sha256": "334f4c9233dc0dc424be0f3d247570f1afac83d3f7f982ca54b2176d8fe5c84b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -56683,7 +56735,7 @@
     {
       "id": "SURFACE-822b40e105c55487",
       "path": "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
-      "sha256": "f6956da62c40594524b4362f84ee685fb2a84d33cd9cde0bee190262d92829a7",
+      "sha256": "ebe885636c5118082f1b3d87416290e5fab11e1ebe933ef93a8bf8d9a63ead01",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62110,16 +62162,26 @@
     {
       "id": "SURFACE-d380d4ada9543610",
       "path": "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
-      "sha256": "a52393d5ed61972981e8c9800d74ffc780e0b3667892abb588671ed02cb2a952",
+      "sha256": "e3038bcd8c6f70f1daf8acb8c148f2e7266cf1239aa1a6bbcb316f5dd75ef7d2",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-86468d4e75140c87",
       "path": "tdf-hq-ui/src/pages/CourseBuilderPage.tsx",
-      "sha256": "30ce88344417f3e417b1566224fcbfa6de36b1c65d3c75a437bbe7138c3d0f37",
+      "sha256": "8becae891de1375f77aee74823def67a63453f1fb89f9d116c59c9bbead1d986",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-fd4d2654b87334c2",
@@ -63874,7 +63936,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "273f03069994d394fc675eefbfa6daace3fc989e54a477c09a005f276acd0d08",
+      "sha256": "c0fc81815927e1ae10b84d6dcf42983494020e4bab109e5d7b40fd4b630e3d7f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65883,6 +65945,30 @@
       "requirements": [
         {
           "requirement": "EVT-TICKET-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-65698d3f8cd68164",
+      "path": "tdf-hq-ui/src/utils/coursePriceInput.test.ts",
+      "sha256": "a7008935fcbb61d875c0a6a6c45ce5eada7a6470fbbca0f086299abba761b1be",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-0deb04ff0ae2b4ed",
+      "path": "tdf-hq-ui/src/utils/coursePriceInput.ts",
+      "sha256": "c90990c0191b99fa901720634b241e9d1dff5c4c3989dbe32a33a8db83050b4c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -82945,8 +83031,6 @@
     "SURFACE-4863f94a96956295",
     "SURFACE-d340c53f92e0fc7d",
     "SURFACE-cc160e8f39f921e2",
-    "SURFACE-d380d4ada9543610",
-    "SURFACE-86468d4e75140c87",
     "SURFACE-ba081a4837547871",
     "SURFACE-b584e0770511a16a",
     "SURFACE-8bf82e65fbe7190d",
@@ -85111,7 +85195,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6c57432772901126461f06d0885ee7db1f490ed879b77c5a519acdd442ab6352",
+      "sourceSha256": "ef819758df1e69efde226a7d1040718af2947ac04411eae04365e70c8bbcd774",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85139,7 +85223,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6c57432772901126461f06d0885ee7db1f490ed879b77c5a519acdd442ab6352",
+      "sourceSha256": "ef819758df1e69efde226a7d1040718af2947ac04411eae04365e70c8bbcd774",
       "definition": {
         "states": [
           "absent",
@@ -85169,7 +85253,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "6c57432772901126461f06d0885ee7db1f490ed879b77c5a519acdd442ab6352",
+      "sourceSha256": "ef819758df1e69efde226a7d1040718af2947ac04411eae04365e70c8bbcd774",
       "definition": {
         "export": [
           "queued",
