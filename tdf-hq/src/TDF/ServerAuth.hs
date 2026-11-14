@@ -76,6 +76,7 @@ module TDF.ServerAuth
 
 import Control.Applicative ((<|>))
 import TDF.Auth.AccountName (initialAccountName)
+import qualified TDF.Auth.Throttle as Throttle
 import Control.Exception.Safe (SomeException, try)
 import TDF.App.FailureBoundary (bestEffortActivity)
 import Control.Monad (forM, forM_, guard, join, unless, void, when)
@@ -1600,12 +1601,43 @@ login :: LoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 login rawRequest = do
   LoginRequest{..} <- either throwError pure (validateLoginRequest rawRequest)
   Env pool cfg <- ask
-  result <- liftIO $ flip runSqlPool pool (runLogin (sessionTokenTtlFromConfig cfg) username password)
+  -- Temporary lockout: once the failures recorded for this identifier use up
+  -- the window's limit, nothing is checked until the window ends.
+  -- The count check, the password check and the failure count run in one
+  -- transaction under a per-identifier advisory lock, so concurrent attempts
+  -- cannot all pass a count read before any of them recorded its failure.
+  attemptedAt <- liftIO getCurrentTime
+  outcome <- liftIO $ flip runSqlPool pool $ do
+    Throttle.lockAuthThrottleSubject Throttle.ThrottleLoginFailure username
+    recordedFailures <-
+      Throttle.readAuthThrottleCount Throttle.ThrottleLoginFailure username attemptedAt
+    if Throttle.authThrottleLockedOut Throttle.ThrottleLoginFailure recordedFailures
+      then pure Nothing
+      else do
+        attempt <- runLogin (sessionTokenTtlFromConfig cfg) username password
+        case attempt of
+          Left msg | msg == loginInvalidMessage ->
+            void (Throttle.consumeAuthThrottle Throttle.ThrottleLoginFailure username attemptedAt)
+          _ -> pure ()
+        pure (Just attempt)
+  result <- maybe (throwError (authThrottleRefusal Throttle.ThrottleLoginFailure attemptedAt)) pure outcome
   case result of
-    Left msg -> throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
+    Left msg ->
+      throwError err401 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
     Right res -> do
       recordAuthActivity "login_password" res Nothing Nothing
       withSessionCookie res
+
+-- | 429 with the seconds left in the current window.
+authThrottleRefusal :: Throttle.AuthThrottleScope -> UTCTime -> ServerError
+authThrottleRefusal scope now =
+  err429
+    { errBody = "Too many attempts; try again later"
+    , errHeaders =
+        [ ("Retry-After", BS8.pack (show (Throttle.authThrottleRetryAfterSeconds scope now)))
+        , ("Cache-Control", "no-store")
+        ]
+    }
 
 googleLogin :: GoogleLoginRequest -> AppM (Api.SessionCookieHeaders LoginResponse)
 googleLogin GoogleLoginRequest{..} = do
@@ -1819,6 +1851,10 @@ signup SignupRequest
     liftIO (flip runSqlPool pool (validateSignupFanArtistTargets sanitizedFanArtists))
       >>= either throwError pure
   let emailSvc = EmailSvc.mkEmailService cfg
+  signupAttempts <- liftIO $ flip runSqlPool pool $
+    Throttle.consumeAuthThrottle Throttle.ThrottleSignup emailClean now
+  when (Throttle.authThrottleOverLimit Throttle.ThrottleSignup signupAttempts) $
+    throwError (authThrottleRefusal Throttle.ThrottleSignup now)
   result <- liftIO $ flip runSqlPool pool $
     runSignupDb
       (sessionTokenTtlFromConfig cfg)
@@ -2090,7 +2126,15 @@ passwordReset redirect locale PasswordResetRequest{..} = do
   emailClean <- maybe (throwBadRequest "Invalid email address") pure (normalizeAuthEmailAddress emailInput)
   Env pool cfg <- ask
   let emailSvc = EmailSvc.mkEmailService cfg
-  mPayload <- liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
+  requestedAt <- liftIO getCurrentTime
+  resetRequests <- liftIO $ flip runSqlPool pool $
+    Throttle.consumeAuthThrottle Throttle.ThrottlePasswordReset emailClean requestedAt
+  -- Past the limit the answer stays the same and nothing is issued or sent,
+  -- so the route neither floods a mailbox nor reveals that it is throttled.
+  mPayload <-
+    if Throttle.authThrottleOverLimit Throttle.ThrottlePasswordReset resetRequests
+      then pure Nothing
+      else liftIO $ flip runSqlPool pool (runPasswordReset emailClean)
   for_ mPayload $ \(resetToken, displayName, recipientEmail) -> do
     resetResult <-
       liftIO $
@@ -2445,10 +2489,12 @@ runLogin ttl identifier pwd = do
   mCred <- lookupCredentialLocked identifier
   case mCred of
     Nothing -> pure (Left invalidMsg)
-    Just (Entity _ cred)
-      | not (userCredentialActive cred) -> pure (Left "Account disabled")
-      | otherwise ->
+    Just (Entity _ cred) ->
+          -- The password is checked first and a disabled account answers
+          -- exactly like a wrong password, so the response does not reveal
+          -- that the account exists or is disabled.
           if validatePassword (TE.encodeUtf8 (userCredentialPasswordHash cred)) (TE.encodeUtf8 pwd)
+               && userCredentialActive cred
             then do
               sessionToken <- createSessionToken ttl (userCredentialPartyId cred) (userCredentialUsername cred)
               mUser <- loadAuthedUser sessionToken
@@ -2457,7 +2503,10 @@ runLogin ttl identifier pwd = do
                 Just user -> pure (Right (toLoginResponse sessionToken user))
             else pure (Left invalidMsg)
   where
-    invalidMsg = "Invalid username or password"
+    invalidMsg = loginInvalidMessage
+
+loginInvalidMessage :: Text
+loginInvalidMessage = "Invalid username or password"
 
 lookupCredential :: Text -> SqlPersistT IO (Maybe (Entity UserCredential))
 lookupCredential rawIdentifier = do

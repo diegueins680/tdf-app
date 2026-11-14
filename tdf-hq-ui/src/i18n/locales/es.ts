@@ -1,6 +1,7 @@
 import mobileApp from './mobileApp.es';
 import accountDeletion from './accountDeletion.es';
 import directorySearch from './directorySearch.es';
+import marketplace from './marketplace.es';
 import authEntry from './authEntry.es';
 const es = {
   app: mobileApp,
@@ -8,6 +9,7 @@ const es = {
   records: { videoUnavailable: 'Video no disponible en la fuente', thumbnailUnavailable: 'Miniatura no disponible', loadingThumbnail: 'Cargando miniatura' },
   authEntry,
   directorySearch,
+  marketplace,
   auditAccessibility: {
     loadingFeaturedArtists: 'Cargando artistas destacados',
     loadingMarketplace: 'Cargando productos del marketplace',
@@ -50,6 +52,23 @@ const es = {
     saving: 'Guardando tu salida de primeros pasos…',
     loadError: 'No pudimos cargar tus primeros pasos. No mostraremos información de otra cuenta; revisa tu conexión e inténtalo de nuevo.',
     saveError: 'No pudimos guardar que terminaste estos primeros pasos. Puedes reintentarlo sin perder tu progreso.',
+  },
+  eventDashboard: {
+    title: 'Tus eventos',
+    subtitle: 'Crea un evento, publícalo y gestiona entradas, asistentes y logística desde un solo lugar.',
+    create: 'Crear evento',
+    manageAll: 'Gestionar eventos',
+    upcoming: 'Próximos eventos que organizas',
+    loading: 'Cargando tus eventos',
+    empty: 'No organizas eventos próximos. Crea el primero en minutos.',
+    error: 'No pudimos cargar tus eventos. Aún puedes crear o gestionar eventos con los botones de arriba.',
+    retry: 'Reintentar',
+    manage: 'Gestionar',
+    manageNamed: 'Gestionar {{title}}',
+    logistics: 'Logística',
+    logisticsNamed: 'Logística de {{title}}',
+    dateTbc: 'Fecha por confirmar',
+    more: 'Y {{count}} más en Eventos.',
   },
   Parties: 'Personas',
   Bookings: 'Agenda',

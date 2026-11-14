@@ -129,9 +129,29 @@ instance ToJSON DirectoryProfileUpsert
 data DirectoryStatusRequest = DirectoryStatusRequest
   { status :: Text
   , reason :: Maybe Text
+  -- | Optimistic concurrency (ADR 0134): the entity version the caller decided
+  -- on. Offers refuse the transition with 409 when their version moved on.
+  , expectedVersion :: Maybe Int64
   } deriving (Show, Generic)
 instance FromJSON DirectoryStatusRequest
 instance ToJSON DirectoryStatusRequest
+
+-- | ADR 0136: the buyer starts the charge an agreement is waiting for with
+-- the payment provider they chose.
+data AgreementPaymentRequest = AgreementPaymentRequest
+  { provider :: Text
+  } deriving (Show, Generic)
+instance FromJSON AgreementPaymentRequest
+instance ToJSON AgreementPaymentRequest
+
+-- | ADR 0136: where a profile is paid. For PayPhone the identifier is an
+-- identification (cédula or RUC) or a phone in international format.
+data PayoutAccountRequest = PayoutAccountRequest
+  { identifierType :: Text
+  , identifier :: Text
+  } deriving (Show, Generic)
+instance FromJSON PayoutAccountRequest
+instance ToJSON PayoutAccountRequest
 
 data ClassifiedCreateRequest = ClassifiedCreateRequest
   { authorProfileId :: UUID
@@ -159,20 +179,41 @@ data ClassifiedCreateRequest = ClassifiedCreateRequest
   , serviceOfferingId :: Maybe UUID
   , serviceAdId :: Maybe Int64
   , expiresAt :: Maybe UTCTime
+    -- ADR 0134 marketplace fields (all optional for compatibility)
+  , slots :: Maybe Int
+  , priceMode :: Maybe Text
+  , offerDeadlineAt :: Maybe UTCTime
+  , terms :: Maybe Value
   } deriving (Show, Generic)
 instance FromJSON ClassifiedCreateRequest
 instance ToJSON ClassifiedCreateRequest
 
+-- | An offer on a classified. @amountMinor@ supersedes @proposedAmountMinor@;
+-- both are accepted while clients migrate (ADR 0134).
 data ApplicationCreateRequest = ApplicationCreateRequest
   { applicantProfileId :: UUID
   , message :: Text
   , portfolio :: Value
   , availability :: Maybe Text
   , proposedAmountMinor :: Maybe Int64
+  , amountMinor :: Maybe Int64
   , currencyId :: Maybe UUID
+  , terms :: Maybe Value
+  , expiresAt :: Maybe UTCTime
   } deriving (Show, Generic)
 instance FromJSON ApplicationCreateRequest
 instance ToJSON ApplicationCreateRequest
+
+-- | A counter-offer round from either participant (ADR 0134).
+data OfferCounterRequest = OfferCounterRequest
+  { amountMinor :: Int64
+  , currencyId :: UUID
+  , terms :: Maybe Value
+  , message :: Maybe Text
+  , expiresAt :: Maybe UTCTime
+  } deriving (Show, Generic)
+instance FromJSON OfferCounterRequest
+instance ToJSON OfferCounterRequest
 
 data InvitationCreateRequest = InvitationCreateRequest
   { senderProfileId :: UUID
@@ -279,6 +320,7 @@ type DirectoryPublicAPI = "directory" :>
            :> QueryParam "cursor" Text
            :> QueryParam "limit" Int
            :> QueryParam "profileKind" Text
+           :> QueryParam "intent" Text
            :> Get '[JSON] DirectorySearchResponse
     :<|> "suggestions" :> QueryParam "q" Text :> QueryParam "cityId" UUID :> Get '[JSON] [DirectorySuggestion]
     :<|> "taxonomies" :> QueryParam "locale" Text :> Get '[JSON] Value
@@ -303,9 +345,19 @@ type DirectoryProtectedAPI =
     :<|> "classifieds" :> Get '[JSON] [Value]
     :<|> "classifieds" :> RequiredIdempotency :> ReqBody '[JSON] ClassifiedCreateRequest :> PostCreated '[JSON] Value
     :<|> "classifieds" :> Capture "classifiedId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
-    :<|> "classifieds" :> Capture "classifiedId" UUID :> "applications" :> Get '[JSON] [Value]
+    :<|> "classifieds" :> Capture "classifiedId" UUID :> "applications" :> QueryParam "sort" Text :> Get '[JSON] [Value]
     :<|> "classifieds" :> Capture "classifiedId" UUID :> "applications" :> RequiredIdempotency :> ReqBody '[JSON] ApplicationCreateRequest :> PostCreated '[JSON] Value
+    :<|> "applications" :> QueryParam "status" Text :> Get '[JSON] [Value]
+    :<|> "applications" :> Capture "applicationId" UUID :> Get '[JSON] Value
+    :<|> "applications" :> Capture "applicationId" UUID :> "counter" :> RequiredIdempotency :> ReqBody '[JSON] OfferCounterRequest :> PostCreated '[JSON] Value
     :<|> "applications" :> Capture "applicationId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
+    :<|> "agreements" :> QueryParam "status" Text :> Get '[JSON] [Value]
+    :<|> "agreements" :> Capture "agreementId" UUID :> Get '[JSON] Value
+    :<|> "agreements" :> Capture "agreementId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
+    :<|> "agreements" :> Capture "agreementId" UUID :> "payments" :> ReqBody '[JSON] AgreementPaymentRequest :> PostCreated '[JSON] Value
+    :<|> "payout-accounts" :> Get '[JSON] [Value]
+    :<|> "profiles" :> Capture "profileId" UUID :> "payout-accounts" :> Capture "provider" Text :> ReqBody '[JSON] PayoutAccountRequest :> Put '[JSON] Value
+    :<|> "profiles" :> Capture "profileId" UUID :> "payout-accounts" :> Capture "provider" Text :> Delete '[JSON] Value
     :<|> "invitations" :> Get '[JSON] [Value]
     :<|> "invitations" :> RequiredIdempotency :> ReqBody '[JSON] InvitationCreateRequest :> PostCreated '[JSON] Value
     :<|> "invitations" :> Capture "invitationId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value

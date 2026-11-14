@@ -94,6 +94,14 @@ jobs:
         run: python formal/payments/provider_binding_admission.py
       - name: Prove PlaceToPay query admission, exact minor units and guard necessity
         run: python formal/payments/placetopay_query_admission.py
+      - name: Prove Meta webhook admission outcomes and guard necessity
+        run: python formal/auth/meta_webhook_admission.py
+      - name: Prove credential throttle windows, lockout bound and guard necessity
+        run: python formal/auth/credential_throttle.py
+      - name: Prove legacy Stripe ticket capture outcomes and guard necessity
+        run: python formal/payments/stripe_ticket_capture.py
+      - name: Prove hosted dead-letter review coverage and guard necessity
+        run: python formal/payments/hosted_dead_letter_review.py
       - name: Generate formal assurance and release decision
         if: ${{ !cancelled() }}
         timeout-minutes: 15

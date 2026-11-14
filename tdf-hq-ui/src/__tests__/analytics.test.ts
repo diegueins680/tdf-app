@@ -297,6 +297,21 @@ describe('analytics/posthog (web)', () => {
     }
   });
 
+  test('never exports the administrator invitation token carried in the URL fragment', () => {
+    const token = 'ab'.repeat(32);
+    const url = `https://tdf.test/eventos/141#admin=${token}`;
+    expect(redactSensitiveQueryValues(url)).toBe('https://tdf.test/eventos/141');
+    expect(redactSensitiveQueryValues(`/eventos/141#admin=${token}`)).toBe('/eventos/141');
+    const sanitized = JSON.stringify(sanitizeAnalyticsProperties({
+      $current_url: url,
+      $initial_current_url: url,
+      $referrer: url,
+      $pathname: '/eventos/141',
+      redirect: `/login?redirect=${encodeURIComponent(`/eventos/141#admin=${token}`)}`,
+    }));
+    expect(sanitized).not.toContain(token);
+  });
+
   test('keeps configured private navigation identifiers out of automatic pageviews', () => {
     const sentinel = 'PRIVATE-ROUTE-CAPABILITY';
     const privateParam = /^(?:orderId|orderNumber|registrationId|bookingId|quoteId|token|notificationId|partyId|reportId|taskId|planId|destinationId|id)$/;

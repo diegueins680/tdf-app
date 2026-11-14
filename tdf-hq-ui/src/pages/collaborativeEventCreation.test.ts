@@ -1,11 +1,14 @@
 import { jest } from '@jest/globals';
 import { DateTime } from 'luxon';
 
+import type { SocialEventDTO } from '../api/socialEvents';
 import {
   buildCollaborativeEventPayload,
   buildInitialCollaborativeEventDraft,
   createCollaborativeEvent,
+  normalizeLineup,
   parseOptionalPriceCents,
+  validateEventArtFile,
   type CollaborativeEventDraft,
 } from './collaborativeEventCreation';
 
@@ -131,5 +134,99 @@ describe('collaborative event creation', () => {
         reason: 'Sin acceso',
       },
     ]);
+  });
+
+  it('accepts raster art up to 10 MB and explains what it rejects', () => {
+    expect(validateEventArtFile({ type: 'image/png', size: 1024 })).toBeNull();
+    expect(validateEventArtFile({ type: 'IMAGE/JPEG', size: 10 * 1024 * 1024 })).toBeNull();
+    expect(validateEventArtFile({ type: 'application/pdf', size: 1024 })).toMatch(/JPG, PNG, WebP o GIF/);
+    expect(validateEventArtFile({ type: 'image/png', size: 0 })).toMatch(/vacío/);
+    expect(validateEventArtFile({ type: 'image/png', size: 10 * 1024 * 1024 + 1 })).toMatch(/10 MB/);
+  });
+
+  it('cleans a lineup: trims names, drops blanks and repeats, keeps the order', () => {
+    expect(normalizeLineup([
+      { artistId: ' 7 ', artistName: 'Vera' },
+      { artistId: null, artistName: '  Los   Nuevos ' },
+      { artistId: '7', artistName: 'Vera otra vez' },
+      { artistId: null, artistName: 'los nuevos' },
+      { artistId: null, artistName: '   ' },
+    ])).toEqual([
+      { artistId: '7', artistName: 'Vera' },
+      { artistId: null, artistName: 'Los Nuevos' },
+    ]);
+  });
+
+  it('creates with known artists, then adds named ones and uploads the art', async () => {
+    const eventDraft = {
+      ...draft(),
+      artists: [
+        { artistId: '7', artistName: 'Vera' },
+        { artistId: null, artistName: 'Los Nuevos' },
+      ],
+    };
+    const calls: string[] = [];
+    const createEvent = jest.fn(async (payload: SocialEventDTO) => {
+      calls.push('create');
+      return { ...payload, eventId: '42' };
+    });
+    const saveLineup = jest.fn(async (_eventId: string, payload: SocialEventDTO) => {
+      calls.push('lineup');
+      return payload;
+    });
+    const uploadArt = jest.fn(async () => { calls.push('art'); });
+    const art = new File(['png'], 'afiche.png', { type: 'image/png' });
+
+    const result = await createCollaborativeEvent(
+      eventDraft,
+      { createEvent, saveLineup, uploadArt, addCollaborator: jest.fn<never>() },
+      art,
+    );
+
+    // Lineup precedes the art so the update can never replace the uploaded image.
+    expect(calls).toEqual(['create', 'lineup', 'art']);
+    expect(createEvent.mock.calls[0]?.[0].eventArtists).toEqual([{ artistId: '7', artistName: 'Vera' }]);
+    const [lineupEventId, lineupPayload] = saveLineup.mock.calls[0] ?? [];
+    expect(lineupEventId).toBe('42');
+    expect(lineupPayload?.eventArtists).toEqual([
+      { artistId: '7', artistName: 'Vera' },
+      { artistName: 'Los Nuevos' },
+    ]);
+    expect(lineupPayload).not.toHaveProperty('eventImageUrl');
+    expect(lineupPayload).not.toHaveProperty('eventTicketUrl');
+    expect(uploadArt).toHaveBeenCalledWith('42', art);
+    expect(result).toMatchObject({ pendingArtists: [], lineupError: null, artUploaded: true, artError: null });
+    expect(result.event.eventId).toBe('42');
+  });
+
+  it('keeps the created event when named artists or the art are refused', async () => {
+    const eventDraft = { ...draft(), artists: [{ artistId: null, artistName: 'Los Nuevos' }] };
+    const createEvent = jest.fn(async (payload: SocialEventDTO) => ({ ...payload, eventId: '42' }));
+    const result = await createCollaborativeEvent(
+      eventDraft,
+      {
+        createEvent,
+        saveLineup: jest.fn(async () => { throw new Error('eventArtists[].artistId is required'); }),
+        uploadArt: jest.fn(async () => { throw new Error('Sin conexión'); }),
+        addCollaborator: jest.fn<never>(),
+      },
+      new File(['png'], 'afiche.png', { type: 'image/png' }),
+    );
+
+    expect(createEvent.mock.calls[0]?.[0].eventArtists).toEqual([]);
+    expect(result.event.eventId).toBe('42');
+    expect(result.pendingArtists).toEqual([{ artistId: null, artistName: 'Los Nuevos' }]);
+    expect(result.lineupError).toBe('eventArtists[].artistId is required');
+    expect(result).toMatchObject({ artUploaded: false, artError: 'Sin conexión' });
+  });
+
+  it('refuses invalid art before anything is created', async () => {
+    const createEvent = jest.fn<never>();
+    await expect(createCollaborativeEvent(
+      draft(),
+      { createEvent, addCollaborator: jest.fn<never>() },
+      new File(['%PDF'], 'afiche.pdf', { type: 'application/pdf' }),
+    )).rejects.toThrow(/JPG, PNG, WebP o GIF/);
+    expect(createEvent).not.toHaveBeenCalled();
   });
 });

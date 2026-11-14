@@ -32,6 +32,7 @@ import Data.Time (UTCTime, addUTCTime, getCurrentTime)
 import Data.UUID (UUID)
 import qualified Data.UUID as UUID
 import Data.UUID.V4 (nextRandom)
+import System.Environment (lookupEnv)
 import Database.Persist (PersistValue(..), toPersistValue)
 import Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
 import Data.Scientific (base10Exponent, toBoundedInteger, toRealFloat)
@@ -40,6 +41,7 @@ import Servant
 import TDF.API.Directory
 import TDF.Auth (AuthedUser(..), ModuleAccess(..), hasModuleAccess)
 import qualified TDF.CMS.Models as CMS
+import qualified TDF.Commerce.CheckoutStore as Checkout
 import TDF.DB (Env(..))
 import TDF.Directory.Policy
 import TDF.Models (RoleEnum(Admin))
@@ -91,12 +93,15 @@ directoryPublicServer =
 
 searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
   mProfessionId mServiceId mInstrumentId mGenreId mRemote mAvailable
-  mDateFrom mDateTo mCursor mLimit mProfileKind = do
+  mDateFrom mDateTo mCursor mLimit mProfileKind mIntent = do
   query <- validateQuery mQuery
   entityType <- validateEntityType mEntityType
   let profileKind = normalizeOptional mProfileKind
+      intent = normalizeOptional mIntent
   when (maybe False (`notElem` ["person","artist","band","project"]) profileKind) $
     throwError err400 { errBody = "unsupported profileKind" }
+  when (maybe False (`notElem` ["seeking","offering"]) intent) $
+    throwError err400 { errBody = "unsupported intent" }
   (latitude, longitude, radiusKm) <- validateGeo mLatitude mLongitude mRadiusKm
   let limit = min 50 (max 1 (fromMaybe 20 mLimit))
       cursor = normalizeOptional mCursor
@@ -107,6 +112,7 @@ searchDirectory mQuery mEntityType mCityId mLatitude mLongitude mRadiusKm
         , optionalUuid mInstrumentId, optionalUuid mGenreId
         , maybe PersistNull PersistBool mRemote, maybe PersistNull PersistBool mAvailable
         , optionalTime mDateFrom, optionalTime mDateTo, optionalText profileKind
+        , optionalText intent
         ]
       eventVisibilityParams = [PersistText Social.externalEventRefSuppressedStatus]
   ranked <- jsonRows (searchSql False) (commonParams <> eventVisibilityParams <> [optionalText cursor, PersistInt64 (fromIntegral (limit + 1))])
@@ -199,7 +205,10 @@ directoryFilterClause =
   "document.effective_at,document.expires_at,input.q,(SELECT alias_entity_ids FROM directory_query_aliases),input.profile_kind," <>
   "input.city_id,input.profession_id,input.service_id,input.instrument_id,input.genre_id," <>
   "input.remote_only,input.available_only,input.date_from,input.date_to) " <>
-  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) "
+  "AND (input.latitude IS NULL OR input.radius_km IS NULL OR directory_distance_km(input.latitude,input.longitude,document.public_latitude,document.public_longitude)<=input.radius_km) " <>
+  -- ADR 0134: an intent filter only ever selects classifieds, by their
+  -- category intent (busco / ofrezco).
+  "AND (input.intent IS NULL OR (document.entity_kind='classified' AND EXISTS (SELECT 1 FROM classified intent_classified JOIN classified_category intent_category ON intent_category.id=intent_classified.category_id WHERE intent_classified.id::text=document.entity_id AND intent_category.intent=input.intent))) "
 
 directoryEntityTypeClause :: Text
 directoryEntityTypeClause =
@@ -210,7 +219,7 @@ directoryEntityTypeClause =
 -- Materialize only aliases: typed inputs remain foldable for index conditions.
 directorySearchInputSql :: Text
 directorySearchInputSql =
-  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind), " <>
+  "WITH input AS (SELECT ?::text q,?::text entity_type,?::uuid city_id,?::float8 latitude,?::float8 longitude,?::float8 radius_km,?::uuid profession_id,?::uuid service_id,?::uuid instrument_id,?::uuid genre_id,?::boolean remote_only,?::boolean available_only,?::timestamptz date_from,?::timestamptz date_to,?::text profile_kind,?::text intent), " <>
   "directory_query_aliases AS MATERIALIZED (SELECT directory_query_alias_entity_ids((SELECT q FROM input)) alias_entity_ids), "
 
 searchSql :: Bool -> Text
@@ -226,7 +235,7 @@ searchSql sponsoredOnly =
   "ranked AS (SELECT scored.*,round(((.40*text_score+.15*semantic_score+.15*CASE WHEN distance_km IS NULL THEN .35 ELSE 1/(1+distance_km/25) END+.10*profile_completeness+.08*least(1,1/(1+extract(epoch from (now()-source_updated_at))/2592000))+.05*availability_score+.07*reputation_score)/5)::numeric,6) organic_score FROM scored), " <>
   "boundary AS (SELECT organic_score,source_updated_at,entity_kind,entity_id FROM ranked WHERE entity_kind||':'||entity_id=?::text), " <>
   "page AS (SELECT ranked.* FROM ranked WHERE NOT EXISTS (SELECT 1 FROM boundary) OR EXISTS (SELECT 1 FROM boundary b WHERE ranked.organic_score<b.organic_score OR (ranked.organic_score=b.organic_score AND (ranked.source_updated_at<b.source_updated_at OR (ranked.source_updated_at=b.source_updated_at AND (ranked.entity_kind>b.entity_kind OR (ranked.entity_kind=b.entity_kind AND ranked.entity_id>b.entity_id)))))) ORDER BY organic_score DESC,source_updated_at DESC,entity_kind,entity_id LIMIT ?) " <>
-  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'profileKind',profile_kind,'canonicalPath',CASE WHEN entity_kind='profile' THEN canonical_path ELSE NULL END,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'cursor',entity_kind||':'||entity_id) FROM page"
+  "SELECT jsonb_build_object('id',entity_id,'type',entity_kind,'slug',slug,'title',title,'subtitle',subtitle,'summary',summary,'profileKind',profile_kind,'canonicalPath',CASE WHEN entity_kind='profile' THEN canonical_path ELSE NULL END,'imageUrl',image_url,'location',jsonb_build_object('cityId',city_id,'city',city_name,'countryCode',country_code,'latitude',public_latitude,'longitude',public_longitude,'precision',location_precision,'distanceKm',CASE WHEN distance_km IS NULL THEN NULL ELSE round(distance_km::numeric,1) END),'modality',jsonb_build_object('onsite',onsite,'remote',remote,'travel',available_to_travel),'taxonomy',jsonb_build_object('professionIds',profession_ids,'serviceIds',service_ids,'instrumentIds',instrument_ids,'genreIds',genre_ids),'score',organic_score,'scoreBreakdown',jsonb_build_object('text',round(text_score::numeric,4),'taxonomy',semantic_score,'proximity',CASE WHEN distance_km IS NULL THEN NULL ELSE round((1/(1+distance_km/25))::numeric,4) END,'quality',profile_completeness,'activityWeight',.08,'availability',availability_score,'reputation',reputation_score),'sponsored',sponsored,'sponsorDisclosure',sponsor_disclosure,'effectiveAt',effective_at,'expiresAt',expires_at,'sourceProfile',CASE WHEN source_profile_id IS NULL THEN NULL ELSE (SELECT jsonb_build_object('id',profile.id,'slug',profile.slug,'name',profile.public_name,'canonicalUrl','/directorio/'||profile.slug) FROM directory_public_profile profile WHERE profile.id=page.source_profile_id) END,'intent',CASE WHEN entity_kind='classified' THEN (SELECT intent_category.intent FROM classified intent_classified JOIN classified_category intent_category ON intent_category.id=intent_classified.category_id WHERE intent_classified.id::text=page.entity_id) ELSE NULL END,'cursor',entity_kind||':'||entity_id) FROM page"
 
 -- `total` and `cities` describe the current query (its entity type included),
 -- so "Resultados orgánicos · N" is the full match count, not the page size.
@@ -294,7 +303,7 @@ directoryTaxonomies mLocale =
    <> "'classifiedCategories',(SELECT coalesce(jsonb_agg(jsonb_build_object("
    <> "'id',item.id,'code',item.code,'slug',item.current_slug,"
    <> "'name',CASE WHEN requested.locale='en' THEN item.name_en ELSE item.name_es END,"
-   <> "'requirements',item.requirements,'derived',item.requirements->>'derivation' IS NOT NULL) ORDER BY item.sort_order),'[]'::jsonb) "
+   <> "'requirements',item.requirements,'derived',item.requirements->>'derivation' IS NOT NULL,'metadata',jsonb_build_object('intent',item.intent)) ORDER BY item.sort_order),'[]'::jsonb) "
    <> "FROM classified_category item WHERE item.active),"
    <> "'compensationTypes',(SELECT coalesce(jsonb_agg(jsonb_build_object("
    <> "'id',item.id,'code',item.code,'slug',item.current_slug,"
@@ -400,7 +409,7 @@ publicProfileReviews slugValue mCursor mLimit = do
 
 publicClassified slugValue =
   jsonOne err404
-    "SELECT jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'description',classified.description,'category',jsonb_build_object('id',category.id,'code',category.code,'name',category.name_es),'author',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'modality',jsonb_build_object('onsite',classified.onsite,'remote',classified.remote,'travel',classified.available_to_travel),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'metroId',location.metropolitan_area_id,'radiusKm',location.service_radius_km)) FROM classified_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.classified_id=classified.id),'[]'::jsonb),'compensation',CASE WHEN classified.compensation_type_id IS NULL THEN NULL ELSE jsonb_build_object('typeId',classified.compensation_type_id,'minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'startsAt',classified.starts_at,'endsAt',classified.ends_at,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'imageUrl',CASE WHEN classified.source_profile_id IS NOT NULL THEN directory_profile_preview_image_url(classified.source_profile_id) ELSE (SELECT document.image_url FROM directory_search_document document WHERE document.entity_kind='classified' AND document.entity_id=classified.id::text) END,'sourceProfile',CASE WHEN classified.source_profile_id IS NULL THEN NULL ELSE jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind,'canonicalUrl','/directorio/'||profile.slug) END,'canonicalUrl','/clasificados/'||classified.slug) FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_public_profile profile ON profile.id=classified.author_profile_id WHERE classified.slug=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now()"
+    ("SELECT jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug,'description',classified.description,'category',jsonb_build_object('id',category.id,'code',category.code,'name',category.name_es),'author',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'modality',jsonb_build_object('onsite',classified.onsite,'remote',classified.remote,'travel',classified.available_to_travel),'locations',coalesce((SELECT jsonb_agg(jsonb_build_object('cityId',location.city_id,'city',city.name_es,'countryCode',country.alpha2,'metroId',location.metropolitan_area_id,'radiusKm',location.service_radius_km)) FROM classified_location location JOIN country_reference country ON country.id=location.country_id LEFT JOIN city_reference city ON city.id=location.city_id WHERE location.classified_id=classified.id),'[]'::jsonb),'compensation',CASE WHEN classified.compensation_type_id IS NULL AND classified.budget_max_minor IS NULL THEN NULL ELSE jsonb_build_object('typeId',coalesce(classified.compensation_type_id,(SELECT type.id FROM compensation_type type WHERE type.code=CASE WHEN classified.price_mode='fixed' THEN 'exact' ELSE 'negotiable' END AND type.active ORDER BY type.id LIMIT 1)),'minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'startsAt',classified.starts_at,'endsAt',classified.ends_at,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'intent',category.intent,'priceMode',classified.price_mode,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'offerDeadlineAt',classified.offer_deadline_at,'terms',classified.terms,'offerStats',(SELECT jsonb_build_object('count',count(*),'minMinor',CASE WHEN count(*)>=3 AND count(DISTINCT application.currency_id)=1 THEN min(application.current_amount_minor) END,'maxMinor',CASE WHEN count(*)>=3 AND count(DISTINCT application.currency_id)=1 THEN max(application.current_amount_minor) END,'currencyId',CASE WHEN count(*)>=3 AND count(DISTINCT application.currency_id)=1 THEN min(application.currency_id::text)::uuid END) FROM classified_application application WHERE application.classified_id=classified.id AND (application.status IN ('accepted','conversation_open','converted') OR " <> activeOfferSql "application" <> ")),'imageUrl',CASE WHEN classified.source_profile_id IS NOT NULL THEN directory_profile_preview_image_url(classified.source_profile_id) ELSE (SELECT document.image_url FROM directory_search_document document WHERE document.entity_kind='classified' AND document.entity_id=classified.id::text) END,'sourceProfile',CASE WHEN classified.source_profile_id IS NULL THEN NULL ELSE jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind,'canonicalUrl','/directorio/'||profile.slug) END,'canonicalUrl','/clasificados/'||classified.slug) FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_public_profile profile ON profile.id=classified.author_profile_id WHERE classified.slug=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now()")
     [PersistText (T.toLower (T.strip slugValue))]
 
 publicEvent eventId = jsonOne err404
@@ -423,7 +432,17 @@ directoryProtectedServer user =
   :<|> changeClassifiedStatus user
   :<|> listApplications user
   :<|> createApplication user
+  :<|> listMyApplications user
+  :<|> getApplication user
+  :<|> counterOffer user
   :<|> changeApplicationStatus user
+  :<|> listMyAgreements user
+  :<|> getAgreement user
+  :<|> changeAgreementStatus user
+  :<|> createAgreementPayment user
+  :<|> listPayoutAccounts user
+  :<|> savePayoutAccount user
+  :<|> disablePayoutAccount user
   :<|> listInvitations user
   :<|> createInvitation user
   :<|> changeInvitationStatus user
@@ -849,16 +868,17 @@ profileSummary user profileId = jsonOne err404
   ("SELECT managed.value FROM (" <> managedProfileSql <> ") managed WHERE managed.value->>'id'=?")
   [toPersistValue (auPartyId user),PersistText (UUID.toText profileId)]
 
-listManagedClassifieds user = jsonRows "SELECT jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'sourceProfileId',classified.source_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'version',classified.version) FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id" [toPersistValue (auPartyId user)]
+listManagedClassifieds user = jsonRows ("SELECT " <> managedClassifiedProjectionSql <> " FROM classified JOIN classified_category category ON category.id=classified.category_id JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id WHERE manager.account_party_id=? AND manager.active ORDER BY classified.updated_at DESC,classified.id") [toPersistValue (auPartyId user)]
 
 createClassified user idempotency request@ClassifiedCreateRequest
   { authorProfileId, categoryId, title, slug, description, onsite, remote
   , availableToTravel, startsAt, endsAt, experienceLevel, compensationTypeId
   , budgetMinMinor, budgetMaxMinor, currencyId, budgetNegotiable
-  , serviceOfferingId, serviceAdId, expiresAt } = do
+  , serviceOfferingId, serviceAdId, expiresAt, slots, priceMode, offerDeadlineAt, terms } = do
   requireProfileCapability user authorProfileId "publish"
   requireAdult user
   validateClassified request
+  (slotCount, mode, termsValue) <- validateMarketplaceFields slots priceMode terms budgetMinMinor budgetMaxMinor currencyId budgetNegotiable
   classifiedId <- reserveIdempotency user "classified.create" idempotency request "classified"
   existing <- jsonRows "SELECT jsonb_build_object('id',id,'slug',slug,'status',status,'version',version) FROM classified WHERE id=?" [toPersistValue classifiedId]
   case existing of
@@ -868,11 +888,36 @@ createClassified user idempotency request@ClassifiedCreateRequest
       let expiry=fromMaybe (addUTCTime (30*24*60*60) now) expiresAt
       when (expiry<=now || expiry>addUTCTime (90*24*60*60) now) $
         throwError err400 {errBody="expiresAt must be in the future and no more than 90 days away; renew manually after publication"}
+      when (maybe False (\deadline -> deadline<=now || deadline>expiry) offerDeadlineAt) $
+        throwError err400 {errBody="offerDeadlineAt must be in the future and no later than expiresAt"}
       runDB $ do
-        rawExecute "INSERT INTO classified(id,author_profile_id,category_id,title,slug,description,status,moderation_status,onsite,remote,available_to_travel,starts_at,ends_at,experience_level,compensation_type_id,budget_min_minor,budget_max_minor,currency_id,budget_negotiable,service_offering_id,service_ad_id,expires_at,duplicate_fingerprint) VALUES (?,?,?,?,?,?,'draft','allowed',?,?,?,?,?,?,?,?,?,?,?,?,?,?,encode(digest(directory_normalize_text(?)||':'||directory_normalize_text(?),'sha256'),'hex'))"
-          [toPersistValue classifiedId,toPersistValue authorProfileId,toPersistValue categoryId,PersistText (T.strip title),PersistText (T.toLower (T.strip slug)),PersistText (T.strip description),PersistBool onsite,PersistBool remote,PersistBool availableToTravel,optionalTime startsAt,optionalTime endsAt,optionalText experienceLevel,optionalUuid compensationTypeId,optionalInt64 budgetMinMinor,optionalInt64 budgetMaxMinor,optionalUuid currencyId,PersistBool budgetNegotiable,optionalUuid serviceOfferingId,optionalInt64 serviceAdId,toPersistValue expiry,PersistText title,PersistText description]
+        rawExecute "INSERT INTO classified(id,author_profile_id,category_id,title,slug,description,status,moderation_status,onsite,remote,available_to_travel,starts_at,ends_at,experience_level,compensation_type_id,budget_min_minor,budget_max_minor,currency_id,budget_negotiable,service_offering_id,service_ad_id,expires_at,duplicate_fingerprint,slots,slots_remaining,price_mode,offer_deadline_at,terms) VALUES (?,?,?,?,?,?,'draft','allowed',?,?,?,?,?,?,?,?,?,?,?,?,?,?,encode(digest(directory_normalize_text(?)||':'||directory_normalize_text(?),'sha256'),'hex'),?,?,?,?,?::jsonb)"
+          [toPersistValue classifiedId,toPersistValue authorProfileId,toPersistValue categoryId,PersistText (T.strip title),PersistText (T.toLower (T.strip slug)),PersistText (T.strip description),PersistBool onsite,PersistBool remote,PersistBool availableToTravel,optionalTime startsAt,optionalTime endsAt,optionalText experienceLevel,optionalUuid compensationTypeId,optionalInt64 budgetMinMinor,optionalInt64 budgetMaxMinor,optionalUuid currencyId,PersistBool budgetNegotiable,optionalUuid serviceOfferingId,optionalInt64 serviceAdId,toPersistValue expiry,PersistText title,PersistText description,PersistInt64 (fromIntegral slotCount),PersistInt64 (fromIntegral slotCount),PersistText (priceModeText mode),optionalTime offerDeadlineAt,PersistText (decodeJsonText termsValue)]
         replaceClassifiedSelectionsDB classifiedId request
       classifiedSummary classifiedId
+
+-- ADR 0134: slots, price mode and structured terms. The price mode defaults
+-- from the budget exactly as the migration backfilled existing rows.
+validateMarketplaceFields :: Maybe Int -> Maybe Text -> Maybe Value -> Maybe Int64 -> Maybe Int64 -> Maybe UUID -> Bool -> AppM (Int, PriceMode, Value)
+validateMarketplaceFields slots priceMode terms budgetMinMinor budgetMaxMinor currencyId budgetNegotiable = do
+  let slotCount = fromMaybe 1 slots
+  when (slotCount < 1 || slotCount > 100) $ throwError err400 {errBody="slots must be between 1 and 100"}
+  mode <- case priceMode of
+    Nothing -> pure $ case budgetMaxMinor of
+      Nothing -> PriceOpen
+      Just maximumValue
+        | budgetNegotiable -> PriceSuggested
+        | maybe True (== maximumValue) budgetMinMinor -> PriceFixed
+        | otherwise -> PriceSuggested
+    Just raw -> maybe (throwError err400 {errBody="priceMode must be open, suggested or fixed"}) pure (parsePriceMode raw)
+  when (mode /= PriceOpen && (budgetMaxMinor == Nothing || currencyId == Nothing)) $
+    throwError err400 {errBody="suggested and fixed prices require budgetMaxMinor and currencyId"}
+  when (mode == PriceFixed && maybe False (\minimumValue -> Just minimumValue /= budgetMaxMinor) budgetMinMinor) $
+    throwError err400 {errBody="a fixed price requires a single amount"}
+  let termsValue = fromMaybe (object []) terms
+  requireJsonObject "terms" termsValue
+  when (BL.length (encode termsValue) > 20000) $ throwError err400 {errBody="terms is too large"}
+  pure (slotCount, mode, termsValue)
 
 validateClassified ClassifiedCreateRequest
   { categoryId, title, slug, description, onsite, remote, availableToTravel
@@ -959,65 +1004,858 @@ changeClassifiedStatus user classifiedId DirectoryStatusRequest{status=newStatus
   to <- maybe (throwError err400 {errBody="invalid target classified state"}) pure (parseClassifiedStatus newStatus)
   unless (allowedClassifiedTransition from to) $ throwError err409 {errBody="undeclared classified transition"}
   runDB $ do
-    rawExecute "UPDATE classified SET status=? WHERE id=?" [PersistText newStatus,toPersistValue classifiedId]
+    rawExecute "UPDATE classified SET status=?,closed_at=CASE WHEN ? IN ('filled','withdrawn') THEN now() ELSE closed_at END,published_at=CASE WHEN ?='published' AND published_at IS NULL THEN now() ELSE published_at END,updated_at=now(),version=version+1 WHERE id=?" [PersistText newStatus,PersistText newStatus,PersistText newStatus,toPersistValue classifiedId]
     rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'classified.status','classified',?,?,?,?,jsonb_build_object('authorProfileId',?::text,'reason',?::text))" [toPersistValue (auPartyId user),PersistText (UUID.toText classifiedId),PersistText oldStatus,PersistText newStatus,PersistText ("classified-status-"<>UUID.toText classifiedId),PersistText (UUID.toText authorProfile),optionalText statusReason]
+    -- ADR 0134: closing a classified rejects every open offer with a reason.
+    forM_ (closureRejectionReason to) $ \reason -> closeOpenOffersDB user classifiedId reason
     refreshClassifiedDB classifiedId
   when (newStatus == "published") $
     recordAuthenticatedEvent user "classified_published" "classified" (UUID.toText classifiedId)
   classifiedSummary classifiedId
 
+-- Rejects open offers of a classified, notifies each offerer and audits the
+-- bulk rejection. Runs inside the caller's transaction.
+closeOpenOffersDB :: AuthedUser -> UUID -> Text -> SqlPersistT IO ()
+closeOpenOffersDB user classifiedId reason = do
+  rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,'marketplace.offer.rejected','Oferta cerrada',CASE WHEN ?='slots_filled' THEN 'El anuncio cubrió sus cupos con otra oferta.' ELSE 'El anuncio se cerró antes de decidir sobre tu oferta.' END,'directory_application',application.id::text,FALSE,now() FROM classified_application application JOIN directory_profile_manager manager ON manager.profile_id=application.applicant_profile_id AND manager.active AND manager.can_contact WHERE application.classified_id=? AND application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [PersistText reason,toPersistValue classifiedId]
+  rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) SELECT ?,'application.status','application',application.id::text,application.status,'rejected','classified-close-'||application.classified_id::text,jsonb_build_object('reason',?::text) FROM classified_application application WHERE application.classified_id=? AND application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [toPersistValue (auPartyId user),PersistText reason,toPersistValue classifiedId]
+  rawExecute "UPDATE classified_application SET status='rejected',rejection_reason=?,updated_at=now(),version=version+1 WHERE classified_id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [PersistText reason,toPersistValue classifiedId]
+
 parseClassifiedStatus value = lookup value [("draft",Draft),("pending_moderation",PendingModeration),("published",Published),("paused",Paused),("filled",Filled),("expired",Expired),("withdrawn",Withdrawn),("rejected",Rejected),("moderated",Moderated)]
 
-classifiedSummary classifiedId = jsonOne err404 "SELECT jsonb_build_object('id',id,'authorProfileId',author_profile_id,'sourceProfileId',source_profile_id,'title',title,'slug',slug,'status',status,'moderationStatus',moderation_status,'expiresAt',NULLIF(expires_at,'infinity'::timestamptz),'version',version) FROM classified WHERE id=?" [toPersistValue classifiedId]
+classifiedSummary classifiedId = jsonOne err404 ("SELECT " <> managedClassifiedProjectionSql <> " FROM classified JOIN classified_category category ON category.id=classified.category_id WHERE classified.id=?") [toPersistValue classifiedId]
 
-listApplications user classifiedId = do
+-- An offer is active while its stored state is open and its expiry has not
+-- elapsed; elapsed offers read as expired before any write persists that
+-- (ADR 0134). The alias of classified_application is a parameter.
+activeOfferSql :: Text -> Text
+activeOfferSql alias =
+  alias <> ".status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND (" <> alias <> ".offer_expires_at IS NULL OR " <> alias <> ".offer_expires_at>now())"
+
+-- Negotiation rounds of an offer, oldest first.
+offerRoundsSql :: Text
+offerRoundsSql =
+  "(SELECT coalesce(jsonb_agg(jsonb_build_object('roundNumber',round.round_number,'actorRole',round.actor_role,'kind',round.kind,'amountMinor',round.amount_minor,'currencyId',round.currency_id,'terms',round.terms,'message',round.message,'expiresAt',round.expires_at,'createdAt',round.created_at) ORDER BY round.round_number),'[]'::jsonb) FROM classified_offer_round round WHERE round.application_id=application.id)"
+
+-- Shared projection for the author's own listings (ADR 0134 adds intent,
+-- slots, price mode, offer deadline and the number of offers received).
+managedClassifiedProjectionSql :: Text
+managedClassifiedProjectionSql =
+  "jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'sourceProfileId',classified.source_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'moderationStatus',classified.moderation_status,'expiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'version',classified.version,'intent',category.intent,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'priceMode',classified.price_mode,'offerDeadlineAt',classified.offer_deadline_at,'budget',CASE WHEN classified.budget_max_minor IS NULL AND classified.budget_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END,'offerCount',(SELECT count(*) FROM classified_application application WHERE application.classified_id=classified.id),'openOfferCount',(SELECT count(*) FROM classified_application application WHERE application.classified_id=classified.id AND " <> activeOfferSql "application" <> "))"
+
+listApplications user classifiedId mSort = do
   _ <- requireClassifiedAuthor user classifiedId
-  jsonRows "SELECT jsonb_build_object('id',application.id,'classifiedId',application.classified_id,'applicantProfile',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug),'message',application.message,'portfolio',application.portfolio,'availability',application.availability_text,'proposedAmountMinor',application.proposed_amount_minor,'currencyId',application.currency_id,'status',application.status,'submittedAt',application.submitted_at,'version',application.version) FROM classified_application application JOIN directory_profile profile ON profile.id=application.applicant_profile_id WHERE application.classified_id=? ORDER BY application.submitted_at DESC,application.id" [toPersistValue classifiedId]
+  orderBy <- case normalizeOptional mSort of
+    Nothing -> pure "application.submitted_at DESC,application.id"
+    Just "recent" -> pure "application.updated_at DESC,application.id"
+    Just "price_asc" -> pure "application.current_amount_minor ASC NULLS LAST,application.submitted_at DESC,application.id"
+    Just "price_desc" -> pure "application.current_amount_minor DESC NULLS LAST,application.submitted_at DESC,application.id"
+    Just "reputation" -> pure "(reputation.value->>'ratingAvg')::numeric DESC NULLS LAST,(reputation.value->>'completedCount')::integer DESC NULLS LAST,application.submitted_at DESC,application.id"
+    Just _ -> throwError err400 {errBody="sort must be recent, price_asc, price_desc or reputation"}
+  jsonRows ("SELECT " <> offerProjectionSql "'author'" <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id CROSS JOIN LATERAL (" <> profileReputationSql "application.applicant_profile_id" <> ") reputation WHERE application.classified_id=? ORDER BY " <> orderBy) [toPersistValue classifiedId]
+
+-- Offers where the caller manages the offering profile (ADR 0134).
+listMyApplications user mStatus = do
+  let statusFilter = normalizeOptional mStatus
+  when (maybe False (`notElem` ["open","accepted","closed"]) statusFilter) $
+    throwError err400 {errBody="status must be open, accepted or closed"}
+  jsonRows ("SELECT " <> offerProjectionSql "'applicant'" <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id JOIN directory_profile_manager manager ON manager.profile_id=application.applicant_profile_id AND manager.account_party_id=? AND manager.active CROSS JOIN LATERAL (" <> profileReputationSql "classified.author_profile_id" <> ") reputation WHERE (?::text IS NULL OR (?::text='open' AND " <> activeOfferSql "application" <> ") OR (?::text='accepted' AND application.status IN ('accepted','conversation_open','converted')) OR (?::text='closed' AND (application.status IN ('rejected','withdrawn','expired') OR (application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND application.offer_expires_at<=now())))) ORDER BY application.updated_at DESC,application.id")
+    [toPersistValue (auPartyId user),optionalText statusFilter,optionalText statusFilter,optionalText statusFilter,optionalText statusFilter]
+
+getApplication user applicationId = do
+  role <- applicationParticipantRole user applicationId
+  -- The role comes from applicationParticipantRole (a closed set), so it is
+  -- safe to interpolate as a SQL literal; the author sees the offerer's
+  -- reputation and the offerer sees the author's.
+  let roleLiteral = "'" <> role <> "'"
+      counterpartProfile = if role == "author" then "application.applicant_profile_id" else "classified.author_profile_id"
+  jsonOne err404 ("SELECT " <> offerProjectionSql roleLiteral <> " FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN directory_profile profile ON profile.id=application.applicant_profile_id CROSS JOIN LATERAL (" <> profileReputationSql counterpartProfile <> ") reputation WHERE application.id=?")
+    [toPersistValue applicationId]
+
+-- Typed offer projection shared by every offer endpoint, negotiation rounds
+-- included so boards and lists show counter-offer messages before a decision.
+-- The participant role is interpolated as a SQL literal or placeholder by the
+-- caller.
+offerProjectionSql :: Text -> Text
+offerProjectionSql roleSql =
+  "jsonb_build_object('id',application.id,'classifiedId',application.classified_id,'classified',jsonb_build_object('id',classified.id,'authorProfileId',classified.author_profile_id,'title',classified.title,'slug',classified.slug,'status',classified.status,'priceMode',classified.price_mode,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'offerDeadlineAt',classified.offer_deadline_at,'budget',CASE WHEN classified.budget_max_minor IS NULL AND classified.budget_min_minor IS NULL THEN NULL ELSE jsonb_build_object('minMinor',classified.budget_min_minor,'maxMinor',classified.budget_max_minor,'currencyId',classified.currency_id,'negotiable',classified.budget_negotiable) END),'applicantProfileId',application.applicant_profile_id,'applicantProfile',jsonb_build_object('id',profile.id,'name',profile.public_name,'slug',profile.slug,'kind',profile.profile_kind),'message',application.message,'portfolio',application.portfolio,'availability',application.availability_text,'currencyId',application.currency_id,'proposedAmountMinor',application.proposed_amount_minor,'currentAmountMinor',application.current_amount_minor,'acceptedAmountMinor',application.accepted_amount_minor,'currentRound',application.current_round,'lastActorRole',application.last_actor_role,'terms',application.terms,'offerExpiresAt',application.offer_expires_at,'status',CASE WHEN application.status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND application.offer_expires_at IS NOT NULL AND application.offer_expires_at<=now() THEN 'expired' ELSE application.status END,'rejectionReason',application.rejection_reason,'participantRole'," <> roleSql <> ",'reputation',reputation.value,'rounds'," <> offerRoundsSql <> ",'agreementId',(SELECT agreement.id FROM marketplace_agreement agreement WHERE agreement.application_id=application.id),'submittedAt',application.submitted_at,'updatedAt',application.updated_at,'acceptedAt',application.accepted_at,'version',application.version)"
+
+-- Verified-review reputation of a profile, from directory_review (Phase 3
+-- adds response metrics and badges on top of this).
+profileReputationSql :: Text -> Text
+profileReputationSql profileSql =
+  "SELECT jsonb_build_object('ratingAvg',round(avg(review.rating)::numeric,2),'ratingCount',count(review.id),'completedCount',(SELECT count(*) FROM directory_interaction interaction WHERE interaction.status='completed' AND (interaction.profile_a_id=" <> profileSql <> " OR interaction.profile_b_id=" <> profileSql <> "))) value FROM directory_review review WHERE review.subject_profile_id=" <> profileSql <> " AND review.status='published'"
 
 createApplication user classifiedId idempotency request@ApplicationCreateRequest
-  { applicantProfileId, message, portfolio, availability, proposedAmountMinor, currencyId } = do
+  { applicantProfileId, message, portfolio, availability, proposedAmountMinor, amountMinor, currencyId, terms, expiresAt } = do
   requireProfileCapability user applicantProfileId "contact"
   requireAdult user
   validatePrivateMessage 10 message
   requireJsonArray "portfolio" portfolio
-  when (maybe False (<0) proposedAmountMinor || (proposedAmountMinor/=Nothing && currencyId==Nothing)) $
-    throwError err400 {errBody="a non-negative proposal requires currencyId"}
+  let offeredAmount = amountMinor <|> proposedAmountMinor
+      termsValue = fromMaybe (object []) terms
+  requireJsonObject "terms" termsValue
+  when (maybe False (<0) offeredAmount || (offeredAmount/=Nothing && currencyId==Nothing)) $
+    throwError err400 {errBody="a non-negative amount requires currencyId"}
   applicationId <- reserveIdempotency user "classified.apply" idempotency request "application"
   existing <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_application WHERE id=?" [toPersistValue applicationId]
   if not (null existing) then applicationSummary user applicationId else do
     allowed <- jsonRows "SELECT to_jsonb(TRUE) FROM classified JOIN directory_profile author ON author.id=classified.author_profile_id JOIN directory_profile applicant ON applicant.id=? LEFT JOIN directory_contact_preference preference ON preference.profile_id=author.id WHERE classified.id=? AND classified.status='published' AND classified.moderation_status='allowed' AND classified.expires_at>now() AND classified.author_profile_id<>applicant.id AND applicant.completeness_score>=coalesce(preference.minimum_profile_completeness,0) AND coalesce(preference.allow_classified_applications,TRUE) AND NOT EXISTS (SELECT 1 FROM directory_profile_block block WHERE (block.blocker_profile_id=classified.author_profile_id AND block.blocked_profile_id=applicant.id) OR (block.blocker_profile_id=applicant.id AND block.blocked_profile_id=classified.author_profile_id))" [toPersistValue applicantProfileId,toPersistValue classifiedId]
     when (null allowed) $ throwError err403 {errBody="this classified does not accept this application"}
+    -- ADR 0134: marketplace admission rules.
+    listing <- jsonOne err404 "SELECT jsonb_build_object('priceMode',price_mode,'budgetMaxMinor',budget_max_minor,'currencyId',currency_id,'slotsRemaining',slots_remaining,'offerDeadlineAt',offer_deadline_at,'expiresAt',expires_at,'derived',source_profile_id IS NOT NULL) FROM classified WHERE id=?" [toPersistValue classifiedId]
+    when (valueBool "derived" listing) $ throwError err409 {errBody="artist profile listings do not take offers; contact the profile or invite it to a classified"}
+    when (maybe True (<=0) (valueInt "slotsRemaining" listing)) $ throwError err409 {errBody="this classified has no slot left"}
+    now <- liftIO getCurrentTime
+    when (maybe False (<=now) (valueTime "offerDeadlineAt" listing)) $ throwError err409 {errBody="the offer deadline has passed"}
+    mode <- maybe (throwError err500) pure (parsePriceMode (fromMaybe "open" (valueText "priceMode" listing)))
+    let referenceAmount = valueInt64 "budgetMaxMinor" listing
+        referenceCurrency = valueUuid "currencyId" listing
+    unless (offerAmountAcceptable mode referenceAmount offeredAmount && (mode /= PriceFixed || currencyId == referenceCurrency)) $
+      throwError err409 {errBody="this classified has a fixed price; the offer must accept that exact amount and currency"}
+    let deadline = valueTime "offerDeadlineAt" listing <|> valueTime "expiresAt" listing
+        defaultExpiry = addUTCTime (7*24*60*60) now
+        offerExpiry = minimumTime (fromMaybe defaultExpiry expiresAt) deadline
+    when (offerExpiry <= now) $ throwError err400 {errBody="expiresAt must be in the future"}
     consumeRate user "application" 20
     let fingerprint = requestFingerprint request
-    runDB $ rawExecute "INSERT INTO classified_application(id,classified_id,applicant_profile_id,message,portfolio,availability_text,proposed_amount_minor,currency_id,status,idempotency_key,request_fingerprint) VALUES (?,?,?,?,?::jsonb,?,?,?,'submitted',?,?)"
-      [toPersistValue applicationId,toPersistValue classifiedId,toPersistValue applicantProfileId,PersistText (T.strip message),PersistText (decodeJsonText portfolio),optionalText availability,optionalInt64 proposedAmountMinor,optionalUuid currencyId,PersistText idempotency,PersistText fingerprint]
-    notifyClassifiedAuthor classifiedId applicationId "directory.application" "Nueva postulación" "Recibiste una postulación a tu anuncio."
+    -- Admission for one (classified, profile) pair is serialised with a
+    -- transaction-scoped advisory lock, so the duplicate check and the insert
+    -- happen in the same transaction: two submissions with different
+    -- idempotency keys cannot both become active offers. An elapsed previous
+    -- offer is persisted as expired first so a replacement is admitted;
+    -- accepted and open, unexpired offers still block duplicates.
+    outcome <- runDB $ do
+      _ <- (rawSql "SELECT 1::bigint FROM pg_advisory_xact_lock(hashtextextended(?,0))" [PersistText ("marketplace-offer:"<>UUID.toText classifiedId<>":"<>UUID.toText applicantProfileId)] :: SqlPersistT IO [Single Int64])
+      -- The classified row is locked before any offer row is touched (the same
+      -- order acceptance, counters and listing transitions use, so the
+      -- fill-and-close path cannot deadlock with admission) and its admission
+      -- state is re-read here: an acceptance that filled the last slot or a
+      -- closure that landed since the checks above refuses this offer instead
+      -- of leaving an open offer on a filled listing.
+      admission <- rawSql "SELECT classified.status,classified.slots_remaining,(classified.expires_at>now() AND (classified.offer_deadline_at IS NULL OR classified.offer_deadline_at>now())) FROM classified WHERE classified.id=? FOR UPDATE OF classified"
+        [toPersistValue classifiedId] :: SqlPersistT IO [(Single Text, Single Int, Single Bool)]
+      rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE classified_id=? AND applicant_profile_id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant') AND offer_expires_at<=now()" [toPersistValue classifiedId,toPersistValue applicantProfileId]
+      duplicates <- rawSql ("SELECT application.id FROM classified_application application WHERE application.classified_id=? AND application.applicant_profile_id=? AND (application.status IN ('accepted','conversation_open','converted') OR " <> activeOfferSql "application" <> ") LIMIT 1") [toPersistValue classifiedId,toPersistValue applicantProfileId] :: SqlPersistT IO [Single UUID]
+      if not (null duplicates)
+        then pure (Left err409 {errBody="this profile already has an active offer on this classified"})
+        else if not (admissionOpen admission)
+        then pure (Left err409 {errBody="this classified no longer takes offers"})
+        else do
+          rawExecute "INSERT INTO classified_application(id,classified_id,applicant_profile_id,message,portfolio,availability_text,proposed_amount_minor,current_amount_minor,currency_id,terms,offer_expires_at,status,idempotency_key,request_fingerprint) VALUES (?,?,?,?,?::jsonb,?,?,?,?,?::jsonb,?,'submitted',?,?)"
+            [toPersistValue applicationId,toPersistValue classifiedId,toPersistValue applicantProfileId,PersistText (T.strip message),PersistText (decodeJsonText portfolio),optionalText availability,optionalInt64 offeredAmount,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),toPersistValue offerExpiry,PersistText idempotency,PersistText fingerprint]
+          rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,message,expires_at,created_by_party_id) VALUES (?,1,'applicant','initial',?,?,?::jsonb,?,?,?)"
+            [toPersistValue applicationId,optionalInt64 offeredAmount,optionalUuid currencyId,PersistText (decodeJsonText termsValue),PersistText (T.strip message),toPersistValue offerExpiry,toPersistValue (auPartyId user)]
+          pure (Right ())
+    either throwError pure outcome
+    notifyClassifiedAuthor classifiedId applicationId "marketplace.offer.new" "Nueva oferta" "Recibiste una oferta en tu anuncio."
     recordAuthenticatedEvent user "application_submitted" "application" (UUID.toText applicationId)
     applicationSummary user applicationId
 
-changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStatus} = do
+-- A counter-offer from either participant (ADR 0134). Alternation and the
+-- round limit come from TDF.Directory.Policy; the round and the offer's
+-- current state change in one transaction.
+counterOffer user applicationId idempotency request@OfferCounterRequest{amountMinor, currencyId, terms, message, expiresAt} = do
+  role <- applicationParticipantRole user applicationId
+  actor <- case role of
+    "author" -> pure ActorAuthor
+    "applicant" -> pure ActorApplicant
+    _ -> throwError err403 {errBody="only the classified author or the offerer may counter"}
+  requireAdult user
+  when (amountMinor < 0) $ throwError err400 {errBody="amountMinor must be non-negative"}
+  forM_ message (validatePrivateMessage 1)
+  let termsValue = fromMaybe (object []) terms
+  requireJsonObject "terms" termsValue
+  requireMarketplaceOffers
+  roundId <- reserveIdempotency user "offer.counter" idempotency request "offer_round"
+  replayed <- jsonRows "SELECT to_jsonb(TRUE) FROM classified_offer_round WHERE id=?" [toPersistValue roundId]
+  if not (null replayed) then getApplication user applicationId else do
+    current <- jsonOne err404 "SELECT jsonb_build_object('status',application.status,'round',application.current_round,'lastActor',application.last_actor_role,'offerExpiresAt',application.offer_expires_at,'priceMode',classified.price_mode,'classifiedStatus',classified.status,'classifiedExpiresAt',NULLIF(classified.expires_at,'infinity'::timestamptz),'offerDeadlineAt',classified.offer_deadline_at,'classifiedId',classified.id,'applicantProfileId',application.applicant_profile_id,'authorProfileId',classified.author_profile_id) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=?" [toPersistValue applicationId]
+    status <- maybe (throwError err409 {errBody="unknown current application state"}) pure (valueText "status" current >>= parseApplicationStatus)
+    now <- liftIO getCurrentTime
+    when (maybe False (<=now) (valueTime "offerExpiresAt" current) && applicationIsOpen status) $ do
+      runDB $ rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [toPersistValue applicationId]
+      throwError err409 {errBody="the offer expired before this counter"}
+    unless (valueText "classifiedStatus" current == Just "published") $ throwError err409 {errBody="the classified is no longer open"}
+    when (maybe False (<=now) (valueTime "classifiedExpiresAt" current) || maybe False (<=now) (valueTime "offerDeadlineAt" current)) $
+      throwError err409 {errBody="the classified no longer takes offers"}
+    when (valueText "priceMode" current == Just "fixed") $ throwError err409 {errBody="fixed-price classifieds do not admit counter-offers"}
+    unless (counterAllowedFor status actor) $ throwError err409 {errBody="it is not this participant's turn to counter"}
+    let nextRound = fromMaybe 1 (valueInt "round" current) + 1
+    -- The final round is reserved for the acceptance (I18).
+    unless (counterRoundAllowed nextRound) $ throwError err409 {errBody="negotiation round limit reached; accept, reject or withdraw the current offer"}
+    lastActor <- case valueText "lastActor" current of
+      Just "author" -> pure ActorAuthor
+      Just "applicant" -> pure ActorApplicant
+      _ -> throwError err500
+    unless (nextRoundActor lastActor == actor) $ throwError err409 {errBody="negotiation must alternate between participants"}
+    let defaultExpiry = addUTCTime (7*24*60*60) now
+        -- A counter never outlives the classified offer deadline or expiry.
+        listingDeadline = case (valueTime "offerDeadlineAt" current, valueTime "classifiedExpiresAt" current) of
+          (Just deadline, Just expiry) -> Just (min deadline expiry)
+          (deadline, expiry) -> deadline <|> expiry
+        roundExpiry = minimumTime (fromMaybe defaultExpiry expiresAt) listingDeadline
+        newStatus = if actor == ActorAuthor then "countered_by_author" else "countered_by_applicant"
+        actorText = if actor == ActorAuthor then "author" else "applicant"
+    when (roundExpiry <= now) $ throwError err400 {errBody="expiresAt must be in the future"}
+    consumeRate user "application" 20
+    -- The offer is re-read under a row lock inside the transaction: a withdrawal,
+    -- acceptance or competing counter that landed since the read above makes
+    -- this counter fail before any write instead of resurrecting the offer.
+    outcome <- runDB $ do
+      -- Same lock order as admission and acceptance: classified, then offer.
+      listing <- rawSql "SELECT classified.status FROM classified WHERE classified.id=? FOR UPDATE"
+        [optionalUuid (valueUuid "classifiedId" current)] :: SqlPersistT IO [Single Text]
+      locked <- rawSql "SELECT application.status,application.current_round,application.last_actor_role FROM classified_application application WHERE application.id=? FOR UPDATE"
+        [toPersistValue applicationId] :: SqlPersistT IO [(Single Text, Single Int, Single Text)]
+      case (listing, locked) of
+        ([Single lockedClassifiedStatus], [(Single lockedStatus, Single lockedRound, Single lockedActor)])
+          | lockedStatus /= applicationStatusText status || lockedRound + 1 /= nextRound || lockedActor /= (if lastActor == ActorAuthor then "author" else "applicant") ->
+              pure (Left err409 {errBody="the offer changed before this counter; reload and retry"})
+          | lockedClassifiedStatus /= "published" -> pure (Left err409 {errBody="the classified is no longer open"})
+          | otherwise -> do
+              rawExecute "INSERT INTO classified_offer_round(id,application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,message,expires_at,created_by_party_id) VALUES (?,?,?,?,'counter',?,?,?::jsonb,?,?,?)"
+                [toPersistValue roundId,toPersistValue applicationId,PersistInt64 (fromIntegral nextRound),PersistText actorText,PersistInt64 amountMinor,toPersistValue currencyId,PersistText (decodeJsonText termsValue),optionalText (T.strip <$> message),toPersistValue roundExpiry,toPersistValue (auPartyId user)]
+              rawExecute "UPDATE classified_application SET status=?,current_amount_minor=?,currency_id=?,current_round=?,last_actor_role=?,terms=CASE WHEN ?::jsonb='{}'::jsonb THEN terms ELSE ?::jsonb END,offer_expires_at=?,updated_at=now(),version=version+1 WHERE id=? AND status=?"
+                [PersistText newStatus,PersistInt64 amountMinor,toPersistValue currencyId,PersistInt64 (fromIntegral nextRound),PersistText actorText,PersistText (decodeJsonText termsValue),PersistText (decodeJsonText termsValue),toPersistValue roundExpiry,toPersistValue applicationId,PersistText (applicationStatusText status)]
+              rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'application.counter','application',?,?,?,?,jsonb_build_object('round',?::int,'amountMinor',?::bigint))"
+                [toPersistValue (auPartyId user),PersistText (UUID.toText applicationId),PersistText (applicationStatusText status),PersistText newStatus,PersistText ("application-counter-"<>UUID.toText applicationId),PersistInt64 (fromIntegral nextRound),PersistInt64 amountMinor]
+              pure (Right ())
+        _ -> pure (Left err404)
+    either throwError pure outcome
+    let counterpart = if actor == ActorAuthor then valueUuid "applicantProfileId" current else valueUuid "authorProfileId" current
+    forM_ counterpart $ \profileIdValue -> notifyOfferParticipant profileIdValue applicationId "marketplace.offer.countered" "Contraoferta recibida" "La otra parte propuso un nuevo monto para la oferta."
+    recordAuthenticatedEvent user "offer_countered" "application" (UUID.toText applicationId)
+    getApplication user applicationId
+
+-- A classified admits a new offer while it is published, has a slot left and
+-- neither its expiry nor its offer deadline has elapsed (ADR 0134).
+admissionOpen :: [(Single Text, Single Int, Single Bool)] -> Bool
+admissionOpen [(Single status, Single remaining, Single live)] = status == "published" && remaining > 0 && live
+admissionOpen _ = False
+
+mergeObjects :: Value -> Value -> Value
+mergeObjects (Object left) (Object right) = Object (KeyMap.union right left)
+mergeObjects left _ = left
+
+minimumTime :: UTCTime -> Maybe UTCTime -> UTCTime
+minimumTime value Nothing = value
+minimumTime value (Just other) = min value other
+
+valueText :: Text -> Value -> Maybe Text
+valueText key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just (String value) -> Just value
+  _ -> Nothing
+valueText _ _ = Nothing
+
+valueBool :: Text -> Value -> Bool
+valueBool key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just (Bool value) -> value
+  _ -> False
+valueBool _ _ = False
+
+valueInt :: Text -> Value -> Maybe Int
+valueInt key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just (Number value) -> toBoundedInteger value
+  _ -> Nothing
+valueInt _ _ = Nothing
+
+valueInt64 :: Text -> Value -> Maybe Int64
+valueInt64 key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just (Number value) -> toBoundedInteger value
+  _ -> Nothing
+valueInt64 _ _ = Nothing
+
+valueTime :: Text -> Value -> Maybe UTCTime
+valueTime key (Object values) = case KeyMap.lookup (Key.fromText key) values of
+  Just value@(String _) -> case (Aeson.fromJSON value :: Aeson.Result UTCTime) of
+    Aeson.Success time -> Just time
+    _ -> Nothing
+  _ -> Nothing
+valueTime _ _ = Nothing
+
+applicationStatusText :: ApplicationStatus -> Text
+applicationStatusText status = case status of
+  ApplicationSubmitted -> "submitted"
+  ApplicationViewed -> "viewed"
+  ApplicationShortlisted -> "shortlisted"
+  ApplicationCounteredByAuthor -> "countered_by_author"
+  ApplicationCounteredByApplicant -> "countered_by_applicant"
+  ApplicationAccepted -> "accepted"
+  ApplicationRejected -> "rejected"
+  ApplicationWithdrawn -> "withdrawn"
+  ApplicationExpired -> "expired"
+  ApplicationConversationOpen -> "conversation_open"
+  ApplicationConverted -> "converted"
+
+changeApplicationStatus user applicationId DirectoryStatusRequest{status=newStatus,reason=statusReason,expectedVersion} = do
   visible <- applicationParticipantRole user applicationId
-  current <- jsonOne err404 "SELECT to_jsonb(status) FROM classified_application WHERE id=?" [toPersistValue applicationId]
-  oldStatus <- case current of String value -> pure value; _ -> throwError err500
+  current <- jsonOne err404 "SELECT jsonb_build_object('status',application.status,'offerExpiresAt',application.offer_expires_at,'classifiedId',classified.id,'classifiedStatus',classified.status,'slots',classified.slots,'slotsRemaining',classified.slots_remaining,'expiresAt',classified.expires_at,'applicantProfileId',application.applicant_profile_id,'authorProfileId',classified.author_profile_id,'currentAmountMinor',application.current_amount_minor) FROM classified_application application JOIN classified ON classified.id=application.classified_id WHERE application.id=?" [toPersistValue applicationId]
+  oldStatus <- maybe (throwError err500) pure (valueText "status" current)
   from <- maybe (throwError err409 {errBody="unknown current application state"}) pure (parseApplicationStatus oldStatus)
   to <- maybe (throwError err400 {errBody="invalid target application state"}) pure (parseApplicationStatus newStatus)
-  let applicantAllowed=Set.fromList ["withdrawn","conversation_open"]
-      authorAllowed=Set.fromList ["viewed","shortlisted","accepted","rejected","conversation_open","converted"]
-  unless ((visible=="applicant" && newStatus `Set.member` applicantAllowed) || (visible=="author" && newStatus `Set.member` authorAllowed) || visible=="admin") $ throwError err403 {errBody="application transition is not allowed for this participant"}
+  when (to `elem` [ApplicationCounteredByAuthor, ApplicationCounteredByApplicant]) $
+    throwError err400 {errBody="counter-offers are recorded through the counter endpoint"}
+  now <- liftIO getCurrentTime
+  when (applicationIsOpen from && maybe False (<=now) (valueTime "offerExpiresAt" current) && to /= ApplicationExpired && visible /= "admin") $ do
+    runDB $ rawExecute "UPDATE classified_application SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status IN ('submitted','viewed','shortlisted','countered_by_author','countered_by_applicant')" [toPersistValue applicationId]
+    throwError err409 {errBody="the offer expired before this transition"}
+  unless (participantTransitionAllowed visible from to) $ throwError err403 {errBody="application transition is not allowed for this participant"}
   unless (allowedApplicationTransition from to) $ throwError err409 {errBody="undeclared application transition"}
-  runDB $ rawExecute "UPDATE classified_application SET status=?,withdrawn_at=CASE WHEN ?='withdrawn' THEN now() ELSE withdrawn_at END,updated_at=now(),version=version+1 WHERE id=?" [PersistText newStatus,PersistText newStatus,toPersistValue applicationId]
+  classifiedId <- maybe (throwError err500) pure (valueUuid "classifiedId" current)
+  let slotsRemaining = fromMaybe 0 (valueInt "slotsRemaining" current)
+      slotsTotal = fromMaybe 1 (valueInt "slots" current)
+      actorText = if visible == "applicant" then "applicant" else "author"
+      consumesSlot = to == ApplicationAccepted && from /= ApplicationAccepted
+      releasesSlot = to == ApplicationWithdrawn && from `elem` [ApplicationAccepted, ApplicationConversationOpen]
+  when consumesSlot $ do
+    unless (valueText "classifiedStatus" current == Just "published") $ throwError err409 {errBody="the classified is no longer open"}
+    when (maybe False (<=now) (valueTime "expiresAt" current)) $ throwError err409 {errBody="the classified has expired"}
+    when (slotsAfterAccept slotsRemaining == Nothing) $ throwError err409 {errBody="this classified has no slot left"}
+  -- ADR 0135: with the gate on, accepting an offer that carries an amount also
+  -- creates its agreement in the same transaction.
+  agreementsEnabled <- if consumesSlot then marketplaceFeatureEnabled "marketplace.agreements" else pure False
+  -- ADR 0136: with the payments gate on as well, the agreement waits for its
+  -- deposit on the platform when the provider can be paid there.
+  agreementPaymentsEnabled <- if agreementsEnabled then marketplaceFeatureEnabled "marketplace.agreement_payments" else pure False
+  -- The offer and its classified are re-read under row locks inside the
+  -- transaction: a concurrent transition or acceptance that won the lock makes
+  -- this one fail before any write, so one acceptance consumes one slot
+  -- (ADR 0134 I19).
+  outcome <- runDB $ do
+    -- Lock order everywhere: classified first, then individual offers.
+    -- Admission (createApplication), listing transitions
+    -- (changeClassifiedStatus + closeOpenOffersDB) and this handler all take
+    -- the classified row before any offer row, so two acceptances on the same
+    -- listing serialize instead of deadlocking when the first one closes the
+    -- remaining offers.
+    listing <- rawSql "SELECT classified.status,classified.slots_remaining,(classified.expires_at>now()) FROM classified WHERE classified.id=? FOR UPDATE"
+      [toPersistValue classifiedId] :: SqlPersistT IO [(Single Text, Single Int, Single Bool)]
+    -- The offer's own expiry is re-read here too, against the database clock:
+    -- an acceptance that waited on the classified lock past the offer's
+    -- expiry must not consume a slot.
+    offer <- rawSql "SELECT application.status,application.version,(application.offer_expires_at IS NULL OR application.offer_expires_at>now()) FROM classified_application application WHERE application.id=? FOR UPDATE"
+      [toPersistValue applicationId] :: SqlPersistT IO [(Single Text, Single Int64, Single Bool)]
+    -- ADR 0135: withdrawing an accepted offer cancels its live agreement
+    -- (lock order: classified, offer, agreement). An agreement that is
+    -- already completed, disputed or awaiting its balance is settled through
+    -- the agreement itself, never by withdrawing the offer.
+    agreementStates <- (if releasesSlot
+      then rawSql "SELECT agreement.status FROM marketplace_agreement agreement WHERE agreement.application_id=? FOR UPDATE" [toPersistValue applicationId]
+      else pure []) :: SqlPersistT IO [Single Text]
+    -- ADR 0136 I26, under the agreement lock: withdrawing the offer is a
+    -- cancellation of its agreement, so the same rules apply. Collected money
+    -- is settled through a dispute, and nothing is cancelled while a payment
+    -- attempt may still collect money.
+    agreementFunded <- (if releasesSlot
+      then rawSql ("SELECT payment.id FROM marketplace_agreement_payment payment JOIN marketplace_agreement agreement ON agreement.id=payment.agreement_id WHERE agreement.application_id=? AND (payment.status='paid' OR (payment.status='pending' AND EXISTS (SELECT 1 FROM commerce_payment_attempt attempt WHERE attempt.checkout_id=payment.checkout_id AND attempt.status IN " <> liveAttemptStatusesSql <> "))) LIMIT 1") [toPersistValue applicationId]
+      else pure []) :: SqlPersistT IO [Single UUID]
+    case (listing, offer) of
+      ([(Single lockedClassifiedStatus, Single lockedRemaining, Single lockedLive)], [(Single lockedStatus, Single lockedVersion, Single offerLive)])
+        | lockedStatus /= oldStatus -> pure (Left err409 {errBody="the offer changed before this transition; reload and retry"})
+        | any (\(Single agreementState) -> agreementState `elem` ["completed","disputed","balance_due"]) agreementStates ->
+            pure (Left err409 {errBody="this offer has an agreement that can no longer be withdrawn; use the agreement"})
+        | not (null agreementFunded) ->
+            pure (Left err409 {errBody="a payment was made or is in progress for this offer's agreement; open a dispute on the agreement instead of withdrawing"})
+        -- The caller decided on a specific round (version): a newer counter
+        -- that landed since, even in another tab, is never accepted unseen.
+        | maybe False (/= lockedVersion) expectedVersion -> pure (Left err409 {errBody="the offer changed since it was displayed; review the latest round and retry"})
+        | consumesSlot && not offerLive -> pure (Left err409 {errBody="the offer has expired"})
+        | consumesSlot && (lockedClassifiedStatus /= "published" || not lockedLive) -> pure (Left err409 {errBody="the classified is no longer open"})
+        | consumesSlot && slotsAfterAccept lockedRemaining == Nothing -> pure (Left err409 {errBody="this classified has no slot left"})
+        | otherwise -> do
+            rawExecute "UPDATE classified_application SET status=?,withdrawn_at=CASE WHEN ?='withdrawn' THEN now() ELSE withdrawn_at END,accepted_at=CASE WHEN ?='accepted' THEN now() ELSE accepted_at END,accepted_amount_minor=CASE WHEN ?='accepted' THEN current_amount_minor ELSE accepted_amount_minor END,rejection_reason=CASE WHEN ?='rejected' THEN 'author_decision' ELSE rejection_reason END,updated_at=now(),version=version+1 WHERE id=? AND status=?"
+              [PersistText newStatus,PersistText newStatus,PersistText newStatus,PersistText newStatus,PersistText newStatus,toPersistValue applicationId,PersistText oldStatus]
+            rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'application.status','application',?,?,?,?,jsonb_build_object('reason',?::text,'participant',?::text))"
+              [toPersistValue (auPartyId user),PersistText (UUID.toText applicationId),PersistText oldStatus,PersistText newStatus,PersistText ("application-status-"<>UUID.toText applicationId),optionalText statusReason,PersistText visible]
+            when consumesSlot $ do
+              -- ADR 0134 I18/I19: the accept round always closes the chain
+              -- (counters stop at round 9) and exactly one slot is consumed.
+              rawExecute "INSERT INTO classified_offer_round(application_id,round_number,actor_role,kind,amount_minor,currency_id,terms,created_by_party_id) SELECT id,least(current_round+1,10),?,'accept',current_amount_minor,currency_id,terms,? FROM classified_application WHERE id=? ON CONFLICT DO NOTHING"
+                [PersistText actorText,toPersistValue (auPartyId user),toPersistValue applicationId]
+              rawExecute "UPDATE classified_application SET current_round=least(current_round+1,10),last_actor_role=? WHERE id=?" [PersistText actorText,toPersistValue applicationId]
+              rawExecute "UPDATE classified SET slots_remaining=slots_remaining-1,updated_at=now(),version=version+1 WHERE id=? AND slots_remaining>0" [toPersistValue classifiedId]
+              let remaining = fromMaybe 0 (slotsAfterAccept lockedRemaining)
+              when (remaining == 0) $ do
+                rawExecute "UPDATE classified SET status='filled',closed_at=now() WHERE id=? AND status='published'" [toPersistValue classifiedId]
+                rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'classified.status','classified',?,'published','filled',?,jsonb_build_object('reason','slots_filled'))" [toPersistValue (auPartyId user),PersistText (UUID.toText classifiedId),PersistText ("classified-status-"<>UUID.toText classifiedId)]
+                closeOpenOffersDB user classifiedId "slots_filled"
+                rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,'marketplace.classified.filled','Anuncio cubierto','Tu anuncio cubrió todos sus cupos.','directory_classified',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText (UUID.toText classifiedId),optionalUuid (valueUuid "authorProfileId" current)]
+              refreshClassifiedDB classifiedId
+              when agreementsEnabled $ createAgreementDB user agreementPaymentsEnabled applicationId
+            when releasesSlot $ do
+              -- I19: the released slot reopens a filled, unexpired classified
+              -- (filled -> published is declared in the database relation). A
+              -- listing still stored as published but already elapsed moves to
+              -- expired in the same write: the transition guard refuses any
+              -- row that stays published past its expiry, and an elapsed
+              -- filled listing keeps its status.
+              rawExecute "UPDATE classified SET slots_remaining=?,status=CASE WHEN status='filled' AND expires_at>now() THEN 'published' WHEN status='published' AND expires_at<=now() THEN 'expired' ELSE status END,closed_at=CASE WHEN status='filled' AND expires_at>now() THEN NULL WHEN status='published' AND expires_at<=now() THEN coalesce(closed_at,now()) ELSE closed_at END,updated_at=now(),version=version+1 WHERE id=?"
+                [PersistInt64 (fromIntegral (slotsAfterRelease slotsTotal lockedRemaining)),toPersistValue classifiedId]
+              refreshClassifiedDB classifiedId
+              rawExecute "UPDATE marketplace_agreement SET status='cancelled',cancelled_at=now(),cancelled_by_profile_id=(SELECT applicant_profile_id FROM classified_application WHERE id=?),cancellation_reason='offer_withdrawn',updated_at=now(),version=version+1 WHERE application_id=? AND status IN ('pending_deposit','confirmed','in_progress')"
+                [toPersistValue applicationId,toPersistValue applicationId]
+              -- A charge that was never paid dies with the agreement.
+              rawExecute "UPDATE marketplace_agreement_payment SET status='cancelled',updated_at=now(),version=version+1 WHERE status='pending' AND agreement_id IN (SELECT agreement.id FROM marketplace_agreement agreement WHERE agreement.application_id=?)"
+                [toPersistValue applicationId]
+            pure (Right ())
+      _ -> pure (Left err404)
+  either throwError pure outcome
+  let counterpart = if visible == "applicant" then valueUuid "authorProfileId" current else valueUuid "applicantProfileId" current
+      notify kind title body = forM_ counterpart $ \profileIdValue -> notifyOfferParticipant profileIdValue applicationId kind title body
+  case to of
+    ApplicationAccepted | consumesSlot -> notify "marketplace.offer.accepted" "Oferta aceptada" "La oferta fue aceptada. Ya pueden coordinar los detalles."
+    ApplicationRejected | from /= ApplicationRejected -> notify "marketplace.offer.rejected" "Oferta rechazada" "El autor del anuncio declinó la oferta."
+    ApplicationWithdrawn | from /= ApplicationWithdrawn -> notify "marketplace.offer.withdrawn" "Oferta retirada" "La otra parte retiró su oferta."
+    _ -> pure ()
+  when (newStatus == "accepted" && consumesSlot) $
+    recordAuthenticatedEvent user "offer_accepted" "application" (UUID.toText applicationId)
   when (newStatus == "conversation_open") $
     recordAuthenticatedEvent user "contact_accepted" "application" (UUID.toText applicationId)
   when (newStatus == "converted") $
     recordAuthenticatedEvent user "match_converted" "application" (UUID.toText applicationId)
   applicationSummary user applicationId
 
+parseApplicationStatus :: Text -> Maybe ApplicationStatus
 parseApplicationStatus value = lookup value
-  [("submitted",ApplicationSubmitted),("viewed",ApplicationViewed),("shortlisted",ApplicationShortlisted),("accepted",ApplicationAccepted),("rejected",ApplicationRejected),("withdrawn",ApplicationWithdrawn),("conversation_open",ApplicationConversationOpen),("converted",ApplicationConverted)]
+  [("submitted",ApplicationSubmitted),("viewed",ApplicationViewed),("shortlisted",ApplicationShortlisted),("countered_by_author",ApplicationCounteredByAuthor),("countered_by_applicant",ApplicationCounteredByApplicant),("accepted",ApplicationAccepted),("rejected",ApplicationRejected),("withdrawn",ApplicationWithdrawn),("expired",ApplicationExpired),("conversation_open",ApplicationConversationOpen),("converted",ApplicationConverted)]
 
-applicationSummary user applicationId = do
-  _ <- applicationParticipantRole user applicationId
-  jsonOne err404 "SELECT jsonb_build_object('id',id,'classifiedId',classified_id,'applicantProfileId',applicant_profile_id,'message',message,'portfolio',portfolio,'availability',availability_text,'proposedAmountMinor',proposed_amount_minor,'currencyId',currency_id,'status',status,'submittedAt',submitted_at,'version',version) FROM classified_application WHERE id=?" [toPersistValue applicationId]
+applicationSummary user applicationId = getApplication user applicationId
+
+-- ---------------------------------------------------------------------------
+-- ADR 0135: marketplace agreements (Phase 2, part A — no payment collection).
+-- ---------------------------------------------------------------------------
+
+parseAgreementStatus :: Text -> Maybe AgreementStatus
+parseAgreementStatus value = lookup value
+  [("pending_deposit",AgreementPendingDeposit),("confirmed",AgreementConfirmed),("in_progress",AgreementInProgress),("balance_due",AgreementBalanceDue),("completed",AgreementCompleted),("cancelled",AgreementCancelled),("disputed",AgreementDisputed),("expired",AgreementExpired)]
+
+parseAgreementPaymentStatus :: Text -> Maybe AgreementPaymentStatus
+parseAgreementPaymentStatus value = lookup value
+  [("pending",AgreementPaymentPending),("paid",AgreementPaymentPaid),("expired",AgreementPaymentExpired),("cancelled",AgreementPaymentCancelled)]
+
+-- Pricing rule that applies to a classified: its category's active rule, or
+-- the default one. Expects the alias "classified" in scope.
+agreementPricingSql :: Text
+agreementPricingSql =
+  "JOIN LATERAL (SELECT rule.commission_bps,rule.deposit_bps,rule.deposit_due_hours,rule.cancellation_policy FROM marketplace_agreement_pricing rule WHERE rule.active AND (rule.category_id=classified.category_id OR rule.category_id IS NULL) ORDER BY (rule.category_id IS NULL),rule.created_at DESC LIMIT 1) pricing ON TRUE"
+
+-- Creates the agreement of an offer that was just accepted, inside the
+-- acceptance transaction. Parties follow the listing intent (the seeker pays);
+-- amount, commission and deposit are frozen from the accepted amount and the
+-- pricing rule in force (TDF.Directory.Policy.agreementAmounts). Offers
+-- without a positive amount and currency do not create an agreement. Payment
+-- is not collected here. The agreement starts confirmed and off-platform,
+-- unless (ADR 0136) the payments gate is on, a deposit is due and the provider
+-- has a ready payout account usable in the agreed currency (PayPhone settles
+-- USD only): then it starts pending_deposit on the platform with a deadline.
+createAgreementDB :: AuthedUser -> Bool -> UUID -> SqlPersistT IO ()
+createAgreementDB user paymentsEnabled applicationId = do
+  pricing <- rawSql ("SELECT application.current_amount_minor,pricing.commission_bps,pricing.deposit_bps FROM classified_application application JOIN classified ON classified.id=application.classified_id " <> agreementPricingSql <> " WHERE application.id=? AND application.current_amount_minor>0 AND application.currency_id IS NOT NULL")
+    [toPersistValue applicationId] :: SqlPersistT IO [(Single Int64, Single Int, Single Int)]
+  case pricing of
+    [(Single amount, Single commissionBps, Single depositBps)] ->
+      forM_ (agreementAmounts commissionBps depositBps amount) $ \(commission, deposit, balance) -> do
+        rawExecute ("INSERT INTO marketplace_agreement(application_id,classified_id,buyer_profile_id,provider_profile_id,amount_minor,currency_id,commission_bps,commission_minor,deposit_bps,deposit_minor,balance_minor,terms,cancellation_policy,settlement_mode,status,deposit_due_at,starts_at,ends_at) SELECT application.id,classified.id,CASE WHEN category.intent='offering' THEN application.applicant_profile_id ELSE classified.author_profile_id END,CASE WHEN category.intent='offering' THEN classified.author_profile_id ELSE application.applicant_profile_id END,?,application.currency_id,?,?,?,?,?,coalesce(classified.terms,'{}'::jsonb)||coalesce(application.terms,'{}'::jsonb),pricing.cancellation_policy,CASE WHEN settlement.on_platform THEN 'platform' ELSE 'off_platform' END,CASE WHEN settlement.on_platform THEN 'pending_deposit' ELSE 'confirmed' END,CASE WHEN settlement.on_platform THEN now()+make_interval(hours=>pricing.deposit_due_hours) END,classified.starts_at,classified.ends_at FROM classified_application application JOIN classified ON classified.id=application.classified_id JOIN classified_category category ON category.id=classified.category_id " <> agreementPricingSql <> " JOIN currency_reference currency ON currency.id=application.currency_id CROSS JOIN LATERAL (SELECT (?::boolean AND ?::bigint>0 AND EXISTS (SELECT 1 FROM marketplace_payout_account account WHERE account.status='ready' AND account.profile_id=CASE WHEN category.intent='offering' THEN classified.author_profile_id ELSE application.applicant_profile_id END AND (account.provider<>'payphone' OR currency.code='USD'))) AS on_platform) settlement WHERE application.id=? ON CONFLICT (application_id) DO NOTHING")
+          [PersistInt64 amount,PersistInt64 (fromIntegral commissionBps),PersistInt64 commission,PersistInt64 (fromIntegral depositBps),PersistInt64 deposit,PersistInt64 balance,PersistBool paymentsEnabled,PersistInt64 deposit,toPersistValue applicationId]
+        rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) SELECT ?,'agreement.create','agreement',agreement.id::text,NULL,agreement.status,'agreement-create-'||agreement.id::text,jsonb_build_object('applicationId',agreement.application_id,'amountMinor',agreement.amount_minor,'commissionMinor',agreement.commission_minor,'depositMinor',agreement.deposit_minor) FROM marketplace_agreement agreement WHERE agreement.application_id=?"
+          [toPersistValue (auPartyId user),toPersistValue applicationId]
+        rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,'marketplace.agreement.created','Acuerdo creado','La oferta aceptada generó un acuerdo con el monto y las condiciones pactadas.','directory_application',?::text,FALSE,now() FROM marketplace_agreement agreement JOIN directory_profile_manager manager ON manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.active AND manager.can_contact WHERE agreement.application_id=?"
+          [PersistText (UUID.toText applicationId),toPersistValue applicationId]
+    _ -> pure ()
+
+-- Typed agreement projection. Both parties see the same frozen figures: the
+-- total, the deposit/balance split, the TDF commission and the provider's
+-- net. The participant role is interpolated as a SQL literal or expression by
+-- the caller. Expects the aliases agreement, classified, buyer and provider.
+agreementProjectionSql :: Text -> Text
+agreementProjectionSql roleSql =
+  "jsonb_build_object('id',agreement.id,'applicationId',agreement.application_id,'classified',jsonb_build_object('id',classified.id,'title',classified.title,'slug',classified.slug),'buyerProfile',jsonb_build_object('id',buyer.id,'name',buyer.public_name,'slug',buyer.slug),'providerProfile',jsonb_build_object('id',provider.id,'name',provider.public_name,'slug',provider.slug),'amountMinor',agreement.amount_minor,'currencyId',agreement.currency_id,'commissionBps',agreement.commission_bps,'commissionMinor',agreement.commission_minor,'providerNetMinor',agreement.amount_minor-agreement.commission_minor,'depositBps',agreement.deposit_bps,'depositMinor',agreement.deposit_minor,'balanceMinor',agreement.balance_minor,'terms',agreement.terms,'cancellationPolicy',agreement.cancellation_policy,'settlementMode',agreement.settlement_mode,'status',agreement.status,'participantRole'," <> roleSql <> ",'startsAt',agreement.starts_at,'endsAt',agreement.ends_at,'startedAt',agreement.started_at,'completedAt',agreement.completed_at,'cancelledAt',agreement.cancelled_at,'cancellationReason',agreement.cancellation_reason,'interactionId',agreement.interaction_id,'createdAt',agreement.created_at,'updatedAt',agreement.updated_at,'version',agreement.version)||jsonb_build_object('depositDueAt',agreement.deposit_due_at,'payments',(SELECT coalesce(jsonb_agg(" <> agreementPaymentProjectionSql <> " ORDER BY payment.created_at,payment.id),'[]'::jsonb) FROM marketplace_agreement_payment payment WHERE payment.agreement_id=agreement.id AND payment.status<>'cancelled'),'payoutProviders',(SELECT coalesce(jsonb_agg(account.provider ORDER BY account.provider),'[]'::jsonb) FROM marketplace_payout_account account WHERE account.profile_id=agreement.provider_profile_id AND account.status='ready'))"
+
+-- One charge of an agreement with its frozen split. The payout recipient is
+-- never projected. Expects the alias payment.
+agreementPaymentProjectionSql :: Text
+agreementPaymentProjectionSql =
+  "jsonb_build_object('id',payment.id,'kind',payment.kind,'provider',payment.provider,'status',payment.status,'amountMinor',payment.amount_minor,'currency',payment.currency,'platformFeeMinor',payment.platform_fee_minor,'processingFeeMinor',payment.processing_fee_minor,'processingFeePayer',payment.processing_fee_payer,'providerAmountMinor',payment.provider_amount_minor,'dueAt',payment.due_at,'paidAt',payment.paid_at,'createdAt',payment.created_at)"
+
+agreementFromSql :: Text
+agreementFromSql =
+  " FROM marketplace_agreement agreement JOIN classified ON classified.id=agreement.classified_id JOIN directory_profile buyer ON buyer.id=agreement.buyer_profile_id JOIN directory_profile provider ON provider.id=agreement.provider_profile_id "
+
+-- Agreements where the caller manages either party, newest first.
+listMyAgreements user mStatus = do
+  let statusFilter = normalizeOptional mStatus
+  when (maybe False (`notElem` ["open","closed"]) statusFilter) $
+    throwError err400 {errBody="status must be open or closed"}
+  runDB (expireOverdueDepositsDB (toPersistValue (auPartyId user)))
+  jsonRows ("SELECT " <> agreementProjectionSql "CASE WHEN EXISTS (SELECT 1 FROM directory_profile_manager manager WHERE manager.profile_id=agreement.buyer_profile_id AND manager.account_party_id=? AND manager.active) THEN 'buyer' ELSE 'provider' END" <> agreementFromSql <> "WHERE EXISTS (SELECT 1 FROM directory_profile_manager manager WHERE manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.account_party_id=? AND manager.active) AND (?::text IS NULL OR (?::text='open' AND agreement.status IN ('pending_deposit','confirmed','in_progress','balance_due','disputed')) OR (?::text='closed' AND agreement.status IN ('completed','cancelled','expired'))) ORDER BY agreement.updated_at DESC,agreement.id")
+    [toPersistValue (auPartyId user),toPersistValue (auPartyId user),optionalText statusFilter,optionalText statusFilter,optionalText statusFilter]
+
+agreementParticipantRole user agreementId = do
+  roles <- jsonRows "SELECT to_jsonb(CASE WHEN buyer.account_party_id IS NOT NULL THEN 'buyer' WHEN provider.account_party_id IS NOT NULL THEN 'provider' ELSE 'none' END::text) FROM marketplace_agreement agreement LEFT JOIN directory_profile_manager buyer ON buyer.profile_id=agreement.buyer_profile_id AND buyer.account_party_id=? AND buyer.active LEFT JOIN directory_profile_manager provider ON provider.profile_id=agreement.provider_profile_id AND provider.account_party_id=? AND provider.active WHERE agreement.id=?" [toPersistValue (auPartyId user),toPersistValue (auPartyId user),toPersistValue agreementId]
+  case listToMaybe roles of Just (String role) | role/="none" -> pure role; _ | isDirectoryAdmin user -> pure "admin"; _ -> throwError err404
+
+getAgreement user agreementId = do
+  role <- agreementParticipantRole user agreementId
+  runDB (expireOverdueDepositsDB (toPersistValue (auPartyId user)))
+  -- The role comes from agreementParticipantRole (a closed set), so it is
+  -- safe to interpolate as a SQL literal.
+  jsonOne err404 ("SELECT " <> agreementProjectionSql ("'" <> role <> "'") <> agreementFromSql <> "WHERE agreement.id=?") [toPersistValue agreementId]
+
+-- A participant (or an admin resolving a dispute) moves an agreement. Which
+-- transition each party may request comes from
+-- TDF.Directory.Policy.agreementTransitionAllowedFor; the decision is bound to
+-- the version the caller saw. Completing records the verified interaction
+-- that makes both parties eligible to review each other; cancelling withdraws
+-- the accepted offer and releases its slot.
+changeAgreementStatus user agreementId DirectoryStatusRequest{status=newStatus,reason=statusReason,expectedVersion} = do
+  role <- agreementParticipantRole user agreementId
+  enabled <- marketplaceFeatureEnabled "marketplace.agreements"
+  unless enabled $ throwError err503 {errBody="Feature marketplace.agreements is not enabled in this environment"}
+  current <- jsonOne err404 "SELECT jsonb_build_object('status',agreement.status,'classifiedId',agreement.classified_id,'applicationId',agreement.application_id,'buyerProfileId',agreement.buyer_profile_id,'providerProfileId',agreement.provider_profile_id,'settlementMode',agreement.settlement_mode,'balanceMinor',agreement.balance_minor) FROM marketplace_agreement agreement WHERE agreement.id=?" [toPersistValue agreementId]
+  oldStatus <- maybe (throwError err500) pure (valueText "status" current)
+  from <- maybe (throwError err409 {errBody="unknown current agreement state"}) pure (parseAgreementStatus oldStatus)
+  to <- maybe (throwError err400 {errBody="unknown target agreement state"}) pure (parseAgreementStatus newStatus)
+  let party = case role of
+        "buyer" -> PartyBuyer
+        "provider" -> PartyProvider
+        _ -> PartyAdmin
+  unless (agreementTransitionAllowedFor party from to) $
+    throwError err409 {errBody="this agreement transition is not permitted for this participant"}
+  -- ADR 0136: on the platform the buyer's confirmation of delivery waits for
+  -- the balance when one is owed; the buyer never names that state.
+  let onPlatform = valueText "settlementMode" current == Just "platform"
+      effective
+        | to == AgreementCompleted && party == PartyBuyer =
+            agreementCompletionTarget onPlatform (fromMaybe 0 (valueInt64 "balanceMinor" current))
+        | otherwise = to
+      effectiveStatus = if effective == AgreementBalanceDue then "balance_due" else newStatus
+  forM_ statusReason $ \reasonText -> when (T.length reasonText > 2000) $ throwError err400 {errBody="reason is too long"}
+  classifiedId <- maybe (throwError err500) pure (valueUuid "classifiedId" current)
+  applicationId <- maybe (throwError err500) pure (valueUuid "applicationId" current)
+  let actingProfile = case party of
+        PartyBuyer -> valueUuid "buyerProfileId" current
+        PartyProvider -> valueUuid "providerProfileId" current
+        PartyAdmin -> Nothing
+      cancels = to == AgreementCancelled
+  outcome <- runDB $ do
+    -- Lock order: classified, offer, agreement (the offer side is only needed
+    -- to release the slot when the agreement is cancelled).
+    when cancels $ do
+      _ <- (rawSql "SELECT classified.status FROM classified WHERE classified.id=? FOR UPDATE" [toPersistValue classifiedId] :: SqlPersistT IO [Single Text])
+      _ <- (rawSql "SELECT application.status FROM classified_application application WHERE application.id=? FOR UPDATE" [toPersistValue applicationId] :: SqlPersistT IO [Single Text])
+      pure ()
+    locked <- rawSql "SELECT agreement.status,agreement.version FROM marketplace_agreement agreement WHERE agreement.id=? FOR UPDATE"
+      [toPersistValue agreementId] :: SqlPersistT IO [(Single Text, Single Int64)]
+    -- ADR 0136 I26, read under the agreement lock: a paid deposit blocks a
+    -- participant's direct cancellation, and nothing is cancelled while a
+    -- payment attempt may still collect money.
+    depositPaid <- rawSql "SELECT payment.id FROM marketplace_agreement_payment payment WHERE payment.agreement_id=? AND payment.kind='deposit' AND payment.status='paid' LIMIT 1"
+      [toPersistValue agreementId] :: SqlPersistT IO [Single UUID]
+    paymentInFlight <- rawSql ("SELECT payment.id FROM marketplace_agreement_payment payment JOIN commerce_payment_attempt attempt ON attempt.checkout_id=payment.checkout_id WHERE payment.agreement_id=? AND payment.status='pending' AND attempt.status IN " <> liveAttemptStatusesSql <> " LIMIT 1")
+      [toPersistValue agreementId] :: SqlPersistT IO [Single UUID]
+    case locked of
+      [(Single lockedStatus, Single lockedVersion)]
+        | lockedStatus /= oldStatus -> pure (Left err409 {errBody="the agreement changed before this transition; reload and retry"})
+        | maybe False (/= lockedVersion) expectedVersion -> pure (Left err409 {errBody="the agreement changed since it was displayed; reload and retry"})
+        | cancels && party /= PartyAdmin && not (agreementParticipantCancelAllowed onPlatform (not (null depositPaid))) ->
+            pure (Left err409 {errBody="a deposit was already paid for this agreement; open a dispute instead of cancelling"})
+        | (cancels || to == AgreementDisputed) && not (null paymentInFlight) ->
+            pure (Left err409 {errBody="a payment for this agreement is in progress; wait for it to finish first"})
+        | otherwise -> do
+            rawExecute "UPDATE marketplace_agreement SET status=?,started_at=CASE WHEN ?='in_progress' THEN now() ELSE started_at END,completed_at=CASE WHEN ?='completed' THEN now() ELSE completed_at END,cancelled_at=CASE WHEN ?='cancelled' THEN now() ELSE cancelled_at END,cancelled_by_profile_id=CASE WHEN ?='cancelled' THEN ?::uuid ELSE cancelled_by_profile_id END,cancellation_reason=CASE WHEN ?='cancelled' THEN ?::text ELSE cancellation_reason END,disputed_at=CASE WHEN ?='disputed' THEN now() ELSE disputed_at END,updated_at=now(),version=version+1 WHERE id=? AND status=?"
+              [PersistText effectiveStatus,PersistText effectiveStatus,PersistText effectiveStatus,PersistText effectiveStatus,PersistText effectiveStatus,optionalUuid actingProfile,PersistText effectiveStatus,optionalText statusReason,PersistText effectiveStatus,toPersistValue agreementId,PersistText oldStatus]
+            rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'agreement.status','agreement',?,?,?,?,jsonb_build_object('reason',?::text,'participant',?::text))"
+              [toPersistValue (auPartyId user),PersistText (UUID.toText agreementId),PersistText oldStatus,PersistText effectiveStatus,PersistText ("agreement-status-"<>UUID.toText agreementId),optionalText statusReason,PersistText role]
+            when (effective == AgreementCompleted) $ do
+              -- The verified interaction is what makes reviews eligible (I12).
+              rawExecute "INSERT INTO directory_interaction(interaction_kind,external_id,profile_a_id,profile_b_id,status,verified_at) SELECT 'marketplace_agreement',agreement.id::text,agreement.buyer_profile_id,agreement.provider_profile_id,'completed',now() FROM marketplace_agreement agreement WHERE agreement.id=? ON CONFLICT (interaction_kind,external_id) DO UPDATE SET status='completed',verified_at=coalesce(directory_interaction.verified_at,now())"
+                [toPersistValue agreementId]
+              rawExecute "UPDATE marketplace_agreement SET interaction_id=(SELECT interaction.id FROM directory_interaction interaction WHERE interaction.interaction_kind='marketplace_agreement' AND interaction.external_id=?) WHERE id=?"
+                [PersistText (UUID.toText agreementId),toPersistValue agreementId]
+            -- A disputed agreement stops collecting: its unpaid charge is
+            -- cancelled and the administrator decides from there.
+            when (to == AgreementDisputed) $
+              rawExecute "UPDATE marketplace_agreement_payment SET status='cancelled',updated_at=now(),version=version+1 WHERE agreement_id=? AND status='pending'"
+                [toPersistValue agreementId]
+            when cancels $ do
+              -- The deal is off: the accepted offer is withdrawn and its slot
+              -- released, reopening a filled listing that has not expired
+              -- (same statement as an offer withdrawal, ADR 0134 I19).
+              releaseAgreementSlotDB classifiedId applicationId
+              -- A charge that was never paid dies with the agreement.
+              rawExecute "UPDATE marketplace_agreement_payment SET status='cancelled',updated_at=now(),version=version+1 WHERE agreement_id=? AND status='pending'"
+                [toPersistValue agreementId]
+            rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',?::text,FALSE,now() FROM marketplace_agreement agreement JOIN directory_profile_manager manager ON manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.active AND manager.can_contact WHERE agreement.id=? AND manager.account_party_id<>?"
+              [PersistText (agreementNotificationType effective),PersistText (agreementNotificationTitle effective),PersistText (agreementNotificationBody effective),PersistText (UUID.toText applicationId),toPersistValue agreementId,toPersistValue (auPartyId user)]
+            pure (Right ())
+      _ -> pure (Left err404)
+  either throwError pure outcome
+  case effective of
+    AgreementCompleted -> recordAuthenticatedEvent user "agreement_completed" "agreement" (UUID.toText agreementId)
+    AgreementCancelled -> recordAuthenticatedEvent user "agreement_cancelled" "agreement" (UUID.toText agreementId)
+    _ -> pure ()
+  getAgreement user agreementId
+
+agreementNotificationType :: AgreementStatus -> Text
+agreementNotificationType status = case status of
+  AgreementInProgress -> "marketplace.agreement.started"
+  AgreementCompleted -> "marketplace.agreement.completed"
+  AgreementCancelled -> "marketplace.agreement.cancelled"
+  AgreementDisputed -> "marketplace.agreement.disputed"
+  AgreementBalanceDue -> "marketplace.agreement.balance_due"
+  AgreementExpired -> "marketplace.agreement.expired"
+  _ -> "marketplace.agreement.created"
+
+agreementNotificationTitle :: AgreementStatus -> Text
+agreementNotificationTitle status = case status of
+  AgreementInProgress -> "Acuerdo en curso"
+  AgreementCompleted -> "Acuerdo completado"
+  AgreementCancelled -> "Acuerdo cancelado"
+  AgreementDisputed -> "Acuerdo en disputa"
+  AgreementBalanceDue -> "Saldo pendiente"
+  AgreementExpired -> "Acuerdo vencido"
+  _ -> "Acuerdo actualizado"
+
+agreementNotificationBody :: AgreementStatus -> Text
+agreementNotificationBody status = case status of
+  AgreementInProgress -> "El proveedor marcó el trabajo como iniciado."
+  AgreementCompleted -> "El acuerdo se completó. Ya pueden dejarse una reseña verificada."
+  AgreementCancelled -> "La otra parte canceló el acuerdo."
+  AgreementDisputed -> "La otra parte abrió una disputa sobre el acuerdo."
+  AgreementBalanceDue -> "El comprador confirmó la entrega. El acuerdo se completa cuando se pague el saldo."
+  AgreementExpired -> "El depósito no se pagó a tiempo y el acuerdo venció. El cupo del anuncio quedó libre."
+  _ -> "El acuerdo cambió de estado."
+
+-- The deal is off: the accepted offer is withdrawn and its slot released,
+-- reopening a filled listing that has not expired (same statement as an offer
+-- withdrawal, ADR 0134 I19). The caller holds the classified and offer locks.
+releaseAgreementSlotDB :: UUID -> UUID -> SqlPersistT IO ()
+releaseAgreementSlotDB classifiedId applicationId = do
+  released <- rawSql "UPDATE classified_application SET status='withdrawn',withdrawn_at=now(),updated_at=now(),version=version+1 WHERE id=? AND status IN ('accepted','conversation_open') RETURNING id"
+    [toPersistValue applicationId] :: SqlPersistT IO [Single UUID]
+  -- An offer the author already marked as converted is terminal and
+  -- keeps that status, but its slot was consumed by the same
+  -- acceptance, so cancelling the agreement releases it as well.
+  converted <- rawSql "SELECT application.id FROM classified_application application WHERE application.id=? AND application.status='converted'"
+    [toPersistValue applicationId] :: SqlPersistT IO [Single UUID]
+  unless (null released && null converted) $ do
+    rawExecute "UPDATE classified SET slots_remaining=least(slots,slots_remaining+1),status=CASE WHEN status='filled' AND expires_at>now() THEN 'published' WHEN status='published' AND expires_at<=now() THEN 'expired' ELSE status END,closed_at=CASE WHEN status='filled' AND expires_at>now() THEN NULL WHEN status='published' AND expires_at<=now() THEN coalesce(closed_at,now()) ELSE closed_at END,updated_at=now(),version=version+1 WHERE id=?"
+      [toPersistValue classifiedId]
+    refreshClassifiedDB classifiedId
+
+-- ---------------------------------------------------------------------------
+-- ADR 0136: agreement payments (Phase 2, part B1). Charges go through the
+-- canonical checkout; this module never calls a payment provider and never
+-- marks a charge as paid (the checkout sync trigger does, with verified
+-- provider evidence).
+-- ---------------------------------------------------------------------------
+
+-- Payment attempt states that may still collect money. Trusted SQL literal.
+liveAttemptStatusesSql :: Text
+liveAttemptStatusesSql = "('created','requires_customer_action','processing','requires_review','succeeded')"
+
+requireAgreementPayments :: AppM ()
+requireAgreementPayments = do
+  enabled <- marketplaceFeatureEnabled "marketplace.agreement_payments"
+  unless enabled $ throwError err503
+    { errBody = "Feature marketplace.agreement_payments is not enabled in this environment" }
+
+-- I26: an agreement whose deposit was not paid by its deadline expires and
+-- releases its slot. Runs lazily for the agreements the caller takes part in,
+-- in its own transaction, in a stable order (classified, offer, agreement,
+-- payment). An agreement with a payment attempt that may still collect money
+-- is left alone until that attempt settles.
+expireOverdueDepositsDB :: PersistValue -> SqlPersistT IO ()
+expireOverdueDepositsDB partyParam = do
+  overdue <- rawSql ("SELECT agreement.id,agreement.classified_id,agreement.application_id FROM marketplace_agreement agreement WHERE agreement.status='pending_deposit' AND agreement.deposit_due_at<=now() AND EXISTS (SELECT 1 FROM directory_profile_manager manager WHERE manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.account_party_id=? AND manager.active) AND NOT EXISTS (SELECT 1 FROM marketplace_agreement_payment payment JOIN commerce_payment_attempt attempt ON attempt.checkout_id=payment.checkout_id WHERE payment.agreement_id=agreement.id AND attempt.status IN " <> liveAttemptStatusesSql <> ") ORDER BY agreement.classified_id,agreement.application_id LIMIT 20")
+    [partyParam] :: SqlPersistT IO [(Single UUID, Single UUID, Single UUID)]
+  forM_ overdue $ \(Single agreementId, Single classifiedId, Single applicationId) -> do
+    _ <- (rawSql "SELECT classified.status FROM classified WHERE classified.id=? FOR UPDATE" [toPersistValue classifiedId] :: SqlPersistT IO [Single Text])
+    _ <- (rawSql "SELECT application.status FROM classified_application application WHERE application.id=? FOR UPDATE" [toPersistValue applicationId] :: SqlPersistT IO [Single Text])
+    expired <- rawSql "UPDATE marketplace_agreement SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status='pending_deposit' AND deposit_due_at<=now() RETURNING id"
+      [toPersistValue agreementId] :: SqlPersistT IO [Single UUID]
+    unless (null expired) $ do
+      rawExecute "UPDATE marketplace_agreement_payment SET status='expired',updated_at=now(),version=version+1 WHERE agreement_id=? AND status='pending'"
+        [toPersistValue agreementId]
+      releaseAgreementSlotDB classifiedId applicationId
+      rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (NULL,'agreement.status','agreement',?,'pending_deposit','expired',?,jsonb_build_object('reason','deposit_not_paid'))"
+        [PersistText (UUID.toText agreementId),PersistText ("agreement-expire-"<>UUID.toText agreementId)]
+      rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',?::text,FALSE,now() FROM marketplace_agreement agreement JOIN directory_profile_manager manager ON manager.profile_id IN (agreement.buyer_profile_id,agreement.provider_profile_id) AND manager.active AND manager.can_contact WHERE agreement.id=?"
+        [PersistText (agreementNotificationType AgreementExpired),PersistText (agreementNotificationTitle AgreementExpired),PersistText (agreementNotificationBody AgreementExpired),PersistText (UUID.toText applicationId),toPersistValue agreementId]
+
+-- Payout account as its managers see it: the recipient is masked.
+payoutAccountProjectionSql :: Text
+payoutAccountProjectionSql =
+  "jsonb_build_object('id',account.id,'profileId',account.profile_id,'profileName',profile.public_name,'provider',account.provider,'identifierType',account.identifier_type,'identifierMasked',repeat('*',greatest(length(account.identifier)-4,0))||right(account.identifier,4),'status',account.status,'updatedAt',account.updated_at,'version',account.version) FROM marketplace_payout_account account JOIN directory_profile profile ON profile.id=account.profile_id "
+
+requirePayoutManager :: AuthedUser -> UUID -> AppM ()
+requirePayoutManager user profileId = do
+  managed <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.account_party_id=? AND manager.active AND manager.can_manage"
+    [toPersistValue profileId,toPersistValue (auPartyId user)]
+  when (null managed) $ throwError err404
+
+-- Payout accounts of the profiles the caller manages.
+listPayoutAccounts user =
+  jsonRows ("SELECT " <> payoutAccountProjectionSql <> "WHERE EXISTS (SELECT 1 FROM directory_profile_manager manager WHERE manager.profile_id=account.profile_id AND manager.account_party_id=? AND manager.active AND manager.can_manage) ORDER BY profile.public_name,account.provider,account.id")
+    [toPersistValue (auPartyId user)]
+
+-- A profile manager declares where the profile is paid. Only PayPhone
+-- recipients are accepted for now (an identification or a phone); the value
+-- is validated, stored, and never returned in full.
+savePayoutAccount user profileId rawProvider PayoutAccountRequest{identifierType=rawKind,identifier=rawIdentifier} = do
+  requireAgreementPayments
+  let provider = T.toLower (T.strip rawProvider)
+      kind = T.toLower (T.strip rawKind)
+      recipient = T.strip rawIdentifier
+  when (provider == "stripe") $ throwError err409 {errBody="Stripe payout accounts are not available yet"}
+  unless (provider == "payphone") $ throwError err404
+  unless (payoutIdentifierValid kind recipient) $
+    throwError err400 {errBody="identifier must be a 10 or 13 digit identification, or a phone in international format"}
+  requirePayoutManager user profileId
+  runDB $ do
+    rawExecute "INSERT INTO marketplace_payout_account(profile_id,provider,identifier_type,identifier,status) VALUES (?,?,?,?,'ready') ON CONFLICT (profile_id,provider) DO UPDATE SET identifier_type=EXCLUDED.identifier_type,identifier=EXCLUDED.identifier,status='ready',updated_at=now(),version=marketplace_payout_account.version+1"
+      [toPersistValue profileId,PersistText provider,PersistText kind,PersistText recipient]
+    rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'payout_account.save','profile',?,NULL,'ready',?,jsonb_build_object('provider',?::text,'identifierType',?::text))"
+      [toPersistValue (auPartyId user),PersistText (UUID.toText profileId),PersistText ("payout-account-"<>UUID.toText profileId<>"-"<>provider),PersistText provider,PersistText kind]
+  jsonOne err500 ("SELECT " <> payoutAccountProjectionSql <> "WHERE account.profile_id=? AND account.provider=?")
+    [toPersistValue profileId,PersistText provider]
+
+-- Disabling keeps the row (charges already created froze their recipient) and
+-- stops new agreements and charges from using it.
+disablePayoutAccount user profileId rawProvider = do
+  let provider = T.toLower (T.strip rawProvider)
+  requirePayoutManager user profileId
+  runDB $ do
+    rawExecute "UPDATE marketplace_payout_account SET status='disabled',updated_at=now(),version=version+1 WHERE profile_id=? AND provider=? AND status<>'disabled'"
+      [toPersistValue profileId,PersistText provider]
+    rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'payout_account.disable','profile',?,NULL,'disabled',?,jsonb_build_object('provider',?::text))"
+      [toPersistValue (auPartyId user),PersistText (UUID.toText profileId),PersistText ("payout-account-"<>UUID.toText profileId<>"-"<>provider),PersistText provider]
+  jsonOne err404 ("SELECT " <> payoutAccountProjectionSql <> "WHERE account.profile_id=? AND account.provider=?")
+    [toPersistValue profileId,PersistText provider]
+
+-- The buyer starts the charge that the agreement is waiting for: the deposit
+-- while it is pending_deposit, the balance while it is balance_due. The split
+-- is frozen here (I25) and a canonical checkout of domain
+-- marketplace_agreement is created for it; the response carries the lookup
+-- token the buyer needs to open a payment session on that checkout. The token
+-- is not stored, so asking again replaces a charge that has no payment attempt
+-- in flight. Lock order: agreement, then payment; the checkout is an insert.
+createAgreementPayment user agreementId AgreementPaymentRequest{provider=rawProvider} = do
+  requireAgreementPayments
+  role <- agreementParticipantRole user agreementId
+  unless (role == "buyer") $ throwError err403 {errBody="only the buyer pays an agreement"}
+  let provider = T.toLower (T.strip rawProvider)
+  unless (provider `elem` ["payphone","stripe","datafast"]) $ throwError err400 {errBody="unknown payment provider"}
+  configured <- liftIO (lookupEnv "COMMERCE_CHECKOUT_ENV")
+  environment <- either (const (throwError err500 {errBody="checkout environment is not configured"})) pure
+    (Checkout.resolveCheckoutEnvironment configured)
+  paymentId <- liftIO nextRandom
+  tokenHead <- liftIO nextRandom
+  tokenTail <- liftIO nextRandom
+  now <- liftIO getCurrentTime
+  let lookupToken = T.filter (/= '-') (UUID.toText tokenHead <> UUID.toText tokenTail)
+      lookupHash = T.pack (show (hash (TE.encodeUtf8 lookupToken) :: Digest SHA256))
+      paymentText = UUID.toText paymentId
+      agreementText = UUID.toText agreementId
+  runDB (expireOverdueDepositsDB (toPersistValue (auPartyId user)))
+  outcome <- runDB $ do
+    locked <- rawSql "SELECT jsonb_build_object('status',agreement.status,'settlementMode',agreement.settlement_mode,'commissionMinor',agreement.commission_minor,'depositMinor',agreement.deposit_minor,'balanceMinor',agreement.balance_minor,'currency',currency.code,'depositDueAt',agreement.deposit_due_at,'title',classified.title,'email',coalesce(party.primary_email,'')) FROM marketplace_agreement agreement JOIN currency_reference currency ON currency.id=agreement.currency_id JOIN classified ON classified.id=agreement.classified_id JOIN party ON party.id=? WHERE agreement.id=? FOR UPDATE OF agreement"
+      [toPersistValue (auPartyId user),toPersistValue agreementId] :: SqlPersistT IO [Single CMS.AesonValue]
+    case listToMaybe [CMS.unAesonValue value | Single value <- locked] of
+      Nothing -> pure (Left err404)
+      Just current -> do
+        let commission = fromMaybe 0 (valueInt64 "commissionMinor" current)
+            deposit = fromMaybe 0 (valueInt64 "depositMinor" current)
+            balance = fromMaybe 0 (valueInt64 "balanceMinor" current)
+            currencyCode = fromMaybe "" (valueText "currency" current)
+            email = T.strip (fromMaybe "" (valueText "email" current))
+            title = fromMaybe "" (valueText "title" current)
+            charge = case valueText "status" current of
+              Just "pending_deposit" -> Just (AgreementDeposit, "deposit" :: Text, deposit, valueTime "depositDueAt" current)
+              Just "balance_due" -> Just (AgreementBalance, "balance", balance, Just (addUTCTime (30 * 86400) now))
+              _ -> Nothing
+        case charge of
+          _ | valueText "settlementMode" current /= Just "platform" ->
+                pure (Left err409 {errBody="this agreement is settled off the platform"})
+          Nothing -> pure (Left err409 {errBody="this agreement has no payment due"})
+          Just (_, _, _, Nothing) -> pure (Left err409 {errBody="this agreement has no payment deadline"})
+          Just (kind, kindText, amount, Just dueAt)
+            | amount <= 0 -> pure (Left err409 {errBody="this agreement has no payment due"})
+            | dueAt <= now -> pure (Left err409 {errBody="the payment deadline has passed"})
+            | T.null email -> pure (Left err409 {errBody="add an email address to your account before paying"})
+            | provider == "payphone" && currencyCode /= "USD" ->
+                pure (Left err409 {errBody="PayPhone payments are available in USD only"})
+            | otherwise -> do
+                settled <- rawSql "SELECT payment.id FROM marketplace_agreement_payment payment WHERE payment.agreement_id=? AND payment.kind=? AND payment.status='paid' LIMIT 1"
+                  [toPersistValue agreementId,PersistText kindText] :: SqlPersistT IO [Single UUID]
+                inFlight <- rawSql ("SELECT payment.id FROM marketplace_agreement_payment payment JOIN commerce_payment_attempt attempt ON attempt.checkout_id=payment.checkout_id WHERE payment.agreement_id=? AND payment.kind=? AND payment.status='pending' AND attempt.status IN " <> liveAttemptStatusesSql <> " LIMIT 1")
+                  [toPersistValue agreementId,PersistText kindText] :: SqlPersistT IO [Single UUID]
+                recipients <- rawSql "SELECT jsonb_build_object('id',account.id,'identifierType',account.identifier_type,'identifier',account.identifier,'feeBps',rule.fee_bps,'feeFixedMinor',rule.fee_fixed_minor,'payer',rule.payer) FROM marketplace_agreement agreement JOIN marketplace_payout_account account ON account.profile_id=agreement.provider_profile_id AND account.provider=? AND account.status='ready' JOIN marketplace_payment_fee_rule rule ON rule.provider=account.provider WHERE agreement.id=?"
+                  [PersistText provider,toPersistValue agreementId] :: SqlPersistT IO [Single CMS.AesonValue]
+                -- I25: what the paid charges already collected for the platform
+                -- (its fee, plus the processor fee when the platform bore it).
+                collectedRows <- rawSql "SELECT coalesce(sum(payment.platform_fee_minor + CASE WHEN payment.processing_fee_payer='platform' THEN payment.processing_fee_minor ELSE 0 END),0)::bigint FROM marketplace_agreement_payment payment WHERE payment.agreement_id=? AND payment.status='paid'"
+                  [toPersistValue agreementId] :: SqlPersistT IO [Single Int64]
+                let collected = sum [value | Single value <- collectedRows]
+                    frozen = do
+                      recipient <- listToMaybe [CMS.unAesonValue value | Single value <- recipients]
+                      feeBps <- valueInt "feeBps" recipient
+                      feeFixed <- valueInt64 "feeFixedMinor" recipient
+                      fee <- agreementProcessingFee feeBps feeFixed amount
+                      let payer = if valueText "payer" recipient == Just "platform" then FeePaidByPlatform else FeePaidByProvider
+                      parts <- agreementPaymentSplit payer fee (agreementCommissionDue kind commission deposit collected) amount
+                      accountId <- valueUuid "id" recipient
+                      recipientKind <- valueText "identifierType" recipient
+                      recipientValue <- valueText "identifier" recipient
+                      pure (parts, payer, accountId, recipientKind, recipientValue)
+                case frozen of
+                  _ | not (null settled) -> pure (Left err409 {errBody="this payment was already made"})
+                  _ | not (null inFlight) -> pure (Left err409 {errBody="a payment for this agreement is already in progress"})
+                  Nothing -> pure (Left err409 {errBody="the provider cannot be paid with this payment provider"})
+                  Just (parts, payer, accountId, recipientKind, recipientValue) -> do
+                    let payerText = case payer of
+                          FeePaidByPlatform -> "platform" :: Text
+                          FeePaidByProvider -> "provider"
+                        description = (if kind == AgreementDeposit then "Depósito del acuerdo: " else "Saldo del acuerdo: ") <> T.take 120 title
+                    rawExecute "UPDATE marketplace_agreement_payment SET status='cancelled',updated_at=now(),version=version+1 WHERE agreement_id=? AND kind=? AND status='pending'"
+                      [toPersistValue agreementId,PersistText kindText]
+                    checkout <- Checkout.createCheckout Checkout.CheckoutCreation
+                      { Checkout.ccDomainType = "marketplace_agreement"
+                      , Checkout.ccDomainOrderId = paymentText
+                      , Checkout.ccEnvironment = environment
+                      , Checkout.ccCurrency = currencyCode
+                      , Checkout.ccAmountMinor = amount
+                      , Checkout.ccCustomerEmail = email
+                      , Checkout.ccLookupTokenHash = lookupHash
+                      , Checkout.ccIdempotencyKey = "agreement-payment:" <> paymentText
+                      , Checkout.ccExpiresAt = dueAt
+                      , Checkout.ccProductType = "marketplace_agreement_payment"
+                      , Checkout.ccProductId = agreementText
+                      , Checkout.ccProductVersion = kindText
+                      , Checkout.ccDescription = description
+                      , Checkout.ccSnapshot = object
+                          [ "agreementId" .= agreementText
+                          , "paymentId" .= paymentText
+                          , "kind" .= kindText
+                          , "provider" .= provider
+                          , "platformFeeMinor" .= splitPlatformFeeMinor parts
+                          , "processingFeeMinor" .= splitProcessingFeeMinor parts
+                          , "providerAmountMinor" .= splitProviderAmountMinor parts
+                          ]
+                      , Checkout.ccCorrelationId = "agreement-payment:" <> paymentText
+                      }
+                    let checkoutText = Checkout.checkoutReferenceId checkout
+                    rawExecute "INSERT INTO marketplace_agreement_payment(id,agreement_id,kind,provider,amount_minor,currency,platform_fee_minor,processing_fee_minor,processing_fee_payer,provider_amount_minor,payout_account_id,payout_identifier_type,payout_identifier,checkout_id,due_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?::uuid,?)"
+                      [toPersistValue paymentId,toPersistValue agreementId,PersistText kindText,PersistText provider,PersistInt64 amount,PersistText currencyCode,PersistInt64 (splitPlatformFeeMinor parts),PersistInt64 (splitProcessingFeeMinor parts),PersistText payerText,PersistInt64 (splitProviderAmountMinor parts),toPersistValue accountId,PersistText recipientKind,PersistText recipientValue,PersistText checkoutText,PersistUTCTime dueAt]
+                    rawExecute "UPDATE marketplace_agreement SET deposit_checkout_id=CASE WHEN ?='deposit' THEN ?::uuid ELSE deposit_checkout_id END,balance_checkout_id=CASE WHEN ?='balance' THEN ?::uuid ELSE balance_checkout_id END,updated_at=now() WHERE id=?"
+                      [PersistText kindText,PersistText checkoutText,PersistText kindText,PersistText checkoutText,toPersistValue agreementId]
+                    rawExecute "INSERT INTO directory_audit_event(actor_party_id,action,entity_kind,entity_id,previous_state,new_state,correlation_id,metadata) VALUES (?,'agreement.payment.create','agreement',?,NULL,'pending',?,jsonb_build_object('paymentId',?::text,'kind',?::text,'provider',?::text,'amountMinor',?::bigint))"
+                      [toPersistValue (auPartyId user),PersistText agreementText,PersistText ("agreement-payment-create-"<>paymentText),PersistText paymentText,PersistText kindText,PersistText provider,PersistInt64 amount]
+                    pure (Right checkoutText)
+  checkoutId <- either throwError pure outcome
+  agreement <- getAgreement user agreementId
+  pure (object ["agreement" .= agreement, "paymentId" .= paymentText, "checkoutId" .= checkoutId, "lookupToken" .= lookupToken, "provider" .= provider])
 
 applicationParticipantRole user applicationId = do
   roles <- jsonRows "SELECT to_jsonb(CASE WHEN applicant.account_party_id IS NOT NULL THEN 'applicant' WHEN author.account_party_id IS NOT NULL THEN 'author' ELSE 'none' END::text) FROM classified_application application JOIN classified ON classified.id=application.classified_id LEFT JOIN directory_profile_manager applicant ON applicant.profile_id=application.applicant_profile_id AND applicant.account_party_id=? AND applicant.active LEFT JOIN directory_profile_manager author ON author.profile_id=classified.author_profile_id AND author.account_party_id=? AND author.active WHERE application.id=?" [toPersistValue (auPartyId user),toPersistValue (auPartyId user),toPersistValue applicationId]
@@ -1379,6 +2217,33 @@ validateReportTarget kind identifier = do
   when (T.null (T.strip identifier) || T.length identifier>160) $
     throwError err400 {errBody="invalid report targetId"}
 
+-- ADR 0134: the marketplace offer flow (amounts, counters, slot accounting)
+-- ships behind the `marketplace.offers` runtime flag, read from the same
+-- revenue_feature_flag table as the other commerce gates. Merging code never
+-- enables it.
+marketplaceFeatureEnvironment :: IO Text
+marketplaceFeatureEnvironment = do
+  raw <- lookupEnv "APP_ENV"
+  pure $ case fmap (T.toLower . T.strip . T.pack) raw of
+    Just "production" -> "production"
+    Just "prod" -> "production"
+    Just "staging" -> "staging"
+    _ -> "sandbox"
+
+marketplaceFeatureEnabled :: Text -> AppM Bool
+marketplaceFeatureEnabled flag = do
+  environment <- liftIO marketplaceFeatureEnvironment
+  rows <- runDB (rawSql
+    "SELECT enabled FROM revenue_feature_flag WHERE flag_key=? AND environment=?"
+    [PersistText flag, PersistText environment] :: SqlPersistT IO [Single Bool])
+  pure (rows == [Single True])
+
+requireMarketplaceOffers :: AppM ()
+requireMarketplaceOffers = do
+  enabled <- marketplaceFeatureEnabled "marketplace.offers"
+  unless enabled $ throwError err503
+    { errBody = "Feature marketplace.offers is not enabled in this environment" }
+
 requireDirectoryAdmin :: AuthedUser -> AppM ()
 requireDirectoryAdmin user = unless (isDirectoryAdmin user) (throwError err403 {errBody="directory administration requires the Admin role and module"})
 
@@ -1533,6 +2398,8 @@ consumeRate user action maxCount = do
 
 notifyClassifiedAuthor classifiedId applicationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',?::text,FALSE,now() FROM classified JOIN directory_profile_manager manager ON manager.profile_id=classified.author_profile_id AND manager.active AND manager.can_contact WHERE classified.id=?" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue applicationId,toPersistValue classifiedId]
 
+notifyOfferParticipant profileIdValue applicationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_application',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue applicationId,toPersistValue profileIdValue]
+
 notifyProfile profileIdValue invitationId notificationType notificationTitle notificationBody = runDB $ rawExecute "INSERT INTO notification(recipient_party_id,notif_type,title,body,target_type,target_key,is_read,created_at) SELECT DISTINCT manager.account_party_id,?,?,?,'directory_invitation',?::text,FALSE,now() FROM directory_profile_manager manager WHERE manager.profile_id=? AND manager.active AND manager.can_contact" [PersistText notificationType,PersistText notificationTitle,PersistText notificationBody,toPersistValue invitationId,toPersistValue profileIdValue]
 
 isDirectoryAdmin user = Admin `elem` auRoles user && hasModuleAccess ModuleAdmin user
@@ -1599,11 +2466,11 @@ validateContactContext user senderProfileIdValue targetProfileIdValue kind ident
 notificationContext :: AuthedUser -> Text -> UUID.UUID -> AppM Value
 notificationContext user kind ident = case kind of
   "application" -> do
-    role <- applicationParticipantRole user ident
-    unless (role == "author") $ throwError err404
-    jsonOne err404
-      "SELECT jsonb_build_object('id',a.id,'classifiedId',a.classified_id,'authorProfileId',c.author_profile_id,'title',c.title,'status',a.status,'message',a.message,'submittedAt',a.submitted_at,'applicantProfile',jsonb_build_object('id',p.id,'name',p.public_name,'slug',p.slug)) FROM classified_application a JOIN classified c ON c.id=a.classified_id JOIN directory_profile p ON p.id=a.applicant_profile_id WHERE a.id=?"
-      [toPersistValue ident]
+    -- ADR 0134: offer notifications reach both participants (new offer,
+    -- counter, acceptance, rejection), so either may open the context.
+    detail <- getApplication user ident
+    authorProfile <- jsonOne err404 "SELECT jsonb_build_object('authorProfileId',c.author_profile_id,'title',c.title) FROM classified_application a JOIN classified c ON c.id=a.classified_id WHERE a.id=?" [toPersistValue ident]
+    pure (mergeObjects detail authorProfile)
   "invitation" -> invitationSummary user ident
   "review" -> do
     visible <- jsonRows "SELECT to_jsonb(TRUE) FROM directory_review r JOIN directory_profile subject ON subject.id=r.subject_profile_id JOIN directory_profile_manager m ON m.profile_id=coalesce(subject.canonical_profile_id,subject.id) WHERE r.id=? AND r.status='published' AND m.account_party_id=? AND m.active AND m.can_manage" [toPersistValue ident,toPersistValue (auPartyId user)]

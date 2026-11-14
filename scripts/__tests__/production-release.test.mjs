@@ -1052,6 +1052,58 @@ test('buildMigrationBatchSql verifies the pre-designation social shape only on e
   assert.equal(socialCount(buildSchemaVerificationSql()), '17');
 });
 
+test('buildMigrationBatchSql verifies the ADR 0134 marketplace offer schema unless a prefix opts out', () => {
+  const before = {
+    id: '2026-10-25_event_memory_invitations',
+    path: 'tdf-hq/sql/2026-10-25_event_memory_invitations.sql',
+    checksum: '1'.repeat(64),
+    content: 'SELECT 1;',
+  };
+  const offers = {
+    id: '2026-11-08_marketplace_offers',
+    path: 'tdf-hq/sql/2026-11-08_marketplace_offers.sql',
+    checksum: '3'.repeat(64),
+    content: 'SELECT 3;',
+  };
+  const marketplaceCheck = /Marketplace offer schema \(ADR 0134\) is missing/;
+  // Without the explicit opt-out every batch verifies the current production shape.
+  assert.match(buildMigrationBatchSql([before]), marketplaceCheck);
+  assert.match(buildMigrationBatchSql([before, offers]), marketplaceCheck);
+  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false, marketplaceOffersIncluded: false });
+  assert.doesNotMatch(prefix, marketplaceCheck);
+  assert.doesNotMatch(prefix, /classified_slots_remaining_check is missing/);
+  assert.match(prefix, /ADR 0134: marketplace offers verified only when the batch applies 2026-11-08_marketplace_offers/);
+  // Production verification outside a batch always expects the marketplace schema.
+  assert.match(buildSchemaVerificationSql(), marketplaceCheck);
+  assert.match(buildSchemaVerificationSql(), /classified_application rows without an initial negotiation round/);
+});
+
+test('buildMigrationBatchSql verifies the ADR 0135 marketplace agreement schema unless a prefix opts out', () => {
+  const before = {
+    id: '2026-10-25_event_memory_invitations',
+    path: 'tdf-hq/sql/2026-10-25_event_memory_invitations.sql',
+    checksum: '1'.repeat(64),
+    content: 'SELECT 1;',
+  };
+  const agreementCheck = /Marketplace agreement schema \(ADR 0135\) is missing/;
+  assert.match(buildMigrationBatchSql([before]), agreementCheck);
+  assert.match(buildMigrationBatchSql([before]), /Marketplace agreement default pricing rule is missing/);
+  const prefix = buildMigrationBatchSql([before], { socialDesignationIncluded: false, marketplaceOffersIncluded: false, marketplaceAgreementsIncluded: false, marketplaceAgreementPaymentsIncluded: false });
+  assert.doesNotMatch(prefix, agreementCheck);
+  const paymentCheck = /Marketplace agreement payment schema \(ADR 0136\) is missing/;
+  assert.doesNotMatch(prefix, paymentCheck);
+  assert.match(prefix, /ADR 0136: marketplace agreement payments verified only when the batch applies 2026-11-12_marketplace_agreement_payments/);
+  assert.match(buildMigrationBatchSql([before]), paymentCheck);
+  assert.match(buildMigrationBatchSql([before], { marketplaceAgreementsIncluded: false }), paymentCheck);
+  assert.match(buildSchemaVerificationSql(), paymentCheck);
+  assert.match(prefix, /ADR 0135: marketplace agreements verified only when the batch applies 2026-11-12_marketplace_agreements/);
+  // Opting out of agreements alone keeps the offers verification.
+  const offersOnly = buildMigrationBatchSql([before], { marketplaceAgreementsIncluded: false });
+  assert.match(offersOnly, /Marketplace offer schema \(ADR 0134\) is missing/);
+  assert.doesNotMatch(offersOnly, agreementCheck);
+  assert.match(buildSchemaVerificationSql(), agreementCheck);
+});
+
 test('buildMigrationBatchSql rejects unexpanded include directives', () => {
   assert.throws(
     () => buildMigrationBatchSql([{
