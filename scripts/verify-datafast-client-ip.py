@@ -51,7 +51,10 @@ def main():
             summaries = re.findall(r'^(\d+) examples?, (\d+) failures?(?:, (\d+) pending)?$', output, re.M)
             complete = len(summaries) == 1 and summaries[0][0] == '11' and not summaries[0][2]
             failures = int(summaries[0][1]) if complete else None
-            accepted = (complete and result.returncode != 0 and failures > 0) if control else (
+            assertion_failure = ('uncaught exception' not in output.lower()
+                                 and ('expected:' in output or 'predicate failed on' in output))
+            accepted = (complete and result.returncode != 0 and failures > 0
+                        and assertion_failure) if control else (
                 complete and result.returncode == 0 and failures == 0
                 and re.findall(r'\+\+\+ OK, passed (\d+) tests\.', output) == ['100'])
             reports.append({'variant': name, 'exit': result.returncode,

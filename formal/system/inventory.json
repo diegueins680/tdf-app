@@ -7194,7 +7194,7 @@
     {
       "id": "SURFACE-61dd07e6dca708d2",
       "path": "scripts/verify-datafast-client-ip.py",
-      "sha256": "64f2705e5f2c36fef15398d319fcd3dc012b7dcfa1c78b076055f6d1e98bf5f8",
+      "sha256": "6fe1778819f5ebbcc8852953f5e8b02ae32e3a99fbb51c1dca61915fd069ea98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18468,7 +18468,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "0a043f75f13bbcccdbfd73950791c489316c7bb230eebbb8e2bd327df503b0eb",
+      "sha256": "be9a02b5b53547a29e1266d6e907fe3c33ca2f8d0150a064bdb442eab2d2138c",
       "semanticConformance": "not-established-by-discovery"
     },
     {

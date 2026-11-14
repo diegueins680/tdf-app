@@ -2505,7 +2505,7 @@ datafastClientPreflightSpec = describe "Dataweb client IP HTTP preflight" $ do
       response <- datafastClientHttp pool orderId token
       WaiTest.simpleStatus response `shouldBe` status200
       case A.eitherDecode (WaiTest.simpleBody response) of
-        Right (A.Object payload) -> KM.lookup "checkoutId" payload `shouldBe` Just (A.String resource)
+        Right (A.Object payload) -> KM.lookup "dcCheckoutId" payload `shouldBe` Just (A.String resource)
         _ -> expectationFailure "Cached Dataweb response is not a checkout object"
       runSqlPool (datafastCreationRows checkout) pool `shouldReturn` before
 
