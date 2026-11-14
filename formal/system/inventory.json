@@ -1371,6 +1371,7 @@
       "tdf-hq-ui/src/pages/DonationPage.tsx",
       "tdf-hq-ui/src/pages/EstebanMunozReportPage.tsx",
       "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
+      "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
       "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
       "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
       "tdf-hq-ui/src/pages/EventTaskPage.tsx",
@@ -10192,7 +10193,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
+      "sha256": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11195,6 +11196,12 @@
       "id": "SURFACE-378a6bc30de606b4",
       "path": "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
       "sha256": "4dac7124635899687df092f6164248eab3673764ae71ed80d44bac9be0234bdf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0cf77a2e272d6fba",
+      "path": "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
+      "sha256": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12454,7 +12461,7 @@
     {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
-      "sha256": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
+      "sha256": "971562ddbfb8770bb528148b612cb348d4d598f95fdbb3fe80e834090f4f8297",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13534,7 +13541,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
+      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30304,7 +30311,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "110491315eee899949c31a958e2c57d2d0fe2faccce46a3506e6e616a720e694",
+      "sha256": "6f642380184c1a4a94e3669112a9dc8502f6d6ab608c4449830aaace184a8aa5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30542,7 +30549,7 @@
     },
     {
       "path": "formal/system/event-admin-delegation.md",
-      "sha256": "585db75a82697fa24f69229a5c40a6549f3a94b7f8fb15edcd65e65c67d7618c",
+      "sha256": "10d3944f33287a06ddbb172f9cd8bd81469f74d6bc5c27840169f19e193f0a97",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31298,7 +31305,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3afefd2cbd21d426143c2cc0ea1ec236178f17a72f703b0fdfad932fee126747",
+      "sha256": "1cebf091af7bb77c1fcbec0fd16667a34524be0565eb6d59dd0cf3c41fd61a0d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
