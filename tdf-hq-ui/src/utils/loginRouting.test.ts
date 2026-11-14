@@ -231,3 +231,11 @@ describe('redirect helpers', () => {
    expect(resolvePostAuthPath(null, ['Customer'], [], '/artista/42#music')).toBe('/artista/42#music');
    expect(resolvePostAuthPath(null, ['Customer'], [], '//evil.example')).toBe('/fans');
  });
+
+it('never carries an administrator invitation fragment into a login URL for a public event', () => {
+  const token = 'ab'.repeat(32);
+  expect(sanitizeRedirectPath(`/eventos/141#admin=${token}`)).toBe('/eventos/141');
+  expect(buildLoginRedirectPath(`/eventos/141#admin=${token}`)).toBe('/login?redirect=%2Feventos%2F141');
+  // A just-created account without workspace modules still returns to the event page.
+  expect(resolvePostAuthPath(null, ['Fan', 'Customer'], [], '/eventos/141')).toBe('/eventos/141');
+});

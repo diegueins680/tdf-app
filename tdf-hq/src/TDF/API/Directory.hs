@@ -136,6 +136,23 @@ data DirectoryStatusRequest = DirectoryStatusRequest
 instance FromJSON DirectoryStatusRequest
 instance ToJSON DirectoryStatusRequest
 
+-- | ADR 0136: the buyer starts the charge an agreement is waiting for with
+-- the payment provider they chose.
+data AgreementPaymentRequest = AgreementPaymentRequest
+  { provider :: Text
+  } deriving (Show, Generic)
+instance FromJSON AgreementPaymentRequest
+instance ToJSON AgreementPaymentRequest
+
+-- | ADR 0136: where a profile is paid. For PayPhone the identifier is an
+-- identification (cédula or RUC) or a phone in international format.
+data PayoutAccountRequest = PayoutAccountRequest
+  { identifierType :: Text
+  , identifier :: Text
+  } deriving (Show, Generic)
+instance FromJSON PayoutAccountRequest
+instance ToJSON PayoutAccountRequest
+
 data ClassifiedCreateRequest = ClassifiedCreateRequest
   { authorProfileId :: UUID
   , categoryId :: UUID
@@ -334,6 +351,13 @@ type DirectoryProtectedAPI =
     :<|> "applications" :> Capture "applicationId" UUID :> Get '[JSON] Value
     :<|> "applications" :> Capture "applicationId" UUID :> "counter" :> RequiredIdempotency :> ReqBody '[JSON] OfferCounterRequest :> PostCreated '[JSON] Value
     :<|> "applications" :> Capture "applicationId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
+    :<|> "agreements" :> QueryParam "status" Text :> Get '[JSON] [Value]
+    :<|> "agreements" :> Capture "agreementId" UUID :> Get '[JSON] Value
+    :<|> "agreements" :> Capture "agreementId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
+    :<|> "agreements" :> Capture "agreementId" UUID :> "payments" :> ReqBody '[JSON] AgreementPaymentRequest :> PostCreated '[JSON] Value
+    :<|> "payout-accounts" :> Get '[JSON] [Value]
+    :<|> "profiles" :> Capture "profileId" UUID :> "payout-accounts" :> Capture "provider" Text :> ReqBody '[JSON] PayoutAccountRequest :> Put '[JSON] Value
+    :<|> "profiles" :> Capture "profileId" UUID :> "payout-accounts" :> Capture "provider" Text :> Delete '[JSON] Value
     :<|> "invitations" :> Get '[JSON] [Value]
     :<|> "invitations" :> RequiredIdempotency :> ReqBody '[JSON] InvitationCreateRequest :> PostCreated '[JSON] Value
     :<|> "invitations" :> Capture "invitationId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value

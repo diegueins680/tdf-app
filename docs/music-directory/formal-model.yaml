@@ -47,6 +47,33 @@ state_machines:
       rejected: []
       withdrawn: []
       expired: []
+  agreement:
+    # ADR 0135: created when an offer with an amount is accepted and the
+    # marketplace.agreements gate is on. pending_deposit, balance_due and
+    # expired belong to platform settlement (checkout) and are never entered
+    # by a participant request; off-platform agreements start at confirmed.
+    # ADR 0136: with the marketplace.agreement_payments gate on and a ready
+    # payout account, the agreement starts at pending_deposit instead and only
+    # verified payments move it out of pending_deposit and balance_due.
+    initial: confirmed
+    transitions:
+      pending_deposit: [confirmed, cancelled, expired]
+      confirmed: [in_progress, balance_due, completed, cancelled, disputed]
+      in_progress: [balance_due, completed, cancelled, disputed]
+      balance_due: [completed, disputed]
+      disputed: [completed, cancelled]
+      completed: []
+      cancelled: []
+      expired: []
+  agreement_payment:
+    # ADR 0136: one charge (deposit or balance) of an agreement settled on the
+    # platform. Only reconciliation with verified provider evidence pays it.
+    initial: pending
+    transitions:
+      pending: [paid, expired, cancelled]
+      paid: []
+      expired: []
+      cancelled: []
   invitation:
     initial: pending
     transitions:
@@ -145,6 +172,24 @@ invariants:
   I20_offer_confidentiality_aggregates:
     statement: Offerers see only their own offer and rounds; the public and other offerers see only the offer count and, with at least three offers, an anonymous amount range.
     enforcement: participant-scoped queries and offerStats projection
+  I21_agreement_transitions:
+    statement: Every agreement state change belongs to the declared relation; completed, cancelled and expired agreements never move again; amounts, parties and terms are frozen at creation.
+    enforcement: Policy relation, marketplace_agreement_transition_allowed trigger, static state-machine gate and property tests
+  I22_agreement_authority:
+    statement: The provider marks the start, only the buyer confirms completion, either party cancels or disputes a live agreement, only an administrator resolves a dispute, and settlement states (pending_deposit, balance_due, expired) are never requested by a participant nor used by off-platform agreements.
+    enforcement: agreementTransitionAllowedFor, participant-scoped role resolution, CHECK on settlement_mode and property tests
+  I23_agreement_accounting:
+    statement: For every agreement deposit + balance = amount, 0 <= commission <= amount, and the commission and deposit are the pricing rule in force when the offer was accepted; a payment state never implies the service was delivered.
+    enforcement: CHECK constraints, agreementAmounts property tests and the frozen-values trigger
+  I24_agreement_payment_transitions:
+    statement: Every agreement payment state change belongs to the declared relation; a paid, expired or cancelled payment never moves again; its amount, split, recipient and checkout are frozen at creation; and it becomes paid only with verified provider evidence bound to its own canonical checkout for the exact amount and currency.
+    enforcement: Policy relation, marketplace_guard_agreement_payment trigger (commerce_checkout_has_verified_payment), static state-machine gate and property tests
+  I25_agreement_payment_split:
+    statement: For every agreement payment platform fee + processor fee + provider amount = amount with no negative part; the platform never takes more than the commission due on that charge; the balance carries whatever the paid charges did not collect for the platform, so over deposit and balance it takes the frozen commission whenever the charges can carry it and never more; TDF never holds the provider's part.
+    enforcement: CHECK constraint, agreementPaymentSplit and agreementCommissionDue property tests, marketplace product flow capability gates (ADR 0115)
+  I26_agreement_settlement_progress:
+    statement: An agreement settled on the platform is confirmed only with a paid deposit and completed from balance_due only with a paid balance; the buyer's confirmation of delivery waits for the balance when one is owed; a participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money; either party may dispute an agreement that waits for its balance; an unpaid deposit expires the agreement and releases the slot.
+    enforcement: marketplace_agreement_require_paid_payment trigger, agreementCompletionTarget and agreementParticipantCancelAllowed, reconciliation hook and property tests
   I15_no_public_sensitive_data:
     statement: No public endpoint returns PII, credentials, tokens, private evidence, moderation notes or administrative fields.
     enforcement: DTO allowlists, OpenAPI schema audit and endpoint tests
@@ -225,9 +270,16 @@ postconditions:
     - the author accepts an offer waiting on the author; the offerer accepts an author counter
     - the classified is published, unexpired and has a slot left; the offer state and the slot are re-read under row locks and one slot is consumed atomically (concurrent acceptances of the same offer consume one slot)
     - accepted_amount_minor freezes the last round's amount and an accept round is recorded
+    - with the marketplace.agreements gate on and a positive amount, the agreement is created in the same transaction with frozen amounts (ADR 0135)
     - when no slot is left the classified becomes filled and open offers are rejected (slots_filled)
     - application remains private
     - conversation context may be created exactly once
+  transition_agreement:
+    - caller manages the buyer or provider profile, or is an administrator resolving a dispute
+    - the marketplace.agreements gate is on and the transition is permitted for that party
+    - the agreement is re-read under a row lock (order classified, offer, agreement) and matches the version the caller saw
+    - completing records a verified directory_interaction of kind marketplace_agreement
+    - cancelling withdraws the accepted offer and releases its slot
   counter_offer:
     - caller is the author or the offerer and it is their turn
     - the offer is open, unexpired, the classified is published and its price mode is not fixed

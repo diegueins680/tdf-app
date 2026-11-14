@@ -4774,7 +4774,7 @@
         "Organizer assigned once",
         "updated_at refreshed on assignment"
       ],
-      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before.",
+      "authorization": "Organizer-only routes require the stored organizer; an event without one is refused with 403 except for the strict-administrator edit that assigns it. Administrative refund, payment-review, invoice-resend, deletion and invitation routes admit strict administrators as before. A delegated administrator under EVT-ADMIN-DELEGATION-001 passes the organizer check of the operations that requirement lists, only on an event that has a stored organizer; the stored organizer itself is never changed by a grant.",
       "privacy": "Buyer, refund and invoice data of an event without an organizer are no longer reachable by an arbitrary signed-in account.",
       "concurrency": "Assignment runs under the event row lock together with the accepted edit and is one UPDATE conditional on the organizer still being missing; the row is reread and the edit proceeds only if the stored organizer is the caller.",
       "idempotency": "Repeating the edit as the assigned organizer is an ordinary organizer request; a second assignment changes nothing.",
@@ -4863,7 +4863,7 @@
       "effects": [
         "Atomic ticket/audit or transfer/code update; rollback on failure; public buyer projections omit transferred credentials."
       ],
-      "authorization": "Stored organizer for admission; transfer follows current-holder/organizer checks and authenticated opaque invitation capability, not email identity. Full staff delegation remains unspecified.",
+      "authorization": "Stored organizer, or a delegated administrator of the event under EVT-ADMIN-DELEGATION-001, for admission; transfer follows current-holder/organizer checks and authenticated opaque invitation capability, not email identity. Staff delegation beyond EVT-ADMIN-DELEGATION-001 remains unspecified.",
       "privacy": "Opaque full-UUID credentials replace PII/fixed-HMAC QR. Transfer email is contact data, not delivery or verified identity.",
       "concurrency": "Event/order/ticket/invitation lock order serializes conflicting operations within PostgreSQL; exact transaction wrappers remain required. External-change processing locks the event and order before recording the admission-fencing reconciliation exception.",
       "idempotency": "Second scan/accept rejects; random replacement credential invalidates prior code. Does not provide payment-provider exactly-once behavior.",
@@ -10202,6 +10202,220 @@
       }
     },
     {
+      "id": "MKT-AGREEMENT-001",
+      "title": "Marketplace agreements with frozen commission and deposit, created from accepted offers",
+      "domain": "MKT",
+      "statement": "With the marketplace.agreements gate on, accepting an offer that carries a positive amount and a currency creates exactly one agreement in the acceptance transaction. The buyer is the party that seeks (the classified author for seeking categories, the offerer for offering categories) and the other party is the provider. The agreement freezes the amount, currency, combined terms, the TDF commission and the deposit/balance split from the pricing rule in force (default 10% commission, 30% deposit), and those values never change. Part A collects no payment: agreements start confirmed and off-platform. The provider marks the start, only the buyer confirms completion, either party cancels or disputes a live agreement and only an administrator resolves a dispute. Completion records a verified interaction that makes both parties eligible to review each other; cancellation withdraws the accepted offer and releases its slot; withdrawing an accepted offer cancels its live agreement.",
+      "authority": "Product owner decisions of 2026-11-12 (10% commission, 30% deposit, agreement before payments); ADR 0135",
+      "source": "docs/adr/0135-marketplace-agreements.md; docs/marketplace/01-plan-por-fases.md; docs/marketplace/03-diseno-de-datos.md",
+      "contract": "docs/adr/0135-marketplace-agreements.md",
+      "actors": [
+        "Buyer (manager of the profile that seeks and pays)",
+        "Provider (manager of the profile that delivers)",
+        "Directory administrator"
+      ],
+      "preconditions": [
+        "Migration 2026-11-12_marketplace_agreements is applied after 2026-11-08_marketplace_offers",
+        "The marketplace.agreements runtime flag is on for the environment",
+        "The accepted offer carries a positive amount and a currency",
+        "An active pricing rule exists for the classified category or by default"
+      ],
+      "inputs": [
+        "PATCH /directory/applications/{applicationId}/status (acceptance creates the agreement; withdrawal cancels a live one)",
+        "GET /directory/agreements and GET /directory/agreements/{agreementId} (participant-scoped reads)",
+        "PATCH /directory/agreements/{agreementId}/status (start, complete, cancel or dispute with expectedVersion)"
+      ],
+      "state": {
+        "agreement": "pending_deposit, confirmed, in_progress, balance_due, completed, cancelled, disputed, expired",
+        "authority": "TDF.Directory.Policy.allowedAgreementTransition, marketplace_agreement_transition_allowed trigger and marketplace_agreement CHECK constraints"
+      },
+      "allowedTransitions": [
+        "confirmed -> in_progress (provider)",
+        "confirmed|in_progress -> completed (buyer)",
+        "confirmed|in_progress -> cancelled or disputed (either party)",
+        "disputed -> completed or cancelled (administrator)",
+        "pending_deposit -> confirmed|cancelled|expired and in_progress -> balance_due -> completed (platform settlement, part B only)"
+      ],
+      "forbiddenTransitions": [
+        "Any transition out of completed, cancelled or expired",
+        "Completion requested by the provider",
+        "A settlement state requested by a participant or used by an off-platform agreement",
+        "A change of amount, currency, commission, deposit, parties or terms after creation",
+        "A second agreement for the same offer",
+        "A decision on a version the caller did not see"
+      ],
+      "effects": [
+        "One marketplace_agreement row per accepted offer with commission, deposit and balance computed by agreementAmounts",
+        "Completion inserts a verified directory_interaction of kind marketplace_agreement and links it",
+        "Cancellation withdraws the accepted offer, releases its slot and reopens a filled unexpired classified",
+        "Both parties are notified of creation and of every transition"
+      ],
+      "authorization": "Only managers of the buyer or provider profile read an agreement; each party may request only its own transitions; administrators read and resolve disputes; nobody else learns the agreement exists.",
+      "privacy": "Agreements are private to their two parties and administrators; amounts, commission and terms never appear in public projections.",
+      "concurrency": "Row locks in the order classified, offer, agreement; conditional updates on the observed status; expectedVersion binds the decision to the displayed version; the unique application_id makes creation idempotent.",
+      "idempotency": "Agreement creation is ON CONFLICT (application_id) DO NOTHING inside the acceptance transaction; a repeated transition to the current state is refused by the participant rule.",
+      "failure": "Transitions not permitted for the party, stale versions and changed states return 409; unknown target states return 400; non-participants get 404; the gate off returns 503 for transitions while reads keep working.",
+      "recovery": "Rollback 2026-11-12_marketplace_agreements_rollback drops agreements, pricing and the agreement interactions with their reviews, and restores the previous interaction, notification and analytics allowlists; accepted offers are kept.",
+      "observability": "directory_audit_event rows agreement.create and agreement.status; analytics events agreement_completed and agreement_cancelled; notifications marketplace.agreement.*; release schema verification of the agreement objects.",
+      "property": "For every agreement deposit_minor + balance_minor = amount_minor and 0 <= commission_minor <= amount_minor; every stored status change is a pair of the declared relation; an off-platform agreement is never pending_deposit or balance_due.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
+        "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/features/marketplace/agreements.ts",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
+        "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
+        "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
+        "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
+        "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
+        "scripts/lib/production-release.mjs",
+        "scripts/test-event-memory-source-moderation.sh",
+        "scripts/production-migrations.json",
+        "formal/system/state-machine-bindings.json",
+        "formal/system/compiled-api-surface.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
+      ],
+      "formalModels": [
+        "docs/music-directory/formal-model.yaml"
+      ],
+      "verification": "Hspec property tests of the transition relation, party rules and amount arithmetic; Jest unit and component tests of the client mirror and the agreement card; static state-machine gate against the formal model; local PostgreSQL exercise of the migration, rollback, frozen-values trigger and every new statement (PREPARE). No PostgreSQL integration test of the handler transaction yet.",
+      "evidence": "Local static gates and PostgreSQL 16 exercise on 2026-11-12; CI on the candidate.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Policy verified by property tests; SQL verified against a migrated schema; handler transaction verified by review and CI build, not yet by a PostgreSQL handler test; payments are out of scope of part A.",
+      "ambiguity": [
+        "Offers without an amount (exchange or unpaid) create no agreement, so they end without a verified interaction until a later decision.",
+        "Dispute resolution is an administrator status change without a dedicated operations panel until part B."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented behind the marketplace.agreements flag with policy, unit and component coverage; payment collection, settlement, refunds and deposit expiry (part B), PostgreSQL handler integration tests and production manual gates remain open."
+      }
+    },
+    {
+      "id": "MKT-AGREEMENT-PAYMENT-001",
+      "title": "Marketplace agreement payments on the canonical checkout with a frozen split per charge",
+      "domain": "MKT",
+      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit; on the balance, whatever the paid charges did not actually collect for the platform), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money. A deposit unpaid at its deadline expires the agreement and releases the slot. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor refuses agreement checkouts until a split-capable provider flow exists.",
+      "authority": "Product owner decisions of 2026-11-12 (Stripe, PayPhone and DataWeb by currency and user choice; automatic provider payout; DataWeb integrated but closed; split on every charge); ADR 0136; ADR 0115",
+      "source": "docs/adr/0136-marketplace-agreement-payments.md; docs/adr/0115-provider-neutral-payment-routing.md",
+      "contract": "docs/adr/0136-marketplace-agreement-payments.md",
+      "actors": [
+        "Buyer (manager of the profile that seeks and pays)",
+        "Provider (manager of the profile that delivers and is paid)",
+        "Directory administrator",
+        "Payment reconciliation (canonical checkout runtime)"
+      ],
+      "preconditions": [
+        "Migration 2026-11-12_marketplace_agreement_payments is applied after 2026-11-12_marketplace_agreements",
+        "The marketplace.agreements and marketplace.agreement_payments runtime flags are on for the environment",
+        "The provider profile has a ready payout account for a payment provider that settles the agreed currency",
+        "A processor fee rule exists for the chosen payment provider"
+      ],
+      "inputs": [
+        "PATCH /directory/applications/{applicationId}/status (acceptance decides the settlement mode of the new agreement)",
+        "POST /directory/agreements/{agreementId}/payments (the buyer starts the deposit or balance charge)",
+        "PATCH /directory/agreements/{agreementId}/status (delivery confirmation, cancellation, dispute)",
+        "GET /directory/payout-accounts (payout accounts of the profiles the caller manages)",
+        "PUT /directory/profiles/{profileId}/payout-accounts/{provider} (declare a payout account)",
+        "DELETE /directory/profiles/{profileId}/payout-accounts/{provider} (disable a payout account)",
+        "commerce_checkout_session status changes written by payment reconciliation"
+      ],
+      "state": {
+        "agreementPayment": "pending, paid, expired, cancelled",
+        "authority": "TDF.Directory.Policy.allowedAgreementPaymentTransition, marketplace_guard_agreement_payment trigger, marketplace_agreement_require_paid_payment trigger and the checkout sync triggers"
+      },
+      "allowedTransitions": [
+        "payment pending -> paid (verified checkout evidence only)",
+        "payment pending -> expired (deposit deadline) or cancelled (replaced charge, cancelled agreement)",
+        "agreement pending_deposit -> confirmed (paid deposit) | cancelled (either party) | expired (deadline)",
+        "agreement confirmed|in_progress -> balance_due (buyer confirms delivery with a balance owed on the platform)",
+        "agreement balance_due -> completed (paid balance) | disputed (either party)"
+      ],
+      "forbiddenTransitions": [
+        "Any transition out of a paid, expired or cancelled payment",
+        "A payment marked paid by a participant or an administrator, or without verified evidence for its exact amount and currency",
+        "A change of amount, split, recipient or checkout of a payment after creation",
+        "An agreement confirmed without a paid deposit or completed from balance_due without a paid balance",
+        "A direct cancellation by a participant after the deposit was collected, or while a payment attempt may still collect money",
+        "An agreement charge executed by a provider flow that cannot split it"
+      ],
+      "effects": [
+        "One live charge (pending or paid) per agreement and kind, with platform fee + processor fee + provider amount = amount",
+        "A verified paid checkout marks its charge paid, moves the agreement, notifies both parties and writes an audit event; verified money for a charge that is no longer pending is recorded as agreement.payment.unapplied for operations",
+        "Expiry withdraws the accepted offer and releases its slot",
+        "Payout accounts store the recipient and project it masked"
+      ],
+      "authorization": "Only the buyer starts a charge; only managers of a profile with the manage capability read or change its payout accounts; reads of an agreement and its charges stay limited to its two parties and administrators.",
+      "privacy": "The payout recipient (identification or phone) is never returned in full and never appears in agreement projections, audit metadata or analytics; charges are private to the parties and administrators.",
+      "concurrency": "Lock order classified, offer, agreement, payment; reconciliation locks the checkout first and then the agreement and the payment; no marketplace path locks a checkout while holding an agreement (creating the checkout is an insert). Deposit expiry skips agreements with a payment attempt that may still collect money.",
+      "idempotency": "A unique partial index allows one live charge per agreement and kind; asking again replaces a pending charge that has no payment attempt in flight; the checkout idempotency key is derived from the payment id; the sync trigger updates a charge only while it is pending.",
+      "failure": "Gate off returns 503; a non-buyer gets 403; no charge due, a passed deadline, a missing account email, an unsupported currency, a charge in progress or an unpayable provider return 409; the shared executor returns 503 for agreement checkouts until a split-capable flow is verified.",
+      "recovery": "Rollback 2026-11-12_marketplace_agreement_payments_rollback refuses to run when a paid charge exists; otherwise it returns agreements waiting for a deposit to confirmed off-platform, sends agreements waiting for a balance to dispute, drops charges, payout accounts and fee rules and restores the previous agreement transition relation and notification allowlist.",
+      "observability": "directory_audit_event rows agreement.payment.create, agreement.payment.paid, agreement.payment.unapplied, agreement.payment.unexpected_state, payout_account.save and payout_account.disable; notifications marketplace.agreement.deposit_paid, balance_due and expired; release schema verification of the payment objects.",
+      "property": "For every charge amount = platform fee + processor fee + provider amount with no negative part and platform fee <= commission due; over deposit and balance the platform takes the frozen commission whenever the charges can carry it and never more; every stored payment status change is a pair of the declared relation; no charge is paid without verified checkout evidence.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
+        "tdf-hq/src/TDF/Directory/Policy.hs",
+        "tdf-hq/src/TDF/API/Directory.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/docs/openapi/directory.yaml",
+        "tdf-hq/docs/openapi/api.yaml",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-mobile/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/directory.ts",
+        "tdf-hq-ui/src/features/marketplace/agreements.ts",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
+        "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
+        "scripts/lib/production-release.mjs",
+        "scripts/production-migrations.json",
+        "docs/music-directory/formal-model.yaml",
+        "formal/system/state-machine-bindings.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/__tests__/catalog-list-audit.test.mjs"
+      ],
+      "formalModels": [
+        "docs/music-directory/formal-model.yaml"
+      ],
+      "verification": "Hspec property tests of the payment transition relation, the split and commission arithmetic, the delivery-confirmation target and the payout identifier shape; routing test that the agreement domain is a marketplace flow; Jest unit tests of the client mirror; static state-machine gate; local PostgreSQL exercise of the migration, rollback, guards and checkout sync triggers with a stubbed evidence function, and of every new statement (PREPARE). No PostgreSQL integration test of the handler transactions and no provider sandbox run yet.",
+      "evidence": "Local static gates and PostgreSQL 16 exercise on 2026-11-12; CI on the candidate.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "Policy verified by property tests; SQL verified against a migrated schema; handler transactions verified by review and CI build; no charge can execute because no split-capable provider flow exists and the gate is off in every environment.",
+      "ambiguity": [
+        "Whether the processor fee stays with the service provider or moves to the platform is a configurable rule awaiting a final product decision.",
+        "Deposit expiry runs lazily when a participant loads agreements until a worker exists.",
+        "Automatic refunds under the frozen cancellation policy, the PayPhone button flow with transferTo and the canonical Stripe adapter are part B2."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Domain, guards, handlers and read-side UI are implemented behind the marketplace.agreement_payments flag, which is off in every environment; split-capable provider execution (PayPhone button, Stripe destination charges), payout onboarding UI, refunds, the dispute panel, PostgreSQL handler integration tests and provider sandbox evidence remain open."
+      }
+    },
+    {
       "id": "MSG-WHATSAPP-REDELIVERY-001",
       "title": "A redelivered WhatsApp message changes nothing and is not answered again",
       "domain": "MSG",
@@ -14068,7 +14282,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
       ],
-      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction.",
+      "verification": "Bounded TLC with a negative control reproducing the pre-change race under perfect clocks; Apalache inductive proof (initiation, consecution, implication); Hspec for the pure reconciliation decision. Music purchases (added 2026-11-07): recordMusicVerifiedPayment now uses recordVerifiedPaymentOrReconcile; MusicPurchaseSpec (PostgreSQL) shows a COMPLETED capture into an expired checkout is refused and leaves an open verified_payment_not_admitted exception. Before the change the music capture and Datafast status paths answered 502 with no record. Legacy and hosted paths (added 2026-11-10): the legacy Stripe ticket webhook records an exception for a succeeded capture it refuses (PAY-STRIPE-WEBHOOK-001), and a bound PlaceToPay or PayPhone event that dead-letters leaves a provider_event_dead_letter exception (PAY-HOSTED-NOTIFICATIONS-001); on the hosted path the exception is written at the dead letter, not in the refusing transaction. Z3 proof stripe_ticket_capture.py covers the legacy ticket webhook's two exception writes (see PAY-STRIPE-WEBHOOK-001). Z3 proof hosted_dead_letter_review.py covers the hosted dead-letter review (see PAY-HOSTED-NOTIFICATIONS-001).",
       "evidence": "scripts/verify-inductive-proofs.sh output; tdf-hq-test DomoQuotePropertiesSpec run.",
       "status": "specified and implemented",
       "historicalStatus": null,
@@ -14082,7 +14296,9 @@
       "formalModels": [
         "formal/payments/CaptureAccounting.tla",
         "formal/payments/CaptureAccounting.cfg",
-        "formal/payments/CaptureAccountingLegacy.cfg"
+        "formal/payments/CaptureAccountingLegacy.cfg",
+        "formal/payments/stripe_ticket_capture.py",
+        "formal/payments/hosted_dead_letter_review.py"
       ],
       "confidence": "High for the protocol as modelled and the pure decision; handler correspondence by review of the twelve call sites. The provider reconciliation worker, music commerce and the PayPal webhook keep their own reconciliation paths.",
       "ambiguity": [
@@ -16733,8 +16949,10 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/Spec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end.",
+      "formalModels": [
+        "formal/payments/stripe_ticket_capture.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview are unit-tested in tdf-hq/test/Spec.hs; no PostgreSQL test drives the webhook handler end to end. Z3 proof stripe_ticket_capture.py (translation of handleStripePaymentIntentSucceeded for a matched ticket order, validateStripeTicketPaymentEvidence, parseStripeTicketCapture and stripeTicketClosedOrderNeedsReview, pinned by the hash of those regions): tickets are issued only with the full binding on a pending order, the answer is 400 exactly when the binding is not admitted, a succeeded positive capture always ends in tickets, a paid redelivery or an open exception, and each comparison, the pending fence, both exception writes and the review of a missing order row are load-bearing. The model first showed one silent case (the order row deleted between lookup and read-back while the stale copy said pending); the read-back now treats a missing row as deleted, which is reviewed.",
       "evidence": "formal/system/social-events-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -22876,8 +23094,10 @@
         "scripts/test-auth-throttle-http.sh",
         "scripts/lib/auth_throttle_http.py"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema).",
+      "formalModels": [
+        "formal/auth/credential_throttle.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): the failure counter equals the failed password checks of the window and never exceeds ten, a locked-out attempt checks no password, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -22952,8 +23172,10 @@
         "tdf-hq/test/TDF/ServerAuthSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed.",
+      "formalModels": [
+        "formal/auth/credential_throttle.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Z3 proof credential_throttle.py: reset requests are counted one by one and exactly the first five of an hourly window are admitted (the SQL upsert, the subject hash and the silent answer past the limit are not modelled).",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
@@ -23792,14 +24014,16 @@
       "tests": [
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
       ],
-      "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one.",
+      "formalModels": [
+        "formal/payments/hosted_dead_letter_review.py"
+      ],
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: ProviderRetrySpec (PostgreSQL) checks that an unavailable query carries the bound payment for review, that the fenced recorder writes nothing while the event is leased and exactly one exception once it is a dead letter, and that a recorded query mismatch adds no second one. Z3 proof hosted_dead_letter_review.py (translation of processProviderEventWith, queryAndApply, recordDeadLetterReview, processHostedPayload and markRetry, pinned by the hash of those regions): a bound event that an attempt turns into a dead letter always leaves the dead-letter review or the exception its own stage wrote; the review is written only for a bound event that is a dead letter at that attempt, never for an unbound one and never on top of the stage's own exception; a worker that lost its lease records nothing; guard necessity checked. Added 2026-11-12: a failure thrown after the event is bound keeps the binding (it used to retry without it, so an event that exhausted its retries that way dead-lettered with no exception); ProviderRetrySpec (PostgreSQL) covers it.",
       "evidence": "formal/system/commerce-integration-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue.",
+        "The hosted worker path still admits money with recordVerifiedPayment: a refused admission is retried, and the exception appears only when the event ends as a dead letter (up to eight attempts later), not in the refusing transaction. Events with no immutable binding dead-letter without an exception, so that forged callbacks cannot fill the reconciliation queue; that includes a failure thrown before the binding is loaded. An event whose provider state stays unknown until the retries run out ends with two open exceptions of different types (provider_status_unknown and provider_event_dead_letter).",
         "/NotificacionPago is an undocumented alias of the PayPhone handler."
       ],
       "conformance": {
@@ -24913,7 +25137,7 @@
         "Show preparation status and poster/campaign destinations",
         "Show activities and dependencies by human-readable names"
       ],
-      "authorization": "Existing organizer-only event preparation and logistics owner/editor roles remain enforced; delegated event administration is out of scope.",
+      "authorization": "Existing organizer-only event preparation and logistics owner/editor roles remain enforced; delegated event administration is out of scope here and specified by EVT-ADMIN-DELEGATION-001, whose administrators pass the same organizer checks.",
       "privacy": "No new event visibility or account permissions; poster attachment uses the existing event endpoint.",
       "concurrency": "Upload endpoint retains its event lock; frontend session guards stop late continuation. Concurrent poster replacement may require refreshing before retry.",
       "idempotency": "A confirmed upload is reused for confirmation retries within the same editor and selected file.",
@@ -27248,6 +27472,280 @@
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
       "verification": "Deterministic fixture tests for import extraction, layering, both ratchets and configuration errors, plus a test that runs the committed configuration against the repository; no mathematical proof.",
       "evidence": "scripts/__tests__/architecture-boundaries.test.mjs",
+      "historicalStatus": null
+    },
+    {
+      "id": "EVT-ADMIN-DELEGATION-001",
+      "title": "Organizer-delegated administrators of one event and courtesy tickets",
+      "domain": "EVT",
+      "statement": "Only the stored organizer of an event issues, revokes and lists single-use administrator invitation links and removes delegated administrators. The first signed-in account that accepts a usable link becomes a delegated administrator of that one event; the grant is one database row, carries no global role, and stops applying when the organizer removes it. While the grant exists and the event has a stored organizer, a delegated administrator passes the organizer check for editing the event, uploading its image, creating and updating ticket tiers, listing orders and tickets, viewing ticket QR credentials, admitting tickets, planning logistics with the owner role and issuing courtesy tickets; every other organizer check, including ticket transfers, is unchanged. A courtesy issue creates one zero-amount paid order of 1 to 10 tickets for a named guest and consumes tier and event inventory through the same reservation a purchase uses, only on an active tier inside its sales window. Routes: GET /social-events/events/{eventId}/admins; GET /social-events/events/{eventId}/admin-access; POST /social-events/events/{eventId}/admin-invitations; DELETE /social-events/events/{eventId}/admin-invitations/{invitationId}; DELETE /social-events/events/{eventId}/admins/{partyId}; POST /social-events/admin-invitations/preview; POST /social-events/admin-invitations/accept; POST /social-events/events/{eventId}/courtesy-tickets.",
+      "authority": "Described from the code of branch feat/event-admin-invitations-20261111 (delegated event administrators and courtesy tickets, 2026-11-11); owner confirmation of the intended behaviour is pending, and the exact limits (14-day expiry, 10 pending links, 10 tickets per courtesy order) and the list of delegated operations are implementation choices. Follows the remaining work named in formal/system/event-planning-ux.md.",
+      "source": "formal/system/event-admin-delegation.md",
+      "contract": "formal/system/event-admin-delegation.md",
+      "property": "An invitation link grants administration of exactly one event to at most one account, only while its issuer is still the stored organizer and the link is neither revoked nor expired; the raw token is never stored. A delegated administrator cannot issue, revoke or list invitations or remove administrators, and loses access when the grant row is deleted. Courtesy issuance never exceeds the inventory the shared reservation allows and never creates a nonzero amount.",
+      "actors": [
+        "Event organizer",
+        "Delegated event administrator",
+        "Invited signed-in account",
+        "Other signed-in account",
+        "Courtesy guest named on the order"
+      ],
+      "preconditions": [
+        "Authenticated bearer session on every route",
+        "Event visible to the caller and not hidden",
+        "Event has a stored organizer; an event without one has no delegated administration",
+        "Migration tdf-hq/sql/2026-11-11_event_admin_delegation.sql applied"
+      ],
+      "inputs": [
+        "GET /social-events/events/{eventId}/admins",
+        "GET /social-events/events/{eventId}/admin-access",
+        "POST /social-events/events/{eventId}/admin-invitations",
+        "DELETE /social-events/events/{eventId}/admin-invitations/{invitationId}",
+        "DELETE /social-events/events/{eventId}/admins/{partyId}",
+        "POST /social-events/admin-invitations/preview",
+        "POST /social-events/admin-invitations/accept",
+        "POST /social-events/events/{eventId}/courtesy-tickets",
+        "Invitee name: trimmed, 1 to 120 characters, no control characters",
+        "Invitation token: 64 hexadecimal characters, sent in the JSON body only",
+        "Courtesy issue: ticket tier of the event, quantity 1 to 10, required guest holder name, optional guest email"
+      ],
+      "state": {
+        "boundary": "event_admin_invitation and event_admin_member rows of one event; event_ticket_order, event_ticket and tier inventory for courtesy issues",
+        "authority": "PostgreSQL rows read and written under the social_event row lock; unique (event_id, party_id) and unique (token_sha256)",
+        "invitationStatus": "Derived on read: accepted, revoked, expired or pending"
+      },
+      "allowedTransitions": [
+        "No invitation -> pending invitation, by the organizer, while fewer than 10 are pending",
+        "Pending invitation -> accepted by the first signed-in account that is not the organizer, creating its grant row",
+        "Pending invitation -> revoked, by the organizer",
+        "Pending invitation -> expired, 14 days after creation",
+        "Grant row -> removed, by the organizer",
+        "Courtesy issue by the organizer or a delegated administrator -> zero-amount paid order with issued tickets and reserved inventory"
+      ],
+      "forbiddenTransitions": [
+        "Issue, revoke or list invitations, or remove an administrator, as a delegated administrator, strict administrator or any account other than the stored organizer",
+        "Accept a revoked, expired, unknown or malformed link, a link another account already accepted, or a link whose issuer no longer organizes the event",
+        "Restore a removed grant by replaying its consumed link",
+        "Obtain access to another event, a global role or a module through a grant",
+        "Act as delegated administrator of an event without a stored organizer",
+        "Create or list transfers of a ticket the caller does not hold, as a delegated administrator",
+        "Issue a courtesy order with a nonzero amount, more than 10 or fewer than 1 tickets, no holder name, a tier of another event, an inactive tier or one outside its sales window, or more tickets than the reservation allows",
+        "Store the raw invitation token in the database"
+      ],
+      "effects": [
+        "Insert event_admin_invitation with the SHA-256 digest of the token; the raw token is returned once",
+        "Set accepted_by and accepted_at and insert event_admin_member on first acceptance",
+        "Set revoked_at on revocation; delete the event_admin_member row on removal",
+        "Courtesy issue: insert one event_ticket_order (amount 0, status paid, no buyer party, metadata courtesy and courtesyIssuedBy), reserve inventory, issue one ticket per unit and send the ticket confirmation to the guest email when one is given",
+        "No notification is sent to the organizer or the invitee; no audit row beyond these rows is written"
+      ],
+      "authorization": "Administrator management (issue, revoke, remove, invitation list) requires the stored organizer through requireEventManager and is rechecked under the event lock; strict administrators receive nothing here. The roster is readable by the organizer and by delegated administrators, who receive no invitations. Accept requires only a session and a usable token. Delegated authority is decided by delegatedEventAdminExists for the caller and event, through eventManagerPartyFor in the handlers and inside admitTicket; it applies only when the event has a stored organizer.",
+      "privacy": "Only the SHA-256 digest of the token is stored; the token is returned once to the organizer and travels to the server in request bodies only. The web client carries it in the URL fragment of the public event page, removes it after use, keeps it out of login return targets and analytics URLs, and holds it across sign-in only in tab-scoped session storage keyed by event. Every unusable link receives the same 404. The link is a bearer capability until first use and the invitee name is not matched to the accepting account. Delegated administrators read order, ticket and buyer data of the event as the organizer does.",
+      "concurrency": "Issue, revoke, remove, preview, accept and courtesy issuance lock the social_event row FOR UPDATE and re-read organizer, invitation and grant under it, so simultaneous acceptances admit exactly one account and acceptance, revocation, removal and courtesy issuance are ordered. Ticket admission reads the grant under the same event lock. Event edit and ticket-tier writes read the grant before their transaction, so a removal committed in between does not stop the one request already in flight.",
+      "idempotency": "The accepting account may accept the same link again without change while its grant exists. Revoking a revoked invitation succeeds without change. Issuing is not idempotent: each call creates a new link. Courtesy issuance has no idempotency key: a repeated request issues another order.",
+      "failure": "400 invalid invitee name, identifier, courtesy quantity, holder name or email; 403 caller is not the organizer or an admitted delegated administrator, or the event has no organizer; 404 event missing or hidden, invitation or administrator not on this event, unusable link, tier not on this event; 409 pending-invitation limit, revoking an accepted invitation, organizer accepting their own link, a courtesy issue on an inactive tier or outside its sales window, or not enough tickets for a courtesy issue. A refused request writes nothing.",
+      "recovery": "The organizer issues a new link after an expired, revoked or misdirected one, and removes an administrator who should not have accepted. No automatic retry; the web client keeps the token and offers a retry after a transient failure. The rollback script refuses to drop the tables while grants or invitations exist.",
+      "observability": "HTTP status; event_admin_invitation and event_admin_member rows (creator, grantor, timestamps); courtesy order metadata naming the issuing party. No metric, log line or audit entry is added.",
+      "implementation": [
+        "tdf-hq/sql/2026-11-11_event_admin_delegation.sql",
+        "tdf-hq/sql/2026-11-11_event_admin_delegation_rollback.sql",
+        "scripts/production-migrations.json",
+        "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
+        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
+        "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Ticketing/Admission.hs",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/utils/eventAdminInvitationLink.ts",
+        "tdf-hq-ui/src/components/events/EventAdminsCard.tsx",
+        "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.tsx",
+        "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/routes/publicRoutes.tsx",
+        "scripts/test-event-admin-delegation.sh"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/EventAdminDelegationSpec.hs",
+        "scripts/test-event-admin-delegation.sh",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq-ui/src/components/events/EventAdminsCard.test.tsx",
+        "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.test.tsx",
+        "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/analytics.test.ts",
+        "tdf-hq-ui/src/utils/loginRouting.test.ts",
+        ".github/workflows/ci.yml"
+      ],
+      "formalModels": [],
+      "verification": "Six PostgreSQL Hspec examples in tdf-hq/test/TDF/EventAdminDelegationSpec.hs, run through scripts/test-event-admin-delegation.sh against a fully migrated disposable database: organizer-only issue with digest-only storage; acceptance and its idempotence; binding to one account, one event and the issuer's authority; eight accounts racing for one link; revocation and removal; logistics owner role, courtesy issuance, quantity and capacity refusals and admission by a delegated administrator, refused again after removal. Jest tests cover the client calls, the organizer and delegated views, the courtesy form, the invitation panel and the removal of the token from login and analytics URLs. The hosted workflow runs the script after the organizer runner; without the runner's database variable the Hspec group reports one pending example.",
+      "evidence": "formal/system/event-admin-delegation.md; local PostgreSQL 16 run of scripts/test-event-admin-delegation.sh on 2026-11-11 (6 examples, 0 failures). The runner is a step of .github/workflows/ci.yml; no hosted run of it has been observed yet.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The new handlers, the admission change and every call site of eventManagerPartyFor were read in full (transfer handlers no longer use it) and the grant lifecycle is exercised on PostgreSQL; the existing operations a delegated administrator now passes are established by reading, not by per-route tests, and there is no model.",
+      "ambiguity": [
+        "The list of operations delegated, the 14-day expiry and the limits of 10 pending links and 10 tickets per courtesy order are implementation choices; owner confirmation is pending.",
+        "A delegated administrator can also create a direct zero-price ticket order for another buyer, as the organizer can.",
+        "Courtesy issuance requires an active tier inside its sales window and has no idempotency key; whether courtesy tickets should have their own quota or be reported separately in finance is undecided, and the sales-window refusal has no dedicated test.",
+        "Event edit and ticket-tier writes decide delegation before taking their transaction; one request in flight can complete after the grant is removed.",
+        "The link is a bearer capability until accepted; nobody is notified when it is accepted and the invitee name is not verified.",
+        "The routes are absent from the OpenAPI document and no Mobile client surface exists."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The grant lifecycle, the single-acceptance race, removal and courtesy issuance are exercised on PostgreSQL (locally; the runner is now a hosted workflow step) and the web flows by Jest; the widened organizer checks on existing routes are covered by reading only, no model exists and the product limits await owner confirmation."
+      },
+      "historicalStatus": null
+    },
+    {
+      "id": "UX-PUBLIC-DETAIL-001",
+      "title": "Public detail pages open the full image and follow the application language",
+      "statement": "On a public event, profile, venue or classified page, activating a real preview image opens a viewer with the whole image, and the page's own text and dates use the application language, Spanish by default, not the browser language.",
+      "domain": "UX",
+      "authority": "Product owner requests on 2026-11-11.",
+      "source": "User requests: clicking the event image shows a larger and complete version; the application shows in Spanish by default.",
+      "property": "A visitor can see the entire poster, and a visitor who never chose a language reads the page in Spanish whatever the browser language.",
+      "contract": "formal/system/public-detail-presentation.md",
+      "actors": [
+        "Public visitor",
+        "Signed-in visitor"
+      ],
+      "preconditions": [
+        "The public record is visible under the existing directory visibility rules."
+      ],
+      "inputs": [
+        "Pointer or keyboard activation of the preview image",
+        "Close control, backdrop, image or Escape",
+        "Application language preference"
+      ],
+      "state": {
+        "boundary": "Image viewer visibility and page display language",
+        "states": [
+          "preview",
+          "viewer open",
+          "placeholder"
+        ]
+      },
+      "allowedTransitions": [
+        "preview -> viewer open on activation",
+        "viewer open -> preview on close, backdrop, image activation or Escape",
+        "viewer open -> preview when the full image fails to load"
+      ],
+      "forbiddenTransitions": [
+        "The placeholder opens a viewer.",
+        "The browser language changes the page language when the visitor chose none."
+      ],
+      "effects": [
+        "No request other than loading the already public image URL."
+      ],
+      "authorization": "None beyond the existing public visibility of the record and its image.",
+      "privacy": "The viewer shows only the image URL the page already renders.",
+      "concurrency": "Local view state only.",
+      "idempotency": "Opening and closing change no stored state.",
+      "failure": "A full image that fails to load closes the viewer and leaves the preview.",
+      "recovery": "The preview remains available; a changed image resets the viewer.",
+      "observability": "The control and viewer carry accessible names; the document language reflects the application language.",
+      "implementation": [
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx",
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Component tests for opening, closing and the inert placeholder, and a page test that keeps Spanish under an English browser; TypeScript and changed-file lint.",
+      "evidence": "tdf-hq-ui/src/components/directory/ExpandablePreviewImage.test.tsx and tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx.",
+      "confidence": "The component and page behaviors have local test evidence.",
+      "ambiguity": [
+        "Viewer layout on real devices and the deployed public event page require browser verification."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
+      },
+      "critical": false
+    },
+    {
+      "id": "EVT-LOGISTICS-ACCESS-001",
+      "title": "The web logistics page of an event opens by record scope, not by the Scheduling module",
+      "domain": "EVT",
+      "statement": "The feature-registry entry social.event.logistics (/social/eventos/:eventId/logistica) requires an authenticated session and no module. Its record scopes stay event-member-or-admin for view and event-manager-or-admin for create, edit, delete and assign. The web shell therefore renders the logistics page for any signed-in account, and what that account may read or change is decided per event by the logistics handlers: the stored organizer and a delegated administrator under EVT-ADMIN-DELEGATION-001 receive the owner role, a recorded logistics team member receives its editor or viewer role, and every other account is refused with 403. No other registry entry changes; pages that require the Scheduling module still require it.",
+      "authority": "Repository owner decision of 2026-11-13: remove the module requirement from this record-scoped route and rely on the record scope and the backend authorization, so that an administrator invited to one event (who holds no module) can open its logistics page. Recorded as AUTHORITY-098.",
+      "source": "formal/system/event-admin-delegation.md",
+      "contract": "tdf-hq/assets/feature-registry.json",
+      "property": "For every authenticated session, whatever its modules, the registry decision for discover, view, create, edit, delete and assign on social.event.logistics is allowed; for an unauthenticated session it is not. The logistics plan of an event is returned only to its stored organizer, its delegated administrators and its recorded logistics team.",
+      "actors": [
+        "Event organizer",
+        "Delegated event administrator",
+        "Logistics team member",
+        "Other signed-in account",
+        "Signed-out visitor"
+      ],
+      "preconditions": [
+        "Authenticated session for the page and for every logistics route",
+        "Event visible to the caller"
+      ],
+      "inputs": [
+        "Web route /social/eventos/{eventId}/logistica",
+        "Session roles and modules read by the web shell",
+        "GET /social-events/events/{eventId}/logistics and the logistics write routes under it"
+      ],
+      "state": {
+        "boundary": "Feature-registry entry social.event.logistics; organizer, event_admin_member and event_logistics_member rows of one event",
+        "authority": "tdf-hq/assets/feature-registry.json for page discovery; the logistics handlers and PostgreSQL rows for record access"
+      },
+      "allowedTransitions": [
+        "Signed-in account without the Scheduling module -> logistics page rendered by the web shell",
+        "Organizer or delegated administrator -> plan returned with the owner role",
+        "Recorded logistics team member -> plan returned with its editor or viewer role"
+      ],
+      "forbiddenTransitions": [
+        "Signed-out visitor opening the logistics page without being sent to sign in",
+        "Account that is neither organizer, delegated administrator nor logistics team member reading or changing the plan of an event",
+        "Opening a page that still declares the Scheduling module without holding it"
+      ],
+      "effects": [
+        "The web shell no longer shows the 403 page on the logistics route to an account that lacks the Scheduling module",
+        "No database row, role or module is created or changed"
+      ],
+      "authorization": "Page: authenticated session only (feature registry, enforced by the web shell). Data: requireLogisticsAccess in tdf-hq/src/TDF/Server/SocialEventsHandlers.hs, which never consulted the module: owner for the stored organizer and for a delegated administrator, the stored team role for a logistics team member, 403 otherwise, and 403 for a viewer on a write.",
+      "privacy": "The page shell and its route are visible to any signed-in account; plan data (places, activities, assignees, team) is returned only by the API after the record check. A refused account sees the API error message and no plan content.",
+      "concurrency": "Not applicable to the registry change; logistics writes keep their existing version checks.",
+      "idempotency": "Not applicable; the change is a static access rule.",
+      "failure": "Signed-out: redirected to sign in. Signed-in without access to the event: the page renders the 403 message returned by the API and no plan controls. Unknown or hidden event: 404 from the API.",
+      "recovery": "None needed; the organizer grants access by inviting an administrator or adding a logistics team member.",
+      "observability": "The feature_403_shown analytics event is no longer emitted for this route on a missing module; API 403 responses are unchanged.",
+      "implementation": [
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq-ui/src/features/featureRegistry.ts",
+        "tdf-hq-ui/src/routes/AppShell.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/features/featureRegistry.test.ts",
+        "tdf-hq-ui/src/routes/AppShell.test.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
+        "tdf-hq/test/TDF/EventAdminDelegationSpec.hs"
+      ],
+      "formalModels": [],
+      "verification": "Jest: the registry allows every action of social.event.logistics to a signed-in session with no modules and refuses a signed-out one, while studio.calendar still reports the missing scheduling module; the web shell renders the logistics route for a Fan/Customer session with no modules and the 403 page for /estudio/calendario; the logistics page shows the owner controls for a plan with the owner role and only the API refusal for an account outside the event. The existing PostgreSQL example in tdf-hq/test/TDF/EventAdminDelegationSpec.hs shows the logistics plan refused with 403 before the grant and returned with the owner role after it.",
+      "evidence": "Local Jest run of the three suites on 2026-11-13 (29 tests, 0 failures); the two registry-dependent tests fail against the previous registry. The backend example was not re-run for this change because no backend source changed.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The web guard (evaluatePathAccess in AppShell) and requireLogisticsAccess were read in full; the backend never applied the registry rule to logistics routes, so only the web shell behaviour changes. The generated Mobile registry copy is not regenerated in this change.",
+      "ambiguity": [
+        "The Mobile copy tdf-mobile/src/features/generatedFeatureRegistry.ts at the pinned submodule revision still lists the Scheduling module for this entry. It was already older than the registry on main (npm run audit:features, which no workflow runs, reports it stale before and after this change), Mobile has no logistics screen, and regenerating it needs a commit in the Mobile repository that is not part of this change.",
+        "The record scopes event-member-or-admin and event-manager-or-admin are labels in the registry; the web shell does not evaluate them and relies on the API.",
+        "Accounts with no relation to an event can now load the page shell and see the API refusal instead of the 403 page."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
+      },
       "historicalStatus": null
     },
     {

@@ -56,6 +56,7 @@ import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
+import qualified TDF.EventAdminDelegationSpec as EventAdminDelegationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
@@ -926,6 +927,7 @@ main = hspec $ do
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
+    EventAdminDelegationSpec.spec
     InvoiceDatilSpec.spec
     TicketManualReviewSpec.spec
     TicketPaymentReceiptSpec.spec
@@ -2846,6 +2848,9 @@ main = hspec $ do
               `shouldBe` Just ProviderCapabilities.FlowEventTicket
             PaymentRuntimeStore.productFlowForDomain "marketplace_rental"
               `shouldBe` Just ProviderCapabilities.FlowMarketplace
+            -- ADR 0136: agreement charges need the marketplace capabilities.
+            PaymentRuntimeStore.productFlowForDomain "marketplace_agreement"
+              `shouldBe` Just ProviderCapabilities.FlowMarketplace
             PaymentRuntimeStore.productFlowForDomain "unknown"
               `shouldBe` Nothing
 
@@ -4384,8 +4389,8 @@ main = hspec $ do
             parseStripeTicketCapture (A.object []) `shouldBe` Nothing
 
         it "reviews a valid Stripe capture only when the ticket order is closed" $ do
-            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded"]
-                `shouldBe` [False, False, False, True, True, True]
+            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded", "deleted"]
+                `shouldBe` [False, False, False, True, True, True, True]
 
         it "recovers marketplace order ids from Stripe metadata context" $ do
             let webhookPayload =

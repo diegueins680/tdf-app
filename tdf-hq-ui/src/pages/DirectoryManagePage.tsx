@@ -50,6 +50,7 @@ import {
   type ManagedDirectoryProfile,
   type PriceMode,
 } from '../api/directory';
+import MyAgreementsPanel from '../features/marketplace/MyAgreementsPanel';
 import MyOffersPanel from '../features/marketplace/MyOffersPanel';
 import OfferCard from '../features/marketplace/OfferCard';
 import OfferForm from '../features/marketplace/OfferForm';
@@ -99,7 +100,13 @@ function DirectoryNotificationContext({ kind, id }: { kind: string; id: string }
 function DirectoryManagement() {
   const client = useQueryClient();
   const [params, setParams] = useSearchParams();
-  const [tab, setTab] = useState(params.has('apply') || params.has('contact') || params.has('invite') ? 2 : 0);
+  const [tab, setTab] = useState(params.has('apply') || params.has('contact') || params.has('invite') ? 2 : params.get('tab') === 'acuerdos' ? 5 : 0);
+  // The page stays mounted when a link inside it only changes the query string
+  // (the agreement link on an offer card), so follow ?tab=acuerdos as it changes.
+  const requestedTab = params.get('tab');
+  useEffect(() => {
+    if (requestedTab === 'acuerdos') setTab(5);
+  }, [requestedTab]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState<ManagedDirectoryProfile>();
   const [classifiedOpen, setClassifiedOpen] = useState(false);
@@ -128,12 +135,13 @@ function DirectoryManagement() {
         <Alert severity="info" action={<Button color="inherit" onClick={() => ageMutation.mutate()} disabled={ageMutation.isPending}>Soy mayor de edad</Button>}>
           Para publicar, responder o contactar se requiere control de edad. La declaración de adulto no se muestra como identidad verificada; las cuentas de menores requieren consentimiento aprobado de su representante.
         </Alert>
-        <Tabs value={tab} onChange={(_, value: unknown) => { if (typeof value === 'number') setTab(value); }} aria-label="Administración del directorio" variant="scrollable">
+        <Tabs value={tab} onChange={(_, value: unknown) => { if (typeof value !== 'number') return; setTab(value); if (params.has('tab')) { const next = new URLSearchParams(params); next.delete('tab'); setParams(next, { replace: true }); } }} aria-label="Administración del directorio" variant="scrollable">
           <Tab label={`Perfiles (${profiles.data?.length ?? 0})`} />
           <Tab label={`Anuncios (${classifieds.data?.length ?? 0})`} />
           <Tab label="Ofertar, contactar o invitar" />
           <Tab label="Invitaciones" />
           <Tab label="Mis ofertas" />
+          <Tab label="Acuerdos" />
         </Tabs>
 
         {tab === 0 && <ProfilePanel profiles={profiles.data ?? []} loading={profiles.isLoading} onCreate={() => { setEditingProfile(undefined); setProfileOpen(true); }} onEdit={(profile) => { setEditingProfile(profile); setProfileOpen(true); }} onRefresh={refresh} />}
@@ -141,6 +149,7 @@ function DirectoryManagement() {
         {tab === 2 && <OpportunityActionPanel profiles={profiles.data ?? []} classifieds={classifieds.data ?? []} taxonomies={taxonomies.data} applyId={params.get('apply')} applySlug={params.get('slug')} contactId={params.get('contact')} inviteId={params.get('invite')} contextKind={contextKind} onDone={() => { setNotice('Acción enviada de forma segura.'); setParams({}); }} />}
         {tab === 3 && <InvitationPanel />}
         {tab === 4 && <MyOffersPanel currencies={taxonomies.data?.currencies} />}
+        {tab === 5 && <MyAgreementsPanel currencies={taxonomies.data?.currencies} />}
 
         <ProfileDialog profile={editingProfile} open={profileOpen} onClose={() => setProfileOpen(false)} taxonomies={taxonomies.data} onSaved={() => { setProfileOpen(false); void refresh(); setNotice(editingProfile ? 'Perfil actualizado.' : 'Perfil creado como borrador.'); }} />
         <ClassifiedDialog open={classifiedOpen} onClose={() => setClassifiedOpen(false)} profiles={profiles.data ?? []} taxonomies={taxonomies.data} onCreated={() => { setClassifiedOpen(false); void refresh(); setNotice('Clasificado creado como borrador. Revísalo y publícalo cuando esté listo.'); }} />

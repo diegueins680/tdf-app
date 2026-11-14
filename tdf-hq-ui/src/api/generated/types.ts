@@ -6734,6 +6734,112 @@ export interface paths {
         patch: operations["transitionClassifiedApplication"];
         trace?: never;
     };
+    "/directory/agreements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Agreements where the caller manages the buyer or the provider profile (ADR 0135) */
+        get: operations["listMyAgreements"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/agreements/{agreementId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One agreement (participants and admins) */
+        get: operations["getAgreement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/agreements/{agreementId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Start or complete or cancel or dispute an agreement (ADR 0135) */
+        patch: operations["transitionAgreement"];
+        trace?: never;
+    };
+    "/directory/agreements/{agreementId}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The buyer starts the deposit or balance charge the agreement is waiting for (ADR 0136)
+         * @description Freezes the split of the charge and creates a canonical checkout of domain marketplace_agreement. The lookup token is returned only here; asking again replaces a charge that has no payment attempt in flight.
+         */
+        post: operations["createAgreementPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/payout-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payout accounts of the profiles the caller manages (ADR 0136) */
+        get: operations["listPayoutAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/profiles/{profileId}/payout-accounts/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Declare where a profile is paid for its agreements (ADR 0136) */
+        put: operations["savePayoutAccount"];
+        post?: never;
+        /** Stop using a payout account for new agreements and charges (ADR 0136) */
+        delete: operations["disablePayoutAccount"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/invitations": {
         parameters: {
             query?: never;
@@ -16754,6 +16860,11 @@ export interface components {
             submittedAt: string;
             /** Format: date-time */
             updatedAt?: string;
+            /**
+             * Format: uuid
+             * @description Agreement created when this offer was accepted (ADR 0135)
+             */
+            agreementId?: string | null;
             /** Format: date-time */
             acceptedAt?: string | null;
             /** Format: int64 */
@@ -16793,6 +16904,162 @@ export interface components {
             message?: string;
             /** Format: date-time */
             expiresAt?: string;
+        };
+        AgreementProfile: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        /** @description One charge of an agreement with its frozen split. amountMinor = platformFeeMinor + processingFeeMinor + providerAmountMinor (ADR 0136). */
+        AgreementPayment: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "deposit" | "balance";
+            /** @enum {string} */
+            provider: "payphone" | "stripe" | "datafast";
+            /** @enum {string} */
+            status: "pending" | "paid" | "expired" | "cancelled";
+            /** Format: int64 */
+            amountMinor: number;
+            currency: string;
+            /**
+             * Format: int64
+             * @description TDF commission taken from this charge
+             */
+            platformFeeMinor: number;
+            /**
+             * Format: int64
+             * @description Estimated payment processor fee
+             */
+            processingFeeMinor: number;
+            /** @enum {string} */
+            processingFeePayer: "provider" | "platform";
+            /**
+             * Format: int64
+             * @description Amount sent to the service provider
+             */
+            providerAmountMinor: number;
+            /** Format: date-time */
+            dueAt: string;
+            /** Format: date-time */
+            paidAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Private to its two parties and authorized admins. Amounts and terms are frozen when the offer is accepted (ADR 0135). */
+        MarketplaceAgreement: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            applicationId: string;
+            classified: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+                slug: string;
+            };
+            buyerProfile: components["schemas"]["AgreementProfile"];
+            providerProfile: components["schemas"]["AgreementProfile"];
+            /** Format: int64 */
+            amountMinor: number;
+            /** Format: uuid */
+            currencyId: string;
+            commissionBps: number;
+            /** Format: int64 */
+            commissionMinor: number;
+            /**
+             * Format: int64
+             * @description Amount minus the TDF commission
+             */
+            providerNetMinor: number;
+            depositBps: number;
+            /** Format: int64 */
+            depositMinor: number;
+            /** Format: int64 */
+            balanceMinor: number;
+            terms: components["schemas"]["OfferTerms"];
+            cancellationPolicy?: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            settlementMode: "off_platform" | "platform";
+            /** @enum {string} */
+            status: "pending_deposit" | "confirmed" | "in_progress" | "balance_due" | "completed" | "cancelled" | "disputed" | "expired";
+            /** @enum {string} */
+            participantRole: "buyer" | "provider" | "admin";
+            /** Format: date-time */
+            startsAt?: string | null;
+            /** Format: date-time */
+            endsAt?: string | null;
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
+            cancelledAt?: string | null;
+            cancellationReason?: string | null;
+            /**
+             * Format: uuid
+             * @description Verified interaction that makes reviews eligible once the agreement is completed
+             */
+            interactionId?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int64 */
+            version: number;
+            /**
+             * Format: date-time
+             * @description Deadline to pay the deposit of an agreement settled on the platform (ADR 0136)
+             */
+            depositDueAt?: string | null;
+            /** @description Charges of the agreement that were not replaced */
+            payments?: components["schemas"]["AgreementPayment"][];
+            /** @description Payment providers through which the provider profile can be paid */
+            payoutProviders?: ("payphone" | "stripe")[];
+        };
+        AgreementPaymentRequest: {
+            /** @enum {string} */
+            provider: "payphone" | "stripe" | "datafast";
+        };
+        AgreementPaymentCheckout: {
+            agreement: components["schemas"]["MarketplaceAgreement"];
+            /** Format: uuid */
+            paymentId: string;
+            /** Format: uuid */
+            checkoutId: string;
+            /** @description Secret needed to open a payment session on the checkout; returned only once */
+            lookupToken: string;
+            /** @enum {string} */
+            provider: "payphone" | "stripe" | "datafast";
+        };
+        PayoutAccount: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            profileId: string;
+            profileName: string;
+            /** @enum {string} */
+            provider: "payphone" | "stripe";
+            /** @enum {string} */
+            identifierType: "identification" | "phone" | "account";
+            /** @description Only the last four characters of the recipient are shown */
+            identifierMasked: string;
+            /** @enum {string} */
+            status: "pending" | "ready" | "disabled";
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: int64 */
+            version: number;
+        };
+        PayoutAccountRequest: {
+            /** @enum {string} */
+            identifierType: "identification" | "phone";
+            /** @description Cédula (10 digits), RUC (13 digits) or a phone in international format */
+            identifier: string;
         };
         DirectoryClassifiedReference: {
             /** Format: uuid */
@@ -33820,6 +34087,249 @@ export interface operations {
         responses: {
             /** @description Participant-authorized transition */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listMyAgreements: {
+        parameters: {
+            query?: {
+                status?: "open" | "closed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Agreements of the caller, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"][];
+                };
+            };
+        };
+    };
+    getAgreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Agreement detail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"];
+                };
+            };
+            /** @description Not a participant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    transitionAgreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated agreement */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"];
+                };
+            };
+            /** @description Transition not permitted for this participant, or the agreement changed since it was displayed */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The marketplace.agreements gate is off in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createAgreementPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agreementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgreementPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description Charge and checkout created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgreementPaymentCheckout"];
+                };
+            };
+            /** @description Only the buyer pays an agreement */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No payment is due, the deadline passed, a payment is in progress, or the provider cannot be paid with this payment provider */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The marketplace.agreement_payments gate is off in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listPayoutAccounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Payout accounts with the recipient masked */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutAccount"][];
+                };
+            };
+        };
+    };
+    savePayoutAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+                provider: "payphone" | "stripe";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutAccountRequest"];
+            };
+        };
+        responses: {
+            /** @description Saved payout account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutAccount"];
+                };
+            };
+            /** @description The identifier is not a valid identification or phone */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The caller does not manage this profile */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description This payment provider does not accept payout accounts yet */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The marketplace.agreement_payments gate is off in this environment */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    disablePayoutAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+                provider: "payphone" | "stripe";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disabled payout account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutAccount"];
+                };
+            };
+            /** @description The caller does not manage this profile or it has no such account */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

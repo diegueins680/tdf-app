@@ -8620,6 +8620,12 @@ paths:
   /directory/applications/{applicationId}: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}' }
   /directory/applications/{applicationId}/counter: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}~1counter' }
   /directory/applications/{applicationId}/status: { $ref: './directory.yaml#/paths/~1directory~1applications~1{applicationId}~1status' }
+  /directory/agreements: { $ref: './directory.yaml#/paths/~1directory~1agreements' }
+  /directory/agreements/{agreementId}: { $ref: './directory.yaml#/paths/~1directory~1agreements~1{agreementId}' }
+  /directory/agreements/{agreementId}/status: { $ref: './directory.yaml#/paths/~1directory~1agreements~1{agreementId}~1status' }
+  /directory/agreements/{agreementId}/payments: { $ref: './directory.yaml#/paths/~1directory~1agreements~1{agreementId}~1payments' }
+  /directory/payout-accounts: { $ref: './directory.yaml#/paths/~1directory~1payout-accounts' }
+  /directory/profiles/{profileId}/payout-accounts/{provider}: { $ref: './directory.yaml#/paths/~1directory~1profiles~1{profileId}~1payout-accounts~1{provider}' }
   /directory/invitations: { $ref: './directory.yaml#/paths/~1directory~1invitations' }
   /directory/invitations/{invitationId}/status: { $ref: './directory.yaml#/paths/~1directory~1invitations~1{invitationId}~1status' }
   /directory/contact: { $ref: './directory.yaml#/paths/~1directory~1contact' }
