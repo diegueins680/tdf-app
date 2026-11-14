@@ -63,7 +63,7 @@ ROOT = Path(__file__).resolve().parents[2]
 HANDLERS = 'tdf-hq/src/TDF/Server/SocialEventsHandlers.hs'
 REGIONS = (
     (HANDLERS, 'handleStripePaymentIntentSucceeded :: UTCTime -> Aeson.Value -> AppM NoContent',
-     'issueMissingTicketsForOrder ::', '4922f009442e82d8e13523e7ee7085591b4813f9fabcdb087cf896c06b592e56'),
+     'sendTicketConfirmationForOrder ::', '4922f009442e82d8e13523e7ee7085591b4813f9fabcdb087cf896c06b592e56'),
     (HANDLERS, 'validateStripeTicketPaymentEvidence ::',
      'parseStripeWebhookMarketplaceOrderId :: Aeson.Value -> Maybe T.Text', 'b8a75b76787d2e0ff430d3e981da1c5a5d1679fd5e63d680f73eea68f624e2e7'),
     ('tdf-hq/src/TDF/Server/StripeTicketCapture.hs',
