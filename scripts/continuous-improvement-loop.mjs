@@ -473,20 +473,52 @@ function isLoopCheckpointBranch(rawBranch) {
   return shortName.startsWith('continuous-improvement-loop/dirty/');
 }
 
-function buildBranchMergeCandidates({ localBranches = [], remoteBranches = [], baseBranch = 'main' } = {}) {
+// The loop reconciles and prunes only branches it created itself. Every other
+// branch belongs to someone else's work, usually an open pull request: merging
+// it here and deleting its remote ref closes that pull request unmerged.
+const LOOP_OWNED_BRANCH_PREFIXES = ['continuous-improvement-loop/'];
+
+export function resolveReconcileBranchPrefixes(config = {}) {
+  const configured = Array.isArray(config.reconcileBranchPrefixes) ? config.reconcileBranchPrefixes : [];
+  const extra = configured.map((value) => String(value ?? '').trim());
+  for (const prefix of extra) {
+    // A bare or wildcard prefix would claim every branch again.
+    if (!prefix || !/^[A-Za-z0-9._-]+\/([A-Za-z0-9._/-]*)$/.test(prefix)) {
+      throw new Error(
+        `Invalid reconcileBranchPrefixes entry ${JSON.stringify(prefix)}: use a namespace such as "loop-experiments/".`,
+      );
+    }
+  }
+  return uniqueValues([...LOOP_OWNED_BRANCH_PREFIXES, ...extra]);
+}
+
+export function isLoopOwnedBranch(rawBranch, prefixes = LOOP_OWNED_BRANCH_PREFIXES) {
+  const shortName = normalizeGitBranchShortName(rawBranch);
+  return Boolean(shortName) && prefixes.some((prefix) => shortName.startsWith(prefix));
+}
+
+export function buildBranchMergeCandidates({
+  localBranches = [],
+  remoteBranches = [],
+  baseBranch = 'main',
+  ownedPrefixes = LOOP_OWNED_BRANCH_PREFIXES,
+} = {}) {
   const base = normalizeGitBranchShortName(baseBranch || 'main');
+  const PROTECTED = new Set([base, 'main', 'master', 'HEAD'].filter(Boolean));
   const localByShortName = new Map();
   const remoteByShortName = new Map();
+  const eligible = (shortName) =>
+    Boolean(shortName) && !PROTECTED.has(shortName) && isLoopOwnedBranch(shortName, ownedPrefixes);
 
   for (const branch of localBranches) {
     const shortName = normalizeGitBranchShortName(branch);
-    if (!shortName || shortName === base) continue;
+    if (!eligible(shortName)) continue;
     localByShortName.set(shortName, String(branch).trim());
   }
 
   for (const branch of remoteBranches) {
     const shortName = normalizeGitBranchShortName(branch);
-    if (!shortName || shortName === base) continue;
+    if (!eligible(shortName)) continue;
     remoteByShortName.set(shortName, String(branch).trim());
   }
 
@@ -509,14 +541,9 @@ function buildMainMergeCommitMessage(shortName = '', branchRef = '') {
   return `continuous-improvement-loop: merge ${shortName || branchRef} into main`;
 }
 
-function buildMainConflictResolutionCommitMessage(shortName = '', branchRef = '') {
-  return `continuous-improvement-loop: resolve conflicts while merging ${shortName || branchRef} into main`;
-}
-
 async function mergeRefOntoMain(repoRoot, branchRef, shortName = normalizeGitBranchShortName(branchRef)) {
   const headBefore = await getHeadSha(repoRoot);
   const mergeMessage = buildMainMergeCommitMessage(shortName, branchRef);
-  const conflictMessage = buildMainConflictResolutionCommitMessage(shortName, branchRef);
   const mergeArgs = isLoopCheckpointBranch(shortName)
     ? ['merge', '-s', 'ours', '--no-ff', '-m', mergeMessage, branchRef]
     : ['merge', '--no-ff', '-m', mergeMessage, branchRef];
@@ -529,12 +556,13 @@ async function mergeRefOntoMain(repoRoot, branchRef, shortName = normalizeGitBra
       throw error;
     }
 
-    // Conflict resolution stays fail-closed toward the current main branch.
-    await execText('git', ['restore', '--source=HEAD', '--staged', '--worktree', '--', ...conflicts], repoRoot);
-    await execText('git', ['commit', '-m', conflictMessage], repoRoot);
+    // A conflict is never resolved here. Keeping this side of each conflicting
+    // file would record a merge that silently dropped the branch's changes to
+    // it, so the merge is abandoned and the branch is left exactly as it was.
+    await execText('git', ['merge', '--abort'], repoRoot);
 
     return {
-      outcome: 'conflict-resolved',
+      outcome: 'conflict-skipped',
       ref: branchRef,
       shortName,
       headBefore,
@@ -580,7 +608,7 @@ async function remoteBranchStillExists(repoRoot, remoteRef) {
   return splitLines(stdout).length > 0;
 }
 
-async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main') {
+async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main', ownedPrefixes = LOOP_OWNED_BRANCH_PREFIXES) {
   await execText('git', ['worktree', 'prune'], repoRoot);
   const localBranches = splitLines(
     (await execText('git', ['branch', '--format=%(refname:short)', '--merged', baseBranch], repoRoot)).stdout,
@@ -588,7 +616,8 @@ async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main') 
   const remoteBranches = splitLines(
     (await execText('git', ['branch', '-r', '--format=%(refname:short)', '--merged', baseBranch], repoRoot)).stdout,
   );
-  const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch });
+  // Only loop-owned branches are ever deleted, locally or on the remote.
+  const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch, ownedPrefixes });
   const worktreeBranches = await listWorktreeBranches(repoRoot);
   const prunedLocalBranches = [];
   const prunedRemoteBranches = [];
@@ -662,10 +691,17 @@ export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
     const remoteBranches = splitLines(
       (await execText('git', ['branch', '-r', '--format=%(refname:short)', '--no-merged', baseBranch], repoRoot)).stdout,
     );
-    const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch });
+    const ownedPrefixes = resolveReconcileBranchPrefixes(config);
+    const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch, ownedPrefixes });
+    const candidateNames = new Set(candidates.map((candidate) => candidate.shortName));
+    const leftAloneBranches = uniqueValues(
+      [...localBranches, ...remoteBranches].map((branch) => normalizeGitBranchShortName(branch)),
+    )
+      .filter((shortName) => !candidateNames.has(shortName) && !['main', 'master', normalizeGitBranchShortName(baseBranch)].includes(shortName))
+      .sort((left, right) => left.localeCompare(right));
 
     const mergedBranches = [];
-    const conflictResolvedBranches = [];
+    const conflictSkippedBranches = [];
 
     for (const candidate of candidates) {
       const mergeResult = await mergeRefOntoMain(repoRoot, candidate.ref, candidate.shortName);
@@ -673,8 +709,8 @@ export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
         mergedBranches.push(candidate.shortName);
         continue;
       }
-      if (mergeResult.outcome === 'conflict-resolved') {
-        conflictResolvedBranches.push({
+      if (mergeResult.outcome === 'conflict-skipped') {
+        conflictSkippedBranches.push({
           branch: candidate.shortName,
           conflicts: mergeResult.conflicts,
         });
@@ -682,11 +718,11 @@ export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
     }
 
     const syncedHead = baseSync.remoteExists && baseSync.sha !== baseSync.previousSha;
-    const shouldPush = syncedHead || mergedBranches.length > 0 || conflictResolvedBranches.length > 0;
+    const shouldPush = syncedHead || mergedBranches.length > 0;
     if (shouldPush) {
       await pushHead(repoRoot, remoteName, baseBranch);
     }
-    const pruneResult = await pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch);
+    const pruneResult = await pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch, ownedPrefixes);
     const summary = {
       startedAt,
       endedAt: new Date().toISOString(),
@@ -695,7 +731,9 @@ export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
       syncedRemote: syncedHead,
       candidateBranches: candidates.map((candidate) => candidate.shortName),
       mergedBranches,
-      conflictResolvedBranches,
+      conflictSkippedBranches,
+      leftAloneBranches,
+      ownedBranchPrefixes: ownedPrefixes,
       pushed: shouldPush,
       pushSha: shouldPush ? await getHeadSha(repoRoot) : null,
       pruneCandidateBranches: pruneResult.candidateBranches,

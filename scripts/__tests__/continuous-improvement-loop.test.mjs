@@ -18,8 +18,11 @@ import {
 } from '../lib/continuous-improvement-loop.mjs';
 import { checkpointDirtyWorktree } from '../lib/continuous-improvement-loop-dirty-worktree.mjs';
 import {
+  buildBranchMergeCandidates,
+  isLoopOwnedBranch,
   reconcileNonMainBranchesOntoMain,
   resolveLoopPushBranch,
+  resolveReconcileBranchPrefixes,
   syncAndPollLatestRemoteCi,
   syncSubmodulesRecursively,
   validateLoopConfig,
@@ -899,7 +902,7 @@ test('continuous-improvement-loop rebases onto the push branch before pushing a 
   }
 });
 
-test('reconcileNonMainBranchesOntoMain merges every non-main branch and prunes merged refs', async () => {
+test('reconcileNonMainBranchesOntoMain merges and prunes only loop-owned branches and leaves every other branch alone', async () => {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-branch-sweep-test-'));
   const remoteDir = path.join(tempRoot, 'remote.git');
   const repoDir = path.join(tempRoot, 'repo');
@@ -958,14 +961,19 @@ test('reconcileNonMainBranchesOntoMain merges every non-main branch and prunes m
     assert.equal(result.ok, true);
     assert.deepEqual(result.summary.mergedBranches, [
       'continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z',
-      'feat/remote',
-      'feature/local',
+    ]);
+    assert.deepEqual(result.summary.leftAloneBranches, ['feat/remote', 'feature/local']);
+    assert.deepEqual(result.summary.prunedRemoteBranches, [
+      'continuous-improvement-loop/dirty/main/dirty-worktree-2026-04-14t15-00-00-000z',
     ]);
     assert.equal((await git(['branch', '--show-current'])).stdout.trim(), 'main');
-    assert.equal(await fs.readFile(path.join(repoDir, 'local-only.txt'), 'utf8'), 'local\n');
-    assert.equal(await fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'), 'remote\n');
-    assert.equal((await git(['branch', '--list', 'feature/local'])).stdout.trim(), '');
-    assert.equal((await git(['branch', '-r', '--list', 'origin/feat/remote'])).stdout.trim(), '');
+    // Someone else's branches are neither merged nor deleted: a pull request
+    // whose head is feat/remote stays open.
+    await assert.rejects(fs.readFile(path.join(repoDir, 'local-only.txt'), 'utf8'));
+    await assert.rejects(fs.readFile(path.join(repoDir, 'remote-only.txt'), 'utf8'));
+    assert.equal((await git(['branch', '--list', 'feature/local'])).stdout.trim(), 'feature/local');
+    assert.equal((await git(['branch', '-r', '--list', 'origin/feat/remote'])).stdout.trim(), 'origin/feat/remote');
+    await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', '--verify', 'refs/heads/feat/remote'], { cwd: tempRoot });
     assert.equal(
       (
         await git([
@@ -986,6 +994,114 @@ test('reconcileNonMainBranchesOntoMain merges every non-main branch and prunes m
   } finally {
     await fs.rm(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('reconcileNonMainBranchesOntoMain never deletes a foreign branch that is already contained in the base', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-foreign-merged-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'tracked.txt'), 'before\n', 'utf8');
+    await git(['add', 'tracked.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+    // An open pull request whose head the base already contains, as after an
+    // earlier absorbing run: it used to be pruned, which closed the request.
+    await git(['branch', 'fix/open-pull-request']);
+    await git(['push', '-u', 'origin', 'main', 'fix/open-pull-request']);
+
+    const result = await reconcileNonMainBranchesOntoMain(repoDir, { pushRemote: 'origin', pushBranch: 'main' });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.summary.prunedRemoteBranches, []);
+    assert.deepEqual(result.summary.prunedLocalBranches, []);
+    await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', '--verify', 'refs/heads/fix/open-pull-request'], { cwd: tempRoot });
+    assert.equal((await git(['branch', '--list', 'fix/open-pull-request'])).stdout.trim(), 'fix/open-pull-request');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('reconcileNonMainBranchesOntoMain abandons a conflicting merge instead of dropping the branch changes', async () => {
+  const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-conflict-test-'));
+  const remoteDir = path.join(tempRoot, 'remote.git');
+  const repoDir = path.join(tempRoot, 'repo');
+  await fs.mkdir(repoDir);
+  const git = async (args, cwd = repoDir) => execFileAsync('git', args, { cwd });
+
+  try {
+    await git(['init', '--bare', remoteDir], tempRoot);
+    await git(['init', '-b', 'main']);
+    await git(['config', 'user.name', 'Codex Test']);
+    await git(['config', 'user.email', 'codex@example.com']);
+    await fs.writeFile(path.join(repoDir, 'shared.txt'), 'base\n', 'utf8');
+    await git(['add', 'shared.txt']);
+    await git(['commit', '-m', 'initial']);
+    await git(['remote', 'add', 'origin', remoteDir]);
+
+    await git(['checkout', '-b', 'loop-owned/conflicting']);
+    await fs.writeFile(path.join(repoDir, 'shared.txt'), 'branch side\n', 'utf8');
+    await fs.writeFile(path.join(repoDir, 'branch-only.txt'), 'branch\n', 'utf8');
+    await git(['add', 'shared.txt', 'branch-only.txt']);
+    await git(['commit', '-m', 'branch change']);
+    await git(['checkout', 'main']);
+    await fs.writeFile(path.join(repoDir, 'shared.txt'), 'main side\n', 'utf8');
+    await git(['commit', '-am', 'main change']);
+    await git(['push', '-u', 'origin', 'main', 'loop-owned/conflicting']);
+    const headBefore = (await git(['rev-parse', 'HEAD'])).stdout.trim();
+
+    const result = await reconcileNonMainBranchesOntoMain(repoDir, {
+      pushRemote: 'origin',
+      pushBranch: 'main',
+      reconcileBranchPrefixes: ['loop-owned/'],
+    });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.summary.mergedBranches, []);
+    assert.deepEqual(result.summary.conflictSkippedBranches, [
+      { branch: 'loop-owned/conflicting', conflicts: ['shared.txt'] },
+    ]);
+    // No merge commit claims the branch, nothing of it was applied, and the
+    // branch survives locally and on the remote for a human to merge.
+    assert.equal((await git(['rev-parse', 'HEAD'])).stdout.trim(), headBefore);
+    assert.equal((await git(['status', '--porcelain'])).stdout.trim(), '');
+    assert.equal(await fs.readFile(path.join(repoDir, 'shared.txt'), 'utf8'), 'main side\n');
+    await assert.rejects(fs.readFile(path.join(repoDir, 'branch-only.txt'), 'utf8'));
+    assert.deepEqual(result.summary.prunedRemoteBranches, []);
+    await execFileAsync('git', ['--git-dir', remoteDir, 'rev-parse', '--verify', 'refs/heads/loop-owned/conflicting'], { cwd: tempRoot });
+    assert.equal((await git(['branch', '--list', 'loop-owned/conflicting'])).stdout.trim(), 'loop-owned/conflicting');
+  } finally {
+    await fs.rm(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('reconcile branch prefixes always include the loop namespace and refuse catch-all entries', () => {
+  assert.deepEqual(resolveReconcileBranchPrefixes({}), ['continuous-improvement-loop/']);
+  assert.deepEqual(resolveReconcileBranchPrefixes({ reconcileBranchPrefixes: ['loop-owned/'] }), [
+    'continuous-improvement-loop/',
+    'loop-owned/',
+  ]);
+  for (const bad of ['', '*', '/', 'feat', 'origin/*', 'feat/*']) {
+    assert.throws(() => resolveReconcileBranchPrefixes({ reconcileBranchPrefixes: [bad] }), /Invalid reconcileBranchPrefixes/);
+  }
+  assert.equal(isLoopOwnedBranch('origin/continuous-improvement-loop/dirty/main/x'), true);
+  for (const foreign of ['claude/prompt-formal-validation-b2jmz3', 'fix/label-artist-picture-maintenance', 'main', 'origin/HEAD']) {
+    assert.equal(isLoopOwnedBranch(foreign), false);
+  }
+  assert.deepEqual(
+    buildBranchMergeCandidates({
+      localBranches: ['feature/local', 'continuous-improvement-loop/dirty/a'],
+      remoteBranches: ['origin/feat/remote', 'origin/continuous-improvement-loop/dirty/b'],
+    }).map((candidate) => candidate.shortName),
+    ['continuous-improvement-loop/dirty/a', 'continuous-improvement-loop/dirty/b'],
+  );
 });
 
 test('syncAndPollLatestRemoteCi uses the fetched remote head for latest-commit polling when local main is ahead', async () => {

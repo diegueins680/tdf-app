@@ -27747,6 +27747,80 @@
         "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "OPS-LOOP-BRANCH-OWNERSHIP-001",
+      "title": "The continuous improvement loop merges and deletes only its own branches",
+      "domain": "OPS",
+      "statement": "The branch sweep of the continuous improvement loop merges into its base and prunes, locally and on the remote, only branches under continuous-improvement-loop/ or under a namespace listed in reconcileBranchPrefixes. Every other branch is left unmerged and undeleted. A conflicting merge is aborted and reported; no conflict is resolved by keeping the loop's copy of a file.",
+      "property": "A branch outside the owned namespaces keeps its local and remote ref across a sweep, whether or not the base already contains it. After a sweep in which a merge conflicted, HEAD is unchanged, the worktree is clean and the conflicting branch still exists.",
+      "authority": "Owner instruction of 2026-11-11 to fix the loop after it closed 24 pull requests by deleting their head branches and dropped changes to 258 files.",
+      "source": "AI_WORKFLOW.md",
+      "contract": "AI_WORKFLOW.md",
+      "actors": [
+        "Continuous improvement loop",
+        "Contributors with open pull requests"
+      ],
+      "preconditions": [
+        "The loop runs from a local checkout with push access to the remote."
+      ],
+      "inputs": [
+        "Local and remote branch lists relative to the loop's base",
+        "reconcileBranchPrefixes configuration"
+      ],
+      "state": {
+        "branch": [
+          "foreign",
+          "owned-unmerged",
+          "owned-merged",
+          "conflict-skipped",
+          "pruned"
+        ]
+      },
+      "allowedTransitions": [
+        "owned-unmerged -> owned-merged by a clean merge",
+        "owned-unmerged -> conflict-skipped by an aborted merge",
+        "owned-merged -> pruned"
+      ],
+      "forbiddenTransitions": [
+        "foreign -> merged into the loop base",
+        "foreign -> pruned",
+        "any conflicting merge -> committed with the loop's copy of the conflicting files"
+      ],
+      "effects": [
+        "Merge commits on the loop base for owned branches",
+        "Deletion of owned merged refs",
+        "Sweep summary listing merged, conflict-skipped and left-alone branches"
+      ],
+      "authorization": "Local git credentials of the operator; the rule limits what the loop does with them.",
+      "privacy": "Branch names only.",
+      "concurrency": "One loop per checkout; a branch pushed during a sweep is classified on the next sweep.",
+      "idempotency": "Re-running a sweep leaves foreign and conflict-skipped branches unchanged.",
+      "failure": "A prefix entry that is empty, a wildcard or has no namespace separator fails the sweep before any merge. A merge error without conflicts fails the sweep.",
+      "recovery": "A branch deleted by the earlier behaviour is restored by pushing its recorded head commit and reopening its pull request.",
+      "observability": "conflictSkippedBranches, leftAloneBranches and ownedBranchPrefixes in the sweep summary.",
+      "implementation": [
+        "scripts/continuous-improvement-loop.mjs",
+        "AI_WORKFLOW.md"
+      ],
+      "tests": [
+        "scripts/__tests__/continuous-improvement-loop.test.mjs"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "critical": true,
+      "confidence": "Tests on real temporary git repositories with a bare remote cover foreign unmerged and already-contained branches, a conflicting owned branch and prefix validation.",
+      "ambiguity": [
+        "The loop does not ask GitHub whether a branch has an open pull request; ownership is by namespace only.",
+        "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs still resolves a conflict between the loop's branch and its own remote by keeping the local copy.",
+        "continuous-improvement/auto still contains the lossy merges made before this rule."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "The sweep is tested locally; the dirty-worktree helper keeps the earlier conflict rule and the running launchd instance is outside the tests."
+      },
+      "verification": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs: the sweep merges and prunes only the loop namespace, never deletes a foreign branch the base already contains, aborts a conflicting merge leaving HEAD and the branch intact, and refuses catch-all prefixes.",
+      "evidence": "scripts/__tests__/continuous-improvement-loop.test.mjs"
     }
   ]
 }
