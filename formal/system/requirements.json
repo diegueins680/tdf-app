@@ -27667,6 +27667,83 @@
         "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
       },
       "critical": false
+    },
+    {
+      "id": "SYS-LOOP-001",
+      "title": "The continuous improvement loop only proposes verified changes as draft pull requests",
+      "statement": "The continuous improvement loop works in its own linked worktree, puts each change on a new branch cut from the remote base branch, runs the configured verification command before committing, and publishes the result only as a draft pull request. It never pushes, merges, rebases or deletes the base branch or any branch it did not create, and it discards a change whose implementation or verification fails.",
+      "domain": "SYS",
+      "actors": [
+        "Maintainer",
+        "Loop supervisor",
+        "Loop runner"
+      ],
+      "preconditions": [
+        "A linked git worktree dedicated to the loop exists and its configuration names a verification command."
+      ],
+      "inputs": [
+        "Loop configuration file",
+        "Remote base branch",
+        "Open and closed loop pull requests"
+      ],
+      "state": {
+        "iteration": "idle | proposing | implementing | verifying | published | discarded",
+        "supervisor": "running | blocked | held by stop file"
+      },
+      "allowedTransitions": [
+        "idle -> proposing -> implementing -> verifying -> published",
+        "proposing | implementing | verifying -> discarded",
+        "blocked -> running once the blocking condition clears"
+      ],
+      "forbiddenTransitions": [
+        "verification failed, missing or skipped -> published",
+        "any state -> push, merge, rebase or deletion of the base branch",
+        "any state -> merge or deletion of a branch the loop did not create",
+        "stop file present -> a new iteration"
+      ],
+      "effects": [
+        "A verified change exists as one commit on a new branch under the loop prefix and as one draft pull request.",
+        "A failed iteration leaves the worktree clean on the remote base commit and publishes nothing."
+      ],
+      "authorization": "The loop may open draft pull requests; it cannot approve or merge them. Merging stays with a maintainer under the protected-branch rules.",
+      "privacy": "Logs and status files hold repository paths, commands and exit codes; credentials are never written to them.",
+      "concurrency": "One supervisor per worktree, enforced by a lock directory with a pid file. At most the configured number of loop pull requests stay open; the loop waits while that limit is reached.",
+      "idempotency": "A target file that already has an open or closed-unmerged loop pull request is not proposed again.",
+      "failure": "Reject the configuration, or discard the iteration and report the failing step; stop after the configured number of consecutive failures. Refuse to start an iteration when free disk space is below the configured minimum.",
+      "recovery": "On start, leftover changes in the loop's own worktree are discarded and the worktree is returned to the remote base commit. A stop file holds the supervisor idle until it is removed.",
+      "observability": "Supervisor log, status file with phase, last result and last error, and the pull request body naming the idea and the verification gates that ran.",
+      "authority": "Owner instruction of 2026-11-13 to review, correct and start the self-improvement loop; pull request #750.",
+      "source": "Owner instruction of 2026-11-13; AI_WORKFLOW.md and README.md sections on the continuous improvement loop",
+      "property": "No loop run changes the base branch or publishes an unverified change.",
+      "contract": "AI_WORKFLOW.md",
+      "implementation": [
+        "scripts/continuous-improvement-loop.mjs",
+        "scripts/lib/continuous-improvement-loop.mjs",
+        "scripts/continuous-improvement-loop-verify.mjs",
+        "scripts/lib/continuous-improvement-loop-verify.mjs",
+        "scripts/continuous-improvement-loop-supervisor.sh",
+        "scripts/start-continuous-improvement-loop.sh",
+        "scripts/install-continuous-improvement-loop-launchd.sh",
+        "scripts/codex-loop-worker.sh",
+        "scripts/discover-improvement-idea.mjs",
+        "scripts/lib/discovery.mjs",
+        "scripts/continuous-improvement-loop.codex.json",
+        "scripts/continuous-improvement-loop.example.json"
+      ],
+      "tests": [
+        "scripts/__tests__/continuous-improvement-loop.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Executable tests against temporary git repositories, including refusal controls; not a whole-program proof.",
+      "evidence": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs on the candidate commit; hosted CI on pull request #750.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "high for the tested git and configuration boundaries; the quality of proposed changes is outside this requirement",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local tests pass; the supervisor's launchd behaviour and disk guard are exercised by shell tests only, and hosted gates remain pending."
+      }
     }
   ]
 }

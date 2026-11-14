@@ -63,6 +63,27 @@ const asReviewedBeforeRegistryRefresh = entries => entries.map(entry => {
   return reviewed;
 });
 
+// The continuous improvement loop rework (pull request #750) deleted two automation
+// scripts: their reviews are retired as provenance and one new list is reviewed. Tests
+// that compare against an earlier protected main read the decisions as that main held them.
+const LOOP_REWORK_RECONCILIATION = 'continuousImprovementLoopRework20261113';
+
+async function readLoopRework() {
+  return JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).reconciliation[LOOP_REWORK_RECONCILIATION];
+}
+
+async function readHistoricalReconciliation() {
+  const current = await readReconciliation();
+  const rework = await readLoopRework();
+  const added = new Set(rework.addedDecisionIds);
+  const active = current.active.filter(row => !added.has(row.id));
+  for (const entry of [...rework.decisions].sort((left, right) => left.position - right.position)) {
+    active.splice(entry.position, 0, entry.decision);
+  }
+  return { ...current, active };
+}
+
 async function readReconciliation() {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
@@ -882,7 +903,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   // pointer and retirement they replaced (each nests its predecessor
   // unchanged), and lists first reviewed after that main are left out.
   const { active: currentDecisions, successors: currentSuccessors,
-    integration: currentIntegration } = await readReconciliation();
+    integration: currentIntegration } = await readHistoricalReconciliation();
   const mainIds = new Set((await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN,
     'docs/catalog-persistence/catalog-list-decisions.json')).decisions.map(row => row.id));
   // Later successors (the agreement payments manifest review, ADR 0136) nest
@@ -1046,7 +1067,7 @@ test('event administrator delegation appends one migration to the protected 251-
   assert.equal(await fs.readFile(path.join(workspaceRoot, migration.path), 'utf8'), stdout);
   await execFileAsync('git', ['merge-base', '--is-ancestor', EVENT_ADMIN_INTRODUCTION, 'HEAD'],
     { cwd: workspaceRoot });
-  const { active, successors, integration } = await readReconciliation();
+  const { active, successors, integration } = await readHistoricalReconciliation();
   const priorMain = (await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN, decisionsPath)).decisions;
   // The active manifest review is the agreement payments successor; this
   // review, its pointer and its retirement are nested one step back, unchanged.
@@ -1100,7 +1121,7 @@ test('marketplace agreement payments append one migration to the protected 252-e
   assert.equal(await fs.readFile(path.join(workspaceRoot, migration.path), 'utf8'), stdout);
   await execFileAsync('git', ['merge-base', '--is-ancestor', AGREEMENT_PAYMENTS_INTRODUCTION, 'HEAD'],
     { cwd: workspaceRoot });
-  const { active, successors, integration } = await readReconciliation();
+  const { active, successors, integration } = await readHistoricalReconciliation();
   const priorMain = (await reviewedJson(AGREEMENT_PAYMENTS_PROTECTED_MAIN, decisionsPath)).decisions;
   const pointer = successors.find(row => row.name === 'migrations');
   const current = active.find(row => row.id === pointer.currentId);
@@ -1141,4 +1162,22 @@ test('marketplace agreement payments append one migration to the protected 252-e
   }
   assert.equal(priorMain.length, 1452);
   assert.equal(active.length, 1461);
+});
+
+test('loop rework retires the reviews of two deleted scripts as provenance and reviews one new list', async () => {
+  const { active } = await readReconciliation();
+  const rework = await readLoopRework();
+  assert.equal(rework.decisions.length, 2);
+  assert.ok(rework.reason.length > 80);
+  for (const entry of rework.decisions) {
+    assert.equal(entry.decision.reviewed, true);
+    assert.ok(!active.some(row => row.id === entry.decision.id));
+    await assert.rejects(fs.access(path.join(workspaceRoot, entry.source.file)), { code: 'ENOENT' });
+  }
+  assert.deepEqual(rework.addedDecisionIds, ['16e3988d48089cc77b7e']);
+  for (const id of rework.addedDecisionIds) {
+    assert.equal(active.find(row => row.id === id)?.reviewed, true);
+  }
+  assert.equal(active.length, 1460);
+  assert.equal((await readHistoricalReconciliation()).active.length, 1461);
 });

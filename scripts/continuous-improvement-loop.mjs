@@ -21,6 +21,7 @@ import {
   summarizeWorkflowRuns,
   verifyImprovementLoopModel,
 } from './lib/continuous-improvement-loop.mjs';
+import { unmappedSurfacePaths } from './lib/continuous-improvement-loop-verify.mjs';
 
 const execFileAsync = promisify(execFile);
 const GITHUB_LOG_LINE_LIMIT = 200;
@@ -647,7 +648,9 @@ async function generateIdea(repoRoot, context, config) {
     };
   }
 
-  const idea = await discoverImprovementIdea(repoRoot, { excludedFiles: config.pendingTargetFiles ?? [] });
+  const idea = await discoverImprovementIdea(repoRoot, {
+    excludedFiles: [...(config.pendingTargetFiles ?? []), ...(config.unmappedTargetFiles ?? [])],
+  });
   await fs.writeFile(context.idea_file, idea.markdown, 'utf8');
   const metadata = parseIdeaMarkdown(idea.markdown);
   return {
@@ -969,6 +972,20 @@ async function listPendingTargetFiles(repoRoot, config) {
     if (pulls.length < 100) break;
   }
   return [...files].sort();
+}
+
+// Source files that no requirement covers, read from the repository's traceability index
+// (`traceabilityFile`). CI rejects a change to such a file, so the loop does not propose one.
+async function listUnmappedSurfaceFiles(repoRoot, config) {
+  if (!config.traceabilityFile) return [];
+  const filePath = path.resolve(repoRoot, config.traceabilityFile);
+  let parsed;
+  try {
+    parsed = JSON.parse(await fs.readFile(filePath, 'utf8'));
+  } catch (error) {
+    throw new Error(`Could not read traceabilityFile ${config.traceabilityFile}: ${error.message}`);
+  }
+  return unmappedSurfacePaths(parsed);
 }
 
 function buildPullRequestBody(config, context, branch) {
@@ -1468,6 +1485,7 @@ async function runIteration(repoRoot, config, iteration) {
     // A dry run never switches branches or discards anything.
     const head = await getHeadSha(repoRoot);
     config.pendingTargetFiles = [];
+    config.unmappedTargetFiles = [];
     await writeJson(context.excluded_targets_file, []);
     const dryBranch = { branchName: '', baseBranch: resolveBaseBranch(config), baseRef: head, baseSha: head };
     return runIterationSteps(repoRoot, config, iteration, context, dryBranch);
@@ -1486,7 +1504,8 @@ async function runIteration(repoRoot, config, iteration) {
   }
 
   config.pendingTargetFiles = config.openPullRequest ? await listPendingTargetFiles(repoRoot, config) : [];
-  await writeJson(context.excluded_targets_file, config.pendingTargetFiles);
+  config.unmappedTargetFiles = await listUnmappedSurfaceFiles(repoRoot, config);
+  await writeJson(context.excluded_targets_file, [...config.pendingTargetFiles, ...config.unmappedTargetFiles]);
 
   await emitLoopStatus({ state: 'running', phase: 'branch-preparation', currentIteration: iteration, contextDir });
   const branch = await prepareIterationBranch(repoRoot, config, iteration);
@@ -1605,6 +1624,11 @@ async function runIterationSteps(repoRoot, config, iteration, context, branch) {
     const ideaFile = targetFile(context.idea_target);
     if (ideaFile && (config.pendingTargetFiles ?? []).includes(ideaFile)) {
       throw new Error(`Idea targets ${ideaFile}, which already has a loop pull request awaiting review; skipping it.`);
+    }
+    if (ideaFile && (config.unmappedTargetFiles ?? []).includes(ideaFile)) {
+      throw new Error(
+        `Idea targets ${ideaFile}, which no requirement covers in ${config.traceabilityFile}; the repository's specification gate would reject the change, so skipping it.`,
+      );
     }
 
     if (!config.implementationCommand) {
@@ -1873,6 +1897,7 @@ export {
   countOpenLoopPullRequests,
   discardIterationChanges,
   listPendingTargetFiles,
+  listUnmappedSurfaceFiles,
   isLinkedWorktree,
   openPullRequest,
   prepareIterationBranch,

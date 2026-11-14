@@ -12,6 +12,7 @@
   "baseBranch": "main",
   "branchPrefix": "continuous-improvement-loop/",
   "checkoutSubmodules": true,
+  "traceabilityFile": "formal/system/traceability.json",
   "openPullRequest": true,
   "draftPullRequest": true,
   "maxOpenPullRequests": 3,

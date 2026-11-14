@@ -7110,6 +7110,77 @@
           ]
         }
       ]
+    },
+    "continuousImprovementLoopRework20261113": {
+      "sourceMain": "7d3a394d76ff1e637b1de9c34f785cacc2223d2d",
+      "reason": "The continuous improvement loop rework (pull request #750) deleted scripts/continuous-improvement-loop-forever.mjs and scripts/lib/continuous-improvement-loop-dirty-worktree.mjs, so these fingerprints have no current candidate. The exact decisions, their positions and their source locators are preserved as history. No catalog values are deleted: both lists were command-line and process-state mechanics of removed automation.",
+      "decisions": [
+        {
+          "position": 31,
+          "decision": {
+            "id": "c8eb2cd455c6586eb633",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          "source": {
+            "file": "scripts/continuous-improvement-loop-forever.mjs",
+            "name": "runnerState",
+            "line": 32,
+            "values": [
+              "mode",
+              "pid",
+              "state",
+              "root",
+              "configPath",
+              "intervalSeconds",
+              "stopPollSeconds",
+              "cycleTimeoutSeconds",
+              "cycleKillGraceSeconds",
+              "startedAt",
+              "updatedAt",
+              "heartbeatAt",
+              "cycleCount",
+              "pidFile",
+              "stopFile",
+              "heartbeatFile",
+              "runnerLogFile",
+              "statusFile",
+              "stateDir",
+              "childArgs"
+            ]
+          }
+        },
+        {
+          "position": 49,
+          "decision": {
+            "id": "02f3751b46f8a4867bec",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          "source": {
+            "file": "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
+            "name": "dirtyStatus",
+            "line": 214,
+            "values": [
+              "status",
+              "--porcelain"
+            ]
+          }
+        }
+      ],
+      "addedDecisionIds": [
+        "16e3988d48089cc77b7e"
+      ]
     }
   },
   "decisions": [
@@ -7498,16 +7569,6 @@
       "reviewMethod": "manual-source-review"
     },
     {
-      "id": "c8eb2cd455c6586eb633",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
-    },
-    {
       "id": "25bd48ebe5582108498d",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -7675,16 +7736,6 @@
       "priority": "P0-security",
       "risk": "Echoing arbitrary status strings from hosting payloads could disclose sensitive or attacker-controlled content in CI logs and artifacts.",
       "justification": "This fixed output vocabulary redacts all unrecognized app/machine states to unknown. It is not a payment state machine or business catalog, does not control availability, and cannot authorize a payment or deployment.",
-      "reviewed": true
-    },
-    {
-      "id": "02f3751b46f8a4867bec",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
       "reviewed": true
     },
     {
@@ -47404,6 +47455,16 @@
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
+    },
+    {
+      "id": "16e3988d48089cc77b7e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+      "reviewed": true
     }
   ]
 }

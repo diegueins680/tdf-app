@@ -8,9 +8,11 @@ import process from 'node:process';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
 import {
+  TRACEABILITY_FILE,
   VERIFICATION_GATES,
   parsePorcelainPaths,
   selectVerificationGates,
+  unmappedChangedSurfaces,
 } from './lib/continuous-improvement-loop-verify.mjs';
 
 function changedPaths(repoRoot) {
@@ -35,6 +37,51 @@ function run(command, args, repoRoot, extraEnv = {}) {
     stdio: 'inherit',
   });
   return result.status ?? 1;
+}
+
+// Mirrors the hosted specification and catalog checks, which the repository gate does not
+// run: regenerate the two generated indexes (they are committed with the change), refuse a
+// change to a source file no requirement covers, and require every static list to be reviewed.
+function runSpecificationGate(repoRoot) {
+  const python = process.env.CONTINUOUS_LOOP_PYTHON || 'python3';
+  const env = { PYTHONDONTWRITEBYTECODE: '1' };
+  if (run(python, ['-c', 'import yaml'], repoRoot, env) !== 0) {
+    console.error(
+      `${python} cannot import PyYAML, which the specification indexes need. Install it (see formal/system/requirements-verification.txt) or point CONTINUOUS_LOOP_PYTHON at an interpreter that has it.`,
+    );
+    return 1;
+  }
+  for (const script of ['scripts/specification-inventory.py', 'scripts/specification-conformance.py']) {
+    const status = run(python, [script], repoRoot, env);
+    if (status !== 0) return status;
+  }
+
+  const traceability = JSON.parse(fs.readFileSync(path.join(repoRoot, TRACEABILITY_FILE), 'utf8'));
+  const unmapped = unmappedChangedSurfaces(traceability, changedPaths(repoRoot));
+  if (unmapped.length > 0) {
+    console.error(
+      `Changed source file(s) that no requirement in formal/system/requirements.json covers: ${unmapped.join(', ')}`,
+    );
+    return 1;
+  }
+
+  const auditOutput = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'loop-catalog-audit-')), 'audit.json');
+  try {
+    return run(
+      'node',
+      [
+        'scripts/catalog-list-audit.mjs',
+        '--decisions',
+        'docs/catalog-persistence/catalog-list-decisions.json',
+        '--fail-on-unreviewed',
+        '--output',
+        auditOutput,
+      ],
+      repoRoot,
+    );
+  } finally {
+    fs.rmSync(path.dirname(auditOutput), { recursive: true, force: true });
+  }
 }
 
 function main() {
@@ -96,8 +143,13 @@ function main() {
       }
     }
 
-    const [command, ...args] = gate.command;
-    const status = run(command, args, repoRoot, env);
+    let status;
+    if (gateName === 'specification') {
+      status = runSpecificationGate(repoRoot);
+    } else {
+      const [command, ...args] = gate.command;
+      status = run(command, args, repoRoot, env);
+    }
     if (status !== 0) {
       console.error(`Gate "${gateName}" failed with exit code ${status}.`);
       process.exit(1);

@@ -1,11 +1,18 @@
 // Chooses which build-and-test gates must pass before the continuous improvement loop may
-// commit an iteration. The repository-wide gate always runs; the UI and backend gates run
-// when their trees (or the dependency manifests they build from) changed.
+// commit an iteration. The specification and repository-wide gates always run; the UI and
+// backend gates run when their trees (or the dependency manifests they build from) changed.
 
 const UI_DEPENDENCY_FILES = new Set(['package.json', 'package-lock.json']);
 const MOBILE_SUBMODULE = 'tdf-mobile';
 
+export const TRACEABILITY_FILE = 'formal/system/traceability.json';
+
 export const VERIFICATION_GATES = {
+  specification: {
+    label: 'specification indexes, requirement mapping and catalog list review',
+    // Runs as several steps in the entry script; see runSpecificationGate there.
+    needsNodeModules: true,
+  },
   repo: {
     label: 'repository-wide invariants',
     command: ['bash', 'scripts/quality-repo.sh'],
@@ -44,7 +51,7 @@ export function selectVerificationGates(changedPaths = []) {
     };
   }
 
-  const gates = ['repo'];
+  const gates = ['specification', 'repo'];
   if (paths.some((filePath) => filePath.startsWith('tdf-hq-ui/') || UI_DEPENDENCY_FILES.has(filePath))) {
     gates.push('ui');
   }
@@ -78,4 +85,21 @@ export function parsePorcelainPaths(porcelainZ) {
     }
   }
   return [...new Set(paths.map(normalizePath).filter(Boolean))];
+}
+
+// Paths of the traceability index's source files that no requirement covers.
+export function unmappedSurfacePaths(traceability) {
+  const surfaces = Array.isArray(traceability?.surfaces) ? traceability.surfaces : [];
+  return surfaces
+    .filter((surface) => !Array.isArray(surface?.requirements) || surface.requirements.length === 0)
+    .map((surface) => normalizePath(surface?.path))
+    .filter(Boolean)
+    .sort();
+}
+
+// Changed files that the (freshly regenerated) traceability index lists without a requirement.
+// CI refuses such a change, so the loop must not publish it.
+export function unmappedChangedSurfaces(traceability, changedPaths = []) {
+  const unmapped = new Set(unmappedSurfacePaths(traceability));
+  return [...new Set(changedPaths.map(normalizePath).filter(Boolean))].filter((filePath) => unmapped.has(filePath)).sort();
 }

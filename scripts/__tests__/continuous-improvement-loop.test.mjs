@@ -20,6 +20,8 @@ import {
   VERIFICATION_GATES,
   parsePorcelainPaths,
   selectVerificationGates,
+  unmappedChangedSurfaces,
+  unmappedSurfacePaths,
 } from '../lib/continuous-improvement-loop-verify.mjs';
 import {
   buildIterationBranchName,
@@ -893,6 +895,50 @@ test('continuous-improvement-loop discards an iteration whose verification fails
   }
 });
 
+test('unmapped surfaces are the traceability rows without a requirement, and only changed ones are refused', () => {
+  const traceability = {
+    surfaces: [
+      { path: 'scripts/mapped.mjs', requirements: [{ requirement: 'SYS-X-001', relationship: 'implementation' }] },
+      { path: 'scripts/unmapped.mjs', requirements: [] },
+      { path: './scripts/also-unmapped.sql' },
+    ],
+  };
+
+  assert.deepEqual(unmappedSurfacePaths(traceability), ['scripts/also-unmapped.sql', 'scripts/unmapped.mjs']);
+  assert.deepEqual(unmappedSurfacePaths({}), []);
+  assert.deepEqual(
+    unmappedChangedSurfaces(traceability, ['scripts/mapped.mjs', './scripts/unmapped.mjs', 'docs/guide.md']),
+    ['scripts/unmapped.mjs'],
+  );
+  assert.deepEqual(unmappedChangedSurfaces(traceability, ['scripts/mapped.mjs', 'docs/guide.md']), []);
+});
+
+test('continuous-improvement-loop skips an idea whose target no requirement covers', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-unmapped-target-test-');
+
+  try {
+    const traceabilityFile = path.join(fixture.tempRoot, 'traceability.json');
+    await fs.writeFile(traceabilityFile, JSON.stringify({ surfaces: [{ path: 'tracked.txt', requirements: [] }] }), 'utf8');
+    const configPath = await fixture.writeConfig({ traceabilityFile });
+
+    await assert.rejects(() => fixture.runLoop(configPath), /Idea targets tracked\.txt, which no requirement covers/);
+
+    assert.deepEqual(await fixture.remoteLoopBranches(), []);
+    assert.equal(await fs.readFile(path.join(fixture.repoDir, 'tracked.txt'), 'utf8'), 'before\n');
+
+    // The same target is proposed and published once a requirement covers it.
+    await fs.writeFile(
+      traceabilityFile,
+      JSON.stringify({ surfaces: [{ path: 'tracked.txt', requirements: [{ requirement: 'SYS-X-001' }] }] }),
+      'utf8',
+    );
+    await fixture.runLoop(configPath);
+    assert.equal((await fixture.remoteLoopBranches()).length, 1);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test('continuous-improvement-loop discards partial edits when a worker step fails', async () => {
   const fixture = await createLoopFixture('continuous-improvement-loop-worker-fail-test-');
 
@@ -1129,12 +1175,13 @@ test('buildDefaultIdea skips files that already have a pending proposal', async 
 
 test('selectVerificationGates always runs the repository gate and adds UI and backend gates by path', () => {
   assert.deepEqual(selectVerificationGates([]).gates, []);
-  assert.deepEqual(selectVerificationGates(['docs/guide.md']).gates, ['repo']);
-  assert.deepEqual(selectVerificationGates(['./tdf-hq-ui/src/App.tsx']).gates, ['repo', 'ui']);
-  assert.deepEqual(selectVerificationGates(['package-lock.json']).gates, ['repo', 'ui']);
+  assert.deepEqual(selectVerificationGates(['docs/guide.md']).gates, ['specification', 'repo']);
+  assert.deepEqual(selectVerificationGates(['./tdf-hq-ui/src/App.tsx']).gates, ['specification', 'repo', 'ui']);
+  assert.deepEqual(selectVerificationGates(['package-lock.json']).gates, ['specification', 'repo', 'ui']);
   assert.equal(selectVerificationGates(['package-lock.json']).reinstallDependencies, true);
-  assert.deepEqual(selectVerificationGates(['tdf-hq/src/Main.hs']).gates, ['repo', 'backend']);
+  assert.deepEqual(selectVerificationGates(['tdf-hq/src/Main.hs']).gates, ['specification', 'repo', 'backend']);
   assert.deepEqual(selectVerificationGates(['tdf-hq/src/Main.hs', 'tdf-hq-ui/src/App.tsx']).gates, [
+    'specification',
     'repo',
     'ui',
     'backend',
@@ -1170,7 +1217,7 @@ test('loop verify gate refuses to pass submodule changes and reports its plan', 
     await fs.mkdir(path.join(fixture.repoDir, 'tdf-hq-ui'), { recursive: true });
     await fs.writeFile(path.join(fixture.repoDir, 'tdf-hq-ui', 'App.tsx'), 'export {};\n', 'utf8');
     const plan = await execFileAsync('node', [verifyScriptPath, '--plan'], { cwd: fixture.repoDir });
-    assert.match(plan.stdout, /gate\(s\): repo, ui/);
+    assert.match(plan.stdout, /gate\(s\): specification, repo, ui/);
 
     await fs.mkdir(path.join(fixture.repoDir, 'tdf-mobile'), { recursive: true });
     await fs.writeFile(path.join(fixture.repoDir, 'tdf-mobile', 'index.js'), '\n', 'utf8');
