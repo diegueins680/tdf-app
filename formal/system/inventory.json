@@ -1015,11 +1015,9 @@
       "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
       "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
       "tdf-hq-ui/src/components/AssetDialogs.tsx",
-      "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
       "tdf-hq-ui/src/components/BrandLogo.tsx",
       "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
       "tdf-hq-ui/src/components/ConfirmDialog.tsx",
-      "tdf-hq-ui/src/components/DataTable.tsx",
       "tdf-hq-ui/src/components/EnrollmentSuccessDialog.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
@@ -1041,7 +1039,6 @@
       "tdf-hq-ui/src/components/PageShell.tsx",
       "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
       "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
-      "tdf-hq-ui/src/components/PlaceholderPage.tsx",
       "tdf-hq-ui/src/components/PromoCodeField.logic.test.ts",
       "tdf-hq-ui/src/components/PromoCodeField.logic.ts",
       "tdf-hq-ui/src/components/PromoCodeField.tsx",
@@ -9032,12 +9029,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-6f2233927f043ef3",
-      "path": "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
-      "sha256": "46faa93a4c4da7ee9ccab7d14cd8dbf07e7da57f4cee7425583ae6a2f482bc5e",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-1531c9c36f482a7e",
       "path": "tdf-hq-ui/src/components/BrandLogo.tsx",
       "sha256": "d1d9802db083f11082ede3c1146c33a18e5c2a667e71b83bf0c2fc834e4dbdc8",
@@ -9053,12 +9044,6 @@
       "id": "SURFACE-d4d209018de8c574",
       "path": "tdf-hq-ui/src/components/ConfirmDialog.tsx",
       "sha256": "eb73a2b0c8bcdcd054fca8595a9a8bf99ad29ba3e60dbd96e3f5cd62297379fe",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-7caa67891da35c66",
-      "path": "tdf-hq-ui/src/components/DataTable.tsx",
-      "sha256": "64216ca9c44d1ffbc68199d40f6c7402377e20899a9a6e16b23cb222799de630",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9185,12 +9170,6 @@
       "id": "SURFACE-f637c425082864eb",
       "path": "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
       "sha256": "dd68ec43978b91aae308074079a926ee151c7ec9d3cc543992f337d2f44ad96f",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-ed6a3e9e555262c7",
-      "path": "tdf-hq-ui/src/components/PlaceholderPage.tsx",
-      "sha256": "8d90bda2e923d7263a5142aab4ce98c948292c7b260dd62e15652a5f57c2acf2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30990,7 +30969,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "927362e30cbf37be63f6fb31aa1f9b58b3ed739f19cfe634a7a6c7b33c45a676",
+      "sha256": "fe20a8ecbc96b125c1f92c4b44cbd9bd14c28894f9cbc86ba72ebd8baf233730",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

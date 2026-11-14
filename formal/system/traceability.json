@@ -14737,7 +14737,6 @@
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistFansList.tsx",
-        "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
         "tdf-hq-ui/src/components/MarkdownText.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -28035,7 +28034,6 @@
     "tdf-hq-ui/src/components/ArtistProfileImage.tsx": "3c8e49833a85f3220ca06125db816d25bfbd6a465abc82f300be2d0759cb1370",
     "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx": "5dcab0089505cd3c7a6e207e40a966f64804f40d8dfe4310bc1357ff525d4a6f",
     "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx": "12b5c7fbb55aaaa9df265c3feb6832c61d75bfe45050f1459304f73f3b21cbcc",
-    "tdf-hq-ui/src/components/BasicFeaturePage.tsx": "46faa93a4c4da7ee9ccab7d14cd8dbf07e7da57f4cee7425583ae6a2f482bc5e",
     "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx": "1faa71b1331653c4bf9fb12a32726732d94b63d1929b336f79bd7b11da3c0d94",
     "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx": "b61a8194d526d08b5f86a3bccbd9029c3666b4d9a349001498fadde1c1197958",
     "tdf-hq-ui/src/components/InAppBrowserNotice.tsx": "ee2e97283f584ae5028f15da77b1b9783b8dcc7c03a4b6678feeede6a887775b",
@@ -43869,12 +43867,6 @@
         "relationship": "implementation"
       }
     ],
-    "tdf-hq-ui/src/components/BasicFeaturePage.tsx": [
-      {
-        "requirement": "WEB-CONTENT-001",
-        "relationship": "implementation"
-      }
-    ],
     "tdf-hq-ui/src/components/MarkdownText.tsx": [
       {
         "requirement": "WEB-CONTENT-001",
@@ -58664,18 +58656,6 @@
       "requirements": []
     },
     {
-      "id": "SURFACE-6f2233927f043ef3",
-      "path": "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
-      "sha256": "46faa93a4c4da7ee9ccab7d14cd8dbf07e7da57f4cee7425583ae6a2f482bc5e",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": [
-        {
-          "requirement": "WEB-CONTENT-001",
-          "relationship": "implementation"
-        }
-      ]
-    },
-    {
       "id": "SURFACE-1531c9c36f482a7e",
       "path": "tdf-hq-ui/src/components/BrandLogo.tsx",
       "sha256": "d1d9802db083f11082ede3c1146c33a18e5c2a667e71b83bf0c2fc834e4dbdc8",
@@ -58693,13 +58673,6 @@
       "id": "SURFACE-d4d209018de8c574",
       "path": "tdf-hq-ui/src/components/ConfirmDialog.tsx",
       "sha256": "eb73a2b0c8bcdcd054fca8595a9a8bf99ad29ba3e60dbd96e3f5cd62297379fe",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-7caa67891da35c66",
-      "path": "tdf-hq-ui/src/components/DataTable.tsx",
-      "sha256": "64216ca9c44d1ffbc68199d40f6c7402377e20899a9a6e16b23cb222799de630",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -58915,13 +58888,6 @@
       "id": "SURFACE-f637c425082864eb",
       "path": "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
       "sha256": "dd68ec43978b91aae308074079a926ee151c7ec9d3cc543992f337d2f44ad96f",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
-      "id": "SURFACE-ed6a3e9e555262c7",
-      "path": "tdf-hq-ui/src/components/PlaceholderPage.tsx",
-      "sha256": "8d90bda2e923d7263a5142aab4ce98c948292c7b260dd62e15652a5f57c2acf2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
     },
@@ -82816,7 +82782,6 @@
     "SURFACE-1531c9c36f482a7e",
     "SURFACE-85a789593d432274",
     "SURFACE-d4d209018de8c574",
-    "SURFACE-7caa67891da35c66",
     "SURFACE-08e710fa5e7786c7",
     "SURFACE-38bb7b3066524a69",
     "SURFACE-df42e6ad7db6be04",
@@ -82826,7 +82791,6 @@
     "SURFACE-7eea28cead7a268a",
     "SURFACE-efa80e61bd5fc736",
     "SURFACE-f637c425082864eb",
-    "SURFACE-ed6a3e9e555262c7",
     "SURFACE-2da7b2bb463ec4ef",
     "SURFACE-2fd56cddd4894a6a",
     "SURFACE-e3d94a49085bdc41",
@@ -85111,7 +85075,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "927362e30cbf37be63f6fb31aa1f9b58b3ed739f19cfe634a7a6c7b33c45a676",
+      "sourceSha256": "fe20a8ecbc96b125c1f92c4b44cbd9bd14c28894f9cbc86ba72ebd8baf233730",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85139,7 +85103,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "927362e30cbf37be63f6fb31aa1f9b58b3ed739f19cfe634a7a6c7b33c45a676",
+      "sourceSha256": "fe20a8ecbc96b125c1f92c4b44cbd9bd14c28894f9cbc86ba72ebd8baf233730",
       "definition": {
         "states": [
           "absent",
@@ -85169,7 +85133,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "927362e30cbf37be63f6fb31aa1f9b58b3ed739f19cfe634a7a6c7b33c45a676",
+      "sourceSha256": "fe20a8ecbc96b125c1f92c4b44cbd9bd14c28894f9cbc86ba72ebd8baf233730",
       "definition": {
         "export": [
           "queued",

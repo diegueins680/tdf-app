@@ -14736,7 +14736,6 @@
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistFansList.tsx",
-        "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
         "tdf-hq-ui/src/components/MarkdownText.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
