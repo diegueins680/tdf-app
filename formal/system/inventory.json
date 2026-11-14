@@ -157,6 +157,7 @@
       "scripts/__tests__/content-storage-model.test.mjs",
       "scripts/__tests__/content-storage-reconciliation.test.mjs",
       "scripts/__tests__/continuous-improvement-loop.test.mjs",
+      "scripts/__tests__/delivery-matrix.test.mjs",
       "scripts/__tests__/dependency-security.test.mjs",
       "scripts/__tests__/diagnose-social.test.mjs",
       "scripts/__tests__/directory-event-search-http.mjs",
@@ -310,6 +311,7 @@
       "scripts/continuous-improvement-loop.example.json",
       "scripts/continuous-improvement-loop.mjs",
       "scripts/continuous-improvement-loop.test.mjs",
+      "scripts/delivery-matrix.mjs",
       "scripts/deploy-stripe-ticketing.sh",
       "scripts/diagnose-instagram.mjs",
       "scripts/diagnose-social.mjs",
@@ -352,6 +354,7 @@
       "scripts/lib/compiled-api-surface.mjs",
       "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
+      "scripts/lib/delivery-matrix.mjs",
       "scripts/lib/discovery.mjs",
       "scripts/lib/disposable-postgres-url.mjs",
       "scripts/lib/flyctl-cli.mjs",
@@ -3202,7 +3205,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
+      "sha256": "8c324110865c620869587f3ade3e5c9d51fb097e694b24aa93b73bbdc3992443",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3826,7 +3829,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+      "sha256": "3b75451201352914e57227c19008fee7c8e8747ff00bf81ae3a43a7a3512fa6b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3959,6 +3962,12 @@
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
       "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-16a9cdb8e79980cc",
+      "path": "scripts/__tests__/delivery-matrix.test.mjs",
+      "sha256": "37dfd759fd9d46dac0b539dc88e9b8d8d64a6c2f777b7034d1f60c541fc2aac9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4564,7 +4573,7 @@
     {
       "id": "SURFACE-ba099638d09bac1d",
       "path": "scripts/__tests__/verification-evidence.test.mjs",
-      "sha256": "9b8cd614de470986a9af0e15c4a26569cbdb2b5d57e4e17f74a9d5678bece05d",
+      "sha256": "d844c7be68115d503729dc5fc97f7d86766d53d52f641e21f7eeb5c9b1fbe14b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4880,6 +4889,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-5a0c7f10ee9b584c",
+      "path": "scripts/delivery-matrix.mjs",
+      "sha256": "b69aeaee6ffcfc23ea4a86a5060a6c170cbc2a60d80f4df77a9a744819536cf2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-45b3849f78ceb2dd",
       "path": "scripts/deploy-stripe-ticketing.sh",
       "sha256": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
@@ -5132,6 +5147,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ee31b4ec099109f8",
+      "path": "scripts/lib/delivery-matrix.mjs",
+      "sha256": "0052f89b9b64323d3d7fa9fc14d9837087edbbbe602c479dfabc7125147ad8de",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-5d55ff4fc614658c",
       "path": "scripts/lib/discovery.mjs",
       "sha256": "a14e9b4b45190816752fdceb69684a059746e0a55344fef3c18f8451dcecdc14",
@@ -5362,7 +5383,7 @@
     {
       "id": "SURFACE-51ff2aecc0e6e208",
       "path": "scripts/lib/verification-evidence.mjs",
-      "sha256": "5639d0c6f49f826ded7ac4509620249b3768bd3e3b8e865aef77608619b01fc0",
+      "sha256": "b2155d28b8f6885dfef9efd2ba44e0be4fd9bd8714c7aa0cd33e75c62b137a9d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5536,7 +5557,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
+      "sha256": "76005d9ebad188fbfe397b77d9ef1aee5e6a1c8ea7001e243741fbbb56d37810",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24766,6 +24787,13 @@
       "kind": "requirement-candidate"
     },
     {
+      "path": "docs/release/delivery-evidence-matrix.md",
+      "sha256": "6044ad469758e8e6459c413acd7d3fe290920af123a3ed29d388e88d133b2015",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
       "path": "docs/release/ios-signing-blocker-handoff-2026-03-16.md",
       "sha256": "14dc85af12951aeae17842817537a41825474fd050d17b3dc6a48b2512e34afc",
       "authority": "inferred",
@@ -31298,7 +31326,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "11d88d6ff2176efc8cccdbd9e22c2b6bda1f11df77c2b83407d2f18a9a363a8c",
+      "sha256": "6704a884fe7534b3a499266f9008cc09c708da7faaee24a55092660c22f48ec8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

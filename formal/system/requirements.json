@@ -144,9 +144,12 @@
         "formal/system/proof-certificates.md",
         "scripts/lib/alloy-controls.mjs",
         "scripts/verify-alloy-controls.mjs",
-        "scripts/quality-repo.sh"
+        "scripts/quality-repo.sh",
+        "scripts/delivery-matrix.mjs",
+        "scripts/lib/delivery-matrix.mjs",
+        "docs/release/delivery-evidence-matrix.md"
       ],
-      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs.",
+      "verification": "Exhaustive finite truth-table check of actual admission function; source/tool hash and execution logs. No log authenticity or hostile-runner proof. Consumer replay pins all 41 SMT expectations, validates source provenance and artifacts, and derives source-derived statuses from fresh solver results. Python admission contracts remain UNPROVEN beyond controlled regression evidence. Separate CVC5 replay checks all 41 inputs; Ethos independently checks fourteen formula obligations (twelve distinct inputs), with all complete implementation/refinement obligations still UNPROVEN and all source/refinement limitations retained. Every event-operations Alloy assertion has an assertion-preserving fact/predicate mutation; the pinned solver must produce the named counterexample at unchanged scopes. Coverage and result-admission negative tests reject missing, failed and mismatched runs. The delivery evidence inventory rejects missing, skipped, source-mismatched and wrong-level receipts, preserves BLOCKED formal decisions and never authorizes a release. Receipt consistency does not authenticate execution or prove implementation/refinement. The shared source manifest includes desktop, auxiliary services, edge and media source roots.",
       "evidence": "formal CI source/result manifests and regression output; independent CPC result.json, exact SMT/proof/signature hashes, reference-binding and incompleteness controls",
       "status": "specified and implemented",
       "historicalStatus": "implemented-awaiting-release-evidence",
@@ -189,7 +192,8 @@
         "formal/system/receipt-admission-counterexample.json",
         "scripts/test-proof-certificates.py",
         "scripts/__tests__/alloy-controls.test.mjs",
-        "scripts/__tests__/event-raci-editor-context-runner.test.mjs"
+        "scripts/__tests__/event-raci-editor-context-runner.test.mjs",
+        "scripts/__tests__/delivery-matrix.test.mjs"
       ],
       "formalModels": [],
       "confidence": "high for stated local boundary; no system-wide completion claim",

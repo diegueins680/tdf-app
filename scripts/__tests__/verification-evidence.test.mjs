@@ -48,3 +48,20 @@ test('both formal workflows revalidate on PRs, main integration and schedule wit
     assert.doesNotMatch(source, /continue-on-error/);
   }
 });
+
+// Every shipped execution surface must invalidate retained model evidence.
+test('desktop, edge, campaign and media source edits invalidate evidence', t => {
+  const root = mkdtempSync(path.join(tmpdir(), 'tdf-surfaces-evidence-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  execFileSync('git', ['init', '-q'], { cwd: root });
+  for (const name of ['tdf-desktop/src/main/main.cjs', 'services/campaign-platform/worker.py',
+    'functions/api.ts', 'streaming/worker.js', 'tidal-agent/worker.py', 'e2e/journey.mjs', 'test/capacity.json']) {
+    const full = path.join(root, name);
+    mkdirSync(path.dirname(full), { recursive: true });
+    writeFileSync(full, 'original');
+    const before = sourceManifest(root);
+    assert.ok(before.files[name], `${name} must be fingerprinted`);
+    writeFileSync(full, 'changed');
+    assert.notEqual(sourceManifest(root).digest, before.digest, name);
+  }
+});
