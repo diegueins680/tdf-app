@@ -1283,6 +1283,11 @@
       "id": "2026-11-11_event_admin_delegation",
       "path": "tdf-hq/sql/2026-11-11_event_admin_delegation.sql",
       "introducedBy": "2703eb3a1ac1604829e902262fe2dbfbbf4f4ca8"
+    },
+    {
+      "id": "2026-11-12_marketplace_agreement_payments",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+      "introducedBy": "26c83d9e6525d859b0da0bebf959ad6d1c806159"
     }
   ]
 }
