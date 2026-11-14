@@ -17,10 +17,21 @@ finish every obligation of draft PR #495. Its limits are listed below.
 | Tool code | Git blobs at one committed tool revision, hash-checked on the host |
 | Encryption tool | `age` pinned by `ops/hetzner/recovery-tools.json`, archive and binary hashes verified |
 | Recovery recipient | Public age recipient from the key custodian; the private identity never reaches the host |
-| Off-host target | Storage Box host, port, sub-account and directory; host key pinned in `/opt/tdf/release-control/storage-known-hosts` |
+| Off-host target | Storage Box host, port, sub-account and directory; key and pinned host key in `/opt/tdf/release-config` |
+
+The journal is the single global one at `/opt/tdf/release-control`, which
+already holds the complete 24 October release. It admits only its records and
+lock, so operator configuration (storage key, pinned host key, optional login
+probe) lives in `/opt/tdf/release-config`.
 
 `plan` observes the running API and database identities, configured images,
-public revision and Caddyfile digest. It then pulls the candidate by digest and
+public revision and Caddyfile digest. It also records the exact compose file
+list the API was created from. On 13 November 2026 that list included
+`/opt/tdf-mail/api-smtp-image-override.yaml`, which pins the API image. An
+override is admitted only in that exact three-line shape. The running API must
+match the override's image, and its image must carry the `TDF_IMAGE` digest.
+Every compose command uses the planned file list, so a restart never drops the
+override. It then pulls the candidate by digest and
 records the journal plan. The plan's `runtimeHash` binds the observation and
 every parameter. Each later phase recomputes it and refuses on any drift, and
 refuses tool code from a different revision than the one planned.
@@ -32,13 +43,13 @@ refuses tool code from a different revision than the one planned.
 | backup | maintenance | Original Caddyfile digest must match the plan; overwrite the bind-mounted file in place; edge sees it; reload; public endpoint returns 503 with the maintenance marker |
 | | stop-writers | Stop the backup timer and API; no running backup; the database network has only the database; no other client backends; record ledger and system identifier |
 | | stop-database | Clean stop; `pg_controldata` in a network-less read-only container reports `shut down` with the same system identifier |
-| | capture | Cold file capture of the database volume and `/opt/tdf/production` (configuration, secrets, assets, uploads) with content manifests; bundle archive |
+| | capture | Cold file capture of the database volume and `/opt/tdf/production` (configuration, secrets, assets, uploads) with content manifests, plus the image override; bundle archive |
 | | encrypt | Pinned age to the custodian's recipient; trusted record binds release, plan, hashes and sizes |
 | | retrieve-off-host | Upload bundle and record over SFTP; a fresh connection downloads it; bytes and size must match |
 | | restore-isolate | Replay the captured database into the reviewed physical isolate; it must start with the same identity and migration ledger |
 | migrate | start-database | Healthy; identity and ledger unchanged; API still stopped |
 | | migrate | Candidate image in `TDF_MIGRATION_PRECHECK_ONLY` mode applies its reviewed batch; every manifest id must be in the ledger |
-| cutover | start-candidate | Replace exactly the one `TDF_IMAGE` line that holds the recovery image; start the API; container runs the candidate |
+| cutover | start-candidate | Replace exactly the one `TDF_IMAGE` line that holds the recovery image and, when present, the image override; start the API; container runs the candidate |
 | | verify-candidate | `/health` is ok with database ok; `/version` is the candidate commit; every smoke path returns 200; optional root-only login probe |
 | | reopen | Restore the original Caddyfile; public `/version` is the candidate commit; restore the backup timer |
 
@@ -52,7 +63,7 @@ gets the maintenance response from the first stage until `reopen`.
 once `reopen` has started. From that point users can have written data, and
 restoring would discard it.
 
-- **Before any migration stage:** restore `.env` if changed, start the database
+- **Before any migration stage:** restore `.env` and the image override if changed, start the database
   if stopped, check the ledger equals the pre-release capture, start the recovery
   image, verify its `/version`, and restore the edge.
 - **From `migrate` onward:** the candidate may have changed the schema. The

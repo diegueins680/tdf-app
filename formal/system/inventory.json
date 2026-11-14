@@ -30668,7 +30668,7 @@
     },
     {
       "path": "formal/system/guarded-release.md",
-      "sha256": "ea2b60ab6b878b5450b91bdba5f6c1ca1f413648dfc213df389644143f74fe81",
+      "sha256": "fda6464005909d04710696ca44e14801956ac6d3d2f4c8534825c638ba8b68da",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31291,7 +31291,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "983e107fa23c78c8f699b4e75b4302f14f2ea0dcf8f289f1555acf4ad9b5567a",
+      "sha256": "12fd4467930062ee346e23c3bd0a37a7c85855a0bf8880c86effda19141d0b9a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

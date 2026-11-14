@@ -6729,7 +6729,8 @@
         "Running API and database match the configured immutable images",
         "Candidate image published for the exact commit",
         "Storage Box sub-account key and pinned host key installed root-only on the host",
-        "Custodian holds the private age identity off-host"
+        "Custodian holds the private age identity off-host",
+        "API image override, when present, is exactly a three-line api image setting"
       ],
       "inputs": [
         "Candidate commit",
@@ -6801,14 +6802,14 @@
       ],
       "formalModels": [],
       "status": "specified and implemented",
-      "confidence": "Orchestration controls over the real journal and release files with an in-memory host; seven safety-check mutations detected. No staging or production execution yet.",
+      "confidence": "Orchestration controls over the real journal and release files with an in-memory host; fifteen safety-check mutations detected. A read-only inspection on 13 November confirmed the compose override, journal location and capacity. No staging or production execution yet.",
       "ambiguity": [
         "Storage Box acceptance and custodian decrypt pending",
         "Journal abandon record missing",
         "Edge certificates not captured",
         "Authenticated login probe optional"
       ],
-      "verification": "20 orchestration tests: full release, ordering and confirmation, interrupted-stage blocking, client/peer fencing, corrupt off-host copy, Caddyfile and parameter drift, missing migration rows, rollback with and without database restore, refusal after reopen and release succession.",
+      "verification": "29 controls: full release, ordering and confirmation, interrupted-stage blocking, client/peer fencing, corrupt off-host copy, Caddyfile and parameter drift, missing migration rows, rollback with and without database restore, refusal after reopen, release succession, and the real runtime observation against production-shaped inspect output including the 13 November image override and compose file set.",
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Executor and driver exist; staging rehearsal and supervised production execution are pending."
