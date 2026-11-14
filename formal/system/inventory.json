@@ -9220,13 +9220,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "7045b50d883ef59b11f96d1dabfcdb944f70528ee85cf504e4e78662a1baa41e",
+      "sha256": "95415cab3816b561f35af86ae94f76d29c116d1e3b2a859f5692d376209e20eb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "c2d4405ef7f068ab8c82472c36020656746b93a632e294cf7ce9ad27506a997c",
+      "sha256": "ee7cee30783e18871af7a1fe8ab7a13970d64f5585c0d66ddd2800156c7329ae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30990,7 +30990,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6c57432772901126461f06d0885ee7db1f490ed879b77c5a519acdd442ab6352",
+      "sha256": "927362e30cbf37be63f6fb31aa1f9b58b3ed739f19cfe634a7a6c7b33c45a676",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

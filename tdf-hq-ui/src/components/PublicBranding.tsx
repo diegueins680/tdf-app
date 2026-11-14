@@ -28,17 +28,19 @@ import {
 
 const FeatureMenu = lazy(() => import('./SidebarNav'));
 
+// `primary` items form the header row on wide screens; search is the header icon. Every item, primary or
+// not, is listed under "Más opciones", which is the whole navigation on phones.
 const PUBLIC_NAV_ITEMS = [
-  { label: 'authEntry.search', to: '/buscar' },
-  { label: 'authEntry.events', to: EVENTS_PATH },
-  { label: 'TDF', to: '/tdf' },
-  { label: 'app.title', to: '/app', surface: 'nav' },
-  { label: 'authEntry.services', to: '/comercio' },
-  { label: 'authEntry.community', to: '/fans' },
-  { label: 'authEntry.shop', to: '/marketplace' },
-  { label: 'Domo', to: '/domo-del-pululahua' },
-  { label: 'authEntry.book', to: '/reservar' },
-  { label: 'authEntry.releases', to: '/records' },
+  { label: 'authEntry.search', to: '/buscar', primary: false },
+  { label: 'authEntry.events', to: EVENTS_PATH, primary: true },
+  { label: 'TDF', to: '/tdf', primary: true },
+  { label: 'app.title', to: '/app', surface: 'nav', primary: false },
+  { label: 'authEntry.services', to: '/comercio', primary: false },
+  { label: 'authEntry.community', to: '/fans', primary: true },
+  { label: 'authEntry.shop', to: '/marketplace', primary: true },
+  { label: 'Domo', to: '/domo-del-pululahua', primary: false },
+  { label: 'authEntry.book', to: '/reservar', primary: true },
+  { label: 'authEntry.releases', to: '/records', primary: false },
 ] as const;
 
 interface FooterAction {
@@ -227,7 +229,7 @@ export default function PublicBranding({
                   spacing={0.5}
                   sx={{ display: { xs: 'none', md: 'flex' }, flexWrap: 'wrap' }}
                 >
-                  {PUBLIC_NAV_ITEMS.map((item) => (
+                  {PUBLIC_NAV_ITEMS.filter((item) => item.primary).map((item) => (
                     <Button
                       key={item.to}
                       component={RouterLink}
@@ -253,7 +255,7 @@ export default function PublicBranding({
               </Stack>
               <Stack direction="row" alignItems="center" spacing={{ xs: 1, sm: 1.5 }} sx={{ maxWidth: '100%', minWidth: 0 }}>
                 {!focusedPurchase && <MarketplaceCartButton />}
-                {!focusedPurchase && <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44, display: { md: 'none' } }}><SearchIcon /></IconButton>}
+                {!focusedPurchase && <IconButton component={RouterLink} to="/buscar" aria-label={t('authEntry.search')} sx={{ minWidth: 44, minHeight: 44 }}><SearchIcon /></IconButton>}
                 {session ? (
                   <SessionMenu />
                 ) : showLoginButton && (
@@ -282,14 +284,14 @@ export default function PublicBranding({
                   anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                   transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 >
-                  {/* The main navigation already shows these from md up; here they serve phones only. */}
+                  {/* From md up the header row already shows the primary items and the search icon. */}
                   {PUBLIC_NAV_ITEMS.map((item) => (
                     <MenuItem
                       key={item.to}
                       component={RouterLink}
                       to={navItemProps(item).to}
                       onClick={() => { navItemProps(item).onClick?.(); setMenuAnchor(null); }}
-                      sx={{ display: focusedPurchase ? undefined : { md: 'none' } }}
+                      sx={{ display: focusedPurchase || !(item.primary || item.to === '/buscar') ? undefined : { md: 'none' } }}
                     >
                       {t(item.label)}
                     </MenuItem>

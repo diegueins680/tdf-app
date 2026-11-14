@@ -163,6 +163,21 @@ describe('PublicBranding', () => {
     }
   });
 
+  it('keeps the header row to five destinations', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderBranding(container, '/tdf');
+
+    try {
+      const nav = container.querySelector('nav[aria-label="Navegación principal"]');
+      const paths = Array.from(nav?.querySelectorAll<HTMLAnchorElement>('a') ?? []).map((link) => link.getAttribute('href'));
+      expect(paths).toEqual(['/social/eventos', '/tdf', '/fans', '/marketplace', '/reservar']);
+      expect(container.querySelector('a[href="/buscar"][aria-label="Buscar"]')).not.toBeNull();
+    } finally {
+      await cleanup();
+    }
+  });
+
   it('offers exactly one events entry in the main navigation', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -271,15 +286,19 @@ it('places the signup invitation before public destination content inside main',
   } finally { await view.cleanup(); activeSession = null; }
 });
 
-it('sends the TDF Mobile navigation entry to the landing with its surface', async () => {
+it('sends the TDF Mobile entry under more options to the landing with its surface', async () => {
+  await i18n.changeLanguage('es');
   const container = document.createElement('div');
   document.body.appendChild(container);
   const view = await renderBranding(container, '/tdf');
   try {
-    const navLinks = Array.from(container.querySelectorAll('nav a')).filter((a) => a.getAttribute('href')?.startsWith('/app'));
-    expect(navLinks.length).toBeGreaterThan(0);
-    for (const link of navLinks) expect(link.getAttribute('href')).toBe('/app?surface=nav');
-    expect(container.querySelector('nav a[href="/buscar"]')).toBeTruthy();
+    expect(container.querySelector('nav a[href^="/app"]')).toBeNull();
+    const more = container.querySelector<HTMLButtonElement>(`button[aria-label="${i18n.t('authEntry.more')}"]`);
+    expect(more).not.toBeNull();
+    await act(async () => { more!.click(); await flushPromises(); });
+    const entries = Array.from(document.querySelectorAll('[role="menu"] a')).map((a) => a.getAttribute('href'));
+    expect(entries).toContain('/app?surface=nav');
+    for (const path of ['/buscar', '/comercio', '/domo-del-pululahua', '/records', '/donar']) expect(entries).toContain(path);
   } finally {
     await view.cleanup();
     container.remove();
