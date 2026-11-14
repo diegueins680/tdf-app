@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "cb5903ac6e4f66e522ed5477accf56a87c80d64c",
+  "mobileRevision": "594d8991531a20481aa6ac7f4386d01c018ca29e",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -2466,6 +2466,7 @@
       "tdf-hq/src/TDF/Server/CourseCheckout.hs",
       "tdf-hq/src/TDF/Server/DDEX.hs",
       "tdf-hq/src/TDF/Server/Directory.hs",
+      "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
       "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
       "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
       "tdf-hq/src/TDF/Server/EventResearch.hs",
@@ -17754,7 +17755,13 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "c1117c37025e114281599f7a86c53b3f37ce9594dae2a8d92dfca42c10d9c77c",
+      "sha256": "594adfab7aa756ac1d0b20d438e871ddc7b4efbccd7edc6a7b01918530bc27be",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1b093fb3647ce61a",
+      "path": "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
+      "sha256": "3fffa9b76eae802e1629413435696333a45947f8e946a48f28a8170bbe833c83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18234,7 +18241,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "sha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20766,7 +20773,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
+      "sha256": "c2a349198cc22efe3a7d0e4d15ba8ff5351886c9e6d827d7261324f2f5047f2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31312,7 +31319,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "5a30a7638831ebd5e99d4441d7b5cc8e96cd0a31732a46adaf4d977409a7c634",
+      "sha256": "eff16e07f63200d5d4027a74e26303092f39733ad23d7e85132ac6fab339a268",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
