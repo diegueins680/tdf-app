@@ -49,7 +49,7 @@ const AGREEMENT_PAYMENTS_INTRODUCTION = '26c83d9e6525d859b0da0bebf959ad6d1c80615
 // verified with the records stepped back to the main they reviewed.
 const LATAM_VENUE_DISCOVERY_ENTRY = '2026-11-14_latam_venue_discovery_sources';
 const VENUE_DISCOVERY_PROTECTED_MAIN = '5084d8a8a4d7a7a3b8d30d1f55ae5d9c8c032b9b';
-const VENUE_DISCOVERY_INTRODUCTION = '9cacfd762b5e332805dcc45d2cb412a7f16a2469';
+const VENUE_DISCOVERY_INTRODUCTION = 'c8a55bb726b7627bd63154bc4cf703f80b97c179';
 // [successor review, the review of protected main 5084d8a8 it nests unchanged]
 const VENUE_DISCOVERY_LIST_SUCCESSORS = [
   ['a72c8ad948739d7af29c', '51b43e3c0476c26bf606'],

@@ -1292,7 +1292,7 @@
     {
       "id": "2026-11-14_latam_venue_discovery_sources",
       "path": "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql",
-      "introducedBy": "9cacfd762b5e332805dcc45d2cb412a7f16a2469"
+      "introducedBy": "c8a55bb726b7627bd63154bc4cf703f80b97c179"
     }
   ]
 }

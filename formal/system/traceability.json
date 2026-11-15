@@ -27866,7 +27866,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "0ea61f8666a8eb7d9d917ccfcc98ec1dee42197911234b590878dddf623b75dc",
+    "docs/catalog-persistence/catalog-list-decisions.json": "4e58b37e67da1907a91287fe121a9e187c22940e55ab09f61b2116dc3655d01b",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28300,7 +28300,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "c8e23b1f2f5470f1e1c7208a7242dbaa4aaaf5bdfaf9abd0674b1b8c59958acd",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "92cfb77f163bcf9666572efede7b00c23cf7b7484cc28f1fd34a55269bf22d68",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28466,7 +28466,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "efe24d87a5fe1f3fdcdd06085307ee0779aad8a603c09a6a3053e713dff56acb",
+    "scripts/production-migrations.json": "9dd3e10cd5dc85e0b45eeadb88dd0bf30ed40293e8a128082d347553e612a9d0",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -49905,7 +49905,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "c8e23b1f2f5470f1e1c7208a7242dbaa4aaaf5bdfaf9abd0674b1b8c59958acd",
+      "sha256": "92cfb77f163bcf9666572efede7b00c23cf7b7484cc28f1fd34a55269bf22d68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53009,7 +53009,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "efe24d87a5fe1f3fdcdd06085307ee0779aad8a603c09a6a3053e713dff56acb",
+      "sha256": "9dd3e10cd5dc85e0b45eeadb88dd0bf30ed40293e8a128082d347553e612a9d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

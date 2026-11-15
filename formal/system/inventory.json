@@ -3911,7 +3911,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "c8e23b1f2f5470f1e1c7208a7242dbaa4aaaf5bdfaf9abd0674b1b8c59958acd",
+      "sha256": "92cfb77f163bcf9666572efede7b00c23cf7b7484cc28f1fd34a55269bf22d68",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5507,7 +5507,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "efe24d87a5fe1f3fdcdd06085307ee0779aad8a603c09a6a3053e713dff56acb",
+      "sha256": "9dd3e10cd5dc85e0b45eeadb88dd0bf30ed40293e8a128082d347553e612a9d0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
