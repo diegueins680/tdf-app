@@ -1,3 +1,5 @@
+import { formatPriceCentsInput } from '../utils/priceInput';
+import { rentalPriceField } from '../utils/rentalPriceInput';
 import MarkdownText from '../components/MarkdownText';
 import { resolveApiBase } from '../config/apiBase';
 import { readOptionalBrowserStorage, writeOptionalBrowserPreference, removeOptionalBrowserPreference } from '../utils/optionalBrowserStorage';
@@ -975,14 +977,13 @@ export default function MarketplacePage() {
   const updateRentalTermsMutation = useMutation({
     mutationFn: () => {
       if (!rentalTermsDialogListing) throw new Error('No rental listing selected');
+      if (rentalTermsFormInvalid) throw new Error('Revisa los importes y límites de renta.');
       const readInteger = (value: string) => Number(value.trim());
       return Marketplace.updateRentalTerms(rentalTermsDialogListing.miListingId, {
-        mrtuDailyRateUsdCents: readInteger(rentalTermsForm.dailyRate),
-        mrtuWeeklyRateUsdCents: rentalTermsForm.weeklyRate.trim()
-          ? readInteger(rentalTermsForm.weeklyRate)
-          : null,
-        mrtuSecurityDepositUsdCents: readInteger(rentalTermsForm.deposit),
-        mrtuLateFeeUsdCents: readInteger(rentalTermsForm.lateFee),
+        mrtuDailyRateUsdCents: rentalAmounts.dailyRate.cents!,
+        mrtuWeeklyRateUsdCents: rentalAmounts.weeklyRate.cents,
+        mrtuSecurityDepositUsdCents: rentalAmounts.deposit.cents!,
+        mrtuLateFeeUsdCents: rentalAmounts.lateFee.cents!,
         mrtuMinDays: readInteger(rentalTermsForm.minDays),
         mrtuMaxDays: readInteger(rentalTermsForm.maxDays),
         mrtuCancellationWindowHours: readInteger(rentalTermsForm.cancellationHours),
@@ -1525,10 +1526,10 @@ export default function MarketplacePage() {
     if (!canManagePhotos || listing.miPurpose !== 'rent') return;
     setRentalTermsDialogListing(listing);
     setRentalTermsForm({
-      dailyRate: String(listing.miPriceUsdCents),
-      weeklyRate: listing.miRentalWeeklyPriceUsdCents == null ? '' : String(listing.miRentalWeeklyPriceUsdCents),
-      deposit: String(listing.miRentalSecurityDepositUsdCents ?? 0),
-      lateFee: String(listing.miRentalLateFeeUsdCents ?? listing.miPriceUsdCents),
+      dailyRate: formatPriceCentsInput(listing.miPriceUsdCents),
+      weeklyRate: formatPriceCentsInput(listing.miRentalWeeklyPriceUsdCents),
+      deposit: formatPriceCentsInput(listing.miRentalSecurityDepositUsdCents ?? 0),
+      lateFee: formatPriceCentsInput(listing.miRentalLateFeeUsdCents ?? listing.miPriceUsdCents),
       minDays: String(listing.miRentalMinDays ?? 1),
       maxDays: String(listing.miRentalMaxDays ?? 30),
       cancellationHours: String(listing.miRentalCancellationWindowHours ?? 24),
@@ -1539,25 +1540,36 @@ export default function MarketplacePage() {
     updateRentalTermsMutation.reset();
   };
 
-  const rentalTermsFormInvalid = useMemo(() => {
-    const integerFields = [
-      rentalTermsForm.dailyRate,
-      rentalTermsForm.deposit,
-      rentalTermsForm.lateFee,
-      rentalTermsForm.minDays,
-      rentalTermsForm.maxDays,
-      rentalTermsForm.cancellationHours,
-      ...(rentalTermsForm.weeklyRate.trim() ? [rentalTermsForm.weeklyRate] : []),
-    ];
-    const values = integerFields.map(Number);
-    return values.some((value) => !Number.isSafeInteger(value) || value < 0)
-      || Number(rentalTermsForm.dailyRate) < 1
-      || Number(rentalTermsForm.minDays) < 1
-      || Number(rentalTermsForm.maxDays) < Number(rentalTermsForm.minDays)
-      || Number(rentalTermsForm.maxDays) > 366
-      || !rentalTermsForm.version.trim()
-      || !rentalTermsForm.summary.trim();
-  }, [rentalTermsForm]);
+  const rentalAmounts = {
+    dailyRate: rentalPriceField(rentalTermsForm.dailyRate, true),
+    weeklyRate: rentalPriceField(rentalTermsForm.weeklyRate, true, true),
+    deposit: rentalPriceField(rentalTermsForm.deposit, false),
+    lateFee: rentalPriceField(rentalTermsForm.lateFee, false),
+  };
+  const rentalTermsFormInvalid = Object.values(rentalAmounts).some((field) => field.error)
+    || [rentalTermsForm.minDays, rentalTermsForm.maxDays, rentalTermsForm.cancellationHours]
+      .some((value) => !/^\d+$/.test(value.trim()) || !Number.isSafeInteger(Number(value)))
+    || Number(rentalTermsForm.minDays) < 1
+    || Number(rentalTermsForm.maxDays) < Number(rentalTermsForm.minDays)
+    || Number(rentalTermsForm.maxDays) > 366
+    || Number(rentalTermsForm.cancellationHours) > 8760
+    || !rentalTermsForm.version.trim() || rentalTermsForm.version.trim().length > 80
+    || !rentalTermsForm.summary.trim() || rentalTermsForm.summary.trim().length > 1000;
+
+  const rentalAmountInput = (key: keyof typeof rentalAmounts, label: string) => (
+    <Grid item xs={12} sm={6}>
+      <TextField
+        label={label}
+        value={rentalTermsForm[key]}
+        onChange={(event) => setRentalTermsForm((current) => ({ ...current, [key]: event.target.value }))}
+        disabled={updateRentalTermsMutation.isPending}
+        inputProps={{ inputMode: 'decimal', maxLength: 32 }}
+        error={Boolean(rentalAmounts[key].error)}
+        helperText={rentalAmounts[key].error ?? 'USD. Usa punto o coma; hasta dos decimales.'}
+        fullWidth
+      />
+    </Grid>
+  );
 
   const handleRestoreCart = () => {
     if (!savedCartMeta?.cartId) return;
@@ -3006,11 +3018,11 @@ export default function MarketplacePage() {
               Activar esta versión la publica para nuevos checkouts. Las órdenes existentes conservan sus fechas, importes y versión aceptada.
             </Alert>
             <Grid container spacing={1.5}>
+              {rentalAmountInput('dailyRate', 'Tarifa diaria (USD)')}
+              {rentalAmountInput('weeklyRate', 'Tarifa semanal (USD, opcional)')}
+              {rentalAmountInput('deposit', 'Depósito reembolsable (USD)')}
+              {rentalAmountInput('lateFee', 'Cargo tardío (USD)')}
               {([
-                ['Tarifa diaria (centavos)', 'dailyRate'],
-                ['Tarifa semanal (centavos, opcional)', 'weeklyRate'],
-                ['Depósito reembolsable (centavos)', 'deposit'],
-                ['Cargo tardío (centavos)', 'lateFee'],
                 ['Días mínimos', 'minDays'],
                 ['Días máximos', 'maxDays'],
                 ['Ventana de cancelación (horas)', 'cancellationHours'],
@@ -3021,7 +3033,7 @@ export default function MarketplacePage() {
                     type="number"
                     value={rentalTermsForm[key as keyof typeof rentalTermsForm]}
                     onChange={(event) => setRentalTermsForm((current) => ({ ...current, [key]: event.target.value }))}
-                    inputProps={{ min: key === 'dailyRate' || key === 'minDays' || key === 'maxDays' ? 1 : 0, step: 1 }}
+                    inputProps={{ min: key === 'minDays' || key === 'maxDays' ? 1 : 0, step: 1 }}
                     fullWidth
                   />
                 </Grid>

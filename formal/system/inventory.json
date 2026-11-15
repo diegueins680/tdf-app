@@ -86,6 +86,7 @@
       "e2e/web/public-welcome.spec.mjs",
       "e2e/web/radio-navigation.spec.mjs",
       "e2e/web/records-thumbnails.spec.mjs",
+      "e2e/web/rental-terms-money.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
       "e2e/web/staff-event-money.spec.mjs",
       "e2e/web/storage-upload-recovery.spec.mjs",
@@ -1706,6 +1707,7 @@
       "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
       "tdf-hq-ui/src/utils/releaseDate.test.ts",
       "tdf-hq-ui/src/utils/releaseDate.ts",
+      "tdf-hq-ui/src/utils/rentalPriceInput.ts",
       "tdf-hq-ui/src/utils/roles.ts",
       "tdf-hq-ui/src/utils/serviceTypesStore.ts",
       "tdf-hq-ui/src/utils/sessionPersonalData.test.ts",
@@ -3379,7 +3381,7 @@
     {
       "id": "SURFACE-5536617b95247007",
       "path": "e2e/web/course-price-booking-transfer.spec.mjs",
-      "sha256": "334f4c9233dc0dc424be0f3d247570f1afac83d3f7f982ca54b2176d8fe5c84b",
+      "sha256": "3c627f962373bc400a3199042d2baa61e64f2bd1e47693716e4fd38d8fd83dfa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3578,6 +3580,12 @@
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
       "sha256": "53bff5d1d66f9ee34b8d177f04c1aa0d53e42129bb230d4774a0fe15970b2821",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-6defa30dc7d00e16",
+      "path": "e2e/web/rental-terms-money.spec.mjs",
+      "sha256": "2aa7db7822c418b8021a16e1f733b996128c8ee001f0d488f791669428c6c462",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7903,7 +7911,7 @@
     {
       "id": "SURFACE-35d1e3a8fc77c9a6",
       "path": "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
-      "sha256": "6782e58671ba4bda52419ad3db29c408bcec37750c9df6b71f5c65d838d7e47b",
+      "sha256": "ae2ad3f7be703b347c428926fce27a779f7da84e99fdac8b45637950667edf57",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11377,7 +11385,7 @@
     {
       "id": "SURFACE-ae8970a24d4f1f59",
       "path": "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-      "sha256": "8435855126f94456a4916ef4b4ef2d22af2c659ca586540ec382e31fdfc86c99",
+      "sha256": "1543ebcbf71ccb7f7f3d1382c04f556a1fb9e3e83c93c14d8873a0cdfb30af1a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13178,6 +13186,12 @@
       "id": "SURFACE-bcd48d67432136ed",
       "path": "tdf-hq-ui/src/utils/releaseDate.ts",
       "sha256": "db23efb506ffd9aab7be771830e0f78c75fd0ff8a49ce957d5e27e1fd9fc84df",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0073c6e385b321f4",
+      "path": "tdf-hq-ui/src/utils/rentalPriceInput.ts",
+      "sha256": "5fb0755b4fa08690616edaa7fab6b7d1a4248457157c84f7155e628e8bff2c0b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31011,7 +31025,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "ef819758df1e69efde226a7d1040718af2947ac04411eae04365e70c8bbcd774",
+      "sha256": "235e008a738a549d6a7868259236be5c13a5fb8b7d4786f5207a7a1ee74f51e1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

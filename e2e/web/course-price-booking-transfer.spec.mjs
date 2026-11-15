@@ -6,10 +6,14 @@ async function inspectField(page, input) {
   const helper = await input.getAttribute('aria-describedby');
   expect(helper).toBeTruthy();
   await expect(page.locator(`[id="${helper}"]`)).not.toBeEmpty();
+  // Contrast is meaningful once MUI's floating label/color transitions settle.
+  // Keep the actual WCAG rules and report offending nodes on persistent failure.
+  await expect.poll(() => input.evaluate(node => node.closest('.MuiFormControl-root')
+    .getAnimations({ subtree: true }).filter(animation => animation.playState === 'running').length)).toBe(0);
   await page.addScriptTag({ content: axe.source });
   expect(await input.evaluate(async node => (await globalThis.axe.run(node.closest('.MuiFormControl-root'), {
     runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] },
-  })).violations.map(v => ({ id: v.id, impact: v.impact })))).toEqual([]);
+  })).violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.map(n => ({ target: n.target, summary: n.failureSummary })) })))).toEqual([]);
 }
 
 async function showField(input) {
