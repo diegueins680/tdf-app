@@ -66,8 +66,11 @@ INSERT INTO event_discovery_source
   (source_key, name, source_type, feed_url, city_id, enabled, priority, configuration,
    consecutive_failures, created_at, updated_at)
 VALUES
+  -- Seeded disabled: Meet2Go's terms of use (section 1.10, items f and k,
+  -- read 2026-11-15) prohibit robot, crawler and spider access. An operator
+  -- enables it only after Meet2Go grants written permission.
   ('meet2go-jsonld', 'Meet2Go (eventos)', 'jsonld',
-   'https://www.meet2go.com/seo/sitemap.xml', NULL, TRUE, 420,
+   'https://www.meet2go.com/seo/sitemap.xml', NULL, FALSE, 420,
    '{"linkPrefix":"https://www.meet2go.com/ev/","rewriteFrom":"https://www.meet2go.com/ev/","rewriteTo":"https://www.meet2go.com/seo/ev/","maxPages":300}',
    0, now(), now()),
   ('latiquetera-jsonld', 'La Tiquetera', 'jsonld',

@@ -52,7 +52,9 @@ psql_exec -f "$migration" >/dev/null
 test "$(count "SELECT count(*) FROM event_city")" = 6
 test "$(count "SELECT string_agg(name, ',' ORDER BY name) FROM event_city WHERE country_code='CO' AND time_zone='America/Bogota'")" = "Bogotá,Cali,Medellín"
 test "$(count "SELECT count(*) FROM event_city WHERE country_code='EC' AND time_zone='America/Guayaquil'")" = 3
-test "$(count "SELECT count(*) FROM event_discovery_source WHERE source_type IN ('ical','jsonld') AND enabled")" = 10
+test "$(count "SELECT count(*) FROM event_discovery_source WHERE source_type IN ('ical','jsonld') AND enabled")" = 9
+# Meet2Go's terms prohibit crawlers, so its source is registered but off.
+test "$(count "SELECT enabled::text FROM event_discovery_source WHERE source_key='meet2go-jsonld'")" = "false"
 # Every single-venue source is bound to its city; the two platforms are not.
 test "$(count "SELECT count(*) FROM event_discovery_source WHERE source_type IN ('ical','jsonld') AND city_id IS NULL")" = 2
 test "$(count "SELECT string_agg(source_key, ',' ORDER BY source_key) FROM event_discovery_source WHERE city_id IS NULL AND source_type='jsonld'")" = "latiquetera-jsonld,meet2go-jsonld"
