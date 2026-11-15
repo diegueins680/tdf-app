@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 
 import type { AgreementPayment } from '../../api/directory';
-import { agreementActions, agreementChargeDue, bpsToPercent, isAgreementOpen, visibleAgreementPayments } from './agreements';
+import { agreementActions, agreementChargeDue, bpsToPercent, isAgreementOpen, payoutIdentifierValid, visibleAgreementPayments } from './agreements';
 
 describe('agreement actions (ADR 0135)', () => {
   it('lets the provider start, only the buyer complete, and either party cancel or dispute a live agreement', () => {
@@ -55,5 +55,15 @@ describe('agreement actions (ADR 0135)', () => {
     });
     expect(visibleAgreementPayments({ payments: [payment('a', 'expired'), payment('b', 'paid'), payment('c', 'pending')] }).map((item) => item.id)).toEqual(['b', 'c']);
     expect(visibleAgreementPayments({})).toEqual([]);
+  });
+
+  it('accepts a cédula, a RUC or an international phone as payout recipient', () => {
+    expect(payoutIdentifierValid('identification', '1712345678')).toBe(true);
+    expect(payoutIdentifierValid('identification', '1712345678001')).toBe(true);
+    expect(payoutIdentifierValid('identification', '17123456')).toBe(false);
+    expect(payoutIdentifierValid('identification', '17123456AB')).toBe(false);
+    expect(payoutIdentifierValid('phone', '+593991234567')).toBe(true);
+    expect(payoutIdentifierValid('phone', '0991234567')).toBe(false);
+    expect(payoutIdentifierValid('phone', '+0991234567')).toBe(false);
   });
 });
