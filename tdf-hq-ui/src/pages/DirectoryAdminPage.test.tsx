@@ -9,6 +9,7 @@ const decide = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 jest.unstable_mockModule('../api/directory', () => ({ Directory: {
   adminClaims: claims, adminVerifications: jest.fn(), moderationQueue: jest.fn(),
   setClaimStatus: decide, mergeProfiles: jest.fn(),
+  adminAgreementDisputes: jest.fn(() => Promise.resolve([])), taxonomies: jest.fn(() => Promise.resolve({})),
 } }));
 jest.unstable_mockModule('../components/events/EventOrganizerClaimsQueue', () => ({
   default: () => <p>Cola de eventos sin organizador</p>,

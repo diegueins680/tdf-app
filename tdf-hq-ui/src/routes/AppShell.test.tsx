@@ -100,6 +100,8 @@ const renderShell = async (container: HTMLElement, initialEntry: string) => {
             <Route path="/inicio" element={<div>Home body</div>} />
             <Route path="/social/eventos" element={<div>Public events body</div>} />
             <Route path="/social/events" element={<div>Legacy events body</div>} />
+            <Route path="/social/eventos/:eventId/logistica" element={<div>Event logistics body</div>} />
+            <Route path="/estudio/calendario" element={<div>Studio calendar body</div>} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -293,6 +295,36 @@ describe('Shell', () => {
       expect(container.querySelector('[data-testid="chatkit-launcher"]')).not.toBeNull();
     } finally {
       await cleanup();
+    }
+  });
+
+  it('opens event logistics without the Scheduling module and still refuses module-gated pages', async () => {
+    const original = { roles: session.roles, modules: session.modules };
+    session.roles = ['Fan', 'Customer'];
+    session.modules = [];
+    try {
+      const logisticsContainer = document.createElement('div');
+      document.body.appendChild(logisticsContainer);
+      const logistics = await renderShell(logisticsContainer, '/social/eventos/42/logistica');
+      try {
+        expect(logisticsContainer.textContent).toContain('Event logistics body');
+        expect(logisticsContainer.textContent).not.toContain('ERROR 403');
+      } finally {
+        await logistics.cleanup();
+      }
+
+      const calendarContainer = document.createElement('div');
+      document.body.appendChild(calendarContainer);
+      const calendar = await renderShell(calendarContainer, '/estudio/calendario');
+      try {
+        expect(calendarContainer.textContent).toContain('ERROR 403');
+        expect(calendarContainer.textContent).not.toContain('Studio calendar body');
+      } finally {
+        await calendar.cleanup();
+      }
+    } finally {
+      session.roles = original.roles;
+      session.modules = original.modules;
     }
   });
 

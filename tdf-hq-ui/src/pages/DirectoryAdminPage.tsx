@@ -19,6 +19,7 @@ import { useState } from 'react';
 
 import { Directory } from '../api/directory';
 import EventOrganizerClaimsQueue from '../components/events/EventOrganizerClaimsQueue';
+import AgreementDisputesPanel from '../features/marketplace/AgreementDisputesPanel';
 
 type ReviewRecord = Record<string, unknown>;
 type QueueKind = 'claims' | 'verifications' | 'moderation';
@@ -61,6 +62,7 @@ export default function DirectoryAdminPage() {
             {(selected.data ?? []).map((record) => <ReviewCard key={stringValue(record['id'])} kind={queue} record={record} />)}
           </Stack>
         </>}
+        <AgreementDisputesPanel />
         <ProfileMergePanel />
       </Stack>
     </Container>
