@@ -68,6 +68,7 @@ import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import { hasStrictAdminAccess } from '../utils/accessControl';
+import EventTicketSaleRequestsQueue from '../components/events/EventTicketSaleRequestsQueue';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
 import EventTaxDocumentsPanel from '../components/events/EventTaxDocumentsPanel';
@@ -976,6 +977,7 @@ export default function SocialEventsPage() {
     <Box>
       <Stack spacing={2} sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight={800}>Eventos</Typography>
+        {hasStrictAdminAccess(session?.roles, session?.modules) && <EventTicketSaleRequestsQueue />}
         <Typography color="text.secondary">
           Descubre eventos, confirma asistencia y gestiona operación completa: tickets, presupuesto y contabilidad por evento.
         </Typography>

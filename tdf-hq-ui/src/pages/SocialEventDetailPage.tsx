@@ -17,7 +17,7 @@ import { SocialEventsAPI, type SocialEventMomentCreateDTO, type SocialTicketTier
 import { EventTickets } from '../api/eventTickets';
 import { Catalogs } from '../api/catalogs';
 import { useSession } from '../session/SessionContext';
-import { canAccessPath } from '../utils/accessControl';
+import { canAccessPath, hasStrictAdminAccess } from '../utils/accessControl';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import { formatCurrency } from '../utils/formatters';
 import ExperienceReviews from '../components/reviews/ExperienceReviews';
@@ -33,6 +33,7 @@ import EventPreparationPanel from '../components/events/EventPreparationPanel';
 import EventLineupEditor from '../components/events/EventLineupEditor';
 import EventAdminsCard from '../components/events/EventAdminsCard';
 import EventCourtesyTicketsCard from '../components/events/EventCourtesyTicketsCard';
+import EventTicketSaleCard from '../components/events/EventTicketSaleCard';
 import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicketPricing';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
@@ -503,6 +504,7 @@ export default function SocialEventDetailPage() {
           </CardContent>
         </Card>
 
+        {event && (adminAccess !== 'none' || hasStrictAdminAccess(session?.roles, session?.modules)) && <EventTicketSaleCard key={`ticket-sale:${editorScope}`} eventId={eventId} />}
         {event && adminAccess !== 'none' && <EventCourtesyTicketsCard key={`courtesy:${editorScope}`} eventId={eventId} tiers={tiersQuery.data ?? []} tiersLoading={tiersQuery.isLoading} />}
         {event && adminAccess !== 'none' && <EventAdminsCard
           key={`admins:${editorScope}`}

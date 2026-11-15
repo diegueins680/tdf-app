@@ -230,6 +230,7 @@ import Data.Time.Clock (addUTCTime)
 import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import qualified TDF.Server.EventAdminDelegation as EventAdmin
+import qualified TDF.Server.EventTicketSale as EventTicketSale
 import TDF.Server.EventAdminDelegation (eventNotOrganizerError, eventWithoutOrganizerError, isEventManager, isTicketTierSaleOpen, requireEventManager)
 import qualified TDF.Ticketing.Inventory as TicketInventory
 import qualified TDF.Ticketing.Refund as TicketRefund
@@ -2375,6 +2376,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
                 lockSocialEventForMutation isImportedEventHidden validateTicketPurchaseBuyerName validateTicketPurchaseBuyerEmail
                 issueMissingTicketsForOrder ticketOrderEntityToDTO sendTicketConfirmationForOrder )
         :<|> memoryInvitationsServer
+        :<|> EventTicketSale.eventTicketSaleServer user currentPartyId
+            (EventTicketSale.EventTicketSaleDeps parseVisibleEventKey lockSocialEventForMutation)
   where
     currentPartyId :: T.Text
     currentPartyId = renderPartyId user
