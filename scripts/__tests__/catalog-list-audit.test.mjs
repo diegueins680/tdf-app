@@ -1070,7 +1070,12 @@ test('event administrator delegation appends one migration to the protected 251-
     'docs/catalog-persistence/event-integration-retirements.json')).retirements
     .find(row => row.source.name === 'migrations'));
   // The typed client registry is the only other successor; it also nests its parent review.
-  const client = active.find(row => row.id === successors.find(row => row.name === 'SocialEventsAPI').currentId);
+  // EVT-TICKET-SALE-001 later added four methods: its 90-method successor keeps
+  // this 86-method review intact as its previousDecision.
+  const clientNow = active.find(row => row.id === successors.find(row => row.name === 'SocialEventsAPI').currentId);
+  assert.equal(clientNow.evidence.valueCount, 90);
+  const client = clientNow.previousDecision;
+  assert.equal(client.id, '083bd1a66e9f23f02866');
   assert.equal(client.evidence.valueCount, 86);
   assert.deepEqual(client.previousDecision, priorMain.find(row => row.id === '2511cbba2fc7279bc28a'));
   // Every other review of protected main is retained exactly; three lists are new.
@@ -1126,8 +1131,12 @@ test('marketplace agreement payments append one migration to the protected 252-e
   // new (payment provider, fee payer, payout and payment CHECK lists and the
   // two Policy sum types) and reviewed by the deterministic policy.
   const history = new Map(active.map(row => [row.id, row]));
+  // The 86-method client review was since superseded by EVT-TICKET-SALE-001
+  // and is retained exactly as the previousDecision of its successor.
+  const clientSuccessor = active.find(row => row.previousDecision?.id === '083bd1a66e9f23f02866');
   for (const row of priorMain) {
     if (row.id === current.previousDecision.id) assert.ok(!history.has(row.id));
+    else if (row.id === '083bd1a66e9f23f02866') assert.deepEqual(clientSuccessor.previousDecision, row);
     else assert.deepEqual(history.get(row.id), row);
   }
   const payoutReviews = ['d580ad14a8f01218c4a9', 'fbe5e4e4d0289e1caaf4', 'cfa5a05214e95ed07ef0',
