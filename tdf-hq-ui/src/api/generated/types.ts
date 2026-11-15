@@ -7101,6 +7101,23 @@ export interface paths {
         patch: operations["decideDirectoryVerification"];
         trace?: never;
     };
+    "/directory/admin/agreements/disputes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Disputed marketplace agreements waiting for an administrator, oldest dispute first (ADR 0136) */
+        get: operations["listAgreementDisputes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/directory/admin/moderation": {
         parameters: {
             query?: never;
@@ -16948,6 +16965,15 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        /** @description Who opened the dispute of an agreement, from which state and why. Present only in the administrator dispute queue (ADR 0136). */
+        AgreementDispute: {
+            reason?: string | null;
+            /** @enum {string|null} */
+            openedBy?: "buyer" | "provider" | "admin" | null;
+            previousStatus?: string | null;
+            /** Format: date-time */
+            openedAt?: string | null;
+        };
         /** @description Private to its two parties and authorized admins. Amounts and terms are frozen when the offer is accepted (ADR 0135). */
         MarketplaceAgreement: {
             /** Format: uuid */
@@ -17020,6 +17046,7 @@ export interface components {
             payments?: components["schemas"]["AgreementPayment"][];
             /** @description Payment providers through which the provider profile can be paid */
             payoutProviders?: ("payphone" | "stripe")[];
+            dispute?: components["schemas"]["AgreementDispute"];
         };
         AgreementPaymentRequest: {
             /** @enum {string} */
@@ -34850,6 +34877,33 @@ export interface operations {
         responses: {
             /** @description Independent verification decision */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    listAgreementDisputes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disputed agreements with who opened the dispute and why */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarketplaceAgreement"][];
+                };
+            };
+            /** @description Requires the Admin role and module */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
