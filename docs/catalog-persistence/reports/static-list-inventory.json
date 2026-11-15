@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-14T06:07:49.722Z",
+  "generatedAt": "2026-11-15T21:06:08.141Z",
   "repositoryRoot": ".",
-  "filesScanned": 2687,
+  "filesScanned": 2690,
   "candidateCount": 1428,
   "byClassification": {
     "dynamic-business-catalog": 933,
@@ -6336,7 +6336,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 908,
+      "consumerCount": 909,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6623,7 +6623,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 908,
+      "consumerCount": 909,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -7193,7 +7193,7 @@
       "lines": [
         40
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
@@ -7274,6 +7274,7 @@
         "tdf-hq-ui/src/pages/CmsAdminPage.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
@@ -7295,8 +7296,7 @@
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-        "tdf-hq-ui/src/pages/SystemStatusPage.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/eventDetail.tsx",
@@ -10489,7 +10489,7 @@
       "lines": [
         64
       ],
-      "consumerCount": 235,
+      "consumerCount": 236,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -10544,6 +10544,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -10591,8 +10592,7 @@
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -12471,7 +12471,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 210,
+      "consumerCount": 211,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -12525,6 +12525,7 @@
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -12573,8 +12574,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -12695,7 +12695,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -12749,6 +12749,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -12797,8 +12798,7 @@
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -12921,7 +12921,7 @@
       "lines": [
         35
       ],
-      "consumerCount": 213,
+      "consumerCount": 214,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -12975,6 +12975,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -13023,8 +13024,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -13140,7 +13140,7 @@
       "lines": [
         36
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -13194,6 +13194,7 @@
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -13242,8 +13243,7 @@
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -13362,7 +13362,7 @@
       "lines": [
         37
       ],
-      "consumerCount": 214,
+      "consumerCount": 215,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -13416,6 +13416,7 @@
         "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -13464,8 +13465,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -13583,7 +13583,7 @@
       "lines": [
         38
       ],
-      "consumerCount": 214,
+      "consumerCount": 215,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -13637,6 +13637,7 @@
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -13685,8 +13686,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -13798,7 +13798,7 @@
       "lines": [
         39
       ],
-      "consumerCount": 213,
+      "consumerCount": 214,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -13852,6 +13852,7 @@
         "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -13900,8 +13901,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -14017,7 +14017,7 @@
       "lines": [
         40
       ],
-      "consumerCount": 212,
+      "consumerCount": 213,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -14071,6 +14071,7 @@
         "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -14119,8 +14120,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -14236,7 +14236,7 @@
       "lines": [
         41
       ],
-      "consumerCount": 210,
+      "consumerCount": 211,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -14290,6 +14290,7 @@
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -14338,8 +14339,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -14454,7 +14454,7 @@
       "lines": [
         42
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -14508,6 +14508,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -14556,8 +14557,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -16884,7 +16884,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 920,
+      "consumerCount": 921,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17666,7 +17666,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 916,
+      "consumerCount": 917,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17956,7 +17956,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 916,
+      "consumerCount": 917,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -19074,7 +19074,7 @@
       "domain": "studio-services-booking",
       "kind": "array",
       "name": "defaultPublicRooms",
-      "line": 180,
+      "line": 183,
       "values": [
         "{roomId=room-live, rName=Live Room, rBookable=true}",
         "{roomId=room-control, rName=Control Room, rBookable=true}",
@@ -19083,7 +19083,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        180
+        183
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -24878,7 +24878,7 @@
       "lines": [
         180
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -24932,6 +24932,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -24980,8 +24981,7 @@
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -25098,7 +25098,7 @@
       "lines": [
         181
       ],
-      "consumerCount": 164,
+      "consumerCount": 165,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -25137,6 +25137,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -25185,8 +25186,7 @@
         "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -26350,7 +26350,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 990,
+      "consumerCount": 991,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -26910,7 +26910,7 @@
       "lines": [
         990
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -26975,6 +26975,7 @@
         "tdf-hq-ui/src/api/serviceStorefront.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
@@ -37638,7 +37639,7 @@
         472,
         843
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -37692,6 +37693,7 @@
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -37740,8 +37742,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -37863,7 +37864,7 @@
         562,
         599
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -37917,6 +37918,7 @@
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -37965,8 +37967,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -38089,7 +38090,7 @@
       "lines": [
         642
       ],
-      "consumerCount": 264,
+      "consumerCount": 265,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -38143,6 +38144,7 @@
         "tdf-hq/src/TDF/ServerExtra.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -38191,8 +38193,7 @@
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -38331,7 +38332,7 @@
       "lines": [
         673
       ],
-      "consumerCount": 221,
+      "consumerCount": 222,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -38385,6 +38386,7 @@
         "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -38433,8 +38435,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -38555,7 +38556,7 @@
       "lines": [
         786
       ],
-      "consumerCount": 214,
+      "consumerCount": 215,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -38609,6 +38610,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -38657,8 +38659,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -40868,7 +40869,7 @@
         118,
         127
       ],
-      "consumerCount": 210,
+      "consumerCount": 211,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -40922,6 +40923,7 @@
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -40970,8 +40972,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -41101,7 +41102,7 @@
       "lines": [
         40
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -41155,6 +41156,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -41203,8 +41205,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -41339,7 +41340,7 @@
       "lines": [
         94
       ],
-      "consumerCount": 166,
+      "consumerCount": 167,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -41378,6 +41379,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -41426,8 +41428,7 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -41545,7 +41546,7 @@
       "lines": [
         110
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -41599,6 +41600,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -41647,8 +41649,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -46875,7 +46876,7 @@
       "lines": [
         36
       ],
-      "consumerCount": 187,
+      "consumerCount": 188,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -46921,6 +46922,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -46969,8 +46971,7 @@
         "tdf-hq-ui/src/pages/ManualPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-        "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx"
+        "tdf-hq-ui/src/pages/MerchSellerPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -47939,7 +47940,7 @@
         4050,
         4450
       ],
-      "consumerCount": 221,
+      "consumerCount": 222,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -47993,6 +47994,7 @@
         "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -48041,8 +48043,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -48166,7 +48167,7 @@
         3774,
         4051
       ],
-      "consumerCount": 249,
+      "consumerCount": 250,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -48220,6 +48221,7 @@
         "tdf-hq/test/TDF/ServerExtraSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -48268,8 +48270,7 @@
         "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
-        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
-        "tdf-hq-ui/src/pages/InternshipsPage.test.tsx"
+        "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -48398,7 +48399,7 @@
       "lines": [
         3944
       ],
-      "consumerCount": 261,
+      "consumerCount": 262,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -48452,6 +48453,7 @@
         "tdf-hq/src/TDF/ServerFuture.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -48500,8 +48502,7 @@
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-        "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
-        "tdf-hq-ui/src/pages/EventTaskPage.test.tsx"
+        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -48625,7 +48626,7 @@
       "lines": [
         3945
       ],
-      "consumerCount": 231,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -48679,6 +48680,7 @@
         "tdf-hq/test/TDF/ServerProposalsSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -48727,8 +48729,7 @@
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
-        "tdf-hq-ui/src/pages/InventoryPage.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
+        "tdf-hq-ui/src/pages/InventoryPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -48857,7 +48858,7 @@
       "lines": [
         3981
       ],
-      "consumerCount": 225,
+      "consumerCount": 226,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -48911,6 +48912,7 @@
         "tdf-hq/test/TDF/ServerAuthSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -48959,8 +48961,7 @@
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
-        "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx"
+        "tdf-hq-ui/src/pages/EventTaskPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -49069,7 +49070,7 @@
       "lines": [
         3982
       ],
-      "consumerCount": 169,
+      "consumerCount": 170,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -49107,6 +49108,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -49155,8 +49157,7 @@
         "tdf-hq-ui/src/pages/PartiesPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx"
+        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -49269,7 +49270,7 @@
       "lines": [
         4017
       ],
-      "consumerCount": 212,
+      "consumerCount": 213,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -49323,6 +49324,7 @@
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -49371,8 +49373,7 @@
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -49474,7 +49475,7 @@
       "lines": [
         4018
       ],
-      "consumerCount": 168,
+      "consumerCount": 169,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -49513,6 +49514,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/publicBookingRooms.test.ts",
         "tdf-hq-ui/src/api/admin.ts",
@@ -49561,8 +49563,7 @@
         "tdf-hq-ui/src/pages/PartiesPage.tsx",
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -49675,7 +49676,7 @@
       "lines": [
         4325
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -49729,6 +49730,7 @@
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -49777,8 +49779,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -49886,7 +49887,7 @@
       "lines": [
         4326
       ],
-      "consumerCount": 231,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -49940,6 +49941,7 @@
         "tdf-hq/test/TDF/ServerProposalsSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -49988,8 +49990,7 @@
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
-        "tdf-hq-ui/src/pages/InventoryPage.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
+        "tdf-hq-ui/src/pages/InventoryPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -50114,7 +50115,7 @@
       "lines": [
         4334
       ],
-      "consumerCount": 216,
+      "consumerCount": 217,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -50168,6 +50169,7 @@
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -50216,8 +50218,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -50325,7 +50326,7 @@
       "lines": [
         4335
       ],
-      "consumerCount": 231,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -50379,6 +50380,7 @@
         "tdf-hq/test/TDF/ServerProposalsSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -50427,8 +50429,7 @@
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
-        "tdf-hq-ui/src/pages/InventoryPage.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
+        "tdf-hq-ui/src/pages/InventoryPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -50556,7 +50557,7 @@
       "lines": [
         4451
       ],
-      "consumerCount": 258,
+      "consumerCount": 259,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -50610,6 +50611,7 @@
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -50658,8 +50660,7 @@
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/FeedbackPage.test.ts",
         "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
-        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
-        "tdf-hq-ui/src/pages/InternTaskDetailPage.test.tsx"
+        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -50794,7 +50795,7 @@
       "lines": [
         4459
       ],
-      "consumerCount": 221,
+      "consumerCount": 222,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -50848,6 +50849,7 @@
         "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -50896,8 +50898,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -51021,7 +51022,7 @@
       "lines": [
         4460
       ],
-      "consumerCount": 258,
+      "consumerCount": 259,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -51075,6 +51076,7 @@
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -51123,8 +51125,7 @@
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/FeedbackPage.test.ts",
         "tdf-hq-ui/src/pages/ForbiddenPage.test.tsx",
-        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
-        "tdf-hq-ui/src/pages/InternTaskDetailPage.test.tsx"
+        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -51354,7 +51355,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 1015,
+      "consumerCount": 1016,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -52019,7 +52020,7 @@
         43,
         55
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -52073,6 +52074,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -52121,8 +52123,7 @@
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -54067,7 +54068,7 @@
       "domain": "studio-services-booking",
       "kind": "array",
       "name": "DEFAULT_SESSIONS",
-      "line": 40,
+      "line": 54,
       "values": [
         "{label=Sábado 1 · Introducción, date=2026-06-06}",
         "{label=Sábado 2 · Grabación, date=2026-06-13}",
@@ -54077,7 +54078,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        40
+        54
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -54102,7 +54103,7 @@
       "domain": "academy-courses",
       "kind": "array",
       "name": "MONTH_SLUGS",
-      "line": 54,
+      "line": 68,
       "values": [
         "ene",
         "feb",
@@ -54120,7 +54121,7 @@
       "valueCount": 12,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        54
+        68
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -54145,7 +54146,7 @@
       "domain": "academy-courses",
       "kind": "array",
       "name": "sections",
-      "line": 136,
+      "line": 163,
       "values": [
         "{key=detalles, label=Detalles}",
         "{key=sesiones, label=Sesiones}",
@@ -54155,7 +54156,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        136
+        163
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -60797,7 +60798,7 @@
       "lines": [
         535
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -60851,6 +60852,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -60899,8 +60901,7 @@
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -61657,7 +61658,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 1015,
+      "consumerCount": 1016,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -61955,7 +61956,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 210,
+      "consumerCount": 211,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -62009,6 +62010,7 @@
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -62057,8 +62059,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -63059,7 +63060,7 @@
       "lines": [
         45
       ],
-      "consumerCount": 154,
+      "consumerCount": 155,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -63126,6 +63127,7 @@
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
@@ -63265,7 +63267,7 @@
       "lines": [
         56
       ],
-      "consumerCount": 150,
+      "consumerCount": 151,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -63333,6 +63335,7 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
@@ -63465,7 +63468,7 @@
       "lines": [
         67
       ],
-      "consumerCount": 117,
+      "consumerCount": 118,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -63517,6 +63520,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
@@ -64642,7 +64646,7 @@
       "lines": [
         415
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -64696,6 +64700,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -64744,8 +64749,7 @@
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -64862,7 +64866,7 @@
       "lines": [
         416
       ],
-      "consumerCount": 164,
+      "consumerCount": 165,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -64901,6 +64905,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -64949,8 +64954,7 @@
         "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -65066,7 +65070,7 @@
       "lines": [
         461
       ],
-      "consumerCount": 292,
+      "consumerCount": 293,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -65121,6 +65125,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
@@ -65168,8 +65173,7 @@
         "tdf-hq-ui/src/pages/AdminTokenPage.tsx",
         "tdf-hq-ui/src/pages/AdminUsersPage.test.tsx",
         "tdf-hq-ui/src/pages/AdminUsersPage.tsx",
-        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
-        "tdf-hq-ui/src/pages/ArtistOnboardingPage.tsx"
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -66831,7 +66835,7 @@
       "domain": "payments-finance",
       "kind": "literal-union",
       "name": "MarketplacePaymentMethod",
-      "line": 197,
+      "line": 199,
       "values": [
         "stripe",
         "contact",
@@ -66841,7 +66845,7 @@
       "valueCount": 4,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        197
+        199
       ],
       "consumerCount": 105,
       "backendConsumers": [
@@ -66979,7 +66983,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "method",
-      "line": 200,
+      "line": 202,
       "values": [
         "stripe",
         "card",
@@ -66989,8 +66993,8 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        200,
-        215
+        202,
+        217
       ],
       "consumerCount": 319,
       "backendConsumers": [
@@ -67233,7 +67237,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "object-registry",
       "name": "DEFAULT_MARKETPLACE_VIEW_STATE",
-      "line": 259,
+      "line": 261,
       "values": [
         "search",
         "category",
@@ -67245,7 +67249,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        259
+        261
       ],
       "consumerCount": 61,
       "backendConsumers": [
@@ -67346,7 +67350,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "switch-cases",
       "name": "sort",
-      "line": 1060,
+      "line": 1061,
       "values": [
         "relevance",
         "price-asc",
@@ -67356,7 +67360,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1060
+        1061
       ],
       "consumerCount": 345,
       "backendConsumers": [
@@ -67597,7 +67601,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 2058,
+      "line": 2070,
       "values": [
         "all",
         "relevance",
@@ -67611,7 +67615,7 @@
       "valueCount": 8,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        2058
+        2070
       ],
       "consumerCount": 15,
       "backendConsumers": [
@@ -69790,7 +69794,7 @@
       "lines": [
         323
       ],
-      "consumerCount": 73,
+      "consumerCount": 74,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -69835,6 +69839,7 @@
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
@@ -71691,7 +71696,7 @@
       "domain": "studio-services-booking",
       "kind": "object-registry",
       "name": "bookingPayload",
-      "line": 764,
+      "line": 766,
       "values": [
         "pbFullName",
         "pbEmail",
@@ -71707,7 +71712,7 @@
       "valueCount": 10,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        764
+        766
       ],
       "consumerCount": 1,
       "backendConsumers": [
@@ -71862,7 +71867,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 1015,
+      "consumerCount": 1016,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -72162,7 +72167,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 1015,
+      "consumerCount": 1016,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -73871,7 +73876,7 @@
       "lines": [
         141
       ],
-      "consumerCount": 1015,
+      "consumerCount": 1016,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -79212,7 +79217,7 @@
       "lines": [
         31
       ],
-      "consumerCount": 34,
+      "consumerCount": 35,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -79236,6 +79241,7 @@
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -80623,7 +80629,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 231,
+      "consumerCount": 232,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -80677,6 +80683,7 @@
         "tdf-hq/test/TDF/ServerProposalsSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -80725,8 +80732,7 @@
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.test.tsx",
-        "tdf-hq-ui/src/pages/InternshipsPage.tsx",
-        "tdf-hq-ui/src/pages/InventoryPage.test.tsx"
+        "tdf-hq-ui/src/pages/InternshipsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -80852,7 +80858,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 939,
+      "consumerCount": 940,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -81592,7 +81598,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 260,
+      "consumerCount": 261,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -81646,6 +81652,7 @@
         "tdf-hq/src/TDF/ServerInternAudit.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -81694,8 +81701,7 @@
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -81832,7 +81838,7 @@
       "lines": [
         55
       ],
-      "consumerCount": 182,
+      "consumerCount": 183,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -81876,6 +81882,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -81924,8 +81931,7 @@
         "tdf-hq-ui/src/pages/ManualPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-        "tdf-hq-ui/src/pages/OrdersPage.tsx",
-        "tdf-hq-ui/src/pages/PartiesPage.tsx"
+        "tdf-hq-ui/src/pages/OrdersPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/bookings.tsx",
@@ -82133,7 +82139,7 @@
       "lines": [
         65
       ],
-      "consumerCount": 257,
+      "consumerCount": 258,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -82187,6 +82193,7 @@
         "tdf-hq/src/TDF/ServerInternships.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -82235,8 +82242,7 @@
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
-        "tdf-hq-ui/src/pages/DomoVenuePage.tsx"
+        "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -82370,7 +82376,7 @@
       "lines": [
         66
       ],
-      "consumerCount": 182,
+      "consumerCount": 183,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -82414,6 +82420,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -82462,8 +82469,7 @@
         "tdf-hq-ui/src/pages/ManualPage.tsx",
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-        "tdf-hq-ui/src/pages/OrdersPage.tsx",
-        "tdf-hq-ui/src/pages/PartiesPage.tsx"
+        "tdf-hq-ui/src/pages/OrdersPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/bookings.tsx",
@@ -82691,7 +82697,7 @@
       "lines": [
         116
       ],
-      "consumerCount": 219,
+      "consumerCount": 220,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -82745,6 +82751,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -82793,8 +82800,7 @@
         "tdf-hq-ui/src/pages/DirectoryPublicDetailPage.test.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx"
+        "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -82984,7 +82990,7 @@
       "lines": [
         41
       ],
-      "consumerCount": 215,
+      "consumerCount": 216,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -83038,6 +83044,7 @@
         "tdf-hq/test/TDF/Operations/ModelSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -83086,8 +83093,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -83208,7 +83214,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 209,
+      "consumerCount": 210,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -83262,6 +83268,7 @@
         "tdf-hq/test/TDF/ServerAuthSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/growthAttribution.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -83310,8 +83317,7 @@
         "tdf-hq-ui/src/pages/FanClubPage.publication.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -83630,7 +83636,7 @@
       "lines": [
         84
       ],
-      "consumerCount": 166,
+      "consumerCount": 167,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -83671,6 +83677,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -83719,8 +83726,7 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/ResetPasswordPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
-        "tdf-hq-ui/src/pages/SocialEventsPage.money-input.test.tsx"
+        "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -83832,7 +83838,7 @@
       "lines": [
         93
       ],
-      "consumerCount": 172,
+      "consumerCount": 173,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -83874,6 +83880,7 @@
         "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/api/admin.ts",
         "tdf-hq-ui/src/api/auth.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -83922,8 +83929,7 @@
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/PartiesPage.tsx",
-        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-        "tdf-hq-ui/src/pages/ResetPasswordPage.tsx"
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -88481,7 +88487,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 356,
+      "consumerCount": 357,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -88801,7 +88807,7 @@
       "lines": [
         1
       ],
-      "consumerCount": 356,
+      "consumerCount": 357,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
         "tdf-hq/sql/2026-08-07_label_project_notes_backfill_apply.sql",
@@ -97561,7 +97567,7 @@
       "lines": [
         16940
       ],
-      "consumerCount": 102,
+      "consumerCount": 103,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -97622,6 +97628,7 @@
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
@@ -105208,7 +105215,7 @@
       "lines": [
         182
       ],
-      "consumerCount": 101,
+      "consumerCount": 102,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -105267,6 +105274,7 @@
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
@@ -108911,7 +108919,7 @@
       "lines": [
         131
       ],
-      "consumerCount": 119,
+      "consumerCount": 120,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -108981,6 +108989,7 @@
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
@@ -116150,7 +116159,7 @@
         278,
         622
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -116212,6 +116221,7 @@
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
@@ -119429,7 +119439,7 @@
         798,
         799
       ],
-      "consumerCount": 81,
+      "consumerCount": 82,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-09-09_canonical_payment_lifecycle.sql",
@@ -119487,6 +119497,7 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
         "tdf-hq-ui/src/pages/DonationPage.tsx",
@@ -121940,7 +121951,7 @@
       "lines": [
         135
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -121995,6 +122006,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/ticketFunnel.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -122296,7 +122308,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -122351,6 +122363,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/ticketFunnel.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -124148,7 +124161,7 @@
       "lines": [
         133
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -124203,6 +124216,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/ticketFunnel.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -125048,7 +125062,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -125103,6 +125117,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/ticketFunnel.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -125552,7 +125567,7 @@
       "lines": [
         68
       ],
-      "consumerCount": 88,
+      "consumerCount": 89,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -125604,6 +125619,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
@@ -126526,7 +126542,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -126581,6 +126597,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/ticketFunnel.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -127200,7 +127217,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 115,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -127255,6 +127272,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/analytics/ticketFunnel.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -128337,7 +128355,7 @@
       "lines": [
         91
       ],
-      "consumerCount": 149,
+      "consumerCount": 150,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -128403,6 +128421,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
@@ -129201,7 +129220,7 @@
       "lines": [
         266
       ],
-      "consumerCount": 91,
+      "consumerCount": 92,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -129240,6 +129259,7 @@
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
@@ -133379,7 +133399,7 @@
       "lines": [
         286
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -133441,6 +133461,7 @@
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/features/featureRegistry.test.ts",
         "tdf-hq-ui/src/features/featureRegistry.ts",
         "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx",
@@ -142127,7 +142148,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 231,
+      "consumerCount": 233,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -142195,6 +142216,7 @@
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
         "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx",
@@ -142215,6 +142237,7 @@
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
@@ -142228,9 +142251,7 @@
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
         "tdf-hq-ui/src/pages/InternshipsPage.tsx",
         "tdf-hq-ui/src/pages/LabelTracksPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx",
-        "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
-        "tdf-hq-ui/src/pages/MerchReputationModerationPage.tsx"
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -142345,7 +142366,7 @@
       "lines": [
         35
       ],
-      "consumerCount": 255,
+      "consumerCount": 256,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -142419,6 +142440,7 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/__tests__/RefundManagementPanel.test.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.test.tsx",
         "tdf-hq-ui/src/pages/AccessRequestsPage.tsx",
@@ -142447,8 +142469,7 @@
         "tdf-hq-ui/src/pages/ReactionTypesCatalogPage.tsx",
         "tdf-hq-ui/src/pages/RecentlyDiscoveredEventsPage.tsx",
         "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
-        "tdf-hq-ui/src/pages/internAuditPlanLogic.test.ts",
-        "tdf-hq-ui/src/pages/internAuditPlanLogic.ts"
+        "tdf-hq-ui/src/pages/internAuditPlanLogic.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/access-requests/review.tsx",
@@ -142876,7 +142897,7 @@
       "lines": [
         70
       ],
-      "consumerCount": 91,
+      "consumerCount": 92,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -142942,6 +142963,7 @@
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/pages/ChatPage.privacy.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.test.tsx",
         "tdf-hq-ui/src/pages/DonationPage.tsx",
@@ -149016,7 +149038,7 @@
       "lines": [
         486
       ],
-      "consumerCount": 74,
+      "consumerCount": 75,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -149060,6 +149082,7 @@
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseBuilderPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
@@ -156130,7 +156153,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 66,
+      "consumerCount": 67,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_dry_run.sql",
@@ -156170,6 +156193,7 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/MarketplacePage.test.tsx",
         "tdf-hq-ui/src/__tests__/PublicBookingPage.test.tsx",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
@@ -164895,7 +164919,7 @@
       "lines": [
         51
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -164961,6 +164985,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
@@ -165095,7 +165120,7 @@
       "lines": [
         63
       ],
-      "consumerCount": 117,
+      "consumerCount": 118,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -165146,6 +165171,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.test.tsx",
         "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
@@ -165483,7 +165509,7 @@
       "lines": [
         52
       ],
-      "consumerCount": 67,
+      "consumerCount": 68,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -165521,6 +165547,7 @@
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
         "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx",
         "tdf-hq-ui/src/pages/InternTaskDetailPage.tsx",
@@ -167771,7 +167798,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 622,
+      "consumerCount": 624,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -167864,6 +167891,7 @@
         "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx",
         "tdf-hq-ui/src/components/events/EventMemoryModeration.test.tsx",
+        "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx",
         "tdf-hq-ui/src/components/notificationTarget.ts",
         "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
@@ -167873,8 +167901,7 @@
         "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx",
         "tdf-hq-ui/src/desktop/shell.test.ts",
         "tdf-hq-ui/src/desktop/shell.ts",
-        "tdf-hq-ui/src/features/ddex/DdexInboxPage.tsx",
-        "tdf-hq-ui/src/features/fans/reconcileFollowState.test.ts"
+        "tdf-hq-ui/src/features/ddex/DdexInboxPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -168084,7 +168111,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 1015,
+      "consumerCount": 1016,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",

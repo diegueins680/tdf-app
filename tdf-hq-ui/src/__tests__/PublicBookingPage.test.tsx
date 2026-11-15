@@ -171,6 +171,9 @@ const createPublicCheckoutMock = jest.fn<
   },
   paymentMethods: [],
 }));
+type CheckoutFixture = Awaited<ReturnType<typeof createPublicCheckoutMock>>;
+const selectManualMock = jest.fn<() => Promise<CheckoutFixture>>();
+const submitManualMock = jest.fn<(id: number, reference: string, token: string) => Promise<CheckoutFixture>>();
 const storePublicBookingLookupTokenMock = jest.fn();
 const logoutMock = jest.fn();
 const listPublicServicesMock = jest.fn<() => Promise<PublicServiceCatalogItem[]>>(
@@ -200,8 +203,8 @@ jest.unstable_mockModule('../api/bookings', () => ({
     createPublicDatafastCheckout: jest.fn(),
     createPublicPaypalOrder: jest.fn(),
     capturePublicPaypalOrder: jest.fn(),
-    selectPublicManualPayment: jest.fn(),
-    submitPublicManualEvidence: jest.fn(),
+    selectPublicManualPayment: selectManualMock,
+    submitPublicManualEvidence: submitManualMock,
   },
 }));
 
@@ -345,6 +348,7 @@ describe('PublicBookingPage', () => {
   beforeEach(() => {
     createPublicMock.mockClear();
     createPublicCheckoutMock.mockClear();
+    selectManualMock.mockReset(); submitManualMock.mockReset();
     storePublicBookingLookupTokenMock.mockClear();
     listPublicServicesMock.mockReset();
     listPublicServicesMock.mockResolvedValue(defaultPublicServices);
@@ -1073,6 +1077,58 @@ describe('PublicBookingPage', () => {
       consoleErrorSpy.mockRestore();
     }
   });
+
+  it('associates transfer-reference errors with the field, preserves rejected evidence and prevents edits while sending', async () => {
+    const fixture = await createPublicCheckoutMock.getMockImplementation()!({
+      pbcServiceOfferingId: BAND_RECORDING_ID, pbcDurationMinutes: 120, pbcTermsAccepted: true,
+    }, 'synthetic-fixture-key');
+    const checkout: CheckoutFixture = { ...fixture, paymentMethods: ['bank_transfer'] };
+    createPublicCheckoutMock.mockResolvedValueOnce(checkout);
+    selectManualMock.mockResolvedValue({ ...checkout, manualPayment: { paymentMethod: 'bank_transfer', status: 'awaiting_evidence' } });
+    globalThis.fetch = jest.fn(async () => ({ ok: true, json: async () => ({ available: true, quote: checkout.quote }) })) as unknown as typeof fetch;
+    const container = document.createElement('div'); document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+    try {
+      await act(async () => {
+        setInputValue(getInputByLabel(container, 'Nombre completo'), 'Contacto sintético');
+        setInputValue(getInputByLabel(container, 'Correo'), 'contact@example.test');
+        clickButtonByText(container, 'Continuar'); await flushPromises();
+      });
+      await act(async () => {
+        const zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+        setInputValue(getInputByLabel(container, 'Fecha y hora'), DateTime.fromISO('2030-01-01T12:00', { zone: 'America/Guayaquil' }).setZone(zone).toFormat("yyyy-MM-dd'T'HH:mm"));
+        setInputValue(getInputByLabel(container, 'Duración (min)'), '120');
+        clickCheckboxNearText(container, 'Asignar ingeniero después'); await flushPromises();
+      });
+      await act(async () => {
+        container.querySelector<HTMLInputElement>('input[aria-label="Aceptar precio y política de reserva"]')!.click();
+        await flushPromises(); submitBookingForm(container); await flushPromises();
+      });
+      await act(async () => { clickButtonByText(container, 'Registrar transferencia'); await flushPromises(); });
+      const input = getInputByLabel(document.body, 'Referencia o comprobante bancario');
+      await act(async () => { setInputValue(input, 'aa'); });
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent).toContain('3 a 120');
+      const submit = () => Array.from(document.body.querySelectorAll<HTMLButtonElement>('button')).find(button => button.textContent?.trim() === 'Enviar para revisión')!;
+      expect(submit().disabled).toBe(true); expect(submitManualMock).not.toHaveBeenCalled();
+      await act(async () => { setInputValue(input, 'R'.repeat(121)); });
+      expect(input.getAttribute('aria-invalid')).toBe('true'); expect(submit().disabled).toBe(true);
+      submitManualMock.mockRejectedValueOnce(new Error('Synthetic rejection'));
+      await act(async () => { setInputValue(input, '  REF-SYNTHETIC-77  '); submit().click(); await flushPromises(); });
+      expect(submitManualMock).toHaveBeenCalledWith(456, 'REF-SYNTHETIC-77', 'lookup-secret');
+      expect(input.value).toBe('  REF-SYNTHETIC-77  ');
+      expect(document.body.textContent).toContain('No pudimos enviar la referencia. No se confirmó ningún pago.');
+      let finish!: (result: CheckoutFixture) => void;
+      submitManualMock.mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
+      await act(async () => { submit().click(); await flushPromises(); });
+      expect(input.disabled).toBe(true); expect(submit().disabled).toBe(true);
+      await act(async () => { finish({ ...checkout, manualPayment: { paymentMethod: 'bank_transfer', status: 'submitted' } }); await flushPromises(); });
+      expect(submitManualMock).toHaveBeenCalledTimes(2);
+      expect(submitManualMock.mock.calls[1]).toEqual(submitManualMock.mock.calls[0]);
+      expect(container.textContent).toContain('Permanece pendiente');
+    } finally { await cleanup(); container.remove(); }
+  });
+
 });
 
 it('skips the optional account card for a visitor who is already signed in', async () => {

@@ -386,6 +386,8 @@ export default function PublicBookingPage() {
   const paypalClientId = useMemo(() => env.read('VITE_PAYPAL_CLIENT_ID') ?? '', []);
   const [manualDialogOpen, setManualDialogOpen] = useState(false);
   const [manualReference, setManualReference] = useState('');
+  const [manualReferenceError, setManualReferenceError] = useState<string | null>(null);
+  const manualReferenceInput = useRef<HTMLInputElement>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const bookingIdempotency = useRef<{ fingerprint: string; key: string } | null>(null);
   const [rememberProfile, setRememberProfile] = useState(false);
@@ -1204,9 +1206,11 @@ export default function PublicBookingPage() {
     if (!checkoutSuccess || !checkoutLookupToken) return;
     const reference = manualReference.trim();
     if (reference.length < 3 || reference.length > 120) {
-      setPaymentError('Ingresa una referencia bancaria de 3 a 120 caracteres.');
+      setManualReferenceError('Ingresa una referencia bancaria de 3 a 120 caracteres.');
+      manualReferenceInput.current?.focus();
       return;
     }
+    setManualReferenceError(null);
     setPaymentBusy(true);
     setPaymentError(null);
     try {
@@ -1218,6 +1222,7 @@ export default function PublicBookingPage() {
       setCheckoutSuccess({ ...updated, lookupToken: checkoutLookupToken });
       setManualDialogOpen(false);
       setManualReference('');
+      setManualReferenceError(null);
       setSnackbar({
         open: true,
         message: 'Referencia enviada para revisión. El depósito todavía no está confirmado.',
@@ -1651,6 +1656,7 @@ export default function PublicBookingPage() {
         <Dialog
           open={manualDialogOpen}
           onClose={() => { if (!paymentBusy) setManualDialogOpen(false); }}
+          TransitionProps={{ onEntered: () => manualReferenceInput.current?.focus() }}
           maxWidth="xs"
           fullWidth
         >
@@ -1664,11 +1670,25 @@ export default function PublicBookingPage() {
                 Usa únicamente las instrucciones bancarias oficiales que TDF te haya proporcionado. No incluyas claves, números completos de cuenta ni datos de tarjeta.
               </Typography>
               <TextField
+                id="booking-transfer-reference"
                 label="Referencia o comprobante bancario"
                 value={manualReference}
-                onChange={(event) => setManualReference(event.target.value)}
+                inputRef={manualReferenceInput}
+                disabled={paymentBusy}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setManualReference(next);
+                  setManualReferenceError(next.trim().length < 3 || next.trim().length > 120
+                    ? 'Ingresa una referencia bancaria de 3 a 120 caracteres.' : null);
+                }}
+                onBlur={() => {
+                  if (manualReference.trim().length < 3 || manualReference.trim().length > 120) {
+                    setManualReferenceError('Ingresa una referencia bancaria de 3 a 120 caracteres.');
+                  }
+                }}
                 inputProps={{ maxLength: 120 }}
-                helperText="3–120 caracteres. La referencia queda protegida para revisión financiera."
+                error={Boolean(manualReferenceError)}
+                helperText={manualReferenceError ?? '3–120 caracteres. La referencia queda protegida para revisión financiera.'}
                 autoComplete="off"
                 fullWidth
               />
@@ -1682,7 +1702,7 @@ export default function PublicBookingPage() {
             <Button
               variant="contained"
               onClick={() => void handleManualEvidenceSubmit()}
-              disabled={paymentBusy || manualReference.trim().length < 3}
+              disabled={paymentBusy || manualReference.trim().length < 3 || manualReference.trim().length > 120}
             >
               Enviar para revisión
             </Button>
