@@ -649,7 +649,7 @@ async function generateIdea(repoRoot, context, config) {
   }
 
   const idea = await discoverImprovementIdea(repoRoot, {
-    excludedFiles: [...(config.pendingTargetFiles ?? []), ...(config.unmappedTargetFiles ?? [])],
+    excludedFiles: excludedTargetFiles(config),
   });
   await fs.writeFile(context.idea_file, idea.markdown, 'utf8');
   const metadata = parseIdeaMarkdown(idea.markdown);
@@ -986,6 +986,107 @@ async function listUnmappedSurfaceFiles(repoRoot, config) {
     throw new Error(`Could not read traceabilityFile ${config.traceabilityFile}: ${error.message}`);
   }
   return unmappedSurfacePaths(parsed);
+}
+
+// Targets the loop already worked on without producing a change worth proposing. Without
+// this memory the discovery step returns the same top finding every iteration, so one
+// finding the worker declines (or cannot fix) would be retried forever.
+// An entry holds the blob id of the file on the base branch, so it lapses by itself as
+// soon as that file changes there.
+const ATTEMPT_FAILURES_BEFORE_SKIP = 2;
+
+function attemptedTargetsFilePath(config) {
+  if (config.attemptedTargetsFile) return path.resolve(config.attemptedTargetsFile);
+  if (process.env.CONTINUOUS_LOOP_ATTEMPTED_TARGETS_FILE) return process.env.CONTINUOUS_LOOP_ATTEMPTED_TARGETS_FILE;
+  if (SUPERVISOR_STATUS_FILE) return path.join(path.dirname(SUPERVISOR_STATUS_FILE), 'attempted-targets.json');
+  return '';
+}
+
+async function readAttemptedTargets(config) {
+  const filePath = attemptedTargetsFilePath(config);
+  if (!filePath) return config.attemptedTargetsMemory ?? {};
+  try {
+    const parsed = JSON.parse(await fs.readFile(filePath, 'utf8'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch (error) {
+    if (error.code !== 'ENOENT') console.warn(`Ignoring unreadable attempted targets file ${filePath}: ${error.message}`);
+    return {};
+  }
+}
+
+async function writeAttemptedTargets(config, entries) {
+  const filePath = attemptedTargetsFilePath(config);
+  if (!filePath) {
+    config.attemptedTargetsMemory = entries;
+    return;
+  }
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const tmpFile = `${filePath}.${process.pid}.tmp`;
+  await writeJson(tmpFile, entries);
+  await fs.rename(tmpFile, filePath);
+}
+
+async function targetFingerprint(repoRoot, revision, file) {
+  try {
+    const { stdout } = await execText('git', ['rev-parse', '--verify', '--quiet', `${revision}:${file}`], repoRoot);
+    return stdout.trim();
+  } catch {
+    return '';
+  }
+}
+
+function isSkippedAttempt(entry) {
+  return entry?.outcome === 'no-change' || Number(entry?.failures ?? 0) >= ATTEMPT_FAILURES_BEFORE_SKIP;
+}
+
+// Drops entries whose file changed on the base since the attempt and returns the files
+// that discovery should still leave alone.
+async function listAttemptedTargetFiles(repoRoot, config, revision) {
+  const entries = await readAttemptedTargets(config);
+  const current = {};
+  let changed = false;
+  for (const [file, entry] of Object.entries(entries)) {
+    const fingerprint = await targetFingerprint(repoRoot, revision, file);
+    if (fingerprint && fingerprint === entry?.fingerprint) {
+      current[file] = entry;
+    } else {
+      changed = true;
+    }
+  }
+  if (changed) await writeAttemptedTargets(config, current);
+  return Object.keys(current)
+    .filter((file) => isSkippedAttempt(current[file]))
+    .sort();
+}
+
+async function recordAttemptedTarget(repoRoot, config, revision, target, outcome, reason) {
+  const file = targetFile(target);
+  if (!file) return;
+  const fingerprint = await targetFingerprint(repoRoot, revision, file);
+  if (!fingerprint) return; // not a file on the base (for example a CI repair of the branch)
+  const entries = await readAttemptedTargets(config);
+  const previous = entries[file]?.fingerprint === fingerprint ? entries[file] : {};
+  entries[file] = {
+    fingerprint,
+    outcome,
+    failures: Number(previous.failures ?? 0) + (outcome === 'failed' ? 1 : 0),
+    reason: String(reason ?? '').slice(0, 300),
+    at: new Date().toISOString(),
+  };
+  await writeAttemptedTargets(config, entries);
+  if (isSkippedAttempt(entries[file])) {
+    console.log(`Leaving ${file} alone until it changes on the base branch (${outcome}).`);
+  }
+}
+
+function excludedTargetFiles(config) {
+  return [
+    ...new Set([
+      ...(config.pendingTargetFiles ?? []),
+      ...(config.unmappedTargetFiles ?? []),
+      ...(config.attemptedTargetFiles ?? []),
+    ]),
+  ];
 }
 
 function buildPullRequestBody(config, context, branch) {
@@ -1486,6 +1587,7 @@ async function runIteration(repoRoot, config, iteration) {
     const head = await getHeadSha(repoRoot);
     config.pendingTargetFiles = [];
     config.unmappedTargetFiles = [];
+    config.attemptedTargetFiles = [];
     await writeJson(context.excluded_targets_file, []);
     const dryBranch = { branchName: '', baseBranch: resolveBaseBranch(config), baseRef: head, baseSha: head };
     return runIterationSteps(repoRoot, config, iteration, context, dryBranch);
@@ -1505,19 +1607,30 @@ async function runIteration(repoRoot, config, iteration) {
 
   config.pendingTargetFiles = config.openPullRequest ? await listPendingTargetFiles(repoRoot, config) : [];
   config.unmappedTargetFiles = await listUnmappedSurfaceFiles(repoRoot, config);
-  await writeJson(context.excluded_targets_file, [...config.pendingTargetFiles, ...config.unmappedTargetFiles]);
 
   await emitLoopStatus({ state: 'running', phase: 'branch-preparation', currentIteration: iteration, contextDir });
   const branch = await prepareIterationBranch(repoRoot, config, iteration);
   context.branch_name = branch.branchName;
+  config.attemptedTargetFiles = await listAttemptedTargetFiles(repoRoot, config, branch.baseSha);
+  await writeJson(context.excluded_targets_file, excludedTargetFiles(config));
   console.log(`Iteration ${iteration} works on ${branch.branchName} from ${branch.baseRef} (${branch.baseSha}).`);
 
   let succeeded = false;
   try {
     const result = await runIterationSteps(repoRoot, config, iteration, context, branch);
     succeeded = true;
+    if (result?.skipped && !result.backlog && context.idea_attempted) {
+      await recordAttemptedTarget(repoRoot, config, branch.baseSha, context.idea_target, 'no-change', result.reason);
+    }
     return result;
   } catch (error) {
+    if (context.idea_attempted) {
+      try {
+        await recordAttemptedTarget(repoRoot, config, branch.baseSha, context.idea_target, 'failed', error.message);
+      } catch (recordError) {
+        console.error(`Failed to record the attempted target: ${recordError.message}`);
+      }
+    }
     try {
       await discardIterationChanges(repoRoot, config);
     } catch (discardError) {
@@ -1631,9 +1744,16 @@ async function runIterationSteps(repoRoot, config, iteration, context, branch) {
       );
     }
 
+    if (ideaFile && (config.attemptedTargetFiles ?? []).includes(ideaFile)) {
+      throw new Error(
+        `Idea targets ${ideaFile}, which the loop already worked on without a change worth proposing; skipping it until the file changes on ${branch.baseBranch}.`,
+      );
+    }
+
     if (!config.implementationCommand) {
       throw new Error('implementationCommand is required to run the loop unattended.');
     }
+    context.idea_attempted = true;
 
     await emitLoopStatus({ state: 'running', phase: 'implementation', currentIteration: iteration, ideaTitle: context.idea_title });
     logStep(`Iteration ${iteration}: implementation`);

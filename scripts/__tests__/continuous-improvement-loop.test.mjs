@@ -939,6 +939,72 @@ test('continuous-improvement-loop skips an idea whose target no requirement cove
   }
 });
 
+test('continuous-improvement-loop stops retrying a target that produced no change until the file changes on the base', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-attempted-target-test-');
+  const attemptedTargetsFile = path.join(fixture.tempRoot, 'state', 'attempted-targets.json');
+
+  try {
+    // The worker declines the idea: nothing changes, twice in a row.
+    const declining = await fixture.writeConfig({
+      attemptedTargetsFile,
+      stopOnNoChanges: false,
+      failureDelaySeconds: 0,
+      implementationCommand: 'true',
+    });
+    await assert.rejects(
+      () => execFileAsync('node', [loopScriptPath, '--config', declining, '--max-iterations', '2'], { cwd: fixture.repoDir }),
+      /Idea targets tracked\.txt, which the loop already worked on without a change worth proposing/,
+    );
+
+    const recorded = JSON.parse(await fs.readFile(attemptedTargetsFile, 'utf8'));
+    assert.deepEqual(Object.keys(recorded), ['tracked.txt']);
+    assert.equal(recorded['tracked.txt'].outcome, 'no-change');
+    assert.equal(
+      recorded['tracked.txt'].fingerprint,
+      (await fixture.git(['rev-parse', 'origin/main:tracked.txt'])).stdout.trim(),
+    );
+    assert.deepEqual(await fixture.remoteLoopBranches(), []);
+
+    // The memory survives a restart: a new process refuses the same target at once.
+    const working = await fixture.writeConfig({ attemptedTargetsFile });
+    await assert.rejects(() => fixture.runLoop(working), /already worked on without a change worth proposing/);
+
+    // Once the file changes on the base branch the entry lapses and the target is eligible again.
+    await fs.writeFile(path.join(fixture.repoDir, 'tracked.txt'), 'before\nedited upstream\n', 'utf8');
+    await fixture.git(['commit', '-am', 'upstream edit']);
+    await fixture.git(['push', 'origin', 'HEAD:main']);
+    await fixture.runLoop(working);
+    assert.equal((await fixture.remoteLoopBranches()).length, 1);
+    assert.deepEqual(JSON.parse(await fs.readFile(attemptedTargetsFile, 'utf8')), {});
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('continuous-improvement-loop gives a failing target one retry before leaving it alone', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-failed-target-test-');
+  const attemptedTargetsFile = path.join(fixture.tempRoot, 'attempted-targets.json');
+
+  try {
+    const configPath = await fixture.writeConfig({
+      attemptedTargetsFile,
+      failureDelaySeconds: 0,
+      maxConsecutiveFailures: 0,
+      implementationCommand: "printf 'bad\\n' >> tracked.txt; exit 1",
+    });
+    await assert.rejects(
+      () => execFileAsync('node', [loopScriptPath, '--config', configPath, '--max-iterations', '3'], { cwd: fixture.repoDir }),
+      /already worked on without a change worth proposing/,
+    );
+    const recorded = JSON.parse(await fs.readFile(attemptedTargetsFile, 'utf8'));
+    assert.equal(recorded['tracked.txt'].outcome, 'failed');
+    assert.equal(recorded['tracked.txt'].failures, 2);
+    assert.deepEqual(await fixture.remoteLoopBranches(), []);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test('continuous-improvement-loop discards partial edits when a worker step fails', async () => {
   const fixture = await createLoopFixture('continuous-improvement-loop-worker-fail-test-');
 
