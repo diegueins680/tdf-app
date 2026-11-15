@@ -48408,7 +48408,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "7f2f2181f1f14f59916ea98da4c6182cdf6f85707e7bae855be49cd7083c6fc6",
+      "sha256": "e04375261987133c19a594a9eea2a6352970282a8905ce93280e40c8eb77abe2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49998,7 +49998,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "d4ef8dc3fc0b755297bbb76375e14010b68d840e8aacd1804c5658eb0b98eb7f",
+      "sha256": "7396514230828e7a502e7d757d4c1eca5d24fbeffb9c26f58e33d170dfc4a34e",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53102,7 +53102,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "1949fdf9335db01f3c8e8a84bd863f1df84d61b8aa02019247a0f470ed34971b",
+      "sha256": "4a5632e146051f7891e75a4ade7e3080a12d6262220ae0320ca6f6b93dff8bc4",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54839,6 +54839,22 @@
       "sha256": "a3e1b15c7f4d1c91acb4b87510f8fe0b0aa4d45ad7e6a56971a5a114c1785bf9",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-dcb61d4dcff5a0cc",
+      "path": "scripts/test-event-organizer-claim.sh",
+      "sha256": "700a5794f9eb1ff66f1d00972161104d2a2558b1abcaf3a112e92cc745f57190",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-5f11b620c3566a19",
@@ -59637,7 +59653,7 @@
     {
       "id": "SURFACE-f2b48a740f534a82",
       "path": "tdf-hq-ui/src/api/socialEvents.test.ts",
-      "sha256": "94e606bd6901c34bcf460a614294be9f4eb027c39b9ef2110e55df65aef5962b",
+      "sha256": "bd82c08aa3a7a9ec505e9392483015c28e23bb00896fb54a96a667fbfc237ace",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59669,7 +59685,7 @@
     {
       "id": "SURFACE-b4f37f74b12d2493",
       "path": "tdf-hq-ui/src/api/socialEvents.ts",
-      "sha256": "94dcbd14805849f075383b163c63f9b06258bf7801a299b4b1d3bb2dd9448bab",
+      "sha256": "067b006d3c93af5a32ee204f50b075202f37f910369fa591f6508ab5e6c91c64",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61225,6 +61241,54 @@
         },
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-6606945d359e84a4",
+      "path": "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.test.tsx",
+      "sha256": "a9a670e2689c8d37e5d37ac5611a40d6025ceaf371dd351bc596d96d332c0eca",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e39c8c4bfaaaa3c0",
+      "path": "tdf-hq-ui/src/components/events/EventOrganizerClaimCard.tsx",
+      "sha256": "05c69182195270f8f3925fc8dd8af9036aa42cedf27363345be03ae41e82f2f2",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-76d943c4592372b0",
+      "path": "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.test.tsx",
+      "sha256": "dd9ed05681792788da49e91aedfd6a0cfb795818df9fd967b539bad12db7a5bd",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-f99e3f8f3c301bb0",
+      "path": "tdf-hq-ui/src/components/events/EventOrganizerClaimsQueue.tsx",
+      "sha256": "0d94b89d68353cf24939f82a8ac6dadb2ca58418c28956dcc0f69b4e79020f1c",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -63981,7 +64045,7 @@
     {
       "id": "SURFACE-bf406241ca9e0491",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
-      "sha256": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
+      "sha256": "d3c4cc81824b60a4b5b69eecf14c12341cece07df939ab3292e10358de977dfc",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63997,7 +64061,7 @@
     {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
+      "sha256": "e0bccb5cc87b488e45af60463333372d979eb34c141c51aea1854a67cf27bad8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65872,7 +65936,7 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "86fe863cc9608c5ce0ae086a46f85bb46b559ca823e426345e5fc436226f8fb8",
+      "sha256": "f47437d30bf46d87aa4ba4027085d1f5b8a7758cf5893fc4fe5af311b50d206b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -65908,7 +65972,7 @@
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "59489c52c5b17d71f4cf15de51adec1e3e09c0770a900520dbdd368d174cce7f",
+      "sha256": "e5feb39407ef32b8602c36a04dfaf9808383a80910c0b8b40a3db47d95976335",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67706,6 +67770,18 @@
         },
         {
           "requirement": "SYS-ARCH-BOUNDARY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-7afa11840a0c6bda",
+      "path": "tdf-hq-ui/src/utils/eventOrganizerClaimLimits.ts",
+      "sha256": "5480ce5799e4493378b1f21c01c904ed700abec3f1fab14196483804662bb3fe",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
           "relationship": "implementation"
         }
       ]
@@ -73334,6 +73410,30 @@
       ]
     },
     {
+      "id": "SURFACE-9ccdbc4a731dc957",
+      "path": "tdf-hq/sql/2026-11-13_event_organizer_claim.sql",
+      "sha256": "2ec72bd643c4cbddf998eee8b50f9ff4671f37945b85e8222331a98ea099eb40",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-c8b193f8abcaca8d",
+      "path": "tdf-hq/sql/2026-11-13_event_organizer_claim_rollback.sql",
+      "sha256": "6b9faa1f1cbc0b15bbb28d063bc2a358b376c78fb02d241705642d6e9b4f0665",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -73843,7 +73943,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "ff4a520a6e7c6b9d770a157701b30a5460b9d5ab97a137ff0aedfcf43e3fb33b",
+      "sha256": "5281cb52001f8db71959cb65d4a8f18193230aa033a0e68a1a52cd47523b125c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75126,7 +75226,7 @@
     {
       "id": "SURFACE-3ff9ad29b119eeb6",
       "path": "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
-      "sha256": "c6300e48bff308344021f7a61cbc00c7859459d087668afe8bdf3a094092f5f3",
+      "sha256": "d23c099fcc5b7ab7a83564884c332cd15a2a5ed3f73978c27e43c63971fe64a8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75531,7 +75631,7 @@
     {
       "id": "SURFACE-9913c975520e953f",
       "path": "tdf-hq/src/TDF/Models/SocialEventsModels.hs",
-      "sha256": "c6f0a707566cf96e63d59890c04b499a67362d99d6f9c625380dc36f770473c9",
+      "sha256": "ec04e7f7d93a4b14fcea00b1c195b6bb85c323020a0a8772d43ffd6a8368b534",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76460,6 +76560,22 @@
       ]
     },
     {
+      "id": "SURFACE-6ca67648a8d9ff24",
+      "path": "tdf-hq/src/TDF/Server/EventOrganizerClaim.hs",
+      "sha256": "2ef91902c9d7d8a3278952afe149fb9823a01dba6a437360c3e5a833958c574e",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-OWNER-CLAIM-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-06aae7ecd0fab607",
       "path": "tdf-hq/src/TDF/Server/EventResearch.hs",
       "sha256": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
@@ -76889,7 +77005,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
+      "sha256": "6ff0bc16744f0901e38ec07535646f3996f80f76d10f281b79bbe3160c9881e5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77947,7 +78063,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "sha256": "a5bff7d82db5dd9f60f931fd1982b05b13d22dc3a392e6ff37fa42b45934f453",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78130,7 +78246,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1556d52061b59dda1fa6e20d5fb1bd5986f4cd7a578545946dc8ceec86dfee4d",
+      "sha256": "b7856c7817b079971dcf0ae253ebced2bcbf1068f404244c98ff876dcac5dd3a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -78950,6 +79066,18 @@
       "sha256": "b8ae8271535758e9e40efcd106b9abfd9b3775ed9f55f51a9022039bce8e169a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": []
+    },
+    {
+      "id": "SURFACE-97f944e68a39cf16",
+      "path": "tdf-hq/test/TDF/EventOrganizerClaimSpec.hs",
+      "sha256": "5fad2c970ed6a1cf16f082cb3bbb5118b221c57472e6a898b92bbd580c05f7e5",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-ORGANIZER-CLAIM-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0b2762494d9e6ae1",
