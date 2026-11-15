@@ -8,9 +8,10 @@ live in [docs/Event_Discovery_Cron.md](../../docs/Event_Discovery_Cron.md).
 The daily discovery worker (06:00 America/Guayaquil) covers every `event_city`
 row whose country is Ecuador or Colombia, plus followed cities. Migration
 `2026-11-14_latam_venue_discovery_sources.sql` registers Quito, Guayaquil,
-Cuenca, Bogotá, Cali and Medellín and seeds ten enabled sources: two venue
+Cuenca, Bogotá, Cali and Medellín and seeds ten sources: two venue
 iCalendar feeds, six single-venue schema.org sources and two platform
-schema.org sources.
+schema.org sources. Nine are seeded enabled; the Meet2Go platform source is
+seeded disabled because Meet2Go's terms of use prohibit crawler access.
 
 ## Rules
 
@@ -48,8 +49,15 @@ schema.org sources.
 
 ## Not established
 
-- No platform's terms of service were reviewed. `robots.txt` was read for each
-  seeded host on 2026-11-14 and allows the paths used.
+- Permission from any platform. The terms of TuBoleta, Meet2Go and La
+  Tiquetera were read on 2026-11-15. Meet2Go prohibits robot, crawler and
+  spider access (section 1.10, items f and k), so its source stays disabled
+  until Meet2Go agrees in writing. TuBoleta and La Tiquetera state no
+  automated-access rule for their ticketing sites, but both reserve their
+  content and La Tiquetera forbids using its materials on another site, so
+  descriptions and images from them need editorial review before publication.
+  `robots.txt` was read for each seeded host on 2026-11-14 and allows the
+  paths used.
 - No production run has been observed; the live fetch path (redirects,
   compression, rate) is exercised only by manual requests with the worker's
   user agent, not by an automated test.

@@ -325,14 +325,20 @@ retain all canonical/editorial data. This change does not activate any source.
 ## Venue sources for the six registered cities
 
 Researched and probed on 2026-11-14. Every row below answered the worker's own
-user agent and its `robots.txt` allows the paths read. No platform's terms of
-service were reviewed; do that before treating a source as permanent.
+user agent and its `robots.txt` allows the paths read. The terms of TuBoleta,
+Meet2Go and La Tiquetera were read on 2026-11-15. Meet2Go prohibits robot,
+crawler and spider access (section 1.10), so `meet2go-jsonld` is seeded
+**disabled**; enable it only with Meet2Go's written permission. TuBoleta and La
+Tiquetera state no automated-access rule for their ticketing sites but reserve
+their content (La Tiquetera forbids using its materials on another site), so
+review their descriptions and images before publishing a draft. Every other row
+is seeded enabled.
 
 | Source key | Type | Covers |
 | --- | --- | --- |
 | `teatro-sucre-ical` | `ical` | Quito: Teatro Nacional Sucre, Teatro México, Teatro Variedades |
 | `teatro-centro-de-arte-jsonld` | `jsonld` | Guayaquil: Teatro Centro de Arte |
-| `meet2go-jsonld` | `jsonld` | Quito, Guayaquil, Cuenca: clubs and mid-size shows sold on Meet2Go |
+| `meet2go-jsonld` (disabled) | `jsonld` | Quito, Guayaquil, Cuenca: clubs and mid-size shows sold on Meet2Go |
 | `buenplan` (existing) | `buenplan` | Quito, Guayaquil, Cuenca |
 | `teatro-colon-bogota-ical` | `ical` | Bogotá: Teatro Colón / Centro Nacional de las Artes |
 | `tuboleta-movistar-arena` | `jsonld` | Bogotá: Movistar Arena (El Corazón de Bogotá) |
@@ -345,7 +351,7 @@ service were reviewed; do that before treating a source as permanent.
 Known gaps, none of which has a structured public feed today:
 
 - **Cali** has no venue-owned feed; only La Tiquetera's nationwide list reaches it.
-- **Cuenca** has no venue-owned feed; coverage is Meet2Go and Buen Plan.
+- **Cuenca** has no venue-owned feed; while Meet2Go is disabled, coverage is Buen Plan only.
 - **Stadiums and arenas sold through TicketShow, Feel The Tickets, Taquilla Live
   or ticketmaster.co** (Coliseo Rumiñahui, Estadio Atahualpa, Coliseo Voltaire
   Paladines, Coliseo MedPlus, Vive Claro, El Campín, Arena Cañaveralejo) sit

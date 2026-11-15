@@ -1164,7 +1164,7 @@
       ],
       "conflict": "The discovery document limited registry coverage to Ecuador, stated that no source is enabled by a migration, and excluded reading web pages. The repository owner asked on 2026-11-14 for the events of the most important venues in Quito, Guayaquil, Cuenca, Bogotá, Cali and Medellín to be ingested automatically every day; most of those venues publish events only as schema.org data on venue or ticketing pages.",
       "authority": "Repository owner request of 2026-11-14.",
-      "resolution": "Extend registry coverage to Colombia, admit a jsonld source type that reads only link targets and schema.org JSON-LD, and seed the verified sources enabled (EVT-VENUE-DISCOVERY-001). Imports remain private drafts; publication approval, the pilot allowance and the master switch are unchanged. Platform terms of service were not reviewed and remain an open obligation."
+      "resolution": "Extend registry coverage to Colombia, admit a jsonld source type that reads only link targets and schema.org JSON-LD, and seed the verified sources enabled (EVT-VENUE-DISCOVERY-001), except a source whose platform terms prohibit automated access. Imports remain private drafts; publication approval, the pilot allowance and the master switch are unchanged. The terms of TuBoleta, Meet2Go and La Tiquetera were read on 2026-11-15: Meet2Go prohibits robot, crawler and spider access (section 1.10), so its source is seeded disabled until Meet2Go grants written permission; TuBoleta and La Tiquetera state no automated-access rule for their ticketing sites but reserve their content, so republishing their descriptions or images remains an editorial obligation at publication."
     }
   ]
 }
