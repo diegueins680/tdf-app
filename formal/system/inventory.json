@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "cb5903ac6e4f66e522ed5477accf56a87c80d64c",
+  "mobileRevision": "594d8991531a20481aa6ac7f4386d01c018ca29e",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -2512,6 +2512,7 @@
       "tdf-hq/src/TDF/ServerRadio.hs",
       "tdf-hq/src/TDF/Services.hs",
       "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+      "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
       "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs",
       "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
@@ -17303,7 +17304,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "fe1cb4021b188faeeadae74745ecfb003918162476359d6fd1c69b98af466128",
+      "sha256": "97088e0580d91b17efbdd3af32bcda0e20c411bfbff562462fbd9894d6695ab2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18035,7 +18036,13 @@
     {
       "id": "SURFACE-f53dee8d468f33b8",
       "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
-      "sha256": "4c707a9a54b04b28aeb65350f295b10ef150506fe14b18c68213d88523cc9e80",
+      "sha256": "a3b76de0496afff1ecf4ea087c1b8dce65f36ab65d169645517e6b9dbd6f0ffa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dfd6616359647c1a",
+      "path": "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
+      "sha256": "7c836754d1b9a114b875a83c53042d2042bc1b81220e8e7693fc6769b5b94280",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18269,7 +18276,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "sha256": "f03ed18d67b75840c1a8013b6e66d040358d443be24695a64b89579fcce4509c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18815,7 +18822,7 @@
     {
       "id": "SURFACE-916f8955abd0c6a2",
       "path": "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
-      "sha256": "45f72969bfda6e096354e2c117d95bdb9b53b666bb21221e24e0526dfdd05b4a",
+      "sha256": "29f30805ff325bbea6b49533819cb1e7ca8d861e25891fd7566f630925a41625",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20801,7 +20808,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "c30bfcd998cfae7e70227b203c79f296536a6b8b9027f6010f3ce038fda5249d",
+      "sha256": "c2a349198cc22efe3a7d0e4d15ba8ff5351886c9e6d827d7261324f2f5047f2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31347,7 +31354,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "3cea1bb63274894ca30fc98d30d0249147f392d8ea54efec93ff8ebceb491833",
+      "sha256": "a852a8ad4cf61774fc41398e960e9209b02c0f5cc707dda192a8f89a1a3ae98a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

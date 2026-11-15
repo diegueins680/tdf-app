@@ -98,7 +98,6 @@ import           TDF.Services.EventDiscovery
   , failEventDiscoveryRun
   , fetchBuenPlanEvents
   , fetchStructuredFeedEvents
-  , fetchLinkedDataEvents
   , fetchTicketmasterEventsForCity
   , completeEventDiscoverySourceRun
   , loadRegistryDiscoveryCities
@@ -107,6 +106,7 @@ import           TDF.Services.EventDiscovery
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
   )
+import           TDF.Services.EventDiscoveryLinkedData (fetchLinkedDataEvents)
 import           TDF.Services.EventLogisticsRoutes
   ( RouteEstimateInput(..)
   , RouteEstimateResult(..)

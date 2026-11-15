@@ -185,6 +185,7 @@ library
     TDF.Services.InstagramMessaging
     TDF.Services.FacebookMessaging
     TDF.Services.EventDiscovery
+    TDF.Services.EventDiscoveryLinkedData
     TDF.Services.YouTube
     TDF.Services.RecordsIngestion
     TDF.Server.RecordsIngestion

@@ -40,14 +40,9 @@ import TDF.Services.EventDiscovery
   , normalizeTicketmasterResponse
   , normalizeUserCities
   , loadRegistryDiscoveryCities
-  , LinkedDataSourceConfig(..)
   , StructuredFeedEvent(..)
   , classifyDiscoveredEventType
-  , linkedDataEventLinks
-  , normalizeLinkedDataDocument
   , parseIcsEvents
-  , parseLinkedDataSourceConfig
-  , parseLinkedDataTime
   , publishedEventTypeLookupParams
   , failEventDiscoveryRun
   , finishEventDiscoveryRun
@@ -58,6 +53,13 @@ import TDF.Services.EventDiscovery
   , discoveredEventPublicationReady
   , syncDiscoveredEvent
   , syncDiscoveredEventDraft
+  )
+import TDF.Services.EventDiscoveryLinkedData
+  ( LinkedDataSourceConfig(..)
+  , linkedDataEventLinks
+  , normalizeLinkedDataDocument
+  , parseLinkedDataSourceConfig
+  , parseLinkedDataTime
   )
 import qualified TDF.Models.SocialEventsModels as Social
 

@@ -27815,6 +27815,7 @@
       "observability": "[Cron][EventDiscovery] log lines per source with seen, created and updated counts or the failure text; last_success_at, last_error and consecutive_failures on the source row, shown in /configuracion/fuentes-eventos.",
       "implementation": [
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
         "tdf-hq/src/TDF/Cron.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql",
