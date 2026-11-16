@@ -1090,8 +1090,9 @@ test('event administrator delegation appends one migration to the protected 251-
     else assert.deepEqual(history.get(row.id), row);
   }
   assert.equal(priorMain.length, 1449);
-  // 1452 after this review, plus the nine agreement payments reviews (ADR 0136).
-  assert.equal(active.length, 1461);
+  // 1452 after this review, plus the nine agreement payments reviews (ADR 0136)
+  // and the Hetzner inspection failure-stage review (#721).
+  assert.equal(active.length, 1462);
 });
 
 test('marketplace agreement payments append one migration to the protected 252-entry manifest', async () => {
@@ -1149,5 +1150,6 @@ test('marketplace agreement payments append one migration to the protected 252-e
     assert.match(history.get(id).reviewMethod, /^deterministic-policy-v\d+$/);
   }
   assert.equal(priorMain.length, 1452);
-  assert.equal(active.length, 1461);
+  // 1461 after these reviews, plus the Hetzner inspection failure-stage review (#721).
+  assert.equal(active.length, 1462);
 });
