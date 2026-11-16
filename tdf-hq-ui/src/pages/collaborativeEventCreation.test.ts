@@ -75,6 +75,8 @@ describe('collaborative event creation', () => {
     expect(resolveEventCreatorTimezone('UTC', 'UTC')).toBe('UTC');
     expect(resolveEventCreatorTimezone('UTC', 'Not/AZone')).toBe('UTC');
     expect(resolveEventCreatorTimezone('UTC', undefined)).toBe('UTC');
+    // UTC saved from this browser is a choice, not the placeholder.
+    expect(resolveEventCreatorTimezone('UTC', 'America/Guayaquil', true)).toBe('UTC');
   });
 
   it('uses the event timezone independently of the browser and rejects DST shifts', () => {
