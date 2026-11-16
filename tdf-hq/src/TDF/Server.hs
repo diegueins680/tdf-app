@@ -4900,6 +4900,10 @@ maxGoogleCalendarSyncCursorChars = 4096
 -- unavailable instead of falling back to plaintext.
 sealCalendarTokenForStorage :: Text -> AppM Text
 sealCalendarTokenForStorage plain = do
+  -- Only a token the stored-token validator will accept back is sealed.
+  when (CalendarTokenCipher.calendarTokenIsSealed plain
+          || isLeft (validateStoredGoogleCalendarOAuthToken "token" plain)) $
+    throwError err502 { errBody = "Google OAuth returned an unusable token" }
   mKey <- liftIO CalendarTokenCipher.loadCalendarTokenKey
   case mKey of
     Nothing -> throwError (calendarTokenCipherError CalendarTokenCipher.CalendarTokenKeyMissing)
@@ -4930,7 +4934,7 @@ validateStoredGoogleCalendarRefreshToken =
 validateStoredGoogleCalendarOAuthToken :: Text -> Text -> Either ServerError Text
 validateStoredGoogleCalendarOAuthToken label rawToken
   | T.null tokenVal = invalid
-  | T.length tokenVal > maxDriveOAuthTokenChars = invalid
+  | T.length tokenVal > CalendarTokenCipher.calendarTokenStoredLimit maxDriveOAuthTokenChars tokenVal = invalid
   | T.any isSpace tokenVal = invalid
   | T.any isControl tokenVal = invalid
   | T.any isHiddenDriveOAuthTokenChar tokenVal = invalid
