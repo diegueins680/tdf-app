@@ -449,7 +449,7 @@ export default function LabelArtistsPage() {
   const showFirstArtistSetup = !artistsQuery.isLoading && !artistsQuery.error && !hasArtistProfiles;
 
   const upsertMutation = useMutation({
-    mutationFn: async (payload: { draft: ArtistFormState; originalDisplayName: string; isCurrentOwner: () => boolean }) => {
+    mutationFn: async (payload: { draft: ArtistFormState; originalDisplayName: string; persistedCover: string | null; isCurrentOwner: () => boolean }) => {
       if (!payload.isCurrentOwner()) throw new Error('La sesión del formulario cambió.');
       const { draft, originalDisplayName } = payload;
       if (!draft.partyId) {
@@ -459,9 +459,7 @@ export default function LabelArtistsPage() {
       if (!trimmedName) {
         throw new Error('Agrega un nombre público para el artista.');
       }
-      if (trimmedName !== originalDisplayName) {
-        await Parties.update(draft.partyId, { uDisplayName: trimmedName });
-      }
+      const artistId = draft.partyId;
       const body: ArtistProfileUpsert = {
         apuArtistId: draft.partyId,
         apuSlug: toNullableField(draft.slug),
@@ -477,7 +475,14 @@ export default function LabelArtistsPage() {
         apuGenreIds: draft.genreIds,
         apuHighlights: toNullableField(draft.highlights),
       };
-      return Admin.upsertArtistProfile(body);
+      // The cover is validated first, so a rejected image leaves the CRM name
+      // untouched instead of saving half of the form.
+      return Admin.upsertArtistProfile(body, {
+        persistedCover: payload.persistedCover,
+        beforeWrite: async () => {
+          if (trimmedName !== originalDisplayName) await Parties.update(artistId, { uDisplayName: trimmedName });
+        },
+      });
     },
     onSuccess: (dto, request) => {
       if (!request.isCurrentOwner()) return;
@@ -628,7 +633,7 @@ export default function LabelArtistsPage() {
       return;
     }
     const originalName = selectedParty?.displayName ?? selectedArtist?.apDisplayName ?? '';
-    upsertMutation.mutate({ draft: form, originalDisplayName: originalName, isCurrentOwner: isCurrentEditorOwner });
+    upsertMutation.mutate({ draft: form, originalDisplayName: originalName, persistedCover: selectedArtist?.apHeroImageUrl ?? null, isCurrentOwner: isCurrentEditorOwner });
   };
 
   const handlePromotionEdit = (slot: ArtistPromoSlotDTO) => {

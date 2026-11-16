@@ -1,5 +1,5 @@
 import { get, post, put, del } from './client';
-import { saveArtistProfileMedia } from './artistProfileMedia';
+import { saveArtistProfileMedia, type ArtistProfileMediaOptions } from './artistProfileMedia';
 import type {
   ArtistProfileDTO,
   ArtistReleaseDTO,
@@ -88,8 +88,8 @@ export const Fans = {
   activateMyArtistProfile: async () =>
     (await send('/artists/me/activate', {})) as ArtistProfileDTO,
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
-  updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
-    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/fans/me/artist-profile', prepared))),
+  updateMyArtistProfile: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/fans/me/artist-profile', prepared), options)),
   createMyArtistProfile: async (payload: ArtistProfileUpsert) =>
     (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/profile', prepared))),
   updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert) =>

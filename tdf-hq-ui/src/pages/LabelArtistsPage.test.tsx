@@ -27,7 +27,10 @@ const listCatalogItemsMock = jest.fn<() => Promise<{
 jest.unstable_mockModule('../api/admin', () => ({
   Admin: {
     listArtistProfiles: () => listArtistProfilesMock(),
-    upsertArtistProfile: (payload: unknown) => upsertArtistProfileMock(payload),
+    upsertArtistProfile: async (payload: unknown, options?: { beforeWrite?: () => Promise<unknown> }) => {
+      await options?.beforeWrite?.();
+      return upsertArtistProfileMock(payload);
+    },
     listArtistPromoSlots: (artistId: number, day: string) => listArtistPromoSlotsMock(artistId, day),
     createArtistPromoSlot: (artistId: number, payload: unknown) => createArtistPromoSlotMock(artistId, payload),
     updateArtistPromoSlot: (artistId: number, promotionId: number, payload: unknown) =>

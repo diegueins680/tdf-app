@@ -402,9 +402,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       submittedDraft: ArtistProfileUpsert;
       isCurrentOwner: () => boolean;
       acknowledgeSave: (draft: ArtistProfileUpsert) => void;
+      persistedCover: string | null;
     }) => {
       if (!request.isCurrentOwner()) throw new Error('Vuelve a cargar tu perfil antes de guardar.');
-      return Fans.updateMyArtistProfile(request.payload);
+      return Fans.updateMyArtistProfile(request.payload, { persistedCover: request.persistedCover });
     },
     onSuccess: (profile, request) => {
       // A successful write is not permission to share a draft slug or another Party's identity.
@@ -734,9 +735,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       apuGenreIds: artistDraft.apuGenreIds,
       apuHighlights: normalizeField(artistDraft.apuHighlights),
     };
+    // Only the signed-in artist's own saved cover counts as unchanged.
+    const published = artistProfileQuery.data;
+    const persistedCover = published && published.apArtistId === session.partyId
+      ? published.apHeroImageUrl ?? null : null;
     updateArtistProfileMutation.mutate({
       payload, submittedDraft: artistDraft, isCurrentOwner: isCurrentArtistOwner,
-      acknowledgeSave: acknowledgeArtistSave,
+      acknowledgeSave: acknowledgeArtistSave, persistedCover,
     });
   };
 

@@ -14816,7 +14816,8 @@
         "tdf-hq-ui/src/api/reviews.test.ts",
         "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
         "tdf-hq-ui/src/components/MarkdownText.test.tsx",
-        "tdf-hq-ui/src/components/UserProfileLink.test.tsx"
+        "tdf-hq-ui/src/components/UserProfileLink.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

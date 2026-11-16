@@ -50,3 +50,32 @@ it('releases the pending save when an image never loads and supports removing th
   await saveArtistProfileMedia({ apuHeroImageUrl: '' }, write);
   expect(write).toHaveBeenCalledWith({ apuHeroImageUrl: null });
 });
+
+it('keeps an unchanged legacy embedded cover so other profile fields can still be saved', async () => {
+  const write = jest.fn(async (payload: object) => payload);
+  const legacy = 'data:image/png;base64,iVBORw0KGgo=';
+  await saveArtistProfileMedia({ apuBio: 'Nueva bio', apuHeroImageUrl: legacy }, write, { persistedCover: legacy });
+  expect(write).toHaveBeenCalledWith({ apuBio: 'Nueva bio', apuHeroImageUrl: legacy });
+  // The same embedded image is still refused as a newly supplied cover.
+  await expect(saveArtistProfileMedia({ apuHeroImageUrl: legacy }, write)).rejects.toThrow('Sube una imagen');
+  await expect(saveArtistProfileMedia({ apuHeroImageUrl: legacy }, write, { persistedCover: 'https://cdn.example/old.jpg' }))
+    .rejects.toThrow('Sube una imagen');
+  expect(write).toHaveBeenCalledTimes(1);
+});
+
+it('runs a dependent write only after the cover is accepted', async () => {
+  const order: string[] = [];
+  const write = jest.fn(async (payload: object) => { order.push('profile'); return payload; });
+  const beforeWrite = jest.fn(async () => { order.push('name'); });
+  await expect(saveArtistProfileMedia({ apuHeroImageUrl: 'https://open.spotify.com/artist/abc' }, write, { beforeWrite }))
+    .rejects.toThrow('Sube una imagen');
+  const failing = saveArtistProfileMedia({ apuHeroImageUrl: 'https://cdn.example/missing.jpg' }, write, { beforeWrite });
+  fireEvent.error(image);
+  await expect(failing).rejects.toThrow('No pudimos cargar');
+  expect(beforeWrite).not.toHaveBeenCalled();
+  expect(write).not.toHaveBeenCalled();
+  const saving = saveArtistProfileMedia({ apuHeroImageUrl: 'https://cdn.example/cover.jpg' }, write, { beforeWrite });
+  fireEvent.load(image);
+  await saving;
+  expect(order).toEqual(['name', 'profile']);
+});
