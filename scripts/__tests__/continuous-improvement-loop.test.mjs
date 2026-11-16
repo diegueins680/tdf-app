@@ -1102,6 +1102,27 @@ test('reconcile branch prefixes always include the loop namespace and refuse cat
     }).map((candidate) => candidate.shortName),
     ['continuous-improvement-loop/dirty/a', 'continuous-improvement-loop/dirty/b'],
   );
+  // The push remote is not always called origin: its owned branches still
+  // qualify, and branches on any other remote never do.
+  assert.deepEqual(
+    buildBranchMergeCandidates({
+      remoteName: 'upstream',
+      remoteBranches: [
+        'upstream',
+        'upstream/HEAD',
+        'upstream/main',
+        'upstream/feat/remote',
+        'upstream/continuous-improvement-loop/experiment',
+        'origin/continuous-improvement-loop/elsewhere',
+      ],
+    }),
+    [{
+      shortName: 'continuous-improvement-loop/experiment',
+      ref: 'upstream/continuous-improvement-loop/experiment',
+      localRef: '',
+      remoteRef: 'upstream/continuous-improvement-loop/experiment',
+    }],
+  );
 });
 
 test('syncAndPollLatestRemoteCi uses the fetched remote head for latest-commit polling when local main is ahead', async () => {

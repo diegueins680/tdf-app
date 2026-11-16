@@ -3959,7 +3959,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "bd4b374d210d7a1a3efca191434048c1227ccc7f39b5c3d03f497249ed55b640",
+      "sha256": "7365301e6a67f1a348a4a6639f3c2f85779afb6aa305cfda317ef21c2b82ce08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4871,7 +4871,7 @@
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "018eee8fc5fe792b5983ca28f191962be51eb0fa18a2d92e2eb0c81ce8f17174",
+      "sha256": "220e05fae8703ce5e526117850d40efb769be2af5030b5c63999e01978d56d1e",
       "semanticConformance": "not-established-by-discovery"
     },
     {

@@ -468,6 +468,17 @@ function normalizeGitBranchShortName(rawBranch) {
     .trim();
 }
 
+// A remote-tracking branch belongs to the reconciliation only when it lives
+// on the configured push remote. Its short name is the part after that
+// remote's own prefix, whatever the remote is called.
+function remoteBranchShortName(rawBranch, remoteName = 'origin') {
+  const raw = String(rawBranch ?? '').trim().replace(/^refs\/remotes\//, '');
+  const prefix = `${String(remoteName || 'origin').trim()}/`;
+  if (!raw.startsWith(prefix)) return '';
+  const shortName = raw.slice(prefix.length).trim();
+  return shortName === 'HEAD' ? '' : shortName;
+}
+
 function isLoopCheckpointBranch(rawBranch) {
   const shortName = normalizeGitBranchShortName(rawBranch);
   return shortName.startsWith('continuous-improvement-loop/dirty/');
@@ -502,6 +513,7 @@ export function buildBranchMergeCandidates({
   remoteBranches = [],
   baseBranch = 'main',
   ownedPrefixes = LOOP_OWNED_BRANCH_PREFIXES,
+  remoteName = 'origin',
 } = {}) {
   const base = normalizeGitBranchShortName(baseBranch || 'main');
   const PROTECTED = new Set([base, 'main', 'master', 'HEAD'].filter(Boolean));
@@ -517,7 +529,8 @@ export function buildBranchMergeCandidates({
   }
 
   for (const branch of remoteBranches) {
-    const shortName = normalizeGitBranchShortName(branch);
+    // Branches on any other remote are never merged, pushed or deleted here.
+    const shortName = remoteBranchShortName(branch, remoteName);
     if (!eligible(shortName)) continue;
     remoteByShortName.set(shortName, String(branch).trim());
   }
@@ -617,7 +630,7 @@ async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main', 
     (await execText('git', ['branch', '-r', '--format=%(refname:short)', '--merged', baseBranch], repoRoot)).stdout,
   );
   // Only loop-owned branches are ever deleted, locally or on the remote.
-  const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch, ownedPrefixes });
+  const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch, ownedPrefixes, remoteName });
   const worktreeBranches = await listWorktreeBranches(repoRoot);
   const prunedLocalBranches = [];
   const prunedRemoteBranches = [];
@@ -692,10 +705,15 @@ export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
       (await execText('git', ['branch', '-r', '--format=%(refname:short)', '--no-merged', baseBranch], repoRoot)).stdout,
     );
     const ownedPrefixes = resolveReconcileBranchPrefixes(config);
-    const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch, ownedPrefixes });
+    const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch, ownedPrefixes, remoteName });
     const candidateNames = new Set(candidates.map((candidate) => candidate.shortName));
     const leftAloneBranches = uniqueValues(
-      [...localBranches, ...remoteBranches].map((branch) => normalizeGitBranchShortName(branch)),
+      [
+        ...localBranches.map((branch) => normalizeGitBranchShortName(branch)),
+        // Another remote's branch keeps its full name so the summary says whose it is.
+        ...remoteBranches.map((branch) => remoteBranchShortName(branch, remoteName)
+          || (String(branch).trim() === remoteName ? '' : String(branch).trim())),
+      ].filter(Boolean),
     )
       .filter((shortName) => !candidateNames.has(shortName) && !['main', 'master', normalizeGitBranchShortName(baseBranch)].includes(shortName))
       .sort((left, right) => left.localeCompare(right));
