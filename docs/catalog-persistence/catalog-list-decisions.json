@@ -7,6 +7,33 @@
     "reviewedByPolicy": 170,
     "removedStaleDecisions": 0,
     "reviewBatch": "deterministic-policy-v3",
+    "sourceRemovalRetirements": [
+      {
+        "reason": "The Fly staging inspection script (scripts/inspect-staging-config.mjs) was deleted when Fly was retired as a hosting target, so these two lists have no current candidate. The full reviewed decisions are preserved here as history; no catalog values are affected.",
+        "decisions": [
+          {
+            "id": "d6ad7e3315a241e6d802",
+            "classification": "security-system-registry",
+            "disposition": "retain-as-fixed-staging-target-allowlist",
+            "specializedModel": "version-controlled nonproduction inspection targets",
+            "priority": "P0-security",
+            "risk": "A mutable or unrestricted app target could send hosting credentials to an unintended scope or inspect production configuration.",
+            "justification": "The two exact app names are an intentionally closed security boundary for read-only staging inspection, not a merchant-selectable payment catalog. Tests reject every other target; any expansion requires code review and app-scoped credentials.",
+            "reviewed": true
+          },
+          {
+            "id": "f0efc071b84fe0a2cb13",
+            "classification": "security-system-registry",
+            "disposition": "retain-as-redacted-provider-status-projection",
+            "specializedModel": "Fly app and machine operational status vocabulary",
+            "priority": "P0-security",
+            "risk": "Echoing arbitrary status strings from hosting payloads could disclose sensitive or attacker-controlled content in CI logs and artifacts.",
+            "justification": "This fixed output vocabulary redacts all unrecognized app/machine states to unknown. It is not a payment state machine or business catalog, does not control availability, and cannot authorize a payment or deployment.",
+            "reviewed": true
+          }
+        ]
+      }
+    ],
     "consolidatedMainRetirements": {
       "sourceMain": "fdac8e76523befee1603f49f6c7cf7d00762931b",
       "reason": "These fingerprints have no current candidate after combining the reviewed parents. Preserve full decisions and source locators as history; active Mobile/manifest successor decisions retain both parent decisions. No catalog values are deleted by this classification reconciliation.",
