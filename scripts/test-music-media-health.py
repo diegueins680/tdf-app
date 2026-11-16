@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
+import http.client
 import importlib.util
 import io
 import json
 import math
 from pathlib import Path
 import shutil
+import signal
 import socket
 import ssl
 import struct
+import threading
+import time
 import unittest
 from unittest.mock import patch
 import wave
@@ -96,6 +100,48 @@ class Checks(unittest.TestCase):
     def test_timeout_is_temporary(self):
         with patch.object(health,'fetch_prefix',side_effect=socket.timeout):
             self.assertEqual(health.probe('https://media.example/a'),('temporary','timeout'))
+    def test_trickled_http_headers_cannot_exceed_the_absolute_deadline(self):
+        client, server = socket.socketpair()
+        stopped = threading.Event()
+
+        class LocalConnection(http.client.HTTPConnection):
+            def __init__(self, host, *, context, **options):
+                super().__init__(host, **options)
+
+            def connect(self):
+                self.sock = client
+                self.sock.settimeout(self.timeout)
+
+        def trickle():
+            try:
+                with server:
+                    server.sendall(b'HTTP/1.1 200 OK\r\n')
+                    for _ in range(30):
+                        if stopped.wait(0.035):
+                            return
+                        server.sendall(b'X-Chunk: more\r\n')
+                    server.sendall(b'Content-Length: 4\r\n\r\nRIFF')
+            except OSError:
+                pass
+
+        writer = threading.Thread(target=trickle)
+        writer.start()
+        prior_handler = signal.getsignal(signal.SIGALRM)
+        try:
+            started = time.monotonic()
+            with patch.object(health, 'DEADLINE_SECONDS', 0.2), self.assertRaises(health.ProbeFailure) as error:
+                health.fetch_prefix('https://media.example/slow', resolver=lambda _: ['1.1.1.1'],
+                                    connection=LocalConnection)
+            self.assertLess(time.monotonic() - started, 0.65)
+            self.assertEqual((error.exception.reason, error.exception.permanent), ('timeout', False))
+            self.assertEqual(signal.getsignal(signal.SIGALRM), prior_handler)
+            self.assertEqual(signal.getitimer(signal.ITIMER_REAL), (0.0, 0.0))
+        finally:
+            stopped.set()
+            client.close()
+            writer.join(2)
+        self.assertFalse(writer.is_alive())
+
     def test_truncated_sample_is_inconclusive(self):
         with patch.object(health,'fetch_prefix',return_value=(b'not audio',False)):
             self.assertEqual(health.probe('https://media.example/a'),('temporary','inconclusive'))
