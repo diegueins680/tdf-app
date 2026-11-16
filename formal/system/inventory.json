@@ -9026,13 +9026,13 @@
     {
       "id": "SURFACE-fe47678f5e1d55b6",
       "path": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
-      "sha256": "ff19281d3869bde4c70c51cdbcc5f75d260a06e190963429cca242d03dea6ec7",
+      "sha256": "ff5f0ac4efcc5809b46393370808bab8d7cf73a5755a9de5b0549ae3a0f0d1c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-237fd771d24b44a0",
       "path": "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
-      "sha256": "bbb0a57dccd78aa63d5380426e0aab0304d7735cfec9758b44c3d873d7f7128d",
+      "sha256": "6ce6746c76758a9633ebd9ce0c825227c6ac78c2493c19de30598a887a9e224e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
