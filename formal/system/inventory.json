@@ -89,6 +89,7 @@
       "e2e/web/rental-terms-money.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
       "e2e/web/staff-event-money.spec.mjs",
+      "e2e/web/staff-payment-report-money.spec.mjs",
       "e2e/web/storage-upload-recovery.spec.mjs",
       "e2e/web/studio-internship-audit.spec.mjs",
       "e2e/web/ticket-credential.spec.mjs",
@@ -1017,9 +1018,11 @@
       "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
       "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
       "tdf-hq-ui/src/components/AssetDialogs.tsx",
+      "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
       "tdf-hq-ui/src/components/BrandLogo.tsx",
       "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
       "tdf-hq-ui/src/components/ConfirmDialog.tsx",
+      "tdf-hq-ui/src/components/DataTable.tsx",
       "tdf-hq-ui/src/components/EnrollmentSuccessDialog.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.recovery.test.tsx",
       "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
@@ -1041,6 +1044,7 @@
       "tdf-hq-ui/src/components/PageShell.tsx",
       "tdf-hq-ui/src/components/PartyRelatedPopover.test.tsx",
       "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
+      "tdf-hq-ui/src/components/PlaceholderPage.tsx",
       "tdf-hq-ui/src/components/PromoCodeField.logic.test.ts",
       "tdf-hq-ui/src/components/PromoCodeField.logic.ts",
       "tdf-hq-ui/src/components/PromoCodeField.tsx",
@@ -1515,6 +1519,7 @@
       "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
       "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
       "tdf-hq-ui/src/pages/WhatsAppConsentPage.tsx",
+      "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.money.test.tsx",
       "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
       "tdf-hq-ui/src/pages/bookingsPageLogic.test.ts",
       "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
@@ -3595,6 +3600,12 @@
       "id": "SURFACE-8f380cb36d8ef6a6",
       "path": "e2e/web/staff-event-money.spec.mjs",
       "sha256": "14245fbcd90c7e0c9fe7a15a3f3ceb5f49e26dcdbebca5d0eec20d6774a0a42e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b97679a3b2099acb",
+      "path": "e2e/web/staff-payment-report-money.spec.mjs",
+      "sha256": "6f70e7798ab7855b6b06cb82119b77c369c342a569fd534adfe8618931e569be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9046,6 +9057,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-6f2233927f043ef3",
+      "path": "tdf-hq-ui/src/components/BasicFeaturePage.tsx",
+      "sha256": "46faa93a4c4da7ee9ccab7d14cd8dbf07e7da57f4cee7425583ae6a2f482bc5e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1531c9c36f482a7e",
       "path": "tdf-hq-ui/src/components/BrandLogo.tsx",
       "sha256": "d1d9802db083f11082ede3c1146c33a18e5c2a667e71b83bf0c2fc834e4dbdc8",
@@ -9061,6 +9078,12 @@
       "id": "SURFACE-d4d209018de8c574",
       "path": "tdf-hq-ui/src/components/ConfirmDialog.tsx",
       "sha256": "eb73a2b0c8bcdcd054fca8595a9a8bf99ad29ba3e60dbd96e3f5cd62297379fe",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7caa67891da35c66",
+      "path": "tdf-hq-ui/src/components/DataTable.tsx",
+      "sha256": "64216ca9c44d1ffbc68199d40f6c7402377e20899a9a6e16b23cb222799de630",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9190,6 +9213,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-ed6a3e9e555262c7",
+      "path": "tdf-hq-ui/src/components/PlaceholderPage.tsx",
+      "sha256": "8d90bda2e923d7263a5142aab4ce98c948292c7b260dd62e15652a5f57c2acf2",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-2da7b2bb463ec4ef",
       "path": "tdf-hq-ui/src/components/PromoCodeField.logic.test.ts",
       "sha256": "c41bb81dd956e12f7f3e6bf44e48b89cb7ce35a26bd3ce8fa3bada39ed8de99e",
@@ -9216,13 +9245,13 @@
     {
       "id": "SURFACE-6838929c1edd8346",
       "path": "tdf-hq-ui/src/components/PublicBranding.test.tsx",
-      "sha256": "95415cab3816b561f35af86ae94f76d29c116d1e3b2a859f5692d376209e20eb",
+      "sha256": "7045b50d883ef59b11f96d1dabfcdb944f70528ee85cf504e4e78662a1baa41e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-24748a68641bb0f8",
       "path": "tdf-hq-ui/src/components/PublicBranding.tsx",
-      "sha256": "06d452b2517eaa46148f93379340dcd3b5836674adbf5bdf3a0fa2def02b923a",
+      "sha256": "c2d4405ef7f068ab8c82472c36020656746b93a632e294cf7ce9ad27506a997c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9594,13 +9623,13 @@
     {
       "id": "SURFACE-9b8b12c0260a498e",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
-      "sha256": "72242b6cdd069bb33846c947400ff04618d5066a52298771a4b4c43f4e8a4e62",
+      "sha256": "525dcf7c57fd9a89f028945287e147139a0adbfcf5d0106fa89fd9190f658f25",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-3fb10adaf67ec8d5",
       "path": "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
-      "sha256": "995e6ce2c81a10d2ddb096caf2d4261166b825bd51b938cddcea9220132b4a0c",
+      "sha256": "acb502b58dd253f237d5555f617e4e0060044e0071296abe509c4e4207e1440a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10110,7 +10139,7 @@
     {
       "id": "SURFACE-32ac407e77c4e6e8",
       "path": "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
-      "sha256": "f5ae67ed38970fe57d0a3389362e8b3f783d340e4b3ee82e7b4ff0f8bda2cbdd",
+      "sha256": "c0ba767b6280580292afa74d2826e567648bb5758f31bb20a5e3d850712b7839",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10128,7 +10157,7 @@
     {
       "id": "SURFACE-0d06a5220131a483",
       "path": "tdf-hq-ui/src/features/finance/workAccountReport.test.ts",
-      "sha256": "21a72be7d6217b1917193dfd8de0cc2c552ed1de546acf87e30e8e411319aa60",
+      "sha256": "aff5da85df9de1747bf8342539d4327ec5b7b7f51f90aa4c47bd4ba930466785",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11628,13 +11657,13 @@
     {
       "id": "SURFACE-6e21d53461f37190",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
-      "sha256": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
+      "sha256": "16b5ffb7e0abc20a7f578fa2b800d4b7a43fca2a6a35e971537d88f3ddf59a98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
+      "sha256": "bd178d0924511b49299b2da8042d6eb3d4099fb32e6e39a8a967da73d0beb011",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12034,9 +12063,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f53212badf45f68d",
+      "path": "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.money.test.tsx",
+      "sha256": "a03bb6511561eb9fb2e2972440e9ae655b11e598e05347c1d1aed999d08f60ce",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f27402487c0e8e59",
       "path": "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
-      "sha256": "ee2ee5e2509c46c32a0e2f52124b15f0f89ed8f1c02041dbecd0773c20052474",
+      "sha256": "187d95f6a6a60fdc65e175109dcb89fb96c086d37febc810b055c5ea031f351a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31004,7 +31039,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6b27b3895929d6a0002a4a7a665655004fd8d818b7f5e8b7cd5c3ef8b6180418",
+      "sha256": "0fc0c685806803fb1c17806a51991db711992d12b238642c87d70314485e2a5f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

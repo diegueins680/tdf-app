@@ -1,3 +1,5 @@
+import { toLocalDateInputValue } from '../utils/dateOnly';
+import { formatPriceCentsInput, parseOptionalPriceCents } from '../utils/priceInput';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Alert,
@@ -95,7 +97,7 @@ const exampleSource: WorkAccountReportSource = {
 const makeId = () => `block-${Math.random().toString(36).slice(2, 8)}`;
 const makeFieldId = () => `field-${Math.random().toString(36).slice(2, 8)}`;
 
-const todayIsoDate = () => new Date().toISOString().slice(0, 10) as `${number}-${number}-${number}`;
+const todayIsoDate = () => toLocalDateInputValue() as `${number}-${number}-${number}`;
 
 const emptyBlock = (): BuilderBlock => ({
   id: makeId(),
@@ -218,6 +220,19 @@ export default function WorkAccountReportBuilderPage() {
   const [reportTitle, setReportTitle] = useState('Reporte de cuenta');
   const [periodLabel, setPeriodLabel] = useState('');
   const [hourlyRate, setHourlyRate] = useState('25');
+  const [lastValidHourlyRate, setLastValidHourlyRate] = useState(2500);
+  const hourlyRateValue = useMemo(() => {
+    try {
+      const cents = parseOptionalPriceCents(hourlyRate);
+      if (cents === null) throw new Error('Ingresa una tarifa; usa 0 si es gratuita.');
+      return { cents, error: null };
+    } catch (failure) {
+      return { cents: null, error: failure instanceof Error ? failure.message : 'Revisa la tarifa.' };
+    }
+  }, [hourlyRate]);
+  useEffect(() => {
+    if (hourlyRateValue.cents !== null) setLastValidHourlyRate(hourlyRateValue.cents);
+  }, [hourlyRateValue.cents]);
   const [notes, setNotes] = useState('');
   const [asOfDate, setAsOfDate] = useState(todayIsoDate());
   const [blocks, setBlocks] = useState<BuilderBlock[]>([]);
@@ -233,7 +248,7 @@ export default function WorkAccountReportBuilderPage() {
       personName: personName.trim() || 'Sin nombre',
       reportTitle: reportTitle.trim() || 'Reporte de cuenta',
       periodLabel: periodLabel.trim() || 'Sin periodo',
-      hourlyRateCents: Math.max(0, Math.round(Number.parseFloat(hourlyRate.replace(',', '.')) * 100) || 0),
+      hourlyRateCents: hourlyRateValue.cents ?? lastValidHourlyRate,
       notes: notes.trim() || 'Sin notas.',
       customFields: customFields
         .map((field) => ({
@@ -250,16 +265,23 @@ export default function WorkAccountReportBuilderPage() {
         discountReason: block.discountReason.trim() || 'Sin descuento.',
       })),
     }),
-    [blocks, customFields, hourlyRate, notes, periodLabel, personName, reportTitle],
+    [blocks, customFields, hourlyRateValue.cents, lastValidHourlyRate, notes, periodLabel, personName, reportTitle],
   );
 
   const report = useMemo(() => buildWorkAccountReport(source, { asOfDate }), [source, asOfDate]);
 
+  const reportAmountError = hourlyRateValue.error ?? (
+    [report.totalBillableCents, report.totalDiscountCents, ...report.workBlocks.map((block) => block.billableCents)]
+      .some((cents) => !Number.isSafeInteger(cents) || cents < 0)
+      ? 'El total no conserva centavos exactos. Revisa la tarifa y los bloques de trabajo.' : null
+  );
+
   useEffect(() => {
+    if (reportAmountError) { setPdfUrl(''); return; }
     const url = URL.createObjectURL(buildWorkAccountReportPdfBlob(report));
     setPdfUrl(url);
     return () => URL.revokeObjectURL(url);
-  }, [report]);
+  }, [report, reportAmountError]);
 
   const loadExample = () => {
     setPersonName(exampleSource.personName);
@@ -321,7 +343,7 @@ export default function WorkAccountReportBuilderPage() {
 
   const saveTemplate = () => {
     const name = templateName.trim();
-    if (!name) return;
+    if (!name || reportAmountError) return;
     const nextTemplate: WorkAccountTemplate = {
       id: selectedTemplateId || `template-${makeId()}`,
       name,
@@ -350,7 +372,11 @@ export default function WorkAccountReportBuilderPage() {
     setPersonName(template.source.personName);
     setReportTitle(template.source.reportTitle);
     setPeriodLabel(template.source.periodLabel);
-    setHourlyRate(String(template.source.hourlyRateCents / 100));
+    try {
+      setHourlyRate(formatPriceCentsInput(template.source.hourlyRateCents));
+    } catch {
+      setHourlyRate('');
+    }
     setNotes(template.source.notes);
     setAsOfDate(template.source.cutoffDate ?? todayIsoDate());
     setBlocks(cloneBlocks(template.source.workBlocks));
@@ -420,15 +446,19 @@ export default function WorkAccountReportBuilderPage() {
                     startIcon={<DownloadIcon />}
                     variant="contained"
                     component="a"
-                    href={pdfUrl || undefined}
+                    href={reportAmountError ? undefined : pdfUrl || undefined}
                     download="reporte-cuenta.pdf"
-                    disabled={!pdfUrl}
+                    disabled={!pdfUrl || Boolean(reportAmountError)}
                   >
                     Descargar PDF
                   </Button>
                 </Stack>
               </Stack>
 
+              {reportAmountError && <Alert severity="warning" sx={{ mb: 2 }}>
+                {reportAmountError} {hourlyRateValue.error ? 'La vista previa conserva la última tarifa válida. ' : ''}
+                Corrige los valores para guardar la plantilla o descargar el PDF.
+              </Alert>}
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
                   <StatCard
@@ -490,7 +520,7 @@ export default function WorkAccountReportBuilderPage() {
                     </Grid>
                     <Grid item xs={12} md={5}>
                       <Stack direction="row" spacing={1} sx={{ height: '100%' }} alignItems="stretch">
-                        <Button variant="contained" onClick={saveTemplate} fullWidth>
+                        <Button variant="contained" onClick={saveTemplate} disabled={Boolean(reportAmountError)} fullWidth>
                           Guardar plantilla
                         </Button>
                         <Button
@@ -577,7 +607,9 @@ export default function WorkAccountReportBuilderPage() {
                           <TextField label="Periodo" value={periodLabel} onChange={(e) => setPeriodLabel(e.target.value)} fullWidth helperText="Ej: 9 y 10 de julio de 2026" />
                         </Grid>
                         <Grid item xs={12} md={3}>
-                          <TextField label="Tarifa USD/h" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} fullWidth />
+                          <TextField label="Tarifa USD/h" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)}
+                            inputProps={{ inputMode: 'decimal', maxLength: 32 }} error={Boolean(hourlyRateValue.error)}
+                            helperText={hourlyRateValue.error ?? 'USD por hora. Usa punto o coma y hasta dos decimales; 0 indica tarifa gratuita.'} fullWidth />
                         </Grid>
                         <Grid item xs={12} md={3}>
                           <TextField
