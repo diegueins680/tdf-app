@@ -473,6 +473,13 @@ export function buildMigrationBatchSql(migrations, options = {}) {
   // batches over the current schema verify that shape; only a caller that
   // renders a manifest prefix ending before that migration opts out.
   const socialDesignationIncluded = options.socialDesignationIncluded !== false;
+  // ADR 0134 (2026-11-08) adds the marketplace offer schema (category intent,
+  // classified slots and price mode, negotiation rounds). Only a caller that
+  // renders a manifest prefix ending before that migration opts out.
+  const marketplaceOffersIncluded = options.marketplaceOffersIncluded !== false;
+  // ADR 0135 (2026-11-12) adds marketplace agreements; same opt-out rule.
+  const marketplaceAgreementsIncluded = options.marketplaceAgreementsIncluded !== false;
+  const marketplaceAgreementPaymentsIncluded = options.marketplaceAgreementPaymentsIncluded !== false;
   const body = entries.map((entry, index) => {
     const applyVariable = `apply_migration_${index + 1}`;
     return [
@@ -525,7 +532,7 @@ export function buildMigrationBatchSql(migrations, options = {}) {
     '  applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
     ');',
     body,
-    buildSchemaVerificationSql({ includePsqlHeader: false, socialDesignationIncluded }),
+    buildSchemaVerificationSql({ includePsqlHeader: false, socialDesignationIncluded, marketplaceOffersIncluded, marketplaceAgreementsIncluded, marketplaceAgreementPaymentsIncluded }),
     "SELECT pg_advisory_unlock(hashtextextended('tdf-production-schema-migrations', 0));",
     '\\else',
     '\\echo Another production schema migration is active; refusing to wait',
@@ -730,6 +737,14 @@ export function buildSchemaVerificationSql(options = {}) {
   // batch rendered from a manifest prefix that stops before that migration
   // passes false (see buildMigrationBatchSql).
   const socialDesignationIncluded = options.socialDesignationIncluded !== false;
+  // Likewise for the ADR 0134 marketplace offer schema: production verification
+  // and every batch over the current manifest expect it; only a batch rendered
+  // from a manifest prefix that stops before 2026-11-08_marketplace_offers
+  // passes false (see buildMigrationBatchSql).
+  const marketplaceOffersIncluded = options.marketplaceOffersIncluded !== false;
+  // And for the ADR 0135 marketplace agreement schema (2026-11-12_marketplace_agreements).
+  const marketplaceAgreementsIncluded = options.marketplaceAgreementsIncluded !== false;
+  const marketplaceAgreementPaymentsIncluded = options.marketplaceAgreementPaymentsIncluded !== false;
   return `${header}DO $verify$
 DECLARE
   campaign_table TEXT;
@@ -1102,6 +1117,95 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'The artist-profile derived classified category is missing';
   END IF;
+${marketplaceOffersIncluded ? `
+  -- ADR 0134: marketplace offers (2026-11-08_marketplace_offers).
+  IF to_regclass('public.classified_offer_round') IS NULL
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'classified_category' AND column_name = 'intent')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'classified' AND column_name = 'slots_remaining')
+     OR NOT EXISTS (SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = 'public' AND table_name = 'classified_application' AND column_name = 'current_round') THEN
+    RAISE EXCEPTION 'Marketplace offer schema (ADR 0134) is missing';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.classified_application'::regclass
+      AND conname = 'classified_application_status_check'
+      AND pg_get_constraintdef(oid) ILIKE '%countered_by_author%'
+      AND pg_get_constraintdef(oid) ILIKE '%countered_by_applicant%'
+      AND pg_get_constraintdef(oid) ILIKE '%expired%'
+  ) THEN
+    RAISE EXCEPTION 'classified_application_status_check does not declare negotiation states';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.classified'::regclass AND conname = 'classified_slots_remaining_check'
+  ) THEN
+    RAISE EXCEPTION 'classified_slots_remaining_check is missing';
+  END IF;
+  IF EXISTS (SELECT 1 FROM classified WHERE slots_remaining > slots OR slots_remaining < 0) THEN
+    RAISE EXCEPTION 'classified slot accounting is inconsistent';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM classified_application application
+    WHERE NOT EXISTS (SELECT 1 FROM classified_offer_round round
+                      WHERE round.application_id = application.id AND round.round_number = 1)
+  ) THEN
+    RAISE EXCEPTION 'classified_application rows without an initial negotiation round';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM classified_category WHERE code = 'offering-services' AND intent = 'offering')
+     OR NOT EXISTS (SELECT 1 FROM classified_category WHERE code = 'seeking-band' AND intent = 'seeking') THEN
+    RAISE EXCEPTION 'classified_category.intent seed is incomplete';
+  END IF;
+` : '  -- ADR 0134: marketplace offers verified only when the batch applies 2026-11-08_marketplace_offers.'}
+${marketplaceAgreementsIncluded ? `
+  -- ADR 0135: marketplace agreements (2026-11-12_marketplace_agreements).
+  IF to_regclass('public.marketplace_agreement') IS NULL
+     OR to_regclass('public.marketplace_agreement_pricing') IS NULL
+     OR to_regprocedure('marketplace_agreement_transition_allowed(text,text)') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace agreement schema (ADR 0135) is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'marketplace_agreement'::regclass AND conname = 'marketplace_agreement_balance_check')
+     OR NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'marketplace_agreement'::regclass AND conname = 'marketplace_agreement_commission_check')
+     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'marketplace_agreement'::regclass AND tgname = 'marketplace_agreement_transition_trigger' AND NOT tgisinternal) THEN
+    RAISE EXCEPTION 'Marketplace agreement accounting checks or transition trigger are missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM marketplace_agreement_pricing WHERE category_id IS NULL AND active) THEN
+    RAISE EXCEPTION 'Marketplace agreement default pricing rule is missing';
+  END IF;
+  IF NOT marketplace_agreement_transition_allowed('confirmed', 'completed')
+     OR marketplace_agreement_transition_allowed('completed', 'confirmed') THEN
+    RAISE EXCEPTION 'Marketplace agreement transition relation is not the reviewed one';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM revenue_feature_flag WHERE flag_key = 'marketplace.agreements' AND environment = 'production') THEN
+    RAISE EXCEPTION 'marketplace.agreements production gate row is missing';
+  END IF;
+` : '  -- ADR 0135: marketplace agreements verified only when the batch applies 2026-11-12_marketplace_agreements.'}
+${marketplaceAgreementPaymentsIncluded ? `
+  -- ADR 0136: marketplace agreement payments (2026-11-12_marketplace_agreement_payments).
+  IF to_regclass('public.marketplace_agreement_payment') IS NULL
+     OR to_regclass('public.marketplace_payout_account') IS NULL
+     OR to_regclass('public.marketplace_payment_fee_rule') IS NULL
+     OR to_regprocedure('marketplace_agreement_payment_transition_allowed(text,text)') IS NULL THEN
+    RAISE EXCEPTION 'Marketplace agreement payment schema (ADR 0136) is missing';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'marketplace_agreement_payment'::regclass AND conname = 'marketplace_agreement_payment_split_check')
+     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'marketplace_agreement_payment'::regclass AND tgname = 'marketplace_agreement_payment_guard_trigger' AND NOT tgisinternal)
+     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'marketplace_agreement'::regclass AND tgname = 'marketplace_agreement_paid_payment_trigger' AND NOT tgisinternal)
+     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'commerce_checkout_session'::regclass AND tgname = 'trg_marketplace_agreement_require_verified_payment' AND NOT tgisinternal)
+     OR NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid = 'commerce_checkout_session'::regclass AND tgname = 'trg_marketplace_agreement_sync_verified_checkout' AND NOT tgisinternal) THEN
+    RAISE EXCEPTION 'Marketplace agreement payment split check or verified-payment guards are missing';
+  END IF;
+  IF NOT marketplace_agreement_payment_transition_allowed('pending', 'paid')
+     OR marketplace_agreement_payment_transition_allowed('paid', 'pending')
+     OR NOT marketplace_agreement_transition_allowed('confirmed', 'balance_due') THEN
+    RAISE EXCEPTION 'Marketplace agreement payment transition relations are not the reviewed ones';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM revenue_feature_flag WHERE flag_key = 'marketplace.agreement_payments' AND environment = 'production' AND NOT enabled) THEN
+    RAISE EXCEPTION 'marketplace.agreement_payments production gate row is missing or already enabled';
+  END IF;
+` : '  -- ADR 0136: marketplace agreement payments verified only when the batch applies 2026-11-12_marketplace_agreement_payments.'}
   IF EXISTS (
     SELECT 1 FROM directory_artist_listing_audit()
     WHERE finding_kind IN ('missing_listing','duplicate_derived_listing','public_listing_non_public_profile','stale_listing_search_document')

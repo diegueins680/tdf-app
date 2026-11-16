@@ -84,6 +84,7 @@ import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard'
 import { useTranslation } from 'react-i18next';
 import { RADIO_TAKEOVER_EVENT } from '../player/types';
 import { useFanHubOnboarding } from '../features/fans/useFanHubOnboarding';
+import MyEventsPanel from '../components/events/MyEventsPanel';
 
 const FAN_AVATAR_MAX_BYTES = 10 * 1024 * 1024; // 10 MB; keep in sync with UX copy below
 const EMPTY_ARTIST_DRAFT: ArtistProfileUpsert = {
@@ -1349,6 +1350,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             </Typography>
           )}
         </Stack>
+        {viewerId != null && !sessionLoading && <MyEventsPanel partyId={viewerId} />}
         {!focusArtist && <CommunityDiscovery />}
         {onboarding.loading && <CircularProgress size={20} aria-label={t('fanHubOnboarding.loading')} />}
         {onboarding.loadError && (
@@ -1587,15 +1589,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       onClick={() => setArtistEditorOpen((prev) => !prev)}
                     >
                       {artistEditorOpen ? 'Ocultar editor' : 'Editar aquí'}
-                    </Button>
-                  )}
-                  {!isHomeManagerView && (
-                    <Button
-                      variant="contained"
-                      onClick={handleSaveArtistProfile}
-                      disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
-                    >
-                      {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Actualizar perfil de artista'}
                     </Button>
                   )}
                 </Stack>
@@ -1864,20 +1857,22 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           El perfil contiene géneros inactivos o reemplazados. Selecciona valores vigentes antes de guardar.
                         </Alert>
                       )}
-                      {isHomeManagerView && (
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                          <Button
-                            variant="contained"
-                            onClick={handleSaveArtistProfile}
-                            disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
-                          >
-                            {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-                          </Button>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                        <Button
+                          variant="contained"
+                          onClick={handleSaveArtistProfile}
+                          disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
+                        >
+                          {updateArtistProfileMutation.isPending
+                            ? 'Guardando…'
+                            : isHomeManagerView ? 'Guardar cambios' : 'Actualizar perfil de artista'}
+                        </Button>
+                        {isHomeManagerView && (
                           <Button variant="text" onClick={() => setArtistEditorOpen(false)}>
                             Cerrar editor
                           </Button>
-                        </Stack>
-                      )}
+                        )}
+                      </Stack>
                     </Stack>
                   </Box>
                 </>

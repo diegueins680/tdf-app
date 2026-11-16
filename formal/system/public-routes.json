@@ -368,18 +368,6 @@
    "boundary": "public-read"
   },
   {
-   "method": "POST",
-   "path": "/input-list/inventory/seed",
-   "boundary": "operator-secret",
-   "header": "X-Seed-Token"
-  },
-  {
-   "method": "POST",
-   "path": "/input-list/sessions/seed",
-   "boundary": "operator-secret",
-   "header": "X-Seed-Token"
-  },
-  {
    "method": "GET",
    "path": "/instagram/webhook",
    "boundary": "provider-verification-challenge"
@@ -826,12 +814,6 @@
    "method": "GET",
    "path": "/rooms/public",
    "boundary": "public-read"
-  },
-  {
-   "method": "POST",
-   "path": "/seed",
-   "boundary": "operator-secret",
-   "header": "X-Seed-Token"
   },
   {
    "method": "GET",
