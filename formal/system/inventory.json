@@ -8942,13 +8942,13 @@
     {
       "id": "SURFACE-526786b1dccd2ea9",
       "path": "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
-      "sha256": "043c95c2ec03e39cff5513b872f25a1cc9ca9857b98a2469bc35abab28f62b03",
+      "sha256": "73856e76ad3f7c32f16a3e26a2f861bbf692d992c3cd811c0f4e807dea15f788",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d0c4c8db8120be10",
       "path": "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
-      "sha256": "d78edfc4cef789c2a8f9b2d9d0eb29d43465ede2e3b98c23584364960c9fcd51",
+      "sha256": "3ade2bd302889e7c88090df67198aebd1d29bb225e5beebb9d3dc86597cf548e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10622,13 +10622,13 @@
     {
       "id": "SURFACE-c97910a5593293cd",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.en.ts",
-      "sha256": "90c52d854ae9f55a6dfce5daf80d8941e58590108fccff8063d12b6f369984e8",
+      "sha256": "3d3f31a7f996c2cae65ef00ac0c87f8dbca1a2f16c76d8434bf878f03ba0754d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5e55534c6210f093",
       "path": "tdf-hq-ui/src/i18n/locales/accountDeletion.es.ts",
-      "sha256": "7ea99094df143618bdb77441db5b84a197d4570ac7f6b0bf5ebdd867ff1a9ee1",
+      "sha256": "955adc117a22842a12411607143fa81a156384b5be36339a51383d1abb853e3e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
