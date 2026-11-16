@@ -70,6 +70,7 @@
       "e2e/web/legacy-provider-playback.spec.mjs",
       "e2e/web/live-session-contact.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
+      "e2e/web/merch-stock-category.spec.mjs",
       "e2e/web/mobile-layout-regressions.spec.mjs",
       "e2e/web/mobile-program.spec.mjs",
       "e2e/web/music-catalog-discovery.spec.mjs",
@@ -3486,6 +3487,12 @@
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
       "sha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-2bd6440cd77c9023",
+      "path": "e2e/web/merch-stock-category.spec.mjs",
+      "sha256": "d34d9ecf0d4f92decbd07aa89a9c5680d003659d681ea90f7efdad2ae1bcb933",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11411,7 +11418,7 @@
     {
       "id": "SURFACE-61f97ffdc68a2602",
       "path": "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
-      "sha256": "a77106030c05eeb3b9fa54df184afaa128e8247c153e25a312763b882ac6d5e3",
+      "sha256": "662034f7cddb0aef72e3ee1e7ede4988f4f796026fd32c531abc1d88e4c7e5e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11423,7 +11430,7 @@
     {
       "id": "SURFACE-fd84edf3f19cbb72",
       "path": "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
-      "sha256": "e5f7a21499794c798916c4f05ab53f15aa44a7f1ee46265e913e1db03317c5d0",
+      "sha256": "903ab61924dab5e7fbb2f09243d99e4ca3adca8420a6c771fa93da9162913206",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11441,7 +11448,7 @@
     {
       "id": "SURFACE-50bc88ca100727b8",
       "path": "tdf-hq-ui/src/pages/MerchProductPage.tsx",
-      "sha256": "f4f2d80c1035cf622424164999ab3e81ec37d184e5cd34304eb1eb592e1e35b3",
+      "sha256": "205a5f7d23588c210a3da95622b2f755396880dbd816986974e51b1b91666a0b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11465,13 +11472,13 @@
     {
       "id": "SURFACE-21ea108bb12daaf1",
       "path": "tdf-hq-ui/src/pages/MerchSellerPage.money.test.tsx",
-      "sha256": "4bd876341791c6fdb98a637b8c8514a4b62096f692b19e9fe2d8575cbf4e9ddb",
+      "sha256": "e710fc8c8fef8e14f414bf5c0893e3d26cb13c0875a4b1d686d2955cb51f0ca6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-20d3b5c28f107b7d",
       "path": "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
-      "sha256": "787a3636924f8f097cad2b7bcf5da12637829d30eb4e3f1a26fccccb5bf118e0",
+      "sha256": "cb686d0da02bd3f8a84dce78658fa6a4d70751d9d8f2cfb885e951316d9a91f6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13085,7 +13092,7 @@
     {
       "id": "SURFACE-69214ab4dd4d9619",
       "path": "tdf-hq-ui/src/utils/merch.ts",
-      "sha256": "5983d3941a54bb27e53e43b7f09380dff9b53f85b7d73d7735ec4cef47215b51",
+      "sha256": "a4da12769d4b44015b4dc0e78194989fd56149f27fb0e06554506b895563e430",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31039,7 +31046,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "0fc0c685806803fb1c17806a51991db711992d12b238642c87d70314485e2a5f",
+      "sha256": "251a372dbcc33c82922ca7b23560306ec27db4684ab5fd8079e06369a635de67",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

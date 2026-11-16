@@ -26871,7 +26871,7 @@
     {
       "id": "UX-COGLOAD-001",
       "title": "Purchase, sign-in, booking and navigation screens ask for less reading and fewer decisions",
-      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation. Payment choices for tickets, studio deposits, courses, mixing and Domo quote deposits share one visual and accessible group, with the payment type prominent and its processor shown as secondary text. Only existing server-offered methods and existing local eligibility checks supply choices; all retain their original handlers and disabled conditions. The client does not invent a recommended provider from list order. Unknown outcomes continue to lock local and hosted alternatives, retain exact retry keys and permit original-attempt recovery even when new payment is disabled or no method is offered. PayPhone still requests its number only after selection and does not send a request on that first selection. For signed-in booking visitors, a complete valid contact is summarized with an explicit edit control; guests, incomplete contacts and in-progress edits remain expanded. Editing and returning to the summary move keyboard focus to the appropriate control without advancing a step, overwriting manual input or accepting terms. Course authoring preserves decimal currency prices as exact safe integer cents when loading legacy cent drafts, editing with dot/comma and writing CourseUpsert.priceCents. Its public major-unit numeric metadata is accepted only when a cent can be recovered unambiguously; invalid, fractional-cent, missing and unsafe prices cannot become a free course or reach publication. Zero remains an explicit valid free price. Drafts preserve raw invalid/blank price text separately from the API payload, retain explicit empty lists/descriptive fields, and are restored before local writes. A successful save clears the draft only if its edit revision still matches; newer edits remain local and do not show an outdated published status. Booking bank-transfer reference errors appear beside the bounded3–120-character field with an accessible helper and focus in the opened dialog. Invalid input never submits evidence; a failed request retains the reference, and the field is disabled while evidence is in flight. Submission remains review-only and never confirms payment. Before clearing a saved course draft, cleanup compares the stored snapshot with the one observed when saving; a replacement observed at response time is preserved. Marketplace rental terms show daily/optional weekly rates, refundable deposit and late fee in USD units with exact dot/comma conversion to their existing 32-bit cent fields. Daily and present weekly rates must be positive; deposit and late fee require explicit nonnegative amounts. Blank weekly rate remains null. Field-associated errors block malformed or out-of-range prices before the existing authorized version update; failed updates preserve entered prices for deliberate retry. Duration, cancellation, version, summary, activation and timezone retain the server contract. Browser contrast checks wait for the field floating-label/color transitions to finish while retaining every WCAG rule. Manual staff payments parse the entire decimal amount as positive safe integer cents, reject trailing text/exponents/excess decimals instead of rounding or truncating, show an accessible field error, retain raw owned drafts and preserve exact copied amounts. Existing owner/revision recovery guards and payment recording authority remain unchanged. Work-account report hourly prices also parse exact nonnegative cents with explicit zero distinct from blank. Invalid rate text stays visible and labels the preview as retaining the last valid rate; it cannot generate a PDF or save a template. Legacy cent templates load without a floating-point round trip. Unsafe or fractional derived cent totals block template/PDF export without changing the existing hours or discount calculation policy. The shared work-report currency formatter preserves the final cent of safe integer amounts by formatting integer major units and exact fractional cents, retaining the same locale/sign presentation for ordinary amounts. The work-report cutoff and new block dates default to the browser local calendar day rather than the UTC day, including evenings when UTC has already advanced. Loaded explicit template dates remain unchanged.",
+      "statement": "On the public event page the ticket block with the lowest available price sits directly under the title and date, and on phones the same action stays pinned once that block scrolls away; the profile contact panel is not shown on events. The ticket checkout shows a one-line event summary, a single ticket type as text, a quantity stepper with a live subtotal, session-prefilled name and email, optional phone and promo code behind one control, and quantity errors on the quantity field. Ticket checkout, ticket order and payment-return routes render a focused shell without site navigation or promotion. Order, deposit and payment status messages state the same safety facts (not paid yet, do not pay twice, only a confirmed payment counts) without server, provider, durable or rail vocabulary. The public footer does not repeat the navigation and offers no login or signup action to a signed-in visitor. The sign-in card keeps sign-in, Google, account creation, guest exploration and recovery. The booking page asks for the service once, hides the optional account card for a signed-in visitor and keeps paying the deposit as the only primary action while it is pending. The sidebar leaves out groups the viewer cannot use and lists features registered with globalMenu:false only through its search or while they are open. A new access request opened without a target offers the requestable features. Attendance uses one vocabulary: ¿Vas? Voy / Tal vez / No voy. PayPhone's number fields appear only after that wallet is chosen. The booking page introduction is at most four lines. Cancelling or refunding a paid ticket order from the organizer view asks for confirmation naming the order. The trial-class, mixing and marketplace contact forms start from the signed-in account's name and email, which stay editable; contact saved on the device takes precedence in the marketplace. Deleting a label track, a CMS version or an event logistics activity, and revoking an artist invitation link, ask for confirmation naming the object. Booking statuses reported in English are named in Spanish in the booking form and the teacher portal, with the labels studio orders already use; an unknown status is shown as received. The analytics SDK loads on demand: when its file cannot be fetched the app renders normally and events are dropped; calls made while it loads run in order, with properties sanitized at call time. Deleting a fan-club memory asks for confirmation naming the memory and uses its own icon, distinct from hide. Directory profile, classified and invitation statuses are named in Spanish; an unknown status is shown as received. The offline notice is mounted in the public shell as well as the staff shell. Checkout contact and required invoice errors appear beside their fields; focus moves to the first invalid field only on submission, and invalid input or quantities exceeding remaining stock never start checkout. Booking combines schedule and confirmation in one second step, retaining the current quote, deposit, terms acceptance, schedule validation and idempotency. Submission cannot bypass an in-flight availability/price check. Optional analytics failures do not reload forms; required route failures recover with at most one automatic reload per deployed commit in the browser session and retain manual recovery when storage is unavailable. Optional suggested booking times are initially collapsed behind a native keyboard-accessible disclosure; opening it and choosing a suggestion preserves the chosen physical Quito date. Transfer reference errors and receipt validation messages are associated with their respective fields; invalid transfer input never submits evidence. PayPhone country/number errors appear beside the invalid fields and focus the first invalid one without starting a payment or altering exact-recovery data. Service prices are entered in currency units with at most two decimals (dot or comma) and converted exactly to the unchanged integer rateCents wire field; empty means price on request, zero remains explicit and invalid/unsafe amounts cannot silently disappear from a draft. Event ticket-tier prices, budgets, contract commitments and finance-entry amounts use the same exact currency-unit conversion; quantity remains a count. Free tickets and zero budgets remain valid, while contracts and accounting entries require a positive amount. Invalid, fractional-cent and unsafe amounts produce field errors and never reach a mutation API. Rental deposit deductions, merchandise refund requests, variant prices and delivery fees also accept exact currency amounts with inline errors. Refund blank means the server-resolved remaining balance; deductions preserve blank/no-change versus explicit zero; delivery can be free, merchandise prices must be positive. Amounts exceeding verified balances or unsafe stored values cannot authorize financial mutations. Display retains exact safe cents. Existing refund review/execution boundaries, retry keys, custody transitions, stock units and publication rules remain unchanged. While correcting refund or deduction errors, the verified balance or maximum remains beside the input. Music release authoring accepts USD decimal units while preserving the full existing positive signed-64-bit minor-unit text range; no whole-price Number conversion occurs. Malformed price text stays local and pauses autosave before metadata/content writes; blank and zero purchase prices remain saveable in progressive drafts but cannot proceed to offer validation or review, and publication authority and transitions remain enforced. Operations amount filters retain signed exact safe integers, explicit zero, typed comma/dot text, the last valid applied range during correction and cleared/loaded-view distinctions. Invalid or inverted bounds never reach a query or saved view; unsafe saved amounts are rejected rather than silently omitted. Temporary operations drawers sit above the radio bar so actions remain reachable without bypassing pointer or keyboard behavior. Merchandise support, order, refund and settlement states use plain Spanish/English labels for existing server values, keeping requested, approved, paid, partial refund and completed refund distinct; unknown values and CSV machine codes retain their existing behavior. Refund preparation and empty-state text avoid canonical-system jargon while retaining request-only warnings, independent review and execution boundaries. The public Live Session form starts with the email-shaped username returned by its own successful access-code validation, never the ambient staff session. Owned draft values, including intentionally empty email, and subsequent edits take precedence; another verified owner remounts the form. Consent and musician identity are never inferred from that contact default. Leaving an already verified access-code field does not redundantly revalidate and disable the intake form, so the next contact edit is preserved; changed codes still require successful validation. Payment choices for tickets, studio deposits, courses, mixing and Domo quote deposits share one visual and accessible group, with the payment type prominent and its processor shown as secondary text. Only existing server-offered methods and existing local eligibility checks supply choices; all retain their original handlers and disabled conditions. The client does not invent a recommended provider from list order. Unknown outcomes continue to lock local and hosted alternatives, retain exact retry keys and permit original-attempt recovery even when new payment is disabled or no method is offered. PayPhone still requests its number only after selection and does not send a request on that first selection. For signed-in booking visitors, a complete valid contact is summarized with an explicit edit control; guests, incomplete contacts and in-progress edits remain expanded. Editing and returning to the summary move keyboard focus to the appropriate control without advancing a step, overwriting manual input or accepting terms. Course authoring preserves decimal currency prices as exact safe integer cents when loading legacy cent drafts, editing with dot/comma and writing CourseUpsert.priceCents. Its public major-unit numeric metadata is accepted only when a cent can be recovered unambiguously; invalid, fractional-cent, missing and unsafe prices cannot become a free course or reach publication. Zero remains an explicit valid free price. Drafts preserve raw invalid/blank price text separately from the API payload, retain explicit empty lists/descriptive fields, and are restored before local writes. A successful save clears the draft only if its edit revision still matches; newer edits remain local and do not show an outdated published status. Booking bank-transfer reference errors appear beside the bounded3–120-character field with an accessible helper and focus in the opened dialog. Invalid input never submits evidence; a failed request retains the reference, and the field is disabled while evidence is in flight. Submission remains review-only and never confirms payment. Before clearing a saved course draft, cleanup compares the stored snapshot with the one observed when saving; a replacement observed at response time is preserved. Marketplace rental terms show daily/optional weekly rates, refundable deposit and late fee in USD units with exact dot/comma conversion to their existing 32-bit cent fields. Daily and present weekly rates must be positive; deposit and late fee require explicit nonnegative amounts. Blank weekly rate remains null. Field-associated errors block malformed or out-of-range prices before the existing authorized version update; failed updates preserve entered prices for deliberate retry. Duration, cancellation, version, summary, activation and timezone retain the server contract. Browser contrast checks wait for the field floating-label/color transitions to finish while retaining every WCAG rule. Manual staff payments parse the entire decimal amount as positive safe integer cents, reject trailing text/exponents/excess decimals instead of rounding or truncating, show an accessible field error, retain raw owned drafts and preserve exact copied amounts. Existing owner/revision recovery guards and payment recording authority remain unchanged. Work-account report hourly prices also parse exact nonnegative cents with explicit zero distinct from blank. Invalid rate text stays visible and labels the preview as retaining the last valid rate; it cannot generate a PDF or save a template. Legacy cent templates load without a floating-point round trip. Unsafe or fractional derived cent totals block template/PDF export without changing the existing hours or discount calculation policy. The shared work-report currency formatter preserves the final cent of safe integer amounts by formatting integer major units and exact fractional cents, retaining the same locale/sign presentation for ordinary amounts. The work-report cutoff and new block dates default to the browser local calendar day rather than the UTC day, including evenings when UTC has already advanced. Loaded explicit template dates remain unchanged. Merchandise draft weights and stock, and existing variant stock/alert quantities, retain raw text and require whole integers rather than coercing blank to zero. Weights follow the existing 1–100000 gram contract; stock/threshold quantities follow nonnegative database INTEGER limits with explicit zero. Local invalid values cannot reach authoring or stock update APIs. Rejected stock edits remain visible and retain the original version; only an explicit reload reads a newer server version. Pending stock fields are disabled. Stock permissions, reserved/sold constraints, active state, optimistic version guards and product idempotency keys remain authoritative. Existing merch categories have shared Spanish/English display labels in seller, discovery filters, product badges and admin review; selections and requests keep canonical category codes, and unknown categories have a neutral display fallback.",
       "authority": "Owner request 2026-11-10: implement the fixes and improvements from the cognitive-load audit of the same date, within its guardrails (legal and consent, payment and security steps, accessibility and brand identity are not weakened; feature removals remain owner decisions).",
       "domain": "UX",
       "source": "Cognitive-load audit 2026-11-10, prioritized plan items 1-6, 9-12, 14-16, 18, 22 and25; continuation 2026-11-11.",
@@ -26954,6 +26954,8 @@
         "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
+        "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
+        "tdf-hq-ui/src/pages/MerchProductPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
@@ -26989,6 +26991,7 @@
         "e2e/web/course-price-booking-transfer.spec.mjs",
         "e2e/web/event-rsvp-sharing.spec.mjs",
         "e2e/web/live-session-contact.spec.mjs",
+        "e2e/web/merch-stock-category.spec.mjs",
         "e2e/web/music-operations-amounts.spec.mjs",
         "e2e/web/payment-choices-contact.spec.mjs",
         "e2e/web/payment-field-errors.spec.mjs",
@@ -27092,7 +27095,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "398464c71dc8d0acd2254bfbb0b34885324b2d26c14415d96802070f7add812f",
+    "docs/catalog-persistence/catalog-list-decisions.json": "9dba09e27b5f8ae3d993bd58a4f7023ec92bdac045d1417b19935a7f9d1b6820",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "24140b591ed4af3b12577ec19d28f53238d10cfd1ce1604490513ebd56234db9",
@@ -27133,6 +27136,7 @@
     "e2e/web/legacy-provider-playback.spec.mjs": "3e34a6eb6dc507c67c48d574a84e02bfbdf0c54157ef47e57d2fbfd8e5696413",
     "e2e/web/live-session-contact.spec.mjs": "8d10f1047d9776529dc99884b690eb174b5a0c54089012312dce9ec8c134a58d",
     "e2e/web/marketplace-cart.spec.mjs": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+    "e2e/web/merch-stock-category.spec.mjs": "d34d9ecf0d4f92decbd07aa89a9c5680d003659d681ea90f7efdad2ae1bcb933",
     "e2e/web/mobile-layout-regressions.spec.mjs": "0be1916b95d3bff15572a7237bcb427295142aa1d31322df1257b0406e50ec9c",
     "e2e/web/mobile-program.spec.mjs": "ef3ca33035a7920b909e7acb27dba1602dc0f5da42b5d908b512eade6bc3f9bf",
     "e2e/web/music-catalog-discovery.spec.mjs": "680522145d77e6e1fdd57fd53462ee6c39e75e7c2f51cda78988054a5fe0ac84",
@@ -28282,12 +28286,12 @@
     "tdf-hq-ui/src/pages/MarketplacePage.tsx": "1543ebcbf71ccb7f7f3d1382c04f556a1fb9e3e83c93c14d8873a0cdfb30af1a",
     "tdf-hq-ui/src/pages/MerchAdminPage.money.test.tsx": "9306f6cbe5ba3a54badf15943df50f35badbcb11a062227ab0e78822216decf8",
     "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx": "2ebb0cc8490fb5df6e2ea0ea8781e9776afbec0e999ddfa5cd9b9d594dd2f725",
-    "tdf-hq-ui/src/pages/MerchAdminPage.tsx": "a77106030c05eeb3b9fa54df184afaa128e8247c153e25a312763b882ac6d5e3",
-    "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx": "e5f7a21499794c798916c4f05ab53f15aa44a7f1ee46265e913e1db03317c5d0",
-    "tdf-hq-ui/src/pages/MerchProductPage.tsx": "f4f2d80c1035cf622424164999ab3e81ec37d184e5cd34304eb1eb592e1e35b3",
+    "tdf-hq-ui/src/pages/MerchAdminPage.tsx": "662034f7cddb0aef72e3ee1e7ede4988f4f796026fd32c531abc1d88e4c7e5e5",
+    "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx": "903ab61924dab5e7fbb2f09243d99e4ca3adca8420a6c771fa93da9162913206",
+    "tdf-hq-ui/src/pages/MerchProductPage.tsx": "205a5f7d23588c210a3da95622b2f755396880dbd816986974e51b1b91666a0b",
     "tdf-hq-ui/src/pages/MerchReputationPage.tsx": "ef4c88e1640e18c84679d7968ce7eea06fc2b60d9df2e58787a8139c8726b359",
-    "tdf-hq-ui/src/pages/MerchSellerPage.money.test.tsx": "4bd876341791c6fdb98a637b8c8514a4b62096f692b19e9fe2d8575cbf4e9ddb",
-    "tdf-hq-ui/src/pages/MerchSellerPage.tsx": "787a3636924f8f097cad2b7bcf5da12637829d30eb4e3f1a26fccccb5bf118e0",
+    "tdf-hq-ui/src/pages/MerchSellerPage.money.test.tsx": "e710fc8c8fef8e14f414bf5c0893e3d26cb13c0875a4b1d686d2955cb51f0ca6",
+    "tdf-hq-ui/src/pages/MerchSellerPage.tsx": "cb686d0da02bd3f8a84dce78658fa6a4d70751d9d8f2cfb885e951316d9a91f6",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "e257cb0a49e7a7773fc26e24fa9f5f93fb7a68167fca821228f344fa4ced8aa4",
     "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx": "3dafbfa8fbbfdbd112b011cca5b6db49d3507f599277ae76527bb3cb23bda7a7",
     "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": "4647f6a17e8ccd2f70174d93365d15792fdf9d59c895fc2961431acfb25d8894",
@@ -28457,7 +28461,7 @@
     "tdf-hq-ui/src/utils/loginRouting.ts": "d66e41d819a407a04dbbe6d4a35824ec444aa4a119ea013bd7263db435ca6593",
     "tdf-hq-ui/src/utils/markdownMentions.ts": "de382e370625d8f4da61c55d8352f87afb69a1aab083adf998ee26941e93e79d",
     "tdf-hq-ui/src/utils/merch.test.ts": "3846429813d4d4c3a8c72acb6d2b96c67cee4e078048c5b783df597d0dcb3881",
-    "tdf-hq-ui/src/utils/merch.ts": "5983d3941a54bb27e53e43b7f09380dff9b53f85b7d73d7735ec4cef47215b51",
+    "tdf-hq-ui/src/utils/merch.ts": "a4da12769d4b44015b4dc0e78194989fd56149f27fb0e06554506b895563e430",
     "tdf-hq-ui/src/utils/musicMoney.test.ts": "5595b46af83436edef7980f5ca7ee189ba467bd417d8dba415795d337411e352",
     "tdf-hq-ui/src/utils/musicMoney.ts": "d82f44eb3b43765430adabd12f2931cb5e90d0c56ad18dfa2d873be001fddb51",
     "tdf-hq-ui/src/utils/musicPreviewRange.test.ts": "90c8840b4c1e8bdf2c9641efa7e5e75ba8182bbfc511c002f336361d065e4a7f",
@@ -44104,11 +44108,19 @@
       {
         "requirement": "WEB-CONTENT-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/pages/MerchProductPage.tsx": [
       {
         "requirement": "WEB-CONTENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "UX-COGLOAD-001",
         "relationship": "implementation"
       }
     ],
@@ -46886,6 +46898,12 @@
         "relationship": "tests"
       }
     ],
+    "e2e/web/merch-stock-category.spec.mjs": [
+      {
+        "requirement": "UX-COGLOAD-001",
+        "relationship": "tests"
+      }
+    ],
     "e2e/web/music-operations-amounts.spec.mjs": [
       {
         "requirement": "UX-COGLOAD-001",
@@ -47935,6 +47953,18 @@
       "requirements": [
         {
           "requirement": "MKT-CART-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2bd6440cd77c9023",
+      "path": "e2e/web/merch-stock-category.spec.mjs",
+      "sha256": "d34d9ecf0d4f92decbd07aa89a9c5680d003659d681ea90f7efdad2ae1bcb933",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "tests"
         }
       ]
@@ -63496,7 +63526,7 @@
     {
       "id": "SURFACE-61f97ffdc68a2602",
       "path": "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
-      "sha256": "a77106030c05eeb3b9fa54df184afaa128e8247c153e25a312763b882ac6d5e3",
+      "sha256": "662034f7cddb0aef72e3ee1e7ede4988f4f796026fd32c531abc1d88e4c7e5e5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63515,11 +63545,15 @@
     {
       "id": "SURFACE-fd84edf3f19cbb72",
       "path": "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
-      "sha256": "e5f7a21499794c798916c4f05ab53f15aa44a7f1ee46265e913e1db03317c5d0",
+      "sha256": "903ab61924dab5e7fbb2f09243d99e4ca3adca8420a6c771fa93da9162913206",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -63541,11 +63575,15 @@
     {
       "id": "SURFACE-50bc88ca100727b8",
       "path": "tdf-hq-ui/src/pages/MerchProductPage.tsx",
-      "sha256": "f4f2d80c1035cf622424164999ab3e81ec37d184e5cd34304eb1eb592e1e35b3",
+      "sha256": "205a5f7d23588c210a3da95622b2f755396880dbd816986974e51b1b91666a0b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "WEB-CONTENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "UX-COGLOAD-001",
           "relationship": "implementation"
         }
       ]
@@ -63579,7 +63617,7 @@
     {
       "id": "SURFACE-21ea108bb12daaf1",
       "path": "tdf-hq-ui/src/pages/MerchSellerPage.money.test.tsx",
-      "sha256": "4bd876341791c6fdb98a637b8c8514a4b62096f692b19e9fe2d8575cbf4e9ddb",
+      "sha256": "e710fc8c8fef8e14f414bf5c0893e3d26cb13c0875a4b1d686d2955cb51f0ca6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63591,7 +63629,7 @@
     {
       "id": "SURFACE-20d3b5c28f107b7d",
       "path": "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
-      "sha256": "787a3636924f8f097cad2b7bcf5da12637829d30eb4e3f1a26fccccb5bf118e0",
+      "sha256": "cb686d0da02bd3f8a84dce78658fa6a4d70751d9d8f2cfb885e951316d9a91f6",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66707,7 +66745,7 @@
     {
       "id": "SURFACE-69214ab4dd4d9619",
       "path": "tdf-hq-ui/src/utils/merch.ts",
-      "sha256": "5983d3941a54bb27e53e43b7f09380dff9b53f85b7d73d7735ec4cef47215b51",
+      "sha256": "a4da12769d4b44015b4dc0e78194989fd56149f27fb0e06554506b895563e430",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -85362,7 +85400,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0fc0c685806803fb1c17806a51991db711992d12b238642c87d70314485e2a5f",
+      "sourceSha256": "251a372dbcc33c82922ca7b23560306ec27db4684ab5fd8079e06369a635de67",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -85390,7 +85428,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0fc0c685806803fb1c17806a51991db711992d12b238642c87d70314485e2a5f",
+      "sourceSha256": "251a372dbcc33c82922ca7b23560306ec27db4684ab5fd8079e06369a635de67",
       "definition": {
         "states": [
           "absent",
@@ -85420,7 +85458,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "0fc0c685806803fb1c17806a51991db711992d12b238642c87d70314485e2a5f",
+      "sourceSha256": "251a372dbcc33c82922ca7b23560306ec27db4684ab5fd8079e06369a635de67",
       "definition": {
         "export": [
           "queued",

@@ -30,6 +30,35 @@ export const resolveMerchImageUrl = (value?: string | null) => {
   return `${base}/${value.replace(/^\//, '')}`;
 };
 
+// INTEGER columns in the merch schema; weights have the narrower server limit.
+export const readMerchIntegerInput = (raw: string, language: 'es' | 'en', minimum = 0, maximum = 2147483647): {
+  value: number | null; error: string | null;
+} => {
+  const text = raw.trim();
+  const value = /^\d+$/.test(text) ? Number(text) : NaN;
+  if (!Number.isSafeInteger(value) || value < minimum || value > maximum) return {
+    value: null,
+    error: language === 'en' ? `Enter a whole number from ${minimum} to ${maximum}.`
+      : `Ingresa un número entero entre ${minimum} y ${maximum}.`,
+  };
+  return { value, error: null };
+};
+
+export const merchCategoryLabel = (category: string, language: 'es' | 'en') => {
+  switch (category) {
+    case 'apparel': return language === 'en' ? 'Clothing' : 'Ropa';
+    case 'vinyl': return language === 'en' ? 'Vinyl' : 'Vinilo';
+    case 'cd': return 'CD';
+    case 'cassette': return language === 'en' ? 'Cassette' : 'Casete';
+    case 'poster': return language === 'en' ? 'Poster' : 'Afiche';
+    case 'accessory': return language === 'en' ? 'Accessory' : 'Accesorio';
+    case 'limited_edition': return language === 'en' ? 'Limited edition' : 'Edición limitada';
+    case 'bundle': return language === 'en' ? 'Bundle' : 'Paquete';
+    case 'other': return language === 'en' ? 'Other' : 'Otros';
+    default: return language === 'en' ? 'Other category' : 'Otra categoría';
+  }
+};
+
 export const merchStatusLabel = (status: string, language: 'es' | 'en') => {
   const labels: Record<string, readonly [string, string]> = {
     requested: ['Solicitada', 'Requested'],
