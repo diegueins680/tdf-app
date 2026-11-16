@@ -3962,7 +3962,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
+      "sha256": "7365301e6a67f1a348a4a6639f3c2f85779afb6aa305cfda317ef21c2b82ce08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4874,7 +4874,7 @@
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "ecf7580ba5fa6a19d2937ef5cfd9fc4ae643af7d4349b3ecfb6fd45c00d821f5",
+      "sha256": "220e05fae8703ce5e526117850d40efb769be2af5030b5c63999e01978d56d1e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21771,7 +21771,7 @@
   "artifacts": [
     {
       "path": "AI_WORKFLOW.md",
-      "sha256": "3d317430f467a68fdc8541205ce5da725e754113793f5ba88c4aa9c8337fbc76",
+      "sha256": "b466572c350f798d4878363fb1c0e42a2a5292499968436ae515f8eb8f9d23a6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31326,7 +31326,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "f6b7249ac7570e8d99feb9bd074bdca28541482ecd4596ed7ce6e0595f7a08b3",
+      "sha256": "595d6b157ced62dbdd47e35247ec457675bf23140e71fcc88904556720a724d3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
