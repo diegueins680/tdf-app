@@ -325,11 +325,20 @@ matchLinkedDataCity Nothing cities place =
       case foldCityText <$> linkedPlaceCountry place of
         Nothing -> True
         Just country
-          | T.length country == 2 ->
-              country == T.toCaseFold (eventDiscoveryCityCountryCode city)
-          | country == "ecuador" -> eventDiscoveryCityCountryCode city == "EC"
-          | country == "colombia" -> eventDiscoveryCityCountryCode city == "CO"
-          | otherwise -> True
+          | T.null country -> True
+          | otherwise ->
+              linkedCountryCode country
+                == Just (T.toCaseFold (eventDiscoveryCityCountryCode city))
+
+-- The country a source states, as a case-folded two-letter code. A country
+-- written in a form this deployment does not recognise is a different
+-- country, never permission to match a registered city of the same name.
+linkedCountryCode :: Text -> Maybe Text
+linkedCountryCode country
+  | T.length country == 2 = Just country
+  | country == "ecuador" || country == "republica del ecuador" || country == "ecu" = Just "ec"
+  | country == "colombia" || country == "republica de colombia" || country == "col" = Just "co"
+  | otherwise = Nothing
 
 lastUrlSegment :: Text -> Maybe Text
 lastUrlSegment url =
@@ -355,6 +364,8 @@ normalizeLinkedDataDocument lookaheadDays configuredCurrency sourceKey config fi
   where
     eventObjects = concatMap linkedDataEventObjects (linkedDataBlocks document)
     singleEvent = isEventPage && length eventObjects == 1
+    eventUrlOf event = linkedText "url" event >>= normalizeHttpsUrl "Linked-data event URL"
+    eventsSharingUrl url = length (filter ((== Just url) . eventUrlOf) eventObjects)
     lookaheadEnd = addUTCTime (fromIntegral (lookaheadDays * 86400)) now
 
     normalizeOne event = do
@@ -367,12 +378,18 @@ normalizeLinkedDataDocument lookaheadDays configuredCurrency sourceKey config fi
       venueName <-
         (linkedPlaceName place >>= cleanSingleLine 300)
           <|> (linkedDataVenueName config >>= cleanSingleLine 300)
-      let eventUrl = linkedText "url" event >>= normalizeHttpsUrl "Linked-data event URL"
+      let eventUrl = eventUrlOf event
           identityUrl = if isEventPage then documentUrl else fromMaybe documentUrl eventUrl
           startStamp = T.pack (formatTime defaultTimeLocale "%Y%m%dT%H%M" startsAt)
+          -- An event with a page of its own keeps one identity when it is
+          -- rescheduled. Only performances that share a page, or have none,
+          -- need their start time to be told apart.
+          ownPage =
+            not isEventPage
+              && maybe False (\url -> url /= documentUrl && eventsSharingUrl url == 1) eventUrl
       slug <- lastUrlSegment identityUrl
       externalId <-
-        cleanIdentifier (if singleEvent then slug else slug <> "@" <> startStamp)
+        cleanIdentifier (if singleEvent || ownPage then slug else slug <> "@" <> startStamp)
       let endsAt =
             case linkedText "endDate" event >>= parseLinkedDataTime (eventDiscoveryCityTimeZone city) of
               Just candidate | candidate > startsAt -> Just candidate
@@ -436,8 +453,16 @@ normalizeLinkedDataDocument lookaheadDays configuredCurrency sourceKey config fi
           , discoveredEventEnd = endsAt
           , discoveredEventVenue =
               DiscoveredVenue
-                { discoveredVenueExternalId =
-                    sourceKey <> ":" <> normalizeTokenText venueName
+                { -- The same venue name can exist in two cities of one
+                  -- multi-city source, so the place is part of the identity.
+                  discoveredVenueExternalId =
+                    T.intercalate
+                      ":"
+                      [ sourceKey
+                      , T.toCaseFold (eventDiscoveryCityCountryCode city)
+                      , normalizeTokenText (eventDiscoveryCityName city)
+                      , normalizeTokenText venueName
+                      ]
                 , discoveredVenueName = venueName
                 , discoveredVenueAddress = linkedPlaceStreet place >>= cleanSingleLine 500
                 , discoveredVenueCity = eventDiscoveryCityName city

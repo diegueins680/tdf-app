@@ -2263,7 +2263,7 @@ syncDiscoveredEventDb requestedPublication now event@DiscoveredEvent{..} = do
   backend <- T.toCaseFold <$> getRDBMS
   autoPublish <- if "postgres" `T.isInfixOf` backend then do
     sources <- rawSql
-      "SELECT id FROM event_discovery_source WHERE source_key=? AND enabled AND source_type IN ('ticketmaster','buenplan','ical','json') FOR SHARE"
+      "SELECT id FROM event_discovery_source WHERE source_key=? AND enabled AND source_type IN ('ticketmaster','buenplan','ical','json','jsonld') FOR SHARE"
       [toPersistValue discoveredEventProvider] :: SqlPersistT IO [Single Int64]
     unless (length sources == 1) (liftIO (fail "Event source disabled or unavailable"))
     controls <- rawSql

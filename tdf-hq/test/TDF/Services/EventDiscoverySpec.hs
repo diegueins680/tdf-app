@@ -314,6 +314,45 @@ spec = do
       map discoveredEventStatus events `shouldBe` ["announced", "cancelled"]
       map (discoveredVenueName . discoveredEventVenue) events
         `shouldBe` ["Teatro Centro de Arte", "Teatro Centro de Arte"]
+    it "keeps one identity for a listed event with its own page when it is rescheduled" $ do
+      let guayaquil = EventDiscoveryCity "Guayaquil" "EC" (Just "America/Guayaquil")
+          config = platform { linkedDataVenueName = Just "Teatro Centro de Arte" }
+          listingOn day =
+            block
+              ( "[{\"@type\":\"Event\",\"name\":\"Los Panchos\",\"url\":\"https://www.teatrocentrodearte.org/eventos/los-panchos\",\"startDate\":\"2026-11-" <> day <> "T20:00:00\"},"
+                  <> "{\"@type\":\"Event\",\"name\":\"Temporada A\",\"url\":\"https://www.teatrocentrodearte.org/eventos/temporada\",\"startDate\":\"2026-11-25T20:00:00\"},"
+                  <> "{\"@type\":\"Event\",\"name\":\"Temporada B\",\"url\":\"https://www.teatrocentrodearte.org/eventos/temporada\",\"startDate\":\"2026-11-26T20:00:00\"}]"
+              )
+          identities day =
+            map discoveredEventExternalId
+              (normalize config (Just guayaquil) False "https://www.teatrocentrodearte.org/eventos" (listingOn day))
+      identities "20" `shouldBe` ["los-panchos", "temporada@20261126T0100", "temporada@20261127T0100"]
+      identities "27" `shouldBe` ["los-panchos", "temporada@20261126T0100", "temporada@20261127T0100"]
+    it "gives same-named venues in different cities of one source different identities" $ do
+      let eventIn locality =
+            block
+              ( "{\"@type\":\"Event\",\"name\":\"Gira\",\"startDate\":\"2026-12-11T20:00:00-05:00\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"Teatro Municipal\",\"address\":{\"addressLocality\":\"" <> locality <> "\"}}}"
+              )
+          venueIdIn locality =
+            map (discoveredVenueExternalId . discoveredEventVenue)
+              (normalize platform Nothing True "https://p.example/eventos/gira" (eventIn locality))
+      venueIdIn "Quito" `shouldBe` ["source:ec:quito:teatro municipal"]
+      venueIdIn "Cuenca" `shouldBe` ["source:ec:cuenca:teatro municipal"]
+    it "rejects a registered city name in an explicitly different country" $ do
+      let eventIn country =
+            block
+              ( "{\"@type\":\"Event\",\"name\":\"Gira\",\"startDate\":\"2026-12-11T20:00:00-05:00\","
+                  <> "\"location\":{\"@type\":\"Place\",\"name\":\"Teatro Municipal\",\"address\":{\"addressLocality\":\"Cuenca\",\"addressCountry\":\"" <> country <> "\"}}}"
+              )
+          matched country =
+            length (normalize platform Nothing True "https://p.example/eventos/gira" (eventIn country))
+      matched "Spain" `shouldBe` 0
+      matched "España" `shouldBe` 0
+      matched "ES" `shouldBe` 0
+      matched "Ecuador" `shouldBe` 1
+      matched "República del Ecuador" `shouldBe` 1
+      matched "EC" `shouldBe` 1
     it "classifies free-text source categories into catalog event types" $ do
       classifyDiscoveredEventType "Festival de Jazz" [] `shouldBe` "festival"
       classifyDiscoveredEventType "Gala" ["Danza", "Música"] `shouldBe` "concert"

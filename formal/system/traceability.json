@@ -29603,8 +29603,8 @@
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerProposals.hs": "1a2a6c39e8ea7ad9b4154f7164fd19141b39acab00dc533b4ff79e3c81dbe65b",
     "tdf-hq/src/TDF/ServerRadio.hs": "c7e8c81810d6f08ea2e513b6b120c4d8e167e87a7738acd765411e4d13f0329c",
-    "tdf-hq/src/TDF/Services/EventDiscovery.hs": "a3b76de0496afff1ecf4ea087c1b8dce65f36ab65d169645517e6b9dbd6f0ffa",
-    "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs": "7c836754d1b9a114b875a83c53042d2042bc1b81220e8e7693fc6769b5b94280",
+    "tdf-hq/src/TDF/Services/EventDiscovery.hs": "5e20776b2f857475d8c7b0fe4e4566fabe78b82bf1ac128e66f78dd00220bd47",
+    "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs": "8920fffd28e64ae62190cada54a8ffa5cc9dbe8b1171c825d63e1fd3a58234de",
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": "2bb64ea8ae2173a5b9d6893291d58969816d91013b1a6fca28dc513178518da3",
     "tdf-hq/src/TDF/Services/RecordsIngestion.hs": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
@@ -29706,7 +29706,7 @@
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
     "tdf-hq/test/TDF/ServerSpec.hs": "c91224ef9cacdc0991b1a1d0f2edba10a1da577673ec80314b878d0908447cd4",
-    "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs": "29f30805ff325bbea6b49533819cb1e7ca8d861e25891fd7566f630925a41625",
+    "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs": "923b4128c425fc73bdad450972aa6451b34a7f9f0923eade287f4d396f1914e3",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -77412,7 +77412,7 @@
     {
       "id": "SURFACE-f53dee8d468f33b8",
       "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
-      "sha256": "a3b76de0496afff1ecf4ea087c1b8dce65f36ab65d169645517e6b9dbd6f0ffa",
+      "sha256": "5e20776b2f857475d8c7b0fe4e4566fabe78b82bf1ac128e66f78dd00220bd47",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77424,7 +77424,7 @@
     {
       "id": "SURFACE-dfd6616359647c1a",
       "path": "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
-      "sha256": "7c836754d1b9a114b875a83c53042d2042bc1b81220e8e7693fc6769b5b94280",
+      "sha256": "8920fffd28e64ae62190cada54a8ffa5cc9dbe8b1171c825d63e1fd3a58234de",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79764,7 +79764,7 @@
     {
       "id": "SURFACE-916f8955abd0c6a2",
       "path": "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
-      "sha256": "29f30805ff325bbea6b49533819cb1e7ca8d861e25891fd7566f630925a41625",
+      "sha256": "923b4128c425fc73bdad450972aa6451b34a7f9f0923eade287f4d396f1914e3",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
