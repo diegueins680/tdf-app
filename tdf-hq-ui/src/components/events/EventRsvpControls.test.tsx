@@ -109,6 +109,36 @@ describe('EventRsvpControls', () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('http://localhost/eventos/42?utm_source=tdf_web&utm_medium=copy&utm_campaign=event_rsvp'));
   });
 
+  it('offers a single share control where the device has a share sheet', async () => {
+    const shareSheet = jest.fn<(data?: ShareData) => Promise<void>>().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'share', { configurable: true, value: shareSheet });
+    try {
+      renderControls();
+      expect(screen.queryByRole('button', { name: 'Copiar enlace' })).toBeNull();
+      expect(screen.queryByRole('link', { name: 'WhatsApp' })).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Compartir' }));
+      await waitFor(() => expect(shareSheet).toHaveBeenCalledTimes(1));
+      expect(shareSheet.mock.calls[0]?.[0]?.url).toBe('http://localhost/eventos/42?utm_source=tdf_web&utm_medium=share&utm_campaign=event_rsvp');
+    } finally { Reflect.deleteProperty(navigator, 'share'); }
+  });
+
+  it('brings back copy and WhatsApp when the share sheet fails', async () => {
+    Object.defineProperty(navigator, 'share', { configurable: true, value: jest.fn<() => Promise<void>>().mockRejectedValue(new Error('share unavailable')) });
+    try {
+      renderControls();
+      fireEvent.click(screen.getByRole('button', { name: 'Compartir' }));
+      await waitFor(() => expect(screen.queryByRole('button', { name: 'Copiar enlace' })).not.toBeNull());
+      expect(screen.queryByRole('link', { name: 'WhatsApp' })).not.toBeNull();
+    } finally { Reflect.deleteProperty(navigator, 'share'); }
+  });
+
+  it('offers copy and WhatsApp, not a share button, where there is no share sheet', () => {
+    renderControls();
+    expect(screen.queryByRole('button', { name: 'Compartir' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Copiar enlace' })).not.toBeNull();
+    expect(screen.queryByRole('link', { name: 'WhatsApp' })).not.toBeNull();
+  });
+
   it('shows the plain event link only after copying fails', async () => {
     const writeText = jest.fn<() => Promise<void>>().mockRejectedValue(new Error('blocked'));
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });

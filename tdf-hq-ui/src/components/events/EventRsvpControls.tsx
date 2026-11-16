@@ -316,6 +316,8 @@ export default function EventRsvpControls({
   const loading = Boolean(session?.partyId && mine.isLoading);
   const busy = pending || loading;
   const summaryValue = summary.data ?? initialSummary ?? { rsvpAcceptedCount: 0, rsvpMaybeCount: 0 };
+  const nativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const directShare = !nativeShare || shareFailed;
   const whatsapp = publicShareEligible
     ? `https://wa.me/?text=${encodeURIComponent(`${buildEventShareMessage({ eventId, title, start, timezone, venue, status: current === 'declined' ? null : current, locale })} ${canonicalEventUrl(window.location.origin, eventId, { utm_source: 'tdf_web', utm_medium: 'whatsapp', utm_campaign: 'event_rsvp' })}`)}`
     : undefined;
@@ -368,9 +370,11 @@ export default function EventRsvpControls({
       />
       <Typography variant="caption" color="text.secondary">{labels.privacyHint}</Typography>
       <Stack direction="row" gap={1} flexWrap="wrap">
-        <Button startIcon={<ShareIcon />} disabled={!publicShareEligible} onClick={() => { void share('native'); }}>{labels.share}</Button>
-        <Button startIcon={<ContentCopyIcon />} disabled={!publicShareEligible} onClick={() => { void share('copy'); }}>{labels.copy}</Button>
-        {whatsapp && <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />} onClick={() => captureGrowthEvent(analytics, 'event_share_started', { platform: 'web', event_id: eventId, method: 'whatsapp' })}>WhatsApp</Button>}
+        {/* One share control where the device has a share sheet (it already offers copy and WhatsApp);
+            copy and WhatsApp where it does not, or after the sheet failed. */}
+        {nativeShare && <Button startIcon={<ShareIcon />} disabled={!publicShareEligible} onClick={() => { void share('native'); }}>{labels.share}</Button>}
+        {directShare && <Button startIcon={<ContentCopyIcon />} disabled={!publicShareEligible} onClick={() => { void share('copy'); }}>{labels.copy}</Button>}
+        {directShare && whatsapp && <Button component="a" href={whatsapp} target="_blank" rel="noreferrer" startIcon={<WhatsAppIcon />} onClick={() => captureGrowthEvent(analytics, 'event_share_started', { platform: 'web', event_id: eventId, method: 'whatsapp' })}>WhatsApp</Button>}
       </Stack>
       {!compact && publicUrl && shareFailed && (
         <TextField

@@ -217,6 +217,19 @@ describe('LoginPage Google signup consent flow', () => {
     } finally { userAgent.mockRestore(); await cleanup(); }
   });
 
+  it('offers the artist and internship entries as two text links instead of persona cards', async () => {
+    const cleanup = await renderLoginPage('/login');
+    try {
+      expect(screen.queryByText('Onboarding rápido')).toBeNull();
+      expect(screen.queryByText('Soy fan')).toBeNull();
+      expect(screen.queryByRole('button', { name: /rutas rápidas/ })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Soy artista' })).not.toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Busco prácticas' }));
+      await waitFor(() => expect(window.location.search).toContain('intent=internships'));
+      expect(screen.queryByRole('dialog')).not.toBeNull();
+    } finally { await cleanup(); }
+  });
+
   it('keeps the sign-in card to its core actions without helper copy or duplicate links', async () => {
     const cleanup = await renderLoginPage('/login');
     try {

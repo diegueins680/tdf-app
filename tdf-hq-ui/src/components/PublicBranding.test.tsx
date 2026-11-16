@@ -352,6 +352,32 @@ it.each([
   },
 );
 
+it('shows one TDF Mobile invitation per page: the footer link only where the page has none', async () => {
+  activeSession = null;
+  const userAgent = navigator.userAgent;
+  const cases = [
+    ['Android', '/tdf', false, '/app?surface=tdf_landing'],
+    ['Android', '/servicios', false, '/app?surface=mobile_banner'],
+    ['Mozilla/5.0 (X11; Linux x86_64)', '/tdf', false, '/app?surface=tdf_landing'],
+    ['Mozilla/5.0 (X11; Linux x86_64)', '/servicios', true, '/app?surface=footer'],
+  ] as const;
+  try {
+    for (const [agent, route, inFooter, href] of cases) {
+      Object.defineProperty(navigator, 'userAgent', { configurable: true, value: agent });
+      localStorage.clear();
+      const container = document.createElement('div'); document.body.appendChild(container);
+      const view = await renderBranding(container, route);
+      try {
+        await act(async () => { await flushPromises(); await flushPromises(); });
+        const invitations = [...container.querySelectorAll('aside')];
+        expect(invitations).toHaveLength(1);
+        expect(invitations[0]?.querySelector('a')?.getAttribute('href')).toBe(href);
+        expect(Boolean(invitations[0]?.closest('footer'))).toBe(inFooter);
+      } finally { await view.cleanup(); }
+    }
+  } finally { Object.defineProperty(navigator, 'userAgent', { configurable: true, value: userAgent }); }
+});
+
 it('keeps the footer to help and WhatsApp preferences without repeating the navigation', async () => {
   activeSession = null;
   const container = document.createElement('div'); document.body.appendChild(container);

@@ -82,6 +82,9 @@ export default function PublicBranding({
   const focusedPurchase = /^\/eventos\/[1-9]\d{0,18}\/(?:entradas$|orden\/)/.test(location.pathname)
     || location.pathname === '/pagos/retorno';
   const signupInvitation = Boolean(session && (location.state as { mobileInvitation?: boolean } | null)?.mobileInvitation);
+  const landingMobilePromo = ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname);
+  const pageMobilePromo = signupInvitation || landingMobilePromo || profileRoute;
+  const bannerMobilePromo = !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && !focusedPurchase;
   const contextualLoginPath = useMemo(
     () => buildLoginRedirectPath(`${location.pathname}${location.search}${location.hash}`),
     [location.hash, location.pathname, location.search],
@@ -344,9 +347,9 @@ export default function PublicBranding({
         {showInstagramEntryLinks && !focusedPurchase && <InstagramEntryLinks />}
         {!['/login', '/reset', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !focusedPurchase && <UpcomingEventsCarousel />}
         {children}
-        {!signupInvitation && ['/', '/inicio', '/tdf', '/fans', '/comunidad'].includes(location.pathname) && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
+        {!signupInvitation && landingMobilePromo && <MobilePromo surface={location.pathname === '/tdf' ? 'tdf_landing' : (location.pathname === '/fans' || location.pathname === '/comunidad') ? 'community' : session ? 'authenticated_home' : 'homepage'} />}
         {!signupInvitation && profileRoute && <MobilePromo surface="profile" />}
-        {!signupInvitation && !profileRoute && !['/', '/inicio', '/tdf', '/fans', '/comunidad', '/app', '/login', '/reset', '/feedback', '/cuenta/eliminar'].includes(location.pathname) && !location.pathname.includes('/orden/') && !location.pathname.startsWith('/reservar') && !focusedPurchase && <MobilePromo surface="mobile_banner" banner />}
+        {!signupInvitation && bannerMobilePromo && <MobilePromo surface="mobile_banner" banner />}
       </Container>
       <Box
         component="footer"
@@ -358,7 +361,11 @@ export default function PublicBranding({
         }}
       >
         <Container maxWidth="xl">
-          {!['/app', '/cuenta/eliminar'].includes(location.pathname) && !focusedPurchase && <MobilePromo surface="footer" compact />}
+          {/* One invitation per page (audit decision D3): the footer link stands in only where the page
+              shows no invitation of its own, and on phones the dismissable banner already covers it. */}
+          {!['/app', '/cuenta/eliminar'].includes(location.pathname) && !focusedPurchase && !pageMobilePromo && (
+            <MobilePromo surface="footer" compact desktopOnly={bannerMobilePromo} />
+          )}
           <Stack
             direction={{ xs: 'column', xl: 'row' }}
             spacing={3}
