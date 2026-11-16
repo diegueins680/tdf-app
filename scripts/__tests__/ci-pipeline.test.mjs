@@ -511,3 +511,21 @@ test('pinned Mobile main and release validation and configured synthetics fail c
   assert.match(provider.if, /DD_APP_KEY != ''/);
   assert.ok(job.steps.some((step) => step.run?.includes('Skipping Datadog synthetics')));
 });
+
+// Every file copied into the isolated worker image must select its runtime gate.
+test('worker image inputs select the mandatory non-publishing final-image verification', async () => {
+  const dockerfile = await source('tdf-hq/Dockerfile.music-worker');
+  const copies = [...dockerfile.matchAll(/^COPY (scripts\/\S+) /gm)].map(match => match[1]);
+  assert.ok(copies.includes('scripts/music-media-health.py'));
+  for (const file of ['tdf-hq/Dockerfile.music-worker', ...copies]) {
+    assert.equal(classifyChangedFiles([file]).backend, true, file);
+  }
+  const job = parseYaml(await source('.github/workflows/ci.yml')).jobs['repo-quality'];
+  const step = job.steps.find(value => value.name === 'Build and verify the music worker runtime image without publication');
+  assert.ok(step, 'Final image verification must remain in required repository quality');
+  assert.equal(step.if, "needs.changes.outputs.backend == 'true'");
+  assert.equal(step['continue-on-error'], undefined);
+  assert.match(step.run, /docker build --file tdf-hq\/Dockerfile.music-worker/);
+  assert.match(step.run, /node scripts\/test-music-worker-image.mjs/);
+  assert.doesNotMatch(step.run, /docker (?:push|login)|--push/);
+});
