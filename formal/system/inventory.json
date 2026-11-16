@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "44a306ba1fe9361e893688d944b5ce789e364abb",
+  "mobileRevision": "594d8991531a20481aa6ac7f4386d01c018ca29e",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -1219,12 +1219,14 @@
       "tdf-hq-ui/src/features/interactions/model.ts",
       "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
       "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+      "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
       "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
       "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
       "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx",
+      "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
       "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
       "tdf-hq-ui/src/features/marketplace/agreements.ts",
       "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts",
@@ -1369,6 +1371,7 @@
       "tdf-hq-ui/src/pages/DonationPage.tsx",
       "tdf-hq-ui/src/pages/EstebanMunozReportPage.tsx",
       "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
+      "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
       "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
       "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
       "tdf-hq-ui/src/pages/EventTaskPage.tsx",
@@ -2260,6 +2263,8 @@
       "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql",
       "tdf-hq/sql/2026-11-11_event_admin_delegation.sql",
       "tdf-hq/sql/2026-11-11_event_admin_delegation_rollback.sql",
+      "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+      "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql",
       "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
@@ -2460,6 +2465,7 @@
       "tdf-hq/src/TDF/Server/CourseCheckout.hs",
       "tdf-hq/src/TDF/Server/DDEX.hs",
       "tdf-hq/src/TDF/Server/Directory.hs",
+      "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
       "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
       "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
       "tdf-hq/src/TDF/Server/EventResearch.hs",
@@ -3198,7 +3204,7 @@
     {
       "id": "SURFACE-cdbc3458d7b8029f",
       "path": ".github/workflows/event-operations-formal.yml",
-      "sha256": "6cf577af29516285aed4400b885eb687efbeca0c72b70bc445dde7d50af7842c",
+      "sha256": "16d0f422186a4626e30b8f65f469c3a544aca859037f9a4df099e83c659b87f1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3900,7 +3906,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "64dc40b71117e3d45a68bd4cdc49f211184dac7c3ee09040868361578561b629",
+      "sha256": "d4ef8dc3fc0b755297bbb76375e14010b68d840e8aacd1804c5658eb0b98eb7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4350,7 +4356,7 @@
     {
       "id": "SURFACE-d6545235ef8b425c",
       "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
-      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+      "sha256": "cd4f56d1cc520f9b2378488c6b9a63d4b85ef6ea6562701e6242496ffade0d87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4440,7 +4446,7 @@
     {
       "id": "SURFACE-73a4c004bae044bb",
       "path": "scripts/__tests__/production-release.test.mjs",
-      "sha256": "a8ae9dcd557d2ef1093a9924ba2768a1cb3fda070b293f6242801c3d3722bcc0",
+      "sha256": "05a092b3e5184f54ed8ccc2e94c383ff03057a3e6baa2d9c5d01192562a0517b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5286,7 +5292,7 @@
     {
       "id": "SURFACE-a08b79c3f92a0538",
       "path": "scripts/lib/production-release.mjs",
-      "sha256": "ba0eee95b5317f7f5bf65b18a295483410a1555bf42a8f23561eb6986b2c0ac3",
+      "sha256": "11a16fd8acd8689ee44b6b59faf959c918e4a96b11230e02cf50ae17e68392f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5484,7 +5490,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "b41069a3aef3d03668c5243367edb01f716bf77526561408cf6ed167be152a0e",
+      "sha256": "1949fdf9335db01f3c8e8a84bd863f1df84d61b8aa02019247a0f470ed34971b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5598,7 +5604,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
+      "sha256": "5673e5228c12615f7972c5c65312b732ec6ee0f7d2c0f559086fa5e21e300334",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6318,7 +6324,7 @@
     {
       "id": "SURFACE-19da4c176d106585",
       "path": "scripts/test-event-memory-source-moderation.sh",
-      "sha256": "667a63493e8d56bd6cf0ccf2584f52be2543a52e8c5193c20feff06774e12613",
+      "sha256": "325bc11e8fbe697906f8ecf417d739f6ad71171a568d7602e96da06bc23bcac2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8262,7 +8268,7 @@
     {
       "id": "SURFACE-eea9abd0a36ffd69",
       "path": "tdf-hq-ui/src/api/directory.ts",
-      "sha256": "12bdec65e9f52df1889e9215414c43cd020c50af8c8b957b86ef0e8b97db6426",
+      "sha256": "06b552832eadde716e47ff63ec5edc3ae19f1530369f96206eeaecf2bf438588",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8430,7 +8436,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+      "sha256": "c2a349198cc22efe3a7d0e4d15ba8ff5351886c9e6d827d7261324f2f5047f2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10176,7 +10182,7 @@
     {
       "id": "SURFACE-2ee656af772bf719",
       "path": "tdf-hq-ui/src/features/featureRegistry.test.ts",
-      "sha256": "94364cf09fdb93d4166eba58d8594e48c10b34b51a6e4fe19c56e8a577b6e750",
+      "sha256": "3e8ea3f9a0fdd8e13cfb846d7259dd7b4ad723b0154eddd187d99ae1cdb4d368",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10278,7 +10284,13 @@
     {
       "id": "SURFACE-0ba61d7e94897ebf",
       "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
-      "sha256": "1fa60ea04595a4315ee739142efd2d98c889af584844b6c39f8a9d22e50bc5d8",
+      "sha256": "6eb367f0c4978e2a7f4a6de724ea863134bdb5124f240821d1c9173ed47bf505",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-07e4fb9b8baadb99",
+      "path": "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
+      "sha256": "b8c4e7e02c7334bc51bc562b07c56ac72805549cfa3ef2c5826b2f0e7655de32",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10318,15 +10330,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-c50428b63aa94e4d",
+      "path": "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
+      "sha256": "c79a98df646ecf1c975ac23972fc06af6c7f8b9dfe8dbe9540211d6ca1d55fed",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-c03ebdd9cd29f92c",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
-      "sha256": "f3278e2f5bc2bd62776b3f931c1a3d0dd61fa301cb34336d18a9c79d992ab3ed",
+      "sha256": "744aa19c4bfe2232c3090f4f908590197908be95c95ac9b2bd4c0a7044ed5203",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-fbfd335398170a3a",
       "path": "tdf-hq-ui/src/features/marketplace/agreements.ts",
-      "sha256": "3276d73bc416130c4e35f01346b72311be9f5d32b225c267c40c7eac3ecf2d06",
+      "sha256": "a24989e84d57b01b99145e147e2aa1116245d36bbf962b82b9256c66f42f85c0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10650,13 +10668,13 @@
     {
       "id": "SURFACE-98d71404b05bdcb7",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
-      "sha256": "7af47a4af4e01c8f61127ee48dfc88a9da941c07e4e998970e0b1ff41a77f73f",
+      "sha256": "5a7cce5525e8388e7628c8f01a049d77abe51a6c780776e58facb4450f24c6c3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f132c3ba830ae795",
       "path": "tdf-hq-ui/src/i18n/locales/marketplace.es.ts",
-      "sha256": "18f1a13142035e017c86dc79f94849ace4ffccc74d613f6e3ee40412fa13e1d0",
+      "sha256": "f25b169e9dcdf7ede7c3c6017078998a092c87c9b10147e7c4864fbe74dd0440",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11076,13 +11094,13 @@
     {
       "id": "SURFACE-bf406241ca9e0491",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
-      "sha256": "51273aa776503b2f618d2d57bd61d348498d195a457b8485f3770996acb4420b",
+      "sha256": "6346f5a36530f69a754f6f3d3988b95a5fd5ad3a7422d1797d1a2801a933c095",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-34192568166d29c1",
       "path": "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
-      "sha256": "d48c1b8f09a778fae561feae57637ac5c8793a26add0ad6669fc6b762dbd3616",
+      "sha256": "351c03a7f95ddf473ef8d86e01c0e5be7b4e2a0fbd2d842209b09feec1731fcd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11094,7 +11112,7 @@
     {
       "id": "SURFACE-b1d115adebe79a56",
       "path": "tdf-hq-ui/src/pages/DirectoryManagePage.tsx",
-      "sha256": "a6a7ddbdeb0f342d6d3e2b2265e00211452bf51d693e9ce7d7f7ed07cb1eda5f",
+      "sha256": "da3194d624efc791af6152788a87d684b9ff8cb5737fa0574c236497286b2093",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11179,6 +11197,12 @@
       "id": "SURFACE-378a6bc30de606b4",
       "path": "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
       "sha256": "4dac7124635899687df092f6164248eab3673764ae71ed80d44bac9be0234bdf",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0cf77a2e272d6fba",
+      "path": "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx",
+      "sha256": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12438,7 +12462,7 @@
     {
       "id": "SURFACE-65b783cd59e6037b",
       "path": "tdf-hq-ui/src/routes/AppShell.test.tsx",
-      "sha256": "2f0cc1ac0ea4b2a08b8e223e8e4551270247723631fa52e8e471399aa2d74263",
+      "sha256": "971562ddbfb8770bb528148b612cb348d4d598f95fdbb3fe80e834090f4f8297",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13518,7 +13542,7 @@
     {
       "id": "SURFACE-10242ef7f43c8f11",
       "path": "tdf-hq/assets/feature-registry.json",
-      "sha256": "f3b8cab05a8109ddb0cda07fcaf53583914a2b6cc37dbe8dd1ea7a6a90878ac5",
+      "sha256": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13578,13 +13602,13 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "2e42ef0a3c3979ed55e3a8af94f1e5bbf7e70d3be6e75570f0141656cae957de",
+      "sha256": "78b2cfcd35e9054679a1835f1623aff3c78a35b736bd725a0e6e7c70622c9968",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a71412cb6bda4d46",
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "d6054e9b9a87004a98114c1cf04e689dde6dec820a1f9b456831b11a994b598b",
+      "sha256": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16516,6 +16540,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-74155b1d59e66530",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+      "sha256": "ce54f9d614327db9a52028829f369b63876eb2e61c16b5bc8ef00246249137ff",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-fd5051c48e295e02",
+      "path": "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
+      "sha256": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-df68b39756932536",
       "path": "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
       "sha256": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
@@ -16614,7 +16650,7 @@
     {
       "id": "SURFACE-9f19f644ef35d148",
       "path": "tdf-hq/src/TDF/API/Directory.hs",
-      "sha256": "9e0fcbc872de32141d2e8d7b66c4f841d2aa7980ee8367193fe0493f73a1ba9d",
+      "sha256": "460dac1b074c653d2d77f8fa1c4727664f3c27b36d3f04fd3536fbd340b9d31c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16842,7 +16878,7 @@
     {
       "id": "SURFACE-b36aba9e72486f8c",
       "path": "tdf-hq/src/TDF/App/Boot.hs",
-      "sha256": "c4c60bc92c8a1c91034bb028240a397e02b5ee2e08a87cda7fd6296f904fde47",
+      "sha256": "8d2fe4ce097321784c101e5ebffaa05a5111d9cd6e2a95d75c4674270b70c742",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16914,7 +16950,7 @@
     {
       "id": "SURFACE-57235d95566bd74b",
       "path": "tdf-hq/src/TDF/Calendar/TokenCipher.hs",
-      "sha256": "926c4158eee01f8eaf46ee5786c4208da3dd2a62b9f99dd9bada1af87e8bf656",
+      "sha256": "663078efb750b0158d3af8b7bdba30b8b874473f33f9a676425bcc0ee05e5b3b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17070,7 +17106,7 @@
     {
       "id": "SURFACE-f215d4911e9d9bef",
       "path": "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
-      "sha256": "a98813457fa7fb7b967e2ac708340d0fb44298b5cd093771fe732cf6b03ac881",
+      "sha256": "d8b27ce401b562c8e24bd3889080ab3e5990e7cd826b2c39d6b54add53f935a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17376,7 +17412,7 @@
     {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
-      "sha256": "66b1fa1f3049652819edd28cac9492af97df515bd45b0dcc94f10f770627bfa0",
+      "sha256": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17682,7 +17718,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "e763088f9f6b12314a36b103f5b76cdb1b888c27fd34aca37d8624aecaa03c2e",
+      "sha256": "9529471ff6dbcb9a97da7c9b8aa73bc72a00a205b0533aaaf6b0bbce3d764d7a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17712,7 +17748,13 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "eb080034aad1b6ecda2c9da03ffc17345e96f536ce996c41e018780bc34446d4",
+      "sha256": "594adfab7aa756ac1d0b20d438e871ddc7b4efbccd7edc6a7b01918530bc27be",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-1b093fb3647ce61a",
+      "path": "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
+      "sha256": "3fffa9b76eae802e1629413435696333a45947f8e946a48f28a8170bbe833c83",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17802,7 +17844,7 @@
     {
       "id": "SURFACE-453bfe4cc742d024",
       "path": "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-      "sha256": "14ff9f888212e5a78d41708c1e61a68c3983bbfb794a9a57f837cf59bc57a56e",
+      "sha256": "d50b351b163c882e69ff5bd23b8fcae5843ca70fd4959bd8f702768f090df8c2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18192,7 +18234,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "032ec894feddc91915a9a9229121e1e8f6a750ccf56664c6b57985b57bfa6711",
+      "sha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18270,7 +18312,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "41c874bff927930336056f6f272724c8ac5b11cad579686ac92b99b42836c588",
+      "sha256": "1556d52061b59dda1fa6e20d5fb1bd5986f4cd7a578545946dc8ceec86dfee4d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18462,7 +18504,7 @@
     {
       "id": "SURFACE-e284c62e82e2c450",
       "path": "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-      "sha256": "5b2555b902ebbfeb435a4d7159e47f24380a3abb2b12ee681e5ba854f5511474",
+      "sha256": "dbdf1ba83c196b2fa26cdbe9af0348da88a562e4cc454cca7198daa590033884",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18732,7 +18774,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "c72a8012846d356f910c69b504e0fe49a13261c680948983e1918237c703a484",
+      "sha256": "c91224ef9cacdc0991b1a1d0f2edba10a1da577673ec80314b878d0908447cd4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20724,7 +20766,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "a32e5f1b11f549506a67b4633fdab18b09f84e5a69bcfcd4863bfd41942d11d4",
+      "sha256": "c2a349198cc22efe3a7d0e4d15ba8ff5351886c9e6d827d7261324f2f5047f2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21960,7 +22002,7 @@
     },
     {
       "path": "docs/CHANGELOG.md",
-      "sha256": "5e8cdcb259b1fafeeaa4291225473818b1b2f16aefb5f9574c3d0b08555063b0",
+      "sha256": "5d47d013cfb27413bc4a55c95149f97ac66e24f6f845f103f6f8ff1731de4721",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22313,6 +22355,13 @@
       "sha256": "7f92234860016a8b51fad31506596fbb7477fdff86c563675e1f3f3b7bcf706c",
       "authority": "approved",
       "authorityBasis": "Estado: aceptado para implementación. Fecha: 2026-11-12. Extiende ADR 0134 y ADR 0105.",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "docs/adr/0136-marketplace-agreement-payments.md",
+      "sha256": "2d569df4885e986d1b97d373cbc0fb3c0bf48b6505c8e237594f33a54284ee85",
+      "authority": "inferred",
+      "authorityBasis": "Estado: propuesto; diseño aprobado por el dueño del producto el 2026-11-12, implementación en curso.",
       "kind": "requirement-candidate"
     },
     {
@@ -23759,7 +23808,7 @@
     },
     {
       "path": "docs/marketplace/01-plan-por-fases.md",
-      "sha256": "26451daa3f1310c1fce795730c67c3d4458e47aa27389cfcc822d765406428e4",
+      "sha256": "bb20b865bdb1155114eff59c027b5a8d78ffa4daeafbf2de3febc827e34cf25e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23773,7 +23822,7 @@
     },
     {
       "path": "docs/marketplace/03-diseno-de-datos.md",
-      "sha256": "ffc7f159f4e3ecc4528507692201eea1c735922c98c82c0c6f14d668eb0226b8",
+      "sha256": "f56b0a80eb99fd7ecdcc72e10bab208b6843646fedf3ab38503cdc081554c429",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23787,7 +23836,7 @@
     },
     {
       "path": "docs/marketplace/manual-gates.md",
-      "sha256": "181c32663f56ae54ba8d5db69d6f30e4a57c02ed33072beedbf49f675cc2d12f",
+      "sha256": "88d0692633a914b7017a4e9bf91e0b670e5b5fed0934573559a8a9c74e2ee756",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -23885,7 +23934,7 @@
     },
     {
       "path": "docs/music-directory/formal-model.yaml",
-      "sha256": "70db0187a19bdc77e35863ceefdb5b6fb260bc280f79cb389d6f31a84e0e12a0",
+      "sha256": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25383,7 +25432,7 @@
     },
     {
       "path": "formal/auth/README.md",
-      "sha256": "2cbdaaa992f97eb0421087c789c64fc4a29799de4b0527cf2d2a2b3335bcc8c9",
+      "sha256": "ca9b994f3f9c4f7df7374b5e301f52389d754e4ff9f6c6490676f15ee642b6d5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30241,7 +30290,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -30262,7 +30311,7 @@
     },
     {
       "path": "formal/system/authority-decisions.json",
-      "sha256": "110491315eee899949c31a958e2c57d2d0fe2faccce46a3506e6e616a720e694",
+      "sha256": "6f642380184c1a4a94e3669112a9dc8502f6d6ab608c4449830aaace184a8aa5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30500,7 +30549,7 @@
     },
     {
       "path": "formal/system/event-admin-delegation.md",
-      "sha256": "585db75a82697fa24f69229a5c40a6549f3a94b7f8fb15edcd65e65c67d7618c",
+      "sha256": "10d3944f33287a06ddbb172f9cd8bd81469f74d6bc5c27840169f19e193f0a97",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31256,7 +31305,11 @@
     },
     {
       "path": "formal/system/requirements.json",
+<<<<<<< HEAD
       "sha256": "256e6cbf7f463593291fc31c46796d1d3b122171c00c69884e58dc3149ec462f",
+=======
+      "sha256": "f6b7249ac7570e8d99feb9bd074bdca28541482ecd4596ed7ce6e0595f7a08b3",
+>>>>>>> origin/main
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31683,14 +31736,14 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "2e42ef0a3c3979ed55e3a8af94f1e5bbf7e70d3be6e75570f0141656cae957de",
+      "sha256": "78b2cfcd35e9054679a1835f1623aff3c78a35b736bd725a0e6e7c70622c9968",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
     },
     {
       "path": "tdf-hq/docs/openapi/directory.yaml",
-      "sha256": "d6054e9b9a87004a98114c1cf04e689dde6dec820a1f9b456831b11a994b598b",
+      "sha256": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
@@ -33085,6 +33138,15 @@
       "statement": "1. **Un acuerdo por oferta aceptada.** Con el gate `marketplace.agreements` activo, aceptar una oferta que tiene monto positivo y moneda crea, en la misma transacción, una fila `marketplace_agreement`. Ofertas sin monto (intercambio, no remunerado) no crean acuerdo. 2. **Partes según la intención del anuncio.** En un anuncio `seeking` el autor es el comprador (busca y paga) y el oferente el proveedor; en uno `offering`, al revés. 3. **Valores congelados.** El acuerdo guarda monto, moneda, términos (los del anuncio combinados con los de la oferta), comisión y reparto depósito/saldo calculados con la tarifa vigente (`marketplace_agreement_pricing`, por categoría o regla por defecto, editable sin desplegar). Un trigger rechaza cualquier cambio posterior de esos valores. `agreementAmounts` es la única fórmula: la comisión redondea hacia abajo, el depósito al medio hacia arriba, y depósito + saldo = total siempre. 4. **Sin cobro en la parte A.** El acuerdo nace `confirmed` con `settlement_mode='off_platform'`: el pago se coordina entre las partes y TDF no cobra depósito ni comisión todavía. Los estados `pending_deposit`, `balance_due` y `expired` existen en el modelo para la parte B (checkout), pero ninguna solicitud de un participante puede entrar en ellos y un `CHECK` impide usarlos con liquidación fuera de la plataforma. 5. **Quién mueve qué.** El proveedor marca el inicio; solo el comprador confirma que se completó (el proveedor no se autocertifica, y un estado de pago nunca implica servicio prestado); cualquiera de los dos cancela o abre disputa mientras el acuerdo está vivo; solo un administrador resuelve una disputa. La relación vive en `TDF.Directory.Policy`, en `marketplace_agreement_transition_allowed` (trigger) y en `formal-model.yaml#agreement`, y el gate estático las compara. 6. **Cierre con reputación.** Completar un acuerdo registra una `directory_interaction` verificada de tipo `marketplace_agreement`; con ella ambas partes pueden dejarse reseña con las reglas de reseñas existentes (I12). 7. **Cancelar deshace el compromiso.** Cancelar el acuerdo retira la oferta aceptada y libera su cupo (reabre el anuncio cubierto si no venció); retirar la oferta aceptada cancela el acuerdo vivo. Un acuerdo completado, en disputa o con saldo pendiente no se deshace retirando la oferta. 8. **Concurrencia.** Mismo orden de bloqueo que ADR 0134, extendido: anuncio → oferta → acuerdo. Cada decisión va atada a la versión mostrada (`expectedVersion`). 9. **Transparencia.** Ambas partes ven las mismas cifras: total, depósito, saldo, comisión de TDF y neto del proveedor.",
       "source": "docs/adr/0135-marketplace-agreements.md#decisión",
       "status": "approved",
+      "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
+      "verification": "open",
+      "gap": "Per-clause implementation correspondence not discharged by inventory"
+    },
+    {
+      "id": "0136-marketplace-agreement-payments:aeeffac10501",
+      "statement": "1. **El cobro usa el checkout canónico.** Cada cobro de un acuerdo es una fila `marketplace_agreement_payment` (`kind` = `deposit` | `balance`) con su `commerce_checkout_session` de `domain_type='marketplace_agreement'` y `domain_order_id` = id del cobro. `productFlowForDomain` lo mapea a `FlowMarketplace`, de modo que el ruteo existente solo ofrece un proveedor cuando su cuenta, contrato, credenciales y las tres capacidades de marketplace están verificadas para ese método y entorno. Ningún módulo del marketplace llama a un proveedor directamente. 2. **Reparto congelado por cobro.** Al crear el cobro se guarda `platform_fee_minor`, `provider_amount_minor` y `processing_fee_minor`: - depósito: `platform_fee = min(commission_minor, deposit_minor)`; - saldo: `platform_fee = commission_minor − lo que los cobros pagados ya recaudaron para la plataforma` (0 con la tarifa por defecto; más que el resto nominal cuando la comisión del procesador se comió parte de un depósito menor que la comisión); - `provider_amount = monto − platform_fee − processing_fee`, nunca negativo. `processing_fee` sale de `marketplace_payment_fee_rule` (por proveedor: bps + fijo + quién la asume). Por defecto la asume el proveedor del servicio, porque en el cobro del saldo TDF no recibe nada de lo que descontarla. La regla es editable sin desplegar. 3. **Cuenta de cobro del proveedor.** `marketplace_payout_account` (perfil, proveedor, referencia, estado). PayPhone: el proveedor declara su identificación (tipo 3) o teléfono (tipo 4). Stripe: cuenta Express con onboarding alojado (reutiliza `Services.Stripe`). Sin una cuenta lista para algún proveedor ofrecible en la moneda del acuerdo, el acuerdo nace como en la parte A (`off_platform`, `confirmed`); no se bloquea la aceptación. 4. **Estados.** Con el gate `marketplace.agreement_payments` activo y cuenta de cobro lista, el acuerdo nace `pending_deposit` + `platform`, con `deposit_due_at` según la tarifa. - Depósito verificado → `confirmed`. - Depósito sin pagar al vencer → `expired`: retira la oferta y libera el cupo (misma rutina que cancelar). Corre al cargar los acuerdos de un participante y, para todos los acuerdos, cada cinco minutos en un job del servidor (`startAgreementDepositExpiryJob`). - El proveedor inicia (`in_progress`). El comprador confirma la entrega: con saldo pendiente pasa a `balance_due` y se crea el cobro del saldo; el saldo verificado lo lleva a `completed` y registra la interacción verificada. Sin saldo, pasa directo a `completed`. Mientras espera el saldo, cualquiera de las partes puede abrir una disputa: el cobro pendiente se cancela y un administrador resuelve. Las disputas abiertas se listan para administración en `GET /directory/admin/agreements/disputes` (más antigua primero, con quién la abrió, desde qué estado y por qué) y se resuelven con la ruta de estado del acuerdo. - Ningún participante ni administrador puede marcar un cobro como pagado: solo la reconciliación con consulta autenticada al proveedor (trigger `marketplace_agreement_payment_require_verified_payment`, mismo patrón que reservas y entradas). 5. **Proveedores.** - **PayPhone:** el adaptador añade `transferTo` cifrado cuando el checkout trae reparto. Queda cerrado hasta que PayPhone autorice el split para la tienda y se registre la evidencia de capacidad; se exige la modalidad «al día siguiente» para conservar el reverso del primer día. - **Stripe:** adaptador canónico con Checkout Session alojada y cargo destino (`transfer_data.destination`, `application_fee_amount`); se entrega en un segundo PR (B2) junto con reembolsos y panel de disputas, porque incorpora Stripe al runtime canónico. - **DataWeb:** el dominio queda conectado al ruteo, y por tanto cerrado: no hay capacidad de split verificable. Se abre registrando evidencia cuando Datafast la contrate, sin código nuevo en el marketplace. 6. **Cancelación con dinero cobrado.** En B1, un acuerdo `platform` con depósito pagado no se cancela por los participantes, ni directamente ni retirando la oferta aceptada: abre disputa y un administrador resuelve. Tampoco se cancela ni se retira mientras un intento de pago pueda cobrar todavía. El reembolso automático según la política congelada (`cancellation_policy`) llega en B2, cuando exista la reversión del reparto por proveedor. 7. **Orden de bloqueo.** anuncio → oferta → acuerdo → cobro. La reconciliación bloquea checkout e intento primero (regla existente) y después el cobro y el acuerdo; ningún camino del marketplace toma un bloqueo de checkout mientras sostiene el acuerdo, salvo la creación del checkout, que es una inserción.",
+      "source": "docs/adr/0136-marketplace-agreement-payments.md#decisión",
+      "status": "inferred",
       "deliveryScope": "Current-baseline applicability requires the domain traceability/rollout decision; approval is not automatic activation",
       "verification": "open",
       "gap": "Per-clause implementation correspondence not discharged by inventory"
@@ -37167,7 +37229,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -37198,7 +37260,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -37229,7 +37291,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -37260,7 +37322,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -37291,7 +37353,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -37322,7 +37384,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -37353,7 +37415,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -37384,7 +37446,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -37415,7 +37477,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -37446,7 +37508,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -37477,7 +37539,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -37508,7 +37570,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -37537,7 +37599,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -37566,7 +37628,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -37595,7 +37657,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -37624,7 +37686,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -37653,7 +37715,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -37682,7 +37744,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -37711,7 +37773,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -37740,7 +37802,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -37769,7 +37831,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "f46aa2eda777d536522f476143411ac1c05800efcea371133d10f06bab980cc5",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",
