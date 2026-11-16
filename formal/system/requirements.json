@@ -14816,8 +14816,7 @@
         "tdf-hq-ui/src/api/reviews.test.ts",
         "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
         "tdf-hq-ui/src/components/MarkdownText.test.tsx",
-        "tdf-hq-ui/src/components/UserProfileLink.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx"
+        "tdf-hq-ui/src/components/UserProfileLink.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -24967,7 +24966,8 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
         "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
         "tdf-hq-ui/src/api/fans.test.ts",
-        "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx"
+        "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

@@ -14817,8 +14817,7 @@
         "tdf-hq-ui/src/api/reviews.test.ts",
         "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
         "tdf-hq-ui/src/components/MarkdownText.test.tsx",
-        "tdf-hq-ui/src/components/UserProfileLink.test.tsx",
-        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx"
+        "tdf-hq-ui/src/components/UserProfileLink.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -24968,7 +24967,8 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
         "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
         "tdf-hq-ui/src/api/fans.test.ts",
-        "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx"
+        "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -43749,12 +43749,6 @@
         "relationship": "tests"
       }
     ],
-    "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx": [
-      {
-        "requirement": "WEB-CONTENT-001",
-        "relationship": "tests"
-      }
-    ],
     "scripts/lib/test-child-completion.mjs": [
       {
         "requirement": "SYS-WORKER-COMPLETION-001",
@@ -44872,6 +44866,12 @@
       }
     ],
     "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx": [
+      {
+        "requirement": "ART-PROFILE-MEDIA-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx": [
       {
         "requirement": "ART-PROFILE-MEDIA-001",
         "relationship": "tests"
@@ -62006,7 +62006,7 @@
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
-          "requirement": "WEB-CONTENT-001",
+          "requirement": "ART-PROFILE-MEDIA-001",
           "relationship": "tests"
         }
       ]
@@ -83891,7 +83891,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ea74bb8c883c1a662d260dbff243505bf45b76f3d426cf35b5ddc13cbf5bcede",
+      "sourceSha256": "96e8fc5e8b837a50d4388c6a488cf0c2d4941e30ffd66ea72e264a8dadd1e549",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -83919,7 +83919,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ea74bb8c883c1a662d260dbff243505bf45b76f3d426cf35b5ddc13cbf5bcede",
+      "sourceSha256": "96e8fc5e8b837a50d4388c6a488cf0c2d4941e30ffd66ea72e264a8dadd1e549",
       "definition": {
         "states": [
           "absent",
@@ -83949,7 +83949,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "ea74bb8c883c1a662d260dbff243505bf45b76f3d426cf35b5ddc13cbf5bcede",
+      "sourceSha256": "96e8fc5e8b837a50d4388c6a488cf0c2d4941e30ffd66ea72e264a8dadd1e549",
       "definition": {
         "export": [
           "queued",
