@@ -6,6 +6,7 @@ import { Catalogs, type WorkflowState } from '../../api/catalogs';
 import { SocialEventsAPI, type SocialEventDTO } from '../../api/socialEvents';
 import { captureGrowthEvent } from '../../analytics/growthAttribution';
 import { getAnalyticsClient } from '../../analytics/posthog';
+import { getAuthSessionEpoch } from '../../session/authEvents';
 
 const PUBLIC_LISTABLE = 'public-listable';
 
@@ -17,12 +18,18 @@ const PUBLIC_LISTABLE = 'public-listable';
 export function resolvePublishTarget(
   event: Pick<SocialEventDTO, 'eventWorkflowStateId'>,
   states: readonly WorkflowState[],
+  now: number = Date.now(),
 ): { workflowStateId?: string } | null {
   const current = states.find((state) => state.id === event.eventWorkflowStateId);
   if (!current?.active) return null;
   if (current.capabilities.includes(PUBLIC_LISTABLE)) return {};
+  // The server only accepts a transition inside its effective window, so one
+  // that has not started or has already ended is not a way to publish.
+  const inEffect = (transition: WorkflowState['transitions'][number]) =>
+    (!transition.effectiveFrom || Date.parse(transition.effectiveFrom) <= now)
+    && (!transition.effectiveUntil || Date.parse(transition.effectiveUntil) > now);
   const target = current.transitions
-    .filter((transition) => transition.directExecutionAllowed && !transition.requiresReview)
+    .filter((transition) => transition.directExecutionAllowed && !transition.requiresReview && inEffect(transition))
     .flatMap((transition) => states.filter((state) => state.id === transition.toStateId))
     .filter((state) => state.active && state.capabilities.includes(PUBLIC_LISTABLE))
     .sort((a, b) => a.sortOrder - b.sortOrder)[0];
@@ -49,7 +56,17 @@ export default function EventPublishControl({ event }: { event: SocialEventDTO }
     mutationFn: async () => {
       // Read current fields immediately before the existing full-event PUT, so
       // publishing never writes back a title, date or lineup that someone else changed.
+      // Each request is authorized with whichever account is signed in when it
+      // is sent, so the publication must stay with the account that confirmed it.
+      const session = getAuthSessionEpoch();
+      const ensureSameSession = () => {
+        if (!mounted.current || session !== getAuthSessionEpoch()) {
+          throw new Error('Tu sesión cambió. Vuelve al evento antes de publicar.');
+        }
+      };
+      ensureSameSession();
       const latest = await SocialEventsAPI.getEvent(eventId);
+      ensureSameSession();
       const latestTarget = resolvePublishTarget(latest, states);
       if (!latestTarget) throw new Error('El estado del evento cambió. Recarga la página antes de publicar.');
       return SocialEventsAPI.updateEvent(eventId, {
