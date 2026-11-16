@@ -146,6 +146,24 @@
       "principle": "Menos cálculo mental, prevención y corrección de errores",
       "finding": "La configuración de renta pedía cuatro importes en centavos; aceptaba tarifa semanal cero, cargos vacíos y montos fuera del rango que rechaza el servidor.",
       "change": "Tarifa diaria/semanal, depósito y cargo tardío se editan en USD con punto o coma, sin redondear. Errores asociados al campo bloquean precisión o rango inválidos y tarifas cero. Semanal vacía conserva null; depósito/cargo requieren cero explícito. El rechazo conserva los importes para reintentar. La activación, versión y autoridad del servidor se conservan."
+    },
+    {
+      "id": "COG-20261115-02",
+      "principle": "Prevención y corrección de errores monetarios",
+      "finding": "Pagos manuales aceptaba 12abc como 12 y redondeaba precisión adicional; copiar el último monto pasaba por un número en moneda que podía perder centavos.",
+      "change": "Conversión exacta del texto completo a centavos positivos seguros, error junto al campo y ninguna solicitud con texto inválido. El borrador conserva el texto y el rechazo conserva los valores para corrección/reenvío deliberado. Copiar usa centavos enteros; se conservan propietario, revisión y autoridad del registro manual."
+    },
+    {
+      "id": "COG-20261115-03",
+      "principle": "Visibilidad de valores y salida confiable",
+      "finding": "La tarifa por hora del creador de reportes truncaba texto, redondeaba decimales o trataba el vacío como cero. El formato monetario también perdía el último centavo en importes grandes.",
+      "change": "Tarifa exacta no negativa, cero explícito y plantillas antiguas sin conversión flotante. Un error conserva el texto y marca la vista previa con su última tarifa válida; bloquea PDF/plantilla. También se bloquean totales no enteros o inseguros, sin cambiar reglas de horas/descuento. El formato compartido conserva centavos enteros exactos y la presentación habitual."
+    },
+    {
+      "id": "COG-20261115-04",
+      "principle": "Contexto temporal consistente",
+      "finding": "El corte y los bloques nuevos del reporte usaban el día UTC; durante la noche en Ecuador se adelantaban a mañana. La captura sintética mostró esa diferencia.",
+      "change": "Se reutiliza el día de calendario local del navegador para Corte, bloques nuevos y reinicio en blanco. La prueba fija 20/nov/2030 01:15 UTC y comprueba 19/nov en Ecuador; las fechas explícitas de plantillas se conservan."
     }
   ],
   "measurements": [
@@ -269,7 +287,7 @@
       "id": 16,
       "item": "Errores junto al campo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo."
+      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo."
     },
     {
       "id": 17,
@@ -323,7 +341,7 @@
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores."
+      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local."
     },
     {
       "id": 26,
@@ -405,9 +423,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 2,
-      "testsPassed": 38,
-      "sourceCommit": "b5282673f9a9cf8e599ea79dc13ec3bafca46e3b"
+      "suitesPassed": 7,
+      "testsPassed": 61,
+      "sourceCommit": "22603bedc9f7684dbbdced705d507f819dd6cb3b"
     },
     "browser": {
       "passed": 22,
@@ -421,9 +439,9 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "b5282673f9a9cf8e599ea79dc13ec3bafca46e3b",
+      "sourceCommit": "22603bedc9f7684dbbdced705d507f819dd6cb3b",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 109,
+      "mappedChangedMaterialSurfaces": 116,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
@@ -450,51 +468,52 @@
         "WebKit critical"
       ],
       "caseGroups": {
-        "rentalPrices": 7,
-        "coursePriceDraftRoundTrip": 7,
-        "bookingTransferReference": 7
+        "manualPaymentAmount": 7,
+        "reportHourlyRateAndLocalDate": 7,
+        "rentalPriceRegression": 7
       },
       "checks": [
-        "Precios existentes 25.50/123.45/0.00/1.51 sin cálculo manual",
-        "Precisión y rango inválidos, semanal cero y depósito vacío bloquean envío con errores asociados",
-        "40,99 envía4099; semanal vacía envía null, cargo cero envía0; versión, política y límites conservados",
-        "Rechazo503 conserva texto y reintento repite el payload exacto",
-        "WCAG/ARIA, transiciones terminadas, viewport completo, hit testing y ausencia de overflow",
-        "Regresiones de curso y referencia bancaria"
+        "Texto monetario completo, precisión inválida, borrador de pago inválido tras recarga, rechazo422 conserva40,99 y dos payloads equivalentes con4099centavos",
+        "Tarifa inválida con error/ARIA; PDF sin href y plantilla bloqueada, vista previa declarada como última tarifa válida",
+        "Plantilla local0,29→29→recarga0.29; límite entero seguro conserva el último centavo en texto y almacenamiento",
+        "Corte y Fecha de nuevo bloque:19/nov/2030 cuando UTC ya es20/nov; fechas de plantilla conservadas",
+        "WCAG de campos tras transiciones, viewport completo, hit testing y ausencia de overflow"
       ],
       "harness": {
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eighth-playwright.config.mjs",
-        "sourceCheck": "Owned preview cwd verified; served index matched this worktree dist/index.html."
+        "identity": "Explicit worktree cwd and strict port; final large-value assertion also verifies the newly built formatter. An earlier preview in this pass had cwd/served-index equality verified."
       },
-      "limitations": "API interceptada. Dos actualizaciones de tarifa rechazadas/aceptadas sintéticas por recorrido; no se activó ninguna tarifa real. También sintéticas las escrituras de curso/reserva/evidencia."
+      "log": "/private/tmp/cogload-tenth-browser-calendar.log",
+      "limitations": "API requests intercepted. Manual payment uses one simulated422 rejection then one simulated accepted record. Reports use synthetic local templates and Blob URLs; no real ledger payment, financial action, report delivery or production mutation."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "1bf8732e8e53a2dc7062dab3b473acb9503ac062",
-      "ciRun": 43566559194,
-      "ciConclusion": "failure",
+      "commit": "45a4311e625a9d16eb54a599b1ff8bbf97066059",
+      "ciRun": 43754782424,
+      "ciConclusion": "success",
       "webJest": {
         "suites": 378,
-        "tests": 4337,
+        "tests": 4339,
         "result": "passed"
       },
       "mainBrowser": {
-        "passed": 945,
+        "passed": 953,
         "skipped": 22,
-        "failed": 1
+        "failed": 0
       },
-      "mainBrowserFailure": "Booking transfer reference: one iPhone WebKit color-contrast assertion sampled the floating label during its transition. Screenshot reviewed; current check waits for actual field animations, retains all WCAG rules and reports node failure details.",
       "nativeMusic": {
-        "passed": 73,
-        "failed": 1,
-        "failure": "WebKit cached-session bootstrap left the old persisted queue; hosted result unresolved pending fresh verification."
+        "passed": 74,
+        "failed": 0
       },
       "additionalBrowser": {
-        "storage": 8
+        "storage": 8,
+        "torrent": 21,
+        "deletion": 10,
+        "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog43566561661, event43566563874, social43566566482, interaction43566568986",
-      "scope": "Applies only to the recorded prior head. Main CI did not pass."
+      "specialistWorkflows": "all four passed: catalog43754785265, event43754787710, social43754790274, interaction43754792714",
+      "scope": "Completed hosted results belong only to this prior head; they do not verify the new source."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -585,6 +604,14 @@
     {
       "path": "figures/rental-price-inline-error-phone.png",
       "scope": "Precios de renta sintéticos en USD con error de precisión asociado, versión y advertencia de activación conservadas. Dos escrituras interceptadas; no se activó una tarifa real."
+    },
+    {
+      "path": "figures/manual-payment-inline-error-phone.png",
+      "scope": "Monto sintético12abc bloqueado por campo; no se registró un pago real."
+    },
+    {
+      "path": "figures/report-hourly-rate-inline-error-phone.png",
+      "scope": "Tarifa sintética25abc bloqueada; Corte muestra el día local del navegador. No se guardó ni entregó un reporte real."
     }
   ],
   "followups": [
@@ -1231,6 +1258,101 @@
         "mobile": 188,
         "scope": "Read-only coordination; these branches and owner decisions were not changed."
       }
+    },
+    {
+      "date": "2026-11-15",
+      "baseCommit": "45a4311e625a9d16eb54a599b1ff8bbf97066059",
+      "scope": "Items16/25: montos manuales, tarifa/plantillas/PDF y día local de reportes. Formato compartido de moneda exacta; sin cambios de API, permisos, cálculo de horas/descuento, datos de reportes nominales ni Mobile.",
+      "regressionVerification": {
+        "suites": 7,
+        "tests": 61,
+        "log": "/private/tmp/cogload-tenth-unit-final-verified.log",
+        "checks": [
+          "Trailing text/exponent/Infinity/extra decimals/blank/zero/unsafe manual amounts rejected",
+          "Comma/dot and safe boundary cents written exactly; copied values, rejected edits, owned draft and edits during pending save retained",
+          "Report valid/invalid/free tariff, legacy templates, PDF generation guard and unsafe derived totals",
+          "Existing report calculations/PDF and ordinary positive/negative currency presentation retained; boundary cents exact",
+          "Existing date-only parsing/formatting regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 21,
+        "passed": 21,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "manualPaymentAmount": 7,
+          "reportHourlyRateAndLocalDate": 7,
+          "rentalPriceRegression": 7
+        },
+        "checks": [
+          "Texto monetario completo, precisión inválida, borrador de pago inválido tras recarga, rechazo422 conserva40,99 y dos payloads equivalentes con4099centavos",
+          "Tarifa inválida con error/ARIA; PDF sin href y plantilla bloqueada, vista previa declarada como última tarifa válida",
+          "Plantilla local0,29→29→recarga0.29; límite entero seguro conserva el último centavo en texto y almacenamiento",
+          "Corte y Fecha de nuevo bloque:19/nov/2030 cuando UTC ya es20/nov; fechas de plantilla conservadas",
+          "WCAG de campos tras transiciones, viewport completo, hit testing y ausencia de overflow"
+        ],
+        "harness": {
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eighth-playwright.config.mjs",
+          "identity": "Explicit worktree cwd and strict port; final large-value assertion also verifies the newly built formatter. An earlier preview in this pass had cwd/served-index equality verified."
+        },
+        "log": "/private/tmp/cogload-tenth-browser-calendar.log",
+        "limitations": "API requests intercepted. Manual payment uses one simulated422 rejection then one simulated accepted record. Reports use synthetic local templates and Blob URLs; no real ledger payment, financial action, report delivery or production mutation."
+      },
+      "fixtureCorrections": "First attempt lacked the invoicing module and correctly reached403. Next matrix had14 passed/7 manual test failures because an exact label locator included the required asterisk; corrected the date locator. No access gate was weakened. The final complete matrix passed, and was repeated with fixed UTC/local date assertions after the calendar defect was found.",
+      "catalogCandidates": 1428,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new decisions; final source staged before scans, canonical JSON/CSV refreshed.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "45a4311e625a9d16eb54a599b1ff8bbf97066059",
+        "ciRun": 43754782424,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 378,
+          "tests": 4339,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 953,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed: catalog43754785265, event43754787710, social43754790274, interaction43754792714",
+        "scope": "Completed hosted results belong only to this prior head; they do not verify the new source."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "22603bedc9f7684dbbdced705d507f819dd6cb3b",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 116,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "New published head requires its own full workflows."
     }
   ],
   "lastUpdated": "2026-11-15"
