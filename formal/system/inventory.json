@@ -1118,8 +1118,6 @@
       "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx",
       "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
       "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
-      "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
-      "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
       "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
       "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
@@ -1195,8 +1193,6 @@
       "tdf-hq-ui/src/features/fanclubs/LegacyClubReactions.tsx",
       "tdf-hq-ui/src/features/fans/FanProfileEditor.test.tsx",
       "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
-      "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
-      "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
       "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
       "tdf-hq-ui/src/features/fans/ProfileSectionCard.tsx",
       "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
@@ -4362,7 +4358,7 @@
     {
       "id": "SURFACE-d6545235ef8b425c",
       "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
-      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+      "sha256": "cd4f56d1cc520f9b2378488c6b9a63d4b85ef6ea6562701e6242496ffade0d87",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5622,7 +5618,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
+      "sha256": "5673e5228c12615f7972c5c65312b732ec6ee0f7d2c0f559086fa5e21e300334",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9678,25 +9674,13 @@
     {
       "id": "SURFACE-2cea66b752634961",
       "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
-      "sha256": "7dd090e0d630e421a449d7af4789403ab26bedf4aada4ad94f1b2cd666b37f4d",
+      "sha256": "b7cce2b5b45e93c2d66004eb3ea41754c965f1a78bf555bab59db440a1369c24",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-e16e275f767e9623",
       "path": "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
-      "sha256": "fef66abf570226402f8218edf289b554137342cbe4b2e810a81d3a707f426da0",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-fe18db8ab1db5749",
-      "path": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
-      "sha256": "20588666f384e0fd12131c5644cc424d21b8a8c42f944620b0aea60666aa4463",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-dcda7eb130c8a2d6",
-      "path": "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
-      "sha256": "9c621883003a735ec74441167bdedfab111dd60f701425d5340553ddce6ec353",
+      "sha256": "25e4ccd886c5ac0ac86922dbed23f16d4e705462f6317befe0c59b903865a278",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9762,13 +9746,13 @@
     {
       "id": "SURFACE-c608b83dcf4b5559",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
-      "sha256": "5d571852f5782f1e0c4f08acef40b83363bc31ad34209e3047bf24502457b188",
+      "sha256": "900f0988f08e13f94f6cca72e70b3f8c245f755d64a13bd8ab50cd8fc11e650f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2393bd3c8b025098",
       "path": "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
-      "sha256": "bdcfb14c801239f68d83f361f71277a888fdeccb0d8ea021bb330635744befb2",
+      "sha256": "49003b106d8c25a66e4378611e2a9427d18d81128195ff3a56f3f3f4685ff187",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10147,18 +10131,6 @@
       "id": "SURFACE-31c68c4911bce31c",
       "path": "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
       "sha256": "9d09b7acdcb9bd3c0d83e5115bd01eac89b32b0f2d133e884c0797f4a5ca9b5d",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-46dc5a1b952c5ccc",
-      "path": "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
-      "sha256": "4a9db8ea6c7155008b4aafc9094d80d05fb3e8314df91402a78c44edda048d55",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-d4b80b5196ba914e",
-      "path": "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
-      "sha256": "947bea9efc951f911eeaa7ae9f41698ace9a150541c5a18f813637fdb34b2f34",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11034,7 +11006,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "eae23d7e3d698f7e26e99225e09098b44d58eed069f8160c01ac328f0982d3ec",
+      "sha256": "2e737d7512df6b298d5cc168d8ce3a8feff9faf34a489b9ad5fb92a9a7813e2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11316,7 +11288,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "183867bef1d5590d1258381ba1dc5bbb662d3e2ed19d8eeb4627558cc5093301",
+      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12066,13 +12038,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
+      "sha256": "86fe863cc9608c5ce0ae086a46f85bb46b559ca823e426345e5fc436226f8fb8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "4d9383f448eb9af782f818e311fd4890216b318e407d27d33ffc36557d1a39c9",
+      "sha256": "59489c52c5b17d71f4cf15de51adec1e3e09c0770a900520dbdd368d174cce7f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12300,13 +12272,13 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "7f9de243bbbf242ef286f912a543854c1ed8e6490c342cc303981abd646e6bab",
+      "sha256": "5e24b374e0c7fc4ed86f818d0f815b9c300311e211e01fbcdb48b317ff7acbc4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "4f1db308679b4497877defe86e669196809ad405cf3c8d00cfb4eb0756818015",
+      "sha256": "46076098f1c935f7ae5cb6bdf946027fd23cc941c826643debf6e8fe387c21fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30339,7 +30311,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -30781,13 +30753,6 @@
     {
       "path": "formal/system/internships-routes.md",
       "sha256": "ac4337ce6156ae772e99fb182ee6054a18625f223d2b8380e74fc4cb6a00fdda",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
-      "path": "formal/system/invited-first-action.md",
-      "sha256": "6617c701b1141a20eb09b77228fb246d8ddf0b3c5bae32c1f5caf7df53cc1cb9",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31361,7 +31326,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2a51cf4d03a8a4b7a7b7ec8a2f4964c3923c76a0c2e3e674d1fe9d9cc9485963",
+      "sha256": "f6b7249ac7570e8d99feb9bd074bdca28541482ecd4596ed7ce6e0595f7a08b3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -37281,7 +37246,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -37312,7 +37277,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -37343,7 +37308,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -37374,7 +37339,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -37405,7 +37370,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -37436,7 +37401,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -37467,7 +37432,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -37498,7 +37463,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -37529,7 +37494,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -37560,7 +37525,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -37591,7 +37556,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -37622,7 +37587,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -37651,7 +37616,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -37680,7 +37645,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -37709,7 +37674,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -37738,7 +37703,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -37767,7 +37732,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -37796,7 +37761,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -37825,7 +37790,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -37854,7 +37819,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -37883,7 +37848,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "064a04343f113f922085d52ce3031746ec803baee6cb4a65498acc5d93471441",
+      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",
