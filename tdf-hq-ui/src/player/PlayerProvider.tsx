@@ -25,6 +25,12 @@ import {
   type RepeatMode,
 } from './types';
 import { installPlayerAnalyticsBridge } from './analytics';
+import {
+  claimPlaybackSession,
+  releasePlaybackSession,
+  type PlaybackSessionHandlers,
+  type PlaybackSessionState,
+} from './playbackSession';
 
 const PERSISTENCE_KEY = 'tdf-global-player/v1';
 const TARGET_LOUDNESS_LUFS = -14;
@@ -1117,48 +1123,51 @@ function PlayerSession({ children, ownerPartyId, identityReady, restoreListening
 
   useEffect(() => installPlayerAnalyticsBridge(), []);
 
-  useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    const mediaSession = navigator.mediaSession;
-    if (currentTrack && typeof MediaMetadata !== 'undefined') {
-      mediaSession.metadata = new MediaMetadata({
-        title: currentTrack.title,
-        artist: currentTrack.artist,
-        album: currentTrack.releaseId,
-        artwork: currentTrack.artworkUrl ? [{ src: currentTrack.artworkUrl }] : undefined,
-      });
-    } else {
-      mediaSession.metadata = null;
-    }
-    const handlers: Partial<Record<MediaSessionAction, MediaSessionActionHandler>> = {
-      play: () => { void play(); }, pause: () => pause(), previoustrack: previous, nexttrack: next,
-      seekto: (details) => {
-        if (details.seekTime !== undefined) seek(details.seekTime);
-      },
-    };
-    for (const [action, handler] of Object.entries(handlers)) {
-      try { mediaSession.setActionHandler(action as MediaSessionAction, handler); }
-      catch { /* Some browsers expose only a subset of Media Session actions. */ }
-    }
-    return () => {
-      ['play', 'pause', 'previoustrack', 'nexttrack', 'seekto'].forEach((action) => {
-        try {
-          mediaSession.setActionHandler(action as MediaSessionAction, null);
-        } catch {
-          // Older browsers expose MediaSession with a smaller action set.
-        }
-      });
-    };
-  }, [currentTrack, next, pause, play, previous, seek]);
+  const systemOwner = currentTrack?.id.startsWith('radio:') ? 'radio' : 'music';
+  const playbackHandlers = useMemo<PlaybackSessionHandlers>(() => ({
+    play: () => { void play(); },
+    pause,
+    next,
+    previous,
+    seekTo: systemOwner === 'music' ? seek : undefined,
+  }), [next, pause, play, previous, seek, systemOwner]);
 
   useEffect(() => {
-    if (!('mediaSession' in navigator)) return;
-    navigator.mediaSession.playbackState = status === 'playing' ? 'playing' : currentTrack ? 'paused' : 'none';
-    if (duration > 0 && navigator.mediaSession.setPositionState) {
-      try { navigator.mediaSession.setPositionState({ duration, playbackRate, position: Math.min(duration, Math.max(0, currentTime)) }); }
-      catch { /* OS media position reporting is optional. */ }
+    if (!currentTrack) {
+      releasePlaybackSession('music');
+      releasePlaybackSession('radio');
+      return;
     }
-  }, [currentTime, currentTrack, duration, playbackRate, status]);
+    const state: PlaybackSessionState = {
+      status: status === 'playing' ? 'playing'
+        : status === 'loading' || status === 'buffering' ? 'loading'
+          : status === 'error' || status === 'unavailable' ? 'error' : 'paused',
+      title: currentTrack.title,
+      artist: currentTrack.artist,
+      album: currentTrack.releaseId ?? null,
+      artworkUrl: currentTrack.artworkUrl ?? null,
+    };
+    claimPlaybackSession(systemOwner, playbackHandlers, state);
+    releasePlaybackSession(systemOwner === 'music' ? 'radio' : 'music');
+  }, [currentTrack, playbackHandlers, status, systemOwner]);
+
+  useEffect(() => () => {
+    releasePlaybackSession('music');
+    releasePlaybackSession('radio');
+  }, []);
+
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+    try {
+      if (systemOwner === 'radio' || !currentTrack || !Number.isFinite(duration) || duration <= 0) {
+        navigator.mediaSession.setPositionState();
+      } else {
+        navigator.mediaSession.setPositionState({
+          duration, playbackRate, position: Math.min(duration, Math.max(0, currentTime)),
+        });
+      }
+    } catch { /* OS media position reporting is optional. */ }
+  }, [currentTime, currentTrack, duration, playbackRate, systemOwner]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

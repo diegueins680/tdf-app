@@ -8,6 +8,7 @@ module TDF.Server.Catalog
   ( publicCatalogServer
   , catalogServer
   , createSelfFanRoleRequest
+  , validateCatalogApproval
   ) where
 
 import Control.Applicative ((<|>))
@@ -1472,10 +1473,11 @@ approveRevisionHandler user rawRevisionId review = do
   stateCode <- workflowStateCode (M.catalogRevisionWorkflowStateId revision)
   unless (stateCode == "review") $
     throwError err409 { errBody = "Only revisions in review can be approved" }
-  when (M.catalogDefinitionSensitive catalog && M.catalogRevisionCreatedBy revision == auPartyId user && not (crrEmergencyOverride review)) $
-    throwError err403 { errBody = "The author of a sensitive change cannot approve it" }
-  when (crrEmergencyOverride review && not (M.catalogDefinitionSensitive catalog)) $
-    throwError err400 { errBody = "Emergency override is valid only for sensitive catalogs" }
+  either throwError pure $
+    validateCatalogApproval
+      (M.catalogDefinitionSensitive catalog)
+      (M.catalogRevisionCreatedBy revision == auPartyId user)
+      (crrEmergencyOverride review)
   now <- liftIO getCurrentTime
   let publishNow = maybe True (<= now) (crrScheduledPublishAt review)
       nextStateCode = if publishNow then "published" else "approved"
@@ -1494,6 +1496,20 @@ approveRevisionHandler user rawRevisionId review = do
     ]
   updated <- runDB (getJust revisionKey)
   revisionDTO catalog (Entity revisionKey updated)
+
+-- | Approval admission for a catalog revision in review. The author of a
+-- change can never approve it: @catalog_revision_workflow_integrity@ raises
+-- 42501 for any catalog whenever @approved_by = created_by@, so admitting a
+-- self-approval here would publish the item and bump the catalog before the
+-- revision update fails. An emergency override is only meaningful on a
+-- sensitive catalog and does not lift the distinct-approver rule.
+validateCatalogApproval :: Bool -> Bool -> Bool -> Either ServerError ()
+validateCatalogApproval sensitive sameActor emergencyOverride
+  | sameActor =
+      Left err403 { errBody = "The author of a catalog change cannot approve it" }
+  | emergencyOverride && not sensitive =
+      Left err400 { errBody = "Emergency override is valid only for sensitive catalogs" }
+  | otherwise = Right ()
 
 rejectRevisionHandler :: AuthedUser -> Text -> CatalogReviewRequest -> AppM CatalogRevisionDTO
 rejectRevisionHandler user rawRevisionId review = do

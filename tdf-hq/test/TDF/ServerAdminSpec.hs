@@ -1732,6 +1732,29 @@ spec = describe "TDF.ServerAdmin email broadcast helpers" $ do
                     ME.whatsAppMessageHoldReason stored `shouldBe` Just "should stay outbound"
                     ME.whatsAppMessageReplyError stored `shouldBe` Just "transport failure"
 
+        it "never puts an already answered message back in the reply queue" $
+          withWhatsAppAdminPool $ \pool -> do
+            let env = dummyEnv { envPool = pool }
+                now = UTCTime (fromGregorian 2026 4 13) (secondsToDiffTime 0)
+                socialUnhold :<|> _socialStatus :<|> _socialErrors :<|> _socialDelivery = socialHandlersFor (mkUser [Admin])
+                req =
+                    SocialUnholdRequest
+                        { surChannel = "whatsapp"
+                        , surExternalId = Just "wa-answered-1"
+                        , surSenderId = Nothing
+                        , surNote = Nothing
+                        }
+                answered =
+                    (seedWhatsAppAdminMessage now "wa-answered-1" "incoming")
+                        { ME.whatsAppMessageReplyStatus = "sent"
+                        , ME.whatsAppMessageReplyText = Just "already answered"
+                        }
+            msgKey <- runSqlPool (insert answered) pool
+            result <- runAdminTestWith env (socialUnhold req)
+            fmap errHTTPCode (either Just (const Nothing) result) `shouldBe` Just 404
+            mStored <- runSqlPool (get msgKey) pool
+            fmap ME.whatsAppMessageReplyStatus mStored `shouldBe` Just "sent"
+
         it "rejects sender-id unholds when the latest incoming WhatsApp message is not held" $
           withWhatsAppAdminPool $ \pool -> do
             let env = dummyEnv { envPool = pool }

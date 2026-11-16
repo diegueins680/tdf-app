@@ -56,6 +56,7 @@ import qualified TDF.Commerce.PaymentArithmeticSpec as PaymentArithmeticSpec
 import qualified TDF.Commerce.DatafastConfigSpec as DatafastConfigSpec
 import qualified TDF.EmailHeadersSpec as EmailHeadersSpec
 import qualified TDF.TicketConfirmationSpec as TicketConfirmationSpec
+import qualified TDF.EventAdminDelegationSpec as EventAdminDelegationSpec
 import qualified TDF.EventOrganizerSpec as EventOrganizerSpec
 import qualified TDF.InvoiceDatilSpec as InvoiceDatilSpec
 import qualified TDF.TicketManualReviewSpec as TicketManualReviewSpec
@@ -526,6 +527,9 @@ import TDF.Server.SocialEventsHandlers (
     StripeTicketPaymentEvidence (..),
     parseStripeTicketPaymentEvidence,
     validateStripeTicketPaymentEvidence,
+    StripeTicketCapture (..),
+    parseStripeTicketCapture,
+    stripeTicketClosedOrderNeedsReview,
     parseStripeWebhookMarketplaceOrderId,
     parseStripeWebhookPaymentIntentId,
     canRecoverMarketplaceStripeOrder,
@@ -534,12 +538,14 @@ import TDF.Server.SocialEventsHandlers (
     validateInvitationToPartyId,
     validateInvitationStatusInput,
     validateInvitationStatusUpdateInput,
-    validateEventArtistIds,
+    EventArtistRef (..),
+    validateEventArtistRefs,
     validateEventArtistFilter,
     validateArtistName,
     validateSocialEventsFeatureAction,
     validateArtistProfileCreateParty,
     validateArtistProfileWriteAccess,
+    validateArtistProfilePartyChange,
     validateAuthenticatedPartyReference,
     validateTicketCheckInLookup,
     validateStoredTicketOrderStatus,
@@ -594,6 +600,8 @@ import TDF.Config
       facebookMessagingApiBase,
       facebookMessagingPageId,
       googleClientId,
+      appleSignInAudiences,
+      appleSignInJwksUrl,
       instagramAppToken,
       instagramGraphBase,
       instagramMessagingApiBase,
@@ -638,6 +646,7 @@ import TDF.Seed
     , syntheticPersonaPassword
     , syntheticPersonaSeedingAllowed
     )
+import qualified TDF.AppleSignInSpec as AppleSignInSpec
 import qualified TDF.ServerAuthSpec as ServerAuthSpec
 import qualified TDF.TrialIdentitySpec as TrialIdentitySpec
 import qualified TDF.CourseIdentitySpec as CourseIdentitySpec
@@ -918,6 +927,7 @@ main = hspec $ do
     EmailHeadersSpec.spec
     TicketConfirmationSpec.spec
     EventOrganizerSpec.spec
+    EventAdminDelegationSpec.spec
     InvoiceDatilSpec.spec
     TicketManualReviewSpec.spec
     TicketPaymentReceiptSpec.spec
@@ -2838,6 +2848,9 @@ main = hspec $ do
               `shouldBe` Just ProviderCapabilities.FlowEventTicket
             PaymentRuntimeStore.productFlowForDomain "marketplace_rental"
               `shouldBe` Just ProviderCapabilities.FlowMarketplace
+            -- ADR 0136: agreement charges need the marketplace capabilities.
+            PaymentRuntimeStore.productFlowForDomain "marketplace_agreement"
+              `shouldBe` Just ProviderCapabilities.FlowMarketplace
             PaymentRuntimeStore.productFlowForDomain "unknown"
               `shouldBe` Nothing
 
@@ -4345,6 +4358,40 @@ main = hspec $ do
                 (A.object ["data" .= A.object ["object" .= A.object ["id" .= ("pi_ticket_123" :: Text)] ]])
                 `shouldBe` Left "Stripe ticket payment evidence is incomplete"
 
+        it "surfaces a succeeded Stripe capture that carries no usable ticket binding" $ do
+            let capturePayload extra intent =
+                    A.object (("data" .= A.object ["object" .= A.object intent]) : extra)
+                succeeded amount =
+                    [ "id" .= ("pi_ticket_123" :: Text)
+                    , "status" .= ("Succeeded" :: Text)
+                    , "amount_received" .= (amount :: Int)
+                    ]
+            -- No metadata at all: the binding parser refuses, the capture is still read.
+            parseStripeTicketPaymentEvidence (capturePayload [] (succeeded 5100))
+                `shouldBe` Left "Stripe ticket payment evidence is incomplete"
+            parseStripeTicketCapture (capturePayload [] (succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 Nothing CheckoutStore.CheckoutProduction)
+            parseStripeTicketCapture
+                (capturePayload ["livemode" .= False] (("currency" .= ("usd" :: Text)) : succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 (Just "usd") CheckoutStore.CheckoutSandbox)
+            parseStripeTicketCapture (capturePayload ["livemode" .= True] (succeeded 5100))
+                `shouldBe` Just (StripeTicketCapture 5100 Nothing CheckoutStore.CheckoutProduction)
+            -- Nothing captured, nothing to reconcile.
+            parseStripeTicketCapture (capturePayload [] (succeeded 0)) `shouldBe` Nothing
+            parseStripeTicketCapture
+                ( capturePayload
+                    []
+                    [ "status" .= ("requires_payment_method" :: Text)
+                    , "amount_received" .= (5100 :: Int)
+                    ]
+                )
+                `shouldBe` Nothing
+            parseStripeTicketCapture (A.object []) `shouldBe` Nothing
+
+        it "reviews a valid Stripe capture only when the ticket order is closed" $ do
+            map stripeTicketClosedOrderNeedsReview ["pending", "paid", " Paid ", "cancelled", "expired", "refunded", "deleted"]
+                `shouldBe` [False, False, False, True, True, True, True]
+
         it "recovers marketplace order ids from Stripe metadata context" $ do
             let webhookPayload =
                     A.object
@@ -5433,6 +5480,30 @@ main = hspec $ do
                 $ do
                     cfg <- loadConfig
                     googleClientId cfg `shouldBe` Nothing
+
+        it "defaults and normalizes Sign in with Apple audiences and JWKS URL" $ do
+            withEnvOverrides [] $ do
+                cfg <- loadConfig
+                appleSignInAudiences cfg `shouldBe` Just ["com.tdfrecords.app"]
+                appleSignInJwksUrl cfg `shouldBe` "https://appleid.apple.com/auth/keys"
+            withEnvOverrides
+                [ ("APPLE_SIGN_IN_AUDIENCES", Just " com.tdfrecords.app , com.tdfrecords.web,com.tdfrecords.app ")
+                , ("APPLE_SIGN_IN_JWKS_URL", Just " https://example.test/keys ") ]
+                $ do
+                    cfg <- loadConfig
+                    appleSignInAudiences cfg `shouldBe` Just ["com.tdfrecords.app", "com.tdfrecords.web"]
+                    appleSignInJwksUrl cfg `shouldBe` "https://example.test/keys"
+            withEnvOverrides [ ("APPLE_SIGN_IN_AUDIENCES", Just "disabled") ] $ do
+                cfg <- loadConfig
+                appleSignInAudiences cfg `shouldBe` Nothing
+
+        it "rejects malformed Apple Sign in settings" $ do
+            let assertInvalid name value expected =
+                    withEnvOverrides [ (name, Just value) ] $
+                        loadConfig `shouldThrow` \err -> expected `isInfixOf` show (err :: IOException)
+            assertInvalid "APPLE_SIGN_IN_AUDIENCES" "com.tdf/app" "must not contain path"
+            assertInvalid "APPLE_SIGN_IN_AUDIENCES" "com.tdf app" "ASCII letters"
+            assertInvalid "APPLE_SIGN_IN_JWKS_URL" "http://example.test/keys" "absolute https URL"
 
         it "rejects malformed Google client ids before Google login verification fallback" $ do
             let assertInvalid rawClientId expectedMessage =
@@ -12516,6 +12587,25 @@ main = hspec $ do
             (eitherDecode @ArtistDTO "{\"artistName\":\"Los Mentores\",\"artistGenreIds\":[\"11111111-1111-4111-8111-111111111111\"]}")
                 `shouldSatisfy` isRight
 
+    describe "validateArtistProfilePartyChange" $ do
+        let user roles = AuthedUser
+                { auPartyId = toSqlKey 7
+                , auRoles = roles
+                , auModules = modulesForRoles roles
+                , auApiTokenId = Nothing
+                , auSessionWitness = Nothing
+                }
+            owner = user [Artist]
+            admin = user [Admin]
+        it "keeps the stored party when an owner omits it or repeats it" $ do
+            validateArtistProfilePartyChange owner (Just "7") Nothing `shouldBe` Right (Just "7")
+            validateArtistProfilePartyChange owner (Just "7") (Just " 7 ") `shouldBe` Right (Just "7")
+        it "refuses an owner moving the profile to another party" $
+            fmap errHTTPCode (either Just (const Nothing) (validateArtistProfilePartyChange owner (Just "7") (Just "99")))
+                `shouldBe` Just 403
+        it "lets a strict administrator move a profile to another party" $
+            validateArtistProfilePartyChange admin (Just "7") (Just "99") `shouldBe` Right (Just "99")
+
     describe "validateArtistName" $ do
         it "trims canonical artist names before persistence" $
             validateArtistName "  Los Mentores  " `shouldBe` Right "Los Mentores"
@@ -12550,7 +12640,7 @@ main = hspec $ do
             in fmap (map fromSqlKey) (validateEventArtistFilter (Just (Data.Text.pack (show key))))
                 == Right [key]
 
-    describe "validateEventArtistIds" $ do
+    describe "validateEventArtistRefs" $ do
         let mkArtist rawArtistId =
                 ArtistDTO
                     { artistId = rawArtistId
@@ -12565,19 +12655,32 @@ main = hspec $ do
                     , artistUpdatedAt = Nothing
                     }
 
-        it "requires explicit artist ids and canonicalizes explicit positive ids" $ do
-            fmap (map fromSqlKey)
-                (validateEventArtistIds [mkArtist (Just " 0042 "), mkArtist (Just "7")])
-                `shouldBe` Right [42, 7]
-            case validateEventArtistIds [mkArtist Nothing] of
+        it "canonicalizes explicit positive ids and refuses an entry with neither id nor name" $ do
+            validateEventArtistRefs [mkArtist (Just " 0042 "), mkArtist (Just "7")]
+                `shouldBe` Right [EventArtistProfile (toSqlKey 42), EventArtistProfile (toSqlKey 7)]
+            case validateEventArtistRefs [mkArtist Nothing] of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
-                    BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId is required"
+                    BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId or artistName is required"
                 Right value ->
-                    expectationFailure ("Expected missing event artist id to be rejected, got " <> show value)
+                    expectationFailure ("Expected an event artist without id or name to be rejected, got " <> show value)
+
+        it "accepts the name of an artist who is not on the platform yet" $ do
+            validateEventArtistRefs [(mkArtist Nothing){artistName = "  Los   Nuevos "}, mkArtist (Just "7")]
+                `shouldBe` Right [EventArtistNamed "Los Nuevos", EventArtistProfile (toSqlKey 7)]
+            let assertInvalidName expectedMessage rawNames =
+                    case validateEventArtistRefs [(mkArtist Nothing){artistName = rawName} | rawName <- rawNames] of
+                        Left err -> do
+                            errHTTPCode err `shouldBe` 400
+                            BL.unpack (errBody err) `shouldContain` expectedMessage
+                        Right value ->
+                            expectationFailure ("Expected invalid event artist name to be rejected, got " <> show value)
+            assertInvalidName "eventArtists[].artistName must not contain control characters" ["Los\nNuevos"]
+            assertInvalidName "eventArtists[].artistName must be 200 characters or fewer" [Data.Text.replicate 201 "a"]
+            assertInvalidName "eventArtists[].artistName must be unique" ["Los Nuevos", " los  NUEVOS "]
 
         it "rejects duplicate artist ids before event writes hit the join-table constraint" $
-            case validateEventArtistIds [mkArtist (Just "42"), mkArtist (Just "0042")] of
+            case validateEventArtistRefs [mkArtist (Just "42"), mkArtist (Just "0042")] of
                 Left err -> do
                     errHTTPCode err `shouldBe` 400
                     BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId must be unique"
@@ -12586,7 +12689,7 @@ main = hspec $ do
 
         it "rejects malformed explicit artist ids instead of silently dropping event links" $ do
             let assertInvalid rawArtistId =
-                    case validateEventArtistIds [mkArtist (Just rawArtistId)] of
+                    case validateEventArtistRefs [mkArtist (Just rawArtistId)] of
                         Left err -> do
                             errHTTPCode err `shouldBe` 400
                             BL.unpack (errBody err) `shouldContain` "eventArtists[].artistId must be a positive integer"
@@ -18049,6 +18152,7 @@ main = hspec $ do
     ArtistSpec.spec
     ArtistActivationSpec.spec
     ServerAuthSpec.spec
+    AppleSignInSpec.spec
     OperationsInboundCaptureSpec.spec
     ProviderIdentitySpec.spec
     CredentialLifecycleSpec.spec

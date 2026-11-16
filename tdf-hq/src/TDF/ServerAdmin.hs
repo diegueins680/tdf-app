@@ -666,6 +666,8 @@ adminServer user =
             ]
         _ -> throwError err400 { errBody = "channel inválido (instagram|facebook|whatsapp)" }
 
+    -- A message already answered ("sent") is never put back in the reply queue:
+    -- unholding it would make the auto-reply worker answer it a second time.
     unholdByExternalId channel extId =
       case channel of
         "instagram" -> withPool $ do
@@ -673,6 +675,7 @@ adminServer user =
                 [ InstagramMessageExternalId ==. extId
                 , InstagramMessageDirection ==. "incoming"
                 , InstagramMessageDeletedAt ==. Nothing
+                , InstagramMessageReplyStatus !=. "sent"
                 ]
           mRow <- selectFirst filters []
           case mRow of
@@ -692,6 +695,7 @@ adminServer user =
                 [ ME.FacebookMessageExternalId ==. extId
                 , ME.FacebookMessageDirection ==. "incoming"
                 , ME.FacebookMessageDeletedAt ==. Nothing
+                , ME.FacebookMessageReplyStatus !=. "sent"
                 ]
           mRow <- selectFirst filters []
           case mRow of
@@ -710,6 +714,7 @@ adminServer user =
           let filters =
                 [ ME.WhatsAppMessageExternalId ==. extId
                 , ME.WhatsAppMessageDirection ==. "incoming"
+                , ME.WhatsAppMessageReplyStatus !=. "sent"
                 ]
           mRow <- selectFirst filters []
           case mRow of

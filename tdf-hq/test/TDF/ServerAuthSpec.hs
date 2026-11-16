@@ -20,14 +20,24 @@ import TDF.Auth
   ( AuthedUser (..)
   , ModuleAccess (..)
   , hasModuleAccess
+  , apiTokenWithinValidity
+  , isInteractiveSessionLabel
   , modulesForRoles
   , resolveUsernameFromLabel
   , validateModuleAccess
   )
-import TDF.DTO (ArtistInvitationLinkCreate (..), LoginRequest (..), SignupRequest)
-import TDF.Models (RoleEnum (..), UserCredential (..), roleFromText, roleToText)
+import TDF.DTO (AppleFullName (..), ArtistInvitationLinkCreate (..), LoginRequest (..), SignupRequest)
+import TDF.AppleSignIn (AppleIdentity (..))
+import TDF.Models (ApiToken (..), RoleEnum (..), UserCredential (..), roleFromText, roleToText)
 import TDF.ServerAuth
-  ( GoogleIdTokenInfo (..)
+  ( AppleProfile (..)
+  , GoogleIdTokenInfo (..)
+  , appleDisplayName
+  , appleProfileFromIdentity
+  , validateAppleAccountCreationTerms
+  , validateAppleFullName
+  , validateAppleIdentityTokenInput
+  , validateAppleNonceInput
   , GoogleProfile (..)
   , recoveryWindowValid
   , normalizeAuthEmailAddress
@@ -61,6 +71,7 @@ import TDF.ServerAuth
 spec :: Spec
 spec = do
   recoveryWindowSpec
+  appleSessionValiditySpec
   authEmailSpec
   moduleAccessSpec
   loginRequestSpec
@@ -81,6 +92,7 @@ spec = do
   passwordResetTokenSpec
   googleIdTokenInputSpec
   googleTokenInfoSpec
+  appleLoginInputSpec
   loginEmailFallbackSpec
   googleLoginEmailFallbackSpec
   passwordResetDeliverySpec
@@ -294,6 +306,8 @@ tokenLabelUsernameSpec = describe "resolveUsernameFromLabel" $ do
     resolveUsernameFromLabel " password-login: ada@example.com "
       `shouldBe` Just "ada@example.com"
     resolveUsernameFromLabel "google-login:ada@example.com"
+      `shouldBe` Just "ada@example.com"
+    resolveUsernameFromLabel "apple-login:ada@example.com"
       `shouldBe` Just "ada@example.com"
 
   it "rejects malformed stored label usernames before session fallback rendering" $ do
@@ -880,3 +894,68 @@ recoveryWindowSpec = describe "ID-SESSION-003 recovery expiry" $ do
     recoveryWindowValid (-1) 899 1 `shouldBe` False
     recoveryWindowValid 0 901 1 `shouldBe` False
     recoveryWindowValid (maxBound - 899) minBound maxBound `shouldBe` False
+
+appleLoginInputSpec :: Spec
+appleLoginInputSpec = describe "Sign in with Apple request handling" $ do
+  it "applies the same explicit consent rule as Google before creating an account" $ do
+    validateAppleAccountCreationTerms (Just True) (Just "tdf-account-terms-v1") `shouldBe` Right ()
+    validateAppleAccountCreationTerms Nothing (Just "tdf-account-terms-v1") `shouldSatisfy` isLeft
+    validateAppleAccountCreationTerms (Just True) Nothing `shouldSatisfy` isLeft
+    validateAppleAccountCreationTerms (Just True) (Just "other") `shouldSatisfy` isLeft
+    validateAppleAccountCreationTerms Nothing Nothing
+      `shouldBe` Left "Accept the terms and privacy policy through the signup flow before creating a Apple account"
+
+  it "validates the identity token shape and nonce before verification" $ do
+    validateAppleIdentityTokenInput " a.b.c " `shouldBe` Right "a.b.c"
+    validateAppleIdentityTokenInput "   " `shouldSatisfy` isLeft
+    validateAppleIdentityTokenInput "a.b" `shouldSatisfy` isLeft
+    validateAppleIdentityTokenInput "a.b.c d" `shouldSatisfy` isLeft
+    validateAppleIdentityTokenInput "a.b.\233" `shouldSatisfy` isLeft
+    validateAppleNonceInput " nonce-1 " `shouldBe` Right "nonce-1"
+    validateAppleNonceInput "" `shouldSatisfy` isLeft
+    validateAppleNonceInput (T.replicate 257 "n") `shouldSatisfy` isLeft
+    validateAppleNonceInput "a b" `shouldSatisfy` isLeft
+
+  it "builds Apple display names without exposing a relay or contact email" $ do
+    validateAppleFullName (Just (AppleFullName (Just "Ada") (Just "Lovelace"))) `shouldBe` Right (Just "Ada Lovelace")
+    validateAppleFullName Nothing `shouldBe` Right Nothing
+    validateAppleFullName (Just (AppleFullName (Just (T.replicate 101 "a")) Nothing)) `shouldSatisfy` isLeft
+    appleDisplayName (AppleProfile "i" "s" (Just "a@example.com") (Just "Ada")) `shouldBe` "Ada"
+    appleDisplayName (AppleProfile "i" "s" (Just "a@example.com") Nothing) `shouldBe` "Cuenta TDF"
+    appleDisplayName (AppleProfile "i" "s" Nothing Nothing) `shouldBe` "Cuenta TDF"
+
+  it "normalizes the token email and rejects unverified or malformed emails" $ do
+    let identity email verified = AppleIdentity "sub-1" email verified True
+    fmap apEmail (appleProfileFromIdentity Nothing (identity (Just " Relay@PrivateRelay.AppleID.com ") True))
+      `shouldBe` Right (Just "relay@privaterelay.appleid.com")
+    fmap apEmail (appleProfileFromIdentity Nothing (identity Nothing False)) `shouldBe` Right Nothing
+    appleProfileFromIdentity Nothing (identity (Just "a@example.com") False) `shouldSatisfy` isLeft
+    appleProfileFromIdentity Nothing (identity (Just "not-an-email") True) `shouldSatisfy` isLeft
+
+-- Apple-issued sessions follow the same database-clock half-open validity
+-- window as password/Google sessions; provider JWT timestamps are not app TTL.
+appleSessionValiditySpec :: Spec
+appleSessionValiditySpec = describe "Apple interactive session validity" $ do
+  let token label expiry = ApiToken "synthetic-apple-session" (toSqlKey 1)
+        label True (Just 0) expiry
+      -- A token with no validity window at all, as minted before expiry
+      -- enforcement or managed explicitly as a service credential.
+      unwindowed label = ApiToken "synthetic-apple-session" (toSqlKey 1)
+        label True Nothing Nothing
+  it "recognizes canonical and normalized Apple login labels as interactive" $ do
+    isInteractiveSessionLabel (Just "apple-login:apple:subject") `shouldBe` True
+    isInteractiveSessionLabel (Just "  APPLE-LOGIN:apple:subject  ") `shouldBe` True
+  it "rejects legacy Apple sessions without a server-side expiry" $ do
+    apiTokenWithinValidity 100 (unwindowed (Just "apple-login:apple:subject"))
+      `shouldBe` False
+    apiTokenWithinValidity 100 (token (Just "apple-login:apple:subject") Nothing)
+      `shouldBe` False
+  it "accepts a live Apple session and rejects equality and later expiry boundaries" $ do
+    let live = token (Just "apple-login:apple:subject") (Just 100)
+    apiTokenWithinValidity 99 live `shouldBe` True
+    apiTokenWithinValidity 100 live `shouldBe` False
+    apiTokenWithinValidity 101 live `shouldBe` False
+  it "retains explicitly managed unbounded service tokens" $ do
+    apiTokenWithinValidity 100 (unwindowed (Just "service:synthetic")) `shouldBe` True
+  it "rejects a service token whose validity window is incomplete" $ do
+    apiTokenWithinValidity 100 (token (Just "service:synthetic") Nothing) `shouldBe` False

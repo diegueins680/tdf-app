@@ -13,6 +13,7 @@ module TDF.Server where
 
 import qualified TDF.VideoCampaigns as VideoCampaigns
 import qualified TDF.ContentStorage as ContentStorage
+import qualified TDF.Calendar.TokenCipher as CalendarTokenCipher
 import qualified TDF.Social.Chat as SocialChat
 import qualified TDF.CoursePhone as CoursePhone
 import qualified TDF.Social.FanEffects as FanEffects
@@ -171,6 +172,7 @@ import           TDF.Auth
   , hasModuleAccess
   , hasOperationsAccess
   , hasSocialInboxAccess
+  , hasStrictAdminAccess
   , moduleName
   , modulesForRoles
   , validateModuleAccess
@@ -754,6 +756,7 @@ server env =
   :<|> AuthServer.sessionServer
   :<|> AuthServer.login
   :<|> AuthServer.googleLogin
+  :<|> AuthServer.appleLogin
   :<|> AuthServer.signup
   :<|> AuthServer.changePassword
   :<|> AuthServer.authV1Server
@@ -1053,20 +1056,31 @@ listInventory mFieldParam mSessionParam mChannelParam = do
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool (InputList.listInventoryDB parsedField Nothing Nothing)
 
-seedInventory :: Maybe Text -> AppM NoContent
-seedInventory rawToken = do
+seedInventory :: AuthedUser -> Maybe Text -> AppM NoContent
+seedInventory user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool InputList.seedInventoryDB
   pure NoContent
 
-seedHQ :: Maybe Text -> AppM NoContent
-seedHQ rawToken = do
+seedHQ :: AuthedUser -> Maybe Text -> AppM NoContent
+seedHQ user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   now <- liftIO getCurrentTime
   liftIO $ flip runSqlPool envPool (InputList.seedHQDB now)
   pure NoContent
+
+-- | Every seed route needs what POST /admin/seed needs: a strict
+-- administrator session with the Admin module, and then the seed token
+-- (OPS-SEED-ROUTES-001). The shared token alone no longer seeds anything.
+validateSeedOperator :: AuthedUser -> Either ServerError ()
+validateSeedOperator user
+  | not (hasStrictAdminAccess user) = Left err403 { errBody = "Admin role required" }
+  | not (hasModuleAccess ModuleAdmin user) = Left err403 { errBody = "Missing required module access" }
+  | otherwise = Right ()
 
 requireSeedToken :: Maybe Text -> AppM ()
 requireSeedToken rawToken = do
@@ -1751,6 +1765,12 @@ whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
     Just extId -> runDB $ getBy (ME.UniqueWhatsAppMessage extId)
   mReplyTarget <- either throwError pure $
     validateWhatsAppReplyTarget recipient mExternalId mReplyTargetRaw
+  -- A contact who opted out receives nothing further, staff replies included
+  -- (MSG-STAFF-OUTBOUND-001). Nothing is sent or recorded.
+  mConsent <- case normalizeWhatsAppPhone recipient of
+    Nothing -> pure Nothing
+    Just consentPhone -> runDB $ getBy (ME.UniqueWhatsAppConsent consentPhone)
+  either throwError pure (validateWhatsAppReplyConsent (entityVal <$> mConsent))
   now <- liftIO getCurrentTime
   waEnv <- liftIO loadWhatsAppEnv
   sendResult <- sendWhatsAppText waEnv recipient body
@@ -1784,6 +1804,12 @@ whatsappManualReplyHandler user WhatsAppReplyReq{..} = do
         , "messageId" .= fromSqlKey (entityKey sentEntity)
         , "deliveryStatus" .= ME.whatsAppMessageDeliveryStatus (entityVal sentEntity)
         ])
+
+validateWhatsAppReplyConsent :: Maybe ME.WhatsAppConsent -> Either ServerError ()
+validateWhatsAppReplyConsent mConsent
+  | CampaignAutomation.whatsAppConsentWithdrawn mConsent =
+      Left err409 { errBody = "El contacto retiró su consentimiento para recibir mensajes de WhatsApp" }
+  | otherwise = Right ()
 
 whatsappOperatorQuestionHandler :: AuthedUser -> WhatsAppOperatorQuestionReq -> AppM Value
 whatsappOperatorQuestionHandler user WhatsAppOperatorQuestionReq{..} = do
@@ -4884,6 +4910,32 @@ validateGoogleCalendarSyncCursor (Just rawCursor)
 maxGoogleCalendarSyncCursorChars :: Int
 maxGoogleCalendarSyncCursorChars = 4096
 
+-- | Google Calendar tokens are stored sealed (TDF.Calendar.TokenCipher). No
+-- token is written without the key; a missing key makes the integration
+-- unavailable instead of falling back to plaintext.
+sealCalendarTokenForStorage :: Text -> AppM Text
+sealCalendarTokenForStorage plain = do
+  -- Only a token the stored-token validator will accept back is sealed.
+  when (CalendarTokenCipher.calendarTokenIsSealed plain
+          || isLeft (validateStoredGoogleCalendarOAuthToken "token" plain)) $
+    throwError err502 { errBody = "Google OAuth returned an unusable token" }
+  mKey <- liftIO CalendarTokenCipher.loadCalendarTokenKey
+  case mKey of
+    Nothing -> throwError (calendarTokenCipherError CalendarTokenCipher.CalendarTokenKeyMissing)
+    Just key -> liftIO (CalendarTokenCipher.sealCalendarToken key plain)
+
+openStoredCalendarToken :: Text -> AppM Text
+openStoredCalendarToken stored = do
+  mKey <- liftIO CalendarTokenCipher.loadCalendarTokenKey
+  either (throwError . calendarTokenCipherError) pure
+    (CalendarTokenCipher.openCalendarToken mKey stored)
+
+calendarTokenCipherError :: CalendarTokenCipher.CalendarTokenError -> ServerError
+calendarTokenCipherError CalendarTokenCipher.CalendarTokenKeyMissing =
+  err503 { errBody = "Google Calendar token encryption key is not configured" }
+calendarTokenCipherError CalendarTokenCipher.CalendarTokenUnreadable =
+  err503 { errBody = "Stored Google Calendar token cannot be read; reconnect the calendar" }
+
 validateStoredGoogleCalendarAccessToken :: Maybe Text -> Either ServerError Text
 validateStoredGoogleCalendarAccessToken Nothing =
   Left err401 { errBody = "No hay access_token para Google Calendar." }
@@ -4897,7 +4949,7 @@ validateStoredGoogleCalendarRefreshToken =
 validateStoredGoogleCalendarOAuthToken :: Text -> Text -> Either ServerError Text
 validateStoredGoogleCalendarOAuthToken label rawToken
   | T.null tokenVal = invalid
-  | T.length tokenVal > maxDriveOAuthTokenChars = invalid
+  | T.length tokenVal > CalendarTokenCipher.calendarTokenStoredLimit maxDriveOAuthTokenChars tokenVal = invalid
   | T.any isSpace tokenVal = invalid
   | T.any isControl tokenVal = invalid
   | T.any isHiddenDriveOAuthTokenChar tokenVal = invalid
@@ -5044,13 +5096,15 @@ calendarServer user =
             , token_type = gTokenType
             } = token
           expiresAt = addUTCTime . fromIntegral <$> gExpiresIn <*> pure now
+      sealedAccessToken <- sealCalendarTokenForStorage gAccessToken
+      sealedRefreshToken <- traverse sealCalendarTokenForStorage gRefreshToken
       mExisting <- runDB $ getBy (Cal.UniqueCalendar calendarId)
       cfgId <- case mExisting of
         Nothing -> runDB $ insert Cal.GoogleCalendarConfig
           { Cal.googleCalendarConfigOwnerId = Just (auPartyId user)
           , Cal.googleCalendarConfigCalendarId = calendarId
-          , Cal.googleCalendarConfigAccessToken = Just gAccessToken
-          , Cal.googleCalendarConfigRefreshToken = gRefreshToken
+          , Cal.googleCalendarConfigAccessToken = Just sealedAccessToken
+          , Cal.googleCalendarConfigRefreshToken = sealedRefreshToken
           , Cal.googleCalendarConfigTokenType = gTokenType
           , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
           , Cal.googleCalendarConfigSyncCursor = Nothing
@@ -5060,8 +5114,8 @@ calendarServer user =
           }
         Just (Entity eid oldCfg) -> do
           runDB $ update eid
-            [ Cal.GoogleCalendarConfigAccessToken =. Just gAccessToken
-            , Cal.GoogleCalendarConfigRefreshToken =. (gRefreshToken <|> Cal.googleCalendarConfigRefreshToken oldCfg)
+            [ Cal.GoogleCalendarConfigAccessToken =. Just sealedAccessToken
+            , Cal.GoogleCalendarConfigRefreshToken =. (sealedRefreshToken <|> Cal.googleCalendarConfigRefreshToken oldCfg)
             , Cal.GoogleCalendarConfigTokenType =. gTokenType
             , Cal.GoogleCalendarConfigTokenExpiresAt =. expiresAt
             , Cal.GoogleCalendarConfigUpdatedAt =. now
@@ -5164,7 +5218,8 @@ calendarServer user =
         _ -> do
           case Cal.googleCalendarConfigRefreshToken cfg of
             Nothing -> throwError err401 { errBody = "No hay refresh_token para Google Calendar." }
-            Just rt -> do
+            Just storedRt -> do
+              rt <- openStoredCalendarToken storedRt
               refreshToken <- either throwError pure (validateStoredGoogleCalendarRefreshToken rt)
               refreshAccessToken cid sec redirect cfg refreshToken now
 
@@ -5184,8 +5239,13 @@ calendarServer user =
             , token_type = gTokenType
             } = token
           expiresAt = addUTCTime . fromIntegral <$> gExpiresIn <*> pure now
-          updatedCfg = cfg
-            { Cal.googleCalendarConfigAccessToken = Just gAccessToken
+      sealedAccessToken <- sealCalendarTokenForStorage gAccessToken
+      -- Seal the refresh token again too: a row written before encryption
+      -- existed stops holding plaintext at its first refresh.
+      sealedRefreshToken <- sealCalendarTokenForStorage rt
+      let updatedCfg = cfg
+            { Cal.googleCalendarConfigAccessToken = Just sealedAccessToken
+            , Cal.googleCalendarConfigRefreshToken = Just sealedRefreshToken
             , Cal.googleCalendarConfigTokenType = gTokenType
             , Cal.googleCalendarConfigTokenExpiresAt = expiresAt
             , Cal.googleCalendarConfigUpdatedAt = now
@@ -5193,6 +5253,7 @@ calendarServer user =
       _ <- runDB $ updateWhere
         [Cal.GoogleCalendarConfigCalendarId ==. Cal.googleCalendarConfigCalendarId cfg]
         [ Cal.GoogleCalendarConfigAccessToken =. Cal.googleCalendarConfigAccessToken updatedCfg
+        , Cal.GoogleCalendarConfigRefreshToken =. Cal.googleCalendarConfigRefreshToken updatedCfg
         , Cal.GoogleCalendarConfigTokenType =. Cal.googleCalendarConfigTokenType updatedCfg
         , Cal.GoogleCalendarConfigTokenExpiresAt =. Cal.googleCalendarConfigTokenExpiresAt updatedCfg
         , Cal.GoogleCalendarConfigUpdatedAt =. now
@@ -5202,8 +5263,9 @@ calendarServer user =
     syncFromGoogle :: Cal.GoogleCalendarConfig -> Maybe UTCTime -> Maybe UTCTime -> UTCTime -> AppM (Int, Int, Int, Maybe Text)
     syncFromGoogle cfg fromTs toTs now = do
       manager <- pure sharedTlsManager
+      openedAccessToken <- traverse openStoredCalendarToken (Cal.googleCalendarConfigAccessToken cfg)
       token <- either throwError pure $
-        validateStoredGoogleCalendarAccessToken (Cal.googleCalendarConfigAccessToken cfg)
+        validateStoredGoogleCalendarAccessToken openedAccessToken
       (events, cursor) <-
         fetchAllPages
           manager
@@ -9023,8 +9085,9 @@ claimReferral emailVal mUser rawCode = do
 throwNotFound :: Text -> AppM a
 throwNotFound msg = throwError err404 { errBody = BL.fromStrict (TE.encodeUtf8 msg) }
 
-seedTrigger :: Maybe Text -> AppM NoContent
-seedTrigger rawToken = do
+seedTrigger :: AuthedUser -> Maybe Text -> AppM NoContent
+seedTrigger user rawToken = do
+  either throwError pure (validateSeedOperator user)
   requireSeedToken rawToken
   Env{..} <- ask
   liftIO $ flip runSqlPool envPool seedAll
@@ -9632,8 +9695,7 @@ serviceMarketplaceServer user =
 
 listServiceAds :: AppM [Api.ServiceAdDTO]
 listServiceAds = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     ads <- selectList [ServiceAdActive ==. True] [Desc ServiceAdCreatedAt]
     let providerIds = map (serviceAdProviderPartyId . entityVal) ads
     providers <- if null providerIds then pure [] else selectList [PartyId <-. providerIds] []
@@ -9682,8 +9744,24 @@ resolveServiceMarketplaceBookingEntity rawBookingId = do
     pure
     mBooking
 
+-- | Roles that staff assign to people who sell a service. Publishing an ad
+-- or its slots needs one of them; a self-registered Customer or Fan account
+-- cannot advertise (SVCMKT-PROVIDER-ADS-001).
+serviceAdProviderRoles :: [RoleEnum]
+serviceAdProviderRoles =
+  [ Admin, Manager, StudioManager, Engineer, Teacher, Producer, LiveSessionsProducer
+  , Artist, Artista, Songwriter, DJ, Photographer, Publicist, TourManager
+  , StageManager, RoadCrew, Promotor, Promoter, Agency, Vendor
+  ]
+
+validateServiceAdProvider :: AuthedUser -> Either ServerError ()
+validateServiceAdProvider user
+  | fromSqlKey (auPartyId user) > 0 && any (`elem` serviceAdProviderRoles) (auRoles user) = Right ()
+  | otherwise = Left err403 { errBody = "Service ads require an approved provider role" }
+
 createServiceAd :: AuthedUser -> Api.ServiceAdCreateReq -> AppM Api.ServiceAdDTO
 createServiceAd user Api.ServiceAdCreateReq{..} = do
+  either throwError pure (validateServiceAdProvider user)
   when (T.null (T.strip sacRoleTag) || T.null (T.strip sacHeadline)) $
     throwError err400 { errBody = "roleTag and headline are required" }
   when (sacFeeCents <= 0) $ throwError err400 { errBody = "feeCents must be > 0" }
@@ -9694,9 +9772,8 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
     throwError err400 { errBody = "Currency is not enabled by SUPPORTED_CURRENCIES" }
   slotMinutes <- either throwError pure (validateServiceAdSlotMinutes sacSlotMinutes)
   now <- liftIO getCurrentTime
-  pool <- asks envPool
   let catalogKey = toSqlKey catalogId
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     mCatalog <- get catalogKey
     case validateServiceMarketplaceCatalog mCatalog of
       Left serverErr -> liftIO $ throwIO serverErr
@@ -9713,7 +9790,7 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
         , serviceAdActive = True
         , serviceAdCreatedAt = now
         }
-  dto <- liftIO $ flip runSqlPool pool $ do
+  dto <- runDB $ do
     adId <- insert record
     ent <- getJustEntity adId
     mProvider <- get (auPartyId user)
@@ -9724,16 +9801,15 @@ createServiceAd user Api.ServiceAdCreateReq{..} = do
 
 listServiceAdSlots :: Int64 -> AppM [Api.ServiceAdSlotDTO]
 listServiceAdSlots adId = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     Entity adKey _ <- resolveServiceAdEntity adId
     slots <- selectList [ServiceAdSlotAdId ==. adKey] [Asc ServiceAdSlotStartsAt]
     pure (map toServiceAdSlotDTO slots)
 
 createServiceAdSlot :: AuthedUser -> Int64 -> Api.ServiceAdSlotCreateReq -> AppM Api.ServiceAdSlotDTO
 createServiceAdSlot user adId Api.ServiceAdSlotCreateReq{..} = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  either throwError pure (validateServiceAdProvider user)
+  runDB $ do
     ad@(Entity adKey _) <- resolveServiceAdEntity adId
     when (serviceAdProviderPartyId (entityVal ad) /= auPartyId user) $
       liftIO $ throwIO err403
@@ -9759,8 +9835,7 @@ createServiceMarketplaceBooking _ _ =
 
 completeServiceMarketplaceBooking :: AuthedUser -> Int64 -> AppM Api.ServiceMarketplaceBookingDTO
 completeServiceMarketplaceBooking user rawBookingId = do
-  pool <- asks envPool
-  liftIO $ flip runSqlPool pool $ do
+  runDB $ do
     Entity bookingKey booking <- resolveServiceMarketplaceBookingEntity rawBookingId
     escrowEnt <- getBy (UniqueServiceEscrowBooking bookingKey)
     escrow <- either (liftIO . throwIO) pure (requireServiceEscrowForBooking escrowEnt)
@@ -11328,12 +11403,8 @@ selectPublicBookingManualPayment
 selectPublicBookingManualPayment
     rawBookingId mLookupToken Api.PublicBookingManualPaymentReq{..} = do
   context <- requireServiceBookingPaymentContext rawBookingId mLookupToken
-  let method = T.toLower (T.strip pbmprPaymentMethod)
-  unless (method == "bank_transfer") $
-    throwError err400 { errBody = "Only bank transfer is available for public manual payment" }
-  when (sbpcCheckoutStatus context == "processing") $
-    throwError err409
-      { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  either throwError pure
+    (validatePublicManualPaymentSelection (sbpcCheckoutStatus context) pbmprPaymentMethod)
   ensureNoActiveServiceBookingOnlineAttempt context
   requireServiceBookingProvider
     context (sbpcEnvironment context) Checkout.ProviderBankTransfer
@@ -11562,12 +11633,9 @@ createServiceBookingCheckoutTransaction
       :: IO (Either SomeException (Either ServerError (Key Booking))))
   case result of
     Right value -> pure value
-    Left exception -> case fromException exception :: Maybe SomeAsyncException of
-      Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception :: Maybe SqlError of
-        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
-          { errBody = "The selected room or resource was reserved by another request" })
-        _ -> liftIO (throwIO exception)
+    Left exception -> case publicBookingTransactionFailure exception of
+      Just serverErr -> pure (Left serverErr)
+      Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
@@ -11804,6 +11872,45 @@ createPublicBooking mIdempotency PublicBookingReq{..} = do
   when createdNow (notifyEngineerIfNeeded dto)
   pure dto
 
+-- | SQL failures a public booking transaction turns into 409 instead of a
+-- generic 500: the calendar exclusion (23P01), the lifecycle and snapshot
+-- triggers (23514) and serialization or deadlock aborts (40001, 40P01), the
+-- same set the staff path maps in runBookingTransaction.
+-- | Every refusal a public booking transaction can raise: a ServerError thrown
+-- with throwIO inside the transaction (servant's runHandler does not catch
+-- those, so without this mapping they answered a generic 500), or a SQL
+-- conflict the calendar turns into 409. Asynchronous exceptions and anything
+-- else propagate.
+publicBookingTransactionFailure :: SomeException -> Maybe ServerError
+publicBookingTransactionFailure exception =
+  case fromException exception :: Maybe SomeAsyncException of
+    Just _ -> Nothing
+    Nothing ->
+      case fromException exception of
+        Just serverErr -> Just serverErr
+        Nothing -> fromException exception >>= publicBookingSqlConflict
+
+publicBookingSqlConflict :: SqlError -> Maybe ServerError
+publicBookingSqlConflict sqlError
+  | sqlState sqlError == "23P01" =
+      Just err409 { errBody = "The selected room or resource was reserved by another request" }
+  | sqlState sqlError `elem` ["23514", "40001", "40P01"] =
+      Just err409 { errBody = "Booking conflicts with the resource calendar or checkout lifecycle" }
+  | otherwise = Nothing
+
+-- | Admission for a public bank-transfer selection: only bank transfer, never
+-- on a paid deposit, and not while another rail is processing.
+validatePublicManualPaymentSelection :: Text -> Text -> Either ServerError ()
+validatePublicManualPaymentSelection checkoutStatus rawMethod
+  | T.toLower (T.strip rawMethod) /= "bank_transfer" =
+      Left err400 { errBody = "Only bank transfer is available for public manual payment" }
+  | checkoutStatus == "paid" =
+      Left err409 { errBody = "This booking deposit is already paid" }
+  | checkoutStatus == "processing" =
+      Left err409
+        { errBody = "Another payment rail is currently processing; verify it before switching methods" }
+  | otherwise = Right ()
+
 createPublicTentativeBookingTransaction
   :: Text
   -> Text
@@ -11822,12 +11929,9 @@ createPublicTentativeBookingTransaction
       :: IO (Either SomeException (Either ServerError (Key Booking, Bool))))
   case result of
     Right value -> pure value
-    Left exception -> case fromException exception :: Maybe SomeAsyncException of
-      Just _ -> liftIO (throwIO exception)
-      Nothing -> case fromException exception :: Maybe SqlError of
-        Just sqlError | sqlState sqlError == "23P01" -> pure (Left err409
-          { errBody = "The selected room or resource was reserved by another request" })
-        _ -> liftIO (throwIO exception)
+    Left exception -> case publicBookingTransactionFailure exception of
+      Just serverErr -> pure (Left serverErr)
+      Nothing -> liftIO (throwIO exception)
   where
     transactionBody = do
       _ <- (rawSql
@@ -19712,12 +19816,23 @@ resolveMarketplaceOrderPaidAtForStatus now currentStatus mNextStatus currentPaid
         then Left err400 { errBody = "paidAt is required when status is paid" }
         else Right paidAtFinal
 
+-- | A stored order status is either one of the legacy statuses an operator may
+-- set, or one of the canonical checkout statuses that
+-- @trg_marketplace_sync_verified_checkout@ mirrors onto a canonical order
+-- (@awaiting_payment@ at creation, then @processing@ or @failed@). The latter
+-- are never accepted as an update target, but an order carrying one must
+-- still be editable.
 validateStoredMarketplaceOrderStatus :: Text -> Either ServerError Text
-validateStoredMarketplaceOrderStatus rawStatus =
-  case normalizeMarketplaceOrderStatus rawStatus of
-    Just normalized -> Right normalized
-    Nothing ->
-      Left err500 { errBody = "Stored marketplace order status is invalid" }
+validateStoredMarketplaceOrderStatus rawStatus
+  | T.strip rawStatus `elem` canonicalMarketplaceOrderStatuses = Right (T.strip rawStatus)
+  | otherwise =
+      case normalizeMarketplaceOrderStatus rawStatus of
+        Just normalized -> Right normalized
+        Nothing ->
+          Left err500 { errBody = "Stored marketplace order status is invalid" }
+
+canonicalMarketplaceOrderStatuses :: [Text]
+canonicalMarketplaceOrderStatuses = ["holding", "awaiting_payment", "processing"]
 
 isPaidMarketplaceOrderStatus :: Text -> Bool
 isPaidMarketplaceOrderStatus rawStatus =

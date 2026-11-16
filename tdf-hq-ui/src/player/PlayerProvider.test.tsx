@@ -13,6 +13,7 @@ jest.unstable_mockModule('./assetAccess', () => ({ authorizePlayerAsset: jest.fn
 jest.unstable_mockModule('../utils/logger', () => ({ logger: { warn: jest.fn() } }));
 const { PlayerProvider, usePlayer } = await import('./PlayerProvider');
 const { authorizePlayerAsset } = await import('./assetAccess');
+const { dispatchPlaybackCommand, getActivePlaybackOwner } = await import('./playbackSession');
 const { default: GlobalPlayer } = await import('./GlobalPlayer');
 const { dispatchReleaseToRadio } = await import('../features/releases/ReleasePlayerActions');
 
@@ -1741,4 +1742,28 @@ it('preserves a native-user speed selection through a replacement while keeping 
   expect(player.status).toBe('playing');
 });
 
+});
+
+it('routes native controls to the same audio element after switching to radio', async () => {
+  const view = render(<PlayerProvider><Probe /></PlayerProvider>);
+  const audio = view.container.querySelector('audio');
+  await act(async () => { player.playTrack(track('song')); });
+  expect(getActivePlaybackOwner()).toBe('music');
+
+  const station = track('radio:station');
+  await act(async () => { player.playTrack(station); });
+  expect(view.container.querySelectorAll('audio')).toHaveLength(1);
+  expect(view.container.querySelector('audio')).toBe(audio);
+  expect(getActivePlaybackOwner()).toBe('radio');
+
+  act(() => { expect(dispatchPlaybackCommand('pause')).toBe(true); });
+  expect(player.status).toBe('paused');
+  expect(player.playbackRequested).toBe(false);
+  expect(player.currentTrack?.id).toBe(station.id);
+
+  await act(async () => { expect(dispatchPlaybackCommand('play')).toBe(true); });
+  expect(player.status).toBe('playing');
+  expect(view.container.querySelector('audio')).toBe(audio);
+  view.unmount();
+  expect(getActivePlaybackOwner()).toBeNull();
 });

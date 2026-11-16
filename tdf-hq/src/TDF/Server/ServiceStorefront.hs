@@ -80,7 +80,7 @@ import           Data.Time (UTCTime, addUTCTime, defaultTimeLocale, formatTime, 
 import           Data.UUID (UUID, fromText, toText)
 import           Data.UUID.V4 (nextRandom)
 import           Database.Persist (toPersistValue, PersistValue(..), selectList, get, insert, insertUnique, getBy, replace, update, Entity(..), (==.), (=.), SelectOpt(..))
-import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool)
+import           Database.Persist.Sql (Single(..), SqlPersistT, fromSqlKey, rawExecute, rawSql, runSqlPool, updateWhereCount)
 import           Network.HTTP.Client (Request(..), RequestBody(..), Manager)
 import           Servant
 import           System.Environment (lookupEnv)
@@ -1355,41 +1355,49 @@ updateOrderAdminHandler :: Text -> ServiceStorefrontOrderUpdate -> AppM ServiceS
 updateOrderAdminHandler orderIdText ServiceStorefrontOrderUpdate{..} = do
   Env{..} <- ask
   now <- liftIO getCurrentTime
-  -- Lookup by order number
-  mEntity <- liftIO $ flip runSqlPool envPool $
-    getBy (ME.UniqueServiceStorefrontOrderNumber orderIdText)
-  case mEntity of
-    Nothing -> throwError err404 { errBody = "Order not found" }
-    Just (Entity oid order) -> do
-      case ssouStatus of
-        Just nextStatus ->
-          either (throwError . badRequestText) pure $
-            validateServiceFulfillmentTransition
-              (ME.serviceStorefrontOrderStatus order)
-              nextStatus
-        Nothing -> pure ()
-      let updatedOrder = order
-            { ME.serviceStorefrontOrderStatus = fromMaybe (ME.serviceStorefrontOrderStatus order) ssouStatus
-            , ME.serviceStorefrontOrderDeliverablesUrl = maybe (ME.serviceStorefrontOrderDeliverablesUrl order) Just ssouDeliverablesUrl
-            , ME.serviceStorefrontOrderNotes = maybe (ME.serviceStorefrontOrderNotes order) (Just . T.strip) ssouNotes
-            , ME.serviceStorefrontOrderUpdatedAt = now
-            }
-      liftIO $ flip runSqlPool envPool $ do
-        -- Insert status change if status changed
-        case ssouStatus of
-          Just newStatus | newStatus /= ME.serviceStorefrontOrderStatus order -> do
-            let statusChange = ME.ServiceStorefrontOrderStatusChange
-                  { ME.serviceStorefrontOrderStatusChangeOrderId = oid
-                  , ME.serviceStorefrontOrderStatusChangeStatus = newStatus
-                  , ME.serviceStorefrontOrderStatusChangeNotes = Just "Status updated by admin"
-                  , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "admin"
-                  , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
-                  }
-            _ <- insert statusChange
-            pure ()
-          _ -> pure ()
-        replace oid updatedOrder
-      pure (orderToDTO oid updatedOrder)
+  -- One transaction, and only the admin-owned fields are written. A full-row
+  -- replace from an earlier read would put back stale payment fields (status,
+  -- paidAt, capture and checkout ids) written meanwhile by a capture, webhook
+  -- or refund. The write is conditional on the status the transition was
+  -- checked against, so a concurrent status change is refused, not overwritten.
+  result <- liftIO $ flip runSqlPool envPool $ do
+    mEntity <- getBy (ME.UniqueServiceStorefrontOrderNumber orderIdText)
+    case mEntity of
+      Nothing -> pure (Left err404 { errBody = "Order not found" })
+      Just (Entity oid order) -> do
+        let currentStatus = ME.serviceStorefrontOrderStatus order
+            -- Stored in the same normalized form the transition check compares.
+            requestedStatus = T.toLower . T.strip <$> ssouStatus
+        case maybe (Right ()) (validateServiceFulfillmentTransition currentStatus) requestedStatus of
+          Left message -> pure (Left (badRequestText message))
+          Right () -> do
+            let fieldUpdates =
+                  [ ME.ServiceStorefrontOrderStatus =. nextStatus | Just nextStatus <- [requestedStatus] ]
+                  ++ [ ME.ServiceStorefrontOrderDeliverablesUrl =. Just url | Just url <- [ssouDeliverablesUrl] ]
+                  ++ [ ME.ServiceStorefrontOrderNotes =. Just (T.strip notes) | Just notes <- [ssouNotes] ]
+                  ++ [ ME.ServiceStorefrontOrderUpdatedAt =. now ]
+            changed <- updateWhereCount
+              [ ME.ServiceStorefrontOrderId ==. oid
+              , ME.ServiceStorefrontOrderStatus ==. currentStatus
+              ]
+              fieldUpdates
+            if changed /= 1
+              then pure (Left err409 { errBody = "Order status changed; reload and retry" })
+              else do
+                case requestedStatus of
+                  Just newStatus | newStatus /= currentStatus -> do
+                    _ <- insert ME.ServiceStorefrontOrderStatusChange
+                      { ME.serviceStorefrontOrderStatusChangeOrderId = oid
+                      , ME.serviceStorefrontOrderStatusChangeStatus = newStatus
+                      , ME.serviceStorefrontOrderStatusChangeNotes = Just "Status updated by admin"
+                      , ME.serviceStorefrontOrderStatusChangeChangedBy = Just "admin"
+                      , ME.serviceStorefrontOrderStatusChangeCreatedAt = now
+                      }
+                    pure ()
+                  _ -> pure ()
+                mFresh <- get oid
+                pure (maybe (Left err404 { errBody = "Order not found" }) (Right . orderToDTO oid) mFresh)
+  either throwError pure result
 
 -- GET reads local readiness only. POST may finalize exact positive evidence but
 -- never issues a capture/refund POST to the provider. No browser payload is evidence.

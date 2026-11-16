@@ -721,11 +721,11 @@ export default function RadioWidget() {
     ? `Quitar ${activeStation.name || 'esta estación'} de favoritos`
     : `Agregar ${activeStation.name || 'esta estación'} a favoritos`;
   const canSkipStations = sortedVisibleStations.length > 1;
-  const nowPlayingStatus = radioOwnsPlayer && player.status === 'loading'
-    ? 'Preparando'
-    : isPlaying
-      ? 'Reproduciendo'
-      : 'En pausa';
+  const nowPlayingStatus = !radioOwnsPlayer ? 'En pausa'
+    : player.status === 'loading' || player.status === 'buffering' ? 'Preparando'
+    : player.status === 'playing' ? 'Reproduciendo'
+    : player.status === 'error' || player.status === 'unavailable' ? 'No disponible'
+    : 'En pausa';
   const normalizedNowPlayingTitle = nowPlayingTitle?.trim() ?? '';
   const hasNowPlayingTitle =
     normalizedNowPlayingTitle.length > 0 &&

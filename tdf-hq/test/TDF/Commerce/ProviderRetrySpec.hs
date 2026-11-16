@@ -40,7 +40,7 @@ import           Test.Hspec
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.API.CommerceOperations
-import           TDF.Auth (AuthedUser(..))
+import           TDF.Auth (AuthedUser(..), modulesForRoles)
 import           TDF.Models (RoleEnum(..))
 import qualified TDF.Server.CommerceOperations as Operations
 import           TDF.API.ProviderExecution (PaymentSessionCreateDTO(..), PaymentSessionDTO(..))
@@ -79,6 +79,7 @@ import qualified TDF.Ticketing.Transfer as Transfer
 import Database.Persist.Sql (toSqlKey, fromSqlKey)
 import qualified TDF.Server.PaymentAvailability as Availability
 import qualified TDF.Server.ServiceStorefront as Storefront
+import           TDF.API.ServiceStorefrontTypes (ServiceStorefrontOrderUpdate(..))
 
 -- In-memory HTTP connection fixtures. These exercise the real HTTP executor,
 -- not a real provider, TLS handshake, socket, merchant account or sandbox.
@@ -418,6 +419,7 @@ spec = do
         reconciliationTransactionSpec
         fullDomainQuerySpec
         hostedServiceOrderSpec
+        adminServiceOrderUpdateSpec
         closedCheckoutEvidenceSpec
         captureReplaySpec
         ticketLedgerSpec
@@ -2713,6 +2715,38 @@ hostedServiceOrderSpec = describe "hosted service order reconciliation" $
           runSqlPool (paymentSnapshot payment) pool `shouldReturn` financial
           serviceOrderSnapshot pool payment `shouldReturn` order
 
+-- The admin fulfillment update writes only its own fields in one conditional
+-- transaction: payment fields recorded by capture/reconciliation survive it.
+adminServiceOrderUpdateSpec :: SpecWith ConnectionPool
+adminServiceOrderUpdateSpec = describe "admin service order fulfillment update" $
+  it "keeps payment fields, normalizes the status and refuses payment states" $ \pool -> do
+    payment <- serviceOrderFixture pool Checkout.ProviderPlaceToPay
+    result <- parsedQuery payment Adapter.AdapterSucceeded
+    runSqlPool (Reconciliation.applyQueryResult payment result "admin-update-paid" notificationTime) pool
+      `shouldReturn` Right Reconciliation.ReconciliationProcessed
+    let orderNumber = Execution.bppDomainOrderId payment
+        paymentFields = runSqlPool (rawSql
+          "SELECT payment_provider,paid_at,checkout_id::text FROM service_storefront_order WHERE id=?::uuid"
+          [PersistText orderNumber]) pool :: IO [(Single Text, Single UTCTime, Single Text)]
+        admin = AuthedUser
+          { auPartyId = toSqlKey 1, auRoles = [Admin], auModules = modulesForRoles [Admin]
+          , auApiTokenId = Nothing, auSessionWitness = Nothing }
+        updateOrder request = case Storefront.serviceStorefrontAdminServer admin of
+          _list :<|> update :<|> _ -> runHandler (runReaderT (update orderNumber request)
+            Env { envPool = pool, envConfig = error "envConfig is unused by the admin order update" })
+    before <- paymentFields
+    updated <- updateOrder (ServiceStorefrontOrderUpdate (Just " In_Progress ") Nothing (Just " first pass "))
+    updated `shouldSatisfy` isRight
+    paymentFields `shouldReturn` before
+    runSqlPool (rawSql
+      "SELECT status,notes,(SELECT count(*) FROM service_storefront_order_status_change\
+      \ WHERE order_id=?::uuid AND status='in_progress') FROM service_storefront_order WHERE id=?::uuid"
+      (replicate 2 (PersistText orderNumber))) pool
+      `shouldReturn` [(Single ("in_progress" :: Text), Single (Just ("first pass" :: Text)), Single (1 :: Int64))]
+    refused <- updateOrder (ServiceStorefrontOrderUpdate (Just "paid") Nothing Nothing)
+    fmap errHTTPCode (either Just (const Nothing) refused) `shouldBe` Just 400
+    paymentFields `shouldReturn` before
+
 serviceOrderFixture :: ConnectionPool -> Checkout.PaymentProvider -> IO Execution.BoundProviderPayment
 serviceOrderFixture pool provider = do
   (creation, operation, _) <- replayFixtureForDomain "mixing_mastering" pool provider
@@ -2977,6 +3011,65 @@ reconciliationPipelineSpec = describe "persisted callback to authoritative query
             [paymentAttemptParameter payment]) pool :: IO [(Single Text, Single Text, Single Int64, Single Int64)]
           rows `shouldBe` [(Single (if provider == Checkout.ProviderPlaceToPay then "awaiting_payment" else "processing"), Single (if provider == Checkout.ProviderPlaceToPay
             then "requires_customer_action" else "processing"), Single 1, Single 0)]
+
+      it "leaves one reconciliation exception when a bound event with no exception of its own dead-letters" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          let eventRef = Event.pepReference payload
+              reviewCount = runSqlPool (rawSql
+                "SELECT count(*) FROM commerce_reconciliation_exception\
+                \ WHERE internal_reference=? AND exception_type=? AND status='open'"
+                [ PersistText (Checkout.checkoutReferenceId (Execution.bppCheckout payment))
+                , PersistText Reconciliation.deadLetterReviewExceptionType ]) pool :: IO [Single Int64]
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Left (ProviderHttp.AdapterTransportError "SYNTHETIC-PRIVATE timeout"))) getCurrentTime
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          Reconciliation.prrReview outcome `shouldBe` Just payment
+          -- Still leased, not a dead letter: the fence records nothing.
+          runSqlPool (Reconciliation.recordDeadLetterReview eventRef 1 payment notificationTime) pool
+          reviewCount `shouldReturn` [Single 0]
+          runSqlPool (Event.markProviderEventDeadLetter eventRef 1 Nothing Nothing Nothing
+            "Synthetic exhausted retries" notificationTime) pool
+          runSqlPool (Reconciliation.recordDeadLetterReview eventRef 1 payment notificationTime) pool
+          runSqlPool (Reconciliation.recordDeadLetterReview eventRef 1 payment notificationTime) pool
+          reviewCount `shouldReturn` [Single 1]
+
+      it "keeps the bound payment for review while the provider reports the payment pending" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment Adapter.AdapterPending))) getCurrentTime
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          Reconciliation.prrReview outcome `shouldBe` Just payment
+
+      it "keeps the bound payment for review when reconciliation throws after the binding" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          snapshot <- runSqlPool (paymentSnapshot payment) pool
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment Adapter.AdapterSucceeded)))
+            (ioError (userError "SYNTHETIC-PRIVATE clock failure"))
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          Reconciliation.prrReview outcome `shouldBe` Just payment
+          show (Reconciliation.prrSummary outcome) `shouldNotContain` "SYNTHETIC-PRIVATE"
+          runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+      it "does not add a second exception when the query mismatch already recorded one" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment { Execution.bppAmountMinor = 1 }
+              Adapter.AdapterSucceeded))) getCurrentTime
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationDeadLetter
+          Reconciliation.prrReview outcome `shouldBe` Nothing
 
       it "rejects tampered stored callback trust before invoking the query transport" $ \pool ->
         withNotificationEnvironment $ do

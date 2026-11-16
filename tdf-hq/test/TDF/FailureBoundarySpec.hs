@@ -7,7 +7,7 @@ import Control.Monad (forM_)
 import Data.ByteString.Builder (toLazyByteString)
 import Data.IORef
 import Data.Text (Text)
-import Network.HTTP.Types (status200, status400, status413, status431, status500)
+import Network.HTTP.Types (status200, status400, status409, status413, status431, status500)
 import Network.Wai
 import Network.Wai.Internal (ResponseReceived(..))
 import qualified Network.Wai.Handler.Warp as Warp
@@ -15,6 +15,7 @@ import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
 import TDF.App.FailureBoundary
 import TDF.Cors (corsPolicy)
+import Servant.Server (ServerError (..), err409)
 
 data Unrenderable = Unrenderable
 instance Show Unrenderable where show _ = error "EXCEPTION_RENDERED_PRIVATE_SECRET"
@@ -41,6 +42,21 @@ spec = describe "request and activity failure authority" $ do
         pure ResponseReceived
     readIORef count `shouldReturn` 1
     readIORef logs `shouldReturn` ["[HTTP] Unhandled request failure"]
+  it "answers a ServerError thrown inside the application as that error, not a 500" $ do
+    logs <- newIORef ([] :: [Text])
+    count <- newIORef (0 :: Int)
+    _ <- requestExceptionBoundary (\entry -> modifyIORef' logs (entry:))
+      (\_ _ -> throwIO err409 { errBody = "Booking conflicts" })
+      defaultRequest $ \response -> do
+        modifyIORef' count (+1)
+        responseStatus response `shouldBe` status409
+        chunks <- newIORef mempty
+        let (_, _, body) = responseToStream response
+        body $ \stream -> stream (\chunk -> modifyIORef' chunks (<> chunk)) (pure ())
+        (toLazyByteString <$> readIORef chunks) `shouldReturn` "Booking conflicts"
+        pure ResponseReceived
+    readIORef count `shouldReturn` 1
+    readIORef logs `shouldReturn` []
   it "does not even render an exception with an unsafe Show instance" $ do
     logs <- newIORef ([] :: [Text])
     _ <- requestExceptionBoundary (\entry -> modifyIORef' logs (entry:))
