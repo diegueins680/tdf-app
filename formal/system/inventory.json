@@ -232,7 +232,6 @@
       "scripts/__tests__/operations-worker-tick-postgres.mjs",
       "scripts/__tests__/payment-query-report-contract.test.mjs",
       "scripts/__tests__/payment-readiness-helper.test.mjs",
-      "scripts/__tests__/payment-staging-inspection.test.mjs",
       "scripts/__tests__/persistent-uploads.test.mjs",
       "scripts/__tests__/persona-test-program.test.mjs",
       "scripts/__tests__/playwright-image.test.mjs",
@@ -330,7 +329,6 @@
       "scripts/identity-reconciliation.mjs",
       "scripts/inspect-compiled-api.mjs",
       "scripts/inspect-hetzner-production.mjs",
-      "scripts/inspect-payment-staging.mjs",
       "scripts/inspect-ticketing-event-access.mjs",
       "scripts/instagram-lifecycle-artifact.mjs",
       "scripts/instagram-openclaw-cdp.mjs",
@@ -3202,7 +3200,7 @@
     {
       "id": "SURFACE-b803fcb7f17ed923",
       "path": ".github/workflows/ci.yml",
-      "sha256": "75794018c70149c89c9322f7bd0acf64e9b79ef221db55c14c0b9ee643775139",
+      "sha256": "23ade27a31842e6552e0e12165d01dbca02c127cdd1b018efb4324a31103a7b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3880,7 +3878,7 @@
     {
       "id": "SURFACE-f6500b8addb3b248",
       "path": "scripts/__tests__/artist-enrichment.test.mjs",
-      "sha256": "493c2727d5e765a6b2c74b822a551d1f54032cb22129277cc4250359ae90f560",
+      "sha256": "045b26e1fbb6697cf16314850fd71df4896aa647f5b90036ddc8f908929c303f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3922,7 +3920,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "ed071c66c2400becc9b17d7db48c2dd65b1fa49ad13e2aa20862b49f0d3b05a1",
+      "sha256": "b18e5806ffd2319d2b8c63f24542c4285bfad185cac778e0c0407068269cebce",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4234,7 +4232,7 @@
     {
       "id": "SURFACE-ac7679c947f7408b",
       "path": "scripts/__tests__/instagram-token-workflows.test.mjs",
-      "sha256": "f139ae3230ae908c21c7c5b38c090a787bf5045719fc031396e0ac7287201744",
+      "sha256": "60c2b30195a7b5a1d89b8d26ced251a0152afecdb41806d7eff35aaa629c0b9b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4430,12 +4428,6 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-2f21c1c45f5b1cca",
-      "path": "scripts/__tests__/payment-staging-inspection.test.mjs",
-      "sha256": "acb99cc43fbbdca8d24d3d52b7972b0100c5aa1392959ff5c5b91927677db317",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-9f80dbca9b5074c0",
       "path": "scripts/__tests__/persistent-uploads.test.mjs",
       "sha256": "3fa7cfdf56ccf0533240f6b9028970915897af0147023e9e305c77303d19e889",
@@ -4510,7 +4502,7 @@
     {
       "id": "SURFACE-2814c9b72c5f2d05",
       "path": "scripts/__tests__/studio-internship-audit.test.mjs",
-      "sha256": "630716fa1e50aa604476b1159a3ac8daed37b79c7dc9ebd557a6af25f2a33a57",
+      "sha256": "17d13b1f02ee443aa724c4378e184f588782fe704c7e330901291a8a2adf1311",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4660,7 +4652,7 @@
     {
       "id": "SURFACE-ae1fc3f773e478bd",
       "path": "scripts/artist-enrichment.mjs",
-      "sha256": "9c28bed3f0868cc7669a8a20de22e0336547186081ed98a9ddeb1150ab792d06",
+      "sha256": "7cae285c8ffd2373048ab4d3e4ea2838046b7c62571e795163de86f22516809e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4774,7 +4766,7 @@
     {
       "id": "SURFACE-ccd62b2a303eba94",
       "path": "scripts/check-messaging-token.mjs",
-      "sha256": "f2505fab497e7f96880d22952a6863595548f6e1f6b08725cc5243708f2cec75",
+      "sha256": "feb51d713046b1c1e65df434d1c73c4820bc3a71c90ca4bbfc83bb203e0fafc8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5015,12 +5007,6 @@
       "id": "SURFACE-f9faf7061e36724c",
       "path": "scripts/inspect-hetzner-production.mjs",
       "sha256": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-09f409fc2f5fdd87",
-      "path": "scripts/inspect-payment-staging.mjs",
-      "sha256": "a141c1c20e8c9c0d149c91a6cffec7690fd13388ec5f00a0ecfe0ecc26855317",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5350,7 +5336,7 @@
     {
       "id": "SURFACE-4a885036f5208454",
       "path": "scripts/lib/studio-audit-safety.mjs",
-      "sha256": "bc8b2be2d1ba687743be7400b4b4f225f24e5b8fc962471b6a7a4d3072ed3ab7",
+      "sha256": "4cec971d00a5ec16524dd94c490289ffc33d69d9cae32ba9db0910275f3e80d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13528,7 +13514,7 @@
     {
       "id": "SURFACE-349b3c6baf0c525b",
       "path": "tdf-hq/Dockerfile",
-      "sha256": "05ff5c843da66ae0781656c36dad94b7a973a72fdb372ebfad2e75d13efd0e1f",
+      "sha256": "505fa666dbdcc1247d871369bc84557d79dc0fca947897d6ab7f3d4aa807af5e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -21904,7 +21890,7 @@
     },
     {
       "path": "DEPLOYMENT_GUIDE.md",
-      "sha256": "cb020fe6d2f5516a2655289c6e54ca631e3b4abb52d79e5fc7d806052e9c7817",
+      "sha256": "56a959b5ff095100964f4952bb7969c89f30f93d3a60d33c54cb0eb068a74c0a",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22106,13 +22092,6 @@
       "kind": "requirement-candidate"
     },
     {
-      "path": "VERIFICATION.md",
-      "sha256": "03dd8aa2436dd0d1399a14a963bb1b701d62d13cb2f5acd7cd4575fe764849f2",
-      "authority": "inferred",
-      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
-      "kind": "requirement-candidate"
-    },
-    {
       "path": "docs/BAR_OPS_UI.md",
       "sha256": "372316fc0782eaeabd46c0772332cdd347abefd5a59b4ee73f6c05aac96404cd",
       "authority": "inferred",
@@ -22149,7 +22128,7 @@
     },
     {
       "path": "docs/INSTAGRAM_TOKEN_SETUP.md",
-      "sha256": "96df0fdb94aece332d69b649bc587d58ddbeece255bd13b7f0d22186d162b54c",
+      "sha256": "250fa39b32c2c8cc24569410ae85bb19f522e27bde4631435362b23d30d73de3",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31445,7 +31424,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "05026a5504d5c5bcf9688a988b0630d57278770ecb46afd7b710be030aad4e54",
+      "sha256": "96117c1069a505d6e0e2b77052d466c6ac4c63c369109e124fcbf9706ff877e6",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
