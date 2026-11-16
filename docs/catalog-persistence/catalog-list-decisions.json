@@ -32,6 +32,31 @@
             "reviewed": true
           }
         ]
+      },
+      {
+        "reason": "The Fly release executor and its deploy-plan builders (scripts/production-release.mjs, scripts/lib/production-release.mjs) were deleted when Fly was retired as a hosting target, so these two lists have no current candidate. The full reviewed decisions are preserved here as history; no catalog values are affected.",
+        "decisions": [
+          {
+            "id": "4ee0861b0a41a45d76aa",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          {
+            "id": "3391a96825357d78f794",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          }
+        ]
       }
     ],
     "consolidatedMainRetirements": {
@@ -7729,16 +7754,6 @@
       "reviewMethod": "manual-source-review"
     },
     {
-      "id": "4ee0861b0a41a45d76aa",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
-    },
-    {
       "id": "1a41ca8ee4fc59546171",
       "classification": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -7806,16 +7821,6 @@
       "priority": "P0-cutover",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
-    },
-    {
-      "id": "3391a96825357d78f794",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
       "reviewed": true
     },
     {
