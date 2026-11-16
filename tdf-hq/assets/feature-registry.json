@@ -2627,43 +2627,21 @@
         "social.events",
         "social.event.detail"
       ],
-      "requiredModules": [
-        "Scheduling"
-      ],
       "permissions": {
-        "discover": {
-          "modulesAll": [
-            "Scheduling"
-          ]
-        },
+        "discover": {},
         "view": {
-          "modulesAll": [
-            "Scheduling"
-          ],
           "recordScope": "event-member-or-admin"
         },
         "create": {
-          "modulesAll": [
-            "Scheduling"
-          ],
           "recordScope": "event-manager-or-admin"
         },
         "edit": {
-          "modulesAll": [
-            "Scheduling"
-          ],
           "recordScope": "event-manager-or-admin"
         },
         "delete": {
-          "modulesAll": [
-            "Scheduling"
-          ],
           "recordScope": "event-manager-or-admin"
         },
         "assign": {
-          "modulesAll": [
-            "Scheduling"
-          ],
           "recordScope": "event-manager-or-admin"
         }
       },
