@@ -51,6 +51,7 @@ import {
   type PriceMode,
 } from '../api/directory';
 import MyAgreementsPanel from '../features/marketplace/MyAgreementsPanel';
+import PayoutAccountsPanel from '../features/marketplace/PayoutAccountsPanel';
 import MyOffersPanel from '../features/marketplace/MyOffersPanel';
 import OfferCard from '../features/marketplace/OfferCard';
 import OfferForm from '../features/marketplace/OfferForm';
@@ -150,6 +151,7 @@ function DirectoryManagement() {
         {tab === 3 && <InvitationPanel />}
         {tab === 4 && <MyOffersPanel currencies={taxonomies.data?.currencies} />}
         {tab === 5 && <MyAgreementsPanel currencies={taxonomies.data?.currencies} />}
+        {tab === 5 && <PayoutAccountsPanel profiles={profiles.data ?? []} />}
 
         <ProfileDialog profile={editingProfile} open={profileOpen} onClose={() => setProfileOpen(false)} taxonomies={taxonomies.data} onSaved={() => { setProfileOpen(false); void refresh(); setNotice(editingProfile ? 'Perfil actualizado.' : 'Perfil creado como borrador.'); }} />
         <ClassifiedDialog open={classifiedOpen} onClose={() => setClassifiedOpen(false)} profiles={profiles.data ?? []} taxonomies={taxonomies.data} onCreated={() => { setClassifiedOpen(false); void refresh(); setNotice('Clasificado creado como borrador. Revísalo y publícalo cuando esté listo.'); }} />
