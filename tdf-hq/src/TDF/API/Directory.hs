@@ -377,6 +377,7 @@ type DirectoryProtectedAPI =
     :<|> "admin" :> "claims" :> Capture "claimId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
     :<|> "admin" :> "verifications" :> Get '[JSON] [Value]
     :<|> "admin" :> "verifications" :> Capture "verificationId" UUID :> "status" :> ReqBody '[JSON] DirectoryStatusRequest :> Patch '[JSON] Value
+    :<|> "admin" :> "agreements" :> "disputes" :> Get '[JSON] [Value]
     :<|> "admin" :> "moderation" :> Get '[JSON] [Value]
     :<|> "admin" :> "moderation" :> Capture "caseId" UUID :> "decisions" :> RequiredIdempotency :> ReqBody '[JSON] ModerationDecisionRequest :> PostCreated '[JSON] Value
     :<|> "admin" :> "merges" :> RequiredIdempotency :> ReqBody '[JSON] ProfileMergeRequest :> PostCreated '[JSON] Value
