@@ -66,13 +66,17 @@ const asReviewedBeforeRegistryRefresh = entries => entries.map(entry => {
 async function readReconciliation() {
   const ledger = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-retirements.json'), 'utf8'));
-  const active = JSON.parse(await fs.readFile(path.join(workspaceRoot,
-    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8')).decisions;
+  const register = JSON.parse(await fs.readFile(path.join(workspaceRoot,
+    'docs/catalog-persistence/catalog-list-decisions.json'), 'utf8'));
+  const active = register.decisions;
+  // Reviews whose source list was deleted outright (no successor list). They
+  // leave the active register and are kept, unchanged, as history.
+  const retired = (register.reconciliation.sourceRemovalRetirements ?? []).flatMap(entry => entry.decisions);
   const successors = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-catalog-current-successors.json'), 'utf8')).successors;
   const integration = JSON.parse(await fs.readFile(path.join(workspaceRoot,
     'docs/catalog-persistence/event-integration-retirements.json'), 'utf8'));
-  return { ledger, active, successors, integration };
+  return { ledger, active, retired, successors, integration };
 }
 
 test('music/main reconciliation retains both reviews and the protected migration prefix', async () => {
@@ -881,7 +885,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   // them: the event administrator successors are read back to the review,
   // pointer and retirement they replaced (each nests its predecessor
   // unchanged), and lists first reviewed after that main are left out.
-  const { active: currentDecisions, successors: currentSuccessors,
+  const { active: currentDecisions, retired, successors: currentSuccessors,
     integration: currentIntegration } = await readReconciliation();
   const mainIds = new Set((await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN,
     'docs/catalog-persistence/catalog-list-decisions.json')).decisions.map(row => row.id));
@@ -983,11 +987,13 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   assert.equal(old.length, 1405);
   assert.equal(priorApple.length, 1407);
   assert.equal(currentMain.length, 1409);
-  assert.equal(historicalAppleView.length, 1411);
+  const retiredIds = new Set(retired.map(row => row.id));
+  assert.equal(historicalAppleView.length, 1411 - retired.length);
   assert.deepEqual(historicalAppleView,
-    await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1423 + marketplaceReviewIds.length + authRateLimitReviews.length + agreementReviews.length);
-  const history = new Map();
+    (await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a')).filter(row => !retiredIds.has(row.id)));
+  assert.equal(active.length,
+    1423 + marketplaceReviewIds.length + authRateLimitReviews.length + agreementReviews.length - retired.length);
+  const history = new Map(retired.map(row => [row.id, row]));
   const visit = row => {
     if (!row) return;
     if (!history.has(row.id)) history.set(row.id, row);
@@ -1046,7 +1052,7 @@ test('event administrator delegation appends one migration to the protected 251-
   assert.equal(await fs.readFile(path.join(workspaceRoot, migration.path), 'utf8'), stdout);
   await execFileAsync('git', ['merge-base', '--is-ancestor', EVENT_ADMIN_INTRODUCTION, 'HEAD'],
     { cwd: workspaceRoot });
-  const { active, successors, integration } = await readReconciliation();
+  const { active, retired, successors, integration } = await readReconciliation();
   const priorMain = (await reviewedJson(EVENT_ADMIN_PROTECTED_MAIN, decisionsPath)).decisions;
   // The active manifest review is the agreement payments successor; this
   // review, its pointer and its retirement are nested one step back, unchanged.
@@ -1074,15 +1080,16 @@ test('event administrator delegation appends one migration to the protected 251-
   assert.equal(client.evidence.valueCount, 86);
   assert.deepEqual(client.previousDecision, priorMain.find(row => row.id === '2511cbba2fc7279bc28a'));
   // Every other review of protected main is retained exactly; three lists are new.
-  const history = new Map(active.map(row => [row.id, row]));
+  const history = new Map([...active, ...retired].map(row => [row.id, row]));
   const replaced = new Set([current.previousDecision.id, client.previousDecision.id]);
   for (const row of priorMain) {
     if (replaced.has(row.id)) assert.ok(!history.has(row.id));
     else assert.deepEqual(history.get(row.id), row);
   }
   assert.equal(priorMain.length, 1449);
-  // 1452 after this review, plus the nine agreement payments reviews (ADR 0136).
-  assert.equal(active.length, 1461);
+  // 1452 after this review, plus the nine agreement payments reviews (ADR 0136),
+  // less the reviews retired with their deleted source lists.
+  assert.equal(active.length, 1461 - retired.length);
 });
 
 test('marketplace agreement payments append one migration to the protected 252-entry manifest', async () => {
@@ -1100,7 +1107,7 @@ test('marketplace agreement payments append one migration to the protected 252-e
   assert.equal(await fs.readFile(path.join(workspaceRoot, migration.path), 'utf8'), stdout);
   await execFileAsync('git', ['merge-base', '--is-ancestor', AGREEMENT_PAYMENTS_INTRODUCTION, 'HEAD'],
     { cwd: workspaceRoot });
-  const { active, successors, integration } = await readReconciliation();
+  const { active, retired, successors, integration } = await readReconciliation();
   const priorMain = (await reviewedJson(AGREEMENT_PAYMENTS_PROTECTED_MAIN, decisionsPath)).decisions;
   const pointer = successors.find(row => row.name === 'migrations');
   const current = active.find(row => row.id === pointer.currentId);
@@ -1125,7 +1132,7 @@ test('marketplace agreement payments append one migration to the protected 252-e
   // Every other review of protected main is retained exactly; nine lists are
   // new (payment provider, fee payer, payout and payment CHECK lists and the
   // two Policy sum types) and reviewed by the deterministic policy.
-  const history = new Map(active.map(row => [row.id, row]));
+  const history = new Map([...active, ...retired].map(row => [row.id, row]));
   for (const row of priorMain) {
     if (row.id === current.previousDecision.id) assert.ok(!history.has(row.id));
     else assert.deepEqual(history.get(row.id), row);
@@ -1140,5 +1147,5 @@ test('marketplace agreement payments append one migration to the protected 252-e
     assert.match(history.get(id).reviewMethod, /^deterministic-policy-v\d+$/);
   }
   assert.equal(priorMain.length, 1452);
-  assert.equal(active.length, 1461);
+  assert.equal(active.length, 1461 - retired.length);
 });
