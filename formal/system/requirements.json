@@ -27757,7 +27757,8 @@
       "confidence": "Local tests cover each behavior. The publish write was not executed against a real server.",
       "ambiguity": [
         "A logistics team member who is neither a manager of the event nor holds the Scheduling module can open the planning workspace (EVT-LOGISTICS-ACCESS-001) but is not offered the link on the event page.",
-        "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test."
+        "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test.",
+        "The server reports UTC both for an account that never chose a zone and for one that chose UTC. A zone saved from the same browser is remembered locally and kept; on another device a chosen UTC still starts a new event in the browser's zone, which the form lets the organizer change."
       ],
       "conformance": {
         "classification": "PARTIAL",
