@@ -27755,6 +27755,97 @@
         "reason": "The web decision and page behaviour are exercised by Jest and the API refusal by an existing PostgreSQL example; the generated Mobile registry copy is not regenerated, and no browser run against a deployed build was made."
       },
       "historicalStatus": null
+    },
+    {
+      "id": "EVT-VENUE-DISCOVERY-001",
+      "title": "Daily venue event discovery for six cities in Ecuador and Colombia",
+      "domain": "EVT",
+      "statement": "The daily discovery worker covers every registered event city in Ecuador and Colombia in addition to followed cities. Quito, Guayaquil, Cuenca, Bogotá, Cali and Medellín are registered with their time zones. Venue iCalendar feeds resolve local times in zones without daylight saving and take the source name as venue when an event has no location. A jsonld source reads an index document (XML sitemap or HTML listing), follows event links under its configured prefix within a page budget, and imports the schema.org Event objects those documents publish as JSON-LD. A source bound to a city files every event under that city; a source without a city imports an event only when it names a registered discovery city. Ten sources verified on 2026-11-14 are seeded; nine are enabled and the Meet2Go source is seeded disabled because that platform's terms of use prohibit crawler access. Imported events remain private drafts.",
+      "authority": "Repository owner request of 2026-11-14 to ingest daily the events of the most important venues of the six cities from the places where they are announced. Recorded as AUTHORITY-VENUE-DISCOVERY-001. The choice of venues and sources follows research and live probes of that date; the page budget, request spacing and the list of fixed-offset zones are implementation choices.",
+      "source": "formal/system/venue-discovery-sources.md",
+      "contract": "formal/system/venue-discovery-sources.md",
+      "property": "A run of a jsonld or ical source either imports a complete bounded inventory or fails without marking any event missing. No event is imported without a title, a start instant derived from an explicit offset or a fixed-offset zone, a venue name and a registered city. A jsonld source never obtains automatic publication approval. The migration never changes an existing source row.",
+      "actors": [
+        "Event discovery worker",
+        "Strict administrator managing sources",
+        "Venue or ticketing site publishing the source",
+        "Editor reviewing imported drafts"
+      ],
+      "preconditions": [
+        "EVENT_DISCOVERY_ENABLED is true on the running backend",
+        "Migration tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql applied",
+        "Source row enabled with an HTTPS index or feed URL"
+      ],
+      "inputs": [
+        "event_city rows with country code EC or CO",
+        "event_discovery_source rows of type ical or jsonld, with the jsonld configuration JSON (linkPrefix, rewriteFrom, rewriteTo, maxPages, venueName, dateOnlyLocalTime)",
+        "iCalendar documents",
+        "XML sitemaps, HTML listings and event pages carrying schema.org JSON-LD",
+        "PUT and POST /social-events/event-sources with source type jsonld"
+      ],
+      "state": {
+        "boundary": "event_city, event_discovery_source, external_event_discovery_run, external_event_ref and the imported social_event, venue and artist rows",
+        "authority": "PostgreSQL rows; the per-source run ledger and advisory lock of the existing worker",
+        "sourceTypes": "ticketmaster, buenplan, ical, json, jsonld, web"
+      },
+      "allowedTransitions": [
+        "Enabled ical or jsonld source with a complete fetch -> events created or refreshed as private drafts and the run recorded complete",
+        "Event absent from two complete runs of its source -> that purchase option unavailable (existing reconciliation)",
+        "Seeded source disabled by an administrator or by rollback -> not fetched"
+      ],
+      "forbiddenTransitions": [
+        "Mark events missing after a failed, truncated or over-budget fetch",
+        "Import an event with a date but no start time, or with a local time in a zone that has no fixed offset",
+        "Import a platform event that names no registered discovery city, or whose stated country differs from the matched city",
+        "Follow a redirect or link to a non-HTTPS or non-public host",
+        "Grant automatic publication approval to a jsonld source",
+        "Re-enable, re-point or re-prioritize an existing source when the migration is applied or replayed"
+      ],
+      "effects": [
+        "Insert the six event_city rows when absent and fill a missing time zone",
+        "Insert ten enabled event_discovery_source rows when absent",
+        "Create or refresh private draft events, venues, artists and external references through the existing synchronization",
+        "Record per-source run success or failure and the last error"
+      ],
+      "authorization": "The worker runs without a user. Source administration keeps the existing strict-administrator requirement of the event-source routes; this requirement adds only the jsonld type to their validation, with an optional city.",
+      "privacy": "Only public event pages are fetched, with the worker's own user agent and no credentials or user data. Nothing about TDF users is sent to a source.",
+      "concurrency": "Unchanged: one advisory lock per batch and one ledger row per source and slot, so replicas do not run a source twice.",
+      "idempotency": "Provider and external identifier remain the idempotency key. A single-event page uses its URL slug; a page or listing with several events appends the UTC start stamp. The migration is replay-safe.",
+      "failure": "Invalid configuration, an unreachable or non-success index, an index over the page budget, an unsafe redirect, an oversized document or an event page answering other than success, 404 or 410 fails that source run, records the error and leaves other sources running. Three consecutive failures open the existing 24-hour circuit.",
+      "recovery": "Fix or disable the source in the registry; the next daily slot retries. Rollback SQL disables the ten seeded sources and keeps all data.",
+      "observability": "[Cron][EventDiscovery] log lines per source with seen, created and updated counts or the failure text; last_success_at, last_error and consecutive_failures on the source row, shown in /configuracion/fuentes-eventos.",
+      "implementation": [
+        "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
+        "tdf-hq/src/TDF/Cron.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql",
+        "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources_rollback.sql",
+        "tdf-hq-ui/src/api/eventDiscoverySources.ts",
+        "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
+        "scripts/production-migrations.json"
+      ],
+      "tests": [
+        "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
+        "scripts/test-latam-venue-discovery-migration.sh"
+      ],
+      "formalModels": [],
+      "verification": "Hspec examples for iCalendar zone resolution, default venue and category mapping; linked-data time parsing, configuration validation, sitemap and listing link selection, platform city matching, city-bound venue sources, date-only labelling, listing pages with several events, and registry city selection for both countries. A disposable-PostgreSQL script applies the migration, replays it, checks operator choices survive, checks the type constraint and exercises rollback and reapplication. The manual live run is not repeatable evidence: source inventories change daily.",
+      "evidence": "Local runs of 2026-11-14 on the working tree: the Hspec discovery groups (141 examples, 0 failures, GHC 9.10.3); scripts/test-latam-venue-discovery-migration.sh on a disposable PostgreSQL 16.13 cluster; web typecheck and lint of the two changed files; catalog list audit. One manual run of the compiled fetch against the live sources with the worker's user agent returned 5 events for Teatro Centro de Arte, 9 for DAVIarena, 6 for Teatro Metropolitano, 22 for Movistar Arena, 8 for La Tiquetera (6 Medellín, 2 Bogotá, 0 Cali) and 66 for Meet2Go (33 Quito, 19 Guayaquil, 14 Cuenca); the two iCalendar feeds were fetched and parsed from saved copies only. No hosted CI run and no production run.",
+      "critical": false,
+      "status": "specified and implemented",
+      "confidence": "The pure parsing and selection paths are covered by examples built from documents fetched from the seeded sources on 2026-11-14. The network path (manual redirect following, pacing, response limits) and the cron dispatch are not covered by an automated test.",
+      "ambiguity": [
+        "No platform's terms of service were reviewed; robots.txt of each seeded host allowed the paths read on 2026-11-14.",
+        "Whether the production pilot allowance leaves room for new imports was not checked; new events are deferred, not lost, when it is exhausted.",
+        "Most TuBoleta pages publish a date-only marker; those events carry a placeholder start time and the “Hora por confirmar” note until an editor corrects them.",
+        "Cali and Cuenca have no venue-owned feed; their coverage depends on platforms."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Parsing, selection and the migration are exercised locally; no production run, no automated test of the network path and no terms-of-service review exist."
+      },
+      "historicalStatus": null
     }
   ],
   "sourceFingerprints": {
@@ -27776,7 +27867,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "073fc6082c9186384dcac0000dceee15d15ad2665e7b1c29fda75ab911339363",
+    "docs/catalog-persistence/catalog-list-decisions.json": "4e58b37e67da1907a91287fe121a9e187c22940e55ab09f61b2116dc3655d01b",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -28160,8 +28251,8 @@
     "formal/system/public-routes.json": "cd5ce4ecf4944e61c4f2af25e76591ca9ae5717bb02efa218fe2b45a63561514",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "b7980edc9152952275b560746f7fa66f9a88429f33d66fa9137cb0ae71f8741a",
-    "formal/system/route-requirements.json": "51e768950b165a225e4aed27e511d3979c8e30931b8cc2e2d4125348dedf3a0d",
+    "formal/system/recovery-expiry-arithmetic.json": "c1a7ef03851909560f9e0fde1e7d060142596cf1134b51ef838d8e2e04e089ee",
+    "formal/system/route-requirements.json": "2e59fbd1945cd95b45474cce9bd10ba221d0ae8316804310a41cc922107f6f91",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
     "functions/_shared/app-smart-link.mjs": "ee51768e45a66f777643fea820eb9735f5cdf8e7dacac28c611e5abff9ef13fa",
@@ -28192,7 +28283,7 @@
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
     "ops/privacy/request-workflow.json": "57ff7b2bf527cad61796b9b0d2abc608da34920d670fa135fcb720c5ce7e838d",
     "package-lock.json": "4f2f99e39788cd1f67da2623474d725e06e51757b409474118f82d3c9a43aa1d",
-    "package.json": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+    "package.json": "f2c36ff5cc7d7772a74a2f1befae7fb32569f774437d86f0ebdd70c94ccd4d5b",
     "playwright.config.mjs": "37eb4ab6c22dc0a3f2e575361426a045ad760a32920fe4a3b36a1f50e660e71b",
     "playwright.desktop.config.mjs": "74292833e979da0f81610adcedcddcfe6a7053cd5dfa6a34b36b2f1ddbddeb92",
     "playwright.discovery.config.mjs": "a067957a030880100a9964a5add8be0041cd07b93c0d378d1da2804d38ba179b",
@@ -28210,7 +28301,7 @@
     "scripts/__tests__/browser-vendor.test.mjs": "07f0672117d5d3d54fe175f6a5f70fbc0c02c3a8d3db9125ddc790e80e11397a",
     "scripts/__tests__/build-trust.test.mjs": "c7dd2f007ce26fbdab82eb22b60b22ba0c6206cf401e92d224dcf66a55899be7",
     "scripts/__tests__/campaign-tiktok-ui.test.mjs": "b6e1ffb3dc75b3a9647ac80f3544d9448ba426751e619452a68e91da2dc710aa",
-    "scripts/__tests__/catalog-list-audit.test.mjs": "d4ef8dc3fc0b755297bbb76375e14010b68d840e8aacd1804c5658eb0b98eb7f",
+    "scripts/__tests__/catalog-list-audit.test.mjs": "92cfb77f163bcf9666572efede7b00c23cf7b7484cc28f1fd34a55269bf22d68",
     "scripts/__tests__/checkout-amount-postgres.mjs": "9577cc4448d137da4138e14f6f78db782d88432f5900b633425701e8141fae7d",
     "scripts/__tests__/checkout-money-http.mjs": "7831228f977b010add0f129c5a49d0a957cf40b5b625e6e7eb9c52508023e184",
     "scripts/__tests__/ci-change-scope.test.mjs": "f1b2040e831f2ad6c78c1ad68527051b9a7176ca9e3cd54338ece1da471da219",
@@ -28376,7 +28467,7 @@
     "scripts/process-music-release-audio.sh": "d5b33d6b6d605e2a7aaad3f9b89c7804136d1b9b71e1b418fb4bc4a50e63b505",
     "scripts/process-music-release-preview.sh": "51d1add10638e1c328f604602ceee22251f9b7e4dcd2bc9504cb7ac51da11260",
     "scripts/production-catalog-inventory.mjs": "24a26cec208edddba4c67010fe513bab0bc1f899f7932fb55a3eeedde9a061c7",
-    "scripts/production-migrations.json": "1949fdf9335db01f3c8e8a84bd863f1df84d61b8aa02019247a0f470ed34971b",
+    "scripts/production-migrations.json": "9dd3e10cd5dc85e0b45eeadb88dd0bf30ed40293e8a128082d347553e612a9d0",
     "scripts/production-release.mjs": "3138485773e2944338cdd27d89747955451c8146eba50f252aa1a57e42434771",
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
@@ -28450,6 +28541,7 @@
     "scripts/test-interaction-write-budget.sh": "00d63b1d82a4c3f2d7bcbbf1859aeb0019869e608276b53a6c3ce60ea1eb8395",
     "scripts/test-invoice-worker.sh": "52c4de19ce4b9a1b69f90e8ba4d25da3a2b19de626a0297049429fe90b34da7f",
     "scripts/test-isolated-application-canary.py": "3b50fccf75e7ae6e11d2765b07b02154239a8ec8295022f7c3c6042c7a4b9078",
+    "scripts/test-latam-venue-discovery-migration.sh": "199ef246bc415162d5768223e893cf1b420add3265637c51e6624bf5382794f1",
     "scripts/test-ledger-posting.sh": "c70fc5c138cde076c328c5f91059a1c4d90732f428f449eccb8162e8706ce860",
     "scripts/test-marketplace-contact-identity.sh": "1a41424b372a8247e55983945ef059df9121d5f58f7cec06ccb028b679ed9cee",
     "scripts/test-marketplace-operations-migration.sh": "320bf8ef28435b8d9401d6bfd3fd3bc3f7c9de7b91dce3f0e2998ee055e8bd55",
@@ -28686,6 +28778,7 @@
     "tdf-hq-ui/src/api/domoQuotes.ts": "d1353a1cd98093582b6d90df3fd061ea759d003bc1b7d4112809f9789af32373",
     "tdf-hq-ui/src/api/drive.ts": "6bff25b244765346986e765a7ae1685a732656d296f0c0e3be75f1619844b934",
     "tdf-hq-ui/src/api/drive.upload.test.ts": "7ae7828b0917f8ee4f03f630a5932bff0098b498b0f5ff7fde96b90f7682f033",
+    "tdf-hq-ui/src/api/eventDiscoverySources.ts": "c73e4c32cf6b775425ff3bcfadcf36dbab3fbca1a997133d8c38e45e80c7ebc0",
     "tdf-hq-ui/src/api/eventMemoryInvitations.test.ts": "9d38441f08bdac34840484807caaea351a6be48c1d701ae5e346587db99ff86f",
     "tdf-hq-ui/src/api/eventMemoryInvitations.ts": "2ed34e56f52432bff7d53ee495a79c902a9d2fb4c6d79ea630bc92cd61e7e6f9",
     "tdf-hq-ui/src/api/eventMemoryModeration.test.ts": "4bb13866a0291da53b45c7b547ee4716ab6736701b9a938793d32a0f8fa62915",
@@ -28953,6 +29046,7 @@
     "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
     "tdf-hq-ui/src/pages/DirectorySearchPage.tsx": "57d4e4708ecadf1e32f5daeaf4c1af8e45c715c88977ecbf6182278850dfcf64",
     "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx": "e41b35acd4352f396fe687fe21016eddc97139fb363bc7e4e8295d7255a7857f",
+    "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx": "572fd5bd8d8094c618a627352dbe74fc7e7b6182402e1036e19ad8c1d3355473",
     "tdf-hq-ui/src/pages/EventLogisticsPage.test.tsx": "c0d2368f5146b8e0ed3552c6e8b98ce50be7ed215a88cc10092f7034843dc913",
     "tdf-hq-ui/src/pages/EventLogisticsPage.tsx": "c7df527c7a1f9e1859cbe81a549012dba31cf22e892a99de4621acf013a9202f",
     "tdf-hq-ui/src/pages/FanClubMemberProfilePage.tsx": "3b706df13cadd3dfa75ca932202c6dbc44f87c2146df911918c44e2d4c4adcfd",
@@ -29345,6 +29439,8 @@
     "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql": "86483222ece86b79a88a693a2cd403cdf3d9b3fd183ef1182df4bf447c873f95",
     "tdf-hq/sql/2026-11-12_marketplace_agreements.sql": "cba023d9107d987ce7f336181505334538bd0a0a00782e596fab1faf4a14fdbf",
     "tdf-hq/sql/2026-11-12_marketplace_agreements_rollback.sql": "47a811221f03817022572f6bee479567c08f714897b56706cea4f75c8b39ac8f",
+    "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql": "ac023d7798dbc485e4786603169e4d480d8544dc4ea25d0fc9bb2d394fe5c391",
+    "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources_rollback.sql": "e89b182f451dd1197e62b8e854c855810446f07959dfa500d8698f4d61b04030",
     "tdf-hq/sql/init_schema.sql": "e7005641dfeff586cffe960d4945a639a712f7c2be32c8e1c5f146d40465fccd",
     "tdf-hq/sql/queries/social-event-city-match.sql": "b0ade949ccc6219c22c531e1d214e64a2fcd822a727fa6a04c2654fbee25b34f",
     "tdf-hq/src/TDF/API.hs": "14f98ec436c46f5eed2df814ca140ea1125b93a7ac3bcc4ff6f160861a2233ec",
@@ -29418,7 +29514,7 @@
     "tdf-hq/src/TDF/CoursePhone.hs": "fb76b482037d717076acb9cba7d4f69d4b7a3a89c9072017c71feebec4a6fc99",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
     "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "d084222b9da081d89cfb4f80dc7442e6be0fe3f54873c547c96a77a3f1003af2",
-    "tdf-hq/src/TDF/Cron.hs": "49728135c1299ac19d712709832349c1e3a405f66c58c3f4baf1a272dc5ae804",
+    "tdf-hq/src/TDF/Cron.hs": "97088e0580d91b17efbdd3af32bcda0e20c411bfbff562462fbd9894d6695ab2",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
@@ -29489,7 +29585,7 @@
     "tdf-hq/src/TDF/Server/Reviews.hs": "1d66d7842ad8367f84765d6251f1a7a2e8a4f56234108b39a054cb4cfe402cfb",
     "tdf-hq/src/TDF/Server/ServiceStorefront.hs": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
     "tdf-hq/src/TDF/Server/SocialDiscovery.hs": "fde6d33d4c212c327406565c94fb42818ebc0f1e6926d6e5e026124643340a4c",
-    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
+    "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": "47d52d9e436380e0afc8b6a79d0868223efebcfd76328c706e75141af3751c64",
     "tdf-hq/src/TDF/Server/SocialSync.hs": "59e1fb4047fe3879d65f93037da9d8907855fac764f335530ffae78abbfce8f0",
     "tdf-hq/src/TDF/Server/StripeTicketCapture.hs": "b2a93b8ef71726410abeb79ec0ec07ef8e96d845ada7d7c0a401fda9b5b7c842",
     "tdf-hq/src/TDF/Server/TicketManualPayments.hs": "e301982d5c7359a74c5832af5a7c6d09eefdf76404a8e7ab0583e45d173bae77",
@@ -29507,6 +29603,8 @@
     "tdf-hq/src/TDF/ServerLiveSessions.hs": "f96d18a505baa24bc00b33d790a5830879c83461b9a34f560006662f9d981c30",
     "tdf-hq/src/TDF/ServerProposals.hs": "1a2a6c39e8ea7ad9b4154f7164fd19141b39acab00dc533b4ff79e3c81dbe65b",
     "tdf-hq/src/TDF/ServerRadio.hs": "c7e8c81810d6f08ea2e513b6b120c4d8e167e87a7738acd765411e4d13f0329c",
+    "tdf-hq/src/TDF/Services/EventDiscovery.hs": "5e20776b2f857475d8c7b0fe4e4566fabe78b82bf1ac128e66f78dd00220bd47",
+    "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs": "8920fffd28e64ae62190cada54a8ffa5cc9dbe8b1171c825d63e1fd3a58234de",
     "tdf-hq/src/TDF/Services/EventLogisticsRoutes.hs": "2bb64ea8ae2173a5b9d6893291d58969816d91013b1a6fca28dc513178518da3",
     "tdf-hq/src/TDF/Services/RecordsIngestion.hs": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
     "tdf-hq/src/TDF/Services/Stripe.hs": "f9d0f6f94e220c8058e391ac2c1a9a28226247991bb68e2df3fde388ea70d491",
@@ -29530,7 +29628,7 @@
     "tdf-hq/src/TDF/WhatsApp/History.hs": "758772747d261873ec0b7409f96c9f2318b9997dee3f851e2f7fcc897510460a",
     "tdf-hq/src/TDF/WhatsApp/Transport.hs": "a7efcd1ce4d11dc32d01f9d090097e9b99d6bdbbb4a2f862b1f8dc5d8528ab38",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
-    "tdf-hq/tdf-hq.cabal": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+    "tdf-hq/tdf-hq.cabal": "f03ed18d67b75840c1a8013b6e66d040358d443be24695a64b89579fcce4509c",
     "tdf-hq/test/EventOperationsHttpMain.hs": "44b34a362fa4e90172091d4311a22b05e48230e13d7b0bb7896f878b984393c8",
     "tdf-hq/test/MusicCorsProbeMain.hs": "3b3453d5fb07ced4e314a1045c7cf1b8059a9cd1a1b50c07fc0da04edb0a1d2d",
     "tdf-hq/test/MusicCredentialCacheMain.hs": "90ef9ac6a1f4baeba056ca82a00dd213b15606caf4f168bde3b6881f3ffe5e35",
@@ -29608,6 +29706,7 @@
     "tdf-hq/test/TDF/ServerFanClubSpec.hs": "09827463e1afa9c80342e2d1d12ab74a172c8f338e1195af6733eb1276585042",
     "tdf-hq/test/TDF/ServerProposalsSpec.hs": "8fd3ca3f2e911d4f86730ea680df25a1aebbe87bc8ffb1cf593555d518fc3f06",
     "tdf-hq/test/TDF/ServerSpec.hs": "c91224ef9cacdc0991b1a1d0f2edba10a1da577673ec80314b878d0908447cd4",
+    "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs": "923b4128c425fc73bdad450972aa6451b34a7f9f0923eade287f4d396f1914e3",
     "tdf-hq/test/TDF/Services/RecordsIngestionSpec.hs": "688aa6da5068211c4123adb4c5fdbff48a8a175a4bd63fd240a0639154a41e6c",
     "tdf-hq/test/TDF/Social/AccountOwnershipSpec.hs": "f109e4ccbeaa5d7fd065b439d8183c74b23bc615ef8aafba966889b562bb2614",
     "tdf-hq/test/TDF/Social/AccountOwnershipStoreSpec.hs": "6383061eeafa7ea40eaba9dc8659c142c81b4489fc23dfbf9cd11454ee773b98",
@@ -32642,6 +32741,10 @@
       },
       {
         "requirement": "EVT-ADMIN-DELEGATION-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -35768,6 +35871,10 @@
       },
       {
         "requirement": "EVT-LOGISTICS-ACCESS-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
         "relationship": "implementation"
       }
     ],
@@ -44757,6 +44864,10 @@
       {
         "requirement": "AUTH-SOCIAL-OAUTH-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/ServerInstagramOAuth.hs": [
@@ -48074,6 +48185,54 @@
         "requirement": "EVT-LOGISTICS-ACCESS-001",
         "relationship": "tests"
       }
+    ],
+    "tdf-hq/src/TDF/Services/EventDiscovery.hs": [
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs": [
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql": [
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources_rollback.sql": [
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/eventDiscoverySources.ts": [
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx": [
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs": [
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "tests"
+      }
+    ],
+    "scripts/test-latam-venue-discovery-migration.sh": [
+      {
+        "requirement": "EVT-VENUE-DISCOVERY-001",
+        "relationship": "tests"
+      }
     ]
   },
   "surfaces": [
@@ -49585,7 +49744,7 @@
     {
       "id": "SURFACE-7ae45ad102eab3b6",
       "path": "package.json",
-      "sha256": "862ea41afa019dcf0edea194b2dfc0f75f3a593886e3603403bc9b2a22af4c92",
+      "sha256": "f2c36ff5cc7d7772a74a2f1befae7fb32569f774437d86f0ebdd70c94ccd4d5b",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -49754,7 +49913,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "d4ef8dc3fc0b755297bbb76375e14010b68d840e8aacd1804c5658eb0b98eb7f",
+      "sha256": "92cfb77f163bcf9666572efede7b00c23cf7b7484cc28f1fd34a55269bf22d68",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52858,7 +53017,7 @@
     {
       "id": "SURFACE-4b1375d7bd4167ca",
       "path": "scripts/production-migrations.json",
-      "sha256": "1949fdf9335db01f3c8e8a84bd863f1df84d61b8aa02019247a0f470ed34971b",
+      "sha256": "9dd3e10cd5dc85e0b45eeadb88dd0bf30ed40293e8a128082d347553e612a9d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52931,6 +53090,10 @@
         },
         {
           "requirement": "EVT-ADMIN-DELEGATION-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -54840,6 +55003,18 @@
       "requirements": [
         {
           "requirement": "DEPLOY-CANARY-001",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-e24b57f42786c346",
+      "path": "scripts/test-latam-venue-discovery-migration.sh",
+      "sha256": "199ef246bc415162d5768223e893cf1b420add3265637c51e6624bf5382794f1",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
           "relationship": "tests"
         }
       ]
@@ -58558,9 +58733,14 @@
     {
       "id": "SURFACE-8a2776e43bfcbb99",
       "path": "tdf-hq-ui/src/api/eventDiscoverySources.ts",
-      "sha256": "25a52612ab0e9228060dd65246722fe9530e912c27f8b725df4c2b25ca5e39f7",
+      "sha256": "c73e4c32cf6b775425ff3bcfadcf36dbab3fbca1a997133d8c38e45e80c7ebc0",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ed4c4e2cae08642f",
@@ -63998,9 +64178,14 @@
     {
       "id": "SURFACE-378a6bc30de606b4",
       "path": "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
-      "sha256": "4dac7124635899687df092f6164248eab3673764ae71ed80d44bac9be0234bdf",
+      "sha256": "572fd5bd8d8094c618a627352dbe74fc7e7b6182402e1036e19ad8c1d3355473",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-0cf77a2e272d6fba",
@@ -73066,6 +73251,30 @@
       ]
     },
     {
+      "id": "SURFACE-7bcde7c345db5c9e",
+      "path": "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources.sql",
+      "sha256": "ac023d7798dbc485e4786603169e4d480d8544dc4ea25d0fc9bb2d394fe5c391",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-2831864c8972417d",
+      "path": "tdf-hq/sql/2026-11-14_latam_venue_discovery_sources_rollback.sql",
+      "sha256": "e89b182f451dd1197e62b8e854c855810446f07959dfa500d8698f4d61b04030",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-7c4cd603babd8c4c",
       "path": "tdf-hq/sql/benchmark_admin_operations_control_center.sql",
       "sha256": "987a0fd68fb17864d5699fb057a64b3f161eb43ab873fcfd0e7fdd07b5afe470",
@@ -74664,11 +74873,15 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "49728135c1299ac19d712709832349c1e3a405f66c58c3f4baf1a272dc5ae804",
+      "sha256": "97088e0580d91b17efbdd3af32bcda0e20c411bfbff562462fbd9894d6695ab2",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "AUTH-SOCIAL-OAUTH-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -76609,7 +76822,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
+      "sha256": "47d52d9e436380e0afc8b6a79d0868223efebcfd76328c706e75141af3751c64",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76754,6 +76967,10 @@
         },
         {
           "requirement": "EVT-LOGISTICS-ACCESS-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
           "relationship": "implementation"
         }
       ]
@@ -77195,9 +77412,26 @@
     {
       "id": "SURFACE-f53dee8d468f33b8",
       "path": "tdf-hq/src/TDF/Services/EventDiscovery.hs",
-      "sha256": "2f607cc22ee3646febe4e913583969a4df00a411a616f698cc142f6c8019ed7e",
+      "sha256": "5e20776b2f857475d8c7b0fe4e4566fabe78b82bf1ac128e66f78dd00220bd47",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-dfd6616359647c1a",
+      "path": "tdf-hq/src/TDF/Services/EventDiscoveryLinkedData.hs",
+      "sha256": "8920fffd28e64ae62190cada54a8ffa5cc9dbe8b1171c825d63e1fd3a58234de",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-8feae87922bfebcd",
@@ -77663,7 +77897,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "sha256": "f03ed18d67b75840c1a8013b6e66d040358d443be24695a64b89579fcce4509c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79530,9 +79764,14 @@
     {
       "id": "SURFACE-916f8955abd0c6a2",
       "path": "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
-      "sha256": "2fbffdb8b05ba0138c791b49455c183402ec1250feeb0a51d271d5f89e2083cf",
+      "sha256": "923b4128c425fc73bdad450972aa6451b34a7f9f0923eade287f4d396f1914e3",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "EVT-VENUE-DISCOVERY-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-b84bbb40486fa4d8",
@@ -84404,7 +84643,6 @@
     "SURFACE-813e2cb331206edf",
     "SURFACE-7b04c2b9c9106a38",
     "SURFACE-0c959c7387eb57ac",
-    "SURFACE-8a2776e43bfcbb99",
     "SURFACE-c4fda8b73ff04ca3",
     "SURFACE-3cd89bf125cae3f7",
     "SURFACE-538da406d34b654f",
@@ -84616,7 +84854,6 @@
     "SURFACE-b81f0abcff43675c",
     "SURFACE-069f0007a6d5497d",
     "SURFACE-29fec1655a519178",
-    "SURFACE-378a6bc30de606b4",
     "SURFACE-acd0be5e389457cc",
     "SURFACE-63a292b2e11fa9e9",
     "SURFACE-a446627998229bcd",
@@ -85199,7 +85436,6 @@
     "SURFACE-2c8ed40114d9013d",
     "SURFACE-81312ef85a6b405a",
     "SURFACE-3538414933fee775",
-    "SURFACE-f53dee8d468f33b8",
     "SURFACE-d8a42e512f685ab6",
     "SURFACE-f70cbdf0bd82961f",
     "SURFACE-b4b451c7f0a9bfab",
@@ -85228,7 +85464,6 @@
     "SURFACE-705eb0208602ff31",
     "SURFACE-85348e5ee1e69142",
     "SURFACE-c823af87bc95031c",
-    "SURFACE-916f8955abd0c6a2",
     "SURFACE-eef0c0019f0d35ca",
     "SURFACE-6e0e63efd78f6dcd",
     "SURFACE-60c6485e90430e4b",
@@ -86861,7 +87096,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f6b7249ac7570e8d99feb9bd074bdca28541482ecd4596ed7ce6e0595f7a08b3",
+      "sourceSha256": "64a52f3583ed0341200ad1db10e29e8b966999e1982409a696382acad1954a5f",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -86889,7 +87124,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f6b7249ac7570e8d99feb9bd074bdca28541482ecd4596ed7ce6e0595f7a08b3",
+      "sourceSha256": "64a52f3583ed0341200ad1db10e29e8b966999e1982409a696382acad1954a5f",
       "definition": {
         "states": [
           "absent",
@@ -86919,7 +87154,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "f6b7249ac7570e8d99feb9bd074bdca28541482ecd4596ed7ce6e0595f7a08b3",
+      "sourceSha256": "64a52f3583ed0341200ad1db10e29e8b966999e1982409a696382acad1954a5f",
       "definition": {
         "export": [
           "queued",
@@ -110041,7 +110276,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 219,
+    "PARTIAL": 220,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
