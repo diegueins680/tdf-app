@@ -8432,7 +8432,7 @@
         "scripts/test-music-integration-rehearsal.mjs",
         "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md) Controlled heartbeat shutdown tests require native sleep/SQL reaping under a missed first group delivery, preserve identical lease SQL/options/statuses, and retain the existing completion deadline and stream-close requirement. Live CI descriptor-holder identity remains unestablished; see formal/system/music-worker-heartbeat-shutdown.md.",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md) Controlled heartbeat shutdown tests require native sleep/SQL reaping under a missed first group delivery, preserve identical lease SQL/options/statuses, and retain the existing completion deadline and stream-close requirement. Live CI descriptor-holder identity remains unestablished; see formal/system/music-worker-heartbeat-shutdown.md. Added 2026-11-14: stop_heartbeat sent one TERM to the heartbeat's process group and then waited; a TERM that landed while the heartbeat or its sleep was still being forked was lost and the worker waited out a whole heartbeat interval (30 s by default), which is what the CI failure 'Worker did not stop within 30s' showed. The signal is now repeated every 0.1 s until the group is gone. A minimal copy of the logic reproduced the hang under load (1 in 2500 to 4000 runs) and none in 6000 runs with the repeat; music-worker-heartbeat-shutdown.test.mjs drops the first group signal and requires the worker to stop within 4 s (it fails without the repeat).",
       "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
       "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
@@ -27741,7 +27741,8 @@
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts"
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
@@ -27749,7 +27750,8 @@
         "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts"
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -27759,7 +27761,8 @@
       "ambiguity": [
         "A logistics team member who is neither a manager of the event nor holds the Scheduling module can open the planning workspace (EVT-LOGISTICS-ACCESS-001) but is not offered the link on the event page.",
         "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test.",
-        "Unnamed artist profiles still appear in the server-side community directory search and on Mobile."
+        "Unnamed artist profiles still appear in the server-side community directory search and on Mobile.",
+        "The server reports UTC both for an account that never chose a zone and for one that chose UTC. A zone saved from the same browser is remembered locally and kept; on another device a chosen UTC still starts a new event in the browser's zone, which the form lets the organizer change."
       ],
       "conformance": {
         "classification": "PARTIAL",

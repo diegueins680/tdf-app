@@ -8433,7 +8433,7 @@
         "scripts/test-music-integration-rehearsal.mjs",
         "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs"
       ],
-      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md) Controlled heartbeat shutdown tests require native sleep/SQL reaping under a missed first group delivery, preserve identical lease SQL/options/statuses, and retain the existing completion deadline and stream-close requirement. Live CI descriptor-holder identity remains unestablished; see formal/system/music-worker-heartbeat-shutdown.md.",
+      "verification": "S3 spec, local HTTPS S3 probes, Linux worker image smoke and integration against local PostgreSQL/S3; bounded TLC model of leased processing with three negative controls and an over-limit reclaim witness (formal/system/music-asset-processing.md) Controlled heartbeat shutdown tests require native sleep/SQL reaping under a missed first group delivery, preserve identical lease SQL/options/statuses, and retain the existing completion deadline and stream-close requirement. Live CI descriptor-holder identity remains unestablished; see formal/system/music-worker-heartbeat-shutdown.md. Added 2026-11-14: stop_heartbeat sent one TERM to the heartbeat's process group and then waited; a TERM that landed while the heartbeat or its sleep was still being forked was lost and the worker waited out a whole heartbeat interval (30 s by default), which is what the CI failure 'Worker did not stop within 30s' showed. The signal is now repeated every 0.1 s until the group is gone. A minimal copy of the logic reproduced the hang under load (1 in 2500 to 4000 runs) and none in 6000 runs with the repeat; music-worker-heartbeat-shutdown.test.mjs drops the first group signal and requires the worker to stop within 4 s (it fails without the repeat).",
       "evidence": "Local results in docs/music-releases/linux-worker-integration.md and deployment-and-verification.md (2026-09-16); model results and the read of guard/claim/promotion SQL in formal/system/music-asset-processing.md (2026-10-12); re-upload runtime scenario and migration apply/rollback in formal/system/music-upload-rebind.md (2026-10-12, historical local evidence)",
       "confidence": "Medium: lease guard, claim and promotion rules read from source and model-checked in a bounded scope; local-only runtime evidence; no deployed worker or real buckets.",
       "ambiguity": [
@@ -27679,7 +27679,7 @@
     {
       "id": "GROWTH-FIRST-ACTION-001",
       "title": "An invited visitor reaches the promised first action after signup",
-      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to the event's managers and to accounts with the Scheduling module; artist profiles that still carry the account placeholder name are left out of the fan hub catalog; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
+      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to the event's managers and to accounts with the Scheduling module; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
       "domain": "Growth",
       "authority": "Product owner request on 2026-11-13 to walk the invitation funnel on production and remove what stops invited people.",
       "source": "User request: make an invited person able to get real value in one sitting; walk production as a new organizer, fan and artist from the campaign links and fix every blocker.",
@@ -27720,8 +27720,7 @@
         "Publish from a state with no direct, review-free transition to a publicly listable state",
         "Write event fields read before the confirmation instead of the latest stored ones",
         "Show a planning-workspace link to a signed-in visitor who neither manages the event nor holds the Scheduling module",
-        "Override a time zone the account chose with the browser's",
-        "List an unnamed placeholder artist profile in the fan hub catalog for other viewers"
+        "Override a time zone the account chose with the browser's"
       ],
       "effects": [
         "Existing follow and unfollow writes from the starter list",
@@ -27742,7 +27741,8 @@
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts"
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
@@ -27750,7 +27750,8 @@
         "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts"
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -27760,7 +27761,7 @@
       "ambiguity": [
         "A logistics team member who is neither a manager of the event nor holds the Scheduling module can open the planning workspace (EVT-LOGISTICS-ACCESS-001) but is not offered the link on the event page.",
         "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test.",
-        "Unnamed artist profiles still appear in the server-side community directory search and on Mobile."
+        "The server reports UTC both for an account that never chose a zone and for one that chose UTC. A zone saved from the same browser is remembered locally and kept; on another device a chosen UTC still starts a new event in the browser's zone, which the form lets the organizer change."
       ],
       "conformance": {
         "classification": "PARTIAL",
@@ -28359,7 +28360,7 @@
     "scripts/__tests__/music-test-database.test.mjs": "b959b1430823162445ce77bdd7124f9f06967bdbc9f0f0f8f60662cd4aa66b3b",
     "scripts/__tests__/music-track-search-model.test.mjs": "2e61f61fdd8dac32222ed6d9e650b960646f7dbc87ac62237004902e17957b28",
     "scripts/__tests__/music-worker-build.test.mjs": "48ed0c6d1a7308dae7e8d1c6370d2ce14243bd7a1caf80f6b07b1bf5a6e62dcf",
-    "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+    "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs": "cd4f56d1cc520f9b2378488c6b9a63d4b85ef6ea6562701e6242496ffade0d87",
     "scripts/__tests__/music-worker-timing.test.mjs": "907a0871805a5fe6eb121d0917004b2bcca4ab2ee14090a9789ec55d1a425480",
     "scripts/__tests__/music-worker-upload.test.mjs": "85b62ef8c0264b420667a9c519c86cc73aaa926f585638fb97f9b5a70751d005",
     "scripts/__tests__/native-resolver-lock.test.mjs": "1716d05d5e857897f2377375d9a2bdd5f09b06db3fdf0eba5283dd9d7acde056",
@@ -28479,7 +28480,7 @@
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
     "scripts/rehearse-hetzner-restore.mjs": "1c4a8373c22b7561d1c300f7710b7d3db4a2449669525ba39f12bd231f0e2265",
     "scripts/render-production-migration-batch.mjs": "f4639376be970901e91db87e5fc6f791a658c483752b998af5460c50fef53c85",
-    "scripts/run-music-release-worker-once.sh": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
+    "scripts/run-music-release-worker-once.sh": "5673e5228c12615f7972c5c65312b732ec6ee0f7d2c0f559086fa5e21e300334",
     "scripts/run-music-release-worker.sh": "521e52bb3b059c86c17765100957bacbfcf66d1575978b710bc6dc22e916cc5b",
     "scripts/run-native-audio-tests.sh": "89be3522a4c6fb7e4352bc8799edb2aee64de19dac7a95d67efe144395ed48aa",
     "scripts/scan-music-legacy-releases.sh": "5c108cc19a7a3d706e5152e1dc4a95e54e23be7e534bd106e25b92768c74f5cb",
@@ -28897,8 +28898,8 @@
     "tdf-hq-ui/src/components/events/EventMemoryModeration.tsx": "08b0537bc66aced315fb85d5413231fbdc71691f091cad285e7d804c82432931",
     "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx": "7dd090e0d630e421a449d7af4789403ab26bedf4aada4ad94f1b2cd666b37f4d",
     "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx": "fef66abf570226402f8218edf289b554137342cbe4b2e810a81d3a707f426da0",
-    "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": "46429b923331f348410e4198c1a356cd2da1a4a86b16fb00f60ffae752b16dc2",
-    "tdf-hq-ui/src/components/events/EventPublishControl.tsx": "84413ff4f1187408865a7d1fe98b9e073fa169d2a657fe466d08839f77265d48",
+    "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": "20588666f384e0fd12131c5644cc424d21b8a8c42f944620b0aea60666aa4463",
+    "tdf-hq-ui/src/components/events/EventPublishControl.tsx": "9c621883003a735ec74441167bdedfab111dd60f701425d5340553ddce6ec353",
     "tdf-hq-ui/src/components/events/EventRaciEditor.tsx": "4f5d9809f1955c583981cf9cc97fb0d48ce5b9cbf3df7cb9a0b22bd4cf2a3bb9",
     "tdf-hq-ui/src/components/events/EventRsvpControls.tsx": "7f8a8edea0ee34356dcf6cf857f6a5afc056262ce20de8dd5291d88416a32471",
     "tdf-hq-ui/src/components/events/EventTaxDocumentsPanel.tsx": "c725918bac99cf25192be966f3231ddc8fd8bfb44e01634bcb63edc39a2d30d6",
@@ -28925,6 +28926,8 @@
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
     "tdf-hq-ui/src/desktop/shell.test.ts": "4a3ff436d1a4fc40424786499a45255e8e1b6b5c795408bcacbf17f874d55769",
     "tdf-hq-ui/src/desktop/shell.ts": "72405a96082db143d40b8ccd906d87ad217956a8e095d9b5dd980991255494ae",
     "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
@@ -29030,8 +29033,8 @@
     "tdf-hq-ui/src/pages/ClassesPage.tsx": "2c4c084a7e9287144589b96f3ac9a2ff6c3775bc854c0df027f3717bfa85c203",
     "tdf-hq-ui/src/pages/CmsAdminPage.test.tsx": "f1b4937d79da58850ae2060e849acd4c7f85f69548db771a4819f2068b691827",
     "tdf-hq-ui/src/pages/CmsAdminPage.tsx": "0b2a08ef582f97ec33fb6b9eb8c909f7d8482758655fc6f0958e312838f5744c",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
-    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "eae23d7e3d698f7e26e99225e09098b44d58eed069f8160c01ac328f0982d3ec",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx": "ea663a2df7cad94f90988660d40dc5258bc0b4f6736805078956c7d39a1a28fb",
+    "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx": "07aa5b0a0e31ac7cae1a0190060cd9cea6e1b25d37923fe99ce53853b806c66c",
     "tdf-hq-ui/src/pages/CommerceHubPage.tsx": "fd36faca6cd90cfea94cb5bd4fdba16feba0d147ab0efd6bb2372bc6d936bd75",
     "tdf-hq-ui/src/pages/CompaniesPage.tsx": "08964b25803284e26ecb3bafb8968a38b174a0cbd88772529a48cb0cfc951a9c",
     "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx": "afa52a734c52ede144b9bc707ef2534acf659836394aba60c77198a5818845dc",
@@ -29059,7 +29062,7 @@
     "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx": "bc32c42d85f2702f331c7c170764546c3988000c23596cfd3d691e24b4e2c024",
     "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "b7c85fe3881529c7b6c6e601085352dfcd5550ae06509c922eefa0eb60575734",
     "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx": "70b02ed4fec675ddcbc2a53ad2c167498719c9e9b9363c2517c0b29a033e1fdb",
-    "tdf-hq-ui/src/pages/FanHubPage.tsx": "b70938c99ad1b7b0c9144fae21461e775b80aaf01b136dbe60e56ab06bdfd8a7",
+    "tdf-hq-ui/src/pages/FanHubPage.tsx": "183867bef1d5590d1258381ba1dc5bbb662d3e2ed19d8eeb4627558cc5093301",
     "tdf-hq-ui/src/pages/GoogleDriveCallbackPage.tsx": "edceff3b6fe2336ec1b234dbc421fb13a559fbbc56e1156321bb899dcf25ad39",
     "tdf-hq-ui/src/pages/InstagramConnectPage.tsx": "c1e3000474b70b1cfa4a4e41f521762b406d1faaf2ac42966aff9c9df2b87fcf",
     "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx": "3fe5deb295874a99afc50f97d06742fad56c75a7c9a810f3fef5da66d5f4ccc1",
@@ -29137,8 +29140,8 @@
     "tdf-hq-ui/src/pages/UpcomingEventsPublicPage.tsx": "bb3924027457e03a3fc80a02db6471d91c337c06ac0e257af71093bf499347ed",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "d04c9014faf40d54ff34bfdcba72bb77e5812e13437a2b10bdd4d9f97863d891",
     "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx": "d3a2149f3bdde2e710a920fca3d2dc43e3085615c54b4c3685502bc894f5d7bb",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "7f9de243bbbf242ef286f912a543854c1ed8e6490c342cc303981abd646e6bab",
-    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "4f1db308679b4497877defe86e669196809ad405cf3c8d00cfb4eb0756818015",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts": "aab1e9d9166e505604242c195235695eae9720b08f4e311220368f52bf283940",
+    "tdf-hq-ui/src/pages/collaborativeEventCreation.ts": "1b7577906f1f3739f2ae756237f62cca45ae34174039e3dcb94f9d0384644324",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.test.ts": "12d0b8e2c66e11b30784646892d3d97f9d6762032243c2f97819b292630b4c7a",
     "tdf-hq-ui/src/pages/eventDiscoveryFilters.ts": "7e4b0da542f427fb13d49fa972d760d093096e1077c19cfbaa6f9a7fa0b9d251",
     "tdf-hq-ui/src/player/GlobalPlayer.tsx": "be3a06647e7ff272108c2177720b84a7a98483f484a2916a1fd3b2eebf4c6950",
@@ -29193,12 +29196,12 @@
     "tdf-hq-ui/src/theme/AppThemeProvider.tsx": "840ccaf4c10eab5b8f5bbd570f65687c82332fbcdbc4d7e6e7804732e78d0a1a",
     "tdf-hq-ui/src/theme/appTheme.ts": "8a154a8624caf86c6fc881a2571f808b3207d406719d564155ed7b2b0374a00e",
     "tdf-hq-ui/src/utils/__tests__/roles.test.ts": "f5aa3c92f8f8f71fc7690ef46a1be60b768c4d0ea40a714da39b04c817d272fd",
-    "tdf-hq-ui/src/utils/accessControl.test.ts": "be57cad0e4e85b33a1204d7ec6c49200bdac8bbac3f6cd6ebcc305254dbf92e2",
+    "tdf-hq-ui/src/utils/accessControl.test.ts": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
     "tdf-hq-ui/src/utils/accessControl.ts": "4550fd019b3553b00074186bf7e1614e9209c97cb4c94c5a485cb1ea102536c2",
     "tdf-hq-ui/src/utils/artistEnrichmentReview.test.ts": "b7a7422e67a3b5b9c8e6576adb0cd6b85499d2f5411b74cec1b0b658394d2777",
     "tdf-hq-ui/src/utils/artistEnrichmentReview.ts": "f4b507724bc41be6f64d46f10b2f775316f7bc9ea139e7f0c8261a79fe926aae",
-    "tdf-hq-ui/src/utils/artistFallbacks.test.ts": "af8789e3184a41499a645a9bf9bf3d37fc2c27cf1d2812ddb54de565a3f4a6cf",
-    "tdf-hq-ui/src/utils/artistFallbacks.ts": "fe7546a72ac86ae2997504b0f43fa1686cfe6fec0ca0c60ce6362f777955e500",
+    "tdf-hq-ui/src/utils/artistFallbacks.test.ts": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
+    "tdf-hq-ui/src/utils/artistFallbacks.ts": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
     "tdf-hq-ui/src/utils/artistFollowIntent.ts": "8df56d639e7ff6dcace64d8bcf1fc3169a054781c9d69aefa83fea45eaf8fb77",
     "tdf-hq-ui/src/utils/artistIdentity.test.ts": "acb5a3e652e775479c512004696b564253f1e0dd90904eb29fb8c2343902210f",
     "tdf-hq-ui/src/utils/artistIdentity.ts": "e037a5ceb7a7c8377575666d7d0e3a540a3c714da8324f17b85521c96e047a4d",
@@ -29247,7 +29250,7 @@
     "tdf-hq-ui/src/utils/radioRouteVisibility.ts": "e106acc20d3913b5612806e9ebbfd83fcf1944dea00e1d696357184e84fef647",
     "tdf-hq-ui/src/utils/roles.ts": "a6e35fb167641efb11ffadea2d23865d3165e495cd59e0644a49e0a20f87b0da",
     "tdf-hq-ui/src/utils/signupFields.test.ts": "5fa74df8f8faf643a00cdfcc30ac02e5097f07d8e6496c4bc644821ef46b7a24",
-    "tdf-hq-ui/src/utils/signupFields.ts": "af56138c4a10328afa7b1290aa5353a04fd8ed1864fb683bea7afaca31560089",
+    "tdf-hq-ui/src/utils/signupFields.ts": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
     "tdf-hq-ui/src/utils/torrentAudio.test.ts": "f087ac0025221d5acdec23f0d1324cbb97663818a4bf59e6bba97602dd213369",
     "tdf-hq-ui/src/utils/torrentAudio.ts": "ba3680f2a1b9d4dd35c2c1f3d7e34aa133c57a579f6055ce04f857437eb1c893",
     "tdf-hq-ui/src/utils/torrentWorker.test.ts": "f69e605ea3ccd42b61c794f23636f0d92dff7fa566840a5ab92e8c2770d06b2b",
@@ -48217,6 +48220,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": [
       {
         "requirement": "GROWTH-FIRST-ACTION-001",
@@ -48224,6 +48233,12 @@
       }
     ],
     "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts": [
       {
         "requirement": "GROWTH-FIRST-ACTION-001",
         "relationship": "tests"
@@ -50912,7 +50927,7 @@
     {
       "id": "SURFACE-d6545235ef8b425c",
       "path": "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
-      "sha256": "92af81082146c1ebf766a7783745e36c610a60ccc3b27f9bd17e80f348633a1d",
+      "sha256": "cd4f56d1cc520f9b2378488c6b9a63d4b85ef6ea6562701e6242496ffade0d87",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -53410,7 +53425,7 @@
     {
       "id": "SURFACE-2c2cc5981a27ed0f",
       "path": "scripts/run-music-release-worker-once.sh",
-      "sha256": "e8cce4a1b6fcd620bd51811a236084ba9db86fa0bc6d0f9d30fdf1e8ec493d18",
+      "sha256": "5673e5228c12615f7972c5c65312b732ec6ee0f7d2c0f559086fa5e21e300334",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61172,7 +61187,7 @@
     {
       "id": "SURFACE-fe18db8ab1db5749",
       "path": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
-      "sha256": "46429b923331f348410e4198c1a356cd2da1a4a86b16fb00f60ffae752b16dc2",
+      "sha256": "20588666f384e0fd12131c5644cc424d21b8a8c42f944620b0aea60666aa4463",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61184,7 +61199,7 @@
     {
       "id": "SURFACE-dcda7eb130c8a2d6",
       "path": "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
-      "sha256": "84413ff4f1187408865a7d1fe98b9e073fa169d2a657fe466d08839f77265d48",
+      "sha256": "9c621883003a735ec74441167bdedfab111dd60f701425d5340553ddce6ec353",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -61716,16 +61731,26 @@
     {
       "id": "SURFACE-9efb18a7c5a4508f",
       "path": "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts",
-      "sha256": "e71866ff798e2187e308fc2e70d1c5756065d5991a017319f4aa917e75420634",
+      "sha256": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0ffaefaddac14c70",
       "path": "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx",
-      "sha256": "a72cf8aa239817c1ae62038f6d35aa54093fdf6b745d5388a03667296f2a426e",
+      "sha256": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bc08fa3e626b4cbd",
@@ -63754,7 +63779,7 @@
     {
       "id": "SURFACE-78d796fee86d9367",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
-      "sha256": "bc59b3b38e14b62b9d7b67cc7df546d20082fd124979382aa708a68ac0101ad6",
+      "sha256": "ea663a2df7cad94f90988660d40dc5258bc0b4f6736805078956c7d39a1a28fb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63766,7 +63791,7 @@
     {
       "id": "SURFACE-0c8ff6c8d35d5bd5",
       "path": "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-      "sha256": "eae23d7e3d698f7e26e99225e09098b44d58eed069f8160c01ac328f0982d3ec",
+      "sha256": "07aa5b0a0e31ac7cae1a0190060cd9cea6e1b25d37923fe99ce53853b806c66c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -64423,7 +64448,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "b70938c99ad1b7b0c9144fae21461e775b80aaf01b136dbe60e56ab06bdfd8a7",
+      "sha256": "183867bef1d5590d1258381ba1dc5bbb662d3e2ed19d8eeb4627558cc5093301",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66301,7 +66326,7 @@
     {
       "id": "SURFACE-9d3cb0d1235509f1",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
-      "sha256": "7f9de243bbbf242ef286f912a543854c1ed8e6490c342cc303981abd646e6bab",
+      "sha256": "aab1e9d9166e505604242c195235695eae9720b08f4e311220368f52bf283940",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66321,7 +66346,7 @@
     {
       "id": "SURFACE-7ec18247afed2819",
       "path": "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-      "sha256": "4f1db308679b4497877defe86e669196809ad405cf3c8d00cfb4eb0756818015",
+      "sha256": "1b7577906f1f3739f2ae756237f62cca45ae34174039e3dcb94f9d0384644324",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67251,7 +67276,7 @@
     {
       "id": "SURFACE-a14b7188c2af7d0c",
       "path": "tdf-hq-ui/src/utils/accessControl.test.ts",
-      "sha256": "be57cad0e4e85b33a1204d7ec6c49200bdac8bbac3f6cd6ebcc305254dbf92e2",
+      "sha256": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67303,7 +67328,7 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "af8789e3184a41499a645a9bf9bf3d37fc2c27cf1d2812ddb54de565a3f4a6cf",
+      "sha256": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -67315,7 +67340,7 @@
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "fe7546a72ac86ae2997504b0f43fa1686cfe6fec0ca0c60ce6362f777955e500",
+      "sha256": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -68269,7 +68294,7 @@
     {
       "id": "SURFACE-1db49bff24529d0b",
       "path": "tdf-hq-ui/src/utils/signupFields.ts",
-      "sha256": "af56138c4a10328afa7b1290aa5353a04fd8ed1864fb683bea7afaca31560089",
+      "sha256": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -84782,8 +84807,6 @@
     "SURFACE-1f4f62934e5ce609",
     "SURFACE-2d2dd1ee6f2d4fc7",
     "SURFACE-6292138aaa393539",
-    "SURFACE-9efb18a7c5a4508f",
-    "SURFACE-0ffaefaddac14c70",
     "SURFACE-bc08fa3e626b4cbd",
     "SURFACE-97be8dda570dadfa",
     "SURFACE-ce7bf5da901fefcd",
@@ -87109,7 +87132,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7ed25fe4d239f8c48576d8b253d19e4774ecea54514e3b209abe4f5aabd3a9ad",
+      "sourceSha256": "a51ac4d47d4fb4c5e5b0a134db6c9627c3a56b5ab8b975c89b6ffe6fa5474c94",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -87137,7 +87160,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7ed25fe4d239f8c48576d8b253d19e4774ecea54514e3b209abe4f5aabd3a9ad",
+      "sourceSha256": "a51ac4d47d4fb4c5e5b0a134db6c9627c3a56b5ab8b975c89b6ffe6fa5474c94",
       "definition": {
         "states": [
           "absent",
@@ -87167,7 +87190,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "7ed25fe4d239f8c48576d8b253d19e4774ecea54514e3b209abe4f5aabd3a9ad",
+      "sourceSha256": "a51ac4d47d4fb4c5e5b0a134db6c9627c3a56b5ab8b975c89b6ffe6fa5474c94",
       "definition": {
         "export": [
           "queued",

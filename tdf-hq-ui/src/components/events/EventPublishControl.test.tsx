@@ -11,6 +11,7 @@ const readStates = jest.fn<() => Promise<{ states: WorkflowState[] }>>();
 jest.unstable_mockModule('../../api/socialEvents', () => ({ SocialEventsAPI: { getEvent: readEvent, updateEvent } }));
 jest.unstable_mockModule('../../api/catalogs', () => ({ Catalogs: { getPublicWorkflowStates: readStates } }));
 const { default: EventPublishControl, resolvePublishTarget } = await import('./EventPublishControl');
+const { advanceAuthSessionEpoch } = await import('../../session/authEvents');
 
 // Capabilities and transition targets are space-separated here: these are
 // fixtures of the server's lifecycle catalog, not lists the web app owns.
@@ -59,7 +60,39 @@ describe('resolvePublishTarget', () => {
   });
 });
 
+describe('resolvePublishTarget effective windows', () => {
+  const now = Date.parse('2027-01-10T12:00:00Z');
+  const withWindows = (windows: Record<string, { effectiveFrom?: string; effectiveUntil?: string }>) => states.map((item) => item.id !== '1' ? item : {
+    ...item, transitions: item.transitions.map((transition) => ({ ...transition, ...windows[transition.toStateId] })),
+  });
+  it('skips a public transition that has not started or has already ended', () => {
+    expect(resolvePublishTarget(draft, withWindows({ 2: { effectiveFrom: '2027-02-01T00:00:00Z' } }), now)).toEqual({ workflowStateId: '3' });
+    expect(resolvePublishTarget(draft, withWindows({ 2: { effectiveUntil: '2027-01-10T12:00:00Z' } }), now)).toEqual({ workflowStateId: '3' });
+    expect(resolvePublishTarget(draft, withWindows({
+      2: { effectiveFrom: '2027-02-01T00:00:00Z' }, 3: { effectiveUntil: '2027-01-01T00:00:00Z' },
+    }), now)).toBeNull();
+  });
+  it('keeps a transition whose window contains the present', () => {
+    expect(resolvePublishTarget(draft, withWindows({
+      2: { effectiveFrom: '2027-01-10T12:00:00Z', effectiveUntil: '2027-01-11T00:00:00Z' },
+    }), now)).toEqual({ workflowStateId: '2' });
+  });
+});
+
 describe('EventPublishControl', () => {
+  it('does not publish under another account when the session changes during the read', async () => {
+    let finishRead: ((event: SocialEventDTO) => void) | undefined;
+    readEvent.mockImplementation(() => new Promise((resolve) => { finishRead = resolve; }));
+    setup();
+    fireEvent.click(await screen.findByRole('button', { name: 'Publicar evento' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Publicar ahora' }));
+    await waitFor(() => expect(finishRead).toBeDefined());
+    advanceAuthSessionEpoch();
+    finishRead?.(draft);
+    expect(await screen.findByText(/Tu sesión cambió/)).toBeTruthy();
+    expect(updateEvent).not.toHaveBeenCalled();
+  });
+
   it('publishes only after an explicit confirmation, from the latest saved fields', async () => {
     readEvent.mockResolvedValue({ ...draft, eventTitle: 'Título corregido por otra persona' });
     setup();
