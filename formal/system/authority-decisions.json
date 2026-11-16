@@ -1133,6 +1133,17 @@
       "resolution": "approved -> revoked is added to the canonical claim machine. Only an administrator with the Admin role and module who is not the claimant may revoke, a non-empty reason is mandatory, every manager grant created by the claim is deactivated in the same transaction (the database refuses a revoked claim with an active grant), the transition is audited as claim.revoked and revoked is terminal; the claimant may submit a new claim."
     },
     {
+      "id": "AUTHORITY-098",
+      "sources": [
+        "tdf-hq/assets/feature-registry.json",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "formal/system/event-admin-delegation.md"
+      ],
+      "conflict": "The feature registry required the Scheduling module for social.event.logistics, so the web shell refused the logistics page to a delegated event administrator or organizer without that module, while the logistics handlers authorize by event record (organizer, delegated administrator, logistics team) and never consult the module.",
+      "authority": "Repository owner decision of 2026-11-13.",
+      "resolution": "Remove the module requirement from social.event.logistics and keep its record scopes; the backend record check remains the authorization of plan data (EVT-LOGISTICS-ACCESS-001). No other registry entry is changed."
+    },
+    {
       "id": "AUTHORITY-URI-DECODE-001",
       "sources": [
         "formal/system/dependency-security.md",
