@@ -17,9 +17,13 @@ export default function CommunityDiscovery() {
   const debounced = useDebouncedSearch(draft);
   const previousQuery = useRef(query);
   useEffect(() => { setDraft(query); }, [query]);
+  // The result page and page size live in the URL with the filters, so coming
+  // back from a profile restores the same results. Any other change starts
+  // again from the first page.
   const update = (key: string, value: string) => setParams((current) => {
     const next = new URLSearchParams(current);
     if (value) next.set(key, value); else next.delete(key);
+    if (key !== 'page') next.delete('page');
     return next;
   }, { replace: true });
   useEffect(() => {
@@ -29,8 +33,12 @@ export default function CommunityDiscovery() {
   const profileKind = params.get('profileKind') ?? '';
   const genreId = params.get('genreId') ?? '';
   const cityId = params.get('cityId') ?? '';
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(PAGE_SIZE_OPTIONS[0]!);
+  const requestedPage = Number(params.get('page'));
+  const page = Number.isInteger(requestedPage) && requestedPage > 1 ? requestedPage - 1 : 0;
+  const setPage = (next: number) => update('page', next > 0 ? String(next + 1) : '');
+  const requestedSize = Number(params.get('perPage'));
+  const rowsPerPage = PAGE_SIZE_OPTIONS.includes(requestedSize) ? requestedSize : PAGE_SIZE_OPTIONS[0]!;
+  const setRowsPerPage = (size: number) => update('perPage', size === PAGE_SIZE_OPTIONS[0] ? '' : String(size));
   const section = useRef<HTMLDivElement>(null);
   const taxonomies = useQuery({ queryKey: ['directory', 'taxonomies', 'es'], queryFn: () => Directory.taxonomies('es'), staleTime: 30 * 60_000 });
   const results = useDirectorySearch({ q: query || undefined, entityType: 'profile',
@@ -40,20 +48,34 @@ export default function CommunityDiscovery() {
   // already visited ones are shown again without another request.
   const pages = results.data?.pages ?? [];
   const total = pages[0]?.facets.total ?? 0;
-  const items = pages[Math.min(page, pages.length - 1)]?.items ?? [];
-  useEffect(() => { setPage(0); }, [query, profileKind, genreId, cityId, rowsPerPage]);
+  // A restored page that is not loaded yet is reached one server page at a time.
+  const catchingUp = pages.length > 0 && page >= pages.length && Boolean(results.hasNextPage);
+  const items = catchingUp ? [] : pages[Math.min(page, pages.length - 1)]?.items ?? [];
+  const { fetchNextPage, isFetching } = results;
+  useEffect(() => {
+    if (catchingUp && !isFetching) void fetchNextPage();
+  }, [catchingUp, isFetching, fetchNextPage, pages.length]);
+  const searchKey = [query, profileKind, genreId, cityId, rowsPerPage].join('\u0000');
+  const currentSearch = useRef(searchKey);
+  useEffect(() => { currentSearch.current = searchKey; }, [searchKey]);
   const goToPage = async (next: number) => {
+    const startedFor = searchKey;
     if (next >= pages.length) {
       const fetched = await results.fetchNextPage();
-      if ((fetched.data?.pages.length ?? 0) <= next) return;
+      // The filters may have changed while the page loaded; that navigation
+      // belongs to the previous search and must not move the new one.
+      if (currentSearch.current !== startedFor || (fetched.data?.pages.length ?? 0) <= next) return;
     }
     setPage(next);
     section.current?.scrollIntoView?.({ block: 'start' });
   };
+  const globalSearchParams = new URLSearchParams(params);
+  globalSearchParams.delete('page');
+  globalSearchParams.delete('perPage');
   const submit = (event: FormEvent) => { event.preventDefault(); update('q', draft.trim().replace(/\s+/gu, ' ')); };
   const clear = () => { setDraft(''); setParams((current) => {
     const next = new URLSearchParams(current);
-    for (const key of ['q', 'profileKind', 'genreId', 'cityId']) next.delete(key);
+    for (const key of ['q', 'profileKind', 'genreId', 'cityId', 'page']) next.delete(key);
     return next;
   }, { replace: true }); };
   return <Box ref={section} component="section" aria-labelledby="community-discovery-heading" sx={{ color: 'text.primary', bgcolor: 'background.paper', p: { xs: 2, sm: 3 }, borderRadius: 2, '& .MuiInputLabel-root': { color: 'text.primary' }, '& .MuiButton-text': { color: 'text.primary' } }}>
@@ -80,7 +102,7 @@ export default function CommunityDiscovery() {
     {taxonomies.isError && <Alert severity="warning" action={<Button onClick={() => { void taxonomies.refetch(); }}>Reintentar</Button>}>No pudimos cargar los filtros. Puedes seguir buscando por nombre.</Alert>}
     {results.isError && <Alert severity="error" action={<Button onClick={() => { void results.refetch(); }}>Reintentar</Button>}>No pudimos cargar los perfiles. Intenta de nuevo.</Alert>}
     <Typography role="status" aria-live="polite" mb={2}>{results.isFetching ? 'Buscando perfiles…' : `${total} perfiles · Ordenados por relevancia`}</Typography>
-    {!results.isPending && !results.isError && !items.length && <Alert severity="info">No encontramos perfiles con esta búsqueda. Prueba otro nombre o <Button onClick={clear}>explora todos los perfiles</Button>.</Alert>}
+    {!results.isPending && !results.isError && !catchingUp && !items.length && <Alert severity="info">No encontramos perfiles con esta búsqueda. Prueba otro nombre o <Button onClick={clear}>explora todos los perfiles</Button>.</Alert>}
     <Box data-scroll-restoration-pending={results.isPending ? 'true' : undefined} aria-busy={results.isFetching} sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
       {items.map((item) => <Card key={`${item.type}:${item.id}`} component="article" variant="outlined">
         <CardActionArea component={Link} to={directoryResultPath(item)} sx={{ height: '100%', alignItems: 'start' }}>
@@ -101,6 +123,6 @@ export default function CommunityDiscovery() {
       labelRowsPerPage="Por página" labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count} perfiles`}
       getItemAriaLabel={(type) => (type === 'next' ? 'Ir a la página siguiente' : type === 'previous' ? 'Ir a la página anterior' : type === 'first' ? 'Ir a la primera página' : 'Ir a la última página')}
       slotProps={{ actions: { nextButton: { disabled: results.isFetching || (page >= pages.length - 1 && !results.hasNextPage) } } }} sx={{ mt: 1 }} />}
-    <Button component={Link} to={`/buscar?${params.toString()}`} sx={{ mt: 2 }}>Abrir búsqueda global</Button>
+    <Button component={Link} to={`/buscar?${globalSearchParams.toString()}`} sx={{ mt: 2 }}>Abrir búsqueda global</Button>
   </Box>;
 }
