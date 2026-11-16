@@ -27741,7 +27741,8 @@
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
-        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts"
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx"
       ],
       "tests": [
         "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
@@ -27749,7 +27750,8 @@
         "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
         "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts"
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -28924,6 +28926,8 @@
     "tdf-hq-ui/src/config/accountDeletionRollout.test.ts": "a32b108366282c451878b0a95dd4c9efb1cdfba44ea779d0069cd03f3b5c913f",
     "tdf-hq-ui/src/config/accountDeletionRollout.ts": "c55e82bd8e87288e48b3ac05b86a9fe1335e4400be3e105d2f4fee71534af911",
     "tdf-hq-ui/src/config/appConfig.ts": "29f5c5e8d461756baa2d66118623a4b7841affeb08ce5f38d0a07a62b664213e",
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
     "tdf-hq-ui/src/desktop/shell.test.ts": "4a3ff436d1a4fc40424786499a45255e8e1b6b5c795408bcacbf17f874d55769",
     "tdf-hq-ui/src/desktop/shell.ts": "72405a96082db143d40b8ccd906d87ad217956a8e095d9b5dd980991255494ae",
     "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts": "bddb9827e9e144876f863e76805139c5ce2f14bc2d5dc65e9ab5ec92d59051a4",
@@ -48216,6 +48220,12 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "implementation"
+      }
+    ],
     "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx": [
       {
         "requirement": "GROWTH-FIRST-ACTION-001",
@@ -48223,6 +48233,12 @@
       }
     ],
     "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx": [
+      {
+        "requirement": "GROWTH-FIRST-ACTION-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts": [
       {
         "requirement": "GROWTH-FIRST-ACTION-001",
         "relationship": "tests"
@@ -61717,14 +61733,24 @@
       "path": "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts",
       "sha256": "40724d6817e05d242a914760487fd7494cef3847d35229a0b78ab1d16f02615d",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-0ffaefaddac14c70",
       "path": "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx",
       "sha256": "1dc11b1cece10e40c193f15225f92e5b02a5b880c6e7b24239cdb574a64ca06b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "GROWTH-FIRST-ACTION-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-bc08fa3e626b4cbd",
@@ -84781,8 +84807,6 @@
     "SURFACE-1f4f62934e5ce609",
     "SURFACE-2d2dd1ee6f2d4fc7",
     "SURFACE-6292138aaa393539",
-    "SURFACE-9efb18a7c5a4508f",
-    "SURFACE-0ffaefaddac14c70",
     "SURFACE-bc08fa3e626b4cbd",
     "SURFACE-97be8dda570dadfa",
     "SURFACE-ce7bf5da901fefcd",
@@ -87108,7 +87132,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "17124eccef329d008f4d3aa60f786c93a3fb1de2b33283d23ab1eb77059227aa",
+      "sourceSha256": "a51ac4d47d4fb4c5e5b0a134db6c9627c3a56b5ab8b975c89b6ffe6fa5474c94",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -87136,7 +87160,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "17124eccef329d008f4d3aa60f786c93a3fb1de2b33283d23ab1eb77059227aa",
+      "sourceSha256": "a51ac4d47d4fb4c5e5b0a134db6c9627c3a56b5ab8b975c89b6ffe6fa5474c94",
       "definition": {
         "states": [
           "absent",
@@ -87166,7 +87190,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "17124eccef329d008f4d3aa60f786c93a3fb1de2b33283d23ab1eb77059227aa",
+      "sourceSha256": "a51ac4d47d4fb4c5e5b0a134db6c9627c3a56b5ab8b975c89b6ffe6fa5474c94",
       "definition": {
         "export": [
           "queued",
