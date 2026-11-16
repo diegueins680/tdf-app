@@ -116,6 +116,11 @@ if (kind === 'sleep' && process.env.TDF_HEARTBEAT_PHASE === 'psql') process.exit
 const sql = kind === 'psql' ? fs.readFileSync(0, 'utf8') : null;
 fs.writeFileSync(process.env.TDF_HEARTBEAT_READY, JSON.stringify({pid:process.pid,kind,sql,args:process.argv.slice(2)}));
 if (process.env.TDF_HEARTBEAT_CAPTURE_ONLY === 'true') process.exit(Number(process.env.TDF_HEARTBEAT_STATUS));
+const termDelay = Number(process.env.TDF_HEARTBEAT_TERM_DELAY_MS || 0);
+if (termDelay > 0) {
+  let stopping = false;
+  process.on('SIGTERM', () => { if (!stopping) { stopping = true; setTimeout(() => process.exit(0), termDelay); } });
+}
 setInterval(()=>{},1000);
 `);
   for (const name of ['sleep', 'psql']) {
@@ -354,6 +359,85 @@ printf 'WORKER_DONE\\n'
       });
   }
 }
+test('heartbeat stops within moments when the first group signal is lost entirely', { timeout: 10_000 }, async () => {
+  const f = fixture();
+  // A TERM delivered while the heartbeat or its sleep is still being forked
+  // reaches nobody. Model it by dropping the first group signal: without a
+  // repeated signal the worker waits out the whole 60 s heartbeat interval.
+  const observed = observeTestChild(spawn('bash', ['-c', `${f.prelude}
+kill() {
+  if [ "$#" = 3 ] && [ "$1" = -TERM ] && [ "$2" = -- ] && [ ! -e "$working_dir/first-term-lost" ]; then
+    : > "$working_dir/first-term-lost"
+    return 0
+  fi
+  builtin kill "$@"
+}
+heartbeat &
+heartbeat_pid=$!
+printf 'HEARTBEAT_PID=%s\\n' "$heartbeat_pid"
+for ((i=0; i<300; i++)); do
+  [ ! -f "$TDF_HEARTBEAT_READY" ] || break
+  /bin/sleep 0.01
+done
+[ -f "$TDF_HEARTBEAT_READY" ] || exit 91
+stop_heartbeat
+[ -e "$working_dir/first-term-lost" ] || exit 92
+printf 'WORKER_DONE\\n'
+`], { detached: true, stdio: ['ignore', 'pipe', 'pipe'], env: { ...f.env, TDF_HEARTBEAT_PHASE: 'sleep' } }));
+  try {
+    const outcome = await completedTestChild(observed, { timeoutMs: 4000 });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.match(outcome.stdout, /WORKER_DONE/);
+    const native = JSON.parse(readFileSync(f.ready, 'utf8'));
+    assert.equal(native.kind, 'sleep');
+    assert.equal(isAlive(native.pid), false, 'native heartbeat child must already be reaped');
+    assert.equal(observed.snapshot().processState, 'closed');
+  } finally {
+    const heartbeatPid = Number(observed.snapshot().stdout.match(/HEARTBEAT_PID=(\d+)/)?.[1]);
+    if (observed.snapshot().processState !== 'closed') {
+      signalGroup(heartbeatPid, 'SIGKILL'); signalGroup(observed.child.pid, 'SIGKILL');
+      await completedTestChild(observed, { timeoutMs: 1000 }).catch(() => {});
+    }
+    rmSync(f.directory, { recursive: true, force: true });
+  }
+});
+test('repeated stop signals do not let the worker return before a slow native child is reaped', { timeout: 10_000 }, async () => {
+  const f = fixture();
+  // The native child takes 1.2 s to exit after TERM, far longer than the gap
+  // between repeated signals. The heartbeat must keep waiting for it.
+  const started = Date.now();
+  const observed = observeTestChild(spawn('bash', ['-c', `${f.prelude}
+heartbeat &
+heartbeat_pid=$!
+printf 'HEARTBEAT_PID=%s\\n' "$heartbeat_pid"
+for ((i=0; i<300; i++)); do
+  [ ! -f "$TDF_HEARTBEAT_READY" ] || break
+  /bin/sleep 0.01
+done
+[ -f "$TDF_HEARTBEAT_READY" ] || exit 91
+stop_heartbeat
+printf 'WORKER_DONE\\n'
+`], { detached: true, stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...f.env, TDF_HEARTBEAT_PHASE: 'sleep', TDF_HEARTBEAT_TERM_DELAY_MS: '1200' } }));
+  try {
+    const outcome = await completedTestChild(observed, { timeoutMs: 6000 });
+    assert.equal(outcome.status, 0, outcome.stderr);
+    assert.match(outcome.stdout, /WORKER_DONE/);
+    const native = JSON.parse(readFileSync(f.ready, 'utf8'));
+    assert.equal(isAlive(native.pid), false, 'slow native heartbeat child must be reaped before the worker returns');
+    assert.ok(Date.now() - started >= 1100, 'the worker must have waited for the slow child');
+    assert.equal(observed.snapshot().processState, 'closed');
+  } finally {
+    const heartbeatPid = Number(observed.snapshot().stdout.match(/HEARTBEAT_PID=(\d+)/)?.[1]);
+    const native = existsSync(f.ready) ? JSON.parse(readFileSync(f.ready, 'utf8')) : null;
+    if (observed.snapshot().processState !== 'closed' || (native && isAlive(native.pid))) {
+      signalGroup(heartbeatPid, 'SIGKILL'); signalGroup(observed.child.pid, 'SIGKILL');
+      if (native && isAlive(native.pid)) { try { process.kill(native.pid, 'SIGKILL'); } catch { /* already gone */ } }
+      await completedTestChild(observed, { timeoutMs: 1000 }).catch(() => {});
+    }
+    rmSync(f.directory, { recursive: true, force: true });
+  }
+});
 for (const status of [0, 7]) {
   test(`normal and supervised SQL preserve guard, input, options and status ${status}`, { timeout: 10_000 }, async () => {
     const captures = [];

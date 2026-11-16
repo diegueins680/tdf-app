@@ -314,3 +314,68 @@ it('gets one venue by encoded identity and forwards read cancellation', async ()
   await expect(SocialEventsAPI.getVenue('venue/a', signal)).resolves.toEqual(venue);
   expect(getMock).toHaveBeenLastCalledWith('/social-events/venues/venue%2Fa', { signal });
 });
+
+describe('delegated event administration', () => {
+  const token = 'ab'.repeat(32);
+  const eventId = rawPathSegment('event 7');
+  const eventPath = `/social-events/events/${encodeExpectedPathSegment(eventId)}`;
+
+  beforeEach(() => {
+    getMock.mockReset();
+    postMock.mockReset();
+    delMock.mockReset();
+  });
+
+  it('reads the caller access and the administrator roster by encoded event', async () => {
+    const access = { eaaEventId: 'event 7', eaaAccess: 'admin' };
+    const roster = { earAccess: 'owner', earAdmins: [], earInvitations: [] };
+    getMock.mockResolvedValueOnce(access).mockResolvedValueOnce(roster);
+    await expect(SocialEventsAPI.getEventAdminAccess(eventId)).resolves.toBe(access);
+    await expect(SocialEventsAPI.listEventAdmins(eventId)).resolves.toBe(roster);
+    expect(getMock).toHaveBeenNthCalledWith(1, `${eventPath}/admin-access`);
+    expect(getMock).toHaveBeenNthCalledWith(2, `${eventPath}/admins`);
+  });
+
+  it('creates an invitation with only the trimmed invitee name', async () => {
+    const issued = { eaisInvitation: { eaiId: '3' }, eaisToken: token };
+    postMock.mockResolvedValue(issued);
+    await expect(SocialEventsAPI.createEventAdminInvitation(eventId, '  Ana Pérez ')).resolves.toBe(issued);
+    expect(postMock).toHaveBeenCalledWith(`${eventPath}/admin-invitations`, { eaicInviteeName: 'Ana Pérez' });
+  });
+
+  it('revokes an invitation and removes an administrator by encoded identity', async () => {
+    delMock.mockResolvedValue(undefined);
+    await expect(SocialEventsAPI.revokeEventAdminInvitation(eventId, 'inv/1')).resolves.toBeUndefined();
+    await expect(SocialEventsAPI.removeEventAdmin(eventId, 'party/9')).resolves.toBeUndefined();
+    expect(delMock).toHaveBeenNthCalledWith(1, `${eventPath}/admin-invitations/inv%2F1`);
+    expect(delMock).toHaveBeenNthCalledWith(2, `${eventPath}/admins/party%2F9`);
+  });
+
+  it('sends the invitation token in the request body and never in the path', async () => {
+    const preview = { eaipEventId: '7', eaipEventTitle: 'Synthetic', eaipEventStart: '2026-12-01T01:00:00Z', eaipInviteeName: 'Ana', eaipExpiresAt: '2026-11-25T00:00:00Z' };
+    const accepted = { eaaEventId: '7', eaaAccess: 'admin' };
+    postMock.mockResolvedValueOnce(preview).mockResolvedValueOnce(accepted);
+    await expect(SocialEventsAPI.previewEventAdminInvitation(token)).resolves.toBe(preview);
+    await expect(SocialEventsAPI.acceptEventAdminInvitation(token)).resolves.toBe(accepted);
+    expect(postMock).toHaveBeenNthCalledWith(1, '/social-events/admin-invitations/preview', { eaitToken: token });
+    expect(postMock).toHaveBeenNthCalledWith(2, '/social-events/admin-invitations/accept', { eaitToken: token });
+    for (const [path] of postMock.mock.calls) expect(path).not.toContain(token);
+  });
+
+  it('issues courtesy tickets with a trimmed holder and a null email when omitted', async () => {
+    const order = { ticketOrderId: '11', ticketOrderAmountCents: 0, ticketOrderStatusValue: 'paid', ticketOrderTickets: [] };
+    postMock.mockResolvedValue(order);
+    await expect(SocialEventsAPI.issueCourtesyTickets(eventId, {
+      ectTierId: 'tier-1', ectQuantity: 2, ectHolderName: ' Ana Pérez ', ectHolderEmail: '   ',
+    })).resolves.toBe(order);
+    expect(postMock).toHaveBeenLastCalledWith(`${eventPath}/courtesy-tickets`, {
+      ectTierId: 'tier-1', ectQuantity: 2, ectHolderName: 'Ana Pérez', ectHolderEmail: null,
+    });
+    await SocialEventsAPI.issueCourtesyTickets(eventId, {
+      ectTierId: 'tier-1', ectQuantity: 1, ectHolderName: 'Ana', ectHolderEmail: ' ana@example.com ',
+    });
+    expect(postMock).toHaveBeenLastCalledWith(`${eventPath}/courtesy-tickets`, {
+      ectTierId: 'tier-1', ectQuantity: 1, ectHolderName: 'Ana', ectHolderEmail: 'ana@example.com',
+    });
+  });
+});

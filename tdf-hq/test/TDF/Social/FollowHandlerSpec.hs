@@ -2935,6 +2935,16 @@ initializeSocialSchema :: SqlPersistT IO ()
 initializeSocialSchema = do
     rawExecute "PRAGMA foreign_keys = ON" []
     rawExecute
+        "CREATE TABLE IF NOT EXISTS \"event_admin_member\" (\
+        \\"id\" INTEGER PRIMARY KEY,\
+        \\"event_id\" INTEGER NOT NULL,\
+        \\"party_id\" VARCHAR NOT NULL,\
+        \\"granted_by\" VARCHAR NOT NULL,\
+        \\"created_at\" TIMESTAMP NOT NULL,\
+        \CONSTRAINT \"unique_event_admin_member\" UNIQUE (\"event_id\", \"party_id\")\
+        \)"
+        []
+    rawExecute
         "CREATE TABLE IF NOT EXISTS \"party\" (\
         \\"id\" INTEGER PRIMARY KEY,\
         \\"legal_name\" VARCHAR NULL,\
