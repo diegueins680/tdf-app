@@ -3426,7 +3426,7 @@
     {
       "id": "SURFACE-78670b2c15a18002",
       "path": "e2e/web/event-rsvp-sharing.spec.mjs",
-      "sha256": "1ea226064f016bf73fec81f527339bad4d78121ebcb7d49100f350afca34e901",
+      "sha256": "f27965a3cd77cdba6437538b8259c5dad997e059de1ab81995da7349d4c422a5",
       "semanticConformance": "not-established-by-discovery"
     },
     {

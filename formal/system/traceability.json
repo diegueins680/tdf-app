@@ -27137,7 +27137,7 @@
     "e2e/web/directory-language.spec.mjs": "bd2ea2a63805ab1b466e7056eeefdaed3fab6d430efa67e6c46f161904717800",
     "e2e/web/event-discovery-filters.spec.mjs": "f6e267555a45d88ce4cc4c0d7cf13752f164e1ab3cbfaa7f4d064ada7319af78",
     "e2e/web/event-memories.spec.mjs": "197d325765bbd6268167b65c1da217c9b960568b39d99bc92fd356871812e9d0",
-    "e2e/web/event-rsvp-sharing.spec.mjs": "1ea226064f016bf73fec81f527339bad4d78121ebcb7d49100f350afca34e901",
+    "e2e/web/event-rsvp-sharing.spec.mjs": "f27965a3cd77cdba6437538b8259c5dad997e059de1ab81995da7349d4c422a5",
     "e2e/web/fixtures/native-music-setup.mjs": "23c9a14d58758ce579f130b5e8a2368c9563af73ceaf8c3a160c751420cc9365",
     "e2e/web/helpers/campaign-accessibility.mjs": "47771f17f6987749a6e2cc36db7d81400bca4c66ecf5f0cd3821422a9f69e0b1",
     "e2e/web/helpers/thumbnail-failure-diagnostics.mjs": "d40191d4771616880144a3c0ebd629b16f25dac26cc82552187c277fdb53d755",
@@ -47893,7 +47893,7 @@
     {
       "id": "SURFACE-78670b2c15a18002",
       "path": "e2e/web/event-rsvp-sharing.spec.mjs",
-      "sha256": "1ea226064f016bf73fec81f527339bad4d78121ebcb7d49100f350afca34e901",
+      "sha256": "f27965a3cd77cdba6437538b8259c5dad997e059de1ab81995da7349d4c422a5",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

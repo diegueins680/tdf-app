@@ -206,7 +206,8 @@ test('@critical anonymous RSVP survives signup, appears once in the profile, sha
     await expect.poll(() => page.evaluate(() => window.__rsvpSharedUrl)).toContain('/eventos/42');
     expect(await page.evaluate(() => window.__rsvpSharedUrl)).not.toContain('/social/eventos/');
   } else {
-    await expect(page.getByRole('button', { name: 'Compartir', exact: true })).toHaveCount(0);
+    // The only "Compartir" left is the invitation prompt shown after answering.
+    await expect(page.locator('section[aria-labelledby="event-rsvp-title-42"]').getByRole('button', { name: 'Compartir', exact: true })).toHaveCount(await page.getByText('¿Quieres invitar a alguien?').count());
     await page.getByRole('button', { name: 'Copiar enlace' }).click();
     await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain('/eventos/42');
     expect(await page.evaluate(() => navigator.clipboard.readText())).not.toContain('/social/eventos/');
