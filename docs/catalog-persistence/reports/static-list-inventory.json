@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-14T04:30:59.624Z",
+  "generatedAt": "2026-11-16T22:51:54.633Z",
   "repositoryRoot": ".",
   "filesScanned": 2729,
   "candidateCount": 1461,
@@ -4789,7 +4789,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "status",
-      "line": 186,
+      "line": 189,
       "values": [
         "status",
         "--config"
@@ -4797,7 +4797,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        186
+        189
       ],
       "consumerCount": 1230,
       "backendConsumers": [
@@ -5077,7 +5077,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "status",
-      "line": 709,
+      "line": 712,
       "values": [
         "status",
         "--short"
@@ -5085,7 +5085,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        709
+        712
       ],
       "consumerCount": 1229,
       "backendConsumers": [
@@ -80974,7 +80974,7 @@
       "lines": [
         34
       ],
-      "consumerCount": 38,
+      "consumerCount": 37,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -81011,7 +81011,6 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/thumbnail-failure-diagnostics.test.mjs",
-        "scripts/continuous-improvement-loop.mjs",
         "scripts/interactions/test-native.py",
         "scripts/lib/auth_throttle_http.py",
         "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
@@ -109189,7 +109188,7 @@
         59,
         77
       ],
-      "consumerCount": 19,
+      "consumerCount": 20,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
         "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
@@ -109209,6 +109208,7 @@
       "automationConsumers": [
         "scripts/__tests__/architecture-boundaries.test.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/continuous-improvement-loop.mjs",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-music-catalog-search.mjs",
         "scripts/test-music-release-api-e2e.mjs",
@@ -141592,7 +141592,7 @@
       "lines": [
         1206
       ],
-      "consumerCount": 84,
+      "consumerCount": 83,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -141679,7 +141679,6 @@
         "scripts/artist-enrichment.mjs",
         "scripts/audit-feature-registry.mjs",
         "scripts/catalog-list-audit.mjs",
-        "scripts/continuous-improvement-loop.mjs",
         "scripts/generate-feature-audit-reports.mjs",
         "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
         "scripts/rehearse-hetzner-restore.mjs",
@@ -148785,7 +148784,7 @@
       "lines": [
         257
       ],
-      "consumerCount": 17,
+      "consumerCount": 18,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
         "tdf-hq/src/TDF/MusicRelease/ContentValidation.hs",
@@ -148803,6 +148802,7 @@
       "automationConsumers": [
         "scripts/__tests__/architecture-boundaries.test.mjs",
         "scripts/catalog-list-audit.mjs",
+        "scripts/continuous-improvement-loop.mjs",
         "scripts/test-distribution-accounting-migration.sh",
         "scripts/test-music-catalog-search.mjs",
         "scripts/test-music-release-api-e2e.mjs",
@@ -165874,7 +165874,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4979,
+      "line": 4983,
       "values": [
         "confirmed",
         "tentative",
@@ -165883,7 +165883,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4979
+        4983
       ],
       "consumerCount": 67,
       "backendConsumers": [
@@ -165987,7 +165987,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 6319,
+      "line": 6323,
       "values": [
         "note",
         "call",
@@ -166000,7 +166000,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        6319
+        6323
       ],
       "consumerCount": 132,
       "backendConsumers": [
@@ -166169,7 +166169,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "serviceAdProviderRoles",
-      "line": 9737,
+      "line": 9741,
       "values": [
         "Admin",
         "Manager",
@@ -166195,7 +166195,7 @@
       "valueCount": 20,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        9737
+        9741
       ],
       "consumerCount": 55,
       "backendConsumers": [
@@ -166292,7 +166292,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16843,
+      "line": 16847,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -166300,7 +166300,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16843
+        16847
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -166325,7 +166325,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "canonicalMarketplaceOrderStatuses",
-      "line": 19821,
+      "line": 19825,
       "values": [
         "holding",
         "awaiting_payment",
@@ -166334,7 +166334,7 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        19821
+        19825
       ],
       "consumerCount": 155,
       "backendConsumers": [
