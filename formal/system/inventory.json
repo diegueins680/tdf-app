@@ -89,6 +89,7 @@
       "e2e/web/rental-terms-money.spec.mjs",
       "e2e/web/service-storage-recovery.spec.mjs",
       "e2e/web/staff-event-money.spec.mjs",
+      "e2e/web/staff-payment-report-money.spec.mjs",
       "e2e/web/storage-upload-recovery.spec.mjs",
       "e2e/web/studio-internship-audit.spec.mjs",
       "e2e/web/ticket-credential.spec.mjs",
@@ -1518,6 +1519,7 @@
       "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
       "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
       "tdf-hq-ui/src/pages/WhatsAppConsentPage.tsx",
+      "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.money.test.tsx",
       "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
       "tdf-hq-ui/src/pages/bookingsPageLogic.test.ts",
       "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
@@ -3598,6 +3600,12 @@
       "id": "SURFACE-8f380cb36d8ef6a6",
       "path": "e2e/web/staff-event-money.spec.mjs",
       "sha256": "14245fbcd90c7e0c9fe7a15a3f3ceb5f49e26dcdbebca5d0eec20d6774a0a42e",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-b97679a3b2099acb",
+      "path": "e2e/web/staff-payment-report-money.spec.mjs",
+      "sha256": "6f70e7798ab7855b6b06cb82119b77c369c342a569fd534adfe8618931e569be",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10131,7 +10139,7 @@
     {
       "id": "SURFACE-32ac407e77c4e6e8",
       "path": "tdf-hq-ui/src/features/finance/davidCelayaReport.ts",
-      "sha256": "f5ae67ed38970fe57d0a3389362e8b3f783d340e4b3ee82e7b4ff0f8bda2cbdd",
+      "sha256": "c0ba767b6280580292afa74d2826e567648bb5758f31bb20a5e3d850712b7839",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10149,7 +10157,7 @@
     {
       "id": "SURFACE-0d06a5220131a483",
       "path": "tdf-hq-ui/src/features/finance/workAccountReport.test.ts",
-      "sha256": "21a72be7d6217b1917193dfd8de0cc2c552ed1de546acf87e30e8e411319aa60",
+      "sha256": "aff5da85df9de1747bf8342539d4327ec5b7b7f51f90aa4c47bd4ba930466785",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11649,13 +11657,13 @@
     {
       "id": "SURFACE-6e21d53461f37190",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
-      "sha256": "69636a272ab7dc4404d98088f6165450d07939c1ebd19e234b667dee3e163263",
+      "sha256": "16b5ffb7e0abc20a7f578fa2b800d4b7a43fca2a6a35e971537d88f3ddf59a98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4a78e6b0e0157ec4",
       "path": "tdf-hq-ui/src/pages/PaymentsPage.tsx",
-      "sha256": "f52cc4307ec6e241bdd575bd11466db9c47f31abd6021fd250a57afad49ad829",
+      "sha256": "bd178d0924511b49299b2da8042d6eb3d4099fb32e6e39a8a967da73d0beb011",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12055,9 +12063,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-f53212badf45f68d",
+      "path": "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.money.test.tsx",
+      "sha256": "a03bb6511561eb9fb2e2972440e9ae655b11e598e05347c1d1aed999d08f60ce",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-f27402487c0e8e59",
       "path": "tdf-hq-ui/src/pages/WorkAccountReportBuilderPage.tsx",
-      "sha256": "ee2ee5e2509c46c32a0e2f52124b15f0f89ed8f1c02041dbecd0773c20052474",
+      "sha256": "187d95f6a6a60fdc65e175109dcb89fb96c086d37febc810b055c5ea031f351a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31025,7 +31039,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "235e008a738a549d6a7868259236be5c13a5fb8b7d4786f5207a7a1ee74f51e1",
+      "sha256": "0fc0c685806803fb1c17806a51991db711992d12b238642c87d70314485e2a5f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

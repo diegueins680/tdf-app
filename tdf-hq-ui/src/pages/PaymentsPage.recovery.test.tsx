@@ -2,6 +2,7 @@ import { jest } from '@jest/globals';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { PartySelectorOption } from '../api/partySelector';
+import type { PaymentDTO } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
 import '../i18n';
 
@@ -30,9 +31,9 @@ jest.unstable_mockModule('../components/GoogleDriveUploadWidget', () => ({
     <button onClick={() => onComplete([{ id: 'owned-file', name: 'comprobante.pdf', webContentLink: 'https://api.tdf.test/storage/files/owned-file' }])}>Adjuntar comprobante</button>,
 }));
 const { PaymentForm } = await import('./PaymentsPage');
-function openForm(onCreated = jest.fn()) {
+function openForm(onCreated = jest.fn(), payments: PaymentDTO[] = []) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  return { ...render(<QueryClientProvider client={client}><PaymentForm payments={[]} onCreated={onCreated} /></QueryClientProvider>), client, onCreated };
+  return { ...render(<QueryClientProvider client={client}><PaymentForm payments={payments} onCreated={onCreated} /></QueryClientProvider>), client, onCreated };
 }
 beforeEach(() => { sessionStorage.clear(); localStorage.clear(); ownerId = 42; create.mockReset().mockResolvedValue({ payId: 1 }); });
 
@@ -65,5 +66,61 @@ it('does not let a completed earlier request erase edits made while saving', asy
   await act(async () => { finish?.({ payId: 1 }); });
   expect((screen.getByLabelText(/Monto/)).value).toBe('20');
   expect(view.onCreated).not.toHaveBeenCalled();
+  view.unmount(); view.client.clear();
+});
+
+it.each(['12abc', '1e3', 'Infinity', '1.234', '1.2.3', '-1', '0', '', '90071992547409.92'])(
+  'blocks the entire invalid manual payment amount %s with a field error and no request', async (raw) => {
+    const view = openForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir contacto' }));
+    const input = screen.getByLabelText(/Monto/);
+    fireEvent.change(input, { target: { value: raw } }); fireEvent.blur(input);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(input.getAttribute('inputmode')).toBe('decimal');
+    expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent).toBeTruthy();
+    const submit = screen.getByRole('button', { name: /Registrar pago/ });
+    expect((submit as HTMLButtonElement).disabled).toBe(true); fireEvent.click(submit);
+    expect(create).not.toHaveBeenCalled();
+    view.unmount(); view.client.clear();
+  },
+);
+it.each([['0,29', 29], ['1.10', 110], ['90071992547409.91', Number.MAX_SAFE_INTEGER]] as const)(
+  'writes exact manual payment cents for %s', async (raw, cents) => {
+    const view = openForm();
+    fireEvent.click(screen.getByRole('button', { name: 'Elegir contacto' }));
+    fireEvent.change(screen.getByLabelText(/Monto/), { target: { value: raw } });
+    fireEvent.click(screen.getByRole('button', { name: /Registrar pago/ }));
+    await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ pcPartyId: 11, pcAmountCents: cents, pcCurrency: 'USD' }));
+    view.unmount(); view.client.clear();
+  },
+);
+it('keeps invalid raw amount in the owned draft and preserves a rejected exact amount for deliberate resubmission', async () => {
+  const first = openForm();
+  fireEvent.click(screen.getByRole('button', { name: 'Elegir contacto' }));
+  fireEvent.change(screen.getByLabelText(/Monto/), { target: { value: '12abc' } });
+  first.unmount(); first.client.clear();
+  create.mockRejectedValueOnce(new Error('Rechazo sintético'));
+  const next = openForm();
+  await screen.findByText('Cliente Once');
+  expect((screen.getByLabelText(/Monto/)).value).toBe('12abc');
+  expect((screen.getByRole('button', { name: /Registrar pago/ })).disabled).toBe(true);
+  fireEvent.change(screen.getByLabelText(/Monto/), { target: { value: ' 40,99 ' } });
+  fireEvent.click(screen.getByRole('button', { name: /Registrar pago/ }));
+  await screen.findByText('Rechazo sintético');
+  expect((screen.getByLabelText(/Monto/)).value).toBe(' 40,99 ');
+  fireEvent.click(screen.getByRole('button', { name: /Registrar pago/ }));
+  await waitFor(() => expect(create).toHaveBeenCalledTimes(2));
+  expect(create.mock.calls[0]).toEqual(create.mock.calls[1]);
+  expect(create.mock.calls[0]?.[0]).toEqual(expect.objectContaining({ pcAmountCents: 4099 }));
+  next.unmount(); next.client.clear();
+});
+it('copies the last safe-integer amount without a floating-point round trip', () => {
+  const view = openForm(jest.fn(), [{ payId: 1, payPartyId: 11, payAmountCents: Number.MAX_SAFE_INTEGER,
+    payCurrency: 'USD', payMethod: 'Cash', payReference: null, payConcept: 'Honorarios', payPeriod: null } as PaymentDTO]);
+  fireEvent.click(screen.getByRole('button', { name: 'Elegir contacto' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Copiar datos' }));
+  expect((screen.getByLabelText(/Monto/)).value).toBe('90071992547409.91');
+  expect(create).not.toHaveBeenCalled();
   view.unmount(); view.client.clear();
 });
