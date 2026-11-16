@@ -78,6 +78,6 @@ tasa de aceptación, RAS) en PostHog antes de la campaña.
 | Autorización de split de PayPhone | Formulario de PayPhone (docs.payphone.app/split-de-pagos) | Requiere Botón, Cajita o Link operando en producción; pedir la modalidad «al día siguiente»; los datos legales y las declaraciones los firma TDF |
 | Comisión del procesador | `marketplace_payment_fee_rule` | PayPhone 5,75 % a cargo del proveedor del servicio por defecto; confirmar el porcentaje contratado y quién la asume antes de encender el gate (es un `UPDATE`) |
 | Datos del receptor | `marketplace_payout_account.identifier` | Cédula, RUC o teléfono guardados en claro; revisar con privacidad si deben cifrarse antes de abrir el registro de cuentas a usuarios |
-| Vencimiento del depósito | `marketplace_agreement.deposit_due_at` | Vence al cargar los acuerdos de un participante; hasta que exista el worker (B2), un acuerdo que nadie abre conserva el cupo |
+| Vencimiento del depósito | `marketplace_agreement.deposit_due_at` | Vence al cargar los acuerdos de un participante y cada cinco minutos en el job del servidor; revisar en los logs que no haya `[Marketplace][AgreementExpiry] pass failed` repetidos |
 | Dinero sin aplicar | `directory_audit_event` | Una fila `agreement.payment.unapplied` significa que llegó dinero verificado para un cobro que ya no estaba pendiente: hay que devolverlo a mano |
 | `introducedBy` del ledger | `scripts/production-migrations.json` | Apunta al commit que introdujo `2026-11-12_marketplace_agreement_payments.sql`; fusionar con merge commit |

@@ -76,11 +76,13 @@ Entrega en dos partes (decisión del 2026-11-12):
   del proveedor de pagos marca un cobro pagado; el depósito sin pagar vence y libera el cupo. Gate
   `marketplace.agreement_payments` en FALSE en todos los entornos: todavía ningún flujo de proveedor
   reparte el cobro, y el ejecutor compartido rechaza estos checkouts.
-- **Parte B2 — ejecución y reembolsos (pendiente):** Botón de PayPhone con `transferTo`, adaptador
-  Stripe canónico con cargo destino y onboarding de cuentas conectadas, pantalla de pago y de
-  cuenta de cobro, reembolsos automáticos según la política congelada, worker de vencimiento y
-  panel de disputas. DataWeb (Datafast) queda conectado al ruteo y cerrado hasta que contrate un
-  split verificable.
+- **Parte B2a — operación (implementada):** vencimiento del depósito en segundo plano, cola de
+  disputas de acuerdos para administración y registro de la cuenta de cobro de PayPhone en la
+  pestaña Acuerdos.
+- **Parte B2b — ejecución y reembolsos (pendiente, requiere credenciales de sandbox):** Botón de
+  PayPhone con `transferTo`, adaptador Stripe canónico con cargo destino y onboarding de cuentas
+  conectadas, pantalla de pago y reembolsos automáticos según la política congelada. DataWeb
+  (Datafast) queda conectado al ruteo y cerrado hasta que contrate un split verificable.
 
 Alcance:
 - Tabla `marketplace_agreement` creada al aceptar una oferta cuando el gate está activo: partes,
