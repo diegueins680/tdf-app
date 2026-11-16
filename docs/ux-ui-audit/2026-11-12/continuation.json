@@ -164,6 +164,18 @@
       "principle": "Contexto temporal consistente",
       "finding": "El corte y los bloques nuevos del reporte usaban el día UTC; durante la noche en Ecuador se adelantaban a mañana. La captura sintética mostró esa diferencia.",
       "change": "Se reutiliza el día de calendario local del navegador para Corte, bloques nuevos y reinicio en blanco. La prueba fija 20/nov/2030 01:15 UTC y comprueba 19/nov en Ecuador; las fechas explícitas de plantillas se conservan."
+    },
+    {
+      "id": "COG-20261116-01",
+      "principle": "Prevención de cambios involuntarios y corrección por campo",
+      "finding": "Vaciar stock, alerta o peso convertía el campo inmediatamente a cero. Decimales, exponentes o valores fuera del contrato no tenían error propio; el formulario podía aparentar un valor distinto del texto editado.",
+      "change": "Se conserva el texto y se validan unidades enteras. Cero debe ser explícito en stock/alerta; peso respeta1–100000gramos y stock/alerta el INTEGER no negativo. No se recortan dígitos para producir un entero válido diferente. Errores accesibles bloquean envíos inválidos, sin confundirlos con un conflicto del servidor. Se conservan versión, permisos, reservas/ventas, estado activo, idempotencia del borrador y texto rechazado."
+    },
+    {
+      "id": "COG-20261116-02",
+      "principle": "Vocabulario legible y consistente",
+      "finding": "Categorías como apparel o limited_edition aparecían como códigos o inglés sin traducir en filtros públicos, producto, formulario del vendedor y revisión administrativa.",
+      "change": "Un vocabulario de presentación compartido en español/inglés muestra Ropa, Edición limitada y los demás rótulos existentes. Las solicitudes conservan códigos originales y opciones; la lista no gana autoridad ni nuevas categorías seleccionables. Códigos desconocidos reciben un rótulo neutral. La migración pendiente del catálogo se conserva."
     }
   ],
   "measurements": [
@@ -275,7 +287,7 @@
       "id": 14,
       "item": "Vocabulario compartido",
       "status": "Parcial",
-      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles."
+      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos."
     },
     {
       "id": 15,
@@ -287,7 +299,7 @@
       "id": 16,
       "item": "Errores junto al campo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo."
+      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo."
     },
     {
       "id": 17,
@@ -341,7 +353,7 @@
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local."
+      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local. Stock/peso conservan texto completo, cero explícito, límites y versión autorizada del servidor; rechazo no borra la edición."
     },
     {
       "id": 26,
@@ -423,9 +435,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 7,
-      "testsPassed": 61,
-      "sourceCommit": "22603bedc9f7684dbbdced705d507f819dd6cb3b"
+      "suitesPassed": 4,
+      "testsPassed": 53,
+      "sourceCommit": "7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2"
     },
     "browser": {
       "passed": 22,
@@ -439,15 +451,15 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "22603bedc9f7684dbbdced705d507f819dd6cb3b",
+      "sourceCommit": "7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 116,
+      "mappedChangedMaterialSurfaces": 119,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
     },
     "catalog": {
-      "candidates": 1428,
+      "candidates": 1429,
       "unreviewed": 0,
       "stale": 0,
       "preservationTestsPassed": 11
@@ -455,8 +467,8 @@
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "cases": 21,
-      "passed": 21,
+      "cases": 28,
+      "passed": 28,
       "failed": 0,
       "configurations": [
         "Chromium desktop",
@@ -468,37 +480,39 @@
         "WebKit critical"
       ],
       "caseGroups": {
-        "manualPaymentAmount": 7,
-        "reportHourlyRateAndLocalDate": 7,
-        "rentalPriceRegression": 7
+        "sellerStockAndDraft_es": 7,
+        "sellerStockAndDraft_en": 7,
+        "categoryLabelsAndWire_es": 7,
+        "categoryLabelsAndWire_en": 7
       },
       "checks": [
-        "Texto monetario completo, precisión inválida, borrador de pago inválido tras recarga, rechazo422 conserva40,99 y dos payloads equivalentes con4099centavos",
-        "Tarifa inválida con error/ARIA; PDF sin href y plantilla bloqueada, vista previa declarada como última tarifa válida",
-        "Plantilla local0,29→29→recarga0.29; límite entero seguro conserva el último centavo en texto y almacenamiento",
-        "Corte y Fecha de nuevo bloque:19/nov/2030 cuando UTC ya es20/nov; fechas de plantilla conservadas",
-        "WCAG de campos tras transiciones, viewport completo, hit testing y ausencia de overflow"
+        "Campos vacíos permanecen vacíos y bloquean envío; valores largos no se truncan a una cantidad distinta válida",
+        "Dos solicitudes de borrador simuladas, rechazo422 conserva texto/payload/clave de idempotencia; peso100000 y stock0 llegan como enteros",
+        "En el recorrido sintético, conflicto409 conserva cantidad editada y versión7; se recarga para leer versión8 antes del siguiente intento explícito",
+        "Filtros traducidos conservan GET category=bundle; categoría limitada conserva limited_edition al crear; producto y revisión muestran el mismo rótulo",
+        "WCAG/ARIA tras transiciones, helper asociado, viewport/hit testing normal y sin overflow"
       ],
       "harness": {
+        "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
-        "adapter": "/private/tmp/cogload-eighth-playwright.config.mjs",
-        "identity": "Explicit worktree cwd and strict port; final large-value assertion also verifies the newly built formatter. An earlier preview in this pass had cwd/served-index equality verified."
+        "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+        "identity": "Final owned preview PID55500 had the expected cwd; served /inicio index exactly matched this worktree build."
       },
-      "log": "/private/tmp/cogload-tenth-browser-calendar.log",
-      "limitations": "API requests intercepted. Manual payment uses one simulated422 rejection then one simulated accepted record. Reports use synthetic local templates and Blob URLs; no real ledger payment, financial action, report delivery or production mutation."
+      "log": "/private/tmp/cogload-eleventh-browser-complete.log",
+      "limitations": "Todas las API están interceptadas. Cada recorrido de stock simula dos creaciones de borrador y dos actualizaciones de stock; rechazo y conflicto no cambian registros reales. Los recorridos de categorías no realizan escrituras. Sin publicación, compra, cobro, envío, cambio de inventario real o despliegue."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "45a4311e625a9d16eb54a599b1ff8bbf97066059",
-      "ciRun": 43754782424,
+      "commit": "d6b5d14ff01cadeee5ef05cb854b407efaf1f36f",
+      "ciRun": 43793114620,
       "ciConclusion": "success",
       "webJest": {
-        "suites": 378,
-        "tests": 4339,
+        "suites": 379,
+        "tests": 4370,
         "result": "passed"
       },
       "mainBrowser": {
-        "passed": 953,
+        "passed": 967,
         "skipped": 22,
         "failed": 0
       },
@@ -512,8 +526,8 @@
         "deletion": 10,
         "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog43754785265, event43754787710, social43754790274, interaction43754792714",
-      "scope": "Completed hosted results belong only to this prior head; they do not verify the new source."
+      "specialistWorkflows": "all four passed: catalog43793117652, event43793120934, social43793124235, interaction43793127171",
+      "scope": "Completed hosted results belong only to this prior head; new source requires new verification."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -542,7 +556,8 @@
     "Las cifras históricas 49/50 del informe original requieren conciliación; no son conteos nuevos.",
     "No se creó ninguna compra, reserva, correo ni transacción en producción.",
     "No hay aprobación independiente, fusión ni despliegue en producción de esta continuación.",
-    "CourseMetadata.price aún es un número en moneda. Si ya perdió la distinción entre centavos adyacentes, el editor bloquea la publicación hasta una corrección explícita; no se amplió el contrato backend para esa lectura."
+    "CourseMetadata.price aún es un número en moneda. Si ya perdió la distinción entre centavos adyacentes, el editor bloquea la publicación hasta una corrección explícita; no se amplió el contrato backend para esa lectura.",
+    "La protección probada de stock cubre el rechazo mientras el snapshot del editor sigue igual. El editor existente se monta con una clave que incluye la versión; un refetch que traiga otra versión puede reiniciarlo. La conciliación de borradores editados frente a snapshots nuevos queda pendiente y no se declara resuelta aquí."
   ],
   "screenshots": [
     {
@@ -612,6 +627,14 @@
     {
       "path": "figures/report-hourly-rate-inline-error-phone.png",
       "scope": "Tarifa sintética25abc bloqueada; Corte muestra el día local del navegador. No se guardó ni entregó un reporte real."
+    },
+    {
+      "path": "figures/merch-stock-inline-error-phone.png",
+      "scope": "Stock sintético vacío con ayuda por campo y sin coerción a cero; no se creó un borrador o stock reales."
+    },
+    {
+      "path": "figures/merch-category-label-phone.png",
+      "scope": "Categoría Edición limitada en producto sintético; sin compra ni publicación."
     }
   ],
   "followups": [
@@ -1353,7 +1376,114 @@
         "semanticConformance": "not established by these checks"
       },
       "hostedCI": "New published head requires its own full workflows."
+    },
+    {
+      "date": "2026-11-16",
+      "baseCommit": "d6b5d14ff01cadeee5ef05cb854b407efaf1f36f",
+      "scope": "Items14/16/25: stock/peso y vocabulario de categorías en mercancía. API, permisos, versión, estado activo, reservas/ventas, idempotencia y Mobile conservados.",
+      "workspaceRecovery": "El checkout temporal perdió su archivo .git; fuente y PR publicados intactos. Se creó un checkout persistente desde d6b5d14ff, sin reparar, borrar ni reutilizar el directorio temporal incompleto. La fuente Mobile exacta fue inicializada; cambios ajenos del workspace original preservados.",
+      "regressionVerification": {
+        "suites": 4,
+        "tests": 53,
+        "log": "/private/tmp/cogload-eleventh-unit-verified.log",
+        "checks": [
+          "Borrador con varias variantes conserva precios, gramos y stock en sus unidades originales",
+          "Vacío/negativo/decimal/exponente/fuera de rango y valores largos bloquean API incluso mediante submit programático",
+          "Cero y máximo de INTEGER explícitos; peso1–100000; claves y versiones intactas",
+          "Conflicto conserva edición y no se inventa un conflicto del servidor para entrada local inválida",
+          "Regresiones administrativas, de montos y exportación CSV existentes"
+        ]
+      },
+      "browserVerification": {
+        "cases": 28,
+        "passed": 28,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "sellerStockAndDraft_es": 7,
+          "sellerStockAndDraft_en": 7,
+          "categoryLabelsAndWire_es": 7,
+          "categoryLabelsAndWire_en": 7
+        },
+        "checks": [
+          "Campos vacíos permanecen vacíos y bloquean envío; valores largos no se truncan a una cantidad distinta válida",
+          "Dos solicitudes de borrador simuladas, rechazo422 conserva texto/payload/clave de idempotencia; peso100000 y stock0 llegan como enteros",
+          "En el recorrido sintético, conflicto409 conserva cantidad editada y versión7; se recarga para leer versión8 antes del siguiente intento explícito",
+          "Filtros traducidos conservan GET category=bundle; categoría limitada conserva limited_edition al crear; producto y revisión muestran el mismo rótulo",
+          "WCAG/ARIA tras transiciones, helper asociado, viewport/hit testing normal y sin overflow"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Final owned preview PID55500 had the expected cwd; served /inicio index exactly matched this worktree build."
+        },
+        "log": "/private/tmp/cogload-eleventh-browser-complete.log",
+        "limitations": "Todas las API están interceptadas. Cada recorrido de stock simula dos creaciones de borrador y dos actualizaciones de stock; rechazo y conflicto no cambian registros reales. Los recorridos de categorías no realizan escrituras. Sin publicación, compra, cobro, envío, cambio de inventario real o despliegue."
+      },
+      "fixtureCorrections": "Un lote posterior tuvo27 aprobados y un timeout global de30s en Firefox justo en la última solicitud del recorrido largo. Se acotó ese recorrido a60s, conservando los presupuestos de aserción y todos los controles, y se repitió el lote completo. Primer intento interrumpido al buscar un nombre exacto que MUI combina con el valor seleccionado. Se corrigió el locator y se fijó el idioma inicial del fixture; no cambió la semántica accesible del producto. Un lote completo de28 pasó; luego el lote final completo de28 revalidó el guard local de submit y la representación del umbral actualizado.",
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": {
+        "newPresentationConsumer": "7d5d1e64b79af7288982",
+        "priorDecisionsPreserved": 1428,
+        "authority": [
+          "tdf-hq/docs/openapi/api.yaml:MerchProductCategory",
+          "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql:204"
+        ],
+        "classification": "dynamic-business-catalog / consumer-update",
+        "scope": "Solo rótulos para nueve códigos existentes. No se elimina la obligación previa de migrar el catálogo ni se añaden opciones seleccionables."
+      },
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "d6b5d14ff01cadeee5ef05cb854b407efaf1f36f",
+        "ciRun": 43793114620,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 379,
+          "tests": 4370,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 967,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed: catalog43793117652, event43793120934, social43793124235, interaction43793127171",
+        "scope": "Completed hosted results belong only to this prior head; new source requires new verification."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 119,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "New published head requires its own full workflows."
     }
   ],
-  "lastUpdated": "2026-11-15"
+  "lastUpdated": "2026-11-16"
 }

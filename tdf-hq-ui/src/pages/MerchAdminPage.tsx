@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Alert, Box, Button, Checkbox, Chip, CircularProgress, FormControlLabel, MenuItem, Paper, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { Merch, createMerchIdempotencyKey, type MerchIssueTriageRequest } from '../api/merch';
-import { formatMerchMoney, merchLanguage, merchStatusLabel, readMerchMoneyInput } from '../utils/merch';
+import { merchCategoryLabel, formatMerchMoney, merchLanguage, merchStatusLabel, readMerchMoneyInput } from '../utils/merch';
 
 const optionalTrimmed = (value?: string) => {
   const trimmed = value?.trim();
@@ -257,7 +257,7 @@ export default function MerchAdminPage() {
         <Stack spacing={2}>{products.data?.map((product) => <Paper key={product.id} variant="outlined" sx={{ p: 2 }}>
           <Stack spacing={1.5}>
             <Typography fontWeight={800}>{product.name}</Typography>
-            <Typography variant="body2">{product.storeName} · {product.category}</Typography>
+            <Typography variant="body2">{product.storeName} · {merchCategoryLabel(product.category, language)}</Typography>
             <TextField multiline minRows={2} label={language === 'en' ? 'Rejection reason (required to reject)' : 'Motivo (obligatorio para rechazar)'} value={notes[product.id] ?? ''} onChange={(event) => setNotes({ ...notes, [product.id]: event.target.value })} />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}><Button variant="contained" onClick={() => productReview.mutate({ id: product.id, status: 'published' })}>{language === 'en' ? 'Publish' : 'Publicar'}</Button><Button color="error" disabled={(notes[product.id]?.trim().length ?? 0) < 5} onClick={() => productReview.mutate({ id: product.id, status: 'rejected' })}>{language === 'en' ? 'Reject' : 'Rechazar'}</Button></Stack>
           </Stack>

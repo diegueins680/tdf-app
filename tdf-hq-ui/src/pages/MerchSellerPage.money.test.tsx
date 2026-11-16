@@ -1,8 +1,10 @@
 import { jest } from '@jest/globals';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { MerchProductRequest, MerchShippingZoneRequest } from '../api/merch';
+import type { MerchProduct, MerchProductRequest, MerchShippingZoneRequest } from '../api/merch';
 
+const updateStock = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+let managedProducts: MerchProduct[] = [];
 const createProduct = jest.fn<(id: string, payload: MerchProductRequest, key: string) => Promise<unknown>>();
 const createShippingZone = jest.fn<(id: string, payload: MerchShippingZoneRequest) => Promise<unknown>>();
 const empty = async () => [];
@@ -10,8 +12,8 @@ jest.unstable_mockModule('../api/merch', () => ({
   createMerchIdempotencyKey: (scope: string) => `synthetic-${scope}`,
   Merch: {
     capabilities: async () => ({ features: {} }),
-    sellerStores: async () => [{ id: 'synthetic-store', displayName: 'Synthetic store', operationalStatus: 'active', permissions: { catalog: true, settings: true } }],
-    sellerProducts: empty, sellerOrders: empty, sellerIssues: empty, members: empty,
+    sellerStores: async () => [{ id: 'synthetic-store', displayName: 'Synthetic store', operationalStatus: 'active', permissions: { catalog: true, settings: true, stock: true } }],
+    sellerProducts: async () => managedProducts, updateVariantStock: updateStock, sellerOrders: empty, sellerIssues: empty, members: empty,
     createProduct, createShippingZone,
   },
 }));
@@ -26,7 +28,7 @@ async function mount() {
   render(<QueryClientProvider client={client}><MerchSellerPage /></QueryClientProvider>);
   await screen.findByText('Nuevo borrador de producto');
 }
-beforeEach(() => { createProduct.mockReset().mockResolvedValue({}); createShippingZone.mockReset().mockResolvedValue({}); });
+beforeEach(() => { managedProducts = []; updateStock.mockReset(); createProduct.mockReset().mockResolvedValue({}); createShippingZone.mockReset().mockResolvedValue({}); });
 afterEach(() => { cleanup(); client.clear(); });
 
 it('converts each variant independently to cents and leaves stock and weight in their existing units', async () => {
@@ -85,4 +87,56 @@ it('blocks invalid delivery amounts, keeps the input, and supports correction', 
   change(rate, '5,25');
   fireEvent.click(screen.getByRole('button', { name: 'Agregar zona' }));
   await waitFor(() => expect(createShippingZone).toHaveBeenCalledWith('synthetic-store', expect.objectContaining({ rateMinor: 525 })));
+});
+
+it.each([['Stock', ''], ['Stock', '-1'], ['Stock', '1.5'], ['Stock', '1e3'], ['Stock', '2147483648'], ['Stock', '21474836470'],
+  ['Peso (gramos)', ''], ['Peso (gramos)', '0'], ['Peso (gramos)', '100001'], ['Peso (gramos)', '1000001']])(
+  'retains invalid %s text %s and blocks draft creation even on programmatic submit', async (label, raw) => {
+    await mount();
+    const input = screen.getByLabelText(new RegExp('^'+label.replace(/[()]/g, '\\$&')));
+    change(input, raw);
+    expect((input as HTMLInputElement).value).toBe(raw);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    expect(document.getElementById(input.getAttribute('aria-describedby')!)?.textContent).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'Guardar borrador' })).disabled).toBe(true);
+    fireEvent.submit(input.closest('form')!);
+    await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
+    expect(createProduct).not.toHaveBeenCalled();
+  },
+);
+it('keeps explicit zero stock valid, enforces the database boundary and sends integers with the original idempotency key', async () => {
+  await mount();
+  change(screen.getByLabelText(/^Stock/), '2147483647');
+  change(screen.getByLabelText(/^Peso/), '100000');
+  fireEvent.submit(screen.getByLabelText(/^Stock/).closest('form')!);
+  await waitFor(() => expect(createProduct).toHaveBeenCalledTimes(1));
+  expect(createProduct.mock.calls[0]?.[1].variants[0]).toEqual(expect.objectContaining({ stockOnHand: 2147483647, weightGrams: 100000 }));
+  expect(createProduct.mock.calls[0]?.[2]).toBe('synthetic-product');
+  change(screen.getByLabelText(/^Stock/), '0');
+  fireEvent.submit(screen.getByLabelText(/^Stock/).closest('form')!);
+  await waitFor(() => expect(createProduct).toHaveBeenCalledTimes(2));
+  expect(createProduct.mock.calls[1]?.[1].variants[0]?.stockOnHand).toBe(0);
+});
+it('does not coerce blank stock or threshold to zero, and preserves a rejected versioned stock edit', async () => {
+  managedProducts = [{ id: 'synthetic-product', name: 'Producto sintético', status: 'draft', category: 'apparel',
+    variants: [{ id: 'variant-1', name: 'Variante sintética', sku: 'SKU-1', version: 7,
+      stockOnHand: 12, reorderThreshold: 3, stockReserved: 2, stockSold: 1, active: true, stockMode: 'finite' }], images: [] } as MerchProduct];
+  updateStock.mockRejectedValue(new Error('Synthetic version conflict'));
+  await mount();
+  const stock = screen.getByLabelText(/^Existencia/), threshold = screen.getByLabelText(/^Alerta de stock/);
+  const submit = screen.getByRole('button', { name: 'Actualizar stock' });
+  for (const [field, raw] of [[stock, ''], [threshold, ''], [stock, '2.5'], [threshold, '1e3']] as const) {
+    change(field, raw); expect(field.getAttribute('aria-invalid')).toBe('true');
+    expect((submit as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.submit(stock.closest('form')!);
+  }
+  expect(updateStock).not.toHaveBeenCalled();
+  expect(screen.queryByText(/El stock cambió en otro lugar/)).toBeNull();
+  change(stock, '9'); change(threshold, '0');
+  fireEvent.click(submit);
+  await waitFor(() => expect(updateStock).toHaveBeenCalledTimes(1));
+  expect(updateStock).toHaveBeenCalledWith('synthetic-store', 'variant-1', { stockOnHand: 9, reorderThreshold: 0, active: true, version: 7 });
+  await screen.findByText(/El stock cambió en otro lugar/);
+  expect((stock as HTMLInputElement).value).toBe('9');
+  expect((threshold as HTMLInputElement).value).toBe('0');
 });

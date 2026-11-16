@@ -870,6 +870,12 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.match(review.evidence.file, /^tdf-hq-ui\/src\/components\/(sidebarMenuRules\.ts|MenuFamilyTabs\.test\.tsx)$/);
   }
   const menuRuleIds = new Set(menuRuleReviews.map(row => row.id));
+  // The base branch reviewed the merchandise category labels in the same week
+  // (batch cognitive-load-merch-labels-20261116); it is later than both views.
+  for (const row of active.filter(candidate => candidate.reviewBatch === 'cognitive-load-merch-labels-20261116')) {
+    assert.equal(row.evidence.file, 'tdf-hq-ui/src/utils/merch.ts');
+    menuRuleIds.add(row.id);
+  }
   assert.deepEqual(active.filter(row => !merchLabelIds.has(row.id) && !menuRuleIds.has(row.id)),
     await reviewedParent('cfbd8d66447585ef4b178c1ea76004b188cdad46'));
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
@@ -891,7 +897,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   assert.equal(historicalAppleView.length, 1411);
   assert.deepEqual(historicalAppleView,
     await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1434);
+  assert.equal(active.length, 1435);
   const history = new Map();
   const visit = row => {
     if (!row) return;

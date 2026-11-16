@@ -37956,6 +37956,30 @@
       }
     },
     {
+      "id": "7d5d1e64b79af7288982",
+      "classification": "dynamic-business-catalog",
+      "disposition": "consumer-update",
+      "specializedModel": "content_category, tag",
+      "priority": "P1-cross-platform",
+      "risk": "Presentation labels must follow persisted category codes; the existing category catalog migration obligation remains open.",
+      "justification": "Presentation-only Spanish/English labels for the existing nine MerchProductCategory codes. The switch mirrors the OpenAPI enum and SQL category CHECK; it adds no selectable option, database authority or status transition. Existing filters and product requests retain raw codes. Unknown codes get a neutral label.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-and-wire-review",
+      "reviewBatch": "cognitive-load-merch-labels-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/utils/merch.ts",
+        "line": 48,
+        "kind": "switch-cases",
+        "name": "category",
+        "valueCount": 9,
+        "sources": [
+          "tdf-hq/docs/openapi/api.yaml:MerchProductCategory",
+          "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql:204"
+        ],
+        "verification": "e2e/web/merch-stock-category.spec.mjs: localized seller/filter/product/admin labels retain category codes and mutation paths"
+      }
+    },
+    {
       "id": "68f51ccc9ae6aa108850",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
