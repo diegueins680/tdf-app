@@ -27955,7 +27955,7 @@
         "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required."
       },
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
-      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance. The final worker image must import the actual health module as its non-root user without networking, with the full Python standard library. Required repository CI builds the image without publication and executes the immutable-image verifier, which also binds the health-script digest. Earlier backend Python controls alone do not establish final-image dependency availability. A premature EOF that contradicts declared HTTP Content-Length, or invalid length framing, is temporary transport failure and cannot establish a complete invalid media object. Exact/close-delimited completion and the existing bounded-prefix behavior remain; fake-transport controls keep native decoding separate.",
+      "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance. The final worker image must import the actual health module as its non-root user without networking, with the full Python standard library. Required repository CI builds the image without publication and executes the immutable-image verifier, which also binds the health-script digest. Earlier backend Python controls alone do not establish final-image dependency availability. A premature EOF that contradicts declared HTTP Content-Length, or invalid length framing, is temporary transport failure and cannot establish a complete invalid media object. Exact/close-delimited completion and the existing bounded-prefix behavior remain; fake-transport controls keep native decoding separate. A real HTTP parser socket-pair regression bounds trickled response headers under the overall network deadline and verifies timeout cleanup.",
       "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
     }
   ],
@@ -28570,7 +28570,7 @@
     "scripts/mail-deliverability-monitor.py": "8882eea9a8b415b10225075e66f3eaf874a49c41f13d3795b97d1a16550f4c0a",
     "scripts/merge-admission.py": "24bd87a5b6c078ec8cf099e9c6fe46567dca33acd08574953efef75644b0b2b2",
     "scripts/mobile-publishing-admin-audit.sh": "6443db3bbfc3a044fc95206b5742aa4800137af1dbe1e94656818f275bacd3ad",
-    "scripts/music-media-health.py": "96c251959f321a8cfb9ef486e9cfbb36e91d47beb2f606ef6e84798f05a31644",
+    "scripts/music-media-health.py": "2b80bf8d0f812abea2057b364f6384dffcb7d2a4c7275509c02fd7a8d2a0e5c8",
     "scripts/prepare-content-storage-reconciliation.mjs": "8032784954c085896cee00ab69bea66037443e6ff522941aa55ea244706dad57",
     "scripts/prepare-event-draft.mjs": "5ff4d82ba2c2bde1bbd0ec9da7a657d33a91e6ce27dae7ed450e9884f1cdbeb9",
     "scripts/prepare-hetzner-release.mjs": "efb4b038d836b276bf9d79dc2be2bdd220bee32afa20727de0ead6b8dcdc6340",
@@ -28668,7 +28668,7 @@
     "scripts/test-music-download-predicate.mjs": "bca6f459131b70b0ac181a6b24b68fb7a853ee9c06121b604f2e3581f9c59bc4",
     "scripts/test-music-integration-rehearsal.mjs": "c1976955269babf795b4588aa4b1f9f7dd6b1cd09b9ac86f69f053953b0cab4b",
     "scripts/test-music-media-health.mjs": "383825c93a9090858d72ae401cbcad93358cf4e540949c45ed0097b7d90b4efe",
-    "scripts/test-music-media-health.py": "b70f9d104e634a6d6137600b03a3b9716dcc8c9a2641a124d17fc97431b5a195",
+    "scripts/test-music-media-health.py": "899711c458eecca463df2e31938552e505e3ed408fe400fcff17d3923964adda",
     "scripts/test-music-money-wire-verifier.py": "bc1c7cce17011641bbf01ff4ac5382c4d101526bbd3e913fa0c0ae436e915eb5",
     "scripts/test-music-payment-outcomes.sh": "f529c92e471a8118013eab1c229abc7c0cc9ec64b8ac925a8ef677e9f57c02ac",
     "scripts/test-music-playback-identity.mjs": "a60a990dd03b9233777d241733d086d000b31fb0952b29a4addd84b3bad97f01",
@@ -53167,7 +53167,7 @@
     {
       "id": "SURFACE-065b757f096cfd7c",
       "path": "scripts/music-media-health.py",
-      "sha256": "96c251959f321a8cfb9ef486e9cfbb36e91d47beb2f606ef6e84798f05a31644",
+      "sha256": "2b80bf8d0f812abea2057b364f6384dffcb7d2a4c7275509c02fd7a8d2a0e5c8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -55554,7 +55554,7 @@
     {
       "id": "SURFACE-f4fdf752dc07e153",
       "path": "scripts/test-music-media-health.py",
-      "sha256": "b70f9d104e634a6d6137600b03a3b9716dcc8c9a2641a124d17fc97431b5a195",
+      "sha256": "899711c458eecca463df2e31938552e505e3ed408fe400fcff17d3923964adda",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87550,7 +87550,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4871eea34fefe795669bb15b67063afa013c12c548dbdd608c096aef03ddc29b",
+      "sourceSha256": "05026a5504d5c5bcf9688a988b0630d57278770ecb46afd7b710be030aad4e54",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -87578,7 +87578,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4871eea34fefe795669bb15b67063afa013c12c548dbdd608c096aef03ddc29b",
+      "sourceSha256": "05026a5504d5c5bcf9688a988b0630d57278770ecb46afd7b710be030aad4e54",
       "definition": {
         "states": [
           "absent",
@@ -87608,7 +87608,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "4871eea34fefe795669bb15b67063afa013c12c548dbdd608c096aef03ddc29b",
+      "sourceSha256": "05026a5504d5c5bcf9688a988b0630d57278770ecb46afd7b710be030aad4e54",
       "definition": {
         "export": [
           "queued",

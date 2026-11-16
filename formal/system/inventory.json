@@ -5434,7 +5434,7 @@
     {
       "id": "SURFACE-065b757f096cfd7c",
       "path": "scripts/music-media-health.py",
-      "sha256": "96c251959f321a8cfb9ef486e9cfbb36e91d47beb2f606ef6e84798f05a31644",
+      "sha256": "2b80bf8d0f812abea2057b364f6384dffcb7d2a4c7275509c02fd7a8d2a0e5c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6652,7 +6652,7 @@
     {
       "id": "SURFACE-f4fdf752dc07e153",
       "path": "scripts/test-music-media-health.py",
-      "sha256": "b70f9d104e634a6d6137600b03a3b9716dcc8c9a2641a124d17fc97431b5a195",
+      "sha256": "899711c458eecca463df2e31938552e505e3ed408fe400fcff17d3923964adda",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31445,7 +31445,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "4871eea34fefe795669bb15b67063afa013c12c548dbdd608c096aef03ddc29b",
+      "sha256": "05026a5504d5c5bcf9688a988b0630d57278770ecb46afd7b710be030aad4e54",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

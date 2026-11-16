@@ -7,6 +7,7 @@ import ipaddress
 import json
 import os
 import re
+import signal
 import socket
 import ssl
 import subprocess
@@ -133,7 +134,23 @@ def s3_headers(url, env):
 
 
 def fetch_prefix(url, *, signed=False, env=None, resolver=None, connection=http.client.HTTPSConnection):
+    # The dedicated Unix worker runs one synchronous probe on its main thread.
+    # A socket timeout only measures idle time between reads. An alarm also
+    # interrupts a peer that keeps the TLS handshake or HTTP headers busy.
+    def expire(_signum, _frame):
+        raise ProbeFailure('timeout')
+
     deadline = time.monotonic() + DEADLINE_SECONDS
+    previous_handler = signal.signal(signal.SIGALRM, expire)
+    try:
+        signal.setitimer(signal.ITIMER_REAL, DEADLINE_SECONDS)
+        return _fetch_prefix(url, signed, env, resolver, connection, deadline)
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+
+
+def _fetch_prefix(url, signed, env, resolver, connection, deadline):
     for redirect in range(4):
         p = configured_storage_url(url, env) if signed else validated_url(url)
         port = 443 if p.port is None else p.port
