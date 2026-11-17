@@ -69,6 +69,7 @@ class Journal:
         self.directory_fd, self.lock_fd = directory_fd, lock_fd
         self.pid = os.getpid()
         self.closed = False
+        self.live = None
 
     def guard(self):
         require(not self.closed and self.pid == os.getpid())
@@ -191,7 +192,13 @@ class Journal:
         intent_records = self.records()
         # Only this invocation can complete its intent. An exception, process
         # death, invalid observation or failed fsync leaves it non-retryable.
-        observation = effect(dict(context))
+        # The context is public journal data; `live` is this handle's memory of
+        # the one effect it is running, cleared however that effect ends.
+        self.live = operation_id
+        try:
+            observation = effect(dict(context))
+        finally:
+            self.live = None
         self.guard()
         require(isinstance(observation, dict) and set(observation) == set(context) | {'evidenceHash'}
                 and all(observation[key] == value for key, value in context.items())
@@ -200,6 +207,16 @@ class Journal:
         self._append({'kind': 'observed', 'stage': stage, 'operationId': operation_id,
                       'evidenceHash': observation['evidenceHash']})
         return self.status()
+
+    def within(self, context):
+        """Admit only a call made from inside this handle's running effect.
+
+        Records alone cannot show that: a pending intent stays last after its
+        effect raised, and anyone can rebuild its context from records().
+        """
+        self.guard()
+        require(isinstance(context, dict) and self.live is not None
+                and context.get('operationId') == self.live)
 
 
 @contextmanager

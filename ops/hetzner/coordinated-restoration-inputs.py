@@ -79,6 +79,8 @@ class Inputs:
             **records[3],
         }
         if context is not None:
+            # A pending record is not proof of a running effect: see within().
+            self.capture.fence.journal.within(context)
             row = self.capture.fence.journal.records()[-1]
             event = row['event']
             require(event['kind'] == 'intent' and event['stage'] == 'restore-isolate')

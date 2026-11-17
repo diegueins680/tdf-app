@@ -51,6 +51,28 @@ class ReleaseJournalTests(unittest.TestCase):
             with self.assertRaises(ValueError): current.initialize(PLAN, 'e'*32)
         with self.assertRaises(ValueError): current.status()  # Closed handle.
 
+    def test_within_admits_only_the_effect_this_handle_is_running(self):
+        self.initialize()
+        seen = []
+        with journal.open_journal(self.root) as current:
+            def effect(context):
+                current.within(context)
+                for wrong in ({**context, 'operationId': '0'*64}, {}, None):
+                    with self.assertRaises(ValueError): current.within(wrong)
+                seen.append(context)
+                return observed(context)
+            with self.assertRaises(ValueError): current.within({'operationId': None})
+            current.perform('maintenance', TARGETS, effect)
+            with self.assertRaises(ValueError): current.within(seen[0])  # Completed.
+            def failing(context):
+                seen.append(context)
+                raise RuntimeError('synthetic')
+            with self.assertRaises(RuntimeError): current.perform('stop-writers', TARGETS, failing)
+            self.assertEqual(current.status()['pendingStage'], 'stop-writers')
+            with self.assertRaises(ValueError): current.within(seen[1])  # Pending, not running.
+        with journal.open_journal(self.root) as fresh:
+            with self.assertRaises(ValueError): fresh.within(seen[1])
+
     def test_exception_or_invalid_observation_blocks_retry_and_new_nonce(self):
         for kind in ['exception', 'boolean', 'wrong-plan', 'wrong-target', 'wrong-operation', 'wrong-nonce']:
             with self.subTest(kind=kind), tempfile.TemporaryDirectory(dir=self.root) as path:
