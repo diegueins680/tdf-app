@@ -8,6 +8,7 @@ it.each([null, undefined, {}, '01', ' 1', '+1', '1.0', '1e2', '1/2', '', 0, -1, 
 });
 it('uses the canonical profile slug when valid, otherwise the exact Party ID', () => {
   expect(buildArtistPublicPath('55', 'artist-name')).toBe('/a/artist-name');
+  expect(buildArtistPublicPath('55', '65')).toBe('/a/55');
   expect(buildArtistPublicPath('55', '//other.test')).toBe('/a/55');
   expect(buildArtistPublicPath('55', '../login')).toBe('/a/55');
 });

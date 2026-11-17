@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { fireEvent } from '@testing-library/react';
 
 const getMock = jest.fn<(path: string) => Promise<unknown>>();
 const postMock = jest.fn<(path: string, body: unknown) => Promise<unknown>>();
@@ -172,7 +173,13 @@ describe('Fans API optional query paths', () => {
     await Fans.createMyArtistProfile(artistProfilePayload);
     expect(postMock).toHaveBeenCalledWith('/artists/me/profile', artistProfilePayload);
 
-    await Fans.updateMyArtistPhoto(photoPayload);
+    const image = document.createElement('img');
+    Object.defineProperties(image, { naturalWidth: { value: 640 }, naturalHeight: { value: 480 } });
+    const imageConstructor = jest.spyOn(window, 'Image').mockImplementation(() => image);
+    const saving = Fans.updateMyArtistPhoto(photoPayload);
+    fireEvent.load(image);
+    await saving;
+    imageConstructor.mockRestore();
     expect(postMock).toHaveBeenCalledWith('/artists/me/photo', photoPayload);
   });
 });

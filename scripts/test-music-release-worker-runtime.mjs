@@ -10,7 +10,7 @@ import { dirname, join } from 'node:path';
 import { tmpdir, userInfo } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { disposableMusicDatabase, musicTestEnvironment, musicTestDatabaseUrl } from './lib/music-test-database.mjs';
-import { observeTestChild, completedTestChild as completed } from './lib/test-child-completion.mjs';
+import { observeTestChild, completedTestChildWithStopTrace, createTestStopTraceForwarder } from './lib/test-child-completion.mjs';
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const runtime = mkdtempSync(join(tmpdir(), 'tdf-music-worker-test-'));
@@ -84,14 +84,21 @@ const workerEnv = {
   // Synthetic fixture only: preserve fixed-stage timing before failure cleanup.
   // Explicit false remains available; never turn on shell argument tracing.
   MUSIC_WORKER_DIAGNOSTICS: process.env.MUSIC_WORKER_DIAGNOSTICS ?? 'true',
+  // Optional failed-baseline diagnostic pass only; normal qualification is untraced.
+  MUSIC_WORKER_STOP_DIAGNOSTICS: process.env.MUSIC_WORKER_STOP_DIAGNOSTICS ?? 'false',
   // Quotes and psql metacharacters must remain data through -v substitution.
   MUSIC_WORKER_ID: "worker's :quoted \\ identity",
 };
+const forwardStopTrace = createTestStopTraceForwarder({
+  enabled: workerEnv.MUSIC_WORKER_STOP_DIAGNOSTICS === 'true',
+});
+const completed = child => completedTestChildWithStopTrace(child, forwardStopTrace);
 function worker(extra = {}) {
   const started = performance.now();
   const result = spawnSync('bash', [join(root, 'scripts/run-music-release-worker-once.sh')], {
     env: { ...workerEnv, ...extra }, encoding: 'utf8', timeout: 120000, maxBuffer: 1024 * 1024,
   });
+  forwardStopTrace(result.stderr);
   if (workerEnv.MUSIC_WORKER_DIAGNOSTICS === 'true') {
     console.log(`Worker elapsed ${Math.round(performance.now() - started)} ms`);
     console.log(result.stderr?.split('\n').filter((line) => line.startsWith('{"event":"music_worker_timing"')).join('\n'));

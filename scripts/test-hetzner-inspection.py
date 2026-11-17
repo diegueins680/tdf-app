@@ -6,7 +6,7 @@ import json
 import re
 from pathlib import Path
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parent.parent
 spec = importlib.util.spec_from_file_location('hetzner_inspection', ROOT/'ops/hetzner/inspect-runtime.py')
@@ -66,6 +66,81 @@ def discovered_boolean_controls(text):
 
 
 class Boundaries(unittest.TestCase):
+    def test_failed_container_admission_reports_fixed_check_without_partial_observation(self):
+        for field, value, expected in [
+            ('labels', SECRET, 'compose-files'),
+            ('image', 'registry.invalid/private:' + SECRET, 'immutable-image'),
+        ]:
+            probe = container()
+            if field == 'labels':
+                probe['Config']['Labels']['com.docker.compose.project.config_files'] = SECRET
+            else:
+                probe['Config']['Image'] = value
+            with patch.object(module, 'capture', side_effect=['a'*64, json.dumps([probe])]) as capture:
+                with self.assertRaises(module.InspectionRejected) as rejected:
+                    module.inspect()
+            self.assertEqual(capture.call_count, 2)
+            self.assertEqual(module.failure_marker(rejected.exception),
+                             'TDF_INSPECTION_REJECTED container-api ' + expected)
+            self.assertNotIn(SECRET, str(rejected.exception))
+
+    def test_failure_protocol_never_reflects_exception_or_mutated_fields(self):
+        for error in [ValueError(SECRET), module.InspectionRejected(SECRET, SECRET)]:
+            self.assertNotIn(SECRET, module.failure_marker(error))
+        error = module.InspectionRejected()
+        error.stage, error.check = SECRET, SECRET
+        self.assertEqual(module.failure_marker(error),
+                         'TDF_INSPECTION_REJECTED inspection data-boundary')
+        with self.assertRaises(module.InspectionRejected) as rejected:
+            with module.boundary('database-storage'):
+                raise RuntimeError(SECRET)
+        self.assertEqual(module.failure_marker(rejected.exception),
+                         'TDF_INSPECTION_REJECTED database-storage operation-failed')
+        self.assertNotIn(SECRET, str(rejected.exception))
+
+    def test_later_failures_are_staged_and_successful_observation_retains_its_schema(self):
+        def capture(command, input=None):
+            if 'ps' in command: return 'a'*64
+            if 'inspect' in command:
+                service = services.pop(0)
+                return json.dumps([container(service)])
+            if input == module.STORAGE_SQL: return 't'
+            if input == module.SQL: return json.dumps(database())
+            if 'to_regclass' in input: return 'f'
+            self.fail('Unexpected observation command')
+        response = Mock(status=200)
+        response.read.return_value = json.dumps({'name': 'tdf-hq', 'commit': 'a'*40, 'version': '1.2.3'}).encode()
+        response.__enter__ = Mock(return_value=response)
+        response.__exit__ = Mock(return_value=False)
+        stages = [('verify_storage', 'database-storage'),
+                  ('optional_event_flags', 'database-feature-flags'),
+                  ('summarize_database', 'database-summary')]
+        for function, stage in stages:
+            services = ['api', 'db', 'edge']
+            with patch.object(module, 'capture', side_effect=capture), \
+                    patch.object(module.urllib.request, 'urlopen', return_value=response), \
+                    patch.object(module, function, side_effect=RuntimeError(SECRET)):
+                with self.assertRaises(module.InspectionRejected) as rejected: module.inspect()
+            self.assertEqual(module.failure_marker(rejected.exception),
+                             'TDF_INSPECTION_REJECTED ' + stage + ' operation-failed')
+        for failing_input, stage in [(module.SQL, 'database-inventory'), (None, 'public-backend')]:
+            services = ['api', 'db', 'edge']
+            def failed_capture(command, input=None):
+                if input == failing_input and failing_input is not None: raise RuntimeError(SECRET)
+                return capture(command, input)
+            with patch.object(module, 'capture', side_effect=failed_capture), \
+                    patch.object(module.urllib.request, 'urlopen', side_effect=RuntimeError(SECRET)):
+                with self.assertRaises(module.InspectionRejected) as rejected: module.inspect()
+            self.assertEqual(module.failure_marker(rejected.exception),
+                             'TDF_INSPECTION_REJECTED ' + stage + ' operation-failed')
+        services = ['api', 'db', 'edge']
+        with patch.object(module, 'capture', side_effect=capture), \
+                patch.object(module.urllib.request, 'urlopen', return_value=response):
+            result = module.inspect()
+        self.assertEqual(result['schemaVersion'], 1)
+        self.assertEqual(result['publicBackend']['commit'], 'a'*40)
+        self.assertNotIn(SECRET, json.dumps(result))
+
     def test_environment_list_boolean_membership_is_discovered_without_suffix(self):
         for text in [
             'lookupNormalized "SYNTHETIC_PERSONA_SWITCH" `elem` [Just "1", Just "true", Just "yes"]',

@@ -1,6 +1,14 @@
-import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage, isUnnamedArtistProfile } from './artistFallbacks';
+import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage, isUnnamedArtistProfile, picturedArtistsFirst } from './artistFallbacks';
 
 describe('getArtistHeroImage', () => {
+  it('ignores legacy page URLs in image fields and keeps the verified artwork', () => {
+    expect(getArtistHeroImage('https://open.spotify.com/artist/6348Nu8zc4gZC8vtHzPP8R', 'skankafe', 'Skanka Fe')).toBe(
+      'https://i.scdn.co/image/ab6761610000e5eb172b1792c8a9096500cbceb0',
+    );
+    expect(getArtistHeroImage('https://drive.google.com/file/d/cover123/view', 'new-artist', 'New Artist')).toBe(
+      'https://drive.google.com/thumbnail?id=cover123&sz=w1600',
+    );
+  });
   it('uses the verified Quimika Soul artwork for its canonical seeded slug', () => {
     expect(getArtistHeroImage(null, 'quimika-soul')).toBe(
       'https://i.scdn.co/image/ab6761610000e5eb4918df2d6a21f0388e1c092e',
@@ -41,5 +49,18 @@ describe('isUnnamedArtistProfile', () => {
     expect(isUnnamedArtistProfile({ apDisplayName: null })).toBe(true);
     expect(isUnnamedArtistProfile({ apDisplayName: 'Verde 70' })).toBe(false);
     expect(isUnnamedArtistProfile({ apDisplayName: 'Cuenta TDF Sessions' })).toBe(false);
+  });
+});
+
+describe('picturedArtistsFirst', () => {
+  it('lists artists with a picture before those without, keeping the order within each group', () => {
+    const artists = [
+      { id: 1, apHeroImageUrl: null, apSlug: 'unknown-artist' },
+      { id: 2, apHeroImageUrl: 'https://cdn.example.test/a.jpg', apSlug: 'a' },
+      { id: 3, apHeroImageUrl: '  ', apSlug: null },
+      { id: 4, apHeroImageUrl: null, apSlug: 'skankafe' },
+      { id: 5, apHeroImageUrl: '/artist-fallback.svg', apSlug: 'b' },
+    ];
+    expect(picturedArtistsFirst(artists).map((artist) => artist.id)).toEqual([2, 4, 1, 3, 5]);
   });
 });
