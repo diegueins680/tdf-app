@@ -20,6 +20,7 @@ module TDF.Commerce.ProviderAdapter
   , safeRequestSummary
   , AdapterContext(..)
   , MoneyBreakdown(..)
+  , SplitTransfer(..)
   , CreatePayment(..)
   , ExpectedPayment(..)
   , PaymentLocator(..)
@@ -34,6 +35,7 @@ module TDF.Commerce.ProviderAdapter
   , validVisibleCredential
   , validProviderIdentifier
   , unsupportedOperation
+  , refuseSplitTransfers
   ) where
 
 import           Data.Aeson (Value)
@@ -151,6 +153,17 @@ data MoneyBreakdown = MoneyBreakdown
   , mbTipMinor              :: Int64
   } deriving (Eq, Show)
 
+-- | One recipient of a split charge (ADR 0136): part of the charge that the
+-- provider pays out directly to a third party in the same operation, so the
+-- platform never holds it. The identifier is personal data (an
+-- identification number or a phone), so there is no 'Show' instance and no
+-- adapter logs it. 'stByPhone' says which of the two the identifier is.
+data SplitTransfer = SplitTransfer
+  { stIdentifier  :: Text
+  , stByPhone     :: Bool
+  , stAmountMinor :: Int64
+  } deriving (Eq)
+
 data CreatePayment = CreatePayment
   { cpPaymentMethod    :: PaymentMethod
   , cpReference        :: Text
@@ -162,6 +175,10 @@ data CreatePayment = CreatePayment
   , cpBuyerCountryCode :: Maybe Text
   , cpIpAddress        :: Text
   , cpUserAgent        :: Text
+  , cpTransfers        :: [SplitTransfer]
+    -- ^ Split recipients. Empty for a charge the platform keeps whole. An
+    -- adapter without a split operation must refuse a non-empty list rather
+    -- than collect the recipients' part into the platform account.
   } deriving (Eq)
 
 data ExpectedPayment = ExpectedPayment
@@ -262,3 +279,10 @@ validProviderIdentifier value =
 
 unsupportedOperation :: Either AdapterError value
 unsupportedOperation = Left (AdapterError "Operation is not enabled for this provider adapter.")
+
+-- | For adapters (or adapter methods) that cannot pay part of a charge out to
+-- a third party: a split charge is refused before any request is built.
+refuseSplitTransfers :: CreatePayment -> Either AdapterError ()
+refuseSplitTransfers payment
+  | null (cpTransfers payment) = Right ()
+  | otherwise = Left (AdapterError "This payment method cannot split a charge with a third party.")

@@ -75,6 +75,15 @@ Hechos verificados antes de diseñar (fuentes al final):
    - **PayPhone:** el adaptador añade `transferTo` cifrado cuando el checkout trae reparto. Queda
      cerrado hasta que PayPhone autorice el split para la tienda y se registre la evidencia de
      capacidad; se exige la modalidad «al día siguiente» para conservar el reverso del primer día.
+     Implementación (B2b-1): el método `card` de PayPhone es el Botón de Pagos (`/api/button/Prepare`
+     con `transferTo` = JSON `[{Identifier, Type 3|4, Amount}]` cifrado AES-256-CBC con la
+     `PAYPHONE_CODING_PASSWORD` de 32 bytes como clave, IV en cero, PKCS#7, Base64). El ejecutor
+     compartido lee el receptor y el neto del cobro bajo bloqueo y los vuelve a comprobar en la
+     transacción que registra el intento; API Sale (billetera) y PlaceToPay rechazan un reparto. Las
+     referencias del Botón empiezan con `TDFC-`, y su conciliación usa la confirmación
+     (`/api/button/V2/Confirm`), que PayPhone exige en los cinco minutos siguientes al pago o revierte
+     el cobro. El método solo se ofrece con la contraseña de codificación configurada y con evidencia
+     verificada de todas las capacidades de marketplace para `payphone`/`card`.
    - **Stripe:** adaptador canónico con Checkout Session alojada y cargo destino
      (`transfer_data.destination`, `application_fee_amount`); se entrega en un segundo PR (B2) junto
      con reembolsos y panel de disputas, porque incorpora Stripe al runtime canónico.

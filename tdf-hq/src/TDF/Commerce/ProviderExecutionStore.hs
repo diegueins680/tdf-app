@@ -12,6 +12,7 @@ module TDF.Commerce.ProviderExecutionStore
   , ProviderOperationPreparation(..)
   , ProviderOperationClaim(..)
   , loadAuthorizedCheckout
+  , lockCheckoutSplit
   , loadReadyMerchantAccount
   , loadAttemptProviderReference
   , prepareProviderOperation
@@ -58,7 +59,7 @@ import           Database.Persist.Sql
 
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderAdapter
-  ( AdapterOperation(..), AdapterResult(..), AdapterResultState(..) )
+  ( AdapterOperation(..), AdapterResult(..), AdapterResultState(..), SplitTransfer(..) )
 import           TDF.Commerce.ProviderCapabilities
   ( PaymentMethod, paymentMethodText, ProviderOutcomeCertainty(..) )
 
@@ -75,6 +76,41 @@ data CheckoutExecution = CheckoutExecution
   , ceTotalMinor     :: Int64
   , ceCustomerEmail  :: Text
   } deriving (Eq, Show)
+
+-- | ADR 0136: the split recipients of a checkout, read under a row lock so
+-- the caller can check them again inside the transaction that records the
+-- payment attempt. Only marketplace agreement charges are split; every other
+-- domain keeps its charge whole. An agreement charge is payable only while it
+-- is pending, through the payment provider it was frozen for, for the exact
+-- amount and currency of its checkout. Its service-provider part goes to the
+-- recipient frozen on the charge; a part of zero needs no recipient.
+lockCheckoutSplit
+  :: CheckoutExecution -> Checkout.PaymentProvider
+  -> SqlPersistT IO (Either Text [SplitTransfer])
+lockCheckoutSplit checkout provider
+  | ceDomainType checkout /= "marketplace_agreement" = pure (Right [])
+  | otherwise = do
+      rows <- rawSql
+        "SELECT payment.status,payment.provider,payment.amount_minor,payment.currency,\
+        \ payment.payout_identifier_type,payment.payout_identifier,payment.provider_amount_minor\
+        \ FROM marketplace_agreement_payment payment\
+        \ WHERE payment.checkout_id=?::uuid AND payment.id::text=? FOR UPDATE"
+        [ PersistText (Checkout.checkoutReferenceId (ceCheckout checkout))
+        , PersistText (ceDomainOrderId checkout)
+        ] :: SqlPersistT IO [(Single Text, Single Text, Single Int64, Single Text, Single Text, Single Text, Single Int64)]
+      pure $ case rows of
+        [(Single status, Single chargeProvider, Single amount, Single currency,
+            Single recipientKind, Single recipient, Single providerAmount)]
+          | status /= "pending" -> Left "This agreement charge is no longer payable"
+          | chargeProvider /= Checkout.paymentProviderText provider ->
+              Left "This agreement charge was prepared for another payment provider"
+          | amount /= ceTotalMinor checkout || currency /= ceCurrency checkout ->
+              Left "This agreement charge does not match its checkout"
+          | providerAmount == 0 -> Right []
+          | recipientKind == "identification" -> Right [SplitTransfer recipient False providerAmount]
+          | recipientKind == "phone" -> Right [SplitTransfer recipient True providerAmount]
+          | otherwise -> Left "This agreement charge cannot be paid out through this provider"
+        _ -> Left "This agreement charge is not available"
 
 -- | Immutable identifiers and expected money loaded from the provider
 -- binding. This is the only input accepted by authoritative reconciliation;

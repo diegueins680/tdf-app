@@ -1,23 +1,45 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | PayPhone API Sale adapter. PayPhone's response URL is not signed, so every
--- callback is deliberately classified as untrusted until the authenticated
--- transaction-status endpoint confirms merchant reference, amount, currency,
--- and status.
+-- | PayPhone adapter for two flows. API Sale (the PayPhone wallet) pushes the
+-- charge to the buyer's app. The Button ("Botón de Pagos", card method)
+-- prepares a hosted payment page and, for a split charge (ADR 0136), carries
+-- the encrypted @transferTo@ recipients so PayPhone pays them out directly.
+--
+-- PayPhone's response URL is not signed, so every callback is deliberately
+-- classified as untrusted until an authenticated call confirms merchant
+-- reference, amount, currency and status: the transaction-status endpoint for
+-- API Sale, and the Button confirmation for Button charges. PayPhone reverses
+-- a Button charge that is not confirmed within five minutes of payment, so
+-- the Button confirmation is also the query that reconciliation repeats.
+-- Button charges carry the 'payPhoneButtonReferencePrefix' in their merchant
+-- reference, which is immutable and bound, so a query always takes the right
+-- endpoint for the flow that created the charge.
 module TDF.Commerce.ProviderAdapter.PayPhone
   ( PayPhoneConfig(..)
   , payPhoneAdapter
+  , payPhoneButtonReferencePrefix
+  , encryptPayPhoneTransfers
+  , safePayPhoneRedirect
   ) where
 
-import           Control.Monad (unless, when)
+import           Control.Monad (forM_, unless, when)
 import           Control.Applicative ((<|>))
+import qualified Crypto.Cipher.AES as AES
+import           Crypto.Cipher.Types (cbcEncrypt, cipherInit, nullIV)
+import           Crypto.Data.Padding (Format(PKCS7), pad)
+import           Crypto.Error (CryptoFailable(..))
 import           Data.Aeson ((.:), (.:?), (.=), Value)
 import qualified Data.Aeson as A
 import           Data.Aeson.Types (Parser, parseEither)
+import qualified Data.ByteArray.Encoding as BAE
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
 import           Data.Char (isDigit)
 import           Data.Int (Int64)
 import           Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
+import           Text.Read (readMaybe)
 import           Data.Time
   ( TimeOfDay(..), hoursToTimeZone, localDay, localTimeOfDay, utcToLocalTime )
 
@@ -29,6 +51,10 @@ import           TDF.Commerce.ProviderCapabilities
 data PayPhoneConfig = PayPhoneConfig
   { payPhoneToken   :: Text
   , payPhoneStoreId :: Text
+  , payPhoneCodingPassword :: Maybe Text
+    -- ^ The store's coding password from PayPhone Developer. Required only to
+    -- send split recipients; its UTF-8 bytes are the AES-256 key, so it must
+    -- be exactly 32 bytes long.
   }
 
 payPhoneAdapter :: PayPhoneConfig -> Either AdapterError ProviderAdapter
@@ -37,6 +63,9 @@ payPhoneAdapter config = do
     (Left (AdapterError "PayPhone token is missing or invalid."))
   unless (validProviderIdentifier (payPhoneStoreId config))
     (Left (AdapterError "PayPhone store ID is missing or invalid."))
+  forM_ (payPhoneCodingPassword config) $ \password ->
+    unless (BS.length (TE.encodeUtf8 password) == 32)
+      (Left (AdapterError "PayPhone coding password must be exactly 32 bytes."))
   pure ProviderAdapter
     { adapterProvider = ProviderPayPhone
     , adapterBuildCreate = buildCreate config
@@ -55,10 +84,22 @@ buildCreate
   -> AdapterContext
   -> CreatePayment
   -> Either AdapterError AdapterRequest
-buildCreate config _ payment = do
+buildCreate config context payment = case cpPaymentMethod payment of
+  MethodPayPhoneWallet -> buildSale config context payment
+  MethodCard -> buildButtonPrepare config payment
+  _ -> Left (AdapterError "PayPhone supports only its wallet and its payment button.")
+
+buildSale
+  :: PayPhoneConfig
+  -> AdapterContext
+  -> CreatePayment
+  -> Either AdapterError AdapterRequest
+buildSale config _ payment = do
   validateCreate payment
-  unless (cpPaymentMethod payment == MethodPayPhoneWallet)
-    (Left (AdapterError "PayPhone API Sale supports only the PayPhone wallet flow."))
+  -- API Sale does not document a split; its charge stays whole.
+  refuseSplitTransfers payment
+  when (isButtonReference (cpReference payment))
+    (Left (AdapterError "PayPhone wallet charges cannot use a button reference."))
   validateUsdMoney (cpMoney payment)
   phone <- maybe
     (Left (AdapterError "PayPhone buyer phone number is required."))
@@ -97,12 +138,153 @@ buildCreate config _ payment = do
     , arRetryPolicy = QueryBeforeRetry
     }
 
+-- | Button flow ("Botón de Pagos"): PayPhone prepares a hosted page where the
+-- buyer pays by card or with the PayPhone app, then returns the buyer to the
+-- response URL. Split recipients travel encrypted in @transferTo@; their total
+-- never exceeds the charge (PayPhone deducts its own fee before paying them,
+-- and the caller has already discounted it from their part).
+buildButtonPrepare
+  :: PayPhoneConfig
+  -> CreatePayment
+  -> Either AdapterError AdapterRequest
+buildButtonPrepare config payment = do
+  validateCreate payment
+  unless (isButtonReference (cpReference payment))
+    (Left (AdapterError "PayPhone button charges need a button reference."))
+  validateUsdMoney (cpMoney payment)
+  transferTo <- buttonTransfers config payment
+  let money = cpMoney payment
+  pure AdapterRequest
+    { arProvider = ProviderPayPhone
+    , arOperation = AdapterCreate
+    , arMethod = AdapterPost
+    , arUrl = payPhoneBaseUrl <> "/api/button/Prepare"
+    , arHeaders = payPhoneHeaders config
+    , arBody = Just (A.object (
+        [ "amount" .= mbTotalMinor money
+        , "amountWithoutTax" .= mbWithoutTaxMinor money
+        , "amountWithTax" .= mbTaxableBaseMinor money
+        , "tax" .= mbTaxMinor money
+        , "service" .= mbServiceMinor money
+        , "tip" .= mbTipMinor money
+        , "currency" .= normalizedCurrency (mbCurrency money)
+        , "clientTransactionId" .= cpReference payment
+        , "storeId" .= payPhoneStoreId config
+        , "reference" .= cpDescription payment
+        , "responseUrl" .= cpReturnUrl payment
+        , "cancellationUrl" .= cpReturnUrl payment
+        ] <> maybe [] (\encrypted -> ["transferTo" .= encrypted]) transferTo))
+    , arRetryPolicy = QueryBeforeRetry
+    }
+
+buttonTransfers :: PayPhoneConfig -> CreatePayment -> Either AdapterError (Maybe Text)
+buttonTransfers config payment
+  | null transfers = Right Nothing
+  | otherwise = do
+      password <- maybe
+        (Left (AdapterError "PayPhone split needs the store coding password."))
+        Right
+        (payPhoneCodingPassword config)
+      forM_ transfers $ \transfer -> do
+        unless (stAmountMinor transfer > 0)
+          (Left (AdapterError "PayPhone split amounts must be greater than zero."))
+        unless (validRecipient transfer)
+          (Left (AdapterError "PayPhone split recipient is invalid."))
+      unless (sum (map (toInteger . stAmountMinor) transfers)
+          <= toInteger (mbTotalMinor (cpMoney payment)))
+        (Left (AdapterError "PayPhone split exceeds the charge."))
+      Just <$> encryptPayPhoneTransfers password transfers
+  where
+    transfers = cpTransfers payment
+    validRecipient transfer
+      | stByPhone transfer = case T.uncons (stIdentifier transfer) of
+          Just ('+', digits) ->
+            digitsBetween 8 15 digits && T.take 1 digits /= "0"
+          _ -> False
+      | otherwise = T.length (stIdentifier transfer) `elem` [10, 13]
+          && T.all isDigit (stIdentifier transfer)
+
+-- | PayPhone's @transferTo@ encoding: the recipients as a JSON array of
+-- @Identifier@, @Type@ (3 for an identification, 4 for a phone) and @Amount@
+-- in cents, encrypted with AES-256-CBC under the store's coding password (its
+-- UTF-8 bytes are the key) with no initialization vector (all zero bytes) and
+-- PKCS#7 padding, as Base64 text.
+encryptPayPhoneTransfers :: Text -> [SplitTransfer] -> Either AdapterError Text
+encryptPayPhoneTransfers password transfers =
+  case cipherInit (TE.encodeUtf8 password) :: CryptoFailable AES.AES256 of
+    CryptoFailed _ -> Left (AdapterError "PayPhone coding password must be exactly 32 bytes.")
+    CryptoPassed cipher ->
+      let plaintext = BL.toStrict (A.encode (map transferJson transfers))
+          ciphertext = cbcEncrypt cipher nullIV (pad (PKCS7 16) plaintext) :: BS.ByteString
+      in Right (TE.decodeUtf8 (BAE.convertToBase BAE.Base64 ciphertext))
+  where
+    transferJson transfer = A.object
+      [ "Identifier" .= stIdentifier transfer
+      , "Type" .= (if stByPhone transfer then 4 else 3 :: Int)
+      , "Amount" .= stAmountMinor transfer
+      ]
+
+-- | Merchant references of Button charges start with this prefix; API Sale
+-- references never do. The reference is bound to the charge, so reconciliation
+-- picks the Button confirmation from it alone.
+payPhoneButtonReferencePrefix :: Text
+payPhoneButtonReferencePrefix = "TDFC-"
+
+isButtonReference :: Text -> Bool
+isButtonReference = T.isPrefixOf payPhoneButtonReferencePrefix
+
+-- | The hosted Button page the buyer is sent to: HTTPS on a PayPhone host,
+-- with no credentials, port or unusual characters in the authority.
+safePayPhoneRedirect :: Text -> Maybe Text
+safePayPhoneRedirect url = do
+  rest <- T.stripPrefix "https://" url
+  let authority = T.toLower (T.takeWhile (\character -> character /= '/' && character /= '?' && character /= '#') rest)
+      payPhoneHost = authority == "payphonetodoesposible.com"
+        || ".payphonetodoesposible.com" `T.isSuffixOf` authority
+        || authority == "payphone.app"
+        || ".payphone.app" `T.isSuffixOf` authority
+  if T.length url <= 2048 && not (T.null authority)
+      && T.all (\character -> character == '.' || character == '-' || isDigit character
+        || (character >= 'a' && character <= 'z')) authority
+      && payPhoneHost
+    then Just url
+    else Nothing
+
 buildQuery
   :: PayPhoneConfig
   -> AdapterContext
   -> PaymentLocator
   -> Either AdapterError AdapterRequest
-buildQuery config _ locator = do
+buildQuery config _ locator
+  | isButtonReference reference = do
+      validateClientReference reference
+      -- The confirmation answers with the same transaction fields as the
+      -- API Sale status query; until the buyer pays, PayPhone answers with an
+      -- error status, which reconciliation treats as unavailable and retries.
+      transactionId <- maybe
+        (Left (AdapterError "PayPhone button transaction ID is invalid."))
+        Right
+        (readMaybe (T.unpack (plExternalId locator)) :: Maybe Int64)
+      unless (transactionId > 0)
+        (Left (AdapterError "PayPhone button transaction ID is invalid."))
+      pure AdapterRequest
+        { arProvider = ProviderPayPhone
+        , arOperation = AdapterQuery
+        , arMethod = AdapterPost
+        , arUrl = payPhoneBaseUrl <> "/api/button/V2/Confirm"
+        , arHeaders = payPhoneHeaders config
+        , arBody = Just (A.object ["id" .= transactionId, "clientTxId" .= reference])
+        , arRetryPolicy = SafeReadRetry
+        }
+  | otherwise = buildSaleQuery config locator
+  where
+    reference = epReference (plExpected locator)
+
+buildSaleQuery
+  :: PayPhoneConfig
+  -> PaymentLocator
+  -> Either AdapterError AdapterRequest
+buildSaleQuery config locator = do
   validateClientReference (epReference (plExpected locator))
   pure AdapterRequest
     { arProvider = ProviderPayPhone
@@ -121,6 +303,10 @@ buildCancel
   -> Either AdapterError AdapterRequest
 buildCancel config _ locator = do
   validateClientReference (epReference (plExpected locator))
+  -- Cancelling applies to a pending API Sale push; a Button charge the buyer
+  -- has not paid simply lapses, and one never confirmed is reversed by PayPhone.
+  when (isButtonReference (epReference (plExpected locator)))
+    (Left (AdapterError "PayPhone button charges cannot be cancelled."))
   pure (clientMutationRequest config AdapterCancel "/api/Cancel/Client" locator)
 
 buildSameDayReverse
@@ -170,6 +356,30 @@ parseResponse operation locator value = case operation of
 
 parseCreate :: Value -> Parser AdapterResult
 parseCreate = A.withObject "PayPhone create response" $ \object -> do
+  cardPage <- object .:? "payWithCard" :: Parser (Maybe Text)
+  case cardPage of
+    Just page -> parsePrepared object page
+    Nothing -> parseSaleCreate object
+
+-- | Button Prepare answer: the payment id and the hosted page. The charge is
+-- unknown until the buyer pays and the confirmation answers.
+parsePrepared :: A.Object -> Text -> Parser AdapterResult
+parsePrepared object page = do
+  paymentId <- object .: "paymentId" :: Parser Int64
+  when (paymentId <= 0) (fail "PayPhone returned an invalid payment ID")
+  redirect <- maybe (fail "PayPhone payment page is not an allowed PayPhone URL") pure
+    (safePayPhoneRedirect page)
+  pure AdapterResult
+    { adapterResultState = AdapterRequiresCustomerAction
+    , adapterResultExternalId = T.pack (show paymentId)
+    , adapterResultRedirectUrl = Just redirect
+    , adapterResultAmountMinor = Nothing
+    , adapterResultCurrency = Nothing
+    , adapterResultCertainty = ProviderAmbiguous
+    }
+
+parseSaleCreate :: A.Object -> Parser AdapterResult
+parseSaleCreate object = do
   transactionId <- object .: "transactionId" :: Parser Int64
   when (transactionId <= 0) (fail "PayPhone returned an invalid transaction ID")
   pure AdapterResult

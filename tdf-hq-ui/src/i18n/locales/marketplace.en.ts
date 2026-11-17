@@ -112,6 +112,12 @@ const marketplace = {
       },
     },
     depositDeadline: 'Deadline: {{date}}. If it is not paid in time, the agreement expires and the slot is released.',
+    pay: {
+      deposit: 'Pay the deposit with PayPhone',
+      balance: 'Pay the balance with PayPhone',
+      notEnabled: 'Payments inside the platform are not enabled yet. For now arrange the payment directly with the other party.',
+      noPage: 'PayPhone did not return a valid payment page. Try again in a few minutes; you were not charged.',
+    },
     payments: 'Charges',
     paymentKind: { deposit: 'Deposit', balance: 'Balance' },
     paymentStatus: { pending: 'pending', paid: 'paid', expired: 'expired', cancelled: 'cancelled' },

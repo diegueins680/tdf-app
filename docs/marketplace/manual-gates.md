@@ -81,3 +81,42 @@ tasa de aceptación, RAS) en PostHog antes de la campaña.
 | Vencimiento del depósito | `marketplace_agreement.deposit_due_at` | Vence al cargar los acuerdos de un participante y cada cinco minutos en el job del servidor; revisar en los logs que no haya `[Marketplace][AgreementExpiry] pass failed` repetidos |
 | Dinero sin aplicar | `directory_audit_event` | Una fila `agreement.payment.unapplied` significa que llegó dinero verificado para un cobro que ya no estaba pendiente: hay que devolverlo a mano |
 | `introducedBy` del ledger | `scripts/production-migrations.json` | Apunta al commit que introdujo `2026-11-12_marketplace_agreement_payments.sql`; fusionar con merge commit |
+
+## Fase 2, parte B2b-1: Botón de PayPhone con split (ADR 0136)
+
+Nada de esto se probó contra PayPhone. Antes de registrar evidencia hay que verificar en el modo de
+pruebas de PayPhone, con dos cuentas y un receptor real:
+
+| Supuesto del código | Cómo verificarlo |
+| --- | --- |
+| El `paymentId` de Prepare es el mismo `id` que llega a la URL de respuesta y el `transactionId` de Confirm | Pagar una vez y comparar los tres; si difieren, la conciliación deja el cobro en revisión y PayPhone lo revierte a los cinco minutos |
+| Confirm antes de que el comprador pague responde con un estado HTTP de error | Llamar Confirm con el `paymentId` recién preparado; un 2xx con otro formato dejaría la consulta en revisión |
+| PayPhone acepta `transferTo` con `Amount` numérico en centavos | Revisar en PayPhone Developer que el receptor recibió `provider_amount_minor` |
+| `payWithCard` está en `payphonetodoesposible.com` o `payphone.app` | Si es otro dominio, ampliar `safePayPhoneRedirect` (backend y web) |
+| PayPhone añade `id` y `clientTransactionId` a la URL de respuesta sin romper `tdf_checkout` | La página de retorno ya corta lo que siga a un segundo `?` |
+| La consulta del worker confirma antes de cinco minutos | `COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED=true` y flag `checkout.provider_query_recovery`; medir el tiempo entre pago y confirmación |
+
+Configuración: `PAYPHONE_CODING_PASSWORD` (exactamente 32 caracteres, de PayPhone Developer) además de
+`PAYPHONE_TOKEN`, `PAYPHONE_STORE_ID` y `PAYPHONE_RESPONSE_URL`. Sin la contraseña el método `card`
+de PayPhone no se ofrece.
+
+Evidencia de capacidades, solo después de la verificación y de la autorización de split de PayPhone
+(una fila por capacidad; `sandbox_verified` en staging, `production_verified` en producción):
+
+```sql
+INSERT INTO commerce_provider_capability
+  (provider_account_id, payment_method, capability, verification_status, source_reference, verified_at)
+SELECT account.id, 'card', capability, 'sandbox_verified',
+       'https://docs.payphone.app/split-de-pagos#<referencia-de-la-prueba>', now()
+FROM commerce_provider_account account
+CROSS JOIN unnest(ARRAY['one_time','server_verification','connected_accounts',
+                        'split_settlement','seller_payouts']) AS capability
+WHERE account.provider = 'payphone' AND account.environment = 'sandbox'
+ON CONFLICT (provider_account_id, payment_method, capability)
+DO UPDATE SET verification_status = EXCLUDED.verification_status,
+              source_reference = EXCLUDED.source_reference,
+              verified_at = EXCLUDED.verified_at, updated_at = now();
+```
+
+El gate `marketplace.agreement_payments` sigue en FALSE hasta completar esta tabla.
+
