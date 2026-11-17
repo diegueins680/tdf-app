@@ -1,3 +1,5 @@
+import { fireEvent, within } from '@testing-library/react';
+import { MemoryRouter, Route, Routes, useParams } from 'react-router-dom';
 import { jest } from '@jest/globals';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act } from 'react';
@@ -79,6 +81,11 @@ const waitForExpectation = async (assertion: () => void, attempts = 12) => {
   throw lastError;
 };
 
+function ProfileRoute() {
+  const { slugOrId } = useParams();
+  return <h1>{slugOrId}</h1>;
+}
+
 const renderPage = async (container: HTMLElement) => {
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false, gcTime: 0 } },
@@ -88,7 +95,12 @@ const renderPage = async (container: HTMLElement) => {
   await act(async () => {
     root?.render(
       <QueryClientProvider client={qc}>
-        <LabelArtistsPage />
+        <MemoryRouter initialEntries={['/label/artistas']}>
+          <Routes>
+            <Route path="/label/artistas" element={<LabelArtistsPage />} />
+            <Route path="/a/:slugOrId" element={<ProfileRoute />} />
+          </Routes>
+        </MemoryRouter>
       </QueryClientProvider>,
     );
     await flushPromises();
@@ -312,6 +324,34 @@ describe('LabelArtistsPage', () => {
           container.querySelector<HTMLTextAreaElement>('textarea[aria-label="Nota o pendiente para La Ruta"]')?.value,
         ).toBe('Pendiente bio');
       });
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it.each([
+    { surface: 'quick notes', slug: 'la-ruta', expected: 'la-ruta' },
+    { surface: 'roster', slug: null, expected: '101' },
+  ])('opens the artist profile from $surface ($expected)', async ({ surface, slug, expected }) => {
+    listArtistProfilesMock.mockResolvedValue([buildArtist({ apSlug: slug, apHasUserAccount: false })]);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const { cleanup } = await renderPage(container);
+
+    try {
+      await waitForExpectation(() => {
+        const rosterAndNoteLinks = within(container).getAllByRole('link', { name: 'La Ruta' }).slice(0, 2);
+        expect(rosterAndNoteLinks.map((link) => link.getAttribute('href'))).toEqual([
+          `/a/${expected}`, `/a/${expected}`,
+        ]);
+      });
+      await act(async () => {
+        const links = within(container).getAllByRole('link', { name: 'La Ruta' });
+        const link = links.find((candidate) => Boolean(candidate.closest('tbody')) === (surface === 'roster'));
+        if (!link) throw new Error(`Artist link missing from ${surface}`);
+        fireEvent.click(link);
+      });
+      expect(within(container).getByRole('heading', { name: expected })).toBeTruthy();
     } finally {
       await cleanup();
     }
