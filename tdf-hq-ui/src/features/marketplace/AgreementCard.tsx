@@ -80,11 +80,11 @@ export default function AgreementCard({ agreement, currencies }: AgreementCardPr
         )}
         {chargeDue && payable && (
           <Stack spacing={1} alignItems="flex-start">
-            <Button variant="contained" disabled={pay.isPending || pay.data === 'redirected'} onClick={() => pay.mutate()} data-testid="agreement-pay">
+            <Button variant="contained" disabled={pay.isPending || pay.data?.redirected === true} onClick={() => pay.mutate()} data-testid="agreement-pay">
               {t(`marketplace.agreement.pay.${chargeDue}`)}
             </Button>
-            {pay.data === 'not_enabled' && <Alert severity="info">{t('marketplace.agreement.pay.notEnabled')}</Alert>}
-            {(pay.data === 'unsafe_redirect' || pay.data === 'no_redirect') && <Alert severity="warning">{t('marketplace.agreement.pay.noPage')}</Alert>}
+            {pay.data?.notEnabled === true && <Alert severity="info">{t('marketplace.agreement.pay.notEnabled')}</Alert>}
+            {pay.data !== undefined && !pay.data.redirected && !pay.data.notEnabled && <Alert severity="warning">{t('marketplace.agreement.pay.noPage')}</Alert>}
             {pay.error && <Alert severity="error">{pay.error.message}</Alert>}
           </Stack>
         )}

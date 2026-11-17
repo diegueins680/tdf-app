@@ -50,7 +50,7 @@ it('starts the charge, keeps the recovery record and sends the buyer to PayPhone
   createAgreementPayment.mockResolvedValue({ checkoutId, lookupToken: 'lookup-token-0123456789', paymentId: 'p', provider: 'payphone', agreement: {} });
   createProviderPaymentSession.mockResolvedValue({ checkoutId, attemptId, redirectUrl: 'https://pay.payphonetodoesposible.com/PayWithCard/abc' });
   const navigate = jest.fn<(url: string) => void>();
-  await expect(startAgreementPayment('agreement-1', navigate)).resolves.toBe('redirected');
+  await expect(startAgreementPayment('agreement-1', navigate)).resolves.toEqual({ redirected: true, notEnabled: false });
   expect(createAgreementPayment).toHaveBeenCalledWith('agreement-1', 'payphone');
   expect(createProviderPaymentSession).toHaveBeenCalledWith(checkoutId, 'lookup-token-0123456789', 'payment-session-0123456789abcdef',
     { provider: 'payphone', paymentMethod: 'card' });
@@ -62,13 +62,13 @@ it('starts the charge, keeps the recovery record and sends the buyer to PayPhone
 
 it('reports a disabled gate without storing anything and never opens a foreign page', async () => {
   createAgreementPayment.mockRejectedValue(new ApiError('Feature marketplace.agreement_payments is not enabled', 503));
-  await expect(startAgreementPayment('agreement-1', jest.fn())).resolves.toBe('not_enabled');
+  await expect(startAgreementPayment('agreement-1', jest.fn())).resolves.toEqual({ redirected: false, notEnabled: true });
   expect(saveProviderPaymentResume).not.toHaveBeenCalled();
 
   createAgreementPayment.mockResolvedValue({ checkoutId, lookupToken: 'lookup-token-0123456789' });
   createProviderPaymentSession.mockResolvedValue({ checkoutId, attemptId, redirectUrl: 'https://evil.test/pay' });
   const navigate = jest.fn<(url: string) => void>();
-  await expect(startAgreementPayment('agreement-1', navigate)).resolves.toBe('unsafe_redirect');
+  await expect(startAgreementPayment('agreement-1', navigate)).resolves.toEqual({ redirected: false, notEnabled: false });
   expect(navigate).not.toHaveBeenCalled();
 
   createAgreementPayment.mockRejectedValue(new ApiError('a payment for this agreement is already in progress', 409));

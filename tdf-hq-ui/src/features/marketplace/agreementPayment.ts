@@ -35,7 +35,13 @@ export function agreementPayableByBuyer(agreement: Pick<MarketplaceAgreement, 'p
     && (agreement.payoutProviders ?? []).includes('payphone');
 }
 
-export type AgreementPaymentOutcome = 'redirected' | 'not_enabled' | 'unsafe_redirect' | 'no_redirect';
+/** How starting a payment ended when it did not throw. */
+export interface AgreementPaymentStart {
+  /** The buyer was sent to the PayPhone page. */
+  redirected: boolean;
+  /** Payments inside the platform are disabled: the server answered 503. */
+  notEnabled: boolean;
+}
 
 /**
  * Start the charge the agreement is waiting for (ADR 0136) and send the buyer
@@ -47,7 +53,7 @@ export type AgreementPaymentOutcome = 'redirected' | 'not_enabled' | 'unsafe_red
 export async function startAgreementPayment(
   agreementId: string,
   navigate: (url: string) => void = (url) => window.location.assign(url),
-): Promise<AgreementPaymentOutcome> {
+): Promise<AgreementPaymentStart> {
   try {
     const checkout = await Directory.createAgreementPayment(agreementId, 'payphone');
     const idempotencyKey = loadOrCreatePaymentIdempotencyKey(checkout.checkoutId, 'payphone', 'card');
@@ -65,13 +71,13 @@ export async function startAgreementPayment(
       returnPath: AGREEMENT_PAYMENT_RETURN_PATH,
       createdAt: Date.now(),
     });
-    if (!session.redirectUrl) return 'no_redirect';
+    // A missing or foreign page is never opened; the charge stays pending.
     const redirect = safePayPhoneRedirect(session.redirectUrl);
-    if (!redirect) return 'unsafe_redirect';
+    if (!redirect) return { redirected: false, notEnabled: false };
     navigate(redirect);
-    return 'redirected';
+    return { redirected: true, notEnabled: false };
   } catch (error) {
-    if (error instanceof ApiError && error.status === 503) return 'not_enabled';
+    if (error instanceof ApiError && error.status === 503) return { redirected: false, notEnabled: true };
     throw error;
   }
 }
