@@ -11235,7 +11235,8 @@
         ".github/workflows/ci.yml",
         "tdf-hq-ui/src/components/ArtistFansList.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts"
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "tests": [
         "scripts/test-community-search.py",
@@ -25341,7 +25342,13 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-        "package.json"
+        "package.json",
+        "tdf-hq-ui/src/utils/artistImage.ts",
+        "tdf-hq-ui/src/api/artistProfileMedia.ts",
+        "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/admin.ts",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
       ],
       "tests": [
         "scripts/__tests__/artist-enrichment.test.mjs",
@@ -25349,7 +25356,11 @@
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
         "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
         "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+        "tdf-hq-ui/src/api/fans.test.ts",
+        "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
