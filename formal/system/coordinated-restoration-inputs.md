@@ -19,8 +19,10 @@ content digests, rather than an arbitrary caller-provided pathname.
 The caller passes that hash to its normal journal `perform('restore-isolate', ...,
 effect)`. Only inside that effect may `Inputs.prepare(context)` execute. It checks
 the actual last pending intent, including its operation ID, nonce, plan and target
-hash. Missing, stale or different contexts reject before decryption. This is not
-an unresolved-intent resume API. The one-shot live object rejects retries; existing
+hash, and asks the journal handle whether that operation's effect is the one it
+is running now. Missing, stale or different contexts reject before decryption,
+including the context of a pending intent whose effect already ended, rebuilt
+from the journal records. This is not an unresolved-intent resume API. The one-shot live object rejects retries; existing
 output is never adopted or overwritten. The same fixed global journal, physical
 reservation and writer-fence assumptions as capture still apply.
 

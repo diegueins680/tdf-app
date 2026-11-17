@@ -37,6 +37,9 @@ jobs may write before public traffic returns. No old-database rollback is offere
 The callback must independently validate the exact effect and return the context
 plus its protected evidence hash. A Boolean, mismatched context, failed callback,
 or interrupted intent cannot authorize subsequent operations or another nonce.
+`within(context)` admits a helper only while this handle is running that
+operation's effect; the pending record alone, which outlives a failed effect and
+whose context anyone can rebuild from `records()`, does not.
 `sequenceComplete` means only that the recorded sequence completed; it is not
 proof of release readiness or factual validity of the caller's evidence.
 

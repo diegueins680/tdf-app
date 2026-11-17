@@ -7835,7 +7835,7 @@
     "ops/hetzner/coordinated-disposable-creation.py": "d09aa0c2528b8079766e1faa56a9687a9620efd3ee0822d083457f996892069c",
     "ops/hetzner/coordinated-encryption.py": "dc589ccd89a30f8b8d8b6f509f5c2ea92d474fbd547684dc72f9a74db3aa188d",
     "ops/hetzner/coordinated-recovery-bundle.py": "ea572234df275cf7d557cbac56f3410a9cb7ed8f560f63ffd6754f46d476fbff",
-    "ops/hetzner/coordinated-restoration-inputs.py": "bad06f8dea2a479707a3b8ee7245d1bf71c18de104772084b20320865a533b87",
+    "ops/hetzner/coordinated-restoration-inputs.py": "7caf938b8a5e8e334de6889cbc9fb5a6fcec2c58ee94e75df18d65855ff44980",
     "ops/hetzner/coordinated-retrieval.py": "a0ff27480779c58df171b76c4c88710e485694eb2f6a21e208ed77bf171e1368",
     "ops/hetzner/disposable-creation-spec.py": "a8d6645e7bdf829f32efe86689bc73b74aed25ddfbc743c43eadb9ff1ebad0c1",
     "ops/hetzner/dormant-container-admission.py": "f44490aeca05eaaf1e5bf4465aef341f7e7bebf95350367c976ef82eb7846795",
@@ -7868,7 +7868,7 @@
     "ops/hetzner/recovery-tools.json": "a2427185433ece7d46514d9827eb788a223d09881b3d68adb259c1df44b6c2a4",
     "ops/hetzner/recovery-transfer.py": "feb2c02962e866089cc0d5c89e789a79940a2c6a28feec6db05b5f1e17b6081d",
     "ops/hetzner/rehearse-postgres-restore.py": "c08c7a075c444b882d56b5ebf90fc2903ad5cad8b03dc052783cfc8ef4c6c138",
-    "ops/hetzner/release-journal.py": "84ef25a993bf26272d2c368a07cc884ac2194cfe63330c37cf6d55b1d3a75e70",
+    "ops/hetzner/release-journal.py": "5f4e1fd453a774c808a2dcbb423ba4e12e638416f7b10b7e28bd93067f6b1647",
     "ops/hetzner/stopped-application-storage.py": "3fe853f246572fc639a7756613b718cf29fe6d6cc89e0930ce013c744e315d32",
     "ops/hetzner/tdf-postgres-backup.service": "10db2ae947cb611b790cf440fda465a8dc5da94783e763b6a4de3282389155ec",
     "ops/hetzner/tdf-postgres-backup.timer": "d4a3a6e16b6ad1660d1e8c44a883d3e81198dada5db517547676ef60d5b4b3bc",
@@ -7977,7 +7977,7 @@
     "scripts/test-coordinated-disposable-linux.py": "1e154fdbaefe37d5f3f1d21ebb4e9fc836f8f4e6e1fab6fca33995d1a05b5560",
     "scripts/test-coordinated-encryption.py": "060b6962d1a584aaa7878be2fb97b599040098fabefc6367e1f247a5adfa0636",
     "scripts/test-coordinated-recovery-bundle.py": "eb95fc17e1487074d0cdbe1573c41078575a69ededa0e36d539156fe9be020b5",
-    "scripts/test-coordinated-restoration-inputs.py": "d23951010d37eb0c60e51c8de2a17475e3874e464b6d85bf5c1998184a1128bf",
+    "scripts/test-coordinated-restoration-inputs.py": "bfb8b544fcceb94bcd22b88d1ab3de1b6c9ed1286dceaac08749f1bad71b3052",
     "scripts/test-coordinated-retrieval.py": "70d26c1b7d4b868d9d4ffaa478396132be3d278947145457c5b2709b01a20d3a",
     "scripts/test-course-identity.sh": "1913c964fce91156eba43cfe4dee2aa531e4b8885eec9ef9a47b50f8e64c059f",
     "scripts/test-credential-lifecycle.sh": "96dae245a43132687dbcd84722d4753fac63b496ccf700aa6faf5fc726474ba6",
@@ -8033,7 +8033,7 @@
     "scripts/test-recovery-tools.py": "91b2037bea06ffbf5a71a0948b2ab89185aaa695ffcfee53d6717975efceb934",
     "scripts/test-recovery-transfer-ssh.py": "1d40b07dce794ff35e184fe55f95db9a2180201900a4ab6dd89c7f83028bca29",
     "scripts/test-recovery-transfer.py": "eecc140330b4ccfeafa8d46971694ebd30fe51430780ed03463ff6419148dce6",
-    "scripts/test-release-journal.py": "d26a52fed682444dda8e83fb9978e8d534f8c11155be92d83b3ce7e5d3bf670e",
+    "scripts/test-release-journal.py": "3becf2ed49b40053a221fd17ab6c243f2594452337d541c9d372f4baeb87ec70",
     "scripts/test-requirement-declarations.py": "08c025ce0d265c6f54f0324cbb36b24dcd53330a7184d44796b92945670ea88c",
     "scripts/test-specification-conformance.py": "3f9249e5aac45bbe99213c4184d0fb0dc88693bc2631a15d8b8ad2197a76e17d",
     "scripts/test-specification-inventory.py": "d0b2e87029cf7fa557fd2eb84e3d78331b0d59ed2307f8ecee0ac873a77e3172",
@@ -14398,7 +14398,7 @@
     {
       "id": "SURFACE-12ed5d52b2c87fc9",
       "path": "ops/hetzner/coordinated-restoration-inputs.py",
-      "sha256": "bad06f8dea2a479707a3b8ee7245d1bf71c18de104772084b20320865a533b87",
+      "sha256": "7caf938b8a5e8e334de6889cbc9fb5a6fcec2c58ee94e75df18d65855ff44980",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -14849,7 +14849,7 @@
     {
       "id": "SURFACE-d640099eda9235a7",
       "path": "ops/hetzner/release-journal.py",
-      "sha256": "84ef25a993bf26272d2c368a07cc884ac2194cfe63330c37cf6d55b1d3a75e70",
+      "sha256": "5f4e1fd453a774c808a2dcbb423ba4e12e638416f7b10b7e28bd93067f6b1647",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -17844,7 +17844,7 @@
     {
       "id": "SURFACE-aac33699c7bf3130",
       "path": "scripts/test-coordinated-restoration-inputs.py",
-      "sha256": "d23951010d37eb0c60e51c8de2a17475e3874e464b6d85bf5c1998184a1128bf",
+      "sha256": "bfb8b544fcceb94bcd22b88d1ab3de1b6c9ed1286dceaac08749f1bad71b3052",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -18890,7 +18890,7 @@
     {
       "id": "SURFACE-aa3bbdb52a0727dd",
       "path": "scripts/test-release-journal.py",
-      "sha256": "d26a52fed682444dda8e83fb9978e8d534f8c11155be92d83b3ce7e5d3bf670e",
+      "sha256": "3becf2ed49b40053a221fd17ab6c243f2594452337d541c9d372f4baeb87ec70",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

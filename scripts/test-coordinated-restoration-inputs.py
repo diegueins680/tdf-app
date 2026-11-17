@@ -125,6 +125,21 @@ class InputsTests(unittest.TestCase):
         self.decrypt.assert_not_called()
         self.assert_pending()
 
+    def test_pending_intent_rebuilt_from_records_rejects_outside_its_effect(self):
+        def fails_before_prepare(context):
+            raise StopBeforeIsolateCompletion()
+        with self.assertRaises(StopBeforeIsolateCompletion): self.inside_intent(fails_before_prepare)
+        self.assert_pending()
+        row = self.journal.records()[-1]
+        rebuilt = {'releaseNonce': row['releaseNonce'], 'planHash': row['planHash'],
+                   **{key: row['event'][key] for key in ('stage', 'targetsHash', 'operationId')}}
+        self.assertEqual(rebuilt, self.context)
+        for operation in (self.operation, m.Inputs(self.retrieved, self.root/'synthetic-age', self.root/'synthetic-key')):
+            with self.assertRaises(ValueError): operation.prepare(rebuilt)
+        self.decrypt.assert_not_called()
+        self.assertFalse(self.operation.output.exists())
+        self.assert_pending()
+
     def test_mismatched_operation_context_rejects(self):
         def changed(context):
             return self.operation.prepare({**context, 'operationId': '0'*64})
