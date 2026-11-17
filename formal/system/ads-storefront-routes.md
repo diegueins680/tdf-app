@@ -31,7 +31,7 @@ Derived on 2026-11-07 by reading `tdf-hq/src/TDF/Server.hs` (ads and service-mar
 ## Open behaviours for the owner to decide
 
 **Authorization**
-- Any authenticated account, including Fan or Customer, may publish a service-marketplace provider ad; booking completion accepts the bare Admin role.
+- **Decided 2026-11-10.** Service-marketplace ads and slots need a staff-assigned provider role (`validateServiceAdProvider`); Customer, Fan and Student accounts are refused. Still open: there is no provider approval record, earlier ads remain listed, and booking completion accepts the bare Admin role.
 
 **Concurrency and status codes**
 - Automation install and enrollment, provider ads and slots, and storefront revisions race into unique constraints and answer 500 instead of 409 or a per-party rejection.

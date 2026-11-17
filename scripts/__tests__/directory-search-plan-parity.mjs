@@ -16,7 +16,16 @@ function render(template, params) {
   assert.equal(chunks.length, params.length + 1);
   return chunks[0] + params.map((value, i) => quote(value) + chunks[i + 1]).join('');
 }
-const q = (query = '', city = null, genre = null, latitude = null, longitude = null, radius = null) => [query, 'classified', city, latitude, longitude, radius, null, null, null, genre, null, null, null, null, null, 'suppressed', null, 50];
+// ADR 0134 adds the intent input after profile_kind; the immutable reference SQL
+// predates it, so the reference is rendered without that parameter and the
+// per-row intent projection is ignored when comparing result rows.
+const INTENT_INDEX = 15;
+const legacy = (params) => params.filter((_, index) => index !== INTENT_INDEX);
+const withoutIntent = (rows) => rows.map((row) => {
+  const { intent, ...item } = row.jsonb_build_object;
+  return { ...row, jsonb_build_object: item };
+});
+const q = (query = '', city = null, genre = null, latitude = null, longitude = null, radius = null) => [query, 'classified', city, latitude, longitude, radius, null, null, null, genre, null, null, null, null, null, null, 'suppressed', null, 50];
 const cases = [
   ['empty', q()],
   ['selective-city', q('', '24000000-0000-4000-8000-000000000002')],
@@ -52,8 +61,8 @@ let fixture = `BEGIN;
  $explain$;
 `;
 for (const [name, params] of cases) {
-  const oldQuery = render(before.search, params), newQuery = render(after.search, params);
-  const oldFacets = render(before.facets, params.slice(0, -2)), newFacets = render(after.facets, params.slice(0, -2));
+  const oldQuery = render(before.search, legacy(params)), newQuery = render(after.search, params);
+  const oldFacets = render(before.facets, legacy(params).slice(0, -2)), newFacets = render(after.facets, params.slice(0, -2));
   fixture += `SELECT jsonb_build_object('name',${quote(name)},
     'beforeRows',coalesce((SELECT jsonb_agg(to_jsonb(value)) FROM (${oldQuery}) value),'[]'::jsonb),
     'afterRows',coalesce((SELECT jsonb_agg(to_jsonb(value)) FROM (${newQuery}) value),'[]'::jsonb),
@@ -70,7 +79,7 @@ const rows = output.split('\n').filter((line) => line.startsWith('{')).map((line
 assert.equal(rows.length, cases.length);
 function nodes(plan) { return [plan, ...(plan.Plans ?? []).flatMap(nodes)]; }
 for (const row of rows) {
-  assert.deepEqual(row.afterRows, row.beforeRows, `${row.name}: result IDs, values, scores and order changed`);
+  assert.deepEqual(withoutIntent(row.afterRows), row.beforeRows, `${row.name}: result IDs, values, scores and order changed`);
   assert.deepEqual(row.afterFacets, row.beforeFacets, `${row.name}: facet counts changed`);
   assert.ok(!JSON.stringify(row.afterPlan).includes('directory_matches_non_geo_filters'), `${row.name}: filter helper was not inlined`);
   assert.ok(!JSON.stringify(row.afterPlan).includes('directory_matches_entity_and_derivation'), `${row.name}: entity helper was not inlined`);

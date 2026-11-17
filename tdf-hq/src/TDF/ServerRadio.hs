@@ -23,6 +23,7 @@ module TDF.ServerRadio
   , resolveRadioNowPlayingFetchResult
   , parseIcyMetaIntHeader
   , validateRadioCatalogAccess
+  , hardenRadioFetchRequest
   ) where
 
 import           Control.Applicative    ((<|>))
@@ -835,6 +836,13 @@ splitStreamTitle title =
 -- with no module (Fan, Promoter, Agency, ...) keep their own presence routes
 -- and the read-only search, but cannot rewrite the catalog or make the server
 -- fetch URLs on their behalf.
+-- | Every server-side radio fetch goes to a URL that was checked lexically
+-- against private and reserved hosts. A redirect would move the request to a
+-- host that was never checked, so none is followed: the 3xx answer is read as
+-- it is. No cookie is kept between fetches.
+hardenRadioFetchRequest :: Request -> Request
+hardenRadioFetchRequest req = req { redirectCount = 0, cookieJar = Nothing }
+
 validateRadioCatalogAccess :: AuthedUser -> Either ServerError ()
 validateRadioCatalogAccess user
   | fromSqlKey (auPartyId user) <= 0 =
@@ -1043,7 +1051,10 @@ radioServer user =
                 else rows
       manager <- pure sharedTlsManager
       results <- forM candidates $ \(Entity sid stream) -> do
-        metaResult <- liftIO $ fetchStreamMetadata manager (radioStreamStreamUrl stream)
+        -- Stored URLs predate or bypass the current host rules; check again before fetching.
+        metaResult <- case validateRadioStreamUrl (radioStreamStreamUrl stream) of
+          Left _ -> pure (Left "radio_stream_url_rejected")
+          Right safeUrl -> liftIO $ fetchStreamMetadata manager safeUrl
         case metaResult of
           Left _ -> do
             liftIO $ flip runSqlPool envPool $
@@ -1301,8 +1312,8 @@ radioServer user =
 
     fetchSource :: Manager -> Text -> IO [RadioImportCandidate]
     fetchSource manager src = do
-      req <- parseRequest (T.unpack (canonicalRadioImportSource src))
-      resp <- httpLbs req manager
+      req0 <- parseRequest (T.unpack (canonicalRadioImportSource src))
+      resp <- httpLbs (hardenRadioFetchRequest req0 { responseTimeout = responseTimeoutMicro 10000000 }) manager
       let bodyTxt = TE.decodeUtf8 (BL.toStrict (responseBody resp))
           csvItems = parseCsvStreams bodyTxt
       if not (null csvItems)
@@ -1368,7 +1379,7 @@ radioServer user =
     fetchStreamMetadata manager url = do
       result <- fixedFailure "radio_fetch_failed" $ do
         req0 <- parseRequest (T.unpack url)
-        let req = req0
+        let req = (hardenRadioFetchRequest req0)
               { requestHeaders = ("Icy-MetaData","1") : ("User-Agent","tdf-radio-metadata/1.0") : requestHeaders req0
               , responseTimeout = responseTimeoutMicro 5000000
               }
@@ -1387,7 +1398,7 @@ radioServer user =
     fetchNowPlaying manager url = do
       result <- fixedFailure "radio_fetch_failed" $ do
         req0 <- parseRequest (T.unpack url)
-        let req = req0
+        let req = (hardenRadioFetchRequest req0)
               { requestHeaders = ("Icy-MetaData","1") : ("User-Agent","tdf-radio-now-playing/1.0") : requestHeaders req0
               , responseTimeout = responseTimeoutMicro 5000000
               }

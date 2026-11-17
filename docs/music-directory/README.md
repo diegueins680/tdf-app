@@ -22,6 +22,10 @@ perfiles profesionales y clasificados musicales de TDF.
 
 La decisión de arquitectura está en
 [`docs/adr/0105-music-directory-classifieds.md`](../adr/0105-music-directory-classifieds.md).
+La evolución hacia el marketplace de demanda y oferta (ofertas negociables, cupos, modos de precio;
+ADR [`0132`](../adr/0134-marketplace-demand-offers.md)) está documentada en
+[`docs/marketplace/`](../marketplace/README.md); sus estados e invariantes I18–I20 viven en
+`formal-model.yaml`.
 
 ## Convenciones
 

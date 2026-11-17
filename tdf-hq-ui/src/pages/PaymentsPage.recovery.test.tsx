@@ -59,7 +59,10 @@ it('does not let a completed earlier request erase edits made while saving', asy
   const view = openForm();
   fireEvent.click(screen.getByRole('button', { name: 'Elegir contacto' }));
   fireEvent.change(screen.getByLabelText(/Monto/), { target: { value: '10' } });
-  fireEvent.click(screen.getByRole('button', { name: /Registrar pago/ }));
+  const attachmentUrl = screen.getByLabelText('URL de respaldo (opcional)');
+  const submit = screen.getByRole('button', { name: 'Registrar pago' });
+  expect(attachmentUrl.compareDocumentPosition(submit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  fireEvent.click(submit);
   await waitFor(() => expect(create).toHaveBeenCalledTimes(1));
   fireEvent.change(screen.getByLabelText(/Monto/), { target: { value: '20' } });
   await act(async () => { finish?.({ payId: 1 }); });
