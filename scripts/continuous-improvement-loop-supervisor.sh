@@ -27,6 +27,8 @@ CHILD_TIMEOUT_SECONDS="${CONTINUOUS_LOOP_CHILD_TIMEOUT_SECONDS:-0}"
 # The verification gates and their workers are memory-hungry; on macOS swap grows on the
 # same volume in 1 GB steps, so a thin margin can take the whole machine to a full disk.
 MIN_FREE_MB="${CONTINUOUS_LOOP_MIN_FREE_MB:-3072}"
+# The runner rechecks the same reserve before every iteration.
+export CONTINUOUS_LOOP_MIN_FREE_MB="$MIN_FREE_MB"
 
 export PATH="${CONTINUOUS_LOOP_PATH:-/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${HOME}/.local/bin:${PATH:-}}"
 if [ -f "$ROOT/.env" ]; then

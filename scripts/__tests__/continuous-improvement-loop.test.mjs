@@ -18,7 +18,10 @@ import {
 } from '../lib/continuous-improvement-loop.mjs';
 import {
   VERIFICATION_GATES,
+  INSTALLED_LOCKFILE_MARKER,
+  dependenciesNeedInstall,
   parsePorcelainPaths,
+  recordInstalledLockfile,
   selectVerificationGates,
   unmappedChangedSurfaces,
   unmappedSurfacePaths,
@@ -27,6 +30,8 @@ import {
   buildIterationBranchName,
   buildPullRequestBody,
   countOpenLoopPullRequests,
+  discardIterationChanges,
+  diskReserveShortage,
   isLinkedWorktree,
   listPendingTargetFiles,
   openPullRequest,
@@ -1023,6 +1028,97 @@ test('continuous-improvement-loop discards partial edits when a worker step fail
   }
 });
 
+test('discardIterationChanges also restores edits and commits inside initialized submodules', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-submodule-discard-test-');
+  const childDir = path.join(fixture.tempRoot, 'child');
+  const allowFile = ['-c', 'protocol.file.allow=always'];
+
+  try {
+    await fs.mkdir(childDir);
+    await fixture.git(['init', '-b', 'main'], childDir);
+    await fixture.git(['config', 'user.name', 'Codex Test'], childDir);
+    await fixture.git(['config', 'user.email', 'codex@example.com'], childDir);
+    await fs.writeFile(path.join(childDir, 'app.txt'), 'pinned\n', 'utf8');
+    await fixture.git(['add', 'app.txt'], childDir);
+    await fixture.git(['commit', '-m', 'child'], childDir);
+    await fixture.git([...allowFile, 'submodule', 'add', childDir, 'mobile']);
+    await fixture.git(['commit', '-m', 'add submodule']);
+    const subDir = path.join(fixture.repoDir, 'mobile');
+    const pinned = (await fixture.git(['rev-parse', 'HEAD'], subDir)).stdout.trim();
+
+    // A worker edits a tracked file, adds an untracked one and even commits inside the submodule.
+    await fs.writeFile(path.join(subDir, 'app.txt'), 'edited\n', 'utf8');
+    await fs.writeFile(path.join(subDir, 'stray.txt'), 'stray\n', 'utf8');
+    await fixture.git(['config', 'user.name', 'Codex Test'], subDir);
+    await fixture.git(['config', 'user.email', 'codex@example.com'], subDir);
+    await fixture.git(['commit', '-am', 'worker commit'], subDir);
+    await fs.writeFile(path.join(subDir, 'app.txt'), 'edited again\n', 'utf8');
+    assert.notEqual((await fixture.git(['status', '--porcelain'])).stdout.trim(), '');
+
+    await discardIterationChanges(fixture.repoDir, {});
+
+    assert.equal((await fixture.git(['status', '--porcelain'])).stdout.trim(), '');
+    assert.equal((await fixture.git(['rev-parse', 'HEAD'], subDir)).stdout.trim(), pinned);
+    assert.equal(await fs.readFile(path.join(subDir, 'app.txt'), 'utf8'), 'pinned\n');
+    await assert.rejects(fs.access(path.join(subDir, 'stray.txt')), { code: 'ENOENT' });
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('the loop rechecks the disk reserve before each iteration and starts nothing below it', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-disk-reserve-test-');
+  const previous = process.env.CONTINUOUS_LOOP_MIN_FREE_MB;
+
+  try {
+    delete process.env.CONTINUOUS_LOOP_MIN_FREE_MB;
+    assert.equal(diskReserveShortage(fixture.repoDir, {}), '');
+    assert.equal(diskReserveShortage(fixture.repoDir, { minFreeMegabytes: 1 }), '');
+    assert.match(diskReserveShortage(fixture.repoDir, { minFreeMegabytes: 1e12 }), /reserve 1000000000000 MB/);
+
+    const configPath = await fixture.writeConfig();
+    await assert.rejects(
+      () => execFileAsync('node', [loopScriptPath, '--config', configPath, '--max-iterations', '1'], {
+        cwd: fixture.repoDir,
+        env: { ...process.env, CONTINUOUS_LOOP_MIN_FREE_MB: String(1e12) },
+      }),
+      /MB of disk space is free \(reserve 1000000000000 MB\)/,
+    );
+    assert.deepEqual(await fixture.remoteLoopBranches(), []);
+    assert.equal(await fs.readFile(path.join(fixture.repoDir, 'tracked.txt'), 'utf8'), 'before\n');
+  } finally {
+    if (previous === undefined) delete process.env.CONTINUOUS_LOOP_MIN_FREE_MB;
+    else process.env.CONTINUOUS_LOOP_MIN_FREE_MB = previous;
+    await fixture.cleanup();
+  }
+});
+
+test('dependencies are reinstalled whenever the lockfile differs from the one they were installed from', async () => {
+  const repoRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-lockfile-test-'));
+
+  try {
+    await fs.writeFile(path.join(repoRoot, 'package-lock.json'), '{"lockfileVersion":3,"v":1}\n', 'utf8');
+    assert.equal(dependenciesNeedInstall(repoRoot), true); // no node_modules
+
+    await fs.mkdir(path.join(repoRoot, 'node_modules'));
+    assert.equal(dependenciesNeedInstall(repoRoot), true); // installed from an unknown lockfile
+
+    recordInstalledLockfile(repoRoot);
+    assert.ok((await fs.readFile(path.join(repoRoot, INSTALLED_LOCKFILE_MARKER), 'utf8')).trim().length === 64);
+    assert.equal(dependenciesNeedInstall(repoRoot), false);
+
+    // A proposal (or a new base) changes the lockfile: reinstall. Restoring it after a
+    // reinstall for the other version needs another reinstall, not a stale pass.
+    await fs.writeFile(path.join(repoRoot, 'package-lock.json'), '{"lockfileVersion":3,"v":2}\n', 'utf8');
+    assert.equal(dependenciesNeedInstall(repoRoot), true);
+    recordInstalledLockfile(repoRoot);
+    await fs.writeFile(path.join(repoRoot, 'package-lock.json'), '{"lockfileVersion":3,"v":1}\n', 'utf8');
+    assert.equal(dependenciesNeedInstall(repoRoot), true);
+  } finally {
+    await fs.rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test('continuous-improvement-loop moves on to the next iteration after a discarded one', async () => {
   const fixture = await createLoopFixture('continuous-improvement-loop-continue-test-');
   const marker = path.join(fixture.tempRoot, 'first-attempt-done');
@@ -1253,7 +1349,6 @@ test('selectVerificationGates always runs the repository gate and adds UI and ba
   assert.deepEqual(selectVerificationGates(['docs/guide.md']).gates, ['specification', 'repo']);
   assert.deepEqual(selectVerificationGates(['./tdf-hq-ui/src/App.tsx']).gates, ['specification', 'repo', 'ui']);
   assert.deepEqual(selectVerificationGates(['package-lock.json']).gates, ['specification', 'repo', 'ui']);
-  assert.equal(selectVerificationGates(['package-lock.json']).reinstallDependencies, true);
   assert.deepEqual(selectVerificationGates(['tdf-hq/src/Main.hs']).gates, ['specification', 'repo', 'backend']);
   assert.deepEqual(selectVerificationGates(['tdf-hq/src/Main.hs', 'tdf-hq-ui/src/App.tsx']).gates, [
     'specification',

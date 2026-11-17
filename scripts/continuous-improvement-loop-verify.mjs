@@ -10,7 +10,9 @@ import { parseArgs } from 'node:util';
 import {
   TRACEABILITY_FILE,
   VERIFICATION_GATES,
+  dependenciesNeedInstall,
   parsePorcelainPaths,
+  recordInstalledLockfile,
   selectVerificationGates,
   unmappedChangedSurfaces,
 } from './lib/continuous-improvement-loop-verify.mjs';
@@ -108,7 +110,6 @@ function main() {
     return;
   }
 
-  let dependenciesInstalled = false;
   for (const gateName of selection.gates) {
     const gate = VERIFICATION_GATES[gateName];
     console.log(`\n== Gate: ${gate.label} ==`);
@@ -123,15 +124,13 @@ function main() {
       }
     }
 
-    const mustInstall =
-      !fs.existsSync(path.join(repoRoot, 'node_modules')) || (selection.reinstallDependencies && !dependenciesInstalled);
-    if (gate.needsNodeModules && mustInstall) {
-      dependenciesInstalled = true;
+    if (gate.needsNodeModules && dependenciesNeedInstall(repoRoot)) {
       const installStatus = run('npm', ['ci', '--no-audit', '--no-fund'], repoRoot);
       if (installStatus !== 0) {
         console.error('Dependency installation failed; the change is not verified.');
         process.exit(1);
       }
+      recordInstalledLockfile(repoRoot);
     }
 
     const env = { ...(gate.env ?? {}) };

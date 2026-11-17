@@ -28534,7 +28534,7 @@
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
-    "scripts/__tests__/continuous-improvement-loop.test.mjs": "92246896c0b6c6ad1ef2e29aaa2bc0c8f22648f26c703e8034c9f69cbb7b9415",
+    "scripts/__tests__/continuous-improvement-loop.test.mjs": "ecfba657bbecb59ceae8b4f2c6acf6ba60c9169c3d40a70d458729d32a933942",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
@@ -28635,11 +28635,11 @@
     "scripts/ci-job-admission.mjs": "4e9d60556a2ad77d14cb8cc61c1beda2406a5abb61b7177faf4567b3060ee547",
     "scripts/codex-loop-worker.sh": "467cb345b75f0afa7d96e98be460d4225374f3dec1c203c0984f62aef16cc282",
     "scripts/content-storage-model.mjs": "9334e46e43c6b6e8dde89381f7fffd024af979e073dd659176f73add943892c8",
-    "scripts/continuous-improvement-loop-supervisor.sh": "352b0dfa8f7475d5555549089cacdbd3b547836cfc5f5c82897d20ca97de3151",
-    "scripts/continuous-improvement-loop-verify.mjs": "9d3c18b77cc6e93a7d6a1e38621e7ccfe5eb6a8521f20e1f19520511bf3c9e19",
+    "scripts/continuous-improvement-loop-supervisor.sh": "08707c7685af153cabc5d93da8ee490bd0eca6de7f99d16b28df6f5afe881581",
+    "scripts/continuous-improvement-loop-verify.mjs": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
     "scripts/continuous-improvement-loop.codex.json": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
     "scripts/continuous-improvement-loop.example.json": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
-    "scripts/continuous-improvement-loop.mjs": "c2ea6474bbdce508b4c0409c90f67fde6a7663d6e8e9725e5af71d9b98ab03d4",
+    "scripts/continuous-improvement-loop.mjs": "23d4b6e6e9d4ea50701b527c439d048a2796aad5af3e7332323f5465d053d0d0",
     "scripts/deploy-stripe-ticketing.sh": "cef7e2bc4be849388db9dba0e0dbeac6d4a1385cf09c18a8f5394d01888412f1",
     "scripts/diagnose-instagram.mjs": "c1fce6823f7dcb9c958c74e19375b84c464cb99f282ac920c33f2ea7ccae299e",
     "scripts/diagnose-social.mjs": "c0f03f43a928ef24c5609e2f67731444341d42dc70fbc35b7171aa2d6adf109b",
@@ -28660,7 +28660,7 @@
     "scripts/lib/alloy-controls.mjs": "64abe156544a3b58e51ffa9ad35e46e46947c428c5d35b3332809a7d3b4540bb",
     "scripts/lib/auth_throttle_http.py": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
     "scripts/lib/compiled-api-surface.mjs": "6416e603ceb8f55faf42b04658b837a8d076b9f26eaf5d54f26343794e197b72",
-    "scripts/lib/continuous-improvement-loop-verify.mjs": "1eaed1475f7c723968185ae3b16e3d3b0c0fa379c27a4a1704de08ced938ad75",
+    "scripts/lib/continuous-improvement-loop-verify.mjs": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
     "scripts/lib/continuous-improvement-loop.mjs": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
     "scripts/lib/discovery.mjs": "347304302f3a0e0161a6b8fc95d311a1eca12b6cd11bb3ffec378b862878ac4b",
     "scripts/lib/disposable-postgres-url.mjs": "ca76274fbdc034370054719ead67a8d08c53255bd87786ee1cbe964d908be7a8",
@@ -50772,7 +50772,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "92246896c0b6c6ad1ef2e29aaa2bc0c8f22648f26c703e8034c9f69cbb7b9415",
+      "sha256": "ecfba657bbecb59ceae8b4f2c6acf6ba60c9169c3d40a70d458729d32a933942",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52510,7 +52510,7 @@
     {
       "id": "SURFACE-b3c3757671de3a8f",
       "path": "scripts/continuous-improvement-loop-supervisor.sh",
-      "sha256": "352b0dfa8f7475d5555549089cacdbd3b547836cfc5f5c82897d20ca97de3151",
+      "sha256": "08707c7685af153cabc5d93da8ee490bd0eca6de7f99d16b28df6f5afe881581",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52522,7 +52522,7 @@
     {
       "id": "SURFACE-dcc180d2a4916e98",
       "path": "scripts/continuous-improvement-loop-verify.mjs",
-      "sha256": "9d3c18b77cc6e93a7d6a1e38621e7ccfe5eb6a8521f20e1f19520511bf3c9e19",
+      "sha256": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52558,7 +52558,7 @@
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "c2ea6474bbdce508b4c0409c90f67fde6a7663d6e8e9725e5af71d9b98ab03d4",
+      "sha256": "23d4b6e6e9d4ea50701b527c439d048a2796aad5af3e7332323f5465d053d0d0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52958,7 +52958,7 @@
     {
       "id": "SURFACE-52387ab4cef049b4",
       "path": "scripts/lib/continuous-improvement-loop-verify.mjs",
-      "sha256": "1eaed1475f7c723968185ae3b16e3d3b0c0fa379c27a4a1704de08ced938ad75",
+      "sha256": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

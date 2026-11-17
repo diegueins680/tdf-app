@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs/promises';
+import { statfsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -875,6 +876,9 @@ async function discardIterationChanges(repoRoot, config) {
   if (!config.allowDirty) {
     await execText('git', ['reset', '--hard', '--quiet'], repoRoot);
     await execText('git', ['clean', '-fd', '--quiet'], repoRoot);
+    // The parent's reset leaves edits and commits inside initialized submodules alone.
+    await execText('git', ['submodule', 'foreach', '--quiet', '--recursive', 'git reset --hard --quiet && git clean -fd --quiet'], repoRoot);
+    await execText('git', ['submodule', 'update', '--recursive', '--force', '--quiet'], repoRoot);
     return;
   }
 
@@ -1095,6 +1099,16 @@ function describeIdea(context) {
   const title = String(context.idea_title ?? '').trim();
   if (title && title.toLowerCase() !== 'improvement idea') return title;
   return String(context.idea_reason ?? '').trim() || '(untitled)';
+}
+
+function diskReserveShortage(repoRoot, config) {
+  const minimum = Number(process.env.CONTINUOUS_LOOP_MIN_FREE_MB ?? config.minFreeMegabytes ?? 0);
+  if (!(minimum > 0)) return '';
+  const stats = statfsSync(repoRoot);
+  const free = Math.floor((Number(stats.bavail) * Number(stats.bsize)) / (1024 * 1024));
+  return free < minimum
+    ? `Only ${free} MB of disk space is free (reserve ${minimum} MB); waiting before the next iteration.`
+    : '';
 }
 
 function buildPullRequestBody(config, context, branch) {
@@ -1975,6 +1989,16 @@ async function main() {
   let iteration = 1;
   let consecutiveFailures = 0;
   while (config.maxIterations === 0 || iteration <= Number(config.maxIterations)) {
+    // The supervisor checks the reserve only when it starts a child, and the child runs
+    // indefinitely, so the reserve is rechecked before every iteration.
+    const diskShortage = diskReserveShortage(repoRoot, config);
+    if (diskShortage) {
+      console.log(diskShortage);
+      await emitLoopStatus({ state: 'running', phase: 'waiting-for-disk', currentIteration: iteration, details: diskShortage });
+      if (config.dryRun || Number(config.maxIterations) !== 0) throw new Error(diskShortage);
+      await sleep(Number(config.diskRecheckSeconds ?? 300) * 1000);
+      continue;
+    }
     let result;
     try {
       result = await runIteration(repoRoot, config, iteration);
@@ -2024,6 +2048,7 @@ export {
   buildPullRequestBody,
   countOpenLoopPullRequests,
   discardIterationChanges,
+  diskReserveShortage,
   listPendingTargetFiles,
   listUnmappedSurfaceFiles,
   isLinkedWorktree,

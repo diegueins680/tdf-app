@@ -2,10 +2,36 @@
 // commit an iteration. The specification and repository-wide gates always run; the UI and
 // backend gates run when their trees (or the dependency manifests they build from) changed.
 
+import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+
 const UI_DEPENDENCY_FILES = new Set(['package.json', 'package-lock.json']);
 const MOBILE_SUBMODULE = 'tdf-mobile';
 
 export const TRACEABILITY_FILE = 'formal/system/traceability.json';
+
+// node_modules is ignored, so it survives the loop resetting the worktree to a new base or
+// discarding a proposal that changed the lockfile. The marker records which lockfile the
+// installed tree came from; any difference means the dependencies must be reinstalled.
+export const INSTALLED_LOCKFILE_MARKER = path.join('node_modules', '.continuous-loop-lockfile.sha256');
+
+export function lockfileFingerprint(repoRoot) {
+  return createHash('sha256').update(fs.readFileSync(path.join(repoRoot, 'package-lock.json'))).digest('hex');
+}
+
+export function dependenciesNeedInstall(repoRoot) {
+  if (!fs.existsSync(path.join(repoRoot, 'node_modules'))) return true;
+  try {
+    return fs.readFileSync(path.join(repoRoot, INSTALLED_LOCKFILE_MARKER), 'utf8').trim() !== lockfileFingerprint(repoRoot);
+  } catch {
+    return true; // no marker: the installed tree's lockfile is unknown
+  }
+}
+
+export function recordInstalledLockfile(repoRoot) {
+  fs.writeFileSync(path.join(repoRoot, INSTALLED_LOCKFILE_MARKER), `${lockfileFingerprint(repoRoot)}\n`, 'utf8');
+}
 
 export const VERIFICATION_GATES = {
   specification: {
@@ -63,8 +89,6 @@ export function selectVerificationGates(changedPaths = []) {
     gates,
     paths,
     reason: '',
-    // Installed dependencies no longer match the manifest once the lockfile changes.
-    reinstallDependencies: paths.some((filePath) => filePath.endsWith('package-lock.json')),
   };
 }
 
