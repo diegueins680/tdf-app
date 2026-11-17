@@ -1,3 +1,4 @@
+import ArtistProfileLink from '../../components/ArtistProfileLink';
 import { Card, Chip, Stack, Typography } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import type { FanFollowDTO } from '../../api/types';
@@ -12,12 +13,9 @@ export function FollowedArtists({ follows }: { follows: FanFollowDTO[] }) {
       </Typography>
       <Stack direction="row" spacing={2} flexWrap="wrap">
         {follows.map((follow) => (
-          <Chip
-            key={follow.ffArtistId}
-            label={follow.ffArtistName}
-            color="primary"
-            icon={<FavoriteIcon />}
-          />
+          <ArtistProfileLink key={follow.ffArtistId} partyId={follow.ffArtistId}>
+            <Chip label={follow.ffArtistName} color="primary" icon={<FavoriteIcon />} />
+          </ArtistProfileLink>
         ))}
       </Stack>
     </Card>

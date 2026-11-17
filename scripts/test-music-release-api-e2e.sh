@@ -192,7 +192,11 @@ for migration in \
   2026-09-16_music_ddex_operations.sql \
   2026-09-16_music_playback_identity.sql \
   2026-10-15_music_payment_outcome_consistency.sql \
-  2026-10-15_music_exact_minor_units.sql
+  2026-10-15_music_exact_minor_units.sql \
+  2026-10-30_artist_featured_track.sql \
+  2026-11-06_music_media_health.sql \
+  2026-11-06_music_legacy_source_compatibility.sql \
+  2026-11-07_music_featured_source_health.sql
 do
   psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE" \
     < "$TDF_MUSIC_ROOT/tdf-hq/sql/$migration"
@@ -202,6 +206,11 @@ done
 # normal test seed creates synthetic users after those tables exist.
 start_backend true true
 stop_backend
+
+# The normal seed above installs the catalog foundation used by the actual
+# directory schema. Exercise visibility through its real tables and constraints.
+psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE" \
+  < "$TDF_MUSIC_ROOT/tdf-hq/sql/2026-08-14_music_directory_core.sql"
 
 psql -X -q -v ON_ERROR_STOP=1 -d "$TDF_MUSIC_DATABASE" <<'SQL'
 WITH source_credential AS (
