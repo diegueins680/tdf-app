@@ -8,7 +8,7 @@ import {
   MAX_EVENT_ARTISTS,
   normalizeLineup,
   type EventLineupArtistDraft,
-} from '../../pages/collaborativeEventCreation';
+} from '../../utils/eventLineup';
 import { useSession } from '../../session/SessionContext';
 
 interface Props {

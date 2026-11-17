@@ -466,6 +466,27 @@ EventLogisticsMember
     UniqueEventLogisticsMember eventId partyId
     deriving Show Generic
 
+EventAdminInvitation
+    eventId SocialEventId
+    tokenSha256 Text
+    inviteeName Text
+    createdBy Text
+    createdAt UTCTime default=now()
+    expiresAt UTCTime
+    acceptedBy Text Maybe
+    acceptedAt UTCTime Maybe
+    revokedAt UTCTime Maybe
+    UniqueEventAdminInvitationToken tokenSha256
+    deriving Show Generic
+
+EventAdminMember
+    eventId SocialEventId
+    partyId Text
+    grantedBy Text
+    createdAt UTCTime default=now()
+    UniqueEventAdminMember eventId partyId
+    deriving Show Generic
+
 EventLogisticsPlace
     eventId SocialEventId
     venueId VenueId Maybe

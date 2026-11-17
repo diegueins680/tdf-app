@@ -51,7 +51,7 @@ DRIVE_ACCESS_TOKEN=         # Google access token with drive.file scope (for /dr
 DRIVE_UPLOAD_FOLDER_ID=     # Optional Google Drive folder for uploads
 ```
 
-`RESET_DB=true` will drop and recreate the `public` schema on boot; `SEED_DB=false` skips automatic seed data. Setting `SEED_TRIGGER_TOKEN` to a non-empty value enables the unauthenticated `/seed` endpoint; leaving it blank disables it entirely.
+`RESET_DB=true` will drop and recreate the `public` schema on boot; `SEED_DB=false` skips automatic seed data. Setting `SEED_TRIGGER_TOKEN` to a non-empty value enables the seed endpoints (`/seed`, `/input-list/inventory/seed`, `/input-list/sessions/seed`); each also requires a strict administrator session with the Admin module, like `/admin/seed`. Leaving it blank disables them entirely.
 
 Optional browser-session settings:
 
@@ -112,7 +112,7 @@ Override `APP_BASE_URL` when using the `version` Make target, or export environm
 - Startup runs `resetSchema` when `RESET_DB=true`, executes migrations from `TDF.Models`, `TDF.ModelsExtra`, and `TDF.Trials.Models`, then optionally `seedAll` for fixtures used by the UI.
 - Trial availability helpers live in `scripts/migrate_trial_availability.sh`; lesson/package/receipt migrations live in `scripts/migrate_lessons.sh` and corresponding SQL files.
 - Admin-only seed endpoints are exposed under `/admin/seed` and respect the bearer token auth plus `ModuleAdmin` gate.
-- The unauthenticated `/seed` endpoint is protected by `X-Seed-Token` and can be disabled via config.
+- `/seed` and the two `/input-list/*/seed` endpoints require the same administrator session and module, plus `X-Seed-Token`; the token alone is not enough, and a blank `SEED_TRIGGER_TOKEN` disables them.
 
 ## Feature overview
 

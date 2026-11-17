@@ -1596,15 +1596,6 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                       {artistEditorOpen ? 'Ocultar editor' : 'Editar aquí'}
                     </Button>
                   )}
-                  {!isHomeManagerView && (
-                    <Button
-                      variant="contained"
-                      onClick={handleSaveArtistProfile}
-                      disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
-                    >
-                      {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Actualizar perfil de artista'}
-                    </Button>
-                  )}
                 </Stack>
               }
             >
@@ -1871,20 +1862,22 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                           El perfil contiene géneros inactivos o reemplazados. Selecciona valores vigentes antes de guardar.
                         </Alert>
                       )}
-                      {isHomeManagerView && (
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-                          <Button
-                            variant="contained"
-                            onClick={handleSaveArtistProfile}
-                            disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
-                          >
-                            {updateArtistProfileMutation.isPending ? 'Guardando…' : 'Guardar cambios'}
-                          </Button>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+                        <Button
+                          variant="contained"
+                          onClick={handleSaveArtistProfile}
+                          disabled={!artistProfileReady || updateArtistProfileMutation.isPending || !session?.partyId || !genresCatalogQuery.isSuccess || unavailableArtistGenreIds.length > 0}
+                        >
+                          {updateArtistProfileMutation.isPending
+                            ? 'Guardando…'
+                            : isHomeManagerView ? 'Guardar cambios' : 'Actualizar perfil de artista'}
+                        </Button>
+                        {isHomeManagerView && (
                           <Button variant="text" onClick={() => setArtistEditorOpen(false)}>
                             Cerrar editor
                           </Button>
-                        </Stack>
-                      )}
+                        )}
+                      </Stack>
                     </Stack>
                   </Box>
                 </>

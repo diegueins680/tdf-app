@@ -25,7 +25,7 @@ MSG-ACCESS/ATOMIC/NOTIFY-001 (chat), SOC-ABUSE-001 (write budget), PRIV-WHATSAPP
 ## Open behaviours for the owner to decide
 
 **Consent (critical)**
-- `POST /whatsapp/reply` never consults `whats_app_consent`: staff can message a number that sent STOP. It also does not mark the inbound message replied.
+- **Decided 2026-11-10.** `POST /whatsapp/reply` refuses with 409 a contact whose consent row is withdrawn; a contact with no consent row can still be answered. Still open: it does not mark the inbound message replied, and the operator-question and administrator send routes do not consult consent.
 - Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a never-subscribed number.
 
 **Authorization**
