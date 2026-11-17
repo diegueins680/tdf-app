@@ -14,6 +14,12 @@ const identity = path.resolve(process.argv[3]);
 const output = path.resolve(process.argv[5]);
 const inspector = readFileSync(path.join(root, 'ops/hetzner/inspect-runtime.py'));
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
+const failureStages = new Set(['container-api', 'container-db', 'container-edge',
+  'database-storage', 'database-inventory', 'database-feature-flags',
+  'public-backend', 'database-summary', 'inspection']);
+const failureChecks = new Set(['data-boundary', 'operation-failed', 'command-failed',
+  'compose-project', 'compose-service', 'compose-directory', 'compose-files',
+  'container-id', 'image-id', 'immutable-image', 'networks', 'database-volume']);
 function provenance() {
   return {
     sourceRevision: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
@@ -37,7 +43,18 @@ try {
   writeFileSync(output, JSON.stringify(receipt, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
   console.log(JSON.stringify({ receipt: output, backend: snapshot.publicBackend.commit,
     migrationCount: snapshot.database.migrations.length, readOnly: true }));
-} catch {
-  console.error('Read-only Hetzner inspection failed or output already exists. No raw runtime output printed.');
+} catch (error) {
+  // Accept only the complete fixed failure protocol, never raw SSH/process data.
+  // Failed inspection cannot publish a partial runtime receipt.
+  let reported = false;
+  if (error.status === 1 && error.stdout?.length === 0 && Buffer.isBuffer(error.stderr)
+      && error.stderr.length <= 128) {
+    const match = /^TDF_INSPECTION_REJECTED ([a-z-]+) ([a-z-]+)\n$/.exec(error.stderr.toString('utf8'));
+    if (match && failureStages.has(match[1]) && failureChecks.has(match[2])) {
+      console.error(`Read-only Hetzner inspection rejected at ${match[1]}: ${match[2]}. No runtime receipt created.`);
+      reported = true;
+    }
+  }
+  if (!reported) console.error('Read-only Hetzner inspection failed or output already exists. No raw runtime output printed.');
   process.exitCode = 1;
 }
