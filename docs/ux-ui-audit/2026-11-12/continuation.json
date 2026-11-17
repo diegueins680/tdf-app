@@ -182,6 +182,18 @@
       "principle": "Continuidad de tarea, prevención de errores y control explícito",
       "finding": "Una actualización de stock en segundo plano cambiaba la clave de versión y desmontaba el editor, perdiendo la edición sin aviso.",
       "change": "La identidad estable conserva texto/estado activo. Valores nuevos bloquean el guardado y muestran comparación con opciones explícitas para conservar la edición o usar los valores actuales. Revisar no escribe; guardar aparte usa la versión revisada. Un conflicto refresca sin reintentar la escritura."
+    },
+    {
+      "id": "COG-20261117-02",
+      "principle": "Prevención de errores y ayuda junto al campo",
+      "finding": "Datos de entrega de mercancía dependían de la validación nativa; un submit directo omitía el bloqueo del botón ante datos inválidos, checkout deshabilitado o stock/entrega no disponibles.",
+      "change": "Errores localizados tras blur/envío y foco en el primer campo inválido al enviar. Texto y límites existentes conservados. El handler comprueba disponibilidad, opciones y solicitudes pendientes antes de crear orden; revisar o corregir no inicia checkout."
+    },
+    {
+      "id": "COG-20261117-03",
+      "principle": "Evitar repetición y representar el estado real",
+      "finding": "El comprador repetía nombre/correo conocidos, y el total de la vista previa se anunciaba como calculado por el servidor aunque se sumaba localmente.",
+      "change": "Contacto editable desde la cuenta montada, sin restaurar borrados deliberados. Total estimado con confirmación final al continuar. El envío captura el payload, bloquea controles pendientes y conserva texto, clave y capacidad privada para reintentar sin cambios; la orden creada sigue pendiente de pago."
     }
   ],
   "measurements": [
@@ -269,7 +281,7 @@
       "id": 10,
       "item": "Ingreso web",
       "status": "Parcial",
-      "nextOrEvidence": "Ayudas y enlaces duplicados retirados; rutas rápidas D5 pendientes de decisión."
+      "nextOrEvidence": "Ayudas y enlaces duplicados retirados en #722. D5 implementada por recomendación aprobada en #757, sin integrarse ni modificarse en esta continuación."
     },
     {
       "id": 11,
@@ -305,7 +317,7 @@
       "id": 16,
       "item": "Errores junto al campo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo."
+      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo. Contacto y dirección de entrega de mercancía ahora tienen errores por campo, límites, foco al enviar y guard contra submit directo inválido o no disponible."
     },
     {
       "id": 17,
@@ -329,7 +341,7 @@
       "id": 20,
       "item": "App: explorar sin cuenta",
       "status": "Pendiente",
-      "nextOrEvidence": "Recorrido invitado y simplificación del registro; D10 pendiente de decisión."
+      "nextOrEvidence": "Recorrido invitado pendiente. D10 simplifica el registro en el PR móvil separado #188 tras aprobación de Diego; falta prueba nativa e integración."
     },
     {
       "id": 21,
@@ -341,7 +353,7 @@
       "id": 22,
       "item": "Reserva y datos repetidos",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Reserva en 2 pasos con cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y correo de Live Sessions tras validar su código. Contacto completo de la cuenta resumido y editable; invitados e incompletos abiertos. Introducción y otras repeticiones aún no revalidadas frente al objetivo de tres líneas; evaluación humana pendiente."
+      "nextOrEvidence": "Reserva en 2 pasos con cotización, depósito y consentimiento en Horario. Prefill en mezcla, marketplace, pruebas y correo de Live Sessions tras validar su código. Contacto completo de la cuenta resumido y editable; invitados e incompletos abiertos. Introducción y otras repeticiones aún no revalidadas frente al objetivo de tres líneas; evaluación humana pendiente. Carrito de mercancía precarga nombre/correo de la cuenta montada y conserva ediciones y borrados explícitos."
     },
     {
       "id": 23,
@@ -352,8 +364,8 @@
     {
       "id": 24,
       "item": "Estudio y fusiones de menú",
-      "status": "Decisión de permisos pendiente",
-      "nextOrEvidence": "No cambiar roles ni fusionar destinos D11–D14/D17 sin revisar pérdida y afectados."
+      "status": "Menú por rol en #757; permisos e integración pendientes",
+      "nextOrEvidence": "D11–D14/D17 aplicadas por recomendación aprobada en #757, solo en menús y por tipo de usuario. Esta continuación no altera acceso, fusiona páginas ni modifica esa rama; permisos y pérdidas de funciones requieren su revisión correspondiente."
     },
     {
       "id": 25,
@@ -451,9 +463,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 4,
-      "testsPassed": 46,
-      "sourceCommit": "55425b854b73b8cabd8caea5d9534c8675689a39"
+      "suitesPassed": 3,
+      "testsPassed": 27,
+      "sourceCommit": "a1946ef07bc2179ca73d324f588a99a767860fca"
     },
     "browser": {
       "passed": 22,
@@ -467,9 +479,9 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "55425b854b73b8cabd8caea5d9534c8675689a39",
+      "sourceCommit": "a1946ef07bc2179ca73d324f588a99a767860fca",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 122,
+      "mappedChangedMaterialSurfaces": 125,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
@@ -483,8 +495,8 @@
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "cases": 42,
-      "passed": 42,
+      "cases": 56,
+      "passed": 56,
       "failed": 0,
       "configurations": [
         "Chromium desktop",
@@ -501,37 +513,47 @@
         "sellerStockAndDraft_es": 7,
         "sellerStockAndDraft_en": 7,
         "categoryLabelsAndWire_es": 7,
-        "categoryLabelsAndWire_en": 7
+        "categoryLabelsAndWire_en": 7,
+        "merchDelivery_es": 7,
+        "merchDelivery_en": 7
       },
       "checks": [
-        "Real staleTime/focus refetch retains raw09, blank alert and inactive draft while showing newer current values",
-        "Keyboard keep action restores stock focus; invalid blank stays blocked and neither review choice writes",
-        "Explicit version8 PATCH409 retains edits, invalidates the read query and offers current version9 without automatic write retry",
-        "Use current values resets fields deliberately with no write; separate save sends version9; clean refresh follows version11",
-        "Existing whole-integer, category-code, idempotency, rejection/reload and admin/public regressions",
-        "Scoped WCAG/ARIA after animations, full viewport and hit testing of review action, keyboard focus and no overflow"
+        "Signed-in account contact prefill remains editable; invalid name/email and multiline optional notes retain text and show associated errors",
+        "Only deliberate submit focuses first invalid field; full WCAG rules after form animations, viewport/hit test and no horizontal overflow",
+        "Real background refetch changes stock/capability/shipping options; direct submit cannot bypass any unavailable state",
+        "Pending request locks recipient, delivery, reminder and removal; duplicate direct submit does not start a second checkout",
+        "503 rejection preserves draft; deliberate retry uses identical payload/idempotency key/private cart capability",
+        "Successful synthetic order stores private recovery and remains pending payment; reminder keeps createAccount:false",
+        "Previous42 stock/category/version/idempotency regression journeys"
       ],
       "harness": {
         "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
-        "identity": "Final owned preview PID68679 cwd verified; served /inicio index matched this worktree dist/index.html."
+        "identity": "Owned preview PID13813 cwd verified; served /inicio bytes matched this worktree dist/index.html."
       },
-      "log": "/private/tmp/cogload-twelfth-browser-final.log",
-      "limitations": "Todas las API interceptadas. Cada recorrido nuevo hace dos PATCH sintéticos (409 y éxito). Sin inventario, producto, compra, cobro, publicación ni despliegue real."
+      "log": "/private/tmp/cogload-thirteenth-browser.log",
+      "limitations": "API interceptada. Dos POST sintéticos de checkout por recorrido nuevo (503 y orden pendiente). Sin reserva de stock, pago, compra, cuenta, correo, publicación ni despliegue real."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "c6fd0eb449a827c8dbaf57600e2426e496fee40d",
-      "ciRun": 43975808931,
-      "ciConclusion": "success",
+      "commit": "a9666a653f24b62d254491f217672aa7475dccf5",
+      "ciRun": 44030176415,
+      "ciConclusion": "failure",
+      "attempt": 2,
+      "failedJobRerun": {
+        "attempt": 2,
+        "status": "in_progress",
+        "conclusion": null
+      },
+      "initialFailure": "First attempt failed in backend-quality: music worker did not stop within30s; source backend/worker unchanged by this pass. Failed-job-only rerun requested; no timeout or check weakened.",
       "webJest": {
-        "suites": 379,
-        "tests": 4382,
+        "suites": 380,
+        "tests": 4390,
         "result": "passed"
       },
       "mainBrowser": {
-        "passed": 995,
+        "passed": 1009,
         "skipped": 22,
         "failed": 0
       },
@@ -545,26 +567,8 @@
         "deletion": 10,
         "discovery": 25
       },
-      "specialistWorkflows": {
-        "catalog": {
-          "run": 43975814905,
-          "conclusion": "failure",
-          "reason": "Historical Apple-view preservation test omitted the new category-label review; 1429 review objects remain unchanged. Test fixed this pass."
-        },
-        "event": {
-          "run": 43975819580,
-          "conclusion": "success"
-        },
-        "social": {
-          "run": 43975825101,
-          "conclusion": "cancelled"
-        },
-        "interaction": {
-          "run": 43975831062,
-          "conclusion": "success"
-        }
-      },
-      "scope": "Results belong only to the recorded prior head; main CI succeeded, all specialist workflows did not."
+      "specialistWorkflows": "all four passed: catalog44030180326, event44030184241, social44030188230, interaction44030192076",
+      "scope": "Only this recorded prior head. The first main-CI attempt failed; retry outcome recorded separately from successful web/specialist jobs."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -676,6 +680,10 @@
     {
       "path": "figures/merch-stock-background-review-phone.png",
       "scope": "Borrador sintético09/alerta vacía/inactiva conservado ante snapshot8 con valores15/4/activa. Acciones de revisión sin escritura real."
+    },
+    {
+      "path": "figures/merch-delivery-inline-errors-phone.png",
+      "scope": "Carrito sintético con correo inválido, foco y errores asociados de entrega; sin orden ni operación real."
     }
   ],
   "followups": [
@@ -1642,6 +1650,115 @@
       },
       "hostedCI": "New published documentation head requires its own full workflows.",
       "limitations": "La conservación de stock cubre el editor montado ante refetch, conflicto y respuestas pendientes. Cambiar de tienda/variante o sesión reinicia el borrador; no se añadió recuperación en disco ni persistencia tras recargar o abandonar la página."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "a9666a653f24b62d254491f217672aa7475dccf5",
+      "scope": "Items16/22: validación y continuidad de datos de entrega de mercancía. Sin API, esquema, autoridad de pago/stock, consentimiento, permisos ni Mobile nuevos.",
+      "regressionVerification": {
+        "suites": 3,
+        "tests": 27,
+        "log": "/private/tmp/cogload-thirteenth-unit-third.log",
+        "checks": [
+          "Required/optional recipient bounds, controls and Unicode retain raw text; invalid submit never calls checkout or analytics",
+          "First-invalid focus only on submit; account prefill remains editable without restoring cleared values",
+          "Capability, stock, zone, pending read/removal/checkout guards; exact trimmed request and stable key/token across rejection/retry",
+          "Private recovery and pending payment retained after success; existing session principal isolation regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 56,
+        "passed": 56,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "stockBackgroundReview_es": 7,
+          "stockBackgroundReview_en": 7,
+          "sellerStockAndDraft_es": 7,
+          "sellerStockAndDraft_en": 7,
+          "categoryLabelsAndWire_es": 7,
+          "categoryLabelsAndWire_en": 7,
+          "merchDelivery_es": 7,
+          "merchDelivery_en": 7
+        },
+        "checks": [
+          "Signed-in account contact prefill remains editable; invalid name/email and multiline optional notes retain text and show associated errors",
+          "Only deliberate submit focuses first invalid field; full WCAG rules after form animations, viewport/hit test and no horizontal overflow",
+          "Real background refetch changes stock/capability/shipping options; direct submit cannot bypass any unavailable state",
+          "Pending request locks recipient, delivery, reminder and removal; duplicate direct submit does not start a second checkout",
+          "503 rejection preserves draft; deliberate retry uses identical payload/idempotency key/private cart capability",
+          "Successful synthetic order stores private recovery and remains pending payment; reminder keeps createAccount:false",
+          "Previous42 stock/category/version/idempotency regression journeys"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Owned preview PID13813 cwd verified; served /inicio bytes matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-thirteenth-browser.log",
+        "limitations": "API interceptada. Dos POST sintéticos de checkout por recorrido nuevo (503 y orden pendiente). Sin reserva de stock, pago, compra, cuenta, correo, publicación ni despliegue real."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new/stale decision; all1429 decision objects unchanged. New source staged before scan; canonical JSON/CSV refreshed.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "a9666a653f24b62d254491f217672aa7475dccf5",
+        "ciRun": 44030176415,
+        "ciConclusion": "failure",
+        "attempt": 2,
+        "failedJobRerun": {
+          "attempt": 2,
+          "status": "in_progress",
+          "conclusion": null
+        },
+        "initialFailure": "First attempt failed in backend-quality: music worker did not stop within30s; source backend/worker unchanged by this pass. Failed-job-only rerun requested; no timeout or check weakened.",
+        "webJest": {
+          "suites": 380,
+          "tests": 4390,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 1009,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed: catalog44030180326, event44030184241, social44030188230, interaction44030192076",
+        "scope": "Only this recorded prior head. The first main-CI attempt failed; retry outcome recorded separately from successful web/specialist jobs."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "a1946ef07bc2179ca73d324f588a99a767860fca",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 125,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "New published head requires its own full workflows.",
+      "fixtureCorrections": "Initial test mocks needed the real API client session exports; pending read fixture catches cancellation on cleanup. No production auth or timeout change."
     }
   ],
   "lastUpdated": "2026-11-17"
