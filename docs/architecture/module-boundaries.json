@@ -57,9 +57,9 @@
         "TDF.Catalog.DB -> TDF.API.DDEX",
         "TDF.Commerce.ProviderEventWorker -> TDF.Server.ServiceStorefront",
         "TDF.ContentStorage -> TDF.API.ContentStorage",
+        "TDF.Courses.Metadata -> TDF.Routes.Courses",
         "TDF.Cron -> TDF.API.Admin",
         "TDF.Cron -> TDF.Routes.Courses",
-        "TDF.Cron -> TDF.Server",
         "TDF.MusicRelease.ContentValidation -> TDF.API.MusicRelease",
         "TDF.Routes.EventTickets -> TDF.Server.TicketPaymentReceipt",
         "TDF.Social.Chat -> TDF.API.Chat"
@@ -69,7 +69,7 @@
         "headroom": 300,
         "oversized": {
           "tdf-hq/src/TDF/API/Types.hs": 2900,
-          "tdf-hq/src/TDF/Server.hs": 22000,
+          "tdf-hq/src/TDF/Server.hs": 21300,
           "tdf-hq/src/TDF/Server/Catalog.hs": 3300,
           "tdf-hq/src/TDF/Server/ServiceStorefront.hs": 3100,
           "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs": 11000,
