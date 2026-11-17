@@ -98,6 +98,10 @@ async function readReconciliation(beforePlayer = false) {
   const retirement = integration.retirements.find(row => row.source.name === 'migrations');
   const byId = new Map(active.map(row => row === tip ? row.previousDecision : row)
     .map(row => [row.id, row]));
+  // The PayPal webhook domain list moved files unchanged (ADR 0133), so its
+  // review is a successor under a new id; it stands in for the review it nests.
+  const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');
+  byId.set(movedPaypalDomains.previousDecision.id, movedPaypalDomains);
   return {
     ledger,
     active: predecessor.map(row => byId.get(row.id)).filter(Boolean),

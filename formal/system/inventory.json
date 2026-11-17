@@ -3927,7 +3927,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "5b50f2b9abe2e792c61b29917c207584a3e7d548ddcd7db2f9acc01e28ede22b",
+      "sha256": "1261310e8c9c42746095faf838447c9bfe4eb949e0e827ab55695b8f2d0cb027",
       "semanticConformance": "not-established-by-discovery"
     },
     {
