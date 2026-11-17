@@ -176,6 +176,12 @@
       "principle": "Vocabulario legible y consistente",
       "finding": "Categorías como apparel o limited_edition aparecían como códigos o inglés sin traducir en filtros públicos, producto, formulario del vendedor y revisión administrativa.",
       "change": "Un vocabulario de presentación compartido en español/inglés muestra Ropa, Edición limitada y los demás rótulos existentes. Las solicitudes conservan códigos originales y opciones; la lista no gana autoridad ni nuevas categorías seleccionables. Códigos desconocidos reciben un rótulo neutral. La migración pendiente del catálogo se conserva."
+    },
+    {
+      "id": "COG-20261117-01",
+      "principle": "Continuidad de tarea, prevención de errores y control explícito",
+      "finding": "Una actualización de stock en segundo plano cambiaba la clave de versión y desmontaba el editor, perdiendo la edición sin aviso.",
+      "change": "La identidad estable conserva texto/estado activo. Valores nuevos bloquean el guardado y muestran comparación con opciones explícitas para conservar la edición o usar los valores actuales. Revisar no escribe; guardar aparte usa la versión revisada. Un conflicto refresca sin reintentar la escritura."
     }
   ],
   "measurements": [
@@ -353,7 +359,7 @@
       "id": 25,
       "item": "Herramientas del equipo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local. Stock/peso conservan texto completo, cero explícito, límites y versión autorizada del servidor; rechazo no borra la edición."
+      "nextOrEvidence": "Servicios, eventos, comercio, música y ahora cursos aceptan moneda exacta según sus contratos; filtros monetarios de operaciones corregidos. Cursos conservan precio y campos descriptivos del borrador, y ediciones posteriores a una publicación pendiente. Estados de mercancía traducidos. Otros componentes/etiquetas y evaluación humana pendientes. Configuración de renta: cuatro importes en USD, conversión exacta y rango de 32 bits según el endpoint existente; reintento conserva valores. Pagos manuales y tarifa de reportes usan centavos exactos. PDF/plantilla bloqueados si tarifa o total no conserva centavos; corte y bloques nuevos usan día local. Stock/peso conservan texto completo, cero explícito, límites y versión autorizada del servidor; rechazo no borra la edición. El editor montado conserva borradores frente a refetch y conflicto; exige revisar valores nuevos antes de otro guardado, sin rebases ni reintentos de escritura automáticos."
     },
     {
       "id": 26,
@@ -403,29 +409,39 @@
       "D1"
     ],
     "pending": [
-      "D2",
-      "D3",
-      "D4",
-      "D5",
       "D6",
-      "D7",
-      "D8",
-      "D9",
-      "D10",
-      "D11",
-      "D12",
-      "D13",
-      "D14",
       "D15",
       "D16",
-      "D17",
-      "D18",
-      "D19"
+      "D18"
     ],
     "other": [
       "Redacción de tarifa al organizador y consentimiento",
       "Héroe de /inicio",
       "Restricción por rol de /estudio/*"
+    ],
+    "separateImplementation": {
+      "source": "memory/2026-11-16.md, sesión Claude c2ba77ed",
+      "webPR": 757,
+      "mobilePR": 188,
+      "scopedDecisions": [
+        "D2",
+        "D3",
+        "D5",
+        "D10",
+        "D11",
+        "D12",
+        "D13",
+        "D14",
+        "D17"
+      ],
+      "scope": "Recomendaciones aprobadas por Diego en sesión separada. No se modificaron esas ramas aquí; implementación no implica fusión ni despliegue."
+    },
+    "unreconciled": [
+      "D4",
+      "D7",
+      "D8",
+      "D9",
+      "D19"
     ]
   },
   "verification": {
@@ -436,8 +452,8 @@
     },
     "latestFocusedJest": {
       "suitesPassed": 4,
-      "testsPassed": 53,
-      "sourceCommit": "7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2"
+      "testsPassed": 46,
+      "sourceCommit": "55425b854b73b8cabd8caea5d9534c8675689a39"
     },
     "browser": {
       "passed": 22,
@@ -451,9 +467,9 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2",
+      "sourceCommit": "55425b854b73b8cabd8caea5d9534c8675689a39",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 119,
+      "mappedChangedMaterialSurfaces": 122,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
@@ -467,8 +483,8 @@
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "cases": 28,
-      "passed": 28,
+      "cases": 42,
+      "passed": 42,
       "failed": 0,
       "configurations": [
         "Chromium desktop",
@@ -480,39 +496,42 @@
         "WebKit critical"
       ],
       "caseGroups": {
+        "stockBackgroundReview_es": 7,
+        "stockBackgroundReview_en": 7,
         "sellerStockAndDraft_es": 7,
         "sellerStockAndDraft_en": 7,
         "categoryLabelsAndWire_es": 7,
         "categoryLabelsAndWire_en": 7
       },
       "checks": [
-        "Campos vacíos permanecen vacíos y bloquean envío; valores largos no se truncan a una cantidad distinta válida",
-        "Dos solicitudes de borrador simuladas, rechazo422 conserva texto/payload/clave de idempotencia; peso100000 y stock0 llegan como enteros",
-        "En el recorrido sintético, conflicto409 conserva cantidad editada y versión7; se recarga para leer versión8 antes del siguiente intento explícito",
-        "Filtros traducidos conservan GET category=bundle; categoría limitada conserva limited_edition al crear; producto y revisión muestran el mismo rótulo",
-        "WCAG/ARIA tras transiciones, helper asociado, viewport/hit testing normal y sin overflow"
+        "Real staleTime/focus refetch retains raw09, blank alert and inactive draft while showing newer current values",
+        "Keyboard keep action restores stock focus; invalid blank stays blocked and neither review choice writes",
+        "Explicit version8 PATCH409 retains edits, invalidates the read query and offers current version9 without automatic write retry",
+        "Use current values resets fields deliberately with no write; separate save sends version9; clean refresh follows version11",
+        "Existing whole-integer, category-code, idempotency, rejection/reload and admin/public regressions",
+        "Scoped WCAG/ARIA after animations, full viewport and hit testing of review action, keyboard focus and no overflow"
       ],
       "harness": {
         "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
-        "identity": "Final owned preview PID55500 had the expected cwd; served /inicio index exactly matched this worktree build."
+        "identity": "Final owned preview PID68679 cwd verified; served /inicio index matched this worktree dist/index.html."
       },
-      "log": "/private/tmp/cogload-eleventh-browser-complete.log",
-      "limitations": "Todas las API están interceptadas. Cada recorrido de stock simula dos creaciones de borrador y dos actualizaciones de stock; rechazo y conflicto no cambian registros reales. Los recorridos de categorías no realizan escrituras. Sin publicación, compra, cobro, envío, cambio de inventario real o despliegue."
+      "log": "/private/tmp/cogload-twelfth-browser-final.log",
+      "limitations": "Todas las API interceptadas. Cada recorrido nuevo hace dos PATCH sintéticos (409 y éxito). Sin inventario, producto, compra, cobro, publicación ni despliegue real."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "d6b5d14ff01cadeee5ef05cb854b407efaf1f36f",
-      "ciRun": 43793114620,
+      "commit": "c6fd0eb449a827c8dbaf57600e2426e496fee40d",
+      "ciRun": 43975808931,
       "ciConclusion": "success",
       "webJest": {
         "suites": 379,
-        "tests": 4370,
+        "tests": 4382,
         "result": "passed"
       },
       "mainBrowser": {
-        "passed": 967,
+        "passed": 995,
         "skipped": 22,
         "failed": 0
       },
@@ -526,8 +545,26 @@
         "deletion": 10,
         "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog43793117652, event43793120934, social43793124235, interaction43793127171",
-      "scope": "Completed hosted results belong only to this prior head; new source requires new verification."
+      "specialistWorkflows": {
+        "catalog": {
+          "run": 43975814905,
+          "conclusion": "failure",
+          "reason": "Historical Apple-view preservation test omitted the new category-label review; 1429 review objects remain unchanged. Test fixed this pass."
+        },
+        "event": {
+          "run": 43975819580,
+          "conclusion": "success"
+        },
+        "social": {
+          "run": 43975825101,
+          "conclusion": "cancelled"
+        },
+        "interaction": {
+          "run": 43975831062,
+          "conclusion": "success"
+        }
+      },
+      "scope": "Results belong only to the recorded prior head; main CI succeeded, all specialist workflows did not."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -557,7 +594,7 @@
     "No se creó ninguna compra, reserva, correo ni transacción en producción.",
     "No hay aprobación independiente, fusión ni despliegue en producción de esta continuación.",
     "CourseMetadata.price aún es un número en moneda. Si ya perdió la distinción entre centavos adyacentes, el editor bloquea la publicación hasta una corrección explícita; no se amplió el contrato backend para esa lectura.",
-    "La protección probada de stock cubre el rechazo mientras el snapshot del editor sigue igual. El editor existente se monta con una clave que incluye la versión; un refetch que traiga otra versión puede reiniciarlo. La conciliación de borradores editados frente a snapshots nuevos queda pendiente y no se declara resuelta aquí."
+    "La conservación de stock cubre el editor montado ante refetch, conflicto y respuestas pendientes. Cambiar de tienda/variante o sesión reinicia el borrador; no se añadió recuperación en disco ni persistencia tras recargar o abandonar la página."
   ],
   "screenshots": [
     {
@@ -635,6 +672,10 @@
     {
       "path": "figures/merch-category-label-phone.png",
       "scope": "Categoría Edición limitada en producto sintético; sin compra ni publicación."
+    },
+    {
+      "path": "figures/merch-stock-background-review-phone.png",
+      "scope": "Borrador sintético09/alerta vacía/inactiva conservado ante snapshot8 con valores15/4/activa. Acciones de revisión sin escritura real."
     }
   ],
   "followups": [
@@ -1483,7 +1524,125 @@
         "semanticConformance": "not established by these checks"
       },
       "hostedCI": "New published head requires its own full workflows."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "c6fd0eb449a827c8dbaf57600e2426e496fee40d",
+      "scope": "Item25: conciliación del editor de stock montado ante refetch y conflicto; sin API, esquema, autoridad, permisos ni Mobile nuevos.",
+      "regressionVerification": {
+        "suites": 4,
+        "tests": 46,
+        "log": "/private/tmp/cogload-twelfth-unit-verified.log",
+        "checks": [
+          "Dirty raw drafts, invalid values and active state retained across newer snapshots",
+          "Review then separate CAS save; rejected writes refresh reads only",
+          "Pending saves disabled; acknowledged writes cannot roll back to old cache; clean newer snapshot wins",
+          "Store/variant identity resets; SessionQueryProvider principal isolation regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 42,
+        "passed": 42,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "stockBackgroundReview_es": 7,
+          "stockBackgroundReview_en": 7,
+          "sellerStockAndDraft_es": 7,
+          "sellerStockAndDraft_en": 7,
+          "categoryLabelsAndWire_es": 7,
+          "categoryLabelsAndWire_en": 7
+        },
+        "checks": [
+          "Real staleTime/focus refetch retains raw09, blank alert and inactive draft while showing newer current values",
+          "Keyboard keep action restores stock focus; invalid blank stays blocked and neither review choice writes",
+          "Explicit version8 PATCH409 retains edits, invalidates the read query and offers current version9 without automatic write retry",
+          "Use current values resets fields deliberately with no write; separate save sends version9; clean refresh follows version11",
+          "Existing whole-integer, category-code, idempotency, rejection/reload and admin/public regressions",
+          "Scoped WCAG/ARIA after animations, full viewport and hit testing of review action, keyboard focus and no overflow"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Final owned preview PID68679 cwd verified; served /inicio index matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-twelfth-browser-final.log",
+        "limitations": "Todas las API interceptadas. Cada recorrido nuevo hace dos PATCH sintéticos (409 y éxito). Sin inventario, producto, compra, cobro, publicación ni despliegue real."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new decisions. All1429 objects exactly match7aff2e2. Historical Apple projection excludes the separately pinned category review, preserving all older reviews. Canonical inventory/CSV refreshed.",
+      "fixtureCorrections": "First matrix24 passed/18 failed:12 old singular-alert assertions encountered both error and review warnings;6 hit tests sampled a nearest-scroll action behind the fixed radio. Product now consolidates to one review warning once newer values arrive; test scrolls to center and still requires full visibility and pointer hit. Final full matrix rerun retained all WCAG rules and assertion budgets.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "c6fd0eb449a827c8dbaf57600e2426e496fee40d",
+        "ciRun": 43975808931,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 379,
+          "tests": 4382,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 995,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": {
+          "catalog": {
+            "run": 43975814905,
+            "conclusion": "failure",
+            "reason": "Historical Apple-view preservation test omitted the new category-label review; 1429 review objects remain unchanged. Test fixed this pass."
+          },
+          "event": {
+            "run": 43975819580,
+            "conclusion": "success"
+          },
+          "social": {
+            "run": 43975825101,
+            "conclusion": "cancelled"
+          },
+          "interaction": {
+            "run": 43975831062,
+            "conclusion": "success"
+          }
+        },
+        "scope": "Results belong only to the recorded prior head; main CI succeeded, all specialist workflows did not."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "55425b854b73b8cabd8caea5d9534c8675689a39",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 122,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "hostedCI": "New published documentation head requires its own full workflows.",
+      "limitations": "La conservación de stock cubre el editor montado ante refetch, conflicto y respuestas pendientes. Cambiar de tienda/variante o sesión reinicia el borrador; no se añadió recuperación en disco ni persistencia tras recargar o abandonar la página."
     }
   ],
-  "lastUpdated": "2026-11-16"
+  "lastUpdated": "2026-11-17"
 }
