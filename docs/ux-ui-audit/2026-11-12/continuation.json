@@ -194,6 +194,24 @@
       "principle": "Evitar repetición y representar el estado real",
       "finding": "El comprador repetía nombre/correo conocidos, y el total de la vista previa se anunciaba como calculado por el servidor aunque se sumaba localmente.",
       "change": "Contacto editable desde la cuenta montada, sin restaurar borrados deliberados. Total estimado con confirmación final al continuar. El envío captura el payload, bloquea controles pendientes y conserva texto, clave y capacidad privada para reintentar sin cambios; la orden creada sigue pendiente de pago."
+    },
+    {
+      "id": "COG-20261117-04",
+      "principle": "Corrección por campo y continuidad de tarea",
+      "finding": "Reportes y motivos de cancelación de mercancía dependían del botón deshabilitado y no explicaban los errores. Un submit directo omitía ese guard; campos pendientes podían perder su contexto al cambiar de pedido.",
+      "change": "Errores asociados y foco al enviar; texto completo y tipo conservados tras rechazo. Solicitudes capturadas con la misma clave y acceso privado al reintentar sin cambios; operaciones pendientes y lectura fallida bloquean escrituras. Un pedido distinto inicia sus propios borradores, y una respuesta anterior no borra los nuevos."
+    },
+    {
+      "id": "COG-20261117-05",
+      "principle": "Control explícito y prevención de cambios involuntarios",
+      "finding": "Cancelar una orden sin pagar liberaba stock sin confirmar el pedido nombrado. Un reporte de reembolso o cancelación podía confundirse con su ejecución.",
+      "change": "Revisar no escribe. La confirmación nombra pedido y motivo, ofrece Conservar pedido y vuelve a comprobar el estado actual. Pago nuevo bloquea confirmar; durante el envío no se puede duplicar ni cerrar la confirmación. Rechazo conserva el motivo; éxito sigue visible al desaparecer el formulario. Solicitar ayuda no cancela, reembolsa ni confirma un pago."
+    },
+    {
+      "id": "COG-20261117-06",
+      "principle": "Accesibilidad y controles alcanzables",
+      "finding": "Los mensajes largos expandían el textarea fuera de la pantalla; el botón rojo de confirmación presentó contraste3.68:1 en navegador, inferior al mínimo4.5:1.",
+      "change": "Campos de altura acotada con scroll conservan todo el texto. Confirmaciones de peligro usan el rojo oscuro existente del tema y un texto de contraste suficiente en reposo/hover, con estado deshabilitado distinto. Se repite WCAG, teclado, viewport y hit testing sin omitir reglas."
     }
   ],
   "measurements": [
@@ -305,7 +323,7 @@
       "id": 14,
       "item": "Vocabulario compartido",
       "status": "Parcial",
-      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos."
+      "nextOrEvidence": "Asistencia y correo simplificados en web; falta verificar todas las superficies móviles. Categorías de mercancía compartidas en español/inglés en cuatro superficies; filtros y API conservan códigos. Seguimiento de mercancía usa Novedades/Updates y recuperación en lenguaje común, sin mostrar el acceso privado."
     },
     {
       "id": 15,
@@ -317,7 +335,7 @@
       "id": 16,
       "item": "Errores junto al campo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo. Contacto y dirección de entrega de mercancía ahora tienen errores por campo, límites, foco al enviar y guard contra submit directo inválido o no disponible."
+      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo. Contacto y dirección de entrega de mercancía ahora tienen errores por campo, límites, foco al enviar y guard contra submit directo inválido o no disponible. Motivo de cancelación y reporte de pedido tienen límites, errores asociados, foco al enviar y texto sin truncar en campos acotados; confirmación nombrada y guards de estado/lectura/pending."
     },
     {
       "id": 17,
@@ -464,8 +482,8 @@
     },
     "latestFocusedJest": {
       "suitesPassed": 3,
-      "testsPassed": 27,
-      "sourceCommit": "a1946ef07bc2179ca73d324f588a99a767860fca"
+      "testsPassed": 29,
+      "sourceCommit": "68b66c902f21f0eba576605ec579ffe82b946389"
     },
     "browser": {
       "passed": 22,
@@ -479,9 +497,9 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "a1946ef07bc2179ca73d324f588a99a767860fca",
+      "sourceCommit": "68b66c902f21f0eba576605ec579ffe82b946389",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 125,
+      "mappedChangedMaterialSurfaces": 129,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
@@ -495,8 +513,8 @@
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "cases": 56,
-      "passed": 56,
+      "cases": 42,
+      "passed": 42,
       "failed": 0,
       "configurations": [
         "Chromium desktop",
@@ -508,52 +526,44 @@
         "WebKit critical"
       ],
       "caseGroups": {
-        "stockBackgroundReview_es": 7,
-        "stockBackgroundReview_en": 7,
-        "sellerStockAndDraft_es": 7,
-        "sellerStockAndDraft_en": 7,
-        "categoryLabelsAndWire_es": 7,
-        "categoryLabelsAndWire_en": 7,
-        "merchDelivery_es": 7,
-        "merchDelivery_en": 7
+        "supportRequest_es": 7,
+        "supportRequest_en": 7,
+        "namedCancellation_es": 7,
+        "namedCancellation_en": 7,
+        "deliveryRegression_es": 7,
+        "deliveryRegression_en": 7
       },
       "checks": [
-        "Signed-in account contact prefill remains editable; invalid name/email and multiline optional notes retain text and show associated errors",
-        "Only deliberate submit focuses first invalid field; full WCAG rules after form animations, viewport/hit test and no horizontal overflow",
-        "Real background refetch changes stock/capability/shipping options; direct submit cannot bypass any unavailable state",
-        "Pending request locks recipient, delivery, reminder and removal; duplicate direct submit does not start a second checkout",
-        "503 rejection preserves draft; deliberate retry uses identical payload/idempotency key/private cart capability",
-        "Successful synthetic order stores private recovery and remains pending payment; reminder keeps createAccount:false",
-        "Previous42 stock/category/version/idempotency regression journeys"
+        "Invalid/oversize report text retained with helper/focus; bounded textarea remains completely visible and reachable",
+        "Failed background read keeps drafts and stale warning; direct submit does not write until read retry succeeds",
+        "Support type refund stays request-only; pending message/type and competing buyer-link controls locked; identical payload/key/private token on503 retry",
+        "Named order/reason confirmation sends no write on review/dismissal; new paid snapshot blocks cancellation",
+        "409 preserves reason; deliberate new review/confirmation reuses the same request; pending dialog ignores Escape and duplicate submits",
+        "Accepted cancellation keeps visible feedback after form removal; server stays payment-authoritative",
+        "Full WCAG/ARIA after modal/form animations, keyboard keep-order action, normal pointer hit testing and no overflow",
+        "Previous14 ES/EN delivery validation/idempotency/private tracking journeys"
       ],
       "harness": {
         "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
-        "identity": "Owned preview PID13813 cwd verified; served /inicio bytes matched this worktree dist/index.html."
+        "identity": "Final owned preview PID34611 cwd verified; served /inicio matched this worktree dist/index.html."
       },
-      "log": "/private/tmp/cogload-thirteenth-browser.log",
-      "limitations": "API interceptada. Dos POST sintéticos de checkout por recorrido nuevo (503 y orden pendiente). Sin reserva de stock, pago, compra, cuenta, correo, publicación ni despliegue real."
+      "log": "/private/tmp/cogload-fourteenth-browser-final.log",
+      "limitations": "Todas las API interceptadas. Dos POST sintéticos por recorrido de soporte/cancelación, sin pedido, pago, reembolso, liberación/reserva de stock, cuenta o publicación real. No prueba comprensión humana."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "a9666a653f24b62d254491f217672aa7475dccf5",
-      "ciRun": 44030176415,
-      "ciConclusion": "failure",
-      "attempt": 2,
-      "failedJobRerun": {
-        "attempt": 2,
-        "status": "in_progress",
-        "conclusion": null
-      },
-      "initialFailure": "First attempt failed in backend-quality: music worker did not stop within30s; source backend/worker unchanged by this pass. Failed-job-only rerun requested; no timeout or check weakened.",
+      "commit": "73bbc4abb28f931f94cbed346d85836aaed8f75c",
+      "ciRun": 44144953942,
+      "ciConclusion": "success",
       "webJest": {
-        "suites": 380,
-        "tests": 4390,
+        "suites": 381,
+        "tests": 4409,
         "result": "passed"
       },
       "mainBrowser": {
-        "passed": 1009,
+        "passed": 1023,
         "skipped": 22,
         "failed": 0
       },
@@ -567,8 +577,8 @@
         "deletion": 10,
         "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog44030180326, event44030184241, social44030188230, interaction44030192076",
-      "scope": "Only this recorded prior head. The first main-CI attempt failed; retry outcome recorded separately from successful web/specialist jobs."
+      "specialistWorkflows": "all four passed: catalog44144961317,event44144967615,social44144974511,interaction44144980868",
+      "scope": "Only this recorded prior head. Backend passed the complete new-head run; the older a9666a653 timeout was not fixed by a source/timeout change in this continuation."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -684,6 +694,14 @@
     {
       "path": "figures/merch-delivery-inline-errors-phone.png",
       "scope": "Carrito sintético con correo inválido, foco y errores asociados de entrega; sin orden ni operación real."
+    },
+    {
+      "path": "figures/merch-order-report-error-phone.png",
+      "scope": "Reporte sintético demasiado largo, sin truncar y con error asociado; ninguna solicitud real."
+    },
+    {
+      "path": "figures/merch-order-cancel-confirmation-phone.png",
+      "scope": "Confirmación sintética nombra pedido y motivo; Conservar pedido no escribe ni libera stock."
     }
   ],
   "followups": [
@@ -1759,6 +1777,109 @@
       },
       "hostedCI": "New published head requires its own full workflows.",
       "fixtureCorrections": "Initial test mocks needed the real API client session exports; pending read fixture catches cancellation on cleanup. No production auth or timeout change."
+    },
+    {
+      "date": "2026-11-17",
+      "baseCommit": "73bbc4abb28f931f94cbed346d85836aaed8f75c",
+      "scope": "Items14/16: formularios y recuperación del pedido de mercancía; confirmación accesible. Sin API, esquema, autoridad, opciones, roles, consentimiento ni Mobile nuevos.",
+      "regressionVerification": {
+        "suites": 3,
+        "tests": 29,
+        "log": "/private/tmp/cogload-fourteenth-unit-final.log",
+        "checks": [
+          "Raw invalid/Unicode text, original bounds and associated errors; no direct invalid writes",
+          "Named confirmation/no-write dismissal, stale payment guard, pending duplicate/close guard and global success/error visibility",
+          "Report/cancellation rejection preserves payload/key; report rotates key only on success",
+          "Background read failure retains drafts, order switch isolates state and old response cannot clear a new draft",
+          "Legacy invitation dialog/default labels and session principal isolation regressions"
+        ]
+      },
+      "browserVerification": {
+        "cases": 42,
+        "passed": 42,
+        "failed": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "supportRequest_es": 7,
+          "supportRequest_en": 7,
+          "namedCancellation_es": 7,
+          "namedCancellation_en": 7,
+          "deliveryRegression_es": 7,
+          "deliveryRegression_en": 7
+        },
+        "checks": [
+          "Invalid/oversize report text retained with helper/focus; bounded textarea remains completely visible and reachable",
+          "Failed background read keeps drafts and stale warning; direct submit does not write until read retry succeeds",
+          "Support type refund stays request-only; pending message/type and competing buyer-link controls locked; identical payload/key/private token on503 retry",
+          "Named order/reason confirmation sends no write on review/dismissal; new paid snapshot blocks cancellation",
+          "409 preserves reason; deliberate new review/confirmation reuses the same request; pending dialog ignores Escape and duplicate submits",
+          "Accepted cancellation keeps visible feedback after form removal; server stays payment-authoritative",
+          "Full WCAG/ARIA after modal/form animations, keyboard keep-order action, normal pointer hit testing and no overflow",
+          "Previous14 ES/EN delivery validation/idempotency/private tracking journeys"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Final owned preview PID34611 cwd verified; served /inicio matched this worktree dist/index.html."
+        },
+        "log": "/private/tmp/cogload-fourteenth-browser-final.log",
+        "limitations": "Todas las API interceptadas. Dos POST sintéticos por recorrido de soporte/cancelación, sin pedido, pago, reembolso, liberación/reserva de stock, cuenta o publicación real. No prueba comprensión humana."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "All1429 decisions unchanged, no new/stale entries. Final code staged before canonical JSON/CSV scan; unchanged historical reviews preserved.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "73bbc4abb28f931f94cbed346d85836aaed8f75c",
+        "ciRun": 44144953942,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 381,
+          "tests": 4409,
+          "result": "passed"
+        },
+        "mainBrowser": {
+          "passed": 1023,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed: catalog44144961317,event44144967615,social44144974511,interaction44144980868",
+        "scope": "Only this recorded prior head. Backend passed the complete new-head run; the older a9666a653 timeout was not fixed by a source/timeout change in this continuation."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "68b66c902f21f0eba576605ec579ffe82b946389",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 129,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "fixtureCorrections": "First browser run was deliberately interrupted after exposing long-field viewport failures and white-on-red3.68:1 contrast. It was not accepted as a completed matrix. Product fixes bound field height without truncating text and use accessible theme contrast. Final full matrix rerun retains all accessibility rules/assertion budgets; modal animation scope includes ancestors. Unit fixtures wait for query notifications and modal dismissal before accessible-role assertions.",
+      "hostedCI": "New published head requires its own full workflows.",
+      "limitations": "Existing UI10-character report minimum is retained although the API requires only nonempty safe text. Same-payload retry verified; editing an uncertain/rejected request does not get a new idempotency policy. Mounted drafts, not disk/reload recovery."
     }
   ],
   "lastUpdated": "2026-11-17"
