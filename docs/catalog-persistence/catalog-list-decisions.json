@@ -92793,6 +92793,25 @@
       }
     },
     {
+      "id": "e92ce89eca127e0bbe74",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A page size outside the directory search limit would be rejected by the API; the values only bound how many profiles one request returns.",
+      "justification": "Individually reviewed source: the three page sizes (12, 24, 48) offered by the community results pager and accepted from the perPage URL parameter. They are presentation limits passed as the search limit, not business, taxonomy or reference data, and no persisted catalog exists for them.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "community-discovery-pagination-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "line": 11,
+        "kind": "array",
+        "name": "PAGE_SIZE_OPTIONS",
+        "valueCount": 3
+      }
+    },
+    {
       "id": "92bdf7d80182ff259008",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
