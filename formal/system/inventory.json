@@ -11478,13 +11478,13 @@
     {
       "id": "SURFACE-6c5ad1714500a7c5",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
-      "sha256": "09e4d76079f9858f37dd634b681e2319e9b30405354112ac629dea51286f34a4",
+      "sha256": "e90be7b98a15b108d99bb0b55f4b704c3310bc242190870d1048f98c6905b9cc",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+      "sha256": "b4f10db9421ac0d1097d424af1f63888a8aae7894a39c1b02dd28e17a09a51bd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31459,7 +31459,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "db8c5fa5170cdc996494f8d9fd2ea8df5ae94fd20d628572e3b44de24aef5fc7",
+      "sha256": "818a11be586737173c536d08bf7ac069139ea56e5c7738c79c50dbe851497629",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
