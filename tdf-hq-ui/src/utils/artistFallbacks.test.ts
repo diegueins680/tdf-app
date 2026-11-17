@@ -1,6 +1,14 @@
 import { artistInitials, artistPlaceholderImage, getArtistHeroImage, isArtistPlaceholderImage } from './artistFallbacks';
 
 describe('getArtistHeroImage', () => {
+  it('ignores legacy page URLs in image fields and keeps the verified artwork', () => {
+    expect(getArtistHeroImage('https://open.spotify.com/artist/6348Nu8zc4gZC8vtHzPP8R', 'skankafe', 'Skanka Fe')).toBe(
+      'https://i.scdn.co/image/ab6761610000e5eb172b1792c8a9096500cbceb0',
+    );
+    expect(getArtistHeroImage('https://drive.google.com/file/d/cover123/view', 'new-artist', 'New Artist')).toBe(
+      'https://drive.google.com/thumbnail?id=cover123&sz=w1600',
+    );
+  });
   it('uses the verified Quimika Soul artwork for its canonical seeded slug', () => {
     expect(getArtistHeroImage(null, 'quimika-soul')).toBe(
       'https://i.scdn.co/image/ab6761610000e5eb4918df2d6a21f0388e1c092e',

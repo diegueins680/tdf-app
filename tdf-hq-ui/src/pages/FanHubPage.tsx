@@ -1,3 +1,4 @@
+import { getAuthSessionEpoch } from '../session/authEvents';
 import ArtistProfileLink from '../components/ArtistProfileLink';
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
@@ -18,7 +19,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   CircularProgress,
   Dialog,
@@ -45,6 +45,8 @@ import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import LaunchIcon from '@mui/icons-material/Launch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import ArtistCoverPreview from '../components/ArtistCoverPreview';
+import { artistImageUrlError } from '../utils/artistImage';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { ArtistProfileUpsert } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
@@ -403,9 +405,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       submittedDraft: ArtistProfileUpsert;
       isCurrentOwner: () => boolean;
       acknowledgeSave: (draft: ArtistProfileUpsert) => void;
+      persistedCover: string | null;
     }) => {
       if (!request.isCurrentOwner()) throw new Error('Vuelve a cargar tu perfil antes de guardar.');
-      return Fans.updateMyArtistProfile(request.payload);
+      return Fans.updateMyArtistProfile(request.payload, { persistedCover: request.persistedCover, sessionEpoch: getAuthSessionEpoch });
     },
     onSuccess: (profile, request) => {
       // A successful write is not permission to share a draft slug or another Party's identity.
@@ -735,9 +738,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       apuGenreIds: artistDraft.apuGenreIds,
       apuHighlights: normalizeField(artistDraft.apuHighlights),
     };
+    // Only the signed-in artist's own saved cover counts as unchanged.
+    const published = artistProfileQuery.data;
+    const persistedCover = published && published.apArtistId === session.partyId
+      ? published.apHeroImageUrl ?? null : null;
     updateArtistProfileMutation.mutate({
       payload, submittedDraft: artistDraft, isCurrentOwner: isCurrentArtistOwner,
-      acknowledgeSave: acknowledgeArtistSave,
+      acknowledgeSave: acknowledgeArtistSave, persistedCover,
     });
   };
 
@@ -1719,6 +1726,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         />
                         <TextField
                           label="URL de portada (opcional)"
+                          error={Boolean(artistImageUrlError(artistDraft.apuHeroImageUrl))}
+                          helperText={artistImageUrlError(artistDraft.apuHeroImageUrl) ?? 'Enlace público a una imagen o archivo de Drive.'}
                           placeholder="https://"
                           value={artistDraft.apuHeroImageUrl ?? ''}
                           onChange={(event) => {
@@ -1752,14 +1761,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             </Typography>
                           )}
                         </Stack>
-                        {artistDraft.apuHeroImageUrl && (
-                          <Card
-                            variant="outlined"
-                            sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
-                          >
-                            <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
-                          </Card>
-                        )}
+                        <ArtistCoverPreview url={artistDraft.apuHeroImageUrl} />
                         <Typography variant="caption" color="text.secondary">
                           Guardamos sólo enlaces hospedados (Drive/CDN) para que el perfil cargue rápido.
                         </Typography>
