@@ -859,7 +859,14 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
     assert.equal(review.evidence.file, 'tdf-hq-ui/src/utils/merch.ts');
     assert.equal(review.evidence.valueCount, 2);
   }
-  const merchLabelIds = new Set(merchLabelReviews.map(row => row.id));
+  // The category-label consumer adds one separately reviewed presentation map.
+  // Preserve the complete pre-existing decision objects, then project it out of
+  // the historical financial-label and Apple-policy views.
+  const categoryId = '7d5d1e64b79af7288982';
+  const categoryParent = await reviewedParent('7aff2e236d3a73d3d00a22dc57a533dcc4efa0c2');
+  assert.deepEqual(active.find(row => row.id === categoryId), categoryParent.find(row => row.id === categoryId));
+  assert.deepEqual(active, categoryParent);
+  const merchLabelIds = new Set([...merchLabelReviews.map(row => row.id), categoryId]);
   assert.deepEqual(active.filter(row => !merchLabelIds.has(row.id)),
     await reviewedParent('cfbd8d66447585ef4b178c1ea76004b188cdad46'));
   const laterMainIds = new Set([offlineFixture.id, ...routeReviews.map(row => row.id),
@@ -880,7 +887,7 @@ test('Apple policy preserves the exact main prefix and every manual review', asy
   assert.equal(historicalAppleView.length, 1411);
   assert.deepEqual(historicalAppleView,
     await reviewedParent('15e2228d24080a520d4bed187731cc3db09d474a'));
-  assert.equal(active.length, 1428);
+  assert.equal(active.length, 1429);
   const history = new Map();
   const visit = row => {
     if (!row) return;
