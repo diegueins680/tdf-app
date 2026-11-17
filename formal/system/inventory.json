@@ -71,6 +71,7 @@
       "e2e/web/live-session-contact.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
       "e2e/web/merch-delivery-validation.spec.mjs",
+      "e2e/web/merch-order-recovery.spec.mjs",
       "e2e/web/merch-stock-category.spec.mjs",
       "e2e/web/merch-stock-refresh.spec.mjs",
       "e2e/web/mobile-layout-regressions.spec.mjs",
@@ -1420,6 +1421,7 @@
       "tdf-hq-ui/src/pages/MerchCartPage.tsx",
       "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
       "tdf-hq-ui/src/pages/MerchOrderReviewPage.tsx",
+      "tdf-hq-ui/src/pages/MerchOrderTrackingPage.test.tsx",
       "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
       "tdf-hq-ui/src/pages/MerchProductPage.tsx",
       "tdf-hq-ui/src/pages/MerchReputationModerationPage.tsx",
@@ -3498,6 +3500,12 @@
       "id": "SURFACE-c78ffe3a6ce74a3a",
       "path": "e2e/web/merch-delivery-validation.spec.mjs",
       "sha256": "f51ca9efa795d23294c6e80b99b2e71c907c5816df14a5f13feb69d48035cb1f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e10033ba34bd1851",
+      "path": "e2e/web/merch-order-recovery.spec.mjs",
+      "sha256": "b640d5c1ff90a97296b2dcada07e3477fbb386a4f531812884a537867c648f2f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9101,7 +9109,7 @@
     {
       "id": "SURFACE-d4d209018de8c574",
       "path": "tdf-hq-ui/src/components/ConfirmDialog.tsx",
-      "sha256": "eb73a2b0c8bcdcd054fca8595a9a8bf99ad29ba3e60dbd96e3f5cd62297379fe",
+      "sha256": "8581a25cd9959f56ba12a84066c5c87259dadd5da3d00ec56f4148efdeb554a6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11475,9 +11483,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e3a96dc9690c1f93",
+      "path": "tdf-hq-ui/src/pages/MerchOrderTrackingPage.test.tsx",
+      "sha256": "8e72b549c684117850b884e4c8926758547784d9784792ff742da8627581ce8f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fcdfad2ccff36836",
       "path": "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
-      "sha256": "01a55d3b62bd2275c01f7eab23c4f9a8fd4d8c1682ce1e1d504e50b86d98a5ba",
+      "sha256": "360004744caca3f03bf2b5dde1ffeb3e89e1a37efd23e22b7404d979d1d05837",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31081,7 +31095,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "cca6edaaf5061f5119e35690a09525e128b9c2366ac9dce5931accbc8c6b937e",
+      "sha256": "2158d117910ed81f1e5bffdb5791a3e35cef5efb8d62c2bad296a25c0c0b3f86",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
