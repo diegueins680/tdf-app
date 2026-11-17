@@ -1,4 +1,5 @@
 import { get, post, put, del } from './client';
+import { saveArtistProfileMedia, type ArtistProfileMediaOptions } from './artistProfileMedia';
 import type {
   ArtistProfileDTO,
   ArtistReleaseDTO,
@@ -87,14 +88,14 @@ export const Fans = {
   activateMyArtistProfile: async () =>
     (await send('/artists/me/activate', {})) as ArtistProfileDTO,
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
-  updateMyArtistProfile: async (payload: ArtistProfileUpsert) =>
-    (await update('/fans/me/artist-profile', payload)) as ArtistProfileDTO,
-  createMyArtistProfile: async (payload: ArtistProfileUpsert) =>
-    (await send('/artists/me/profile', payload)) as ArtistProfileDTO,
-  updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert) =>
-    (await update('/artists/me/profile', payload)) as ArtistProfileDTO,
-  updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate) =>
-    (await send('/artists/me/photo', payload)) as ArtistProfileDTO,
+  updateMyArtistProfile: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/fans/me/artist-profile', prepared), options)),
+  createMyArtistProfile: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/profile', prepared), options)),
+  updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/artists/me/profile', prepared), options)),
+  updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/photo', prepared), options)),
 
   // Fan Club
   getClub: async (artistId: number) => (await read(`/fans/clubs/${artistId}`)) as FanClubDTO,

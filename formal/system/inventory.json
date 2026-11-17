@@ -862,6 +862,8 @@
       "tdf-hq-ui/src/api/artistEnrichment.test.ts",
       "tdf-hq-ui/src/api/artistEnrichment.ts",
       "tdf-hq-ui/src/api/artistInvitations.ts",
+      "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+      "tdf-hq-ui/src/api/artistProfileMedia.ts",
       "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
       "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
       "tdf-hq-ui/src/api/auth.test.ts",
@@ -1010,12 +1012,15 @@
       "tdf-hq-ui/src/components/ApiStatusChip.tsx",
       "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
       "tdf-hq-ui/src/components/ArtistClaimPanel.tsx",
+      "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+      "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
       "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
       "tdf-hq-ui/src/components/ArtistFansList.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
       "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
       "tdf-hq-ui/src/components/ArtistProfileImage.tsx",
+      "tdf-hq-ui/src/components/ArtistProfileLink.tsx",
       "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
       "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
       "tdf-hq-ui/src/components/AssetDialogs.tsx",
@@ -1639,6 +1644,7 @@
       "tdf-hq-ui/src/utils/artistFollowIntent.ts",
       "tdf-hq-ui/src/utils/artistIdentity.test.ts",
       "tdf-hq-ui/src/utils/artistIdentity.ts",
+      "tdf-hq-ui/src/utils/artistImage.ts",
       "tdf-hq-ui/src/utils/artistProfileContent.test.ts",
       "tdf-hq-ui/src/utils/artistProfileContent.ts",
       "tdf-hq-ui/src/utils/assertNever.ts",
@@ -1725,6 +1731,7 @@
       "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
       "tdf-hq-ui/src/utils/releaseDate.test.ts",
       "tdf-hq-ui/src/utils/releaseDate.ts",
+      "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
       "tdf-hq-ui/src/utils/roles.ts",
       "tdf-hq-ui/src/utils/serviceTypesStore.ts",
       "tdf-hq-ui/src/utils/sessionPersonalData.test.ts",
@@ -2374,6 +2381,7 @@
       "tdf-hq/src/TDF/Commerce/Money.hs",
       "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
       "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+      "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
@@ -2398,6 +2406,7 @@
       "tdf-hq/src/TDF/Contracts/Types.hs",
       "tdf-hq/src/TDF/Cors.hs",
       "tdf-hq/src/TDF/CoursePhone.hs",
+      "tdf-hq/src/TDF/Courses/Metadata.hs",
       "tdf-hq/src/TDF/Courses/Production.hs",
       "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
       "tdf-hq/src/TDF/Cron.hs",
@@ -2424,6 +2433,7 @@
       "tdf-hq/src/TDF/DTO/SocialDiscoveryDTO.hs",
       "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
       "tdf-hq/src/TDF/DTO/SocialSyncDTO.hs",
+      "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
       "tdf-hq/src/TDF/Directory/Policy.hs",
       "tdf-hq/src/TDF/Distribution/StateMachine.hs",
       "tdf-hq/src/TDF/Email.hs",
@@ -2527,6 +2537,7 @@
       "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramSync.hs",
+      "tdf-hq/src/TDF/Services/LlmChat.hs",
       "tdf-hq/src/TDF/Services/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Services/Stripe.hs",
       "tdf-hq/src/TDF/Services/YouTube.hs",
@@ -2544,6 +2555,7 @@
       "tdf-hq/src/TDF/Ticketing/Admission.hs",
       "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
       "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+      "tdf-hq/src/TDF/Ticketing/Issuance.hs",
       "tdf-hq/src/TDF/Ticketing/Refund.hs",
       "tdf-hq/src/TDF/Ticketing/Transfer.hs",
       "tdf-hq/src/TDF/Trials/API.hs",
@@ -3766,7 +3778,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+      "sha256": "96a65fcb9a8fcced995341e4ad639bfa8df7298d6a28b543fc1be1adf569f8b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3922,7 +3934,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "ed071c66c2400becc9b17d7db48c2dd65b1fa49ad13e2aa20862b49f0d3b05a1",
+      "sha256": "1261310e8c9c42746095faf838447c9bfe4eb949e0e827ab55695b8f2d0cb027",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4006,7 +4018,7 @@
     {
       "id": "SURFACE-38cae059ca169cb6",
       "path": "scripts/__tests__/directory-search-plan-parity.mjs",
-      "sha256": "3943a28082bd34a2fa30dc40632b2f9cd67298e0da9ee8034058944ea1e27ea5",
+      "sha256": "d3f45fd24ceabcf7d7d02fba79f91c591b2b86ee2904d9961003277440b0e6e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4198,7 +4210,7 @@
     {
       "id": "SURFACE-30ba86b00dd5f4d7",
       "path": "scripts/__tests__/hetzner-inspection.test.mjs",
-      "sha256": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
+      "sha256": "53e255cde8b47686eaeaa0122f9348b6df387b5b6ccf4be7059c655c466309c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5014,7 +5026,7 @@
     {
       "id": "SURFACE-f9faf7061e36724c",
       "path": "scripts/inspect-hetzner-production.mjs",
-      "sha256": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+      "sha256": "aae57b63c56cacfba8c47c4603b2f99301c6325ffcff1594da560660239fcae4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6232,7 +6244,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "bf63693f3a57208714bf1c49a5a06c4f8c18cc816ac30c0854e21fd0884aa7dc",
+      "sha256": "03d412c521370786b97e3b97299c197dd4af36b709e31896edf754ac201871bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6496,7 +6508,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
+      "sha256": "93fbbdd4918b2e78eec510a2a3710a07fb86ae9fbbe75f6831f530e4577236e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8122,7 +8134,7 @@
     {
       "id": "SURFACE-c708f44fd07aaecc",
       "path": "tdf-hq-ui/src/api/admin.ts",
-      "sha256": "aa46977058c668c63545c17d7fdaa2eacceef4e9dfb0df1feb77f37b08cafe35",
+      "sha256": "61f5d4bce6561301d7ab6d9630a5334fb37ec794d3ceaeeebab02769a44e7cfd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8159,6 +8171,18 @@
       "id": "SURFACE-ca0fcabe86de92f8",
       "path": "tdf-hq-ui/src/api/artistInvitations.ts",
       "sha256": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dfed9ffddc3aa569",
+      "path": "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+      "sha256": "fe5a2920bf7c970b9fadc7b9869aef0917dba873ff9158ee6ca09523dfcefd33",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f78816ba807d3b45",
+      "path": "tdf-hq-ui/src/api/artistProfileMedia.ts",
+      "sha256": "c65ad9b776938dead35bbe19e884ab2e8c0c49ba5f384088f0d46b8868b4d3d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8446,13 +8470,13 @@
     {
       "id": "SURFACE-743e4202864493ee",
       "path": "tdf-hq-ui/src/api/fans.test.ts",
-      "sha256": "1d36c8a5f648dd3f44b7389181786dc3b603fa350570c898a091f9bf70bbd425",
+      "sha256": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ffd1f7d4f06774cf",
       "path": "tdf-hq-ui/src/api/fans.ts",
-      "sha256": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
+      "sha256": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9050,6 +9074,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8e1723edf220f689",
+      "path": "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+      "sha256": "06395a1892e95b4d05a90098e954daca051517b77ceb7e17fd5826abc37534ba",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-84d1edb4b5f2be7f",
+      "path": "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
+      "sha256": "7ec230fec58cd0bf78d13c45f79e1293d273ae38307944c58ef6802f7110554d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fe345132afa3a68e",
       "path": "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
       "sha256": "bd3dab4df6469191bc1cdc53c951410c01fd9cf98bd874b1b55c3c88f8d92e8c",
@@ -9083,6 +9119,12 @@
       "id": "SURFACE-9641be0a0cab4f6d",
       "path": "tdf-hq-ui/src/components/ArtistProfileImage.tsx",
       "sha256": "3c8e49833a85f3220ca06125db816d25bfbd6a465abc82f300be2d0759cb1370",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8fef27125aa18c8e",
+      "path": "tdf-hq-ui/src/components/ArtistProfileLink.tsx",
+      "sha256": "b320117e6d8108cad10a55c193ff7c05111a2abbaae149d4628499eef34ad15b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9418,13 +9460,13 @@
     {
       "id": "SURFACE-2d575081440ad9a8",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-      "sha256": "395baf4498cd3ce0065391a637b58da3f3f56113b5141c75c3c0bef73bda3032",
+      "sha256": "2754bee7969922a337c1ccffb3eb1b4340db5e1fb0af7d9279b2a515024b0727",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a64f86cb6be0afe2",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-      "sha256": "6b84cf452d35810cd5fc3d2117dabb518ed9babe6cba469ee3796f8a8ea24c83",
+      "sha256": "4047d4f6a9ebfd41be4f92b6e7f782db228c0be2d1a09ce08e4f1a178337002b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10108,13 +10150,13 @@
     {
       "id": "SURFACE-2e6553cdf058fc4c",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
-      "sha256": "f3a51d5be321a6539137c208f42aeea6146b48d90aef3e1a9ee048c6ebac836c",
+      "sha256": "00e48cd3adc8e9b5e6f3f6c752f329b33245ef08cff59acde707e316b40db427",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7c62d34c2753965f",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
-      "sha256": "eab1076340f853beda8044ffe0b7fa249d5f714d3a825a561a4120569db32f95",
+      "sha256": "45f4d920685dd6b5bddea888fb4131064813564b5ea9276ce1149334a925e8cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10138,13 +10180,13 @@
     {
       "id": "SURFACE-2539d004605fd6d7",
       "path": "tdf-hq-ui/src/features/fanclubs/FanClubPreview.test.tsx",
-      "sha256": "826eb05dac4016237a2148ce5391049ca33f252ee7cb0542899c1eb6819c8f52",
+      "sha256": "e7109413fd72f29596cf005bfad400f7b2bc60e7e0babb3116a8d7f4942fb826",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-10d683e3558c7c8e",
       "path": "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
-      "sha256": "08ee7bc678eafa92b7b188ce770e91f90c5f418447c024553101e2555961fda2",
+      "sha256": "d332a4b9f06873ed1fd60cde5dd8ab87b44820648dd267e7cb6bc17b0d0f0fb4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10174,7 +10216,7 @@
     {
       "id": "SURFACE-2a073b8f5ad461e7",
       "path": "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
-      "sha256": "310cb8fce17503e19799426b20fcdec5a3b6e9eb6716a7f91b017ec4dc450018",
+      "sha256": "625d4c58450a76a62d7023e3a11b6ef2e89a10c7ee7a354887a2c586ce35da84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10456,13 +10498,13 @@
     {
       "id": "SURFACE-e28aa4c9f9e05abc",
       "path": "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
-      "sha256": "69c34d5b67e05787814dccb1778f88c1715172d11d80d2807d72d35948a16d95",
+      "sha256": "87e3ba60f811319738b5ad8496aabad74551f452c812e1e7d043ee265eb84ca9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6a288f194a0a37aa",
       "path": "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
-      "sha256": "563ec855bfdf6a86c95ec5f1cb654780865d9c04405cc067744de625a22fd00d",
+      "sha256": "c2c69b6b7be1bfff0a472c7c6a5c78e7d3afa05a1f98459ecea5c173544b9696",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10486,7 +10528,7 @@
     {
       "id": "SURFACE-bed1b6650305b76c",
       "path": "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
-      "sha256": "e9a42c05107105e1fb5959ac88c5cb7260e72cdd665065025eb3534188e66a5a",
+      "sha256": "cdcc27ddb569946f134242dc233823e788adb3e946d0b906d930680b9df38e84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10906,7 +10948,7 @@
     {
       "id": "SURFACE-7d1cdc171a244d93",
       "path": "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
-      "sha256": "d4c78364465efb2470458c71eabb7e90ce7943aa6005852aae064c352e6b0005",
+      "sha256": "88cdd0c3a3ced6c7beca9b87ae90badd0842f82fd08907d0bdd621a0b0738ba0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11188,13 +11230,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
+      "sha256": "69d2e5c5578e6a197df30ed9a19b82e36fd3a207c26bf6d2358b922a94c673a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "57d4e4708ecadf1e32f5daeaf4c1af8e45c715c88977ecbf6182278850dfcf64",
+      "sha256": "8291bfa98091297a5b96ca67cf1f2b822bd8a4470d83a19fae59ff99a7682074",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11296,7 +11338,7 @@
     {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "546c843c331c1c3fa6cde2e5ed8aec89c573b79ea428c45fa098f83dd1b2b6c7",
+      "sha256": "a0217caa2b802383711316d3637cbd34ebb74a97db209e6bcd7cc7602437d22b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11326,7 +11368,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
+      "sha256": "2d844a3ba1ac5068af2df207a4752d95fe67237ccc52b426dcac0773f509b3cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11476,13 +11518,13 @@
     {
       "id": "SURFACE-6c5ad1714500a7c5",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
-      "sha256": "09e4d76079f9858f37dd634b681e2319e9b30405354112ac629dea51286f34a4",
+      "sha256": "5bf37c8fc363b406b689146f65e932fb3364d62c954be5c23a6b5a44a9e2a26e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+      "sha256": "f1b5f931b5a23450506065536a4709b6a06656e138aabf14c957b85043359a97",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11518,7 +11560,7 @@
     {
       "id": "SURFACE-4f9114663eff5a34",
       "path": "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
-      "sha256": "209b471c138d4a8a9369059a34002f06b8de9fce8f6ad9601b809ad0c9a64892",
+      "sha256": "cfc9a5768094f99ed0e36b50c851e838bbdcefb0941921c9e34d232e9b0adc77",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11722,7 +11764,7 @@
     {
       "id": "SURFACE-eb82e4705c1d2848",
       "path": "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
-      "sha256": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+      "sha256": "d34d0f97e2928b467bffa3031398caef895d82eb7f1d046e578375f1a7389d2c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11758,7 +11800,7 @@
     {
       "id": "SURFACE-474a81a2327740d9",
       "path": "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-      "sha256": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+      "sha256": "4aaf402124079126a777b2367f8dcfdace4182e34ad52c293b6ea87b0ee5e6df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12112,7 +12154,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "668a587375c5ef9cfdd3cfc31184d79af112684f54eb4a88271fc64d74993397",
+      "sha256": "01229e45a124cb6abe0382d9eef00561606deb69ec554d8dd26b4a85de1f06fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12160,13 +12202,13 @@
     {
       "id": "SURFACE-94ed138833ff9be9",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
-      "sha256": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
+      "sha256": "6ba4f8f777f72fe88da87c5e4f0730a353132d7812eaec2b957e1ebed5c4d38e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a8a994f85758ab3a",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-      "sha256": "0e33d6390625cc6b44a98f9bb32b10897613b33ee1fa2260d6e1c49d3d9c8fea",
+      "sha256": "9a8e4993313f12a39537882a555efffc12d698d5d13abb487c8eda1b64dc2210",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12244,7 +12286,7 @@
     {
       "id": "SURFACE-1e42b51a3ed57a58",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
-      "sha256": "d3a2149f3bdde2e710a920fca3d2dc43e3085615c54b4c3685502bc894f5d7bb",
+      "sha256": "5de2d80b223e90a179d1d66863ecac1a6b73037ffe86fc6598603d70142c7fa2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12796,13 +12838,13 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
+      "sha256": "3d73b8ce3626b8466daf28a2bf37dfadb2e37b547f3d9587b7cbb6cba1b4d115",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
+      "sha256": "ccbc0da7f4944f842ef115a7c3257fced61fc3e8ec08e8de510ab061de39fa7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12814,13 +12856,19 @@
     {
       "id": "SURFACE-954c31f1f53602cf",
       "path": "tdf-hq-ui/src/utils/artistIdentity.test.ts",
-      "sha256": "acb5a3e652e775479c512004696b564253f1e0dd90904eb29fb8c2343902210f",
+      "sha256": "9cd7cb76de4f51c7cdebb6489d4920408ee8ae34b8448da433915768eb6b3b61",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b2be3c4bb9adc022",
       "path": "tdf-hq-ui/src/utils/artistIdentity.ts",
-      "sha256": "e037a5ceb7a7c8377575666d7d0e3a540a3c714da8324f17b85521c96e047a4d",
+      "sha256": "cb53889654ea5f1790c37d40acbf0839c4ba8bc1698870063530c09e8813174f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-12770ceb2b42cba4",
+      "path": "tdf-hq-ui/src/utils/artistImage.ts",
+      "sha256": "d4d5b2e77247f434e0bb07d1cddf46ecd10022160933e7b3e9722e8c52795845",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13337,6 +13385,12 @@
       "id": "SURFACE-bcd48d67432136ed",
       "path": "tdf-hq-ui/src/utils/releaseDate.ts",
       "sha256": "db23efb506ffd9aab7be771830e0f78c75fd0ff8a49ce957d5e27e1fd9fc84df",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7e0dc33999b1de01",
+      "path": "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
+      "sha256": "651eca81c12dd1a15bc5c94086572a12ec322cfbe77301562e6ba6398dd2f978",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16954,7 +17008,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "ff4a520a6e7c6b9d770a157701b30a5460b9d5ab97a137ff0aedfcf43e3fb33b",
+      "sha256": "f478a6ef0b343c4884d4f2477c1c9f912e58ee68d76affe2005a04d87b65871e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17222,6 +17276,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4c930baf69b931a2",
+      "path": "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+      "sha256": "c12568bfac60b5734339eeec886cb23c0fe010a4d75df7f5d779480807805518",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1f329e23e5aba24d",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "sha256": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
@@ -17272,7 +17332,7 @@
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "edd3db953b7f89b6a79cce9fe5cddcc8711f13169a8558335fc40339634d085f",
+      "sha256": "0e1b0135876e275cb5131236e7907060dca3f128b9e6341b2d6221141fee21e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17366,6 +17426,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-134c9ddb3c32afae",
+      "path": "tdf-hq/src/TDF/Courses/Metadata.hs",
+      "sha256": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b5ed9df91b31bc61",
       "path": "tdf-hq/src/TDF/Courses/Production.hs",
       "sha256": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
@@ -17374,13 +17440,13 @@
     {
       "id": "SURFACE-6585884b25e4a8d9",
       "path": "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
-      "sha256": "d084222b9da081d89cfb4f80dc7442e6be0fe3f54873c547c96a77a3f1003af2",
+      "sha256": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "49728135c1299ac19d712709832349c1e3a405f66c58c3f4baf1a272dc5ae804",
+      "sha256": "74692f8cd6294d02c8b5b121e3fc0a2089fabbcde9cbdef781e17d090071192d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17519,6 +17585,12 @@
       "id": "SURFACE-d8b4f1e2ff66bf87",
       "path": "tdf-hq/src/TDF/DTO/SocialSyncDTO.hs",
       "sha256": "3dddc78ae270f09ddaafef0e86ebcce94e19a3e45b3b0689db3b37bd45527b24",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-15d051dc6f1642e3",
+      "path": "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
+      "sha256": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17818,7 +17890,7 @@
     {
       "id": "SURFACE-a6d0775d20903e98",
       "path": "tdf-hq/src/TDF/Routes/EventTickets.hs",
-      "sha256": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
+      "sha256": "09876be565334ca1447092a96546f919b578168a2e927acaa593153ea3fe8e00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17830,7 +17902,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "f3407cfd5ad25614728fea1b9c2f9b877535441bbd420c82020cd38f598ae842",
+      "sha256": "d760b7f6be41ff776a10576616051cba593327a77bc2ebd153d3f6a7ef3839af",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17860,7 +17932,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "594adfab7aa756ac1d0b20d438e871ddc7b4efbccd7edc6a7b01918530bc27be",
+      "sha256": "ea7b71a9b509d0495035e527f7a5ede89a413de035d47ce07070b58ec3300d5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17962,7 +18034,7 @@
     {
       "id": "SURFACE-8bea15f709688422",
       "path": "tdf-hq/src/TDF/Server/ProviderTransport.hs",
-      "sha256": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
+      "sha256": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17980,7 +18052,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
+      "sha256": "ad338e7fb54bcf415d0b2a87f653a2855ab0f0f92219a09c1c22125ab02b7d19",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17992,7 +18064,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
+      "sha256": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18016,7 +18088,7 @@
     {
       "id": "SURFACE-6bf5b2f9b831197f",
       "path": "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
-      "sha256": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
+      "sha256": "f6ed880698126fbfbc409ca4b1098c5f5052b0ea22cd44cade3d3e17de0db6cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18140,6 +18212,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-e60c666298519425",
+      "path": "tdf-hq/src/TDF/Services/LlmChat.hs",
+      "sha256": "9c2a181eb58e95a0e66ab55afc0c66f50ff5e2b04a5b7917c52ca844e6c1785b",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-9aa25107f33c9fd3",
       "path": "tdf-hq/src/TDF/Services/RecordsIngestion.hs",
       "sha256": "5452db2713bc4b6333418abe68f96918d59828568fbfce1cbfc22b56155cd403",
@@ -18239,6 +18317,12 @@
       "id": "SURFACE-b48f5e82f84a1379",
       "path": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
       "sha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-43aa8fca8f095e2e",
+      "path": "tdf-hq/src/TDF/Ticketing/Issuance.hs",
+      "sha256": "398c68514db13ca6c396a3b160cdf10d9b0524c48acb10e7c21032d15e5e25b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18346,7 +18430,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "sha256": "b67cda5d8695e231e113b25e5bab8cab96ba65f71cc39ec7da098630d8f653f8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18424,7 +18508,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1556d52061b59dda1fa6e20d5fb1bd5986f4cd7a578545946dc8ceec86dfee4d",
+      "sha256": "16d5ee619523893449b1f199beb354f075ccee05eb1fea0c374f8849d27d02df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18886,7 +18970,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "c91224ef9cacdc0991b1a1d0f2edba10a1da577673ec80314b878d0908447cd4",
+      "sha256": "418fb28efc492393a668a1cdd7811cf4f9b7ddb2625d278408a5ff66d70062ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22457,7 +22541,7 @@
     },
     {
       "path": "docs/adr/0133-enforced-module-boundaries.md",
-      "sha256": "71af7f45965b5d8016716e17748db867efcbdd15ecd3831e70452cc0f06d02b5",
+      "sha256": "3f56a0328fa3a400d3a47c167710f1022709bc618cff90394bce8cdbe257b8ad",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22520,7 +22604,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "8da89361a61a7404f93547ddf4937c5ee0f0813eab7d807ac068e0119ebd3b6e",
+      "sha256": "8cb30c509bd51f19ff35ab1ff5d10e0c9b97419656fdb1814e5f14a4170a447f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31445,7 +31529,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "05026a5504d5c5bcf9688a988b0630d57278770ecb46afd7b710be030aad4e54",
+      "sha256": "afd24567f7a55583e3f557bfb9bc5c087765c9d3f626bb8e585013740c5d4932",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31641,7 +31725,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "b34d8b33635e0b75e24e96c153f2fe52ff18d8eb2ec2f39fe12f071e2bd5064c",
+      "sha256": "774ab7e42fae8947ce8f0b91c0e5633f1178d3942c8ce26ea2d08bc3ba748ff1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31663,6 +31747,13 @@
     {
       "path": "ops/hetzner/compose.restore.yaml",
       "sha256": "d73e899c86d0012d274f2cefd261562f44f3c42542ece2c604a7e0ca1b8d8b06",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "ops/hetzner/recovery-custody-setup.md",
+      "sha256": "86f64f455746d38ede99401e8b2cd42657792c754dcb7fab78ec00fe16986c70",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

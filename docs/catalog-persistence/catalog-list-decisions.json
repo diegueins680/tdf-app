@@ -78496,6 +78496,25 @@
       }
     },
     {
+      "id": "375e2baef11729d8d3ed",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unreviewed failure vocabulary could reflect runtime data or hide the rejected admission boundary.",
+      "justification": "Individually reviewed: these nine strings name fixed read-only inspection phases, not selectable business data or deployment authority. They must remain a closed protocol vocabulary; complete-message, exit-status and empty-stdout checks reject arbitrary remote diagnostics. Rejection never creates a runtime receipt or permits release preparation.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "release-recovery-diagnostics-2026-11-10",
+      "evidence": {
+        "file": "scripts/inspect-hetzner-production.mjs",
+        "line": 17,
+        "kind": "array",
+        "name": "failureStages",
+        "valueCount": 9
+      }
+    },
+    {
       "id": "3d30e49db2fefa10a623",
       "classification": "governed-reference-data",
       "disposition": "consumer-update",
@@ -92723,6 +92742,25 @@
       }
     },
     {
+      "id": "e92ce89eca127e0bbe74",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A page size outside the directory search limit would be rejected by the API; the values only bound how many profiles one request returns.",
+      "justification": "Individually reviewed source: the three page sizes (12, 24, 48) offered by the community results pager and accepted from the perPage URL parameter. They are presentation limits passed as the search limit, not business, taxonomy or reference data, and no persisted catalog exists for them.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "community-discovery-pagination-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "line": 11,
+        "kind": "array",
+        "name": "PAGE_SIZE_OPTIONS",
+        "valueCount": 3
+      }
+    },
+    {
       "id": "92bdf7d80182ff259008",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -92863,14 +92901,30 @@
       "reviewed": true
     },
     {
-      "id": "a43462622b60606b37d9",
+      "id": "f562d95dce39e81da4af",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The same six PayPal webhook domain types, unchanged in value and order, moved verbatim with paypalWebhookDomainTypes from TDF.Server.ServiceStorefront to TDF.Commerce.PaypalWebhook; the reviewed classification and disposition are unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+        "line": 269
+      },
+      "reviewBatch": "paypal-webhook-domain-module-2026-11-10",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "a43462622b60606b37d9",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "domain-specific catalog table selected during consumer refactor",
+        "priority": "P2-domain",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "fb1005d3b1d035e17581",
