@@ -5,7 +5,7 @@
     "tdf-hq/sql/2026-10-04_auth_recovery_expiry.sql": "b4fea2253d7a9927bdd1bb3233943b9d3c4299fad2c5af692c4e980a412c3f10",
     "tdf-hq/stack.yaml": "312431eebb693b13c8a2870c4330ea1712ccf87ce65f222b6eac08efeb989a77",
     "tdf-hq/stack.yaml.lock": "ad5597db91e82f26f3078b75a70deb1afe77c338f8615e58f03a24556ee55137",
-    "tdf-hq/tdf-hq.cabal": "8e25c07ae89ff4e0a3dc0867ad8f5c7a034735fc574beb0ddb35feaaad06ae98",
+    "tdf-hq/tdf-hq.cabal": "b67cda5d8695e231e113b25e5bab8cab96ba65f71cc39ec7da098630d8f653f8",
     "formal/system/identity-lifecycle.md": "55100ce2e9dc50db7e5efa92612fbcc624f58e719635ed1ecddb47b85eb090e1"
   },
   "obligations": [
@@ -642,6 +642,15 @@
       "currentSha256": "8e25c07ae89ff4e0a3dc0867ad8f5c7a034735fc574beb0ddb35feaaad06ae98",
       "change": "Add TDF.DTO.TicketPaymentReceipt to the library exposed-modules list only; removing that exact line reproduces the previously reviewed Cabal manifest byte for byte.",
       "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The module holds the TicketPaymentReceipt wire type and its JSON instances moved verbatim out of TDF.Server.TicketPaymentReceipt, which re-exports it; it imports no authorization or recovery module and introduces no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
+      "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
+    },
+    {
+      "source": "tdf-hq/tdf-hq.cabal",
+      "reviewedAgainst": "2ebb5c38bef08f3205877dc9521026b40b68d4ef",
+      "previousSha256": "8e25c07ae89ff4e0a3dc0867ad8f5c7a034735fc574beb0ddb35feaaad06ae98",
+      "currentSha256": "b67cda5d8695e231e113b25e5bab8cab96ba65f71cc39ec7da098630d8f653f8",
+      "change": "Add TDF.Commerce.PaypalWebhook and TDF.Ticketing.Issuance to the library exposed-modules list only; removing those exact two lines reproduces the previously reviewed Cabal manifest byte for byte.",
+      "semanticReview": "No source search paths, compiler options, CPP flags, dependencies, extensions or toolchain changes. The modules hold PayPal webhook processing moved verbatim out of TDF.Server.ServiceStorefront and paid-order ticket issuance moved verbatim out of TDF.Server.SocialEventsHandlers; they import no authorization or recovery module and introduce no authorization or recovery binding. Every other reviewed source is unchanged. Reviewed by the change author only; no independent review was performed.",
       "qualification": "Requires fresh source-bound SMT, serialized replay and mutation controls; full implementation/refinement remains UNPROVEN."
     }
   ]

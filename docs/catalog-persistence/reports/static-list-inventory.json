@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-17T03:32:41.395Z",
+  "generatedAt": "2026-11-17T15:23:34.621Z",
   "repositoryRoot": ".",
-  "filesScanned": 2747,
+  "filesScanned": 2749,
   "candidateCount": 1466,
   "byClassification": {
     "dynamic-business-catalog": 966,
@@ -1008,7 +1008,7 @@
         {
           "value": "course_registration",
           "candidateIds": [
-            "a43462622b60606b37d9"
+            "f562d95dce39e81da4af"
           ]
         }
       ]
@@ -4802,7 +4802,7 @@
       "lines": [
         186
       ],
-      "consumerCount": 1236,
+      "consumerCount": 1238,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -5090,7 +5090,7 @@
       "lines": [
         709
       ],
-      "consumerCount": 1235,
+      "consumerCount": 1237,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -6292,7 +6292,7 @@
       "lines": [
         80
       ],
-      "consumerCount": 924,
+      "consumerCount": 925,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -6579,7 +6579,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 924,
+      "consumerCount": 925,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -7946,7 +7946,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 737,
+      "consumerCount": 739,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -8343,7 +8343,7 @@
       "lines": [
         442
       ],
-      "consumerCount": 200,
+      "consumerCount": 201,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -8376,6 +8376,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -8393,8 +8394,7 @@
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -8527,6 +8527,7 @@
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/DDEX/Detect.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
@@ -8568,7 +8569,7 @@
       "lines": [
         563
       ],
-      "consumerCount": 333,
+      "consumerCount": 334,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -8759,6 +8760,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/src/TDF/WhatsApp/Types.hs",
@@ -8799,7 +8801,7 @@
       "lines": [
         106
       ],
-      "consumerCount": 1235,
+      "consumerCount": 1237,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -9429,7 +9431,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1632,
+      "consumerCount": 1634,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -15330,7 +15332,7 @@
       "lines": [
         214
       ],
-      "consumerCount": 311,
+      "consumerCount": 312,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -15529,6 +15531,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
@@ -17106,7 +17109,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 937,
+      "consumerCount": 938,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -17510,7 +17513,7 @@
       "lines": [
         236
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -17532,6 +17535,7 @@
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq/src/TDF/Catalog/Types.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Config.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Parse.hs",
@@ -17560,8 +17564,7 @@
         "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
         "tdf-hq/test/TDF/ServerAdminSpec.hs",
         "tdf-hq/test/TDF/ServerExtraSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -17629,6 +17632,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Parse.hs",
         "tdf-hq/src/TDF/MusicRelease/DDEX/ERN432.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
@@ -17888,7 +17892,7 @@
       "lines": [
         172
       ],
-      "consumerCount": 932,
+      "consumerCount": 933,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -18178,7 +18182,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 932,
+      "consumerCount": 933,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -19073,7 +19077,7 @@
       "lines": [
         71
       ],
-      "consumerCount": 103,
+      "consumerCount": 104,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -19097,6 +19101,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -19123,8 +19128,7 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
         "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
-        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-        "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs"
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -19189,6 +19193,7 @@
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
@@ -19469,7 +19474,7 @@
       "lines": [
         131
       ],
-      "consumerCount": 103,
+      "consumerCount": 104,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -19493,6 +19498,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -19519,8 +19525,7 @@
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
         "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
-        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
-        "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs"
+        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -19585,6 +19590,7 @@
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
@@ -19618,7 +19624,7 @@
         420,
         423
       ],
-      "consumerCount": 120,
+      "consumerCount": 121,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
@@ -19648,6 +19654,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -19668,8 +19675,7 @@
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Ticketing/Refund.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/src/TDF/Ticketing/Refund.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -19739,6 +19745,7 @@
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
@@ -19774,7 +19781,7 @@
       "lines": [
         649
       ],
-      "consumerCount": 770,
+      "consumerCount": 772,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -20383,7 +20390,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -20563,6 +20570,7 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -20740,13 +20748,13 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
+        "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -20795,6 +20803,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -21377,7 +21386,7 @@
       "lines": [
         23
       ],
-      "consumerCount": 154,
+      "consumerCount": 155,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -21425,10 +21434,10 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs"
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -21514,6 +21523,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/API/WhatsApp.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
@@ -23338,7 +23348,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 131,
+      "consumerCount": 132,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -23382,14 +23392,14 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/ContentStorage.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -23459,6 +23469,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -24992,14 +25003,13 @@
       "lines": [
         89
       ],
-      "consumerCount": 30,
+      "consumerCount": 29,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/src/TDF/API.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/ServiceStorefrontTypes.hs",
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/ModelsExtra.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
@@ -26517,6 +26527,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.test.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -27119,7 +27130,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 1005,
+      "consumerCount": 1006,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -28828,7 +28839,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 795,
+      "consumerCount": 797,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29144,13 +29155,13 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
+        "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -29211,6 +29222,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -29296,13 +29308,13 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
+        "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -29353,6 +29365,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -29604,6 +29617,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -29642,7 +29656,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1094,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29939,7 +29953,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1094,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30321,7 +30335,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 421,
+      "consumerCount": 423,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2026-04-23_inventory_checkout_amounts.sql",
@@ -30535,10 +30549,10 @@
         "tdf-hq/src/TDF/API/ServiceStorefrontTypes.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
-        "tdf-hq/src/TDF/Services/Stripe.hs",
-        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs"
+        "tdf-hq/src/TDF/Services/Stripe.hs"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31037,7 +31051,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1094,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -32729,7 +32743,7 @@
       "lines": [
         59
       ],
-      "consumerCount": 145,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -32847,6 +32861,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "security-system-registry",
@@ -32881,7 +32896,7 @@
       "lines": [
         104
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -32930,9 +32945,9 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -32981,6 +32996,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -33018,7 +33034,7 @@
       "lines": [
         89
       ],
-      "consumerCount": 245,
+      "consumerCount": 246,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -33185,6 +33201,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -33544,7 +33561,7 @@
       "lines": [
         1411
       ],
-      "consumerCount": 1148,
+      "consumerCount": 1150,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -33973,7 +33990,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 305,
+      "consumerCount": 306,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -34159,6 +34176,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -34302,7 +34320,7 @@
       "lines": [
         27
       ],
-      "consumerCount": 329,
+      "consumerCount": 330,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_rollback.sql",
@@ -34504,6 +34522,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
@@ -34575,7 +34594,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 771,
+      "consumerCount": 773,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -37089,7 +37108,7 @@
       "lines": [
         105
       ],
-      "consumerCount": 542,
+      "consumerCount": 544,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -37341,14 +37360,14 @@
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/RecordsIngestion.hs",
         "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs",
         "tdf-hq/src/TDF/WhatsApp/Service.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
         "tdf-hq/test/TDF/WhatsAppConsentSpec.hs",
         "tdf-mobile/app/ddex/document/[id].tsx",
         "tdf-mobile/app/ddex/index.tsx",
-        "tdf-mobile/app/ddex/partners.tsx",
-        "tdf-mobile/src/api/artists.ts"
+        "tdf-mobile/app/ddex/partners.tsx"
       ],
       "decision": "governed-reference-data",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -37522,7 +37541,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 114,
+      "consumerCount": 115,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -37561,6 +37580,7 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -37572,8 +37592,7 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/MusicRelease.hs",
-        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs"
+        "tdf-hq/src/TDF/Server/MusicRelease.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -37637,6 +37656,7 @@
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
@@ -37903,7 +37923,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 771,
+      "consumerCount": 773,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42771,7 +42791,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 746,
+      "consumerCount": 748,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -45920,7 +45940,7 @@
       "lines": [
         3
       ],
-      "consumerCount": 297,
+      "consumerCount": 298,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -46113,6 +46133,7 @@
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/BusinessRules.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Convert.hs",
@@ -46562,7 +46583,7 @@
       "lines": [
         46
       ],
-      "consumerCount": 516,
+      "consumerCount": 518,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -46813,6 +46834,7 @@
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/RecordsIngestion.hs",
         "tdf-hq/src/TDF/Commerce/DatafastConfig.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/WhatsApp/History.hs",
         "tdf-hq/src/TDF/WhatsApp/Service.hs",
         "tdf-hq/test/TDF/WhatsApp/HistorySpec.hs",
@@ -46820,8 +46842,7 @@
         "tdf-mobile/app/ddex/document/[id].tsx",
         "tdf-mobile/app/ddex/index.tsx",
         "tdf-mobile/app/ddex/partners.tsx",
-        "tdf-mobile/src/api/events.ts",
-        "tdf-mobile/src/api/generated/types.ts"
+        "tdf-mobile/src/api/events.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -49032,7 +49053,7 @@
       "lines": [
         51
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -49212,6 +49233,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -53088,7 +53110,7 @@
       "lines": [
         75
       ],
-      "consumerCount": 1035,
+      "consumerCount": 1036,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -55640,7 +55662,7 @@
       "lines": [
         37
       ],
-      "consumerCount": 154,
+      "consumerCount": 155,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -55688,10 +55710,10 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs"
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -55778,6 +55800,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/API/WhatsApp.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
@@ -56144,7 +56167,7 @@
       "lines": [
         60
       ],
-      "consumerCount": 367,
+      "consumerCount": 368,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -56350,6 +56373,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
@@ -57818,7 +57842,7 @@
       "lines": [
         4446
       ],
-      "consumerCount": 367,
+      "consumerCount": 368,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -58024,6 +58048,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialDiscoveryAPI.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
@@ -60223,7 +60248,7 @@
       "lines": [
         149
       ],
-      "consumerCount": 1262,
+      "consumerCount": 1264,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -60658,7 +60683,7 @@
       "lines": [
         343
       ],
-      "consumerCount": 1139,
+      "consumerCount": 1141,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -62199,7 +62224,7 @@
       "lines": [
         408
       ],
-      "consumerCount": 1238,
+      "consumerCount": 1240,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -63094,7 +63119,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 808,
+      "consumerCount": 810,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -63540,7 +63565,7 @@
       "lines": [
         99
       ],
-      "consumerCount": 1035,
+      "consumerCount": 1036,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -68388,7 +68413,7 @@
       "lines": [
         1238
       ],
-      "consumerCount": 139,
+      "consumerCount": 140,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -68427,6 +68452,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -68438,8 +68464,7 @@
         "tdf-hq/src/TDF/Server/CommerceOperations.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs"
+        "tdf-hq/src/TDF/Server/Merch.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -68521,6 +68546,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -68774,7 +68800,7 @@
       "lines": [
         196
       ],
-      "consumerCount": 107,
+      "consumerCount": 108,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -68806,6 +68832,7 @@
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -68824,8 +68851,7 @@
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
         "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Ticketing/Refund.hs",
-        "tdf-hq/test/Spec.hs"
+        "tdf-hq/src/TDF/Ticketing/Refund.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -68888,6 +68914,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -68924,7 +68951,7 @@
         199,
         214
       ],
-      "consumerCount": 323,
+      "consumerCount": 324,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/lessons-and-receipts.yaml",
@@ -69136,6 +69163,7 @@
         "tdf-hq/src/TDF/API/Payments.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
@@ -69143,8 +69171,7 @@
         "tdf-hq/src/TDF/Services/Stripe.hs",
         "tdf-hq/src/TDF/WhatsApp/Client.hs",
         "tdf-mobile/src/api/contracts.ts",
-        "tdf-mobile/src/api/generated/types.ts",
-        "tdf-mobile/src/api/upload.ts"
+        "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -73345,7 +73372,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 145,
+      "consumerCount": 146,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -73463,6 +73490,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "security-system-registry",
@@ -73810,7 +73838,7 @@
       "lines": [
         92
       ],
-      "consumerCount": 1035,
+      "consumerCount": 1036,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74110,7 +74138,7 @@
       "lines": [
         102
       ],
-      "consumerCount": 1035,
+      "consumerCount": 1036,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -74912,7 +74940,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1243,
+      "consumerCount": 1245,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -75556,7 +75584,7 @@
       "lines": [
         139
       ],
-      "consumerCount": 1035,
+      "consumerCount": 1036,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -76109,7 +76137,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1094,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -77053,7 +77081,7 @@
       "lines": [
         100
       ],
-      "consumerCount": 557,
+      "consumerCount": 558,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -79375,7 +79403,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 816,
+      "consumerCount": 818,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -80974,7 +81002,7 @@
       "lines": [
         706
       ],
-      "consumerCount": 1148,
+      "consumerCount": 1150,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -81738,7 +81766,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 771,
+      "consumerCount": 773,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -82252,7 +82280,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 955,
+      "consumerCount": 956,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -88566,7 +88594,7 @@
       "lines": [
         115
       ],
-      "consumerCount": 468,
+      "consumerCount": 469,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -91383,7 +91411,7 @@
       "lines": [
         8214
       ],
-      "consumerCount": 476,
+      "consumerCount": 477,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/config/default.env.example",
@@ -92225,7 +92253,7 @@
       "lines": [
         11345
       ],
-      "consumerCount": 1052,
+      "consumerCount": 1054,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -93211,7 +93239,7 @@
       "lines": [
         12047
       ],
-      "consumerCount": 276,
+      "consumerCount": 277,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -93392,6 +93420,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -93822,7 +93851,7 @@
         12288,
         12454
       ],
-      "consumerCount": 237,
+      "consumerCount": 239,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -93992,6 +94021,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -94028,7 +94058,7 @@
       "lines": [
         12291
       ],
-      "consumerCount": 153,
+      "consumerCount": 155,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -94075,11 +94105,11 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/EventOperations/Types.hs",
-        "tdf-hq/src/TDF/Operations/Types.hs",
-        "tdf-hq/src/TDF/Routes/Courses.hs"
+        "tdf-hq/src/TDF/Operations/Types.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -94174,6 +94204,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -94277,7 +94308,7 @@
       "lines": [
         12457
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -94324,11 +94355,11 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
-        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+        "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -94780,7 +94811,7 @@
       "lines": [
         12887
       ],
-      "consumerCount": 83,
+      "consumerCount": 84,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
@@ -94806,6 +94837,7 @@
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/Merch.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -94830,8 +94862,7 @@
         "tdf-hq/test/integration/ticket_inclusive_tax.sql",
         "tdf-hq/test/integration/ticket_manual_bank_transfer.sql",
         "tdf-hq/test/integration/ticket_order_quantity_limit.sql",
-        "tdf-hq/test/integration/ticket_tax_invoices.sql",
-        "tdf-hq/test/sql/music_payment_outcomes.sql"
+        "tdf-hq/test/integration/ticket_tax_invoices.sql"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplaceOrderTrackingPage.test.tsx",
@@ -94875,6 +94906,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/src/TDF/API/Types.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
@@ -95308,7 +95340,7 @@
       "lines": [
         13445
       ],
-      "consumerCount": 146,
+      "consumerCount": 147,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -95342,6 +95374,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
@@ -95358,8 +95391,7 @@
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
-        "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
-        "tdf-hq/src/TDF/Server/ProviderExecution.hs"
+        "tdf-hq/src/TDF/Server/PaymentAvailability.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -95453,6 +95485,7 @@
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -95745,7 +95778,7 @@
       "lines": [
         14605
       ],
-      "consumerCount": 1236,
+      "consumerCount": 1238,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -96779,7 +96812,7 @@
       "lines": [
         15049
       ],
-      "consumerCount": 1236,
+      "consumerCount": 1238,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -98866,7 +98899,7 @@
         17510,
         17562
       ],
-      "consumerCount": 1235,
+      "consumerCount": 1237,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -99163,7 +99196,7 @@
       "lines": [
         17534
       ],
-      "consumerCount": 234,
+      "consumerCount": 236,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -99332,6 +99365,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -99392,7 +99426,7 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/integration/ticket_order_quantity_limit.sql"
@@ -99823,7 +99857,7 @@
       "lines": [
         18439
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -100003,6 +100037,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -100674,7 +100709,7 @@
       "lines": [
         19056
       ],
-      "consumerCount": 1047,
+      "consumerCount": 1049,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -101056,7 +101091,7 @@
       "lines": [
         19099
       ],
-      "consumerCount": 1245,
+      "consumerCount": 1247,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -101843,6 +101878,7 @@
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
@@ -101851,7 +101887,6 @@
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
         "tdf-hq/src/TDF/Server/Reviews.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
@@ -101897,6 +101932,7 @@
         "tdf-hq-ui/src/api/reviews.test.ts",
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq/sql/2026-07-07_marketplace_stripe_checkout.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -102914,8 +102950,8 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-        "tdf-hq/src/TDF/Commerce/ServiceBookings.hs"
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -102997,6 +103033,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -103079,14 +103116,14 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-        "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
-        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs"
+        "tdf-hq/src/TDF/Server/EventAdminDelegation.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -103139,6 +103176,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -107134,7 +107172,7 @@
       "lines": [
         21
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -107315,6 +107353,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -107523,7 +107562,7 @@
       "lines": [
         108
       ],
-      "consumerCount": 134,
+      "consumerCount": 135,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -107567,14 +107606,14 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/Email.hs",
-        "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/Operations/Worker.hs"
+        "tdf-hq/src/TDF/Operations/Server.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -107640,6 +107679,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -108764,7 +108804,7 @@
       "lines": [
         390
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -108945,6 +108985,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -111184,7 +111225,7 @@
       "lines": [
         216
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
@@ -111221,6 +111262,7 @@
         "tdf-hq/src/TDF/Server/SocialSync.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
         "tdf-hq/test/Spec.hs",
@@ -111345,7 +111387,7 @@
       "lines": [
         247
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-16_event_research_ingestion.sql",
@@ -111382,6 +111424,7 @@
         "tdf-hq/src/TDF/Server/SocialSync.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
         "tdf-hq/test/Spec.hs",
@@ -111499,7 +111542,7 @@
       "lines": [
         257
       ],
-      "consumerCount": 43,
+      "consumerCount": 44,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
         "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
@@ -111516,6 +111559,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
         "tdf-hq/test/Spec.hs",
@@ -111793,6 +111837,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts",
@@ -112065,7 +112110,7 @@
       "lines": [
         290
       ],
-      "consumerCount": 258,
+      "consumerCount": 259,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -112243,6 +112288,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -112275,7 +112321,7 @@
       "lines": [
         301
       ],
-      "consumerCount": 252,
+      "consumerCount": 253,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -112453,6 +112499,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -113069,6 +113116,7 @@
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -113113,7 +113161,7 @@
       "lines": [
         53
       ],
-      "consumerCount": 212,
+      "consumerCount": 213,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -113271,6 +113319,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -113480,7 +113529,7 @@
       "lines": [
         107
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -113511,6 +113560,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -113530,8 +113580,7 @@
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
-        "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Ticketing/Refund.hs"
+        "tdf-hq/src/TDF/ServerExtra.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -113607,6 +113656,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -113641,7 +113691,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 116,
+      "consumerCount": 117,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -113665,6 +113715,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -113691,8 +113742,7 @@
         "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs",
-        "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs"
+        "tdf-hq/test/TDF/Profiles/ArtistActivationSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
@@ -113762,6 +113812,7 @@
         "tdf-hq/src/TDF/API/Marketplace.hs",
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-mobile/app/ddex/partners.tsx",
         "tdf-mobile/src/api/generated/types.ts",
@@ -113800,7 +113851,7 @@
       "lines": [
         110
       ],
-      "consumerCount": 213,
+      "consumerCount": 214,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -113957,6 +114008,7 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -113994,7 +114046,7 @@
       "lines": [
         151
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -114041,11 +114093,11 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -114134,6 +114186,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/API/WhatsApp.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
@@ -114172,7 +114225,7 @@
       "lines": [
         165
       ],
-      "consumerCount": 276,
+      "consumerCount": 277,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -114353,6 +114406,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -114869,6 +114923,7 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -114877,8 +114932,7 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+        "tdf-hq/src/TDF/Server/Merch.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -114928,6 +114982,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -114961,7 +115016,7 @@
       "lines": [
         314
       ],
-      "consumerCount": 112,
+      "consumerCount": 113,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -114999,6 +115054,7 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -115011,8 +115067,7 @@
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/MusicRelease.hs",
-        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs",
-        "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs"
+        "tdf-hq/src/TDF/Server/MusicReleaseCatalog.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -115073,6 +115128,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -116598,7 +116654,7 @@
       "lines": [
         89
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -116629,6 +116685,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -116648,8 +116705,7 @@
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
-        "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Ticketing/Refund.hs"
+        "tdf-hq/src/TDF/ServerExtra.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -116725,6 +116781,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -119171,7 +119228,7 @@
       "lines": [
         565
       ],
-      "consumerCount": 243,
+      "consumerCount": 244,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -119342,6 +119399,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -119595,6 +119653,7 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -120378,6 +120437,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -121628,6 +121688,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts",
@@ -123177,7 +123238,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 80,
+      "consumerCount": 81,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
         "tdf-hq/sql/2026-08-14_service_storefront_checkout_runtime.sql",
@@ -123201,6 +123262,7 @@
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/Merch.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -123268,6 +123330,7 @@
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
@@ -123357,7 +123420,7 @@
       "lines": [
         135
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -123718,7 +123781,7 @@
       "lines": [
         54
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -125142,7 +125205,7 @@
       "lines": [
         74
       ],
-      "consumerCount": 186,
+      "consumerCount": 187,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -125286,6 +125349,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -125328,7 +125392,7 @@
       "lines": [
         77
       ],
-      "consumerCount": 172,
+      "consumerCount": 173,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -125469,6 +125533,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -125525,12 +125590,12 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/Merch.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
@@ -125561,6 +125626,7 @@
       ],
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -125592,7 +125658,7 @@
       "lines": [
         133
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -126054,12 +126120,12 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
+        "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -126110,6 +126176,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -126145,7 +126212,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 186,
+      "consumerCount": 187,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -126289,6 +126356,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -126333,7 +126401,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 172,
+      "consumerCount": 173,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -126474,6 +126542,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -126508,7 +126577,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -127648,7 +127717,7 @@
       "lines": [
         52
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -127694,12 +127763,12 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/EventOperations/Types.hs",
         "tdf-hq/src/TDF/Operations/Types.hs",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
+        "tdf-hq/src/TDF/Server.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -127775,6 +127844,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -128027,7 +128097,7 @@
       "lines": [
         109
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -128391,7 +128461,7 @@
       "lines": [
         60
       ],
-      "consumerCount": 92,
+      "consumerCount": 93,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -128432,6 +128502,7 @@
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
         "tdf-hq/test/Spec.hs",
@@ -128441,8 +128512,7 @@
         "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/Social/FollowHandlerSpec.hs",
-        "tdf-hq/test/TicketAdmissionMain.hs",
-        "tdf-hq/test/TicketConfirmationMain.hs"
+        "tdf-hq/test/TicketAdmissionMain.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -128528,7 +128598,7 @@
       "lines": [
         64
       ],
-      "consumerCount": 186,
+      "consumerCount": 187,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -128672,6 +128742,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -128707,7 +128778,7 @@
       "lines": [
         111
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -129166,6 +129237,7 @@
         "tdf-hq/src/TDF/Artists/Enrichment.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/Operations/Model.hs",
@@ -129174,7 +129246,6 @@
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
         "tdf-hq/src/TDF/Server/Reviews.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
@@ -129221,6 +129292,7 @@
         "tdf-hq-ui/src/api/reviews.test.ts",
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq/sql/2026-07-07_marketplace_stripe_checkout.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -131191,7 +131263,7 @@
       "lines": [
         62
       ],
-      "consumerCount": 110,
+      "consumerCount": 111,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -131237,12 +131309,12 @@
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
+        "tdf-hq/src/TDF/Server/Directory.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -131293,6 +131365,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -132447,7 +132520,7 @@
       "lines": [
         104
       ],
-      "consumerCount": 141,
+      "consumerCount": 142,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -132486,6 +132559,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
@@ -132497,8 +132571,7 @@
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -132573,6 +132646,7 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
@@ -132609,7 +132683,7 @@
       "lines": [
         116
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
@@ -132633,6 +132707,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
@@ -132703,6 +132778,7 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -132789,7 +132865,7 @@
       "lines": [
         254
       ],
-      "consumerCount": 152,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -132835,12 +132911,12 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-        "tdf-hq/src/TDF/Email.hs"
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -132926,6 +133002,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
@@ -133932,6 +134009,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -135202,9 +135280,9 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-        "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/Commerce/ServiceBookings.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/analytics/ticketFunnel.test.ts",
@@ -135263,6 +135341,7 @@
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -135436,7 +135515,7 @@
       "lines": [
         376
       ],
-      "consumerCount": 152,
+      "consumerCount": 153,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -135563,6 +135642,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -135695,7 +135775,7 @@
       "lines": [
         378
       ],
-      "consumerCount": 307,
+      "consumerCount": 308,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -135881,6 +135961,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -136263,6 +136344,7 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -136271,8 +136353,7 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+        "tdf-hq/src/TDF/Server/Merch.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -136322,6 +136403,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -136396,6 +136478,7 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -136404,8 +136487,7 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+        "tdf-hq/src/TDF/Server/Merch.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -136452,6 +136534,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -138083,10 +138166,11 @@
       "lines": [
         644
       ],
-      "consumerCount": 51,
+      "consumerCount": 52,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Contracts/Server.hs",
         "tdf-hq/src/TDF/Cron.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
@@ -138148,6 +138232,7 @@
         "tdf-hq-ui/src/api/merch.test.ts",
         "tdf-hq-ui/src/api/merchReputation.ts",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/api/merch.ts",
         "tdf-mobile/src/api/merchReputation.ts",
@@ -138236,7 +138321,7 @@
       "lines": [
         647
       ],
-      "consumerCount": 133,
+      "consumerCount": 134,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -138283,11 +138368,11 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-        "tdf-hq/src/TDF/Models/SocialEventsModels.hs"
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -138356,6 +138441,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "dynamic-business-catalog",
@@ -138440,8 +138526,8 @@
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-        "tdf-hq/src/TDF/Server/TicketManualPayments.hs"
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/src/TDF/Services/LlmChat.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/analytics/posthog.ts",
@@ -140661,7 +140747,7 @@
       "lines": [
         790
       ],
-      "consumerCount": 38,
+      "consumerCount": 39,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
@@ -140675,6 +140761,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/integration/merch_checkout_expiry_assertions.sql"
@@ -141504,14 +141591,14 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Directory/Policy.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
         "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
-        "tdf-hq/src/TDF/Server/EventAdminDelegation.hs"
+        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -141562,6 +141649,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -142822,7 +142910,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -142853,6 +142941,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -142872,8 +142961,7 @@
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
-        "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Ticketing/Refund.hs"
+        "tdf-hq/src/TDF/ServerExtra.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -142949,6 +143037,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -142988,7 +143077,7 @@
       "lines": [
         79
       ],
-      "consumerCount": 125,
+      "consumerCount": 126,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -143019,6 +143108,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -143038,8 +143128,7 @@
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
-        "tdf-hq/src/TDF/ServerExtra.hs",
-        "tdf-hq/src/TDF/Ticketing/Refund.hs"
+        "tdf-hq/src/TDF/ServerExtra.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -143115,6 +143204,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -143158,7 +143248,7 @@
       "lines": [
         12
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -143190,6 +143280,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
@@ -143208,8 +143299,7 @@
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
         "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -143301,6 +143391,7 @@
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -143340,7 +143431,7 @@
       "lines": [
         22
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -143372,6 +143463,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
@@ -143390,8 +143482,7 @@
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
         "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -143483,6 +143574,7 @@
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -143522,7 +143614,7 @@
         90,
         242
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/sql/2025-10-21_packages_lessons_receipts.sql",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -143554,6 +143646,7 @@
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
@@ -143572,8 +143665,7 @@
         "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs",
         "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
         "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs"
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -143665,6 +143757,7 @@
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -144817,7 +144910,7 @@
       "lines": [
         84
       ],
-      "consumerCount": 127,
+      "consumerCount": 128,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -144861,14 +144954,14 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/Invoice/Datil.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -144935,6 +145028,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "security-system-registry",
@@ -145234,7 +145328,7 @@
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -145285,6 +145379,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -145317,7 +145412,7 @@
       "lines": [
         145
       ],
-      "consumerCount": 95,
+      "consumerCount": 96,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
@@ -145349,6 +145444,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
@@ -145367,8 +145463,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-        "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
-        "tdf-hq/test/TDF/LedgerPostingSpec.hs"
+        "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
@@ -145419,6 +145514,7 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -145452,7 +145548,7 @@
       "lines": [
         160
       ],
-      "consumerCount": 79,
+      "consumerCount": 80,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
@@ -145476,6 +145572,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
@@ -145546,6 +145643,7 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -145580,7 +145678,7 @@
       "lines": [
         176
       ],
-      "consumerCount": 124,
+      "consumerCount": 125,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-04_service_storefront.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -145848,7 +145946,7 @@
       "lines": [
         207
       ],
-      "consumerCount": 100,
+      "consumerCount": 101,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -145870,6 +145968,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
@@ -145898,8 +145997,7 @@
         "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
         "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs",
         "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/TicketPaymentGateSpec.hs"
+        "tdf-hq/test/TDF/ServerSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -145964,6 +146062,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
@@ -146823,7 +146922,7 @@
       "lines": [
         344
       ],
-      "consumerCount": 118,
+      "consumerCount": 119,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -146848,6 +146947,7 @@
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
@@ -146873,8 +146973,7 @@
         "tdf-hq/src/TDF/ServerExtra.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
-        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs"
+        "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -146954,6 +147053,7 @@
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -147088,7 +147188,7 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -147151,6 +147251,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -147253,7 +147354,7 @@
       "lines": [
         361
       ],
-      "consumerCount": 113,
+      "consumerCount": 114,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-13_unified_checkout_core.sql",
@@ -147276,6 +147377,7 @@
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderCapabilityStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
@@ -147303,8 +147405,7 @@
         "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs",
-        "tdf-hq/test/TDF/InvoiceDatilSpec.hs",
-        "tdf-hq/test/TDF/Server/MerchRuntimeSpec.hs"
+        "tdf-hq/test/TDF/InvoiceDatilSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -147380,6 +147481,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ProviderExecution.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "governed-reference-data",
@@ -147455,6 +147557,7 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -147463,8 +147566,7 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+        "tdf-hq/src/TDF/Server/Merch.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -147511,6 +147613,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -148158,7 +148261,7 @@
       "lines": [
         97
       ],
-      "consumerCount": 132,
+      "consumerCount": 133,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -148201,6 +148304,7 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -148208,8 +148312,7 @@
         "tdf-hq/src/TDF/ContentStorage.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs"
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -148282,6 +148385,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -149554,7 +149658,7 @@
       "lines": [
         303
       ],
-      "consumerCount": 201,
+      "consumerCount": 202,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_dry_run.sql",
@@ -149714,6 +149818,7 @@
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
@@ -149950,10 +150055,10 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
-        "tdf-hq/src/TDF/ContentStorage.hs",
-        "tdf-hq/src/TDF/Server.hs"
+        "tdf-hq/src/TDF/ContentStorage.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -150007,6 +150112,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -150094,7 +150200,7 @@
       "lines": [
         372
       ],
-      "consumerCount": 159,
+      "consumerCount": 160,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-02_ddex_catalog_core.sql",
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
@@ -150142,10 +150248,10 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs"
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/artistEnrichment.ts",
@@ -150240,6 +150346,7 @@
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
@@ -151218,7 +151325,7 @@
       "lines": [
         506
       ],
-      "consumerCount": 111,
+      "consumerCount": 112,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -151247,6 +151354,7 @@
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/Merch.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
@@ -151268,8 +151376,7 @@
         "tdf-hq/test/TDF/Commerce/DomoCancellationRuntimeSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
-        "tdf-hq/test/TDF/InvoiceWorkerSpec.hs"
+        "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/MarketplaceOrderTrackingPage.test.tsx",
@@ -151327,6 +151434,7 @@
       "apiAndIntegrationConsumers": [
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -151417,7 +151525,7 @@
       "lines": [
         530
       ],
-      "consumerCount": 130,
+      "consumerCount": 131,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
@@ -151464,11 +151572,11 @@
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-        "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
-        "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs"
+        "tdf-hq/src/TDF/Commerce/ServiceBookings.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -151534,6 +151642,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -152247,7 +152356,7 @@
       "lines": [
         72
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -152289,6 +152398,7 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -152297,8 +152407,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CommerceOperations.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
+        "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -152378,6 +152487,7 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -152413,7 +152523,7 @@
       "lines": [
         76
       ],
-      "consumerCount": 109,
+      "consumerCount": 110,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-05_artist_enrichment.sql",
         "tdf-hq/sql/2026-08-07_catalog_backfill_apply.sql",
@@ -152459,12 +152569,12 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/Invoice/Datil.hs",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs"
+        "tdf-hq/src/TDF/Server.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -152515,6 +152625,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_reference_cutover_dry_run.sql",
         "tdf-hq/sql/2026-08-12_ddex_validation_reference_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -152549,7 +152660,7 @@
       "lines": [
         88
       ],
-      "consumerCount": 143,
+      "consumerCount": 144,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -152591,6 +152702,7 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
@@ -152599,8 +152711,7 @@
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/CommerceOperations.hs",
         "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs",
-        "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs"
+        "tdf-hq/src/TDF/Server/DirectoryAgreementText.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -152677,6 +152788,7 @@
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -154124,7 +154236,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 138,
+      "consumerCount": 139,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -154167,6 +154279,7 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
@@ -154174,8 +154287,7 @@
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/src/TDF/Reputation/Worker.hs",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/CommerceOperations.hs"
+        "tdf-hq/src/TDF/Server.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -154257,6 +154369,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts",
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
       ],
@@ -155736,7 +155849,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 184,
+      "consumerCount": 185,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -155886,6 +155999,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -160163,10 +160277,10 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventResearch.hs",
         "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/ServerAdmin.hs",
         "tdf-hq/src/TDF/ServerFeedback.hs",
         "tdf-hq/src/TDF/ServerInternAudit.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/ServerSpec.hs"
@@ -160719,6 +160833,7 @@
         "tdf-hq/src/TDF/Commerce/EventTickets.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
         "tdf-hq/src/TDF/Commerce/MarketplaceSales.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
         "tdf-hq/src/TDF/Server.hs",
@@ -160727,8 +160842,7 @@
         "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs",
         "tdf-hq/src/TDF/Server/EventAdminDelegation.hs",
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/Merch.hs",
-        "tdf-hq/src/TDF/Server/ServiceStorefront.hs"
+        "tdf-hq/src/TDF/Server/Merch.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/accessRequests.ts",
@@ -160775,6 +160889,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -160811,7 +160926,7 @@
       "lines": [
         79
       ],
-      "consumerCount": 162,
+      "consumerCount": 163,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -160951,6 +161066,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -163242,6 +163358,129 @@
       "similarCandidateIds": []
     },
     {
+      "id": "f562d95dce39e81da4af",
+      "file": "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+      "sourceKind": "production",
+      "surface": "backend",
+      "domain": "payments-finance",
+      "kind": "haskell-list",
+      "name": "paypalWebhookDomainTypes",
+      "line": 269,
+      "values": [
+        "mixing_mastering",
+        "marketplace_sale",
+        "marketplace_rental",
+        "service_booking",
+        "course_registration",
+        "event_ticket_order"
+      ],
+      "valueCount": 6,
+      "recommendedClassification": "dynamic-business-catalog",
+      "lines": [
+        269
+      ],
+      "consumerCount": 81,
+      "backendConsumers": [
+        "tdf-hq/sql/2026-05-28_course_registration_stripe_pi.sql",
+        "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
+        "tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql",
+        "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
+        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
+        "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime_rollback.sql",
+        "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
+        "tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql",
+        "tdf-hq/sql/2026-08-17_service_booking_provider_actions_rollback.sql",
+        "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
+        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
+        "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql",
+        "tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer.sql",
+        "tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer_rollback.sql",
+        "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
+        "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
+        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
+        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql",
+        "tdf-hq/sql/2026-11-04_contract_store.sql",
+        "tdf-hq/sql/2026-11-04_contract_store_rollback.sql",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
+        "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
+        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
+        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
+        "tdf-hq/src/TDF/Operations/Model.hs",
+        "tdf-hq/src/TDF/Operations/Server.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
+        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
+        "tdf-hq/src/TDF/Server/Reviews.hs",
+        "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
+        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
+        "tdf-hq/src/TDF/Server/TicketRefunds.hs",
+        "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
+        "tdf-hq/test/PaymentIntentExpiryProbe.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
+        "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
+        "tdf-hq/test/TDF/Operations/ModelSpec.hs",
+        "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
+        "tdf-hq/test/TDF/TicketManualReviewSpec.hs"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/reviews.test.ts",
+        "tdf-hq-ui/src/api/reviews.ts",
+        "tdf-hq-ui/src/components/reviews/ExperienceReviews.test.tsx",
+        "tdf-hq-ui/src/pages/OperationsControlCenterPage.test.tsx"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "automationConsumers": [
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
+        "scripts/__tests__/production-release.test.mjs",
+        "scripts/lib/operations_conformance.py",
+        "scripts/lib/production-release.mjs",
+        "scripts/test-canonical-payment-lifecycle-migration.sh",
+        "scripts/test-checkout-event-refund-runtime-migration.sh",
+        "scripts/test-course-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-contact-identity.sh",
+        "scripts/test-marketplace-operations-migration.sh",
+        "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
+        "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
+        "scripts/test-provider-domain-binding.py",
+        "scripts/test-provider-domain-harness.py",
+        "scripts/test-provider-execution-runtime-migration.sh",
+        "scripts/test-public-ticket-checkout-runtime-migration.sh",
+        "scripts/test-service-booking-checkout-runtime-migration.sh",
+        "scripts/test-service-storefront-checkout-runtime-migration.sh",
+        "scripts/test-unified-checkout-migration.sh",
+        "scripts/test-verified-experience-reviews-migration.sh"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/reviews.test.ts",
+        "tdf-hq-ui/src/api/reviews.ts",
+        "tdf-hq/sql/2026-05-28_course_registration_stripe_pi.sql",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "decision": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The same six PayPal webhook domain types, unchanged in value and order, moved verbatim with paypalWebhookDomainTypes from TDF.Server.ServiceStorefront to TDF.Commerce.PaypalWebhook; the reviewed classification and disposition are unchanged.",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": []
+    },
+    {
       "id": "de9f674875cbad1d6445",
       "file": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "sourceKind": "production",
@@ -164567,10 +164806,11 @@
       "lines": [
         72
       ],
-      "consumerCount": 35,
+      "consumerCount": 36,
       "backendConsumers": [
         "tdf-hq/src/TDF/Catalog/Types.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/BusinessRules.hs",
@@ -164612,6 +164852,7 @@
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/BusinessRules.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Convert.hs",
         "tdf-hq/src/TDF/DDEX/ERN/V432/Normalize.hs",
@@ -165011,12 +165252,13 @@
       "lines": [
         100
       ],
-      "consumerCount": 10,
+      "consumerCount": 11,
       "backendConsumers": [
         "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
         "tdf-hq/test/Spec.hs",
@@ -167101,7 +167343,7 @@
       "lines": [
         19069
       ],
-      "consumerCount": 155,
+      "consumerCount": 156,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -167151,8 +167393,8 @@
         "tdf-hq/src/TDF/Commerce/Merch.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs"
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -167232,6 +167474,7 @@
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-mobile/src/api/generated/types.ts"
       ],
       "decision": "genuine-technical-constant",
@@ -167453,7 +167696,7 @@
       "lines": [
         1225
       ],
-      "consumerCount": 275,
+      "consumerCount": 276,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -167634,6 +167877,7 @@
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Server/StripeTicketCapture.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_validation_reference_cutover_postgres.sql",
@@ -167892,7 +168136,7 @@
       "lines": [
         934
       ],
-      "consumerCount": 131,
+      "consumerCount": 132,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
@@ -167936,14 +168180,14 @@
         "tdf-hq/src/TDF/Commerce/DomoCancellationStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
         "tdf-hq/src/TDF/Commerce/RefundStore.hs",
         "tdf-hq/src/TDF/ContentStorage.hs",
         "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/CommerceOperations.hs",
-        "tdf-hq/src/TDF/Server/CourseCheckout.hs"
+        "tdf-hq/src/TDF/Server/CommerceOperations.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
@@ -168015,6 +168259,7 @@
         "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_apply.sql",
         "tdf-hq/sql/2026-08-12_ddex_operational_cutover_dry_run.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/generated/types.ts"
       ],
@@ -168080,129 +168325,6 @@
       "similarCandidateIds": []
     },
     {
-      "id": "a43462622b60606b37d9",
-      "file": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sourceKind": "production",
-      "surface": "backend",
-      "domain": "studio-services-booking",
-      "kind": "haskell-list",
-      "name": "paypalWebhookDomainTypes",
-      "line": 1087,
-      "values": [
-        "mixing_mastering",
-        "marketplace_sale",
-        "marketplace_rental",
-        "service_booking",
-        "course_registration",
-        "event_ticket_order"
-      ],
-      "valueCount": 6,
-      "recommendedClassification": "dynamic-business-catalog",
-      "lines": [
-        1087
-      ],
-      "consumerCount": 80,
-      "backendConsumers": [
-        "tdf-hq/sql/2026-05-28_course_registration_stripe_pi.sql",
-        "tdf-hq/sql/2026-05-28_course_subscriptions.sql",
-        "tdf-hq/sql/2026-07-12_ticket_checkout_idempotency.sql",
-        "tdf-hq/sql/2026-07-12_ticketing_runtime_schema.sql",
-        "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
-        "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
-        "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime_rollback.sql",
-        "tdf-hq/sql/2026-08-15_marketplace_sale_checkout_runtime.sql",
-        "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
-        "tdf-hq/sql/2026-08-17_course_checkout_runtime.sql",
-        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
-        "tdf-hq/sql/2026-08-17_service_booking_provider_actions.sql",
-        "tdf-hq/sql/2026-08-17_service_booking_provider_actions_rollback.sql",
-        "tdf-hq/sql/2026-08-18_public_ticket_checkout_runtime.sql",
-        "tdf-hq/sql/2026-08-20_verified_experience_reviews.sql",
-        "tdf-hq/sql/2026-09-09_experience_review_ticket_buyer_type_repair.sql",
-        "tdf-hq/sql/2026-09-18_identity_review_dependencies.sql",
-        "tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer.sql",
-        "tdf-hq/sql/2026-10-06_ticket_manual_bank_transfer_rollback.sql",
-        "tdf-hq/sql/2026-10-06_ticket_tax_invoices.sql",
-        "tdf-hq/sql/2026-10-16_provider_domain_payment_binding.sql",
-        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh.sql",
-        "tdf-hq/sql/2026-11-02_identity_party_reference_refresh_rollback.sql",
-        "tdf-hq/sql/2026-11-04_contract_store.sql",
-        "tdf-hq/sql/2026-11-04_contract_store_rollback.sql",
-        "tdf-hq/sql/2026-11-06_video_campaign_identity_references.sql",
-        "tdf-hq/sql/2026-11-06_video_campaign_identity_references_rollback.sql",
-        "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
-        "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
-        "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs",
-        "tdf-hq/src/TDF/Commerce/RefundStore.hs",
-        "tdf-hq/src/TDF/Operations/Model.hs",
-        "tdf-hq/src/TDF/Operations/Server.hs",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/CourseCheckout.hs",
-        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-        "tdf-hq/src/TDF/Server/ProviderExecution.hs",
-        "tdf-hq/src/TDF/Server/Reviews.hs",
-        "tdf-hq/src/TDF/Server/TicketManualPayments.hs",
-        "tdf-hq/src/TDF/Server/TicketRefunds.hs",
-        "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
-        "tdf-hq/test/PaymentIntentExpiryProbe.hs",
-        "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-        "tdf-hq/test/TDF/InvoiceWorkerSpec.hs",
-        "tdf-hq/test/TDF/Operations/ModelSpec.hs",
-        "tdf-hq/test/TDF/Server/PaymentAuditSpec.hs",
-        "tdf-hq/test/TDF/TicketManualReviewSpec.hs",
-        "tdf-hq/test/TicketManualReviewMain.hs"
-      ],
-      "webConsumers": [
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/reviews.test.ts",
-        "tdf-hq-ui/src/api/reviews.ts",
-        "tdf-hq-ui/src/components/reviews/ExperienceReviews.test.tsx",
-        "tdf-hq-ui/src/pages/OperationsControlCenterPage.test.tsx"
-      ],
-      "mobileConsumers": [
-        "tdf-mobile/src/api/generated/types.ts"
-      ],
-      "automationConsumers": [
-        "scripts/__tests__/fixtures/production-schema-20260814.sql",
-        "scripts/__tests__/fixtures/provider-domain-fixtures.sql",
-        "scripts/__tests__/production-release.test.mjs",
-        "scripts/lib/operations_conformance.py",
-        "scripts/lib/production-release.mjs",
-        "scripts/test-canonical-payment-lifecycle-migration.sh",
-        "scripts/test-checkout-event-refund-runtime-migration.sh",
-        "scripts/test-course-checkout-runtime-migration.sh",
-        "scripts/test-marketplace-contact-identity.sh",
-        "scripts/test-marketplace-operations-migration.sh",
-        "scripts/test-marketplace-rental-checkout-runtime-migration.sh",
-        "scripts/test-marketplace-sale-checkout-runtime-migration.sh",
-        "scripts/test-provider-domain-binding.py",
-        "scripts/test-provider-domain-harness.py",
-        "scripts/test-provider-execution-runtime-migration.sh",
-        "scripts/test-public-ticket-checkout-runtime-migration.sh",
-        "scripts/test-service-booking-checkout-runtime-migration.sh",
-        "scripts/test-service-storefront-checkout-runtime-migration.sh",
-        "scripts/test-unified-checkout-migration.sh",
-        "scripts/test-verified-experience-reviews-migration.sh"
-      ],
-      "apiAndIntegrationConsumers": [
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/reviews.test.ts",
-        "tdf-hq-ui/src/api/reviews.ts",
-        "tdf-hq/sql/2026-05-28_course_registration_stripe_pi.sql",
-        "tdf-mobile/src/api/generated/types.ts"
-      ],
-      "decision": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "exactDuplicateIds": [],
-      "similarCandidateIds": []
-    },
-    {
       "id": "fb1005d3b1d035e17581",
       "file": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
       "sourceKind": "production",
@@ -168210,7 +168332,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "storedEventMetadataAllowedKeys",
-      "line": 1828,
+      "line": 1720,
       "values": [
         "ticketUrl",
         "imageUrl",
@@ -168221,7 +168343,7 @@
       "valueCount": 5,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        1828
+        1720
       ],
       "consumerCount": 95,
       "backendConsumers": [
@@ -171045,7 +171167,7 @@
       "lines": [
         212
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -171226,6 +171348,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/accessRequests.ts",
         "tdf-mobile/src/api/events.ts",
@@ -171844,7 +171967,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 322,
+      "consumerCount": 323,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
         "tdf-hq/sql/2026-07-15_social_discovery_reviews.sql",
@@ -172037,6 +172160,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/app/ddex/index.tsx",
         "tdf-mobile/src/api/accessRequests.ts",
@@ -172266,7 +172390,7 @@
       "lines": [
         48
       ],
-      "consumerCount": 630,
+      "consumerCount": 631,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -172476,6 +172600,7 @@
         "tdf-hq/src/TDF/API/Inventory.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/DDEX/Models.hs",
         "tdf-hq/src/TDF/Server/DDEX.hs",
         "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs",
@@ -172484,8 +172609,7 @@
         "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-hq/test/integration/ddex_reference_cutover_postgres.sql",
-        "tdf-mobile/src/api/artists.ts",
-        "tdf-mobile/src/api/generated/types.ts"
+        "tdf-mobile/src/api/artists.ts"
       ],
       "decision": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -172579,7 +172703,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 1035,
+      "consumerCount": 1036,
       "backendConsumers": [
         "tdf-hq/app/GenCatalogIntegrity.hs",
         "tdf-hq/app/GenCatalogMigration.hs",
@@ -173447,7 +173571,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-05-24_ticketing_system_enhancements.sql",
@@ -173627,6 +173751,7 @@
         "tdf-hq-ui/src/api/types.ts",
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-09-16_music_ddex_operations.sql",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/sql/music_ddex_operations.sql",
         "tdf-mobile/src/api/events.ts",
         "tdf-mobile/src/api/generated/types.ts"
@@ -174113,7 +174238,7 @@
       "lines": [
         436
       ],
-      "consumerCount": 271,
+      "consumerCount": 273,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -174135,6 +174260,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/CheckoutStore.hs",
         "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs",
         "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
         "tdf-hq/src/TDF/Cron.hs",
@@ -174163,8 +174289,7 @@
         "tdf-hq/src/TDF/Server/TicketRefunds.hs",
         "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs",
         "tdf-hq/src/TDF/ServerAdmin.hs",
-        "tdf-hq/src/TDF/ServerFanClub.hs",
-        "tdf-hq/src/TDF/Services/EventDiscovery.hs"
+        "tdf-hq/src/TDF/ServerFanClub.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -174303,6 +174428,7 @@
         "tdf-hq/src/TDF/API/MusicRelease.hs",
         "tdf-hq/src/TDF/API/ServiceStorefront.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
         "tdf-hq/test/integration/ddex_operational_cutover_postgres.sql",
         "tdf-mobile/app/ddex/partners.tsx",
         "tdf-mobile/src/api/generated/types.ts",
@@ -174337,7 +174463,7 @@
       "lines": [
         1211
       ],
-      "consumerCount": 1235,
+      "consumerCount": 1237,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -181500,7 +181626,7 @@
       "lines": [
         409
       ],
-      "consumerCount": 468,
+      "consumerCount": 469,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -182023,7 +182149,7 @@
       "lines": [
         120
       ],
-      "consumerCount": 97,
+      "consumerCount": 98,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -182067,14 +182193,14 @@
         "tdf-hq/src/TDF/Services/EventDiscovery.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
         "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/src/TDF/Ticketing/Transfer.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
         "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs",
-        "tdf-hq/test/TDF/MusicPurchaseSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/MusicPurchaseSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/PublicEventTicketsPage.test.tsx",
@@ -182520,7 +182646,7 @@
       "lines": [
         382
       ],
-      "consumerCount": 59,
+      "consumerCount": 60,
       "backendConsumers": [
         "tdf-hq/sql/2026-05-28_artist_tipping.sql",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -182549,6 +182675,7 @@
         "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
         "tdf-hq/src/TDF/Ticketing/Admission.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs",
         "tdf-hq/src/TDF/Ticketing/Refund.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs",
