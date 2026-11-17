@@ -1176,6 +1176,15 @@ test('pull requests are opened as drafts against the base branch and counted for
     assert.equal(post.body.body, buildPullRequestBody(config, context, branch));
     assert.match(post.body.body, /stays a draft until a person reviews it/);
     assert.match(post.body.body, /`npm test` passed/);
+
+    // The generic discovery heading gives way to the finding, and placeholders are expanded.
+    const generic = buildPullRequestBody(
+      { verifyCommand: 'node {tool_root}/verify.mjs' },
+      { ...context, idea_title: 'Improvement Idea', tool_root: '/opt/loop' },
+      branch,
+    );
+    assert.match(generic, /^- Idea: Icon button has no accessible name\.$/m);
+    assert.match(generic, /`node \/opt\/loop\/verify\.mjs` passed/);
   } finally {
     global.fetch = originalFetch;
     await fs.rm(tempRoot, { recursive: true, force: true });

@@ -1089,16 +1089,24 @@ function excludedTargetFiles(config) {
   ];
 }
 
+// The built-in discovery heads every idea "# Improvement Idea", which says nothing in a
+// pull request; the reason line names the actual finding.
+function describeIdea(context) {
+  const title = String(context.idea_title ?? '').trim();
+  if (title && title.toLowerCase() !== 'improvement idea') return title;
+  return String(context.idea_reason ?? '').trim() || '(untitled)';
+}
+
 function buildPullRequestBody(config, context, branch) {
   const lines = [
     'Opened automatically by the continuous improvement loop. It stays a draft until a person reviews it.',
     '',
-    `- Idea: ${context.idea_title || '(untitled)'}`,
+    `- Idea: ${describeIdea(context)}`,
     `- Source: ${context.idea_source || 'unknown'}`,
     `- Target: ${context.idea_target || 'unspecified'}`,
     `- Reason: ${context.idea_reason || 'unspecified'}`,
     `- Base: ${branch.baseBranch} at ${branch.baseSha}`,
-    `- Local verification before commit: \`${config.verifyCommand}\` passed`,
+    `- Local verification before commit: \`${expandTemplate(config.verifyCommand, context)}\` passed`,
   ];
   return `${lines.join('\n')}\n`;
 }
