@@ -81,6 +81,16 @@ function killStepGroup(child, signal) {
   }
 }
 
+function stepGroupAlive(child) {
+  if (!child?.pid) return false;
+  try {
+    process.kill(-child.pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code === 'EPERM';
+  }
+}
+
 const SUPERVISOR_STATUS_FILE = process.env.CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE ?? '';
 
 function sleep(milliseconds) {
@@ -337,6 +347,15 @@ async function runShellCommand(command, repoRoot, context, options = {}) {
       if (killTimer) clearTimeout(killTimer);
       if (activeStepChild === child) activeStepChild = null;
     };
+    // The shell can exit on SIGTERM while a descendant that ignores it keeps
+    // running, so a timed-out step only ends once its whole group is gone.
+    const stopTimedOutGroup = async () => {
+      const deadline = Date.now() + STEP_KILL_GRACE_MS;
+      while (Date.now() < deadline && stepGroupAlive(child)) await sleep(100);
+      if (stepGroupAlive(child)) killStepGroup(child, 'SIGKILL');
+      const killDeadline = Date.now() + STEP_KILL_GRACE_MS;
+      while (Date.now() < killDeadline && stepGroupAlive(child)) await sleep(100);
+    };
 
     child.stdout.on('data', (chunk) => {
       const value = chunk.toString();
@@ -355,14 +374,18 @@ async function runShellCommand(command, repoRoot, context, options = {}) {
       reject(error);
     });
 
-    child.on('close', (code) => {
-      settle();
+    child.on('close', async (code) => {
       if (timedOut) {
+        if (timeoutTimer) clearTimeout(timeoutTimer);
+        if (killTimer) clearTimeout(killTimer);
+        await stopTimedOutGroup();
+        settle();
         reject(
           new Error(`${options.stepName ?? 'Command'} timed out after ${Math.round(timeoutMs / 60_000)} minute(s) and was stopped.`),
         );
         return;
       }
+      settle();
       if ((code ?? 1) !== 0 && !options.allowFailure) {
         reject(new Error(`${options.stepName ?? 'Command'} failed with exit code ${code ?? 1}.`));
         return;
@@ -896,13 +919,45 @@ async function discardIterationChanges(repoRoot, config) {
   }
 }
 
+// The branches this runner created, kept in this worktree's git directory so
+// leftovers from an interrupted run are still recognised. A prefix alone is not
+// ownership: a prefix such as "feature/" can match someone's unpushed work.
+async function loopBranchLedgerPath(repoRoot) {
+  const gitDir = (await execText('git', ['rev-parse', '--git-dir'], repoRoot)).stdout.trim();
+  return path.join(path.resolve(repoRoot, gitDir), 'continuous-improvement-loop-branches');
+}
+
+async function readLoopBranchLedger(repoRoot) {
+  try {
+    return splitLines(await fs.readFile(await loopBranchLedgerPath(repoRoot), 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return [];
+    throw error;
+  }
+}
+
+async function writeLoopBranchLedger(repoRoot, branchNames) {
+  const ledger = await loopBranchLedgerPath(repoRoot);
+  const unique = [...new Set(branchNames)];
+  if (unique.length === 0) {
+    await fs.rm(ledger, { force: true });
+    return;
+  }
+  await fs.writeFile(ledger, `${unique.join('\n')}\n`, 'utf8');
+}
+
 async function deleteLocalLoopBranches(repoRoot, config) {
   const prefix = resolveBranchPrefix(config);
-  const { stdout } = await execText('git', ['for-each-ref', '--format=%(refname:short)', `refs/heads/${prefix}`], repoRoot);
-  for (const branchName of splitLines(stdout)) {
-    // Only local leftovers are removed; published branches and their pull requests stay.
-    await tryGit(repoRoot, ['branch', '-D', branchName]);
+  const remaining = [];
+  for (const branchName of await readLoopBranchLedger(repoRoot)) {
+    if (!branchName.startsWith(prefix)) continue;
+    const exists = await tryGit(repoRoot, ['show-ref', '--verify', '--quiet', `refs/heads/${branchName}`]);
+    if (!exists) continue;
+    // Only this runner's local leftovers are removed; published branches and
+    // their pull requests stay.
+    if (!(await tryGit(repoRoot, ['branch', '-D', branchName]))) remaining.push(branchName);
   }
+  await writeLoopBranchLedger(repoRoot, remaining);
 }
 
 async function prepareIterationBranch(repoRoot, config, iteration) {
@@ -914,6 +969,9 @@ async function prepareIterationBranch(repoRoot, config, iteration) {
   await deleteLocalLoopBranches(repoRoot, config);
 
   const branchName = buildIterationBranchName(config, iteration);
+  // Recorded before it exists, so an interruption right after creation still
+  // leaves it identifiable as this runner's.
+  await writeLoopBranchLedger(repoRoot, [...(await readLoopBranchLedger(repoRoot)), branchName]);
   await execText('git', ['checkout', '--quiet', '--no-track', '-b', branchName, base.remoteRef], repoRoot);
   await syncSubmodulesRecursively(repoRoot, { checkout: Boolean(config.checkoutSubmodules) });
   return {

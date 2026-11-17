@@ -1196,12 +1196,16 @@ test('prepareIterationBranch clears leftovers from an interrupted iteration', as
 
   try {
     const mainSha = await fixture.remoteMainSha();
-    await fixture.git(['checkout', '-b', `${LOOP_BRANCH_PREFIX}stale-1`]);
+    // An interrupted iteration: a branch this runner created, with work left behind.
+    const interrupted = await prepareIterationBranch(fixture.repoDir, { pushRemote: 'origin' }, 6);
     await fs.writeFile(path.join(fixture.repoDir, 'tracked.txt'), 'before\nabandoned\n', 'utf8');
     await fs.writeFile(path.join(fixture.repoDir, 'abandoned.txt'), 'abandoned\n', 'utf8');
+    // A same-prefix branch the runner did not create must survive.
+    await fixture.git(['branch', `${LOOP_BRANCH_PREFIX}someone-else`]);
     await fixture.git(['branch', 'feature/keep-me']);
 
     const branch = await prepareIterationBranch(fixture.repoDir, { pushRemote: 'origin' }, 7);
+    assert.notEqual(branch.branchName, interrupted.branchName);
 
     assert.equal(branch.baseSha, mainSha);
     assert.equal(branch.baseRef, 'origin/main');
@@ -1214,7 +1218,55 @@ test('prepareIterationBranch clears leftovers from an interrupted iteration', as
       .split('\n')
       .sort();
     // Only the loop's own stale branch is removed; unrelated branches are never touched.
-    assert.deepEqual(localBranches, [branch.branchName, 'feature/keep-me', 'main'].sort());
+    assert.deepEqual(localBranches, [branch.branchName, `${LOOP_BRANCH_PREFIX}someone-else`, 'feature/keep-me', 'main'].sort());
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('prepareIterationBranch never deletes branches it did not create under a shared prefix', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-shared-prefix-test-');
+
+  try {
+    await fixture.git(['checkout', '-b', 'feature/unpushed-work']);
+    await fs.writeFile(path.join(fixture.repoDir, 'work.txt'), 'mine\n', 'utf8');
+    await fixture.git(['add', 'work.txt']);
+    await fixture.git(['commit', '-qm', 'unpushed work']);
+    await fixture.git(['checkout', '-q', '--detach', 'origin/main']);
+
+    const config = { pushRemote: 'origin', branchPrefix: 'feature/' };
+    const first = await prepareIterationBranch(fixture.repoDir, config, 1);
+    const second = await prepareIterationBranch(fixture.repoDir, config, 2);
+
+    const localBranches = (await fixture.git(['for-each-ref', '--format=%(refname:short)', 'refs/heads/'])).stdout
+      .trim()
+      .split('\n')
+      .sort();
+    assert.ok(localBranches.includes('feature/unpushed-work'));
+    assert.ok(!localBranches.includes(first.branchName));
+    assert.ok(localBranches.includes(second.branchName));
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('continuous-improvement-loop keeps stopping a timed-out worker that ignores SIGTERM after its shell exits', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-stubborn-test-');
+  const pidFile = path.join(fixture.tempRoot, 'stubborn.pid');
+  const worker = path.join(fixture.tempRoot, 'stubborn.mjs');
+
+  try {
+    await fs.writeFile(worker, `import fs from 'node:fs';\nprocess.on('SIGTERM', () => {});\nfs.writeFileSync(${JSON.stringify(pidFile)}, String(process.pid));\nsetInterval(() => {}, 1000);\n`, 'utf8');
+    const configPath = await fixture.writeConfig({
+      stepTimeoutMinutes: 0.02,
+      implementationCommand: `node "${worker}" > /dev/null 2>&1`,
+    });
+
+    await assert.rejects(() => fixture.runLoop(configPath), /Implementation timed out after/);
+
+    const workerPid = Number((await fs.readFile(pidFile, 'utf8')).trim());
+    assert.ok(workerPid > 0);
+    assert.throws(() => process.kill(workerPid, 0), /ESRCH/);
   } finally {
     await fixture.cleanup();
   }
