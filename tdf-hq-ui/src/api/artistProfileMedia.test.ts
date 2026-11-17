@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { fireEvent } from '@testing-library/react';
 import { saveArtistProfileMedia } from './artistProfileMedia';
-import { advanceAuthSessionEpoch } from '../session/authEvents';
+import { advanceAuthSessionEpoch, getAuthSessionEpoch } from '../session/authEvents';
 
 let image: HTMLImageElement;
 beforeEach(() => {
@@ -32,7 +32,7 @@ it('persists a public Drive image URL only after the image decodes', async () =>
 
 it('rejects a stale save after switching accounts during image validation', async () => {
   const write = jest.fn(async (payload: object) => payload);
-  const saving = saveArtistProfileMedia({ apuHeroImageUrl: 'https://cdn.example/cover.jpg' }, write);
+  const saving = saveArtistProfileMedia({ apuHeroImageUrl: 'https://cdn.example/cover.jpg' }, write, { sessionEpoch: getAuthSessionEpoch });
   advanceAuthSessionEpoch();
   fireEvent.load(image);
   await expect(saving).rejects.toThrow('La sesión cambió');

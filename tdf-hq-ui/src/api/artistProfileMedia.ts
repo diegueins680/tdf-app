@@ -1,4 +1,3 @@
-import { getAuthSessionEpoch } from '../session/authEvents';
 import { prepareArtistImageUrl } from '../utils/artistImage';
 
 function verifyImage(url: string): Promise<void> {
@@ -19,6 +18,12 @@ function verifyImage(url: string): Promise<void> {
 }
 
 export interface ArtistProfileMediaOptions {
+  /**
+   * The signed-in session's epoch, read when the save starts and again before
+   * each write so an account switch during validation cannot save under the
+   * new account. Supplied by the caller: the API layer does not import session.
+   */
+  sessionEpoch?: () => number;
   /** The cover already saved on the profile, when editing an existing one. */
   persistedCover?: string | null;
   /** A dependent write that must only happen once the cover is accepted. */
@@ -34,7 +39,8 @@ export interface ArtistProfileMediaOptions {
 export async function saveArtistProfileMedia<Payload extends { apuHeroImageUrl?: string | null }, Result>(
   payload: Payload, write: (prepared: Payload) => Promise<Result>, options: ArtistProfileMediaOptions = {},
 ): Promise<Result> {
-  const epoch = getAuthSessionEpoch();
+  const sessionEpoch = options.sessionEpoch ?? (() => 0);
+  const epoch = sessionEpoch();
   let prepared = payload;
   if (Object.prototype.hasOwnProperty.call(payload, 'apuHeroImageUrl')) {
     const supplied = payload.apuHeroImageUrl?.trim() ?? '';
@@ -45,10 +51,10 @@ export async function saveArtistProfileMedia<Payload extends { apuHeroImageUrl?:
       prepared = { ...payload, apuHeroImageUrl: imageUrl };
     }
   }
-  if (epoch !== getAuthSessionEpoch()) throw new Error('La sesión cambió. Vuelve a guardar desde tu cuenta actual.');
+  if (epoch !== sessionEpoch()) throw new Error('La sesión cambió. Vuelve a guardar desde tu cuenta actual.');
   if (options.beforeWrite) {
     await options.beforeWrite();
-    if (epoch !== getAuthSessionEpoch()) throw new Error('La sesión cambió. Vuelve a guardar desde tu cuenta actual.');
+    if (epoch !== sessionEpoch()) throw new Error('La sesión cambió. Vuelve a guardar desde tu cuenta actual.');
   }
   return write(prepared);
 }

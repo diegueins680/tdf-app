@@ -90,12 +90,12 @@ export const Fans = {
   getMyArtistProfile: async () => (await read('/fans/me/artist-profile')) as ArtistProfileDTO,
   updateMyArtistProfile: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
     (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/fans/me/artist-profile', prepared), options)),
-  createMyArtistProfile: async (payload: ArtistProfileUpsert) =>
-    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/profile', prepared))),
-  updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert) =>
-    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/artists/me/profile', prepared))),
-  updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate) =>
-    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/photo', prepared))),
+  createMyArtistProfile: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/profile', prepared), options)),
+  updateMyArtistProfileAlias: async (payload: ArtistProfileUpsert, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => put<ArtistProfileDTO>('/artists/me/profile', prepared), options)),
+  updateMyArtistPhoto: async (payload: ArtistProfilePhotoUpdate, options?: ArtistProfileMediaOptions) =>
+    (await saveArtistProfileMedia(payload, prepared => post<ArtistProfileDTO>('/artists/me/photo', prepared), options)),
 
   // Fan Club
   getClub: async (artistId: number) => (await read(`/fans/clubs/${artistId}`)) as FanClubDTO,

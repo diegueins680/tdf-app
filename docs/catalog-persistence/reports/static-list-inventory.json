@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-17T17:24:33.361Z",
+  "generatedAt": "2026-11-17T18:07:56.800Z",
   "repositoryRoot": ".",
-  "filesScanned": 2754,
+  "filesScanned": 2755,
   "candidateCount": 1466,
   "byClassification": {
     "dynamic-business-catalog": 966,
@@ -11653,7 +11653,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
@@ -11677,7 +11676,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -31453,7 +31453,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/hooks/useChatKitScript.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.es.ts",
@@ -31477,7 +31476,8 @@
         "tdf-hq-ui/src/pages/FeedbackCatalogPage.tsx",
         "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
         "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx"
+        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -46047,7 +46047,6 @@
         "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
@@ -46067,7 +46066,8 @@
         "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
         "tdf-hq-ui/src/pages/MarketplacePage.tsx",
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/pages/OrdersPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/directory.tsx",
@@ -47913,7 +47913,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
@@ -47933,7 +47932,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -48078,7 +48078,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/de.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
         "tdf-hq-ui/src/i18n/locales/es.ts",
@@ -48113,7 +48112,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
         "tdf-hq-ui/src/session/logoutIntent.ts",
-        "tdf-hq-ui/src/utils/marketplace.test.ts"
+        "tdf-hq-ui/src/utils/marketplace.test.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -55184,7 +55184,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
         "tdf-hq-ui/src/i18n/locales/marketplace.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -55214,7 +55213,8 @@
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/StudentCreationDialogs.test.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-        "tdf-hq-ui/src/pages/TeacherPortalPage.tsx"
+        "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
+        "tdf-hq-ui/src/pages/TrialsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -55401,7 +55401,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
@@ -55435,6 +55434,7 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
         "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js"
       ],
       "mobileConsumers": [
@@ -63415,7 +63415,7 @@
       "domain": "fan-social",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 764,
+      "line": 765,
       "values": [
         "{label=Slug público, ready}",
         "{label=Bio, ready}",
@@ -63426,7 +63426,7 @@
       "valueCount": 5,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        764
+        765
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -63451,7 +63451,7 @@
       "domain": "fan-social",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 788,
+      "line": 789,
       "values": [
         "{title=Lanzamientos, description=Publica, corrige enlaces de audio y revisa pendientes del sello., to=/label/releases, label=Abrir lanzamientos}",
         "{title=Artistas, description=Edita perfiles, activos y enlaces desde el módulo del sello., to=/label/artistas, label=Ir a artistas}",
@@ -63461,7 +63461,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        788
+        789
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -71620,14 +71620,14 @@
         "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.test.tsx",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
         "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
-        "tdf-hq-ui/src/features/releases/catalogQueries.ts"
+        "tdf-hq-ui/src/features/releases/catalogQueries.ts",
+        "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/.env.example",
@@ -72548,7 +72548,6 @@
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
@@ -72564,7 +72563,8 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
         "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
-        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx"
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -72688,7 +72688,6 @@
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
@@ -72704,7 +72703,8 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
         "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
-        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx"
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -72824,7 +72824,6 @@
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
@@ -72840,7 +72839,8 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
         "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
-        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx"
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -72959,7 +72959,6 @@
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
@@ -72975,7 +72974,8 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
         "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
-        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx"
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -73093,7 +73093,6 @@
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
@@ -73109,7 +73108,8 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/ServiceTypesPage.test.ts",
         "tdf-hq-ui/src/pages/ServiceTypesPage.tsx",
-        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx"
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -78417,9 +78417,9 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/liveSessions.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -78629,9 +78629,9 @@
       ],
       "webConsumers": [
         "tdf-hq-ui/src/api/liveSessions.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx"
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/features/generatedFeatureRegistry.ts"
@@ -81681,7 +81681,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/hooks/useChatKitScript.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
@@ -81716,7 +81715,8 @@
         "tdf-hq-ui/src/player/playbackSession.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
         "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -88941,7 +88941,6 @@
         "tdf-hq-ui/src/components/StreamingPlayer.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
         "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.ts",
@@ -88961,6 +88960,7 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/utils/artistFollowIntent.ts",
         "tdf-hq-ui/src/utils/media.test.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/utils/videoSource.test.ts",
         "tdf-hq-ui/src/utils/videoSource.ts"
       ],
@@ -96164,7 +96164,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
@@ -96187,7 +96186,8 @@
         "tdf-hq-ui/src/player/types.ts",
         "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
-        "tdf-hq-ui/src/utils/authErrorMessage.ts"
+        "tdf-hq-ui/src/utils/authErrorMessage.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -97824,7 +97824,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/SelectedRecordPublication.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/en.ts",
@@ -97848,7 +97847,8 @@
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
         "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/.env.example",
@@ -104500,7 +104500,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
@@ -104524,6 +104523,7 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
         "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/utils/sessionPersonalData.test.ts"
       ],
       "mobileConsumers": [
@@ -117828,7 +117828,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -117852,7 +117851,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -154922,7 +154922,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.en.ts",
         "tdf-hq-ui/src/i18n/locales/directorySearch.es.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
@@ -154946,7 +154945,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -170949,7 +170949,6 @@
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.en.ts",
         "tdf-hq-ui/src/i18n/locales/mobileApp.es.ts",
         "tdf-hq-ui/src/mobile/MobileApp.test.tsx",
@@ -170972,7 +170971,8 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/session/logoutIntent.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -174340,7 +174340,6 @@
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
         "tdf-hq-ui/src/analytics/posthog.ts",
         "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
-        "tdf-hq-ui/src/api/artistProfileMedia.ts",
         "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
         "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
         "tdf-hq-ui/src/api/calendar.ts",
@@ -174386,7 +174385,8 @@
         "tdf-hq-ui/src/components/events/EventLineupPicker.test.tsx",
         "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
         "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.test.tsx",
-        "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx"
+        "tdf-hq-ui/src/components/events/EventManualPaymentsPanel.tsx",
+        "tdf-hq-ui/src/components/events/EventMemoryInvitations.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/_layout.tsx",
@@ -174454,7 +174454,6 @@
       "apiAndIntegrationConsumers": [
         "scripts/test-stripe-integration.sh",
         "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
-        "tdf-hq-ui/src/api/artistProfileMedia.ts",
         "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
         "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
         "tdf-hq-ui/src/api/calendar.ts",

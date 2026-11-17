@@ -1,3 +1,4 @@
+import { getAuthSessionEpoch } from '../session/authEvents';
 import ArtistProfileLink from '../components/ArtistProfileLink';
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
@@ -407,7 +408,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       persistedCover: string | null;
     }) => {
       if (!request.isCurrentOwner()) throw new Error('Vuelve a cargar tu perfil antes de guardar.');
-      return Fans.updateMyArtistProfile(request.payload, { persistedCover: request.persistedCover });
+      return Fans.updateMyArtistProfile(request.payload, { persistedCover: request.persistedCover, sessionEpoch: getAuthSessionEpoch });
     },
     onSuccess: (profile, request) => {
       // A successful write is not permission to share a draft slug or another Party's identity.

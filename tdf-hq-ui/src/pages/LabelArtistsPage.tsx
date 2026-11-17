@@ -1,3 +1,4 @@
+import { getAuthSessionEpoch } from '../session/authEvents';
 import ArtistProfileLink from '../components/ArtistProfileLink';
 import MarkdownText from '../components/MarkdownText';
 import { useEffect, useMemo, useState } from 'react';
@@ -524,6 +525,7 @@ export default function LabelArtistsPage() {
       // untouched instead of saving half of the form.
       return Admin.upsertArtistProfile(body, {
         persistedCover: payload.persistedCover,
+        sessionEpoch: getAuthSessionEpoch,
         beforeWrite: async () => {
           if (trimmedName !== originalDisplayName) await Parties.update(artistId, { uDisplayName: trimmedName });
         },

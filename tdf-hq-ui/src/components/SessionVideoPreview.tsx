@@ -6,7 +6,7 @@ import { getAnalyticsClient } from '../analytics/posthog';
 import { videoAttribution } from '../features/campaigns/videoAttribution';
 import { safeVideoUrl } from '../features/campaigns/videoCampaign';
 import { normalizeArtistImageUrl } from '../utils/artistImage';
-import { isProviderPlaceholder } from '../features/records/resolveRecordThumbnail';
+import { isProviderPlaceholder } from '../utils/resolveRecordThumbnail';
 
 export function sessionVideoTarget(value: string): { kind: 'iframe' | 'video' | 'link'; url: string } | null {
   if (!value || !safeVideoUrl(value)) return null;
