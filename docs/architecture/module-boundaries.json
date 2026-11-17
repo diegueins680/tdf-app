@@ -52,7 +52,6 @@
         }
       ],
       "knownViolations": [
-        "TDF.API.SocialEventsAPI -> TDF.Server.TicketPaymentReceipt",
         "TDF.Artists.Enrichment -> TDF.API.Admin",
         "TDF.Catalog.DB -> TDF.API.DDEX",
         "TDF.Commerce.ProviderEventWorker -> TDF.Server.ServiceStorefront",
@@ -61,7 +60,6 @@
         "TDF.Cron -> TDF.API.Admin",
         "TDF.Cron -> TDF.Routes.Courses",
         "TDF.MusicRelease.ContentValidation -> TDF.API.MusicRelease",
-        "TDF.Routes.EventTickets -> TDF.Server.TicketPaymentReceipt",
         "TDF.Social.Chat -> TDF.API.Chat"
       ],
       "sizeBudget": {

@@ -2425,6 +2425,7 @@
       "tdf-hq/src/TDF/DTO/SocialDiscoveryDTO.hs",
       "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
       "tdf-hq/src/TDF/DTO/SocialSyncDTO.hs",
+      "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
       "tdf-hq/src/TDF/Directory/Policy.hs",
       "tdf-hq/src/TDF/Distribution/StateMachine.hs",
       "tdf-hq/src/TDF/Email.hs",
@@ -16956,7 +16957,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "ff4a520a6e7c6b9d770a157701b30a5460b9d5ab97a137ff0aedfcf43e3fb33b",
+      "sha256": "f478a6ef0b343c4884d4f2477c1c9f912e58ee68d76affe2005a04d87b65871e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17530,6 +17531,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-15d051dc6f1642e3",
+      "path": "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
+      "sha256": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-71ddbe63c1cda5e1",
       "path": "tdf-hq/src/TDF/Directory/Policy.hs",
       "sha256": "a6df5f19662d66aa1875482c5b0d4fac7b099d6f8e50c4a93d8fd03ccb923b94",
@@ -17826,7 +17833,7 @@
     {
       "id": "SURFACE-a6d0775d20903e98",
       "path": "tdf-hq/src/TDF/Routes/EventTickets.hs",
-      "sha256": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
+      "sha256": "09876be565334ca1447092a96546f919b578168a2e927acaa593153ea3fe8e00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18024,7 +18031,7 @@
     {
       "id": "SURFACE-6bf5b2f9b831197f",
       "path": "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
-      "sha256": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
+      "sha256": "f6ed880698126fbfbc409ca4b1098c5f5052b0ea22cd44cade3d3e17de0db6cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18360,7 +18367,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "6b17074b45766b8f5550a6bb188e96e27d2a84b013b1777b0bb64fbe652bbbbd",
+      "sha256": "8e25c07ae89ff4e0a3dc0867ad8f5c7a034735fc574beb0ddb35feaaad06ae98",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22471,7 +22478,7 @@
     },
     {
       "path": "docs/adr/0133-enforced-module-boundaries.md",
-      "sha256": "039f15e0900094bdf6a9751a2460e272dbe3cd8db8281f16e1e55c5b0890f156",
+      "sha256": "0277ad8f5d05d01045519c248b08cba24eb50af77743a3b864449203c3597859",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31459,7 +31466,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "818a11be586737173c536d08bf7ac069139ea56e5c7738c79c50dbe851497629",
+      "sha256": "c8cee41409a47978bfb9fadacc90e9ed986ae4c11edbfb0a940b22acac550ca8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

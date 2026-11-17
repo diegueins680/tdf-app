@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-17T01:30:20.429Z",
+  "generatedAt": "2026-11-17T02:49:43.291Z",
   "repositoryRoot": ".",
-  "filesScanned": 2745,
+  "filesScanned": 2746,
   "candidateCount": 1466,
   "byClassification": {
     "dynamic-business-catalog": 966,
@@ -4541,7 +4541,7 @@
       "lines": [
         566
       ],
-      "consumerCount": 297,
+      "consumerCount": 298,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/config/default.env.example",
@@ -7052,7 +7052,7 @@
       "lines": [
         119
       ],
-      "consumerCount": 354,
+      "consumerCount": 355,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-09_admin_operations_control_center.sql",
@@ -7088,6 +7088,7 @@
         "tdf-hq/src/TDF/Catalog/Seed.hs",
         "tdf-hq/src/TDF/Commerce/DomoQuotes.hs",
         "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
+        "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
         "tdf-hq/src/TDF/Operations/Server.hs",
         "tdf-hq/src/TDF/Server.hs",
         "tdf-hq/src/TDF/Server/Catalog.hs",
@@ -7102,8 +7103,7 @@
         "tdf-hq/test/TDF/ServerSpec.hs",
         "tdf-hq/test/TDF/Services/EventDiscoverySpec.hs",
         "tdf-hq/test/TDF/TicketPaymentReceiptSpec.hs",
-        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs",
-        "tdf-hq/test/integration/directory_event_privacy_composition_postgres.sql"
+        "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/DatafastReturnPage.test.tsx",
@@ -9429,7 +9429,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1630,
+      "consumerCount": 1631,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -30321,7 +30321,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 420,
+      "consumerCount": 421,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2026-04-23_inventory_checkout_amounts.sql",
