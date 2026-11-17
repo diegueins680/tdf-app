@@ -29087,8 +29087,8 @@
     "tdf-hq-ui/src/features/campaigns/videoAttribution.ts": "243066134ab5d8bd0d98f908dc0706d1a0cb999126e7d106337f34ce555adec5",
     "tdf-hq-ui/src/features/campaigns/videoCampaign.test.ts": "ea50012625c3e00735db60556e8400db0b697c859d029c8ce398376f1d44fba2",
     "tdf-hq-ui/src/features/campaigns/videoCampaign.ts": "7aab0af6588a6b078fe8ea4136fd6b9656c7d2996d19e3913041f01125c0d50b",
-    "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": "1cb4724e823b0ea5dc5fa8231cd83627a89f7d895dda711f5577c8aa0490757e",
-    "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx": "145ebc393993c8db685cca9549bb0071ee7374711fd384f9365c697e5833e44e",
+    "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx": "00e48cd3adc8e9b5e6f3f6c752f329b33245ef08cff59acde707e316b40db427",
+    "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx": "45f4d920685dd6b5bddea888fb4131064813564b5ea9276ce1149334a925e8cd",
     "tdf-hq-ui/src/features/discovery/MusicSearchResults.test.tsx": "5a80e485f7fbb8affa088840f1f8e974499a68485074efbf037c850092f08957",
     "tdf-hq-ui/src/features/discovery/MusicSearchResults.tsx": "b9e5f1c68a1aadd48d941e56d9966112bd44bba39f1733f90fcc0701633eb399",
     "tdf-hq-ui/src/features/discovery/useDirectorySearch.ts": "0f4409994400c7190c601c87d8306189974bada850687b4b25bb21459313ecd4",
@@ -62469,7 +62469,7 @@
     {
       "id": "SURFACE-2e6553cdf058fc4c",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
-      "sha256": "1cb4724e823b0ea5dc5fa8231cd83627a89f7d895dda711f5577c8aa0490757e",
+      "sha256": "00e48cd3adc8e9b5e6f3f6c752f329b33245ef08cff59acde707e316b40db427",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -62481,7 +62481,7 @@
     {
       "id": "SURFACE-7c62d34c2753965f",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
-      "sha256": "145ebc393993c8db685cca9549bb0071ee7374711fd384f9365c697e5833e44e",
+      "sha256": "45f4d920685dd6b5bddea888fb4131064813564b5ea9276ce1149334a925e8cd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

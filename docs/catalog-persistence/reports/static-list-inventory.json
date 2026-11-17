@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-17T19:45:18.275Z",
+  "generatedAt": "2026-11-17T20:29:47.926Z",
   "repositoryRoot": ".",
   "filesScanned": 2755,
   "candidateCount": 1467,
@@ -11590,7 +11590,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -11649,6 +11649,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/marketplace/offers.ts",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
@@ -31374,7 +31375,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 253,
+      "consumerCount": 254,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2025-11-05_refactor_students_teachers_to_parties.sql",
@@ -31448,6 +31449,7 @@
         "tdf-hq-ui/src/desktop/shell.ts",
         "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.test.ts",
         "tdf-hq-ui/src/features/campaigns/tdfDomoCampaign.ts",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
@@ -31476,8 +31478,7 @@
         "tdf-hq-ui/src/pages/FeedbackCatalogPage.tsx",
         "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
         "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx"
+        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -41680,7 +41681,7 @@
       "domain": "product-navigation",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 91,
+      "line": 93,
       "values": [
         "artist",
         "band",
@@ -41690,7 +41691,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        91
+        93
       ],
       "consumerCount": 132,
       "backendConsumers": [
@@ -47886,7 +47887,7 @@
       "lines": [
         2
       ],
-      "consumerCount": 119,
+      "consumerCount": 120,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -47945,6 +47946,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
@@ -48045,7 +48047,7 @@
       "lines": [
         16
       ],
-      "consumerCount": 174,
+      "consumerCount": 175,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -48110,6 +48112,7 @@
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts",
         "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
@@ -48147,8 +48150,7 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
         "tdf-hq-ui/src/session/logoutIntent.ts",
-        "tdf-hq-ui/src/utils/marketplace.test.ts",
-        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
+        "tdf-hq-ui/src/utils/marketplace.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -55146,7 +55148,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 234,
+      "consumerCount": 235,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
@@ -55215,6 +55217,7 @@
         "tdf-hq-ui/src/api/socialV2.ts",
         "tdf-hq-ui/src/api/trials.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
@@ -55248,8 +55251,7 @@
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/StudentCreationDialogs.test.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-        "tdf-hq-ui/src/pages/TeacherPortalPage.tsx",
-        "tdf-hq-ui/src/pages/TrialsPage.tsx"
+        "tdf-hq-ui/src/pages/TeacherPortalPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -55367,7 +55369,7 @@
       "lines": [
         81
       ],
-      "consumerCount": 190,
+      "consumerCount": 191,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -55432,6 +55434,7 @@
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/socialV2.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
@@ -55469,8 +55472,7 @@
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
         "tdf-hq-ui/src/session/logoutIntent.ts",
-        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
-        "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js"
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -81651,7 +81653,7 @@
       "lines": [
         28
       ],
-      "consumerCount": 164,
+      "consumerCount": 165,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-07-29_campaign_automation.sql",
@@ -81716,6 +81718,7 @@
         "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/desktop/shell.ts",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
@@ -81753,8 +81756,7 @@
         "tdf-hq-ui/src/player/playbackSession.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
         "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
-        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
+        "tdf-hq-ui/src/session/logoutIntent.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -96137,7 +96139,7 @@
       "lines": [
         14609
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -96199,6 +96201,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
@@ -97783,7 +97786,7 @@
       "lines": [
         16034
       ],
-      "consumerCount": 277,
+      "consumerCount": 278,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -97856,6 +97859,7 @@
         "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.test.tsx",
         "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
@@ -97885,8 +97889,7 @@
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
         "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
-        "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx"
+        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/.env.example",
@@ -104475,7 +104478,7 @@
       "lines": [
         112
       ],
-      "consumerCount": 128,
+      "consumerCount": 129,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -104535,6 +104538,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
@@ -117802,7 +117806,7 @@
       "lines": [
         279
       ],
-      "consumerCount": 148,
+      "consumerCount": 149,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -117864,6 +117868,7 @@
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/components/merch/MerchReputationSummary.test.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
@@ -154905,7 +154910,7 @@
       "lines": [
         14
       ],
-      "consumerCount": 146,
+      "consumerCount": 147,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
@@ -154966,6 +154971,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",
@@ -170932,7 +170938,7 @@
       "lines": [
         30
       ],
-      "consumerCount": 164,
+      "consumerCount": 165,
       "backendConsumers": [
         "tdf-hq/sql/2026-07-21_event_logistics.sql",
         "tdf-hq/sql/2026-08-11_social_event_workflow_cutover_apply.sql",
@@ -170994,6 +171000,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
+        "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/records/resolveRecordThumbnail.metadata.test.ts",

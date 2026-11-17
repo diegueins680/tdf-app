@@ -91,6 +91,24 @@ test('restores the selected result page and page size from the URL', async () =>
   expect(search.mock.calls[0]?.[0].limit).toBe(24);
 });
 
+test('stops restoring a page after its request fails and asks again only on retry', async () => {
+  let failSecond = true;
+  search.mockImplementation((query) => {
+    if (!query.cursor) return Promise.resolve(pageOf('First page artist', 'c0'));
+    return failSecond ? Promise.reject(new Error('unavailable')) : Promise.resolve(pageOf('Second page artist', 'c1'));
+  });
+  mount('/fans?page=2');
+  expect(await screen.findByText('No pudimos cargar los perfiles. Intenta de nuevo.')).toBeTruthy();
+  const cursorCalls = () => search.mock.calls.filter(([query]) => query.cursor).length;
+  await act(async () => { await new Promise((resolve) => setTimeout(resolve, 50)); });
+  expect(cursorCalls()).toBe(1);
+  expect(screen.getByText('No pudimos cargar los perfiles. Intenta de nuevo.')).toBeTruthy();
+  failSecond = false;
+  fireEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
+  await screen.findByText('Second page artist');
+  expect(cursorCalls()).toBe(2);
+});
+
 test('discards a pending page change when the search changes before it finishes', async () => {
   let finishSecond: ((value: DirectorySearchResponse) => void) | undefined;
   search.mockImplementation((query) => {

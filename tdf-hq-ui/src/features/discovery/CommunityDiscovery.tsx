@@ -51,10 +51,12 @@ export default function CommunityDiscovery() {
   // A restored page that is not loaded yet is reached one server page at a time.
   const catchingUp = pages.length > 0 && page >= pages.length && Boolean(results.hasNextPage);
   const items = catchingUp ? [] : pages[Math.min(page, pages.length - 1)]?.items ?? [];
-  const { fetchNextPage, isFetching } = results;
+  const { fetchNextPage, isFetching, isFetchNextPageError } = results;
+  // After a failed page request the catch-up stops; only the retry button asks again.
   useEffect(() => {
-    if (catchingUp && !isFetching) void fetchNextPage();
-  }, [catchingUp, isFetching, fetchNextPage, pages.length]);
+    if (catchingUp && !isFetching && !isFetchNextPageError) void fetchNextPage();
+  }, [catchingUp, isFetching, isFetchNextPageError, fetchNextPage, pages.length]);
+  const retryResults = () => { void (isFetchNextPageError ? fetchNextPage() : results.refetch()); };
   const searchKey = [query, profileKind, genreId, cityId, rowsPerPage].join('\u0000');
   const currentSearch = useRef(searchKey);
   useEffect(() => { currentSearch.current = searchKey; }, [searchKey]);
@@ -100,7 +102,7 @@ export default function CommunityDiscovery() {
     </Stack>
     <Box sx={{ height: 4, my: 2 }}>{results.isFetching && <LinearProgress aria-label="Buscando perfiles" />}</Box>
     {taxonomies.isError && <Alert severity="warning" action={<Button onClick={() => { void taxonomies.refetch(); }}>Reintentar</Button>}>No pudimos cargar los filtros. Puedes seguir buscando por nombre.</Alert>}
-    {results.isError && <Alert severity="error" action={<Button onClick={() => { void results.refetch(); }}>Reintentar</Button>}>No pudimos cargar los perfiles. Intenta de nuevo.</Alert>}
+    {results.isError && <Alert severity="error" action={<Button onClick={retryResults}>Reintentar</Button>}>No pudimos cargar los perfiles. Intenta de nuevo.</Alert>}
     <Typography role="status" aria-live="polite" mb={2}>{results.isFetching ? 'Buscando perfiles…' : `${total} perfiles · Ordenados por relevancia`}</Typography>
     {!results.isPending && !results.isError && !catchingUp && !items.length && <Alert severity="info">No encontramos perfiles con esta búsqueda. Prueba otro nombre o <Button onClick={clear}>explora todos los perfiles</Button>.</Alert>}
     <Box data-scroll-restoration-pending={results.isPending ? 'true' : undefined} aria-busy={results.isFetching} sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, gap: 2 }}>
