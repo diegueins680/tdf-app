@@ -10,6 +10,22 @@ timing() {
   [ "${MUSIC_WORKER_DIAGNOSTICS:-false}" = true ] || return 0
   printf '{"event":"music_worker_timing","stage":"%s","phase":"%s","elapsedSeconds":%s,"status":%s}\n' "$1" "$2" "$3" "$4" >&4
 }
+trace_heartbeat_stop() {
+  [ "${MUSIC_WORKER_STOP_DIAGNOSTICS:-false}" = true ] || return 0
+  [ "$#" -eq 3 ] || return 0
+  case "$1" in start|term|wait) ;; *) return 0 ;; esac
+  case "$2" in ''|0*|*[!0-9]*) return 0 ;; esac
+  [ "${#2}" -le 10 ] || return 0
+  case "$3" in 0|[1-9]*) ;; *) return 0 ;; esac
+  case "$3" in *[!0-9]*) return 0 ;; esac
+  [ "${#3}" -le 3 ] && [ "$3" -le 255 ] || return 0
+  # A broken diagnostics pipe must not signal or run EXIT cleanup in the worker.
+  # The short writer owns no lease/transfer child and cannot run inherited traps.
+  (
+    trap - EXIT INT TERM USR1 PIPE
+    printf '{"event":"music_worker_stop","stage":"%s","heartbeatPid":%s,"status":%s}\n' "$1" "$2" "$3" 2>/dev/null >&4
+  ) 2>/dev/null || true
+}
 active_child=''
 run_child() {
   local started=$SECONDS result=0 stage
@@ -403,8 +419,27 @@ error_log="$working_dir/error.log"
 heartbeat_pid=''
 stop_heartbeat() {
   if [ -n "$heartbeat_pid" ]; then
-    kill -TERM -- "-$heartbeat_pid" 2>/dev/null || true
-    wait "$heartbeat_pid" 2>/dev/null || true
+    local heartbeat_term_status=0 heartbeat_wait_status=0
+    # Retain stop intent if startup has not installed its signal handler yet.
+    : > "$working_dir/heartbeat-stop"
+    trace_heartbeat_stop start "$heartbeat_pid" 0
+    kill -TERM -- "-$heartbeat_pid" 2>/dev/null || heartbeat_term_status=$?
+    trace_heartbeat_stop term "$heartbeat_pid" "$heartbeat_term_status"
+    # A TERM that lands while the heartbeat, or the sleep it is starting, is
+    # still being forked is lost, and the wait below would then last a whole
+    # heartbeat interval. Repeat the signal until the group is gone.
+    # `command -p` keeps the short delay on the system sleep.
+    (
+      trap - EXIT
+      while command -p sleep 0.1; do
+        kill -TERM -- "-$heartbeat_pid" 2>/dev/null || exit 0
+      done
+    ) &
+    local heartbeat_resender=$!
+    wait "$heartbeat_pid" 2>/dev/null || heartbeat_wait_status=$?
+    trace_heartbeat_stop wait "$heartbeat_pid" "$heartbeat_wait_status"
+    kill -KILL -- "-$heartbeat_resender" 2>/dev/null || kill -KILL "$heartbeat_resender" 2>/dev/null || true
+    wait "$heartbeat_resender" 2>/dev/null || true
     heartbeat_pid=''
   fi
 }
@@ -427,9 +462,13 @@ run_heartbeat_child() {
   fi
   wait "$heartbeat_child" || heartbeat_child_status=$?
   if [ "$heartbeat_stopping" = true ]; then
-    # A trapped signal can interrupt wait before the native process exits.
-    # Reap outside the signal handler, including on macOS Bash 3.2.
-    wait "$heartbeat_child" 2>/dev/null || true
+    # A trapped signal can interrupt wait before the native process exits, and
+    # the stop signal is repeated, so it can interrupt this wait as well. Keep
+    # reaping outside the signal handler until the child is really gone,
+    # including on macOS Bash 3.2.
+    while kill -0 "$heartbeat_child" 2>/dev/null; do
+      wait "$heartbeat_child" 2>/dev/null || true
+    done
     heartbeat_child=''
     return 143
   fi
@@ -443,6 +482,9 @@ heartbeat() {
   local heartbeat_stopping=false heartbeat_child='' heartbeat_supervised=true
   trap - EXIT USR1
   trap request_heartbeat_stop TERM INT
+  # The parent can finish a short job before this function initializes. A
+  # signal alone cannot preserve that earlier intent across initialization.
+  [ ! -f "$working_dir/heartbeat-stop" ] || return 0
   while kill -0 "$$" 2>/dev/null; do
     run_heartbeat_child sleep "$heartbeat_seconds" || {
       [ "$heartbeat_stopping" = true ] && return 0
