@@ -4,7 +4,7 @@ jest.unstable_mockModule('../components/events/EventMemoryInvitations', () => ({
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
+import type { EventAdminAccessDTO, EventAdminRosterDTO, SocialEventDTO, SocialEventMomentDTO, SocialTicketTierDTO } from '../api/socialEvents';
 
 const preferenceMock = jest.fn(async () => ({ inApp: false, supportsExtendedMoments: true }));
 const uploadMomentMediaMock = jest.fn<(eventId: string, file: File) => Promise<{ eiuPublicUrl: string }>>();
@@ -14,6 +14,8 @@ jest.unstable_mockModule('../api/eventMemoryInvitations', () => ({ EventMemoryIn
 const getEventMock = jest.fn<(eventId: string) => Promise<SocialEventDTO>>();
 const listMomentsMock = jest.fn<(eventId: string) => Promise<SocialEventMomentDTO[]>>();
 const listTicketTiersMock = jest.fn<(eventId: string) => Promise<SocialTicketTierDTO[]>>();
+const getEventAdminAccessMock = jest.fn<(eventId: string) => Promise<EventAdminAccessDTO>>();
+const listEventAdminsMock = jest.fn<(eventId: string) => Promise<EventAdminRosterDTO>>();
 const getStorefrontMock = jest.fn<(eventId: number) => Promise<{ checkoutAvailable: boolean }>>();
 
 jest.unstable_mockModule('../api/socialEvents', () => ({
@@ -25,6 +27,9 @@ jest.unstable_mockModule('../api/socialEvents', () => ({
     uploadMomentImage: jest.fn(),
     uploadMomentMedia: uploadMomentMediaMock,
     createTicketTier: jest.fn(),
+    getEventAdminAccess: (eventId: string) => getEventAdminAccessMock(eventId),
+    listEventAdmins: (eventId: string) => listEventAdminsMock(eventId),
+    listArtists: jest.fn(async () => []),
   },
 }));
 
@@ -115,6 +120,8 @@ describe('SocialEventDetailPage ticket sharing', () => {
     listMomentsMock.mockReset().mockResolvedValue([]);
     listTicketTiersMock.mockReset().mockResolvedValue([tierFixture]);
     getStorefrontMock.mockReset().mockResolvedValue({ checkoutAvailable: true });
+    getEventAdminAccessMock.mockReset().mockResolvedValue({ eaaEventId: '121', eaaAccess: 'none' });
+    listEventAdminsMock.mockReset().mockResolvedValue({ earAccess: 'admin', earAdmins: [], earInvitations: [] });
     Object.defineProperty(navigator, 'share', { configurable: true, value: undefined });
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
   });
@@ -398,6 +405,54 @@ describe('SocialEventDetailPage ticket sharing', () => {
     const view = renderPage('/social/eventos/121?moment=987');
     expect(await screen.findByText('Esta publicación ya no está disponible o no tienes acceso.')).toBeTruthy();
     view.unmount();
+  });
+
+  it('gives a delegated administrator the management tools but not the organizer-only invitation controls', async () => {
+    activeSession = { partyId: 9 };
+    getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'admin' });
+    listEventAdminsMock.mockResolvedValue({
+      earAccess: 'admin',
+      earAdmins: [{ eamPartyId: '9', eamDisplayName: 'Ana Pérez', eamGrantedAt: '2026-11-01T15:00:00Z' }],
+      earInvitations: [],
+    });
+    const view = renderPage();
+    expect(await screen.findByRole('heading', { name: 'Administradores del evento' })).toBeTruthy();
+    expect(await screen.findByText('Ana Pérez')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Preparar evento' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Artistas del evento' })).toBeTruthy();
+    expect(screen.getByText('Crear tipo de ticket')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Entradas de cortesía' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Emitir cortesía' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Generar enlace de invitación' })).toBeNull();
+    expect(getEventAdminAccessMock).toHaveBeenCalledWith('121');
+    view.unmount();
+  });
+
+  it('lets the organizer invite administrators and keeps every management tool away from other accounts', async () => {
+    activeSession = { partyId: 7 };
+    getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'owner' });
+    listEventAdminsMock.mockResolvedValue({ earAccess: 'owner', earAdmins: [], earInvitations: [] });
+    const organizerView = renderPage();
+    expect(await screen.findByRole('button', { name: 'Generar enlace de invitación' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Entradas de cortesía' })).toBeTruthy();
+    organizerView.unmount();
+
+    activeSession = { partyId: 9 };
+    getEventAdminAccessMock.mockResolvedValue({ eaaEventId: '121', eaaAccess: 'none' });
+    const attendeeView = renderPage();
+    expect(await screen.findByText('General')).toBeTruthy();
+    await waitFor(() => expect(getEventAdminAccessMock).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole('heading', { name: 'Administradores del evento' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Entradas de cortesía' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Preparar evento' })).toBeNull();
+    expect(screen.queryByText('Crear tipo de ticket')).toBeNull();
+    attendeeView.unmount();
+
+    activeSession = null;
+    const guestView = renderPage();
+    expect(await screen.findByText('General')).toBeTruthy();
+    expect(getEventAdminAccessMock).toHaveBeenCalledTimes(2);
+    guestView.unmount();
   });
 
   it('shows the share action only after a ticket tier exists', async () => {

@@ -30,6 +30,8 @@ import { formatInEventTimeZone } from '../utils/dateTime';
 import TicketPricePreview from '../components/events/TicketPricePreview';
 import EventPreparationPanel from '../components/events/EventPreparationPanel';
 import EventLineupEditor from '../components/events/EventLineupEditor';
+import EventAdminsCard from '../components/events/EventAdminsCard';
+import EventCourtesyTicketsCard from '../components/events/EventCourtesyTicketsCard';
 import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicketPricing';
 
 const formatDate = (value: string | null | undefined, locale: string, timezone: string) => {
@@ -109,6 +111,14 @@ export default function SocialEventDetailPage() {
     queryKey: ['social-event-ticket-tiers', eventId],
     queryFn: () => SocialEventsAPI.listTicketTiers(eventId),
     enabled: Boolean(eventId),
+  });
+  // Delegated administration is granted per event by its organizer, so it is
+  // asked of the server instead of being derived from the session roles.
+  const adminAccessQuery = useQuery({
+    queryKey: ['social-event-admin-access', eventId, accountScope],
+    queryFn: () => SocialEventsAPI.getEventAdminAccess(eventId),
+    enabled: Boolean(eventId && session),
+    retry: false,
   });
   const numericEventId = Number(eventId);
   const ticketStorefrontPrerequisitesMet = Number.isSafeInteger(numericEventId)
@@ -219,6 +229,10 @@ export default function SocialEventDetailPage() {
     input.focus();
   }, [composeFocusKey, composer.ready]);
   const isOrganizer = Boolean(session?.partyId && event?.eventOrganizerPartyId && String(session.partyId) === String(event.eventOrganizerPartyId));
+  const adminAccess = session ? adminAccessQuery.data?.eaaAccess ?? 'none' : 'none';
+  // Organizer or delegated administrator: event editing, poster, ticket tiers
+  // and courtesies. Memory campaigns and moderation stay with `isOrganizer`.
+  const canManageEvent = isOrganizer || adminAccess === 'admin';
   const canShareTickets = ticketStorefrontPrerequisitesMet
     && storefrontQuery.data?.checkoutAvailable === true;
   const ticketPurchaseUrl = typeof window === 'undefined'
@@ -428,8 +442,8 @@ export default function SocialEventDetailPage() {
           </Card>
         )}
 
-        {event && isOrganizer && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} />}
-        {event && isOrganizer && session?.partyId && <EventLineupEditor key={`lineup:${editorScope}`} event={event} ownerId={session.partyId} />}
+        {event && canManageEvent && session?.partyId && <EventPreparationPanel key={editorScope} event={event} ownerId={session.partyId} />}
+        {event && canManageEvent && session?.partyId && <EventLineupEditor key={`lineup:${editorScope}`} event={event} ownerId={session.partyId} />}
         {eventEnded && memories}
         {event && <Card variant="outlined">
           <CardContent>
@@ -464,7 +478,7 @@ export default function SocialEventDetailPage() {
                   })}
                 </Stack>
               ) : <Typography color="text.secondary">Aún no hay tickets para este evento.</Typography>}
-              {isOrganizer && <>
+              {canManageEvent && <>
                 <Divider />
                 <Typography variant="subtitle1" fontWeight={700}>Crear tipo de ticket</Typography>
                 {ticketTierMutation.error && <Alert severity="error">{ticketTierMutation.error instanceof Error ? ticketTierMutation.error.message : 'No se pudo crear el ticket.'}</Alert>}
@@ -479,6 +493,15 @@ export default function SocialEventDetailPage() {
             </Stack>
           </CardContent>
         </Card>
+
+        {event && adminAccess !== 'none' && <EventCourtesyTicketsCard key={`courtesy:${editorScope}`} eventId={eventId} tiers={tiersQuery.data ?? []} tiersLoading={tiersQuery.isLoading} />}
+        {event && adminAccess !== 'none' && <EventAdminsCard
+          key={`admins:${editorScope}`}
+          eventId={eventId}
+          access={adminAccess}
+          accountScope={accountScope}
+          formatDate={(value) => formatDate(value, locale, event.eventTimezone ?? timezone)}
+        />}
 
         {event && <ExperienceReviews targetKind="event" targetId={eventId} title="Reseñas del evento" />}
 

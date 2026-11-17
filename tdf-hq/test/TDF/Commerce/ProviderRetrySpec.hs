@@ -3046,6 +3046,20 @@ reconciliationPipelineSpec = describe "persisted callback to authoritative query
           Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
           Reconciliation.prrReview outcome `shouldBe` Just payment
 
+      it "keeps the bound payment for review when reconciliation throws after the binding" $ \pool ->
+        withNotificationEnvironment $ do
+          payment <- reconciliationFixture pool provider
+          payload <- reconciliationNotification pool payment
+          snapshot <- runSqlPool (paymentSnapshot payment) pool
+          outcome <- Reconciliation.processProviderEventWith
+            (\_ -> pure (Right (queryValue payment Adapter.AdapterSucceeded)))
+            (ioError (userError "SYNTHETIC-PRIVATE clock failure"))
+            (Env pool (error "Synthetic reconciliation must not use AppConfig")) payload notificationTime
+          Reconciliation.prrDisposition outcome `shouldBe` Reconciliation.ReconciliationRetry
+          Reconciliation.prrReview outcome `shouldBe` Just payment
+          show (Reconciliation.prrSummary outcome) `shouldNotContain` "SYNTHETIC-PRIVATE"
+          runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
       it "does not add a second exception when the query mismatch already recorded one" $ \pool ->
         withNotificationEnvironment $ do
           payment <- reconciliationFixture pool provider
