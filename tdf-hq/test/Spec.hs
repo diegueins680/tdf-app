@@ -3199,7 +3199,8 @@ main = hspec $ do
               `shouldSatisfy` isLeft
 
         it "refuses a PayPhone split it cannot carry safely (ADR 0136)" $ do
-            let build adapter payment = ProviderAdapter.adapterBuildCreate adapter adapterContext payment
+            let build adapter payment = ProviderAdapter.safeRequestSummary
+                  <$> ProviderAdapter.adapterBuildCreate adapter adapterContext payment
                 transfer identifier byPhone amount = ProviderAdapter.SplitTransfer identifier byPhone amount
             -- No coding password: the split cannot be encrypted.
             build payPhone buttonPayment `shouldSatisfy` isLeft
@@ -3240,7 +3241,8 @@ main = hspec $ do
             confirmBody `shouldContain` "\"id\":23178284"
             confirmBody `shouldContain` "\"clientTxId\":\"TDFC-0123456789abcdef0123456789a\""
             -- A Button charge is never cancelled through API Sale.
-            ProviderAdapter.adapterBuildCancel payPhoneSplit adapterContext buttonLocator
+            (ProviderAdapter.safeRequestSummary
+              <$> ProviderAdapter.adapterBuildCancel payPhoneSplit adapterContext buttonLocator)
               `shouldSatisfy` isLeft
             -- The confirmation answers with the transaction fields of a status query.
             let confirmed statusCode = A.object
