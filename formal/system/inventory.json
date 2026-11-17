@@ -70,6 +70,7 @@
       "e2e/web/legacy-provider-playback.spec.mjs",
       "e2e/web/live-session-contact.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
+      "e2e/web/merch-delivery-validation.spec.mjs",
       "e2e/web/merch-stock-category.spec.mjs",
       "e2e/web/merch-stock-refresh.spec.mjs",
       "e2e/web/mobile-layout-regressions.spec.mjs",
@@ -1415,6 +1416,7 @@
       "tdf-hq-ui/src/pages/MerchAdminPage.money.test.tsx",
       "tdf-hq-ui/src/pages/MerchAdminPage.test.tsx",
       "tdf-hq-ui/src/pages/MerchAdminPage.tsx",
+      "tdf-hq-ui/src/pages/MerchCartPage.test.tsx",
       "tdf-hq-ui/src/pages/MerchCartPage.tsx",
       "tdf-hq-ui/src/pages/MerchDiscoveryPage.tsx",
       "tdf-hq-ui/src/pages/MerchOrderReviewPage.tsx",
@@ -3490,6 +3492,12 @@
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
       "sha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-c78ffe3a6ce74a3a",
+      "path": "e2e/web/merch-delivery-validation.spec.mjs",
+      "sha256": "f51ca9efa795d23294c6e80b99b2e71c907c5816df14a5f13feb69d48035cb1f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11443,9 +11451,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-31e0f52c876408e6",
+      "path": "tdf-hq-ui/src/pages/MerchCartPage.test.tsx",
+      "sha256": "1256d89677c0a62462c50b5c4348195957e0cb309e8fab0551082de71161c9b3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-0e6e43a62c494812",
       "path": "tdf-hq-ui/src/pages/MerchCartPage.tsx",
-      "sha256": "d1c19f78695dda98c2a1e960484053eaf92ae66ebd49625c5e7f1065d30a0a6e",
+      "sha256": "b3a5bd7a554bc94f150e378a4b7c22760614b36cd7aaf2692c4bc886fca2a8e7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31067,7 +31081,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "c065bd73a659f8ad4c1fab41a4382624c61afb3e2b368b1e69a5d944bbdfeb4e",
+      "sha256": "cca6edaaf5061f5119e35690a09525e128b9c2366ac9dce5931accbc8c6b937e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
