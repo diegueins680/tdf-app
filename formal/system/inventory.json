@@ -10380,7 +10380,7 @@
     {
       "id": "SURFACE-0ba61d7e94897ebf",
       "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
-      "sha256": "6fbd37e55a4712559e03c4cf10c11c45bcf5f22cbd62b661aa57d17cd4b37661",
+      "sha256": "14b28bb846b01fb21a2ad01826d72c5c9541fa83f28f302f02d8fb09d4c683ba",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10434,13 +10434,13 @@
     {
       "id": "SURFACE-d689c68a5b5cfbbc",
       "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
-      "sha256": "72742630fa67d2701f256f472ee60c9b7e90386db7eb4af31aa5217a5f7675ee",
+      "sha256": "430ea0d14eb5b9fdf473813c368268bae39ca0dabfe0cc6d12bcf1aa3df411e0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-22fab616d1cda1f8",
       "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
-      "sha256": "e4d3c47c3f960b8294e911ed0850263199ecbfbdbda66b8a3004371616e50d29",
+      "sha256": "737face7a2d2c2f35036daae5a8a4ac4715c05f373441efffcf93a9ddbaee0ff",
       "semanticConformance": "not-established-by-discovery"
     },
     {

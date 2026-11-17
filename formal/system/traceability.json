@@ -29120,7 +29120,7 @@
     "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx": "05fcda4385711ddd958c53037446fadd41081fe70e4879ededc9c9638e3e809e",
     "tdf-hq-ui/src/features/interactions/PublicationSelection.test.tsx": "a4c38b4329431d311a51ae9d9b0ffb2cc67edbd97a6a6e709aa580c7e15fcef1",
     "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx": "34d38e97a9e6c27509256ce7182b50a883de6942b5038887b2bab8d089821fd4",
-    "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx": "6fbd37e55a4712559e03c4cf10c11c45bcf5f22cbd62b661aa57d17cd4b37661",
+    "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx": "14b28bb846b01fb21a2ad01826d72c5c9541fa83f28f302f02d8fb09d4c683ba",
     "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx": "b8c4e7e02c7334bc51bc562b07c56ac72805549cfa3ef2c5826b2f0e7655de32",
     "tdf-hq-ui/src/features/marketplace/MyAgreementsPanel.tsx": "eb7f1eb13f345b656751be082638b185fc86132af05fca7c2bcd402f505bf38b",
     "tdf-hq-ui/src/features/marketplace/MyOffersPanel.tsx": "7bbcb643b3c7d4e8384a7e3d697309aae846b8d8b685f753b3c49f4b850e9904",
@@ -29129,8 +29129,8 @@
     "tdf-hq-ui/src/features/marketplace/OfferForm.tsx": "193e8cdfcb1b6561a98cf19cafd20437114fa54e6d70050347e88c45c085db85",
     "tdf-hq-ui/src/features/marketplace/OffersBoard.tsx": "a9bfb4f66250e3c129f28d567c429c40ada29c807fec638c0204b02c7dd47303",
     "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx": "c79a98df646ecf1c975ac23972fc06af6c7f8b9dfe8dbe9540211d6ca1d55fed",
-    "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts": "72742630fa67d2701f256f472ee60c9b7e90386db7eb4af31aa5217a5f7675ee",
-    "tdf-hq-ui/src/features/marketplace/agreementPayment.ts": "e4d3c47c3f960b8294e911ed0850263199ecbfbdbda66b8a3004371616e50d29",
+    "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts": "430ea0d14eb5b9fdf473813c368268bae39ca0dabfe0cc6d12bcf1aa3df411e0",
+    "tdf-hq-ui/src/features/marketplace/agreementPayment.ts": "737face7a2d2c2f35036daae5a8a4ac4715c05f373441efffcf93a9ddbaee0ff",
     "tdf-hq-ui/src/features/marketplace/agreements.test.ts": "744aa19c4bfe2232c3090f4f908590197908be95c95ac9b2bd4c0a7044ed5203",
     "tdf-hq-ui/src/features/marketplace/agreements.ts": "a24989e84d57b01b99145e147e2aa1116245d36bbf962b82b9256c66f42f85c0",
     "tdf-hq-ui/src/features/marketplace/cartSummary.test.ts": "06f52743acd43e8b31dd67ada1861052d581528caacdc902c1063f6506f4e6f0",
@@ -62976,7 +62976,7 @@
     {
       "id": "SURFACE-0ba61d7e94897ebf",
       "path": "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
-      "sha256": "6fbd37e55a4712559e03c4cf10c11c45bcf5f22cbd62b661aa57d17cd4b37661",
+      "sha256": "14b28bb846b01fb21a2ad01826d72c5c9541fa83f28f302f02d8fb09d4c683ba",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63092,7 +63092,7 @@
     {
       "id": "SURFACE-d689c68a5b5cfbbc",
       "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
-      "sha256": "72742630fa67d2701f256f472ee60c9b7e90386db7eb4af31aa5217a5f7675ee",
+      "sha256": "430ea0d14eb5b9fdf473813c368268bae39ca0dabfe0cc6d12bcf1aa3df411e0",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -63104,7 +63104,7 @@
     {
       "id": "SURFACE-22fab616d1cda1f8",
       "path": "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
-      "sha256": "e4d3c47c3f960b8294e911ed0850263199ecbfbdbda66b8a3004371616e50d29",
+      "sha256": "737face7a2d2c2f35036daae5a8a4ac4715c05f373441efffcf93a9ddbaee0ff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
