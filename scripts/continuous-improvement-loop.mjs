@@ -66,6 +66,8 @@ const DEFAULTS = {
 
 let stepTimeoutMs = DEFAULTS.stepTimeoutMinutes * 60_000;
 let activeStepChild = null;
+// Set once a stop signal arrives; no further step may start after that.
+let shuttingDown = false;
 
 function killStepGroup(child, signal) {
   if (!child?.pid) return;
@@ -318,6 +320,10 @@ async function githubText(endpoint, options = {}) {
 async function runShellCommand(command, repoRoot, context, options = {}) {
   const rendered = expandTemplate(command, context);
   console.log(`$ ${rendered}`);
+
+  if (shuttingDown) {
+    throw new Error(`${options.stepName ?? 'Command'} was not started because the loop is stopping.`);
+  }
 
   return new Promise((resolve, reject) => {
     const child = spawn(rendered, {
@@ -1967,13 +1973,17 @@ async function main() {
   stepTimeoutMs = Math.max(0, Number(config.stepTimeoutMinutes) || 0) * 60_000;
   for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
     process.on(signal, () => {
-      // Stop the running worker tree before exiting so nothing keeps editing the worktree.
-      const child = activeStepChild;
-      killStepGroup(child, 'SIGTERM');
+      if (shuttingDown) return;
+      // No new step may start from here on: a step ended by this signal can
+      // look like a failed audit and would otherwise launch its fix step.
+      shuttingDown = true;
+      // Stop the running worker tree before exiting so nothing keeps editing
+      // the worktree, including any step that was already starting.
+      killStepGroup(activeStepChild, 'SIGTERM');
       setTimeout(() => {
-        killStepGroup(child, 'SIGKILL');
+        killStepGroup(activeStepChild, 'SIGKILL');
         process.exit(143);
-      }, child ? 3000 : 0);
+      }, activeStepChild ? 3000 : 0);
     });
   }
 
@@ -2127,6 +2137,12 @@ function isCliEntry() {
 
 if (isCliEntry()) {
   main().catch(async (error) => {
+    if (shuttingDown) {
+      // A stop signal, not a crash: let the signal handler finish stopping the
+      // active step and exit with the signal status.
+      console.error(error.message);
+      return;
+    }
     await emitLoopStatus({
       state: 'crashed',
       phase: 'error',

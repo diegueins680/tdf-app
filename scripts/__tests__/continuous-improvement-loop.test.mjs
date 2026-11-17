@@ -1250,6 +1250,43 @@ test('prepareIterationBranch never deletes branches it did not create under a sh
   }
 });
 
+test('continuous-improvement-loop starts no further step after a stop signal during an audit', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-shutdown-test-');
+  const auditStarted = path.join(fixture.tempRoot, 'audit.started');
+  const fixStarted = path.join(fixture.tempRoot, 'fix.started');
+
+  try {
+    const configPath = await fixture.writeConfig({
+      logicalAuditCommand: `touch "${auditStarted}"; sleep 30`,
+      logicalFixCommand: `touch "${fixStarted}"; sleep 30`,
+    });
+    const loop = spawn('node', [loopScriptPath, '--config', configPath, '--max-iterations', '1'], {
+      cwd: fixture.repoDir,
+      stdio: 'ignore',
+    });
+    const exited = new Promise((resolve) => loop.on('exit', (code, signal) => resolve({ code, signal })));
+    const deadline = Date.now() + 60_000;
+    while (Date.now() < deadline) {
+      try {
+        await fs.access(auditStarted);
+        break;
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+    await fs.access(auditStarted);
+
+    loop.kill('SIGTERM');
+    const { code } = await exited;
+    assert.equal(code, 143);
+    // Give a wrongly started fix step time to appear.
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await assert.rejects(() => fs.access(fixStarted), /ENOENT/);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test('continuous-improvement-loop keeps stopping a timed-out worker that ignores SIGTERM after its shell exits', async () => {
   const fixture = await createLoopFixture('continuous-improvement-loop-stubborn-test-');
   const pidFile = path.join(fixture.tempRoot, 'stubborn.pid');
