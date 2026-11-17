@@ -1259,6 +1259,9 @@ test('loop rework retires the reviews of two deleted scripts as provenance and r
   for (const id of rework.addedDecisionIds) {
     assert.equal(active.find(row => row.id === id)?.reviewed, true);
   }
-  assert.equal(active.length, 1465);
-  assert.equal((await readHistoricalReconciliation()).active.length, 1466);
+  // The earlier view re-inserts the retired reviews and drops the new one; the catalog
+  // itself keeps growing with main, so only the difference is fixed.
+  const historical = (await readHistoricalReconciliation()).active;
+  assert.equal(historical.length, active.length + rework.decisions.length - rework.addedDecisionIds.length);
+  for (const entry of rework.decisions) assert.deepEqual(historical[entry.position], entry.decision);
 });
