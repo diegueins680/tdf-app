@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-17T03:42:19.610Z",
+  "generatedAt": "2026-11-17T15:23:34.621Z",
   "repositoryRoot": ".",
-  "filesScanned": 2748,
+  "filesScanned": 2749,
   "candidateCount": 1466,
   "byClassification": {
     "dynamic-business-catalog": 966,
@@ -9431,7 +9431,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1633,
+      "consumerCount": 1634,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -27427,7 +27427,7 @@
       "lines": [
         29
       ],
-      "consumerCount": 111,
+      "consumerCount": 116,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-14_social_v2_foundation.sql",
         "tdf-hq/sql/2026-09-18_notification_navigation.sql",
@@ -27480,6 +27480,7 @@
         "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
         "tdf-hq-ui/src/features/campaigns/videoAttribution.test.ts",
         "tdf-hq-ui/src/features/campaigns/videoAttribution.ts",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
         "tdf-hq-ui/src/features/interactions/InteractionPanel.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
@@ -27497,14 +27498,13 @@
         "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
         "tdf-hq-ui/src/pages/CommerceHubPage.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/DomoVenuePage.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/InternalFeedbackPage.tsx",
-        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx",
-        "tdf-hq-ui/src/pages/LeadsPage.tsx",
-        "tdf-hq-ui/src/pages/LogsPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
-        "tdf-hq-ui/src/pages/MerchProductPage.tsx",
-        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
+        "tdf-hq-ui/src/pages/LabelAssetsPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/analytics/partySelectorTelemetry.ts",
@@ -29656,7 +29656,7 @@
       "lines": [
         18
       ],
-      "consumerCount": 1095,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -29953,7 +29953,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1095,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -30803,7 +30803,7 @@
       "lines": [
         11
       ],
-      "consumerCount": 339,
+      "consumerCount": 340,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-06_feature_access_requests.sql",
@@ -30904,9 +30904,9 @@
         "tdf-hq-ui/src/features/ddex/DdexInboxPage.tsx",
         "tdf-hq-ui/src/features/ddex/PartnerManagementPage.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
         "tdf-hq-ui/src/features/fans/FanProfileEditor.tsx",
-        "tdf-hq-ui/src/features/featureRegistry.test.ts",
-        "tdf-hq-ui/src/features/featureRegistry.ts"
+        "tdf-hq-ui/src/features/featureRegistry.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -31051,7 +31051,7 @@
       "lines": [
         13
       ],
-      "consumerCount": 1095,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -46540,7 +46540,7 @@
       "domain": "music-catalog-cms",
       "kind": "object-registry",
       "name": "releaseWithFallback",
-      "line": 393,
+      "line": 394,
       "values": [
         "arSpotifyUrl",
         "arYoutubeUrl"
@@ -46548,7 +46548,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        393
+        394
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -53398,7 +53398,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "literal-union",
       "name": "ReviewTab",
-      "line": 38,
+      "line": 39,
       "values": [
         "profiles",
         "suggestions",
@@ -53408,7 +53408,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        38
+        39
       ],
       "consumerCount": 28,
       "backendConsumers": [
@@ -53475,7 +53475,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "literal-union",
       "name": "VerificationFilter",
-      "line": 39,
+      "line": 40,
       "values": [
         "all",
         "never",
@@ -53484,7 +53484,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        39
+        40
       ],
       "consumerCount": 13,
       "backendConsumers": [
@@ -53528,7 +53528,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 229,
+      "line": 230,
       "values": [
         "pending",
         "approved",
@@ -53550,7 +53550,7 @@
       "valueCount": 16,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        229
+        230
       ],
       "consumerCount": 258,
       "backendConsumers": [
@@ -60683,7 +60683,7 @@
       "lines": [
         343
       ],
-      "consumerCount": 1140,
+      "consumerCount": 1141,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -61345,7 +61345,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 368,
+      "line": 369,
       "values": [
         "__nearby",
         "list",
@@ -61358,7 +61358,7 @@
       "valueCount": 7,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        368
+        369
       ],
       "consumerCount": 8,
       "backendConsumers": [
@@ -62178,7 +62178,7 @@
       "domain": "fan-social",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 309,
+      "line": 312,
       "values": [
         "new",
         "hot",
@@ -62187,7 +62187,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        309
+        312
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -62212,7 +62212,7 @@
       "domain": "fan-social",
       "kind": "switch-cases",
       "name": "status",
-      "line": 405,
+      "line": 408,
       "values": [
         "unread",
         "opened",
@@ -62222,7 +62222,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        405
+        408
       ],
       "consumerCount": 1240,
       "backendConsumers": [
@@ -63390,7 +63390,7 @@
       "domain": "fan-social",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 757,
+      "line": 758,
       "values": [
         "{label=Slug público, ready}",
         "{label=Bio, ready}",
@@ -63401,7 +63401,7 @@
       "valueCount": 5,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        757
+        758
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -63426,7 +63426,7 @@
       "domain": "fan-social",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 781,
+      "line": 782,
       "values": [
         "{title=Lanzamientos, description=Publica, corrige enlaces de audio y revisa pendientes del sello., to=/label/releases, label=Abrir lanzamientos}",
         "{title=Artistas, description=Edita perfiles, activos y enlaces desde el módulo del sello., to=/label/artistas, label=Ir a artistas}",
@@ -63436,7 +63436,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        781
+        782
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -65970,7 +65970,7 @@
       "domain": "music-catalog-cms",
       "kind": "literal-union",
       "name": "SortOrder",
-      "line": 49,
+      "line": 50,
       "values": [
         "newest",
         "oldest",
@@ -65979,7 +65979,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        49
+        50
       ],
       "consumerCount": 162,
       "backendConsumers": [
@@ -66168,7 +66168,7 @@
       "domain": "music-catalog-cms",
       "kind": "array",
       "name": "SORT_ORDER_OPTIONS",
-      "line": 50,
+      "line": 51,
       "values": [
         "newest",
         "oldest",
@@ -66177,7 +66177,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        50
+        51
       ],
       "consumerCount": 118,
       "backendConsumers": [
@@ -66335,7 +66335,7 @@
       "domain": "music-catalog-cms",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 305,
+      "line": 306,
       "values": [
         "all",
         "upcoming",
@@ -66347,7 +66347,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        305
+        306
       ],
       "consumerCount": 124,
       "backendConsumers": [
@@ -71738,7 +71738,7 @@
       "domain": "music-catalog-cms",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 323,
+      "line": 326,
       "values": [
         "copyright",
         "master_rights",
@@ -71750,7 +71750,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        323
+        326
       ],
       "consumerCount": 74,
       "backendConsumers": [
@@ -76137,7 +76137,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 1095,
+      "consumerCount": 1096,
       "backendConsumers": [
         "tdf-hq/config/default.env.example",
         "tdf-hq/docs/openapi/api.yaml",
@@ -76420,7 +76420,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "BUDGET_CATEGORY_OPTIONS",
-      "line": 139,
+      "line": 140,
       "values": [
         "tickets",
         "sponsorship",
@@ -76441,7 +76441,7 @@
       "valueCount": 15,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        139
+        140
       ],
       "consumerCount": 157,
       "backendConsumers": [
@@ -76598,7 +76598,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "FINANCE_SOURCE_OPTIONS",
-      "line": 162,
+      "line": 163,
       "values": [
         "{value=ticket_sale, label=Venta de tickets, direction=income, category=tickets}",
         "{value=ticket_refund, label=Reembolso de tickets, direction=expense, category=tickets}",
@@ -76621,7 +76621,7 @@
       "valueCount": 17,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        162
+        163
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -76646,7 +76646,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "FINANCE_STATUS_OPTIONS",
-      "line": 185,
+      "line": 186,
       "values": [
         "{value=posted, label=Publicado}",
         "{value=pending, label=Pendiente}",
@@ -76656,7 +76656,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        185
+        186
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -76681,7 +76681,7 @@
       "domain": "events-ticketing",
       "kind": "array",
       "name": "PROJECT_BUDGET_TEMPLATE",
-      "line": 197,
+      "line": 198,
       "values": [
         "{code=INC-TICKETS, name=Venta de tickets, type=income, category=tickets}",
         "{code=INC-SPONSORS, name=Patrocinios, type=income, category=sponsorship}",
@@ -76695,7 +76695,7 @@
       "valueCount": 8,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        197
+        198
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -76720,7 +76720,7 @@
       "domain": "events-ticketing",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 1003,
+      "line": 1004,
       "values": [
         "expense",
         "income",
@@ -76731,7 +76731,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        1003
+        1004
       ],
       "consumerCount": 24,
       "backendConsumers": [
@@ -78320,7 +78320,7 @@
       "domain": "studio-services-booking",
       "kind": "array",
       "name": "serviceCards",
-      "line": 276,
+      "line": 277,
       "values": [
         "{title=Estudio y reservas, description=Grabación, mezcla, mastering, ensayos, podcast, DJ booth y sesiones privadas desde el ecosistema TDF., icon, path=/reservar}",
         "{title=Escuela y cursos, description=Programas presenciales para aprender producción, performance, grabación y herramientas de industria., icon, path}",
@@ -78331,7 +78331,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        276
+        277
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -79675,7 +79675,7 @@
       "domain": "campaigns-promotion",
       "kind": "object-registry",
       "name": "plan",
-      "line": 66,
+      "line": 67,
       "values": [
         "id",
         "artistId",
@@ -79687,7 +79687,7 @@
       "valueCount": 6,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        66
+        67
       ],
       "consumerCount": 298,
       "backendConsumers": [
@@ -79920,7 +79920,7 @@
       "domain": "campaigns-promotion",
       "kind": "object-registry",
       "name": "plan",
-      "line": 181,
+      "line": 182,
       "values": [
         "campaignId",
         "objective",
@@ -79931,7 +79931,7 @@
       "valueCount": 5,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        181
+        182
       ],
       "consumerCount": 237,
       "backendConsumers": [
@@ -80146,7 +80146,7 @@
       "domain": "campaigns-promotion",
       "kind": "jsx-option-values",
       "name": "JSX value attributes",
-      "line": 259,
+      "line": 260,
       "values": [
         "draft",
         "prepared",
@@ -80156,7 +80156,7 @@
       "valueCount": 4,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        259
+        260
       ],
       "consumerCount": 14,
       "backendConsumers": [
@@ -92253,7 +92253,7 @@
       "lines": [
         11345
       ],
-      "consumerCount": 1053,
+      "consumerCount": 1054,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
@@ -96534,7 +96534,7 @@
       "lines": [
         14992
       ],
-      "consumerCount": 402,
+      "consumerCount": 403,
       "backendConsumers": [
         "tdf-hq/docs/openapi/directory.yaml",
         "tdf-hq/docs/openapi/user-roles.yaml",
@@ -100709,7 +100709,7 @@
       "lines": [
         19056
       ],
-      "consumerCount": 1048,
+      "consumerCount": 1049,
       "backendConsumers": [
         "tdf-hq/app/Main.hs",
         "tdf-hq/app/templates/tdf-logo.pdf",
