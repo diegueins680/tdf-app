@@ -15,7 +15,7 @@ const club = (overrides: Partial<FanClubDTO> = {}): FanClubDTO => ({
 });
 
 describe('FanClubPreview', () => {
-  it('renders fan club cards linked to their club page', () => {
+  it('links the club details to the club and the photo to the artist profile', () => {
     render(
       <MemoryRouter>
         <FanClubPreview clubs={[club()]} loading={false} />
@@ -25,6 +25,7 @@ describe('FanClubPreview', () => {
     expect(screen.getByText('Tus clubes')).not.toBeNull();
     expect(screen.getByText('Club Luna')).not.toBeNull();
     expect(screen.getByText('128 seguidores')).not.toBeNull();
-    expect(screen.getByRole('link', { name: /Club Luna/i }).getAttribute('href')).toBe('/fans/clubs/42');
+    expect(screen.getByRole('link', { name: /Club Luna 128 seguidores/i }).getAttribute('href')).toBe('/fans/clubs/42');
+    expect(screen.getByRole('link', { name: 'Club Luna' }).getAttribute('href')).toBe('/a/42');
   });
 });

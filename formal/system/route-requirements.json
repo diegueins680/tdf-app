@@ -2,12 +2,12 @@
   "schemaVersion": 1,
   "authority": "Generated from the compiled API surface and requirement text by scripts/check-route-requirements.py; reviewed entries are kept. Coverage here is attribution, not conformance.",
   "summary": {
-    "total": 531,
-    "named": 449,
+    "total": 533,
+    "named": 451,
     "path-named": 0,
     "reviewed": 82,
     "unspecified": 0,
-    "covered": 531
+    "covered": 533
   },
   "routes": [
     {
@@ -2447,11 +2447,27 @@
       ]
     },
     {
+      "method": "PUT",
+      "path": "/music/me/featured-track",
+      "basis": "named",
+      "requirements": [
+        "MEDIA-ARTIST-FEATURED-001"
+      ]
+    },
+    {
       "method": "POST",
       "path": "/music/me/playback-events",
       "basis": "named",
       "requirements": [
         "MEDIA-MUSIC-PLAYBACK-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/music/media-health/{sourceKind}/{sourceId}/revalidate",
+      "basis": "named",
+      "requirements": [
+        "MEDIA-SOURCE-HEALTH-001"
       ]
     },
     {

@@ -1,3 +1,5 @@
+import { getAuthSessionEpoch } from '../session/authEvents';
+import ArtistProfileLink from '../components/ArtistProfileLink';
 import { invalidateArtistCatalog } from '../features/releases/catalogQueries';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
@@ -17,7 +19,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardMedia,
   Chip,
   CircularProgress,
   Dialog,
@@ -44,6 +45,8 @@ import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import LaunchIcon from '@mui/icons-material/Launch';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import GoogleDriveUploadWidget from '../components/GoogleDriveUploadWidget';
+import ArtistCoverPreview from '../components/ArtistCoverPreview';
+import { artistImageUrlError } from '../utils/artistImage';
 import LazyPaginatedList from '../components/LazyPaginatedList';
 import type { ArtistProfileUpsert } from '../api/types';
 import type { DriveFileInfo } from '../services/googleDrive';
@@ -58,7 +61,7 @@ import { slugify } from '../utils/slug';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { canAccessPath } from '../utils/accessControl';
 import { uploadToDrive as uploadToDriveApi } from '../api/drive';
-import { getArtistHeroImage } from '../utils/artistFallbacks';
+import { getArtistHeroImage, hasArtistPicture, picturedArtistsFirst } from '../utils/artistFallbacks';
 import ArtistProfileImage from '../components/ArtistProfileImage';
 import { Records, type RecordsResourceDTO } from '../api/records';
 import {
@@ -301,8 +304,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     return filteredGenreOptions.slice(0, 14);
   }, [filteredGenreOptions, showAllGenres]);
   const filteredArtists = useMemo(() => {
-    if (!genreFilter) return artists;
-    return artists.filter((artist) => artist.apGenreIds.includes(genreFilter));
+    const matching = genreFilter ? artists.filter((artist) => artist.apGenreIds.includes(genreFilter)) : artists;
+    return picturedArtistsFirst(matching);
   }, [artists, genreFilter]);
   const selectedGenreFilterName = genreOptions.find((genre) => genre.id === genreFilter)?.name;
 
@@ -403,9 +406,10 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       submittedDraft: ArtistProfileUpsert;
       isCurrentOwner: () => boolean;
       acknowledgeSave: (draft: ArtistProfileUpsert) => void;
+      persistedCover: string | null;
     }) => {
       if (!request.isCurrentOwner()) throw new Error('Vuelve a cargar tu perfil antes de guardar.');
-      return Fans.updateMyArtistProfile(request.payload);
+      return Fans.updateMyArtistProfile(request.payload, { persistedCover: request.persistedCover, sessionEpoch: getAuthSessionEpoch });
     },
     onSuccess: (profile, request) => {
       // A successful write is not permission to share a draft slug or another Party's identity.
@@ -753,9 +757,13 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
       apuGenreIds: artistDraft.apuGenreIds,
       apuHighlights: normalizeField(artistDraft.apuHighlights),
     };
+    // Only the signed-in artist's own saved cover counts as unchanged.
+    const published = artistProfileQuery.data;
+    const persistedCover = published && published.apArtistId === session.partyId
+      ? published.apHeroImageUrl ?? null : null;
     updateArtistProfileMutation.mutate({
       payload, submittedDraft: artistDraft, isCurrentOwner: isCurrentArtistOwner,
-      acknowledgeSave: acknowledgeArtistSave,
+      acknowledgeSave: acknowledgeArtistSave, persistedCover,
     });
   };
 
@@ -842,7 +850,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
     const followed = new Set(follows.map((f) => f.ffArtistId));
     return artists
       .filter((artist) => !followed.has(artist.apArtistId))
-      .sort((a, b) => (b.apFollowerCount ?? 0) - (a.apFollowerCount ?? 0))
+      .sort((a, b) => Number(hasArtistPicture(b)) - Number(hasArtistPicture(a)) || (b.apFollowerCount ?? 0) - (a.apFollowerCount ?? 0))
       .slice(0, 3);
   }, [artists, follows]);
 
@@ -1290,10 +1298,14 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             >
                               <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
                                 <Stack direction="row" spacing={1.5} alignItems="center">
-                                  <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={artist.apHeroImageUrl} slug={artist.apSlug} width={40} height={40} sx={{ borderRadius: '50%' }} />
+                                  <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug} sx={{ display: 'block' }}>
+                                    <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={artist.apHeroImageUrl} slug={artist.apSlug} width={40} height={40} sx={{ borderRadius: '50%' }} />
+                                  </ArtistProfileLink>
                                   <Box>
                                     <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                                      {artist.apDisplayName}
+                                      <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug}>
+                                        {artist.apDisplayName}
+                                      </ArtistProfileLink>
                                     </Typography>
                                     {artist.apCity && (
                                       <Typography variant="caption" color="text.secondary">
@@ -1751,6 +1763,8 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         />
                         <TextField
                           label="URL de portada (opcional)"
+                          error={Boolean(artistImageUrlError(artistDraft.apuHeroImageUrl))}
+                          helperText={artistImageUrlError(artistDraft.apuHeroImageUrl) ?? 'Enlace público a una imagen o archivo de Drive.'}
                           placeholder="https://"
                           value={artistDraft.apuHeroImageUrl ?? ''}
                           onChange={(event) => {
@@ -1784,14 +1798,7 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                             </Typography>
                           )}
                         </Stack>
-                        {artistDraft.apuHeroImageUrl && (
-                          <Card
-                            variant="outlined"
-                            sx={{ maxWidth: 420, borderRadius: 2, borderColor: 'divider', overflow: 'hidden' }}
-                          >
-                            <CardMedia component="img" height="180" image={artistDraft.apuHeroImageUrl} alt="Vista previa" />
-                          </Card>
-                        )}
+                        <ArtistCoverPreview url={artistDraft.apuHeroImageUrl} />
                         <Typography variant="caption" color="text.secondary">
                           Guardamos sólo enlaces hospedados (Drive/CDN) para que el perfil cargue rápido.
                         </Typography>
@@ -1998,15 +2005,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
             <Typography variant="h6" gutterBottom>Recomendados para ti</Typography>
             <Stack direction="row" spacing={1} flexWrap="wrap">
               {suggestedArtists.map((artist) => (
-                <Chip
-                  key={`sug-${artist.apArtistId}`}
-                  label={artist.apDisplayName}
-                  onClick={() => {
-                    const anchor = document.getElementById(`artist-${artist.apArtistId}`);
-                    anchor?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }}
-                  variant="outlined"
-                />
+                <ArtistProfileLink key={artist.apArtistId} partyId={artist.apArtistId} slug={artist.apSlug}>
+                  <Chip label={artist.apDisplayName} variant="outlined" />
+                </ArtistProfileLink>
               ))}
             </Stack>
           </Card>
@@ -2115,7 +2116,9 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                   onClick={() => { if (artistProfilePath) navigate(artistProfilePath); }}
                 >
                   {displayHeroImage && (
-                    <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={displayHeroImage} width={640} height={220} sx={{ width: '100%' }} />
+                    <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug} sx={{ display: 'block' }}>
+                      <ArtistProfileImage artistName={artist.apDisplayName} imageUrl={displayHeroImage} width={640} height={220} sx={{ width: '100%' }} />
+                    </ArtistProfileLink>
                   )}
                   <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                     <Stack
@@ -2129,11 +2132,11 @@ export default function FanHubPage({ focusArtist }: { focusArtist?: boolean }) {
                         <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} flexWrap="wrap">
                           <Typography
                             variant="h5"
-                            component={RouterLink}
-                            to={artistProfilePath ?? '/fans'}
-                            sx={{ overflowWrap: 'anywhere', minWidth: 0, color: 'inherit' }}
+                            sx={{ overflowWrap: 'anywhere', minWidth: 0 }}
                           >
-                            {artist.apDisplayName}
+                            <ArtistProfileLink partyId={artist.apArtistId} slug={artist.apSlug}>
+                              {artist.apDisplayName}
+                            </ArtistProfileLink>
                           </Typography>
                           <Chip label={`${artist.apFollowerCount} fans`} size="small" />
                         </Stack>

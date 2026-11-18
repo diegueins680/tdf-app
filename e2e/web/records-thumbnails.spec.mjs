@@ -68,8 +68,15 @@ test('Records handles failed images and decoded placeholders with bounded reques
   await expect(control).toBeVisible();
   await expect.poll(() => control.evaluate(i => i.naturalWidth)).toBe(480);
   expect(requests.every(p => /\/vi\/(ooPsIHsikYU|Cb7VGZJ6apo|f2BabxM1Pjc)\/(hqdefault|mqdefault)\.jpg/.test(p))).toBe(true);
-  // Compact + card instances can each request a candidate once; never retry endlessly.
-  expect(requests.length).toBeLessThanOrEqual(10);
+  // Three components can show each recording's still: the compact "Videos recientes"
+  // preview, the recording card thumbnail and the card's video preview poster. Each may
+  // request a candidate once (the browser may also serve repeats from its memory cache),
+  // so a candidate is requested at most three times and nothing retries endlessly.
+  const perCandidate = requests.reduce((counts, p) => ({ ...counts, [p]: (counts[p] ?? 0) + 1 }), {});
+  const detail = `thumbnail requests ${JSON.stringify(requests)}`;
+  expect(Object.values(perCandidate).every(count => count <= 3), detail).toBe(true);
+  expect(Object.keys(perCandidate).length, detail).toBeLessThanOrEqual(5);
+  expect(requests.length, detail).toBeLessThanOrEqual(15);
 });
 
 test('Records preserves source identities, keyboard links and responsive unavailable states @critical', async ({ page, baseURL }) => {

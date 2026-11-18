@@ -48,7 +48,7 @@ import TicketPricePreview from '../components/events/TicketPricePreview';
 import { UserSelector } from '../components/party-selector/PartySelector';
 import { useSession } from '../session/SessionContext';
 import { canAccessPath } from '../utils/accessControl';
-import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { useLocalePreferences, wasTimezoneChosenOnThisDevice } from '../contexts/LocalePreferencesContext';
 import {
   EVENT_ART_ACCEPT,
   buildInitialCollaborativeEventDraft,
@@ -135,7 +135,11 @@ export default function CollaborativeEventCreatorPage() {
   const { session } = useSession();
   const { locale, timezone: preferredTimezone, currency } = useLocalePreferences();
   const timezone = useMemo(
-    () => resolveEventCreatorTimezone(preferredTimezone, Intl.DateTimeFormat().resolvedOptions().timeZone),
+    () => resolveEventCreatorTimezone(
+      preferredTimezone,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      wasTimezoneChosenOnThisDevice(preferredTimezone),
+    ),
     [preferredTimezone],
   );
   const canPlanLogistics = canAccessPath('/social/eventos/0/logistica', session?.roles, session?.modules, session?.featureFlags);
