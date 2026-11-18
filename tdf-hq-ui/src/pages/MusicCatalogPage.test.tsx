@@ -24,7 +24,8 @@ function mount(path = '/musica') {
   clients.push(client);
   return render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}>
     <NavigationProbe /><Routes><Route path="/musica" element={<MusicCatalogPage />} />
-      <Route path="/musica/:slug" element={<div>Detalle del lanzamiento</div>} /></Routes>
+      <Route path="/musica/:slug" element={<div>Detalle del lanzamiento</div>} />
+      <Route path="/a/:slugOrId" element={<div>Perfil del artista</div>} /></Routes>
   </MemoryRouter></QueryClientProvider>);
 }
 beforeEach(() => {
@@ -41,7 +42,11 @@ it('makes release 25 reachable and preserves the query through forward and brows
   expect(screen.queryByRole('heading', { name: 'Lanzamiento 1', exact: true })).toBeNull();
   expect(listPublic).toHaveBeenLastCalledWith('Álbum', undefined, expect.objectContaining({ limit: 25, offset: 24 }));
   expect(screen.getByTestId('location').textContent).toBe('/musica?q=%C3%81lbum&page=2');
-  fireEvent.click(screen.getByRole('link', { name: /Lanzamiento 25 Artista SINGLE/ }));
+  fireEvent.click(screen.getAllByRole('link', { name: 'Artista', exact: true })[0]!);
+  await screen.findByText('Perfil del artista');
+  expect(screen.getByTestId('location').textContent).toBe('/a/1');
+  fireEvent.click(screen.getByRole('button', { name: 'Volver en historial' }));
+  fireEvent.click(await screen.findByRole('link', { name: 'Lanzamiento 25', exact: true }));
   await screen.findByText('Detalle del lanzamiento');
   fireEvent.click(screen.getByRole('button', { name: 'Volver en historial' }));
   await screen.findByRole('heading', { name: 'Lanzamiento 25', exact: true });
