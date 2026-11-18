@@ -2427,7 +2427,7 @@
       "privacy": "Never print raw container configuration, credentials, command stderr or provider/customer payloads. Protected credential transfer is memory-only through verified SSH; refuse unsafe credential file ownership, type or mode. Catalog and mailbox reports retain aggregate facts, not credentials, raw messages or recipient addresses.",
       "concurrency": "Observations are sequential, not an atomic fleet snapshot; fresh verification is required within a future guarded release.",
       "idempotency": "Read-only repeat observations do not mutate application state. Exclusive receipt creation rejects accidental overwrite.",
-      "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider.",
+      "failure": "Fail closed on an unexpected target, database identity, image reference or output path; do not fall back to another host/provider. A failed observation may disclose only an allowlisted stage/check code through the complete fixed failure protocol; never publish a partial runtime receipt or reflect remote exception/process output.",
       "recovery": "Retry observation after authorized configuration correction; retain previous receipts. No database restoration or image rollback is performed.",
       "observability": "Record time, source SHA/dirty status, inspector and launcher hashes, backend identity, ledger checksums, runtime boolean configuration and explicit limitations. Include production merchandise-reputation flags, interaction runtime/entity-kind switches, and optional event-operations API flag-table presence without exposing actor/reason metadata. Known backend boolean controls must be represented even when absent; record CORS boolean aliases and preserve absent/empty/false distinctions. Conservative source discovery must reject newly introduced literal controls missing from the collector register.",
       "formalModels": [],
@@ -11236,7 +11236,8 @@
         ".github/workflows/ci.yml",
         "tdf-hq-ui/src/components/ArtistFansList.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.tsx",
-        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts"
+        "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
+        "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "tests": [
         "scripts/test-community-search.py",
@@ -15334,7 +15335,7 @@
     {
       "id": "MEDIA-ARTIST-CATALOG-001",
       "title": "Shared artist catalog and identity projections",
-      "statement": "Profiles, followed feeds and Label share catalog reads and published-release presentation while retaining canonical and legacy source identity, bounded pagination, cancellation and honest partial failures. Artist links use a validated Party identity; shared subscription commands and target/account-scoped invalidation keep audience projections coherent without granting social consent.",
+      "statement": "Profiles, followed feeds and Label share catalog reads and published-release presentation while retaining canonical and legacy source identity, bounded pagination, cancellation and honest partial failures. Artist links use a validated Party identity; shared subscription commands and target/account-scoped invalidation keep audience projections coherent without granting social consent. Artist display names and photos in the web and desktop app link to their public profile wherever the record supplies a profile identity, including Label quick notes and roster. Use the known Party ID when a slug is missing or ambiguous and retain existing visibility rules.",
       "domain": "MEDIA",
       "actors": [
         "Public listener",
@@ -15366,13 +15367,15 @@
       "allowedTransitions": [
         "Load -> complete only after all eligible pages finish.",
         "One source fails -> partial while retaining other available results.",
-        "Committed subscription change -> invalidate its account and target artist projections."
+        "Committed subscription change -> invalidate its account and target artist projections.",
+        "Activate a known artist name or photo -> open that artist’s existing public profile."
       ],
       "forbiddenTransitions": [
         "Same title -> assume cross-source identity.",
         "Failed or cancelled fetch -> assert an empty complete catalog.",
         "Social artist record ID -> substitute as Party ID.",
-        "Subscription -> grant connection consent or club membership."
+        "Subscription -> grant connection consent or club membership.",
+        "An unlinked credit, a name match, or a numeric slug -> link to an unrelated Party."
       ],
       "effects": [
         "Reuse public release cards, bounded public catalog reads, validated profile routes and existing subscription commands."
@@ -15388,25 +15391,42 @@
       "implementation": [
         "tdf-hq-ui/src/api/artistCatalog.ts",
         "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/components/ArtistProfileLink.tsx",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
+        "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
         "tdf-hq-ui/src/features/fans/artistAudience.ts",
         "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
+        "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/features/releases/catalogQueries.ts",
         "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
         "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
+        "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
+        "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
         "tdf-hq-ui/src/pages/MusicCatalogPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
+        "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
         "tdf-hq-ui/src/utils/artistIdentity.ts"
       ],
       "tests": [
         "tdf-hq-ui/src/api/artistCatalog.test.ts",
+        "tdf-hq-ui/src/features/fanclubs/FanClubPreview.test.tsx",
         "tdf-hq-ui/src/features/fans/artistAudience.test.ts",
         "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
+        "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
         "tdf-hq-ui/src/utils/artistIdentity.test.ts"
       ],
       "formalModels": [],
@@ -15421,10 +15441,10 @@
         "reason": "Web consolidation is implemented and tested locally; physical data migration, protected integration and production acceptance are not established."
       },
       "critical": false,
-      "authority": "User-authorized source consolidation, preserving existing permissions and data.",
+      "authority": "User-authorized source consolidation, preserving existing permissions and data. User request on 2026-11-10 for artist names and photos to open their profiles.",
       "property": "Shared projections preserve source identity, cancellation, partial-failure truthfulness and account scoping.",
       "contract": "docs/architecture/artist-catalog-unification.md",
-      "verification": "Adapter boundary tests, identity negative cases, cache scoping tests and existing profile/hub/event/label component checks.",
+      "verification": "Adapter boundary tests, identity negative cases, cache scoping tests and existing profile/hub/event/label component checks. Component navigation tests exercise roster and quick-note links, including artists without an account, and verify names and photos on the public platform and directory.",
       "evidence": "Local checks and current-head hosted results must be reported separately; no formal refinement proof is claimed."
     },
     {
@@ -25325,7 +25345,13 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
         "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-        "package.json"
+        "package.json",
+        "tdf-hq-ui/src/utils/artistImage.ts",
+        "tdf-hq-ui/src/api/artistProfileMedia.ts",
+        "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
+        "tdf-hq-ui/src/api/fans.ts",
+        "tdf-hq-ui/src/api/admin.ts",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.tsx"
       ],
       "tests": [
         "scripts/__tests__/artist-enrichment.test.mjs",
@@ -25333,7 +25359,11 @@
         "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs",
         "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
         "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx"
+        "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
+        "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+        "tdf-hq-ui/src/api/fans.test.ts",
+        "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -25533,6 +25563,7 @@
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/api/inventory.upload.test.ts",
         "tdf-hq-ui/src/pages/FanHubPage.profileSafety.test.tsx",
+        "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
         "tdf-hq-ui/src/api/uploadQueue.test.ts",
         "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx",
         "tdf-hq-ui/src/session/recoverableDraft.test.ts",
@@ -27463,7 +27494,12 @@
         "package.json",
         "tdf-hq-ui/src/utils/eventLineup.ts",
         "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
-        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx"
+        "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
+        "tdf-hq/src/TDF/Courses/Metadata.hs",
+        "tdf-hq/src/TDF/Services/LlmChat.hs",
+        "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
+        "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+        "tdf-hq/src/TDF/Ticketing/Issuance.hs"
       ],
       "tests": [
         "scripts/__tests__/architecture-boundaries.test.mjs"
@@ -27477,7 +27513,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "The ratchet is enforced; 11 backend imports, 21 web imports and 17 oversized files remain listed debt."
+        "reason": "The ratchet is enforced; 8 backend imports, 21 web imports and 16 oversized files remain listed debt."
       },
       "authority": "User request 2026-11-10; layer definitions and limits are an engineering decision recorded in ADR 0133, owner confirmation pending.",
       "property": "Every cross-layer upward import and every file over the size limit is either absent or individually listed, and every listed entry still exists in the source tree.",
@@ -27959,6 +27995,83 @@
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
       "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance. The final worker image must import the actual health module as its non-root user without networking, with the full Python standard library. Required repository CI builds the image without publication and executes the immutable-image verifier, which also binds the health-script digest. Earlier backend Python controls alone do not establish final-image dependency availability. A premature EOF that contradicts declared HTTP Content-Length, or invalid length framing, is temporary transport failure and cannot establish a complete invalid media object. Exact/close-delimited completion and the existing bounded-prefix behavior remain; fake-transport controls keep native decoding separate. A real HTTP parser socket-pair regression bounds trickled response headers under the overall network deadline and verifies timeout cleanup.",
       "evidence": "Task-local logs and current-head CI; production/device/provider qualification remains pending."
+    },
+    {
+      "id": "SYS-LOOP-001",
+      "title": "The continuous improvement loop only proposes verified changes as draft pull requests",
+      "statement": "The continuous improvement loop works in its own linked worktree, puts each change on a new branch cut from the remote base branch, runs the configured verification command before committing, and publishes the result only as a draft pull request. It never pushes, merges, rebases or deletes the base branch or any branch it did not create, and it discards a change whose implementation or verification fails.",
+      "domain": "SYS",
+      "actors": [
+        "Maintainer",
+        "Loop supervisor",
+        "Loop runner"
+      ],
+      "preconditions": [
+        "A linked git worktree dedicated to the loop exists and its configuration names a verification command."
+      ],
+      "inputs": [
+        "Loop configuration file",
+        "Remote base branch",
+        "Open and closed loop pull requests"
+      ],
+      "state": {
+        "iteration": "idle | proposing | implementing | verifying | published | discarded",
+        "supervisor": "running | blocked | held by stop file"
+      },
+      "allowedTransitions": [
+        "idle -> proposing -> implementing -> verifying -> published",
+        "proposing | implementing | verifying -> discarded",
+        "blocked -> running once the blocking condition clears"
+      ],
+      "forbiddenTransitions": [
+        "verification failed, missing or skipped -> published",
+        "any state -> push, merge, rebase or deletion of the base branch",
+        "any state -> merge or deletion of a branch the loop did not create",
+        "stop file present -> a new iteration"
+      ],
+      "effects": [
+        "A verified change exists as one commit on a new branch under the loop prefix and as one draft pull request.",
+        "A failed iteration leaves the worktree clean on the remote base commit and publishes nothing."
+      ],
+      "authorization": "The loop may open draft pull requests; it cannot approve or merge them. Merging stays with a maintainer under the protected-branch rules.",
+      "privacy": "Logs and status files hold repository paths, commands and exit codes; credentials are never written to them.",
+      "concurrency": "One supervisor per worktree, enforced by a lock directory with a pid file. At most the configured number of loop pull requests stay open; the loop waits while that limit is reached.",
+      "idempotency": "A target file that already has an open or closed-unmerged loop pull request is not proposed again.",
+      "failure": "Reject the configuration, or discard the iteration and report the failing step; stop after the configured number of consecutive failures. Refuse to start an iteration when free disk space is below the configured minimum.",
+      "recovery": "On start, leftover changes in the loop's own worktree are discarded and the worktree is returned to the remote base commit. A stop file holds the supervisor idle until it is removed.",
+      "observability": "Supervisor log, status file with phase, last result and last error, and the pull request body naming the idea and the verification gates that ran.",
+      "authority": "Owner instruction of 2026-11-13 to review, correct and start the self-improvement loop; pull request #750.",
+      "source": "Owner instruction of 2026-11-13; AI_WORKFLOW.md and README.md sections on the continuous improvement loop",
+      "property": "No loop run changes the base branch or publishes an unverified change.",
+      "contract": "AI_WORKFLOW.md",
+      "implementation": [
+        "scripts/continuous-improvement-loop.mjs",
+        "scripts/lib/continuous-improvement-loop.mjs",
+        "scripts/continuous-improvement-loop-verify.mjs",
+        "scripts/lib/continuous-improvement-loop-verify.mjs",
+        "scripts/continuous-improvement-loop-supervisor.sh",
+        "scripts/start-continuous-improvement-loop.sh",
+        "scripts/install-continuous-improvement-loop-launchd.sh",
+        "scripts/codex-loop-worker.sh",
+        "scripts/discover-improvement-idea.mjs",
+        "scripts/lib/discovery.mjs",
+        "scripts/continuous-improvement-loop.codex.json",
+        "scripts/continuous-improvement-loop.example.json"
+      ],
+      "tests": [
+        "scripts/__tests__/continuous-improvement-loop.test.mjs"
+      ],
+      "formalModels": [],
+      "verification": "Executable tests against temporary git repositories, including refusal controls; not a whole-program proof.",
+      "evidence": "node --test scripts/__tests__/continuous-improvement-loop.test.mjs on the candidate commit; hosted CI on pull request #750.",
+      "status": "specified and implemented",
+      "critical": false,
+      "confidence": "high for the tested git and configuration boundaries; the quality of proposed changes is outside this requirement",
+      "ambiguity": [],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local tests pass; the supervisor's launchd behaviour and disk guard are exercised by shell tests only, and hosted gates remain pending."
+      }
     }
   ]
 }

@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import fs from 'node:fs/promises';
+import { statfsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { execFile, execFileSync, spawn } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify, parseArgs } from 'node:util';
 import { discoverImprovementIdea } from './lib/discovery.mjs';
 import { collectUiFindings, summarizeUiFindings } from './lib/ui-static-audit.mjs';
@@ -21,11 +22,13 @@ import {
   summarizeWorkflowRuns,
   verifyImprovementLoopModel,
 } from './lib/continuous-improvement-loop.mjs';
+import { unmappedSurfacePaths } from './lib/continuous-improvement-loop-verify.mjs';
 
 const execFileAsync = promisify(execFile);
 const GITHUB_LOG_LINE_LIMIT = 200;
 const GITHUB_LOG_CHAR_LIMIT = 24_000;
-const PUSH_SYNC_MAX_ATTEMPTS = 2;
+const TOOL_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const STEP_KILL_GRACE_MS = 10_000;
 const ALLOW_PUSH_TO_MAIN_ENV = 'CONTINUOUS_LOOP_ALLOW_PUSH_TO_MAIN';
 
 class GitHubHttpError extends Error {
@@ -44,10 +47,51 @@ const DEFAULTS = {
   ciTimeoutMinutes: 30,
   pollGitHub: true,
   pushRemote: 'origin',
+  baseBranch: 'main',
+  branchPrefix: 'continuous-improvement-loop/',
+  openPullRequest: true,
+  draftPullRequest: true,
+  maxOpenPullRequests: 3,
+  prBacklogDelaySeconds: 900,
+  requireLinkedWorktree: true,
+  stepTimeoutMinutes: 180,
+  maxCiRepairAttempts: 3,
+  maxConsecutiveFailures: 5,
+  failureDelaySeconds: 300,
+  shutdownSimulatorsBeforeImplementation: false,
   stopOnNoChanges: true,
   iterationDelaySeconds: 10,
   commitMessageTemplate: '{commit_message}',
 };
+
+let stepTimeoutMs = DEFAULTS.stepTimeoutMinutes * 60_000;
+let activeStepChild = null;
+// Set once a stop signal arrives; no further step may start after that.
+let shuttingDown = false;
+
+function killStepGroup(child, signal) {
+  if (!child?.pid) return;
+  try {
+    // Steps run as their own process group so nested workers die with them.
+    process.kill(-child.pid, signal);
+  } catch {
+    try {
+      child.kill(signal);
+    } catch {
+      // already gone
+    }
+  }
+}
+
+function stepGroupAlive(child) {
+  if (!child?.pid) return false;
+  try {
+    process.kill(-child.pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code === 'EPERM';
+  }
+}
 
 const SUPERVISOR_STATUS_FILE = process.env.CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE ?? '';
 
@@ -73,10 +117,10 @@ async function emitLoopStatus(patch = {}) {
       ...current,
       ...patch,
       runnerPid: process.pid,
-      lastHeartbeat: new Date().toISOString(),
+      runnerHeartbeat: new Date().toISOString(),
     };
 
-    const tmpFile = `${SUPERVISOR_STATUS_FILE}.tmp`;
+    const tmpFile = `${SUPERVISOR_STATUS_FILE}.runner-${process.pid}.tmp`;
     await fs.writeFile(tmpFile, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
     await fs.rename(tmpFile, SUPERVISOR_STATUS_FILE);
   } catch {
@@ -156,6 +200,7 @@ function getGitHubApiBase() {
 function buildContext(repoRoot, contextDir, iteration) {
   return {
     repo_root: repoRoot,
+    tool_root: TOOL_ROOT,
     context_dir: contextDir,
     iteration: String(iteration),
     idea_file: path.join(contextDir, 'idea.md'),
@@ -164,13 +209,18 @@ function buildContext(repoRoot, contextDir, iteration) {
     ux_report_file: path.join(contextDir, 'ux-report.json'),
     ui_report_file: path.join(contextDir, 'ui-report.json'),
     ci_report_file: path.join(contextDir, 'ci-report.json'),
+    excluded_targets_file: path.join(contextDir, 'excluded-targets.json'),
   };
 }
 
 function loopEnvironment(context) {
+  // Steps must not inherit the supervisor's status file: a nested loop run (for example the
+  // loop's own tests inside the verification gate) would overwrite the live status.
+  const { CONTINUOUS_LOOP_SUPERVISOR_STATUS_FILE: _statusFile, ...inheritedEnv } = process.env;
   return {
-    ...process.env,
+    ...inheritedEnv,
     CONTINUOUS_LOOP_REPO_ROOT: context.repo_root,
+    CONTINUOUS_LOOP_TOOL_ROOT: context.tool_root,
     CONTINUOUS_LOOP_CONTEXT_DIR: context.context_dir,
     CONTINUOUS_LOOP_ITERATION: context.iteration,
     CONTINUOUS_LOOP_IDEA_FILE: context.idea_file,
@@ -179,6 +229,7 @@ function loopEnvironment(context) {
     CONTINUOUS_LOOP_UX_REPORT_FILE: context.ux_report_file,
     CONTINUOUS_LOOP_UI_REPORT_FILE: context.ui_report_file,
     CONTINUOUS_LOOP_CI_REPORT_FILE: context.ci_report_file,
+    CONTINUOUS_LOOP_EXCLUDED_TARGETS_FILE: context.excluded_targets_file,
   };
 }
 
@@ -270,16 +321,47 @@ async function runShellCommand(command, repoRoot, context, options = {}) {
   const rendered = expandTemplate(command, context);
   console.log(`$ ${rendered}`);
 
+  if (shuttingDown) {
+    throw new Error(`${options.stepName ?? 'Command'} was not started because the loop is stopping.`);
+  }
+
   return new Promise((resolve, reject) => {
     const child = spawn(rendered, {
       cwd: repoRoot,
       env: loopEnvironment(context),
       shell: true,
+      detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
     });
+    activeStepChild = child;
 
     let stdout = '';
     let stderr = '';
+    let timedOut = false;
+    let killTimer = null;
+    const timeoutMs = Number(options.timeoutMs ?? stepTimeoutMs);
+    const timeoutTimer =
+      timeoutMs > 0
+        ? setTimeout(() => {
+            timedOut = true;
+            killStepGroup(child, 'SIGTERM');
+            killTimer = setTimeout(() => killStepGroup(child, 'SIGKILL'), STEP_KILL_GRACE_MS);
+          }, timeoutMs)
+        : null;
+    const settle = () => {
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      if (killTimer) clearTimeout(killTimer);
+      if (activeStepChild === child) activeStepChild = null;
+    };
+    // The shell can exit on SIGTERM while a descendant that ignores it keeps
+    // running, so a timed-out step only ends once its whole group is gone.
+    const stopTimedOutGroup = async () => {
+      const deadline = Date.now() + STEP_KILL_GRACE_MS;
+      while (Date.now() < deadline && stepGroupAlive(child)) await sleep(100);
+      if (stepGroupAlive(child)) killStepGroup(child, 'SIGKILL');
+      const killDeadline = Date.now() + STEP_KILL_GRACE_MS;
+      while (Date.now() < killDeadline && stepGroupAlive(child)) await sleep(100);
+    };
 
     child.stdout.on('data', (chunk) => {
       const value = chunk.toString();
@@ -294,10 +376,22 @@ async function runShellCommand(command, repoRoot, context, options = {}) {
     });
 
     child.on('error', (error) => {
+      settle();
       reject(error);
     });
 
-    child.on('close', (code) => {
+    child.on('close', async (code) => {
+      if (timedOut) {
+        if (timeoutTimer) clearTimeout(timeoutTimer);
+        if (killTimer) clearTimeout(killTimer);
+        await stopTimedOutGroup();
+        settle();
+        reject(
+          new Error(`${options.stepName ?? 'Command'} timed out after ${Math.round(timeoutMs / 60_000)} minute(s) and was stopped.`),
+        );
+        return;
+      }
+      settle();
       if ((code ?? 1) !== 0 && !options.allowFailure) {
         reject(new Error(`${options.stepName ?? 'Command'} failed with exit code ${code ?? 1}.`));
         return;
@@ -381,47 +475,79 @@ function findingKey(finding) {
   return [finding.rule, finding.file, finding.message, finding.snippet].join('::');
 }
 
-async function getCurrentBranch(repoRoot) {
-  const { stdout } = await execText('git', ['branch', '--show-current'], repoRoot);
-  return stdout.trim();
+function resolveBaseBranch(config = {}) {
+  return normalizeGitBranchShortName(config.baseBranch) || DEFAULTS.baseBranch;
 }
 
-async function resolveLoopPushBranch(repoRoot, config = {}) {
-  const configuredBranch = normalizeGitBranchShortName(config.pushBranch);
-  if (configuredBranch) {
-    return configuredBranch;
-  }
-
-  return normalizeGitBranchShortName(await getCurrentBranch(repoRoot));
+function resolveBranchPrefix(config = {}) {
+  const raw = config.branchPrefix === undefined ? DEFAULTS.branchPrefix : config.branchPrefix;
+  return String(raw ?? '').trim().replace(/^refs\/heads\//, '');
 }
 
-function isPushToMainOverrideEnabled(config = {}) {
-  return Boolean(config.allowPushToMain) || isTruthyFlag(process.env[ALLOW_PUSH_TO_MAIN_ENV]);
+function isValidBranchPrefix(prefix) {
+  return /^[A-Za-z0-9][A-Za-z0-9._-]*(\/[A-Za-z0-9][A-Za-z0-9._-]*)*[/-]$/.test(prefix) && !prefix.includes('..');
 }
 
+function buildIterationBranchName(config = {}, iteration = 1, now = new Date()) {
+  const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\..*$/, '').replace('T', '-');
+  return `${resolveBranchPrefix(config)}${stamp}-${iteration}`;
+}
+
+async function isLinkedWorktree(repoRoot) {
+  const gitDir = (await execText('git', ['rev-parse', '--git-dir'], repoRoot)).stdout.trim();
+  const commonDir = (await execText('git', ['rev-parse', '--git-common-dir'], repoRoot)).stdout.trim();
+  const resolvedGitDir = await fs.realpath(path.resolve(repoRoot, gitDir));
+  const resolvedCommonDir = await fs.realpath(path.resolve(repoRoot, commonDir));
+  return resolvedGitDir !== resolvedCommonDir;
+}
+
+// The loop never commits to, merges into, or pushes the base branch. Each iteration
+// publishes its own branch and (optionally) a pull request, and discards its own failed
+// attempts, so it must own the checkout it runs in.
 async function validateLoopConfig(repoRoot, config = {}) {
-  const pushBranch = await resolveLoopPushBranch(repoRoot, config);
   const pushingEnabled = !config.dryRun;
-  const allowPushToMain = isPushToMainOverrideEnabled(config);
+  const baseBranch = resolveBaseBranch(config);
+  const branchPrefix = resolveBranchPrefix(config);
 
-  if (!pushBranch && pushingEnabled) {
+  if (Boolean(config.allowPushToMain) || isTruthyFlag(process.env[ALLOW_PUSH_TO_MAIN_ENV])) {
     throw new Error(
-      'Unable to determine pushBranch for the continuous improvement loop. Set pushBranch in config or run from a named branch.',
+      `Pushing to ${baseBranch} is no longer supported: remove "allowPushToMain" and ${ALLOW_PUSH_TO_MAIN_ENV}. The loop publishes one branch and pull request per iteration instead.`,
     );
   }
 
-  if (pushingEnabled && pushBranch === 'main' && !allowPushToMain) {
+  if (config.pushBranch) {
     throw new Error(
-      `Continuous improvement loop refuses to target main by default. Switch to a non-main branch, set "pushBranch" to a non-main branch, or explicitly override with "allowPushToMain": true or ${ALLOW_PUSH_TO_MAIN_ENV}=1.`,
+      '"pushBranch" is no longer supported. Configure "branchPrefix"; every iteration publishes a new branch under it.',
+    );
+  }
+
+  if (!isValidBranchPrefix(branchPrefix)) {
+    throw new Error(
+      `Invalid branchPrefix "${branchPrefix}". Use a non-empty prefix ending in "/" or "-", for example "continuous-improvement-loop/".`,
+    );
+  }
+
+  if (pushingEnabled && !config.verifyCommand) {
+    throw new Error(
+      'verifyCommand is required: the continuous improvement loop refuses to commit changes that were not built and tested.',
+    );
+  }
+
+  const requireLinkedWorktree = config.requireLinkedWorktree !== false;
+  if (pushingEnabled && requireLinkedWorktree && !(await isLinkedWorktree(repoRoot))) {
+    throw new Error(
+      `Continuous improvement loop must run in its own linked git worktree, not the primary checkout (${repoRoot}). Create one with "git worktree add --detach <path> ${config.pushRemote || DEFAULTS.pushRemote}/${baseBranch}" and start the loop there.`,
     );
   }
 
   return {
-    pushBranch,
+    baseBranch,
+    branchPrefix,
     pushingEnabled,
-    allowPushToMain,
+    requireLinkedWorktree,
   };
 }
+
 
 async function getRemoteUrl(repoRoot, remoteName) {
   const { stdout } = await execText('git', ['remote', 'get-url', remoteName], repoRoot);
@@ -454,10 +580,6 @@ function splitLines(stdout) {
     .filter((value) => value.length > 0);
 }
 
-function uniqueValues(values) {
-  return [...new Set(values.map((value) => String(value).trim()).filter(Boolean))];
-}
-
 function normalizeGitBranchShortName(rawBranch) {
   const raw = String(rawBranch ?? '').trim();
   if (!raw || raw === 'HEAD' || raw === 'origin' || raw.endsWith('/HEAD')) return '';
@@ -466,277 +588,6 @@ function normalizeGitBranchShortName(rawBranch) {
     .replace(/^refs\/remotes\/origin\//, '')
     .replace(/^origin\//, '')
     .trim();
-}
-
-function isLoopCheckpointBranch(rawBranch) {
-  const shortName = normalizeGitBranchShortName(rawBranch);
-  return shortName.startsWith('continuous-improvement-loop/dirty/');
-}
-
-function buildBranchMergeCandidates({ localBranches = [], remoteBranches = [], baseBranch = 'main' } = {}) {
-  const base = normalizeGitBranchShortName(baseBranch || 'main');
-  const localByShortName = new Map();
-  const remoteByShortName = new Map();
-
-  for (const branch of localBranches) {
-    const shortName = normalizeGitBranchShortName(branch);
-    if (!shortName || shortName === base) continue;
-    localByShortName.set(shortName, String(branch).trim());
-  }
-
-  for (const branch of remoteBranches) {
-    const shortName = normalizeGitBranchShortName(branch);
-    if (!shortName || shortName === base) continue;
-    remoteByShortName.set(shortName, String(branch).trim());
-  }
-
-  return uniqueValues([...localByShortName.keys(), ...remoteByShortName.keys()])
-    .sort((left, right) => left.localeCompare(right))
-    .map((shortName) => ({
-      shortName,
-      ref: localByShortName.get(shortName) || remoteByShortName.get(shortName) || shortName,
-      localRef: localByShortName.get(shortName) || '',
-      remoteRef: remoteByShortName.get(shortName) || '',
-    }));
-}
-
-async function listUnmergedConflictPaths(repoRoot) {
-  const { stdout } = await execText('git', ['diff', '--name-only', '--diff-filter=U'], repoRoot);
-  return uniqueValues(splitLines(stdout));
-}
-
-function buildMainMergeCommitMessage(shortName = '', branchRef = '') {
-  return `continuous-improvement-loop: merge ${shortName || branchRef} into main`;
-}
-
-function buildMainConflictResolutionCommitMessage(shortName = '', branchRef = '') {
-  return `continuous-improvement-loop: resolve conflicts while merging ${shortName || branchRef} into main`;
-}
-
-async function mergeRefOntoMain(repoRoot, branchRef, shortName = normalizeGitBranchShortName(branchRef)) {
-  const headBefore = await getHeadSha(repoRoot);
-  const mergeMessage = buildMainMergeCommitMessage(shortName, branchRef);
-  const conflictMessage = buildMainConflictResolutionCommitMessage(shortName, branchRef);
-  const mergeArgs = isLoopCheckpointBranch(shortName)
-    ? ['merge', '-s', 'ours', '--no-ff', '-m', mergeMessage, branchRef]
-    : ['merge', '--no-ff', '-m', mergeMessage, branchRef];
-
-  try {
-    await execText('git', mergeArgs, repoRoot);
-  } catch (error) {
-    const conflicts = await listUnmergedConflictPaths(repoRoot);
-    if (conflicts.length === 0) {
-      throw error;
-    }
-
-    // Conflict resolution stays fail-closed toward the current main branch.
-    await execText('git', ['restore', '--source=HEAD', '--staged', '--worktree', '--', ...conflicts], repoRoot);
-    await execText('git', ['commit', '-m', conflictMessage], repoRoot);
-
-    return {
-      outcome: 'conflict-resolved',
-      ref: branchRef,
-      shortName,
-      headBefore,
-      headAfter: await getHeadSha(repoRoot),
-      conflicts,
-    };
-  }
-
-  const headAfter = await getHeadSha(repoRoot);
-  return {
-    outcome: headAfter === headBefore ? 'noop' : 'merged',
-    ref: branchRef,
-    shortName,
-    headBefore,
-    headAfter,
-    conflicts: [],
-  };
-}
-
-function isIgnorablePruneError(message) {
-  const text = String(message ?? '');
-  return (
-    /remote ref does not exist/i.test(text) ||
-    /remote ref not found/i.test(text) ||
-    /unable to delete .*remote ref does not exist/i.test(text) ||
-    /branch .* not found/i.test(text)
-  );
-}
-
-async function listWorktreeBranches(repoRoot) {
-  const { stdout } = await execText('git', ['worktree', 'list', '--porcelain'], repoRoot);
-  const branches = new Set();
-  for (const line of splitLines(stdout)) {
-    if (!line.startsWith('branch ')) continue;
-    const shortName = normalizeGitBranchShortName(line.slice('branch '.length).trim());
-    if (shortName) branches.add(shortName);
-  }
-  return branches;
-}
-
-async function remoteBranchStillExists(repoRoot, remoteRef) {
-  const { stdout } = await execText('git', ['branch', '-r', '--list', remoteRef], repoRoot);
-  return splitLines(stdout).length > 0;
-}
-
-async function pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch = 'main') {
-  await execText('git', ['worktree', 'prune'], repoRoot);
-  const localBranches = splitLines(
-    (await execText('git', ['branch', '--format=%(refname:short)', '--merged', baseBranch], repoRoot)).stdout,
-  );
-  const remoteBranches = splitLines(
-    (await execText('git', ['branch', '-r', '--format=%(refname:short)', '--merged', baseBranch], repoRoot)).stdout,
-  );
-  const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch });
-  const worktreeBranches = await listWorktreeBranches(repoRoot);
-  const prunedLocalBranches = [];
-  const prunedRemoteBranches = [];
-  const skippedWorktreeBranches = [];
-  const pruneErrors = [];
-
-  for (const candidate of candidates) {
-    if (candidate.remoteRef) {
-      try {
-        await execText('git', ['push', remoteName, '--delete', candidate.shortName], repoRoot);
-        prunedRemoteBranches.push(candidate.shortName);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        await execText('git', ['fetch', remoteName, '--prune'], repoRoot);
-        if (!(await remoteBranchStillExists(repoRoot, candidate.remoteRef))) {
-          prunedRemoteBranches.push(candidate.shortName);
-          continue;
-        }
-        if (!isIgnorablePruneError(message)) {
-          pruneErrors.push({ branch: candidate.shortName, scope: 'remote', error: message });
-        }
-      }
-    }
-
-    if (candidate.localRef) {
-      if (worktreeBranches.has(candidate.shortName)) {
-        skippedWorktreeBranches.push(candidate.shortName);
-        continue;
-      }
-      try {
-        await execText('git', ['branch', '-D', candidate.shortName], repoRoot);
-        prunedLocalBranches.push(candidate.shortName);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (!isIgnorablePruneError(message)) {
-          pruneErrors.push({ branch: candidate.shortName, scope: 'local', error: message });
-        }
-      }
-    }
-  }
-
-  if (prunedRemoteBranches.length > 0) {
-    await execText('git', ['fetch', remoteName, '--prune'], repoRoot);
-  }
-
-  return {
-    candidateBranches: candidates.map((candidate) => candidate.shortName),
-    prunedLocalBranches,
-    prunedRemoteBranches,
-    skippedWorktreeBranches,
-    pruneErrors,
-  };
-}
-
-export async function reconcileNonMainBranchesOntoMain(repoRoot, config = {}) {
-  const remoteName = config.pushRemote || 'origin';
-  const baseBranch = 'main';
-  const startedAt = new Date().toISOString();
-
-  try {
-    await execText('git', ['fetch', remoteName, '--prune'], repoRoot);
-    const currentBranch = (await getCurrentBranch(repoRoot)) || baseBranch;
-    if (currentBranch !== baseBranch) {
-      await execText('git', ['checkout', baseBranch], repoRoot);
-    }
-
-    const baseSync = await syncWithPushBranch(repoRoot, remoteName, baseBranch);
-    const localBranches = splitLines(
-      (await execText('git', ['branch', '--format=%(refname:short)', '--no-merged', baseBranch], repoRoot)).stdout,
-    );
-    const remoteBranches = splitLines(
-      (await execText('git', ['branch', '-r', '--format=%(refname:short)', '--no-merged', baseBranch], repoRoot)).stdout,
-    );
-    const candidates = buildBranchMergeCandidates({ localBranches, remoteBranches, baseBranch });
-
-    const mergedBranches = [];
-    const conflictResolvedBranches = [];
-
-    for (const candidate of candidates) {
-      const mergeResult = await mergeRefOntoMain(repoRoot, candidate.ref, candidate.shortName);
-      if (mergeResult.outcome === 'merged') {
-        mergedBranches.push(candidate.shortName);
-        continue;
-      }
-      if (mergeResult.outcome === 'conflict-resolved') {
-        conflictResolvedBranches.push({
-          branch: candidate.shortName,
-          conflicts: mergeResult.conflicts,
-        });
-      }
-    }
-
-    const syncedHead = baseSync.remoteExists && baseSync.sha !== baseSync.previousSha;
-    const shouldPush = syncedHead || mergedBranches.length > 0 || conflictResolvedBranches.length > 0;
-    if (shouldPush) {
-      await pushHead(repoRoot, remoteName, baseBranch);
-    }
-    const pruneResult = await pruneMergedRefsOnMain(repoRoot, remoteName, baseBranch);
-    const summary = {
-      startedAt,
-      endedAt: new Date().toISOString(),
-      baseBranch,
-      currentBranch,
-      syncedRemote: syncedHead,
-      candidateBranches: candidates.map((candidate) => candidate.shortName),
-      mergedBranches,
-      conflictResolvedBranches,
-      pushed: shouldPush,
-      pushSha: shouldPush ? await getHeadSha(repoRoot) : null,
-      pruneCandidateBranches: pruneResult.candidateBranches,
-      prunedLocalBranches: pruneResult.prunedLocalBranches,
-      prunedRemoteBranches: pruneResult.prunedRemoteBranches,
-      skippedWorktreeBranches: pruneResult.skippedWorktreeBranches,
-      pruneErrors: pruneResult.pruneErrors,
-      head: await getHeadSha(repoRoot),
-    };
-
-    if (pruneResult.pruneErrors.length > 0) {
-      return {
-        ok: false,
-        reason: `merged ref pruning on ${baseBranch} failed`,
-        details: pruneResult.pruneErrors.map((item) => `${item.scope}:${item.branch}: ${item.error}`).slice(0, 40),
-        summary,
-      };
-    }
-
-    return { ok: true, summary };
-  } catch (error) {
-    try {
-      await execText('git', ['merge', '--abort'], repoRoot);
-    } catch {}
-    try {
-      await execText('git', ['rebase', '--abort'], repoRoot);
-    } catch {}
-
-    const message = error instanceof Error ? error.message : String(error);
-    return {
-      ok: false,
-      reason: `branch reconciliation onto main failed`,
-      details: splitLines(message).slice(0, 40),
-      summary: {
-        startedAt,
-        endedAt: new Date().toISOString(),
-        baseBranch,
-        error: message,
-      },
-    };
-  }
 }
 
 function extractPathsFromPorcelainLine(line) {
@@ -827,7 +678,9 @@ async function generateIdea(repoRoot, context, config) {
     };
   }
 
-  const idea = await discoverImprovementIdea(repoRoot);
+  const idea = await discoverImprovementIdea(repoRoot, {
+    excludedFiles: excludedTargetFiles(config),
+  });
   await fs.writeFile(context.idea_file, idea.markdown, 'utf8');
   const metadata = parseIdeaMarkdown(idea.markdown);
   return {
@@ -993,12 +846,16 @@ async function commitStagedChanges(repoRoot, commitMessage, stagedFiles) {
 }
 
 async function pushHead(repoRoot, remoteName, branchName) {
-  await execText('git', ['push', remoteName, `HEAD:${branchName}`], repoRoot);
+  await execText('git', ['push', remoteName, `HEAD:refs/heads/${branchName}`], repoRoot);
 }
 
-async function syncSubmodulesRecursively(repoRoot) {
+async function syncSubmodulesRecursively(repoRoot, { checkout = false } = {}) {
   await execText('git', ['submodule', 'sync', '--recursive'], repoRoot);
-  await execText('git', ['submodule', 'update', '--init', '--recursive'], repoRoot);
+  // --checkout pins every submodule to the revision the base records, even for submodules
+  // configured with update=none, so gates that need the pinned sources see the right ones.
+  const updateArgs = ['submodule', 'update', '--init', '--recursive'];
+  if (checkout) updateArgs.push('--checkout');
+  await execText('git', updateArgs, repoRoot);
 }
 
 function buildRemoteBranchRef(remoteName, branchName) {
@@ -1009,85 +866,359 @@ function isMissingRemoteRefError(message) {
   return /\bcouldn't find remote ref\b|\bremote ref\b.*\bnot found\b/i.test(String(message ?? ''));
 }
 
-function isNonFastForwardPushError(message) {
-  return /\bnon-fast-forward\b|failed to push some refs|fetch first/i.test(String(message ?? ''));
-}
-
-async function syncWithPushBranch(repoRoot, remoteName, branchName) {
-  const remoteRef = buildRemoteBranchRef(remoteName, branchName);
-  const previousSha = await getHeadSha(repoRoot);
-
+async function fetchBaseBranch(repoRoot, config) {
+  const remoteName = config.pushRemote;
+  const baseBranch = resolveBaseBranch(config);
+  const remoteRef = buildRemoteBranchRef(remoteName, baseBranch);
   try {
-    await execText('git', ['fetch', remoteName, branchName], repoRoot);
+    await execText('git', ['fetch', remoteName, baseBranch], repoRoot);
   } catch (error) {
     if (isMissingRemoteRefError(error.message)) {
-      await syncSubmodulesRecursively(repoRoot);
-      return {
-        remoteExists: false,
-        remoteRef,
-        previousSha,
-        remoteSha: null,
-        sha: previousSha,
-      };
+      throw new Error(`Base branch ${remoteRef} does not exist on the remote.`);
     }
-    throw new Error(`Failed to fetch ${remoteName}/${branchName} before push.\n${error.message}`);
+    throw new Error(`Failed to fetch ${remoteRef}.\n${error.message}`);
   }
-
-  const remoteSha = await getRevisionSha(repoRoot, remoteRef);
-
-  try {
-    await execText('git', ['rebase', '--autostash', remoteRef], repoRoot);
-  } catch (error) {
-    try {
-      await execText('git', ['rebase', '--abort'], repoRoot);
-    } catch {
-      // ignore abort failures and surface the original rebase error
-    }
-    throw new Error(`Failed to rebase onto ${remoteRef} before push.\n${error.message}`);
-  }
-
-  await syncSubmodulesRecursively(repoRoot);
-
   return {
-    remoteExists: true,
     remoteRef,
-    previousSha,
-    remoteSha,
-    sha: await getHeadSha(repoRoot),
+    baseBranch,
+    sha: await getRevisionSha(repoRoot, remoteRef),
   };
 }
 
-async function syncAndPushHead(repoRoot, remoteName, branchName) {
-  let attempt = 1;
+async function tryGit(repoRoot, args) {
+  try {
+    await execText('git', args, repoRoot);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-  while (attempt <= PUSH_SYNC_MAX_ATTEMPTS) {
-    const syncResult = await syncWithPushBranch(repoRoot, remoteName, branchName);
+// Throw away everything the current iteration produced. Without --allow-dirty the loop
+// owns the whole worktree, so a hard reset is exact. With --allow-dirty the operator's
+// baseline changes are preserved and only paths the iteration touched are restored.
+async function discardIterationChanges(repoRoot, config) {
+  await tryGit(repoRoot, ['merge', '--abort']);
+  await tryGit(repoRoot, ['rebase', '--abort']);
+  await tryGit(repoRoot, ['cherry-pick', '--abort']);
 
-    if (syncResult.remoteExists && syncResult.sha !== syncResult.previousSha) {
-      console.log(`Rebased onto ${syncResult.remoteRef}; new HEAD ${syncResult.sha}.`);
-    }
-
-    try {
-      await pushHead(repoRoot, remoteName, branchName);
-      return {
-        ...syncResult,
-        attempts: attempt,
-        sha: await getHeadSha(repoRoot),
-      };
-    } catch (error) {
-      if (attempt < PUSH_SYNC_MAX_ATTEMPTS && isNonFastForwardPushError(error.message)) {
-        console.warn(
-          `Push to ${remoteName}/${branchName} lost a race. Refetching and rebasing before retry ${attempt + 1}/${PUSH_SYNC_MAX_ATTEMPTS}.`,
-        );
-        attempt += 1;
-        continue;
-      }
-      throw error;
-    }
+  if (!config.allowDirty) {
+    await execText('git', ['reset', '--hard', '--quiet'], repoRoot);
+    await execText('git', ['clean', '-fd', '--quiet'], repoRoot);
+    // The parent's reset leaves edits and commits inside initialized submodules alone.
+    await execText('git', ['submodule', 'foreach', '--quiet', '--recursive', 'git reset --hard --quiet && git clean -fd --quiet'], repoRoot);
+    await execText('git', ['submodule', 'update', '--recursive', '--force', '--quiet'], repoRoot);
+    return;
   }
 
-  throw new Error(`Failed to push HEAD to ${remoteName}/${branchName} after ${PUSH_SYNC_MAX_ATTEMPTS} attempts.`);
+  await tryGit(repoRoot, ['reset', '--quiet']);
+  const baselineTracked = config.initialTrackedPaths ?? new Set();
+  const baselineUntracked = config.initialUntracked ?? new Set();
+  const trackedPaths = extractPathsFromPorcelain(filterTrackedChanges(await listTrackedChanges(repoRoot), baselineTracked));
+  for (const filePath of trackedPaths) {
+    if (baselineTracked.has(filePath)) continue;
+    await tryGit(repoRoot, ['checkout', '--quiet', 'HEAD', '--', filePath]);
+  }
+  for (const filePath of await listUntrackedFiles(repoRoot)) {
+    if (baselineUntracked.has(filePath)) continue;
+    await fs.rm(path.join(repoRoot, filePath), { force: true });
+  }
 }
+
+// The branches this runner created, kept in this worktree's git directory so
+// leftovers from an interrupted run are still recognised. A prefix alone is not
+// ownership: a prefix such as "feature/" can match someone's unpushed work.
+async function loopBranchLedgerPath(repoRoot) {
+  const gitDir = (await execText('git', ['rev-parse', '--git-dir'], repoRoot)).stdout.trim();
+  return path.join(path.resolve(repoRoot, gitDir), 'continuous-improvement-loop-branches');
+}
+
+async function readLoopBranchLedger(repoRoot) {
+  try {
+    return splitLines(await fs.readFile(await loopBranchLedgerPath(repoRoot), 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return [];
+    throw error;
+  }
+}
+
+async function writeLoopBranchLedger(repoRoot, branchNames) {
+  const ledger = await loopBranchLedgerPath(repoRoot);
+  const unique = [...new Set(branchNames)];
+  if (unique.length === 0) {
+    await fs.rm(ledger, { force: true });
+    return;
+  }
+  await fs.writeFile(ledger, `${unique.join('\n')}\n`, 'utf8');
+}
+
+async function deleteLocalLoopBranches(repoRoot, config) {
+  const prefix = resolveBranchPrefix(config);
+  const remaining = [];
+  for (const branchName of await readLoopBranchLedger(repoRoot)) {
+    if (!branchName.startsWith(prefix)) continue;
+    const exists = await tryGit(repoRoot, ['show-ref', '--verify', '--quiet', `refs/heads/${branchName}`]);
+    if (!exists) continue;
+    // Only this runner's local leftovers are removed; published branches and
+    // their pull requests stay.
+    if (!(await tryGit(repoRoot, ['branch', '-D', branchName]))) remaining.push(branchName);
+  }
+  await writeLoopBranchLedger(repoRoot, remaining);
+}
+
+async function prepareIterationBranch(repoRoot, config, iteration) {
+  const base = await fetchBaseBranch(repoRoot, config);
+  if (!config.allowDirty) {
+    await discardIterationChanges(repoRoot, config);
+  }
+  await execText('git', ['checkout', '--quiet', '--detach', base.remoteRef], repoRoot);
+  await deleteLocalLoopBranches(repoRoot, config);
+
+  const branchName = buildIterationBranchName(config, iteration);
+  // Recorded before it exists, so an interruption right after creation still
+  // leaves it identifiable as this runner's.
+  await writeLoopBranchLedger(repoRoot, [...(await readLoopBranchLedger(repoRoot)), branchName]);
+  await execText('git', ['checkout', '--quiet', '--no-track', '-b', branchName, base.remoteRef], repoRoot);
+  await syncSubmodulesRecursively(repoRoot, { checkout: Boolean(config.checkoutSubmodules) });
+  return {
+    branchName,
+    baseBranch: base.baseBranch,
+    baseRef: base.remoteRef,
+    baseSha: base.sha,
+  };
+}
+
+async function leaveIterationBranch(repoRoot, branch) {
+  await tryGit(repoRoot, ['checkout', '--quiet', '--detach', branch.baseRef]);
+  await tryGit(repoRoot, ['branch', '-D', branch.branchName]);
+}
+
+async function countOpenLoopPullRequests(repoRoot, config) {
+  const remote = await getGitHubRemote(repoRoot, config.pushRemote);
+  const prefix = resolveBranchPrefix(config);
+  let count = 0;
+  for (let page = 1; page <= 10; page += 1) {
+    const pulls = await githubJson(
+      `repos/${remote.owner}/${remote.repo}/pulls?state=open&per_page=100&page=${page}`,
+    );
+    if (!Array.isArray(pulls) || pulls.length === 0) break;
+    count += pulls.filter((pull) => String(pull?.head?.ref ?? '').startsWith(prefix)).length;
+    if (pulls.length < 100) break;
+  }
+  return count;
+}
+
+function targetFile(target) {
+  // "path/to/file.ext:12" -> "path/to/file.ext"
+  return String(target ?? '').trim().replace(/:\d+(?::\d+)?$/, '');
+}
+
+function parsePullRequestTarget(body) {
+  const match = /^- Target: (.+)$/m.exec(String(body ?? ''));
+  const file = targetFile(match?.[1]);
+  return file && file !== 'unspecified' ? file : '';
+}
+
+// Files the loop has already proposed a change for: open loop pull requests, and ones a
+// person closed without merging (re-proposing a rejected idea would only repeat the noise).
+// A merged proposal removes its finding from the base, so it needs no entry here.
+async function listPendingTargetFiles(repoRoot, config) {
+  const remote = await getGitHubRemote(repoRoot, config.pushRemote);
+  const prefix = resolveBranchPrefix(config);
+  const files = new Set();
+  for (let page = 1; page <= 3; page += 1) {
+    const pulls = await githubJson(
+      `repos/${remote.owner}/${remote.repo}/pulls?state=all&sort=created&direction=desc&per_page=100&page=${page}`,
+    );
+    if (!Array.isArray(pulls) || pulls.length === 0) break;
+    for (const pull of pulls) {
+      if (!String(pull?.head?.ref ?? '').startsWith(prefix)) continue;
+      if (pull.state !== 'open' && pull.merged_at) continue;
+      const file = parsePullRequestTarget(pull.body);
+      if (file) files.add(file);
+    }
+    if (pulls.length < 100) break;
+  }
+  return [...files].sort();
+}
+
+// Source files that no requirement covers, read from the repository's traceability index
+// (`traceabilityFile`). CI rejects a change to such a file, so the loop does not propose one.
+async function listUnmappedSurfaceFiles(repoRoot, config) {
+  if (!config.traceabilityFile) return [];
+  const filePath = path.resolve(repoRoot, config.traceabilityFile);
+  let parsed;
+  try {
+    parsed = JSON.parse(await fs.readFile(filePath, 'utf8'));
+  } catch (error) {
+    throw new Error(`Could not read traceabilityFile ${config.traceabilityFile}: ${error.message}`);
+  }
+  return unmappedSurfacePaths(parsed);
+}
+
+// Targets the loop already worked on without producing a change worth proposing. Without
+// this memory the discovery step returns the same top finding every iteration, so one
+// finding the worker declines (or cannot fix) would be retried forever.
+// An entry holds the blob id of the file on the base branch, so it lapses by itself as
+// soon as that file changes there.
+const ATTEMPT_FAILURES_BEFORE_SKIP = 2;
+
+function attemptedTargetsFilePath(config) {
+  if (config.attemptedTargetsFile) return path.resolve(config.attemptedTargetsFile);
+  if (process.env.CONTINUOUS_LOOP_ATTEMPTED_TARGETS_FILE) return process.env.CONTINUOUS_LOOP_ATTEMPTED_TARGETS_FILE;
+  if (SUPERVISOR_STATUS_FILE) return path.join(path.dirname(SUPERVISOR_STATUS_FILE), 'attempted-targets.json');
+  return '';
+}
+
+async function readAttemptedTargets(config) {
+  const filePath = attemptedTargetsFilePath(config);
+  if (!filePath) return config.attemptedTargetsMemory ?? {};
+  try {
+    const parsed = JSON.parse(await fs.readFile(filePath, 'utf8'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch (error) {
+    if (error.code !== 'ENOENT') console.warn(`Ignoring unreadable attempted targets file ${filePath}: ${error.message}`);
+    return {};
+  }
+}
+
+async function writeAttemptedTargets(config, entries) {
+  const filePath = attemptedTargetsFilePath(config);
+  if (!filePath) {
+    config.attemptedTargetsMemory = entries;
+    return;
+  }
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  const tmpFile = `${filePath}.${process.pid}.tmp`;
+  await writeJson(tmpFile, entries);
+  await fs.rename(tmpFile, filePath);
+}
+
+async function targetFingerprint(repoRoot, revision, file) {
+  try {
+    const { stdout } = await execText('git', ['rev-parse', '--verify', '--quiet', `${revision}:${file}`], repoRoot);
+    return stdout.trim();
+  } catch {
+    return '';
+  }
+}
+
+function isSkippedAttempt(entry) {
+  return entry?.outcome === 'no-change' || Number(entry?.failures ?? 0) >= ATTEMPT_FAILURES_BEFORE_SKIP;
+}
+
+// Drops entries whose file changed on the base since the attempt and returns the files
+// that discovery should still leave alone.
+async function listAttemptedTargetFiles(repoRoot, config, revision) {
+  const entries = await readAttemptedTargets(config);
+  const current = {};
+  let changed = false;
+  for (const [file, entry] of Object.entries(entries)) {
+    const fingerprint = await targetFingerprint(repoRoot, revision, file);
+    if (fingerprint && fingerprint === entry?.fingerprint) {
+      current[file] = entry;
+    } else {
+      changed = true;
+    }
+  }
+  if (changed) await writeAttemptedTargets(config, current);
+  return Object.keys(current)
+    .filter((file) => isSkippedAttempt(current[file]))
+    .sort();
+}
+
+async function recordAttemptedTarget(repoRoot, config, revision, target, outcome, reason) {
+  const file = targetFile(target);
+  if (!file) return;
+  const fingerprint = await targetFingerprint(repoRoot, revision, file);
+  if (!fingerprint) return; // not a file on the base (for example a CI repair of the branch)
+  const entries = await readAttemptedTargets(config);
+  const previous = entries[file]?.fingerprint === fingerprint ? entries[file] : {};
+  entries[file] = {
+    fingerprint,
+    outcome,
+    failures: Number(previous.failures ?? 0) + (outcome === 'failed' ? 1 : 0),
+    reason: String(reason ?? '').slice(0, 300),
+    at: new Date().toISOString(),
+  };
+  await writeAttemptedTargets(config, entries);
+  if (isSkippedAttempt(entries[file])) {
+    console.log(`Leaving ${file} alone until it changes on the base branch (${outcome}).`);
+  }
+}
+
+function excludedTargetFiles(config) {
+  return [
+    ...new Set([
+      ...(config.pendingTargetFiles ?? []),
+      ...(config.unmappedTargetFiles ?? []),
+      ...(config.attemptedTargetFiles ?? []),
+    ]),
+  ];
+}
+
+// The built-in discovery heads every idea "# Improvement Idea", which says nothing in a
+// pull request; the reason line names the actual finding.
+function describeIdea(context) {
+  const title = String(context.idea_title ?? '').trim();
+  if (title && title.toLowerCase() !== 'improvement idea') return title;
+  return String(context.idea_reason ?? '').trim() || '(untitled)';
+}
+
+function diskReserveShortage(repoRoot, config) {
+  const minimum = Number(process.env.CONTINUOUS_LOOP_MIN_FREE_MB ?? config.minFreeMegabytes ?? 0);
+  if (!(minimum > 0)) return '';
+  const stats = statfsSync(repoRoot);
+  const free = Math.floor((Number(stats.bavail) * Number(stats.bsize)) / (1024 * 1024));
+  return free < minimum
+    ? `Only ${free} MB of disk space is free (reserve ${minimum} MB); waiting before the next iteration.`
+    : '';
+}
+
+function buildPullRequestBody(config, context, branch) {
+  const lines = [
+    'Opened automatically by the continuous improvement loop. It stays a draft until a person reviews it.',
+    '',
+    `- Idea: ${describeIdea(context)}`,
+    `- Source: ${context.idea_source || 'unknown'}`,
+    `- Target: ${context.idea_target || 'unspecified'}`,
+    `- Reason: ${context.idea_reason || 'unspecified'}`,
+    `- Base: ${branch.baseBranch} at ${branch.baseSha}`,
+    `- Local verification before commit: \`${expandTemplate(config.verifyCommand, context)}\` passed`,
+  ];
+  return `${lines.join('\n')}\n`;
+}
+
+async function openPullRequest(repoRoot, config, context, branch) {
+  const remote = await getGitHubRemote(repoRoot, config.pushRemote);
+  const title = String(context.last_commit_message ?? '').split('\n')[0].trim() || `Continuous improvement: ${branch.branchName}`;
+  const payload = await githubJson(`repos/${remote.owner}/${remote.repo}/pulls`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title,
+      head: branch.branchName,
+      base: branch.baseBranch,
+      body: buildPullRequestBody(config, context, branch),
+      draft: config.draftPullRequest !== false,
+    }),
+  });
+  return {
+    number: payload.number ?? null,
+    url: payload.html_url ?? '',
+  };
+}
+
+async function runVerification(repoRoot, config, context) {
+  const result = await runShellCommand(config.verifyCommand, repoRoot, context, {
+    stepName: 'Verification',
+    allowFailure: true,
+  });
+  if (result.code !== 0) {
+    throw new Error(`Verification failed with exit code ${result.code}; the iteration's changes were not committed.`);
+  }
+}
+
 
 async function fetchCheckRuns(owner, repo, sha) {
   const payload = await githubJson(`repos/${owner}/${repo}/commits/${encodeURIComponent(sha)}/check-runs`);
@@ -1418,41 +1549,18 @@ async function waitForGreenCi(repoRoot, config, sha) {
   }
 }
 
-export async function syncAndPollLatestRemoteCi(repoRoot, config, context = null) {
-  const pushBranch = config.pushBranch || (await getCurrentBranch(repoRoot));
-  if (!pushBranch) {
-    throw new Error('Unable to determine current branch for latest-commit GitHub polling.');
-  }
-
-  const syncResult = await syncWithPushBranch(repoRoot, config.pushRemote, pushBranch);
-  const sha = syncResult.remoteSha || syncResult.sha;
-  if (context) {
-    context.head_sha = sha;
-  }
-
+async function pollBaseBranchCi(repoRoot, config, context, branch) {
+  context.head_sha = branch.baseSha;
   if (!config.pollGitHub) {
-    return {
-      pushBranch,
-      sha,
-      syncResult,
-      ciResult: null,
-    };
+    return null;
   }
 
-  const ciResult = await waitForGreenCi(repoRoot, config, sha);
-  if (context) {
-    await writeJson(context.ci_report_file, ciResult);
-  }
-
-  return {
-    pushBranch,
-    sha,
-    syncResult,
-    ciResult,
-  };
+  const ciResult = await waitForGreenCi(repoRoot, config, branch.baseSha);
+  await writeJson(context.ci_report_file, ciResult);
+  return ciResult;
 }
 
-async function finalizeIteration(repoRoot, config, context) {
+async function finalizeIteration(repoRoot, config, context, branch) {
   if (config.dryRun) {
     const trackedChanges = filterTrackedChanges(
       await listTrackedChanges(repoRoot),
@@ -1468,7 +1576,27 @@ async function finalizeIteration(repoRoot, config, context) {
     };
   }
 
+  let pullRequest = null;
+  let repairAttempts = 0;
+
   while (true) {
+    if (!(await hasCommitCandidateChanges(repoRoot, config.initialUntracked, config.initialTrackedPaths))) {
+      return {
+        ok: true,
+        skipped: true,
+        reason: 'No changes detected after this iteration.',
+      };
+    }
+
+    // Nothing is committed, pushed, or proposed until the build-and-test gate passes.
+    await emitLoopStatus({ state: 'running', phase: 'verification', ideaTitle: context.idea_title });
+    logStep('Verification');
+    // Stage the proposal first: freshness checks such as `git diff --exit-code`
+    // after regenerating files compare against the index, which must hold the
+    // proposed tree rather than the base.
+    await stageCommitCandidates(repoRoot, config.initialUntracked, config.initialTrackedPaths);
+    await runVerification(repoRoot, config, context);
+
     const stagedFiles = await listStagedFiles(
       repoRoot,
       config.initialUntracked,
@@ -1486,43 +1614,46 @@ async function finalizeIteration(repoRoot, config, context) {
     const commitMessage = expandTemplate(config.commitMessageTemplate, commitContext);
     const commitResult = await commitStagedChanges(repoRoot, commitMessage, stagedFiles);
     context.head_sha = commitResult.sha;
-    context.last_commit_message = commitMessage;
+    context.last_commit_message = context.last_commit_message || commitMessage;
     console.log(`Committed ${commitResult.sha} with ${commitResult.stagedFiles.length} file(s).`);
 
-    if (!config.pushBranch) {
-      config.pushBranch = await getCurrentBranch(repoRoot);
-    }
-    if (!config.pushBranch) {
-      throw new Error('Unable to determine current branch for git push.');
+    console.log(`Pushing ${commitResult.sha} to ${config.pushRemote}:${branch.branchName}`);
+    await pushHead(repoRoot, config.pushRemote, branch.branchName);
+
+    if (config.openPullRequest && !pullRequest) {
+      pullRequest = await openPullRequest(repoRoot, config, context, branch);
+      console.log(`Opened pull request ${pullRequest.url || `#${pullRequest.number}`}.`);
     }
 
-    console.log(`Pushing ${commitResult.sha} to ${config.pushRemote}:${config.pushBranch}`);
-    const pushResult = await syncAndPushHead(repoRoot, config.pushRemote, config.pushBranch);
-    context.head_sha = pushResult.sha;
+    const published = {
+      ok: true,
+      pushed: true,
+      sha: commitResult.sha,
+      branch: branch.branchName,
+      pullRequest,
+    };
 
     if (!config.pollGitHub) {
-      return {
-        ok: true,
-        pushed: true,
-        sha: pushResult.sha,
-      };
+      return published;
     }
 
-    const ciResult = await waitForGreenCi(repoRoot, config, pushResult.sha);
+    const ciResult = await waitForGreenCi(repoRoot, config, commitResult.sha);
     await writeJson(context.ci_report_file, ciResult);
 
     if (ciResult.ok) {
-      return {
-        ok: true,
-        pushed: true,
-        sha: pushResult.sha,
-        ciResult,
-      };
+      return { ...published, ciResult };
     }
 
     if (!config.ciRepairCommand) {
       throw new Error(
-        `GitHub checks failed for ${pushResult.sha}. Configure ciRepairCommand or inspect ${context.ci_report_file}.`,
+        `GitHub checks failed for ${commitResult.sha}. Configure ciRepairCommand or inspect ${context.ci_report_file}.`,
+      );
+    }
+
+    repairAttempts += 1;
+    if (repairAttempts > Number(config.maxCiRepairAttempts)) {
+      throw new Error(
+        `GitHub checks still fail for ${branch.branchName} after ${config.maxCiRepairAttempts} repair attempt(s); leaving it for review.`,
       );
     }
 
@@ -1540,29 +1671,87 @@ async function finalizeIteration(repoRoot, config, context) {
 async function runIteration(repoRoot, config, iteration) {
   const contextDir = await fs.mkdtemp(path.join(os.tmpdir(), 'continuous-improvement-loop-'));
   const context = buildContext(repoRoot, contextDir, iteration);
-  await emitLoopStatus({ state: 'running', phase: 'branch-reconciliation', currentIteration: iteration, contextDir });
-  const branchSweep = await reconcileNonMainBranchesOntoMain(repoRoot, config);
-  if (!branchSweep.ok) {
-    throw new Error(
-      `${branchSweep.reason}${branchSweep.details?.length ? `\n${branchSweep.details.join('\n')}` : ''}`,
-    );
+
+  if (config.dryRun) {
+    // A dry run never switches branches or discards anything.
+    const head = await getHeadSha(repoRoot);
+    config.pendingTargetFiles = [];
+    config.unmappedTargetFiles = [];
+    config.attemptedTargetFiles = [];
+    await writeJson(context.excluded_targets_file, []);
+    const dryBranch = { branchName: '', baseBranch: resolveBaseBranch(config), baseRef: head, baseSha: head };
+    return runIterationSteps(repoRoot, config, iteration, context, dryBranch);
   }
-  const latestRemote = await syncAndPollLatestRemoteCi(repoRoot, config, context);
-  config.pushBranch = latestRemote.pushBranch;
+
+  if (config.openPullRequest && Number(config.maxOpenPullRequests) > 0) {
+    const openCount = await countOpenLoopPullRequests(repoRoot, config);
+    if (openCount >= Number(config.maxOpenPullRequests)) {
+      const reason = `${openCount} loop pull request(s) are already open (limit ${config.maxOpenPullRequests}); waiting for review before proposing more.`;
+      console.log(reason);
+      await emitLoopStatus({ state: 'running', phase: 'waiting-for-review', currentIteration: iteration, details: reason });
+      await fs.rm(contextDir, { recursive: true, force: true });
+      await sleep(Number(config.prBacklogDelaySeconds) * 1000);
+      return { ok: true, skipped: true, backlog: true, reason };
+    }
+  }
+
+  config.pendingTargetFiles = config.openPullRequest ? await listPendingTargetFiles(repoRoot, config) : [];
+  config.unmappedTargetFiles = await listUnmappedSurfaceFiles(repoRoot, config);
+
+  await emitLoopStatus({ state: 'running', phase: 'branch-preparation', currentIteration: iteration, contextDir });
+  const branch = await prepareIterationBranch(repoRoot, config, iteration);
+  context.branch_name = branch.branchName;
+  config.attemptedTargetFiles = await listAttemptedTargetFiles(repoRoot, config, branch.baseSha);
+  await writeJson(context.excluded_targets_file, excludedTargetFiles(config));
+  console.log(`Iteration ${iteration} works on ${branch.branchName} from ${branch.baseRef} (${branch.baseSha}).`);
+
+  let succeeded = false;
+  try {
+    const result = await runIterationSteps(repoRoot, config, iteration, context, branch);
+    succeeded = true;
+    if (result?.skipped && !result.backlog && context.idea_attempted) {
+      await recordAttemptedTarget(repoRoot, config, branch.baseSha, context.idea_target, 'no-change', result.reason);
+    }
+    return result;
+  } catch (error) {
+    if (context.idea_attempted) {
+      try {
+        await recordAttemptedTarget(repoRoot, config, branch.baseSha, context.idea_target, 'failed', error.message);
+      } catch (recordError) {
+        console.error(`Failed to record the attempted target: ${recordError.message}`);
+      }
+    }
+    try {
+      await discardIterationChanges(repoRoot, config);
+    } catch (discardError) {
+      console.error(`Failed to discard iteration changes: ${discardError.message}`);
+    }
+    throw error;
+  } finally {
+    await leaveIterationBranch(repoRoot, branch);
+    if (succeeded) {
+      await fs.rm(contextDir, { recursive: true, force: true });
+    }
+  }
+}
+
+async function runIterationSteps(repoRoot, config, iteration, context, branch) {
+  const contextDir = context.context_dir;
+  const baseCiResult = await pollBaseBranchCi(repoRoot, config, context, branch);
 
   let repairLatestCommitOnly = false;
-  if (latestRemote.ciResult && !latestRemote.ciResult.ok) {
+  if (baseCiResult && !baseCiResult.ok) {
     if (!config.ciRepairCommand) {
       throw new Error(
-        `Latest pushed commit ${latestRemote.sha} has failing GitHub checks. Configure ciRepairCommand or inspect ${context.ci_report_file}.`,
+        `Latest ${branch.baseBranch} commit ${branch.baseSha} has failing GitHub checks. Configure ciRepairCommand or inspect ${context.ci_report_file}.`,
       );
     }
 
     repairLatestCommitOnly = true;
     context.idea_source = 'github-ci';
-    context.idea_title = `Repair GitHub CI for ${latestRemote.sha.slice(0, 7)}`;
-    context.idea_target = config.pushBranch ?? '';
-    context.idea_reason = `Fix failing GitHub Actions on latest remote commit ${latestRemote.sha}.`;
+    context.idea_title = `Repair GitHub CI for ${branch.baseSha.slice(0, 7)}`;
+    context.idea_target = branch.baseBranch;
+    context.idea_reason = `Fix failing GitHub Actions on latest remote commit ${branch.baseSha}.`;
 
     await emitLoopStatus({
       state: 'running',
@@ -1635,13 +1824,32 @@ async function runIteration(repoRoot, config, iteration) {
     context.idea_target = idea.target ?? '';
     context.idea_reason = idea.reason ?? '';
 
+    const ideaFile = targetFile(context.idea_target);
+    if (ideaFile && (config.pendingTargetFiles ?? []).includes(ideaFile)) {
+      throw new Error(`Idea targets ${ideaFile}, which already has a loop pull request awaiting review; skipping it.`);
+    }
+    if (ideaFile && (config.unmappedTargetFiles ?? []).includes(ideaFile)) {
+      throw new Error(
+        `Idea targets ${ideaFile}, which no requirement covers in ${config.traceabilityFile}; the repository's specification gate would reject the change, so skipping it.`,
+      );
+    }
+
+    if (ideaFile && (config.attemptedTargetFiles ?? []).includes(ideaFile)) {
+      throw new Error(
+        `Idea targets ${ideaFile}, which the loop already worked on without a change worth proposing; skipping it until the file changes on ${branch.baseBranch}.`,
+      );
+    }
+
     if (!config.implementationCommand) {
       throw new Error('implementationCommand is required to run the loop unattended.');
     }
+    context.idea_attempted = true;
 
     await emitLoopStatus({ state: 'running', phase: 'implementation', currentIteration: iteration, ideaTitle: context.idea_title });
     logStep(`Iteration ${iteration}: implementation`);
-    await shutdownBootedSimulators();
+    if (config.shutdownSimulatorsBeforeImplementation) {
+      await shutdownBootedSimulators();
+    }
     await runShellCommand(config.implementationCommand, repoRoot, context, {
       stepName: 'Implementation',
     });
@@ -1689,12 +1897,13 @@ async function runIteration(repoRoot, config, iteration) {
     }
   }
 
-  await emitLoopStatus({ state: 'running', phase: 'commit-push-ci', currentIteration: iteration, ideaTitle: context.idea_title });
-  logStep(`Iteration ${iteration}: commit, push, and CI polling`);
-  const result = await finalizeIteration(repoRoot, config, context);
-  await emitLoopStatus({ state: 'running', phase: 'iteration-complete', currentIteration: iteration, lastIterationResult: result.ok ? 'ok' : 'attention' });
+  await emitLoopStatus({ state: 'running', phase: 'verify-commit-push', currentIteration: iteration, ideaTitle: context.idea_title });
+  logStep(`Iteration ${iteration}: verify, commit, push, and pull request`);
+  const result = await finalizeIteration(repoRoot, config, context, branch);
+  await emitLoopStatus({ state: 'running', phase: 'iteration-complete', currentIteration: iteration, lastIterationResult: result.ok ? 'ok' : 'attention', lastError: null });
   return result;
 }
+
 
 function printHelp() {
   console.log(`Usage: node scripts/continuous-improvement-loop.mjs [options]
@@ -1708,7 +1917,7 @@ Options:
   --help                    Show this help.
 
 Placeholders available inside command hooks:
-  {repo_root} {context_dir} {iteration}
+  {repo_root} {tool_root} {context_dir} {iteration}
   {idea_file} {logical_report_file} {formal_report_file} {ux_report_file} {ui_report_file} {ci_report_file}
 
 Commit message templates can also use:
@@ -1756,13 +1965,48 @@ async function main() {
   const validatedConfig = await validateLoopConfig(repoRoot, config);
   if (values['validate-config-only']) {
     console.log(
-      `Continuous improvement loop config OK. pushBranch=${validatedConfig.pushBranch || 'none'} pushingEnabled=${String(validatedConfig.pushingEnabled)} allowPushToMain=${String(validatedConfig.allowPushToMain)}`,
+      `Continuous improvement loop config OK. baseBranch=${validatedConfig.baseBranch} branchPrefix=${validatedConfig.branchPrefix} pushingEnabled=${String(validatedConfig.pushingEnabled)} openPullRequest=${String(Boolean(config.openPullRequest))}`,
     );
     return;
   }
 
   if (!Number.isFinite(Number(config.maxIterations)) || Number(config.maxIterations) < 0) {
     throw new Error('maxIterations must be a non-negative number.');
+  }
+
+  stepTimeoutMs = Math.max(0, Number(config.stepTimeoutMinutes) || 0) * 60_000;
+  for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) {
+    process.on(signal, () => {
+      if (shuttingDown) return;
+      // No new step may start from here on: a step ended by this signal can
+      // look like a failed audit and would otherwise launch its fix step.
+      shuttingDown = true;
+      // Stop the running worker tree before exiting so nothing keeps editing
+      // the worktree. The handle is kept here because the step's shell can
+      // exit (and clear activeStepChild) while a descendant ignoring SIGTERM
+      // is still running; no other step can start once shutting down.
+      const stopping = activeStepChild;
+      killStepGroup(stopping, 'SIGTERM');
+      setTimeout(async () => {
+        if (stepGroupAlive(stopping)) killStepGroup(stopping, 'SIGKILL');
+        // Exit only once the group is gone, so the runner never reports a
+        // stop while one of its workers is still running.
+        const deadline = Date.now() + STEP_KILL_GRACE_MS;
+        while (Date.now() < deadline && stepGroupAlive(stopping)) await sleep(50);
+        process.exit(143);
+      }, stopping ? 3000 : 0);
+    });
+  }
+
+  if (
+    !config.dryRun &&
+    !config.allowDirty &&
+    validatedConfig.requireLinkedWorktree &&
+    (await listTrackedChanges(repoRoot)).length + (await listUntrackedFiles(repoRoot)).length > 0
+  ) {
+    // Leftovers from an interrupted run in the loop's own worktree are unverified work.
+    console.warn('Discarding uncommitted leftovers from an interrupted run in the loop worktree.');
+    await discardIterationChanges(repoRoot, config);
   }
 
   const startState = await ensureStartState(repoRoot, config.allowDirty);
@@ -1822,9 +2066,45 @@ async function main() {
   }
 
   let iteration = 1;
+  let consecutiveFailures = 0;
   while (config.maxIterations === 0 || iteration <= Number(config.maxIterations)) {
-    const result = await runIteration(repoRoot, config, iteration);
-    if (result.skipped && config.stopOnNoChanges) {
+    // The supervisor checks the reserve only when it starts a child, and the child runs
+    // indefinitely, so the reserve is rechecked before every iteration.
+    const diskShortage = diskReserveShortage(repoRoot, config);
+    if (diskShortage) {
+      console.log(diskShortage);
+      await emitLoopStatus({ state: 'running', phase: 'waiting-for-disk', currentIteration: iteration, details: diskShortage });
+      if (config.dryRun || Number(config.maxIterations) !== 0) throw new Error(diskShortage);
+      await sleep(Number(config.diskRecheckSeconds ?? 300) * 1000);
+      continue;
+    }
+    let result;
+    try {
+      result = await runIteration(repoRoot, config, iteration);
+      consecutiveFailures = 0;
+    } catch (error) {
+      // A failed iteration is discarded, never committed. The loop moves on to the next
+      // idea unless failures keep repeating, which points at an environment problem.
+      consecutiveFailures += 1;
+      const isLastIteration = config.maxIterations !== 0 && iteration >= Number(config.maxIterations);
+      const tooManyFailures =
+        Number(config.maxConsecutiveFailures) > 0 && consecutiveFailures >= Number(config.maxConsecutiveFailures);
+      if (config.dryRun || isLastIteration || tooManyFailures) {
+        throw error;
+      }
+      console.error(`Iteration ${iteration} failed and was discarded: ${error.message}`);
+      await emitLoopStatus({
+        state: 'running',
+        phase: 'iteration-failed',
+        currentIteration: iteration,
+        lastIterationResult: 'discarded',
+        lastError: error.message,
+      });
+      await sleep(Number(config.failureDelaySeconds) * 1000);
+      iteration += 1;
+      continue;
+    }
+    if (result.skipped && !result.backlog && config.stopOnNoChanges) {
       console.log(result.reason);
       break;
     }
@@ -1843,7 +2123,16 @@ async function main() {
 export {
   main,
   discoverImprovementIdea,
-  resolveLoopPushBranch,
+  buildIterationBranchName,
+  buildPullRequestBody,
+  countOpenLoopPullRequests,
+  discardIterationChanges,
+  diskReserveShortage,
+  listPendingTargetFiles,
+  listUnmappedSurfaceFiles,
+  isLinkedWorktree,
+  openPullRequest,
+  prepareIterationBranch,
   validateLoopConfig,
   syncSubmodulesRecursively,
   waitForGreenCi,
@@ -1859,6 +2148,12 @@ function isCliEntry() {
 
 if (isCliEntry()) {
   main().catch(async (error) => {
+    if (shuttingDown) {
+      // A stop signal, not a crash: let the signal handler finish stopping the
+      // active step and exit with the signal status.
+      console.error(error.message);
+      return;
+    }
     await emitLoopStatus({
       state: 'crashed',
       phase: 'error',
