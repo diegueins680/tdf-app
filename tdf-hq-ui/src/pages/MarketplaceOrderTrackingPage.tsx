@@ -1,6 +1,6 @@
 import MarkdownText from '../components/MarkdownText';
 import { logger } from '../utils/logger';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
@@ -70,13 +70,33 @@ const availableCustomerRequestTypes = (order: MarketplaceOrderDTO): MarketplaceC
   return result;
 };
 
+// Match the existing server reference bounds and unsupported text categories.
+function manualReferenceValidationError(value: string): string | null {
+  const reference = value.trim();
+  const length = Array.from(reference).length;
+  if (length < 3 || length > 120) return 'Ingresa una referencia bancaria de 3 a 120 caracteres.';
+  if (/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u.test(reference.replace(/[\n\r\t]/g, ''))) {
+    return 'La referencia contiene caracteres no admitidos. Revísala sin borrar los demás datos.';
+  }
+  return null;
+}
+
 export default function MarketplaceOrderTrackingPage() {
   const { orderId } = useParams<{ orderId: string }>();
+  return <MarketplaceOrderTrackingContent key={orderId ?? 'missing'} orderId={orderId} />;
+}
+
+// A different order owns fresh drafts and pending operations; old responses cannot
+// update the new order's mounted view.
+function MarketplaceOrderTrackingContent({ orderId }: { orderId: string | undefined }) {
   const [order, setOrder] = useState<MarketplaceOrderDTO | null>(null);
   const [status, setStatus] = useState<'loading' | 'error' | 'success'>('loading');
   const [manualReference, setManualReference] = useState('');
   const [manualSubmitting, setManualSubmitting] = useState(false);
   const [manualError, setManualError] = useState<string | null>(null);
+  const [manualReferenceError, setManualReferenceError] = useState<string | null>(null);
+  const manualInFlight = useRef(false);
+  const manualReferenceInput = useRef<HTMLInputElement>(null);
   const [customerRequests, setCustomerRequests] = useState<MarketplaceCustomerRequestDTO[]>([]);
   const [requestType, setRequestType] = useState<MarketplaceCustomerRequestType | ''>('');
   const [requestReason, setRequestReason] = useState('');
@@ -85,6 +105,7 @@ export default function MarketplaceOrderTrackingPage() {
   const [requestError, setRequestError] = useState<string | null>(null);
 
   useEffect(() => {
+    let current = true;
     const run = async () => {
       if (!orderId) {
         setStatus('error');
@@ -97,14 +118,16 @@ export default function MarketplaceOrderTrackingPage() {
           Marketplace.getOrder(orderId, lookupToken),
           Marketplace.listCustomerRequests(orderId, lookupToken),
         ]);
+        if (!current) return;
         setOrder(dto);
         setCustomerRequests(requests);
         setStatus('success');
       } catch {
-        setStatus('error');
+        if (current) setStatus('error');
       }
     };
     void run();
+    return () => { current = false; };
   }, [orderId]);
 
   const timeline = useMemo(() => order?.moStatusHistory ?? [], [order]);
@@ -127,25 +150,39 @@ export default function MarketplaceOrderTrackingPage() {
   };
 
   const submitManualEvidence = async () => {
-    if (!orderId || manualReference.trim().length < 3) return;
+    if (manualInFlight.current || !orderId || status !== 'success'
+      || order?.moPaymentProvider !== 'bank_transfer' || order.moCheckoutStatus === 'paid'
+      || (order.moManualPaymentStatus && order.moManualPaymentStatus !== 'awaiting_evidence'
+        && order.moManualPaymentStatus !== 'rejected')) return;
+    const error = manualReferenceValidationError(manualReference);
+    setManualReferenceError(error);
+    if (error) {
+      manualReferenceInput.current?.focus({ preventScroll: true });
+      manualReferenceInput.current?.scrollIntoView?.({ block: 'center', behavior: 'instant' });
+      return;
+    }
+    const reference = manualReference.trim();
     const lookupToken = loadMarketplaceLookupToken(orderId);
     if (!lookupToken) {
       setManualError('Falta la credencial segura de seguimiento. Abre el enlace desde este navegador o contacta soporte.');
       return;
     }
+    manualInFlight.current = true;
     setManualSubmitting(true);
     setManualError(null);
     try {
       const updated = await Marketplace.submitManualEvidence(
         orderId,
-        manualReference.trim(),
+        reference,
         lookupToken,
       );
+      if (updated.moOrderId !== order.moOrderId) throw new Error('Mismatched order response');
       setOrder(updated);
       setManualReference('');
     } catch {
       setManualError('No pudimos registrar la referencia. El pedido no fue marcado como pagado.');
     } finally {
+      manualInFlight.current = false;
       setManualSubmitting(false);
     }
   };
@@ -223,10 +260,11 @@ export default function MarketplaceOrderTrackingPage() {
         )}
         {status === 'success' && order && (
           <Stack spacing={2}>
-            <Card variant="outlined">
+            <Card variant="outlined" data-testid="marketplace-order-card">
               <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
-                  <Typography variant="h6" fontWeight={700}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between"
+                  alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+                  <Typography variant="h6" fontWeight={700} sx={{ minWidth: 0, overflowWrap: 'anywhere' }}>
                     Pedido {order.moOrderId}
                   </Typography>
                   <Chip label={currentStatusMeta.label} color={currentStatusMeta.color} />
@@ -247,27 +285,43 @@ export default function MarketplaceOrderTrackingPage() {
                 )}
                 {order.moPaymentProvider === 'bank_transfer' && order.moCheckoutStatus !== 'paid' && (
                   <Box sx={{ mt: 1.5 }}>
-                    {(!order.moManualPaymentStatus || order.moManualPaymentStatus === 'awaiting_evidence') && (
-                      <Alert severity="warning" variant="outlined">
-                        <Stack spacing={1}>
-                          <Typography variant="body2">
-                            El pedido está creado, pero no está pagado. Ingresa la referencia de tu transferencia para revisión.
-                          </Typography>
-                          <TextField
-                            label="Referencia de transferencia"
-                            value={manualReference}
-                            onChange={(event) => setManualReference(event.target.value)}
-                            inputProps={{ maxLength: 120 }}
-                            size="small"
-                          />
-                          <Button
-                            variant="contained"
-                            disabled={manualSubmitting || manualReference.trim().length < 3}
-                            onClick={() => { void submitManualEvidence(); }}
-                          >
-                            {manualSubmitting ? 'Enviando…' : 'Enviar evidencia para revisión'}
-                          </Button>
-                        </Stack>
+                    {(!order.moManualPaymentStatus || order.moManualPaymentStatus === 'awaiting_evidence'
+                      || order.moManualPaymentStatus === 'rejected') && (
+                      <Alert severity={order.moManualPaymentStatus === 'rejected' ? 'error' : 'warning'} variant="outlined"
+                        sx={{ '& .MuiAlert-message': { width: '100%', minWidth: 0, overflowWrap: 'anywhere' } }}>
+                        <Box component="form" noValidate data-testid="marketplace-reference-form"
+                          onSubmit={(event) => { event.preventDefault(); void submitManualEvidence(); }}>
+                          <Stack spacing={1}>
+                            <Typography variant="body2">
+                              {order.moManualPaymentStatus === 'rejected'
+                                ? 'La referencia fue rechazada. El pedido continúa impago; puedes enviar una referencia corregida.'
+                                : 'El pedido está creado, pero no está pagado. Ingresa la referencia de tu transferencia para revisión.'}
+                            </Typography>
+                            <TextField
+                              label={order.moManualPaymentStatus === 'rejected' ? 'Referencia corregida' : 'Referencia de transferencia'}
+                              inputRef={manualReferenceInput}
+                              value={manualReference}
+                              onChange={(event) => {
+                                if (manualInFlight.current) return;
+                                setManualReference(event.target.value);
+                                if (manualReferenceError) setManualReferenceError(manualReferenceValidationError(event.target.value));
+                              }}
+                              onBlur={() => {
+                                if (!manualInFlight.current) setManualReferenceError(manualReferenceValidationError(manualReference));
+                              }}
+                              error={Boolean(manualReferenceError)}
+                              helperText={manualReferenceError ?? '3–120 caracteres. Enviar la referencia no confirma el pago.'}
+                              disabled={manualSubmitting}
+                              required
+                              fullWidth
+                              size="small"
+                            />
+                            <Button type="submit" variant="contained" disabled={manualSubmitting}>
+                              {manualSubmitting ? 'Enviando…' : order.moManualPaymentStatus === 'rejected'
+                                ? 'Reenviar evidencia' : 'Enviar evidencia para revisión'}
+                            </Button>
+                          </Stack>
+                        </Box>
                       </Alert>
                     )}
                     {order.moManualPaymentStatus === 'submitted' && (
@@ -283,29 +337,6 @@ export default function MarketplaceOrderTrackingPage() {
                     {order.moManualPaymentStatus === 'approved' && (
                       <Alert severity="warning" variant="outlined">
                         La evidencia fue aprobada, pero el estado canónico de pago aún requiere conciliación.
-                      </Alert>
-                    )}
-                    {order.moManualPaymentStatus === 'rejected' && (
-                      <Alert severity="error" variant="outlined">
-                        <Stack spacing={1}>
-                          <Typography variant="body2">
-                            La referencia fue rechazada. El pedido continúa impago; puedes enviar una referencia corregida.
-                          </Typography>
-                          <TextField
-                            label="Referencia corregida"
-                            value={manualReference}
-                            onChange={(event) => setManualReference(event.target.value)}
-                            inputProps={{ maxLength: 120 }}
-                            size="small"
-                          />
-                          <Button
-                            variant="contained"
-                            disabled={manualSubmitting || manualReference.trim().length < 3}
-                            onClick={() => { void submitManualEvidence(); }}
-                          >
-                            {manualSubmitting ? 'Enviando…' : 'Reenviar evidencia'}
-                          </Button>
-                        </Stack>
                       </Alert>
                     )}
                     {order.moManualPaymentStatus === 'requires_reconciliation' && (

@@ -72,6 +72,7 @@
       "e2e/web/legacy-provider-playback.spec.mjs",
       "e2e/web/live-session-contact.spec.mjs",
       "e2e/web/marketplace-cart.spec.mjs",
+      "e2e/web/marketplace-reference-recovery.spec.mjs",
       "e2e/web/merch-delivery-validation.spec.mjs",
       "e2e/web/merch-order-recovery.spec.mjs",
       "e2e/web/merch-stock-category.spec.mjs",
@@ -3510,6 +3511,12 @@
       "id": "SURFACE-c5e7e7710b072a8d",
       "path": "e2e/web/marketplace-cart.spec.mjs",
       "sha256": "c86a9ccfba020c607716c5f7f0b06fe87f6d3d46cd39221e76f4d2215d666faa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7477a33f5664fcd2",
+      "path": "e2e/web/marketplace-reference-recovery.spec.mjs",
+      "sha256": "5e87b2c8e1d1bc3060412acb19934a2c41406b557515f1b06a43425cf78562f2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -7961,7 +7968,7 @@
     {
       "id": "SURFACE-3c93d16568d6200e",
       "path": "tdf-hq-ui/src/__tests__/MarketplaceOrderTrackingPage.test.tsx",
-      "sha256": "000132a3195b5b1f017478bc4cecf0c3df9c251a7c9c73f6033f1acb3d46660d",
+      "sha256": "78566d1b318610a03ccc41b39205029adeb1a7f0a3bbfd9b6a2a91c41ec6f8c8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11435,7 +11442,7 @@
     {
       "id": "SURFACE-d69d0e258765d7f2",
       "path": "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
-      "sha256": "13a878136764e5afcddf99d85bee2abbe50904e681f33d7aa3f4eb83ac50eba4",
+      "sha256": "318e821fecb6a5d8d1fc20a3a01b6d1d6f21c02e537761d77ef46bcf65696b0b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31123,7 +31130,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "baa87ce669883650f8bbef97cd3072004efcfcb07e63b69d88634ce02a989ffc",
+      "sha256": "ca8b978232d226ca6203a2333036252382edc43f220733c6c14de29a16964c3c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

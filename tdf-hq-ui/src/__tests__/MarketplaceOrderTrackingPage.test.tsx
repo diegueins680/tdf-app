@@ -1,12 +1,12 @@
 /** @jest-environment jsdom */
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useNavigate, type NavigateFunction } from 'react-router-dom';
 import { jest } from '@jest/globals';
 import type { MarketplaceCustomerRequestDTO, MarketplaceOrderDTO } from '../api/types';
 
-const getOrderMock = jest.fn<() => Promise<MarketplaceOrderDTO>>();
-const submitManualEvidenceMock = jest.fn<() => Promise<MarketplaceOrderDTO>>();
+const getOrderMock = jest.fn<(orderId: string, lookupToken: string) => Promise<MarketplaceOrderDTO>>();
+const submitManualEvidenceMock = jest.fn<(orderId: string, reference: string, lookupToken: string) => Promise<MarketplaceOrderDTO>>();
 const listCustomerRequestsMock = jest.fn<() => Promise<MarketplaceCustomerRequestDTO[]>>();
 const submitCustomerRequestMock = jest.fn<() => Promise<MarketplaceCustomerRequestDTO>>();
 
@@ -122,17 +122,125 @@ describe('MarketplaceOrderTrackingPage manual payments', () => {
   });
 
   const renderPage = async () => {
+    let navigate!: NavigateFunction;
+    function TrackingRoutes() {
+      navigate = useNavigate();
+      return <Routes><Route path="/marketplace/orden/:orderId" element={<MarketplaceOrderTrackingPage />} /></Routes>;
+    }
     await act(async () => {
-      root.render(
-        <MemoryRouter initialEntries={['/marketplace/orden/order-1']}>
-          <Routes>
-            <Route path="/marketplace/orden/:orderId" element={<MarketplaceOrderTrackingPage />} />
-          </Routes>
-        </MemoryRouter>,
-      );
+      root.render(<MemoryRouter initialEntries={['/marketplace/orden/order-1']}><TrackingRoutes /></MemoryRouter>);
     });
     await flush();
+    return { navigate: (path: string) => navigate(path) };
   };
+
+  const referenceInput = () => container.querySelector<HTMLInputElement>('[data-testid="marketplace-reference-form"] input')!;
+  const submitReference = () => container.querySelector<HTMLFormElement>('[data-testid="marketplace-reference-form"]')!
+    .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  const editReference = async (value: string) => {
+    await act(async () => { setInputValue(referenceInput(), value); });
+  };
+
+  it('associates invalid references with their field, retains the full text and focuses without sending', async () => {
+    getOrderMock.mockResolvedValue(orderFixture('awaiting_evidence'));
+    await renderPage();
+    await act(async () => { submitReference(); });
+    const input = referenceInput();
+    expect(input).toBe(document.activeElement);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+    const help = document.getElementById(input.getAttribute('aria-describedby')!);
+    expect(help?.textContent).toContain('3 a 120');
+    expect(input.hasAttribute('maxlength')).toBe(false);
+    await editReference(' x ');
+    expect(input.value).toBe(' x ');
+    await act(async () => { submitReference(); });
+    await editReference('a'.repeat(121));
+    await act(async () => { submitReference(); });
+    expect(input.value).toBe('a'.repeat(121));
+    await editReference('REF\u202eBANK');
+    await act(async () => { submitReference(); });
+    expect(help?.textContent).toContain('caracteres no admitidos');
+    await editReference('REF\u0001BANK');
+    await act(async () => { submitReference(); });
+    expect(submitManualEvidenceMock).not.toHaveBeenCalled();
+  });
+
+  it('locks a captured Unicode reference, blocks direct duplicate submits and keeps a rejected draft for explicit retry', async () => {
+    getOrderMock.mockResolvedValue(orderFixture('rejected'));
+    let reject!: (error: Error) => void;
+    submitManualEvidenceMock.mockImplementationOnce(() => new Promise((_resolve, rejectRequest) => { reject = rejectRequest; }));
+    submitManualEvidenceMock.mockResolvedValueOnce(orderFixture('submitted'));
+    await renderPage();
+    const raw = '  ' + '𝄞'.repeat(120) + '  ';
+    await editReference(raw);
+    await act(async () => { submitReference(); submitReference(); });
+    expect(submitManualEvidenceMock).toHaveBeenCalledTimes(1);
+    expect(submitManualEvidenceMock).toHaveBeenCalledWith('order-1', '𝄞'.repeat(120), 'lookup-secret');
+    expect(referenceInput().disabled).toBe(true);
+    expect(container.querySelector<HTMLButtonElement>('button[type="submit"]')?.disabled).toBe(true);
+    await act(async () => { reject(new Error('synthetic failure')); });
+    expect(referenceInput().value).toBe(raw);
+    expect(referenceInput().disabled).toBe(false);
+    expect(container.textContent).toContain('no fue marcado como pagado');
+    expect(submitManualEvidenceMock).toHaveBeenCalledTimes(1);
+    await act(async () => { submitReference(); });
+    expect(submitManualEvidenceMock).toHaveBeenCalledTimes(2);
+    expect(submitManualEvidenceMock.mock.calls[1]).toEqual(submitManualEvidenceMock.mock.calls[0]);
+    expect(container.textContent).toContain('Sigue pendiente de revisión');
+    expect(container.textContent).toContain('aún no está pagado');
+  });
+
+  it('refuses missing access and mismatched responses without losing the reference', async () => {
+    getOrderMock.mockResolvedValue(orderFixture('awaiting_evidence'));
+    await renderPage();
+    await editReference('BANK-REF-VALID');
+    window.sessionStorage.removeItem('tdf-marketplace-order-lookup:order-1');
+    await act(async () => { submitReference(); });
+    expect(submitManualEvidenceMock).not.toHaveBeenCalled();
+    expect(container.textContent).toContain('Falta la credencial');
+    window.sessionStorage.setItem('tdf-marketplace-order-lookup:order-1', 'lookup-secret');
+    submitManualEvidenceMock.mockResolvedValue({ ...orderFixture('submitted'), moOrderId: 'other-order' });
+    await act(async () => { submitReference(); });
+    expect(referenceInput().value).toBe('BANK-REF-VALID');
+    expect(container.textContent).toContain('no fue marcado como pagado');
+    expect(container.textContent).not.toContain('Pedido other-order');
+  });
+
+  it('gives a different order its own draft while an old evidence response finishes', async () => {
+    getOrderMock.mockImplementation(async (id) => ({ ...orderFixture('awaiting_evidence'), moOrderId: id }));
+    window.sessionStorage.setItem('tdf-marketplace-order-lookup:order-2', 'second-secret');
+    let resolve!: (order: MarketplaceOrderDTO) => void;
+    submitManualEvidenceMock.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    const router = await renderPage();
+    await editReference('OLD-BANK-REFERENCE');
+    await act(async () => { submitReference(); });
+    await act(async () => { router.navigate('/marketplace/orden/order-2'); });
+    await flush();
+    expect(container.textContent).toContain('Pedido order-2');
+    expect(referenceInput().value).toBe('');
+    expect(referenceInput().disabled).toBe(false);
+    await editReference('NEW-BANK-REFERENCE');
+    await act(async () => { resolve(orderFixture('submitted')); });
+    expect(container.textContent).toContain('Pedido order-2');
+    expect(container.textContent).not.toContain('Pedido order-1');
+    expect(referenceInput().value).toBe('NEW-BANK-REFERENCE');
+    expect(submitManualEvidenceMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a late lookup from the previous order and never exposes a draft on a paid order', async () => {
+    let resolve!: (order: MarketplaceOrderDTO) => void;
+    getOrderMock.mockImplementationOnce(() => new Promise(done => { resolve = done; }));
+    getOrderMock.mockResolvedValueOnce({ ...orderFixture('approved'), moOrderId: 'order-2', moCheckoutStatus: 'paid', moStatus: 'paid' });
+    window.sessionStorage.setItem('tdf-marketplace-order-lookup:order-2', 'second-secret');
+    const router = await renderPage();
+    await act(async () => { router.navigate('/marketplace/orden/order-2'); });
+    await flush();
+    await act(async () => { resolve(orderFixture('awaiting_evidence')); });
+    expect(container.textContent).toContain('Pedido order-2');
+    expect(container.textContent).not.toContain('Pedido order-1');
+    expect(container.querySelector('[data-testid="marketplace-reference-form"]')).toBeNull();
+    expect(submitManualEvidenceMock).not.toHaveBeenCalled();
+  });
 
   it('submits the customer reference with the scoped lookup token and keeps payment pending', async () => {
     getOrderMock.mockResolvedValue(orderFixture('awaiting_evidence'));
