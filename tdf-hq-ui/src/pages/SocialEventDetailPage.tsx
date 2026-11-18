@@ -23,7 +23,7 @@ import ExperienceReviews from '../components/reviews/ExperienceReviews';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventMemoryInvitationControls from '../components/events/EventMemoryInvitations';
 import { EventMemoryInvitations } from '../api/eventMemoryInvitations';
-import { getAuthSessionEpoch } from '../session/authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 import { useOwnedSessionDraft } from '../session/useOwnedSessionDraft';
 import { buildLoginRedirectPath } from '../utils/loginRouting';
 import { formatInEventTimeZone } from '../utils/dateTime';

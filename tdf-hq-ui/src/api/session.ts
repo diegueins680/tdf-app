@@ -1,4 +1,4 @@
-import { hasLogoutIntent } from '../session/logoutIntent';
+import { hasLogoutIntent } from '../auth/logoutIntent';
 import { fetchWithDeadline, RequestTimeoutError } from './requestDeadline';
 import type { components } from './generated/types';
 import { resolveApiBase } from '../config/apiBase';

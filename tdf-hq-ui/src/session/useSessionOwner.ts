@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { getAuthSessionEpoch } from './authEvents';
+import { getAuthSessionEpoch } from '../auth/authEvents';
 
 /** Revoke captured callbacks synchronously when credentials or editor scope change. */
 export function useSessionOwner(ownerId: number | null, scope = '') {

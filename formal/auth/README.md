@@ -2,7 +2,7 @@
 
 ## Browser logout intent
 
-`LogoutIntent.tla` models `tdf-hq-ui/src/session/logoutIntent.ts`: an explicit
+`LogoutIntent.tla` models `tdf-hq-ui/src/auth/logoutIntent.ts`: an explicit
 logout begins an intent with a fresh revision and a pending server call; the
 call finishes the intent as confirmed or unconfirmed; only fresh interactive
 authentication clears it, again with a fresh revision. Callbacks carry the

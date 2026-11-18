@@ -82165,26 +82165,42 @@
       "reviewed": true
     },
     {
-      "id": "521ae3866b24bfa6a0b8",
+      "id": "c4afa9744b25f84ce57b",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "reviewed": true,
+      "justification": "The same four SESSION_AUTH_FAILURE_MESSAGES, unchanged in value and order, moved verbatim with authEvents.ts from tdf-hq-ui/src/session to tdf-hq-ui/src/auth (ADR 0133: auth-state primitives below the api layer); the reviewed classification and disposition are unchanged.",
+      "evidence": {
+        "file": "tdf-hq-ui/src/auth/authEvents.ts",
+        "line": 7
+      },
+      "reviewBatch": "web-auth-state-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "521ae3866b24bfa6a0b8",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "domain-specific catalog table selected during consumer refactor",
+        "priority": "P2-domain",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
-      "id": "0c91e00629e658db782f",
+      "id": "e9d8659eb044d6177f33",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
       "priority": "P1-integrity",
       "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
-      "justification": "LogoutStatus is the identity-free browser logout/revocation protocol, not selectable booking or community catalog data. The four fixed states must work offline before any server request. Lexical overlaps such as pending/confirmed with booking sources are not consumers of this TypeScript type. Public display copy remains localized independently.",
       "reviewed": true,
+      "justification": "The same LogoutStatus union, unchanged in value and order, moved verbatim with logoutIntent.ts from tdf-hq-ui/src/session to tdf-hq-ui/src/auth (ADR 0133: auth-state primitives below the api layer); the reviewed classification, disposition and justification are unchanged.",
       "evidence": {
-        "file": "tdf-hq-ui/src/session/logoutIntent.ts",
+        "file": "tdf-hq-ui/src/auth/logoutIntent.ts",
         "line": 6,
         "name": "LogoutStatus",
         "kind": "literal-union",
@@ -82195,6 +82211,31 @@
           "confirmed"
         ],
         "contract": "formal/system/logout-intent.md"
+      },
+      "reviewBatch": "web-auth-state-layer-2026-11-17",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "0c91e00629e658db782f",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P1-integrity",
+        "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
+        "justification": "LogoutStatus is the identity-free browser logout/revocation protocol, not selectable booking or community catalog data. The four fixed states must work offline before any server request. Lexical overlaps such as pending/confirmed with booking sources are not consumers of this TypeScript type. Public display copy remains localized independently.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/session/logoutIntent.ts",
+          "line": 6,
+          "name": "LogoutStatus",
+          "kind": "literal-union",
+          "values": [
+            "cleared",
+            "pending",
+            "unconfirmed",
+            "confirmed"
+          ],
+          "contract": "formal/system/logout-intent.md"
+        }
       }
     },
     {

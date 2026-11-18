@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-17T20:29:47.926Z",
+  "generatedAt": "2026-11-18T01:22:52.496Z",
   "repositoryRoot": ".",
   "filesScanned": 2755,
   "candidateCount": 1467,
@@ -918,12 +918,12 @@
           "value": "confirmed",
           "candidateIds": [
             "d7f671a18c763bcd6bb6",
+            "e9d8659eb044d6177f33",
             "3b3e2aeca1d0620424cc",
             "df860f9215f11dd1f668",
             "c740a83a05cffd350c6c",
             "f2263c4938549920d1af",
             "2fc9975280cb062972db",
-            "0c91e00629e658db782f",
             "dd65a3141ce82ff42537",
             "4e7bfcfcc072476b5afc",
             "b6718ffe761cbb47da9a",
@@ -2772,6 +2772,7 @@
             "63e4a77ce8e989c851a9",
             "4294987e14eae908b6bc",
             "dd80f4b5c86c5fd22c6a",
+            "e9d8659eb044d6177f33",
             "64e8632941f203cb08f8",
             "2d70a78215ad33f6ddd2",
             "63df59ecea7ce2e19b5f",
@@ -2789,7 +2790,6 @@
             "22979337b5497908dbe9",
             "783d266ab219233d4ad1",
             "7f46fc8fde3b53d86cd2",
-            "0c91e00629e658db782f",
             "c6e4988f9791b0f4e8d0",
             "a3c297baf99f209ccdac",
             "286a35582fa538dae748",
@@ -6380,6 +6380,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.test.tsx",
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
@@ -6397,8 +6398,7 @@
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.test.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -6667,6 +6667,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.test.tsx",
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
@@ -6684,8 +6685,7 @@
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.test.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -7949,7 +7949,7 @@
       "lines": [
         33
       ],
-      "consumerCount": 741,
+      "consumerCount": 738,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -8031,11 +8031,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -8052,7 +8049,10 @@
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/merch.test.ts",
         "tdf-hq-ui/src/api/merch.ts",
-        "tdf-hq-ui/src/api/musicReleases.ts"
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/preferences.test.ts",
+        "tdf-hq-ui/src/api/preferences.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -8150,11 +8150,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -8186,7 +8183,10 @@
         "tdf-hq-ui/src/api/uploadFailure.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
-        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx"
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
+        "tdf-hq-ui/src/services/instagramAuth.test.ts",
+        "tdf-hq-ui/src/services/instagramAuth.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -11648,6 +11648,7 @@
         "tdf-hq-ui/src/api/artistCatalog.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/marketplace/offers.ts",
@@ -11677,7 +11678,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
@@ -15411,6 +15411,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ApiActivityIndicator.test.tsx",
         "tdf-hq-ui/src/components/ApiActivityIndicator.tsx",
@@ -15444,8 +15445,7 @@
         "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
         "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
         "tdf-hq-ui/src/components/events/TicketPricePreview.tsx",
-        "tdf-hq-ui/src/components/merch/MerchReputationSummary.tsx",
-        "tdf-hq-ui/src/components/payments/ProviderQueryRecoveryPanel.test.tsx"
+        "tdf-hq-ui/src/components/merch/MerchReputationSummary.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -17213,6 +17213,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.test.tsx",
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
@@ -17230,8 +17231,7 @@
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.test.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -17996,6 +17996,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.test.tsx",
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
@@ -18013,8 +18014,7 @@
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.test.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -18286,6 +18286,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.test.tsx",
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
@@ -18303,8 +18304,7 @@
         "tdf-hq-ui/src/components/SidebarNav.test.tsx",
         "tdf-hq-ui/src/components/SidebarNav.tsx",
         "tdf-hq-ui/src/components/StripeCheckoutModal.logic.test.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.logic.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -19800,7 +19800,7 @@
       "lines": [
         649
       ],
-      "consumerCount": 774,
+      "consumerCount": 771,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -19881,13 +19881,10 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
         "tdf-hq-ui/src/api/commerceOperations.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
         "tdf-hq-ui/src/api/directory.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -19903,7 +19900,10 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/merch.test.ts",
-        "tdf-hq-ui/src/api/merch.ts"
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/preferences.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -20001,13 +20001,10 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
         "tdf-hq-ui/src/api/commerceOperations.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
         "tdf-hq-ui/src/api/directory.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -20037,7 +20034,10 @@
         "tdf-hq-ui/src/api/sessions.ts",
         "tdf-hq-ui/src/api/trials.ts",
         "tdf-hq-ui/src/api/uploadFailure.ts",
-        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx"
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -20205,9 +20205,9 @@
       "webConsumers": [
         "tdf-hq-ui/src/analytics/partySelectorTelemetry.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
-        "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/analytics/partySelectorTelemetry.ts",
@@ -27247,6 +27247,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialInbox.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
@@ -27254,8 +27255,7 @@
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
-        "tdf-hq-ui/src/components/PageShell.test.tsx",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.ts"
+        "tdf-hq-ui/src/components/PageShell.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -28080,6 +28080,7 @@
         "tdf-hq-ui/src/api/serviceStorefront.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
@@ -28112,7 +28113,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -28479,6 +28479,161 @@
       "priority": "P3-retain",
       "risk": "Dropping or merging a case would show a generic message for a storage failure that needs a specific recovery step.",
       "justification": "Exhaustive mapping from the backend's storage error codes (raised in TDF.Server and TDF.ContentStorage) to localized user messages. The codes are an API error contract owned by the backend, not an editable catalog.",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": []
+    },
+    {
+      "id": "c4afa9744b25f84ce57b",
+      "file": "tdf-hq-ui/src/auth/authEvents.ts",
+      "sourceKind": "production",
+      "surface": "web",
+      "domain": "security-authorization",
+      "kind": "array",
+      "name": "SESSION_AUTH_FAILURE_MESSAGES",
+      "line": 7,
+      "values": [
+        "missing or invalid auth token",
+        "invalid or inactive token",
+        "invalid or inactive session token",
+        "conflicting auth credentials found"
+      ],
+      "valueCount": 4,
+      "recommendedClassification": "genuine-technical-constant",
+      "lines": [
+        7
+      ],
+      "consumerCount": 0,
+      "backendConsumers": [],
+      "webConsumers": [],
+      "mobileConsumers": [],
+      "automationConsumers": [],
+      "apiAndIntegrationConsumers": [],
+      "decision": "dynamic-business-catalog",
+      "disposition": "migrate-and-remove-authority-from-code",
+      "specializedModel": "domain-specific catalog table selected during consumer refactor",
+      "priority": "P2-domain",
+      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+      "justification": "The same four SESSION_AUTH_FAILURE_MESSAGES, unchanged in value and order, moved verbatim with authEvents.ts from tdf-hq-ui/src/session to tdf-hq-ui/src/auth (ADR 0133: auth-state primitives below the api layer); the reviewed classification and disposition are unchanged.",
+      "exactDuplicateIds": [],
+      "similarCandidateIds": []
+    },
+    {
+      "id": "e9d8659eb044d6177f33",
+      "file": "tdf-hq-ui/src/auth/logoutIntent.ts",
+      "sourceKind": "production",
+      "surface": "web",
+      "domain": "security-authorization",
+      "kind": "literal-union",
+      "name": "LogoutStatus",
+      "line": 6,
+      "values": [
+        "cleared",
+        "pending",
+        "unconfirmed",
+        "confirmed"
+      ],
+      "valueCount": 4,
+      "recommendedClassification": "dynamic-business-catalog",
+      "lines": [
+        6
+      ],
+      "consumerCount": 73,
+      "backendConsumers": [
+        "tdf-hq/sql/2026-07-21_event_logistics.sql",
+        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
+        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
+        "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
+        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement_rollback.sql",
+        "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
+        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
+        "tdf-hq/sql/2026-09-08_merch_reputation.sql",
+        "tdf-hq/sql/2026-09-15_event_raci_editor_context.sql",
+        "tdf-hq/sql/2026-09-15_event_raci_reassignment.sql",
+        "tdf-hq/sql/2026-09-16_event_task_completion.sql",
+        "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
+        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
+        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
+        "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
+        "tdf-hq/src/TDF/Catalog/Seed.hs",
+        "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
+        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
+        "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
+        "tdf-hq/src/TDF/EventOperations/Types.hs",
+        "tdf-hq/src/TDF/Server.hs",
+        "tdf-hq/src/TDF/Server/Directory.hs",
+        "tdf-hq/src/TDF/Server/EventResearch.hs",
+        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
+        "tdf-hq/src/TDF/ServerFeedback.hs",
+        "tdf-hq/src/TDF/Services/EventDiscovery.hs",
+        "tdf-hq/test/EventOperationsHttpMain.hs",
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq/test/TDF/APITypesSpec.hs",
+        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
+        "tdf-hq/test/TDF/ServerSpec.hs",
+        "tdf-hq/test/integration/event_operations_http_fixture.sql",
+        "tdf-hq/test/integration/event_task_completion_assertions.sql",
+        "tdf-hq/test/sql/identity_reconciliation.sql"
+      ],
+      "webConsumers": [
+        "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
+        "tdf-hq-ui/src/api/eventOperations.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/logoutIntent.test.ts",
+        "tdf-hq-ui/src/api/queryValidation.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
+        "tdf-hq-ui/src/components/PromoCodeField.logic.test.ts",
+        "tdf-hq-ui/src/components/PromoCodeField.logic.ts",
+        "tdf-hq-ui/src/components/PromoCodeField.tsx",
+        "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreements.ts",
+        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
+        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
+        "tdf-hq-ui/src/pages/LoginPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
+        "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
+        "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
+        "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
+        "tdf-hq-ui/src/utils/merch.test.ts"
+      ],
+      "mobileConsumers": [
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "automationConsumers": [
+        "scripts/__tests__/artist-enrichment.test.mjs",
+        "scripts/__tests__/calendar-http-runtime.mjs",
+        "scripts/__tests__/fixtures/production-schema-20260814.sql",
+        "scripts/__tests__/identity-http-runtime.mjs",
+        "scripts/artist-enrichment.mjs",
+        "scripts/identity-reconciliation.mjs",
+        "scripts/lib/identity-inventory.sql",
+        "scripts/lib/production-release.mjs",
+        "scripts/test-event-task-revisioned-read-migration.sh",
+        "scripts/test-merch-reputation-migration.sh",
+        "scripts/test-provider-domain-binding.py",
+        "scripts/test-studio-internship-audit-api-e2e.mjs",
+        "scripts/test-studio-internship-audit-migration.sh"
+      ],
+      "apiAndIntegrationConsumers": [
+        "tdf-hq-ui/src/api/eventOperations.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/api/logoutIntent.test.ts",
+        "tdf-hq-ui/src/api/queryValidation.test.ts",
+        "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/api/types.ts",
+        "tdf-mobile/src/api/generated/types.ts"
+      ],
+      "decision": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
+      "justification": "The same LogoutStatus union, unchanged in value and order, moved verbatim with logoutIntent.ts from tdf-hq-ui/src/session to tdf-hq-ui/src/auth (ADR 0133: auth-state primitives below the api layer); the reviewed classification, disposition and justification are unchanged.",
       "exactDuplicateIds": [],
       "similarCandidateIds": []
     },
@@ -28861,7 +29016,7 @@
       "lines": [
         6
       ],
-      "consumerCount": 799,
+      "consumerCount": 796,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -28944,11 +29099,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -28964,7 +29116,10 @@
         "tdf-hq-ui/src/api/liveSessions.ts",
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/api/marketplace.test.ts",
-        "tdf-hq-ui/src/api/marketplace.ts"
+        "tdf-hq-ui/src/api/marketplace.ts",
+        "tdf-hq-ui/src/api/merch.test.ts",
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -29065,11 +29220,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -29101,7 +29253,10 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/session.test.ts",
         "tdf-hq-ui/src/api/session.ts",
-        "tdf-hq-ui/src/api/sessions.ts"
+        "tdf-hq-ui/src/api/sessions.ts",
+        "tdf-hq-ui/src/api/social.ts",
+        "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/api/uploadFailure.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31441,6 +31596,7 @@
         "tdf-hq-ui/src/api/merchReputation.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/MarkdownText.test.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
@@ -31477,8 +31633,7 @@
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FeedbackCatalogPage.tsx",
         "tdf-hq-ui/src/pages/InstagramConnectPage.tsx",
-        "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx"
+        "tdf-hq-ui/src/pages/InventoryScanPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -34411,6 +34566,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ApiActivityIndicator.test.tsx",
         "tdf-hq-ui/src/components/ApiActivityIndicator.tsx",
@@ -34444,8 +34600,7 @@
         "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
-        "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx",
-        "tdf-hq-ui/src/components/events/TicketPricePreview.tsx"
+        "tdf-hq-ui/src/components/events/TicketPaymentReceiptDialog.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -34616,7 +34771,7 @@
       "lines": [
         10
       ],
-      "consumerCount": 775,
+      "consumerCount": 772,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -34698,11 +34853,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -34719,7 +34871,10 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/merch.test.ts",
-        "tdf-hq-ui/src/api/merch.ts"
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/preferences.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -34819,11 +34974,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -34855,7 +35007,10 @@
         "tdf-hq-ui/src/api/trials.ts",
         "tdf-hq-ui/src/api/uploadFailure.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
-        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
+        "tdf-hq-ui/src/services/instagramAuth.test.ts"
       ],
       "decision": "security-system-registry",
       "disposition": "consumer-update",
@@ -37945,7 +38100,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 775,
+      "consumerCount": 772,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -38027,11 +38182,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -38048,7 +38200,10 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/merch.test.ts",
-        "tdf-hq-ui/src/api/merch.ts"
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/preferences.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -38148,11 +38303,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -38184,7 +38336,10 @@
         "tdf-hq-ui/src/api/trials.ts",
         "tdf-hq-ui/src/api/uploadFailure.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
-        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
+        "tdf-hq-ui/src/services/instagramAuth.test.ts"
       ],
       "decision": "security-system-registry",
       "disposition": "consumer-update",
@@ -42851,7 +43006,7 @@
       "lines": [
         138
       ],
-      "consumerCount": 750,
+      "consumerCount": 747,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -42933,11 +43088,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -42954,7 +43106,10 @@
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/merch.test.ts",
         "tdf-hq-ui/src/api/merch.ts",
-        "tdf-hq-ui/src/api/musicReleases.ts"
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/preferences.test.ts",
+        "tdf-hq-ui/src/api/preferences.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -43053,11 +43208,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -43089,7 +43241,10 @@
         "tdf-hq-ui/src/api/uploadFailure.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
         "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
-        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx"
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
+        "tdf-hq-ui/src/services/instagramAuth.test.ts",
+        "tdf-hq-ui/src/services/instagramAuth.ts"
       ],
       "decision": "security-system-registry",
       "disposition": "consumer-update",
@@ -47258,6 +47413,7 @@
         "tdf-hq-ui/src/api/interactions.ts",
         "tdf-hq-ui/src/api/merch.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/components/UserRoleManagement.test.tsx",
         "tdf-hq-ui/src/features/marketplace/cartSummary.ts",
         "tdf-hq-ui/src/i18n/locales/authEntry.en.ts",
@@ -47281,8 +47437,7 @@
         "tdf-hq-ui/src/pages/OrdersPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx",
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
-        "tdf-hq-ui/src/player/publicMusicTrack.ts",
-        "tdf-hq-ui/src/session/logoutIntent.test.ts"
+        "tdf-hq-ui/src/player/publicMusicTrack.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/api/generated/types.ts",
@@ -47945,6 +48100,7 @@
         "tdf-hq-ui/src/api/artistCatalog.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
@@ -47969,7 +48125,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
@@ -48107,6 +48262,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/serviceStorefront.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.test.ts",
         "tdf-hq-ui/src/components/RefundManagementPanel.logic.ts",
@@ -48149,7 +48305,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/marketplace.test.ts"
       ],
       "mobileConsumers": [
@@ -53267,6 +53422,7 @@
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
@@ -53274,8 +53430,7 @@
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
-        "tdf-hq-ui/src/components/PageShell.test.tsx",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.ts"
+        "tdf-hq-ui/src/components/PageShell.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -55216,6 +55371,7 @@
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/socialV2.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferForm.tsx",
@@ -55250,8 +55406,7 @@
         "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "tdf-hq-ui/src/pages/StudentCreationDialogs.test.tsx",
-        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-        "tdf-hq-ui/src/pages/TeacherPortalPage.tsx"
+        "tdf-hq-ui/src/pages/TdfPlatformPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -55433,6 +55588,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/socialV2.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
@@ -55471,7 +55627,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
@@ -56306,6 +56461,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ApiActivityIndicator.test.tsx",
         "tdf-hq-ui/src/components/ApiActivityIndicator.tsx",
@@ -56331,8 +56487,7 @@
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
         "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx",
-        "tdf-hq-ui/src/components/events/EventAdminsCard.tsx",
-        "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.tsx"
+        "tdf-hq-ui/src/components/events/EventAdminsCard.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -57981,6 +58136,7 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/serviceStorefront.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ApiActivityIndicator.test.tsx",
         "tdf-hq-ui/src/components/ApiActivityIndicator.tsx",
@@ -58006,8 +58162,7 @@
         "tdf-hq-ui/src/components/TopBar.tsx",
         "tdf-hq-ui/src/components/UserRoleManagement.tsx",
         "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx",
-        "tdf-hq-ui/src/components/events/EventAdminsCard.tsx",
-        "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.tsx"
+        "tdf-hq-ui/src/components/events/EventAdminsCard.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/merch.tsx",
@@ -63181,7 +63336,7 @@
       "lines": [
         7
       ],
-      "consumerCount": 812,
+      "consumerCount": 809,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -63264,11 +63419,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -63284,7 +63436,10 @@
         "tdf-hq-ui/src/api/liveSessions.ts",
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/api/marketplace.test.ts",
-        "tdf-hq-ui/src/api/marketplace.ts"
+        "tdf-hq-ui/src/api/marketplace.ts",
+        "tdf-hq-ui/src/api/merch.test.ts",
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -63386,11 +63541,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -63422,7 +63574,10 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/session.test.ts",
         "tdf-hq-ui/src/api/session.ts",
-        "tdf-hq-ui/src/api/sessions.ts"
+        "tdf-hq-ui/src/api/sessions.ts",
+        "tdf-hq-ui/src/api/social.ts",
+        "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/api/uploadFailure.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -63722,6 +63877,7 @@
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
@@ -63729,8 +63885,7 @@
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
-        "tdf-hq-ui/src/components/PageShell.test.tsx",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.ts"
+        "tdf-hq-ui/src/components/PageShell.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -64405,6 +64560,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
@@ -64436,7 +64592,6 @@
         "tdf-hq-ui/src/pages/internAuditPlanLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -64779,6 +64934,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
@@ -64810,7 +64966,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -68001,6 +68156,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
@@ -68010,7 +68166,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -68139,6 +68294,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
@@ -68148,7 +68304,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -69446,6 +69601,7 @@
         "tdf-hq-ui/src/api/merch.ts",
         "tdf-hq-ui/src/api/pipelines.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/components/DataTable.tsx",
         "tdf-hq-ui/src/components/LazyPaginatedList.tsx",
         "tdf-hq-ui/src/components/PartyRelatedPopover.tsx",
@@ -69482,8 +69638,7 @@
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.sort.test.tsx",
         "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.test.tsx",
-        "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx",
-        "tdf-hq-ui/src/pages/FanClubPage.tsx"
+        "tdf-hq-ui/src/pages/EventDiscoverySourcesPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/bookings.tsx",
@@ -73998,6 +74153,7 @@
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
@@ -74005,8 +74161,7 @@
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
-        "tdf-hq-ui/src/components/PageShell.test.tsx",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.ts"
+        "tdf-hq-ui/src/components/PageShell.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -74298,6 +74453,7 @@
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
@@ -74305,8 +74461,7 @@
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
-        "tdf-hq-ui/src/components/PageShell.test.tsx",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.ts"
+        "tdf-hq-ui/src/components/PageShell.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -75744,6 +75899,7 @@
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
@@ -75751,8 +75907,7 @@
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
-        "tdf-hq-ui/src/components/PageShell.test.tsx",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.ts"
+        "tdf-hq-ui/src/components/PageShell.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -79468,7 +79623,7 @@
       "lines": [
         9
       ],
-      "consumerCount": 820,
+      "consumerCount": 817,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -79551,11 +79706,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -79571,7 +79723,10 @@
         "tdf-hq-ui/src/api/liveSessions.ts",
         "tdf-hq-ui/src/api/logoutIntent.test.ts",
         "tdf-hq-ui/src/api/marketplace.test.ts",
-        "tdf-hq-ui/src/api/marketplace.ts"
+        "tdf-hq-ui/src/api/marketplace.ts",
+        "tdf-hq-ui/src/api/merch.test.ts",
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -79673,11 +79828,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -79709,7 +79861,10 @@
         "tdf-hq-ui/src/api/reviews.ts",
         "tdf-hq-ui/src/api/session.test.ts",
         "tdf-hq-ui/src/api/session.ts",
-        "tdf-hq-ui/src/api/sessions.ts"
+        "tdf-hq-ui/src/api/sessions.ts",
+        "tdf-hq-ui/src/api/social.ts",
+        "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/api/uploadFailure.ts"
       ],
       "decision": "genuine-technical-constant",
       "disposition": "explicit-allowlist",
@@ -79825,6 +79980,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/components/events/EventAdminInvitationAcceptPanel.tsx",
         "tdf-hq-ui/src/components/events/EventAdminsCard.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
@@ -79856,8 +80012,7 @@
         "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
         "tdf-hq-ui/src/pages/EventTaskPage.test.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
-        "tdf-hq-ui/src/pages/ForbiddenPage.tsx",
-        "tdf-hq-ui/src/pages/InternAuditPlanPage.tsx"
+        "tdf-hq-ui/src/pages/ForbiddenPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/auth.tsx",
@@ -81713,6 +81868,7 @@
         "tdf-hq-ui/src/api/campaignAutomations.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/MarkdownText.test.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/components/directory/DirectoryPreviewImage.test.tsx",
@@ -81755,8 +81911,7 @@
         "tdf-hq-ui/src/player/playbackSession.test.ts",
         "tdf-hq-ui/src/player/playbackSession.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/session/SessionQueryProvider.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -81833,7 +81988,7 @@
       "lines": [
         8
       ],
-      "consumerCount": 775,
+      "consumerCount": 772,
       "backendConsumers": [
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
         "tdf-hq/docs/openapi/api.yaml",
@@ -81915,11 +82070,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -81936,7 +82088,10 @@
         "tdf-hq-ui/src/api/marketplace.test.ts",
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/merch.test.ts",
-        "tdf-hq-ui/src/api/merch.ts"
+        "tdf-hq-ui/src/api/merch.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
+        "tdf-hq-ui/src/api/preferences.test.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/inventory.tsx",
@@ -82036,11 +82191,8 @@
         "tdf-hq-ui/src/api/authHeader.ts",
         "tdf-hq-ui/src/api/bookings.ts",
         "tdf-hq-ui/src/api/client.test.ts",
-        "tdf-hq-ui/src/api/client.ts",
         "tdf-hq-ui/src/api/cms.test.ts",
-        "tdf-hq-ui/src/api/contentStorage.ts",
         "tdf-hq-ui/src/api/courses.ts",
-        "tdf-hq-ui/src/api/drive.ts",
         "tdf-hq-ui/src/api/drive.upload.test.ts",
         "tdf-hq-ui/src/api/feedback.test.ts",
         "tdf-hq-ui/src/api/feedback.ts",
@@ -82072,7 +82224,10 @@
         "tdf-hq-ui/src/api/trials.ts",
         "tdf-hq-ui/src/api/uploadFailure.ts",
         "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
-        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx"
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
+        "tdf-hq-ui/src/services/instagramAuth.test.ts"
       ],
       "decision": "security-system-registry",
       "disposition": "consumer-update",
@@ -82433,6 +82588,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.test.tsx",
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
@@ -82449,8 +82605,7 @@
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
         "tdf-hq-ui/src/components/RegistryBreadcrumbs.tsx",
-        "tdf-hq-ui/src/components/RouteErrorBoundary.tsx",
-        "tdf-hq-ui/src/components/SidebarNav.test.tsx"
+        "tdf-hq-ui/src/components/RouteErrorBoundary.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -82920,161 +83075,6 @@
       "similarCandidateIds": [
         "16fbc3b51e1061c4779a"
       ]
-    },
-    {
-      "id": "521ae3866b24bfa6a0b8",
-      "file": "tdf-hq-ui/src/session/authEvents.ts",
-      "sourceKind": "production",
-      "surface": "web",
-      "domain": "security-authorization",
-      "kind": "array",
-      "name": "SESSION_AUTH_FAILURE_MESSAGES",
-      "line": 7,
-      "values": [
-        "missing or invalid auth token",
-        "invalid or inactive token",
-        "invalid or inactive session token",
-        "conflicting auth credentials found"
-      ],
-      "valueCount": 4,
-      "recommendedClassification": "genuine-technical-constant",
-      "lines": [
-        7
-      ],
-      "consumerCount": 0,
-      "backendConsumers": [],
-      "webConsumers": [],
-      "mobileConsumers": [],
-      "automationConsumers": [],
-      "apiAndIntegrationConsumers": [],
-      "decision": "dynamic-business-catalog",
-      "disposition": "migrate-and-remove-authority-from-code",
-      "specializedModel": "domain-specific catalog table selected during consumer refactor",
-      "priority": "P2-domain",
-      "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "exactDuplicateIds": [],
-      "similarCandidateIds": []
-    },
-    {
-      "id": "0c91e00629e658db782f",
-      "file": "tdf-hq-ui/src/session/logoutIntent.ts",
-      "sourceKind": "production",
-      "surface": "web",
-      "domain": "studio-services-booking",
-      "kind": "literal-union",
-      "name": "LogoutStatus",
-      "line": 6,
-      "values": [
-        "cleared",
-        "pending",
-        "unconfirmed",
-        "confirmed"
-      ],
-      "valueCount": 4,
-      "recommendedClassification": "dynamic-business-catalog",
-      "lines": [
-        6
-      ],
-      "consumerCount": 73,
-      "backendConsumers": [
-        "tdf-hq/sql/2026-07-21_event_logistics.sql",
-        "tdf-hq/sql/2026-08-14_catalog_foundation_seed.sql",
-        "tdf-hq/sql/2026-08-14_music_directory_core.sql",
-        "tdf-hq/sql/2026-08-15_marketplace_rental_checkout_runtime.sql",
-        "tdf-hq/sql/2026-08-16_service_booking_checkout_runtime.sql",
-        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement.sql",
-        "tdf-hq/sql/2026-08-17_marketplace_customer_requests_and_deposit_settlement_rollback.sql",
-        "tdf-hq/sql/2026-08-21_studio_internship_audit.sql",
-        "tdf-hq/sql/2026-09-07_artist_merch_storefronts.sql",
-        "tdf-hq/sql/2026-09-08_merch_reputation.sql",
-        "tdf-hq/sql/2026-09-15_event_raci_editor_context.sql",
-        "tdf-hq/sql/2026-09-15_event_raci_reassignment.sql",
-        "tdf-hq/sql/2026-09-16_event_task_completion.sql",
-        "tdf-hq/sql/2026-09-17_identity_reconciliation.sql",
-        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments.sql",
-        "tdf-hq/sql/2026-11-12_marketplace_agreement_payments_rollback.sql",
-        "tdf-hq/sql/2026-11-12_marketplace_agreements.sql",
-        "tdf-hq/src/TDF/Catalog/Seed.hs",
-        "tdf-hq/src/TDF/Commerce/MarketplaceOperations.hs",
-        "tdf-hq/src/TDF/Commerce/MarketplaceRentals.hs",
-        "tdf-hq/src/TDF/Commerce/ServiceBookings.hs",
-        "tdf-hq/src/TDF/EventOperations/Types.hs",
-        "tdf-hq/src/TDF/Server.hs",
-        "tdf-hq/src/TDF/Server/Directory.hs",
-        "tdf-hq/src/TDF/Server/EventResearch.hs",
-        "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-        "tdf-hq/src/TDF/ServerFeedback.hs",
-        "tdf-hq/src/TDF/Services/EventDiscovery.hs",
-        "tdf-hq/test/EventOperationsHttpMain.hs",
-        "tdf-hq/test/Spec.hs",
-        "tdf-hq/test/TDF/APITypesSpec.hs",
-        "tdf-hq/test/TDF/Directory/PolicySpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/integration/event_operations_http_fixture.sql",
-        "tdf-hq/test/integration/event_task_completion_assertions.sql",
-        "tdf-hq/test/sql/identity_reconciliation.sql"
-      ],
-      "webConsumers": [
-        "tdf-hq-ui/src/__tests__/PublicBookingOrderTrackingPage.test.tsx",
-        "tdf-hq-ui/src/api/eventOperations.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/logoutIntent.test.ts",
-        "tdf-hq-ui/src/api/queryValidation.test.ts",
-        "tdf-hq-ui/src/api/socialEvents.ts",
-        "tdf-hq-ui/src/api/types.ts",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.test.ts",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.ts",
-        "tdf-hq-ui/src/components/PromoCodeField.tsx",
-        "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
-        "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
-        "tdf-hq-ui/src/features/marketplace/agreements.ts",
-        "tdf-hq-ui/src/pages/ArtistOnboardingPage.test.tsx",
-        "tdf-hq-ui/src/pages/EventLogisticsPage.tsx",
-        "tdf-hq-ui/src/pages/LoginPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
-        "tdf-hq-ui/src/pages/MarketplaceOrdersPage.tsx",
-        "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
-        "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
-        "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.test.ts",
-        "tdf-hq-ui/src/utils/merch.test.ts"
-      ],
-      "mobileConsumers": [
-        "tdf-mobile/src/api/generated/types.ts"
-      ],
-      "automationConsumers": [
-        "scripts/__tests__/artist-enrichment.test.mjs",
-        "scripts/__tests__/calendar-http-runtime.mjs",
-        "scripts/__tests__/fixtures/production-schema-20260814.sql",
-        "scripts/__tests__/identity-http-runtime.mjs",
-        "scripts/artist-enrichment.mjs",
-        "scripts/identity-reconciliation.mjs",
-        "scripts/lib/identity-inventory.sql",
-        "scripts/lib/production-release.mjs",
-        "scripts/test-event-task-revisioned-read-migration.sh",
-        "scripts/test-merch-reputation-migration.sh",
-        "scripts/test-provider-domain-binding.py",
-        "scripts/test-studio-internship-audit-api-e2e.mjs",
-        "scripts/test-studio-internship-audit-migration.sh"
-      ],
-      "apiAndIntegrationConsumers": [
-        "tdf-hq-ui/src/api/eventOperations.ts",
-        "tdf-hq-ui/src/api/generated/types.ts",
-        "tdf-hq-ui/src/api/logoutIntent.test.ts",
-        "tdf-hq-ui/src/api/queryValidation.test.ts",
-        "tdf-hq-ui/src/api/socialEvents.ts",
-        "tdf-hq-ui/src/api/types.ts",
-        "tdf-mobile/src/api/generated/types.ts"
-      ],
-      "decision": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Changing these protocol states can re-enable automatic cookie restoration or misrepresent unconfirmed server logout.",
-      "justification": "LogoutStatus is the identity-free browser logout/revocation protocol, not selectable booking or community catalog data. The four fixed states must work offline before any server request. Lexical overlaps such as pending/confirmed with booking sources are not consumers of this TypeScript type. Public display copy remains localized independently.",
-      "exactDuplicateIds": [],
-      "similarCandidateIds": []
     },
     {
       "id": "46555179d31deff719f6",
@@ -88734,6 +88734,8 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/uploadFailure.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/ApiErrorNotice.test.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
@@ -88762,9 +88764,7 @@
         "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
-        "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
-        "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
-        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx"
+        "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
@@ -89745,6 +89745,7 @@
         "tdf-hq-ui/src/api/services.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialInbox.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/ApiErrorNotice.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.tsx",
         "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
@@ -89759,8 +89760,7 @@
         "tdf-hq-ui/src/components/WaitlistJoinDialog.tsx",
         "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.tsx",
         "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
-        "tdf-hq-ui/src/components/notificationTarget.ts",
-        "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx"
+        "tdf-hq-ui/src/components/notificationTarget.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/about.tsx",
@@ -90067,6 +90067,7 @@
         "tdf-hq-ui/src/api/services.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialInbox.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/ApiErrorNotice.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.tsx",
         "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
@@ -90081,8 +90082,7 @@
         "tdf-hq-ui/src/components/WaitlistJoinDialog.tsx",
         "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.tsx",
         "tdf-hq-ui/src/components/events/EventLineupPicker.tsx",
-        "tdf-hq-ui/src/components/notificationTarget.ts",
-        "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx"
+        "tdf-hq-ui/src/components/notificationTarget.ts"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/about.tsx",
@@ -91903,6 +91903,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
@@ -91918,7 +91919,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -95326,6 +95326,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
@@ -95336,7 +95337,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -96199,6 +96199,7 @@
         "tdf-hq-ui/src/api/auth.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
@@ -96225,7 +96226,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
         "tdf-hq-ui/src/utils/authErrorMessage.ts",
         "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
@@ -97854,6 +97854,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/trials.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/ArtistProfileImage.tsx",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/events/EventCourtesyTicketsCard.test.tsx",
@@ -97888,8 +97889,7 @@
         "tdf-hq-ui/src/pages/MerchProductPage.tsx",
         "tdf-hq-ui/src/pages/MerchSellerPage.tsx",
         "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx",
-        "tdf-hq-ui/src/pages/MobileAppPage.tsx",
-        "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx"
+        "tdf-hq-ui/src/pages/MobileAppPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/.env.example",
@@ -99647,6 +99647,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
@@ -99679,7 +99680,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -104385,6 +104385,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
@@ -104400,7 +104401,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -104537,6 +104537,7 @@
         "tdf-hq-ui/src/api/artistCatalog.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
         "tdf-hq-ui/src/features/records/RecordThumbnail.test.tsx",
@@ -104564,7 +104565,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
         "tdf-hq-ui/src/utils/sessionPersonalData.test.ts"
       ],
@@ -105519,6 +105519,7 @@
         "tdf-hq-ui/src/api/invoices.test.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
@@ -105532,7 +105533,6 @@
         "tdf-hq-ui/src/pages/PaymentsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/releaseDate.test.ts"
       ],
       "mobileConsumers": [
@@ -109975,6 +109975,7 @@
         "tdf-hq-ui/src/api/eventOperations.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
@@ -109982,7 +109983,6 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/PaymentsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/releaseDate.test.ts"
       ],
       "mobileConsumers": [
@@ -117865,6 +117865,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/merchReputation.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/components/merch/MerchReputationSummary.test.tsx",
@@ -117895,7 +117896,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
@@ -121958,6 +121958,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
@@ -121969,7 +121970,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -122074,6 +122074,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
@@ -122083,7 +122084,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -123242,6 +123242,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
@@ -123252,7 +123253,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -125191,6 +125191,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
@@ -125208,7 +125209,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -130498,6 +130498,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
@@ -130530,7 +130531,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -135526,6 +135526,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
@@ -135537,7 +135538,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
@@ -139314,6 +139314,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/PromoCodeField.logic.test.ts",
         "tdf-hq-ui/src/components/PromoCodeField.logic.ts",
         "tdf-hq-ui/src/components/PromoCodeField.tsx",
@@ -139342,7 +139343,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
@@ -144551,6 +144551,7 @@
         "tdf-hq-ui/src/api/eventMemoryModeration.test.ts",
         "tdf-hq-ui/src/api/eventOperations.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.test.tsx",
         "tdf-hq-ui/src/pages/CommerceProviderEventsPage.tsx",
@@ -144559,7 +144560,6 @@
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
         "tdf-hq-ui/src/pages/PaymentsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/env.test.ts",
         "tdf-hq-ui/src/utils/releaseDate.test.ts"
       ],
@@ -146249,6 +146249,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/RadioWidget.tsx",
@@ -146280,7 +146281,6 @@
         "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx",
         "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
-        "tdf-hq-ui/src/session/logoutIntent.test.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/merch.test.ts",
         "tdf-hq-ui/src/vendor/webtorrent/webtorrent.min.js"
@@ -149259,13 +149259,13 @@
         "tdf-hq-ui/src/api/eventMemoryModeration.test.ts",
         "tdf-hq-ui/src/api/eventOperations.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
         "tdf-hq-ui/src/pages/PaymentsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/releaseDate.test.ts"
       ],
       "mobileConsumers": [
@@ -149817,6 +149817,7 @@
         "tdf-hq-ui/src/api/eventOperations.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/RefundManagementPanel.test.tsx",
         "tdf-hq-ui/src/components/RefundManagementPanel.tsx",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.test.tsx",
@@ -149838,7 +149839,6 @@
         "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
         "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/marketplace.test.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/providerPaymentResume.test.ts",
@@ -154644,6 +154644,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/components/reviews/ExperienceReviews.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
@@ -154668,7 +154669,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
@@ -154969,6 +154969,7 @@
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/merchReputation.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/GoogleDriveUploadWidget.tsx",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
@@ -154998,7 +154999,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
@@ -159248,6 +159248,7 @@
         "tdf-hq-ui/src/api/eventOperations.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
@@ -159255,7 +159256,6 @@
         "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx",
         "tdf-hq-ui/src/pages/PaymentsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/releaseDate.test.ts"
       ],
       "mobileConsumers": [
@@ -160054,11 +160054,11 @@
         "tdf-hq-ui/src/api/generated/social-v2.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialV2.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/party-selector/PartySelector.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.test.tsx",
         "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
-        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts"
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/src/analytics/partySelectorTelemetry.ts",
@@ -161092,6 +161092,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
         "tdf-hq-ui/src/features/marketplace/OfferCard.tsx",
@@ -161113,7 +161114,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/services/googleDrive.recovery.test.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/marketplace.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
@@ -167037,6 +167037,7 @@
         "tdf-hq-ui/src/api/queryValidation.test.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.test.tsx",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
@@ -167048,7 +167049,6 @@
         "tdf-hq-ui/src/pages/bookingsPageLogic.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -168970,6 +168970,7 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.test.tsx",
         "tdf-hq-ui/src/components/AdminUserCommunicationDialog.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
@@ -169002,7 +169003,6 @@
         "tdf-hq-ui/src/pages/internalFeedbackLogic.test.ts",
         "tdf-hq-ui/src/pages/internalFeedbackLogic.ts",
         "tdf-hq-ui/src/session/SessionProvider.logoutIntent.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/merch.test.ts"
       ],
       "mobileConsumers": [
@@ -169467,6 +169467,8 @@
         "tdf-hq-ui/src/api/marketplace.ts",
         "tdf-hq-ui/src/api/merch.ts",
         "tdf-hq-ui/src/api/operations.ts",
+        "tdf-hq-ui/src/auth/authEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.tsx",
         "tdf-hq-ui/src/components/ChatKitLauncher.tsx",
@@ -169502,9 +169504,7 @@
         "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
         "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
         "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
-        "tdf-hq-ui/src/pages/FanHubPage.tsx",
-        "tdf-hq-ui/src/pages/FeedbackCatalogPage.tsx",
-        "tdf-hq-ui/src/pages/InternshipsPage.tsx"
+        "tdf-hq-ui/src/pages/FanHubPage.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/_layout.tsx"
@@ -170998,6 +170998,7 @@
         "tdf-hq-ui/src/api/eventOperations.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
         "tdf-hq-ui/src/api/socialEvents.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/events/EventRaciEditor.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
         "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
@@ -171026,7 +171027,6 @@
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
         "tdf-hq-ui/src/player/PlayerProvider.tsx",
         "tdf-hq-ui/src/player/types.ts",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts"
       ],
       "mobileConsumers": [
@@ -172898,6 +172898,7 @@
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/studioAudit.test.ts",
         "tdf-hq-ui/src/api/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
         "tdf-hq-ui/src/bootSafety.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.test.tsx",
         "tdf-hq-ui/src/components/AccountDeletionQueue.tsx",
@@ -172905,8 +172906,7 @@
         "tdf-hq-ui/src/components/ApiStatusChip.test.tsx",
         "tdf-hq-ui/src/components/NotificationBell.tsx",
         "tdf-hq-ui/src/components/NotificationNavigation.test.tsx",
-        "tdf-hq-ui/src/components/PageShell.test.tsx",
-        "tdf-hq-ui/src/components/PromoCodeField.logic.ts"
+        "tdf-hq-ui/src/components/PageShell.test.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/create.tsx",
@@ -174117,13 +174117,13 @@
         "tdf-hq-ui/src/api/eventMemoryModeration.test.ts",
         "tdf-hq-ui/src/api/eventOperations.test.ts",
         "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/payments/HeldRefundRecoveryPanel.tsx",
         "tdf-hq-ui/src/pages/FanClubPage.tsx",
         "tdf-hq-ui/src/pages/LabelReleasesPage.test.tsx",
         "tdf-hq-ui/src/pages/LiveSessionPublicPage.tsx",
         "tdf-hq-ui/src/pages/PaymentsPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventWorkspacePage.test.tsx",
-        "tdf-hq-ui/src/session/logoutIntent.ts",
         "tdf-hq-ui/src/utils/releaseDate.test.ts"
       ],
       "mobileConsumers": [
@@ -181800,6 +181800,8 @@
         "tdf-hq-ui/src/api/socialEvents.ts",
         "tdf-hq-ui/src/api/socialV2.test.ts",
         "tdf-hq-ui/src/api/uploadFailure.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.test.ts",
+        "tdf-hq-ui/src/auth/logoutIntent.ts",
         "tdf-hq-ui/src/components/ApiErrorNotice.test.tsx",
         "tdf-hq-ui/src/components/ApiErrorNotice.tsx",
         "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
@@ -181828,9 +181830,7 @@
         "tdf-hq-ui/src/components/events/EventRsvpControls.test.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpControls.tsx",
         "tdf-hq-ui/src/components/events/EventRsvpFeed.test.tsx",
-        "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx",
-        "tdf-hq-ui/src/components/events/MyEventsPanel.test.tsx",
-        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx"
+        "tdf-hq-ui/src/components/events/EventRsvpFeed.tsx"
       ],
       "mobileConsumers": [
         "tdf-mobile/app/(tabs)/events.tsx",
