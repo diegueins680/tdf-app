@@ -135,6 +135,11 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
     >>= either (throwError . unavailableText) pure
   runtime <- liftIO (loadRuntimeProviderAdapter (Store.ceEnvironment checkout) provider)
     >>= either (throwError . unavailableText) pure
+  -- Routing already requires the method's configuration; recheck it on the
+  -- runtime that builds the request so no unconfigured method reaches a provider.
+  unless (paymentMethod `elem` rpaConfiguredMethods runtime) $
+    throwError unavailable
+      { errBody = "Requested provider and payment method are not operationally available" }
   clientIp <- liftIO (numericHost remoteAddress)
     >>= either (throwError . unavailableText) pure
   nonce <- liftIO (getEntropy 32)

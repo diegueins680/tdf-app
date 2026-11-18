@@ -29,7 +29,7 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderCapabilities
 import           TDF.Commerce.ProviderCapabilityStore (loadProviderActivations)
 import           TDF.Commerce.ProviderRuntimeConfig
-  ( runtimeProviderConfigured, runtimeProviderMethodConfigured )
+  ( runtimeProviderMethodConfigured )
 import           TDF.DB (Env(..))
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 
@@ -114,7 +114,10 @@ runtimeReady environment flow method activation = case paProvider activation of
     liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
       method)
   Checkout.ProviderPayPhone ->
-    liftIO (runtimeProviderConfigured environment Checkout.ProviderPayPhone)
+    -- The Button ('MethodCard') is configured only with its coding password
+    -- (ADR 0136); the wallet alone must not open the card route.
+    liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPayPhone
+      method)
   Checkout.ProviderStripe -> pure False
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
