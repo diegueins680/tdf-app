@@ -1628,7 +1628,10 @@ expireOverdueDepositsDB participant = do
   forM_ overdue $ \(Single agreementId, Single classifiedId, Single applicationId) -> do
     _ <- (rawSql "SELECT classified.status FROM classified WHERE classified.id=? FOR UPDATE" [toPersistValue classifiedId] :: SqlPersistT IO [Single Text])
     _ <- (rawSql "SELECT application.status FROM classified_application application WHERE application.id=? FOR UPDATE" [toPersistValue applicationId] :: SqlPersistT IO [Single Text])
-    expired <- rawSql "UPDATE marketplace_agreement SET status='expired',updated_at=now(),version=version+1 WHERE id=? AND status='pending_deposit' AND deposit_due_at<=now() RETURNING id"
+    -- Payment start locks the agreement before recording its attempt, so after
+    -- this lock a fresh statement sees any attempt it committed meanwhile.
+    _ <- (rawSql "SELECT agreement.status FROM marketplace_agreement agreement WHERE agreement.id=? FOR UPDATE" [toPersistValue agreementId] :: SqlPersistT IO [Single Text])
+    expired <- rawSql ("UPDATE marketplace_agreement agreement SET status='expired',updated_at=now(),version=version+1 WHERE agreement.id=? AND agreement.status='pending_deposit' AND agreement.deposit_due_at<=now() AND NOT EXISTS (SELECT 1 FROM marketplace_agreement_payment payment JOIN commerce_payment_attempt attempt ON attempt.checkout_id=payment.checkout_id WHERE payment.agreement_id=agreement.id AND attempt.status IN " <> liveAttemptStatusesSql <> ") RETURNING agreement.id")
       [toPersistValue agreementId] :: SqlPersistT IO [Single UUID]
     unless (null expired) $ do
       rawExecute "UPDATE marketplace_agreement_payment SET status='expired',updated_at=now(),version=version+1 WHERE agreement_id=? AND status='pending'"

@@ -17,7 +17,7 @@ Stripe puede admitir varios medios en el mismo PaymentIntent. `StripePaymentAlte
 - Entradas: checkout público, transferencia, proveedores alojados y formulario Stripe del flujo social. La app móvil ya remite sus entradas de pago al checkout público web; no cobra de nuevo en nativo.
 - Domo: depósito de cotizaciones y sus diálogos.
 - Mezcla y mastering: selección de pago, seguimiento y retorno Datafast.
-- Marketplace: checkout, diálogos de proveedor, seguimiento y retorno Datafast.
+- Marketplace: checkout, diálogos de proveedor, seguimiento y retorno Datafast. Los acuerdos usan su único ejecutor implementado (Botón PayPhone); un resultado desconocido conserva la verificación y un rechazo confirmado remite a soporte sin inventar otros medios.
 - Merch: seguimiento de intentos fallidos; no se anuncian ejecutores que esa pantalla no implementa.
 - Música digital: errores del único ejecutor implementado (PayPal), sin anunciar métodos que no se puedan aplicar a esa compra.
 - Retorno común de proveedores: alternativas de la orden original mediante consultas de solo lectura.
