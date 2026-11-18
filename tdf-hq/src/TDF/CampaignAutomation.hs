@@ -18,6 +18,8 @@ module TDF.CampaignAutomation
   , updateCampaignEnrollmentStatus
   , isWhatsAppCampaignOptOutMessage
   , whatsAppConsentWithdrawn
+  , whatsAppRecipientConsentWithdrawn
+  , whatsAppConsentWithdrawnMessage
   , validateCampaignAutomationActivation
   , validateCampaignAutomationDailyLimit
   , validateCampaignAutomationStatus
@@ -570,6 +572,20 @@ whatsAppConsentWithdrawn Nothing = False
 whatsAppConsentWithdrawn (Just consent) =
   not (ME.whatsAppConsentConsent consent)
     && isJust (ME.whatsAppConsentRevokedAt consent)
+
+-- | Every send to a contact consults this before contacting them: staff
+-- replies, admin sends and resends, and automated replies
+-- (MSG-STAFF-OUTBOUND-001). A number that cannot be normalized has no consent
+-- row, so it withdrew nothing.
+whatsAppRecipientConsentWithdrawn :: Text -> SqlPersistT IO Bool
+whatsAppRecipientConsentWithdrawn rawPhone =
+  case normalizeWhatsAppPhone rawPhone of
+    Nothing -> pure False
+    Just phone -> whatsAppConsentWithdrawn . fmap entityVal <$> getBy (ME.UniqueWhatsAppConsent phone)
+
+whatsAppConsentWithdrawnMessage :: Text
+whatsAppConsentWithdrawnMessage =
+  "El contacto retiró su consentimiento para recibir mensajes de WhatsApp"
 
 activeConsent :: Maybe (Entity ME.WhatsAppConsent) -> Bool
 activeConsent Nothing = False
