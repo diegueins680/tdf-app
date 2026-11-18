@@ -1,0 +1,258 @@
+{
+  "backendBase": "883e12ee394aa374dfecd89b10000e5efd76a773",
+  "preservedFullPlayerSource": "4b7824841fcbf2f3bcb7e95adb5ceb93f60ec22d",
+  "nativeSessionSource": "33c5835e87f61f18efda0cec9c460b44ac247f59",
+  "nativeSpeedRepairSource": "b2216b7afcc140a0c9a461419cc9c6fea688d32d",
+  "nativeSessionRuntimeIntegrated": true,
+  "productionChanged": false,
+  "qualification": {
+    "typecheck": "passed",
+    "changedSourceLint": "passed",
+    "transportAndArtistIntegration": {
+      "suites": 3,
+      "tests": 140,
+      "result": "passed"
+    },
+    "artistPageQualification": {
+      "suites": 3,
+      "tests": 41,
+      "result": "passed"
+    },
+    "catalog": {
+      "candidates": 1424,
+      "unreviewed": 0,
+      "stale": 0,
+      "result": "passed"
+    },
+    "realNativeSessionBrowser": {
+      "project": "chromium-desktop",
+      "tests": 1,
+      "result": "passed",
+      "scope": "Generated H.264/AAC video and independently generated audio; actual native clocks/events, synthetic API/catalog; no production storage."
+    },
+    "fullUI": {
+      "result": "passed",
+      "suites": 376,
+      "tests": 4315
+    },
+    "threeBrowserNativeSuite": {
+      "result": "passed",
+      "tests": 45,
+      "unexpected": 0,
+      "flaky": 0,
+      "skipped": 0,
+      "projects": [
+        "chromium-desktop",
+        "chromium-phone",
+        "firefox-critical"
+      ]
+    },
+    "configuredStorageProbeControls": {
+      "tests": 22,
+      "result": "passed",
+      "source": "883e12ee394aa374dfecd89b10000e5efd76a773",
+      "scope": "Synthetic configured namespace, DNS/TLS-parameter and redirect controls; no real storage/TLS acceptance."
+    },
+    "uiRuntimeInputEquality": "After native33 and concurrent backend883e merges, git diff ef68fbf58 -- tdf-hq-ui lists only PlayerProvider.test.tsx. Production web inputs remain exact to the completed 376-suite/4315-test and45-browser-case executions; four newly added speed cases pass separately.",
+    "additionalNativeSpeedControls": {
+      "tests": 4,
+      "result": "passed",
+      "scope": "Added after full UI run; only test source changed. Existing suite assertions retained, with real native play/playing events modelled for the authoritative engine state."
+    },
+    "repositoryGate": {
+      "result": "passed",
+      "initialFailure": "Gate was started before merge-generated traceability JSON was regenerated; original parse failure retained. No passing gate inferred.",
+      "scope": "Complete normal repository gate exited0 after generated JSON regeneration; initial failed parse retained separately."
+    },
+    "backendLogicOnCurrentMain": {
+      "stackExamples": 4312,
+      "failures": 0,
+      "pending": 23,
+      "httpIntegration": "passed",
+      "sourceTree": "883e12ee394aa374dfecd89b10000e5efd76a773",
+      "localMirror": "cb3d781f492b4243f2d7e24d99bc27818f8220a5",
+      "scope": "Local mirror tree equals published backend883e. Stack began on identical Haskell/Cabal inputs during main reconciliation; generated build/version metadata and this execution do not attest a production image or runtime identity."
+    }
+  },
+  "counterexamples": [
+    "Native pause did not set explicit pause latch across artist navigation",
+    "Native explicit resume did not restore shared requested intent",
+    "Retiring src before draining internal pause misattributed later native pause",
+    "Resuming pending metadata did not rearm deadline",
+    "Stale playing event disarmed next authorization deadline",
+    "Failed video skipped working independent audio for same session",
+    "Native-only artist catalog never entered profile queue",
+    "Format-first filtering downgraded denied protected video or malformed protected identity to an unbound audio URL; all four controls failed before track-wide filtering."
+  ],
+  "limitations": [
+    "Native follow-up PR718 is not main, deployed, approved or a current-head hosted attestation.",
+    "Native Records persistent health, server source identity/grant correspondence and full catalog provenance remain open.",
+    "Records native UUIDs are not offered as unsupported Music featured writes.",
+    "Physical devices, real provider accounts, local Docker/S3 unavailable; guarded production release/receipt unqualified."
+  ],
+  "inputSha256": {
+    "e2e/web/fixtures/native-music-setup.mjs": "e48160585d5865e34916cab3f70c98bc3c6dbf88893beb2215c54f4871b9cbf1",
+    "e2e/web/music-player-native.spec.mjs": "0cd6940daa11d9b53a7f932cd78e20ec0e6084f864d8e0c3de7200c6de67278e",
+    "e2e/web/music-player.spec.mjs": "7527391173e85e99e1e8f51323184209239738012ec6ad4d67cec0859dec71af",
+    "e2e/web/radio-navigation.spec.mjs": "eef173599c0b32ff83749e92278f51b5aa04e6d1cb04dfbb0fc0e79849c13198",
+    "tdf-hq-ui/src/api/artistCatalog.test.ts": "043c8cfcd398d22039d171a6c125d9c96fe60b78e79e7adeb45e30375896e0af",
+    "tdf-hq-ui/src/api/artistCatalog.ts": "746f1024c03b4e0da2e5bddf14e75998569e188c58b9b03b568774508c2f802e",
+    "tdf-hq-ui/src/api/musicReleases.ts": "030f09133bdf008b4a7ac20b37368ecb856c30805ce8d5195e91920b766c4c49",
+    "tdf-hq-ui/src/api/records.test.ts": "ac9df36a14e53a23056ad247e175d433ac74f7a9dcc18aa0c0ef4393afe40c77",
+    "tdf-hq-ui/src/api/records.ts": "808dd38791b019e186d12bf28de0635b475a299772ddfa5abd2c5d82e3202ee9",
+    "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx": "7780e0a0a3338b7e786d1e0dd37c7bd3a6f368a66c124ddbd5cca70c531b4d44",
+    "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx": "8c777a3db79c4c3185afd93df48a8ed42df8373a568252360ea5fb64ccf88727",
+    "tdf-hq-ui/src/components/RadioWidget.tsx": "06a40e87f3239483b934eea031b22a441a49dcf6f72397cd455aa99ed2293171",
+    "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx": "e451f805d3cf81ef7e4509fcbb1fdfd0af384745b51ef2eb4ac7695d40682754",
+    "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx": "9889792e70da6481fbbd237fffafe0cd5323c7ac4e958678a7d657f68f2a2285",
+    "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx": "235b3736f18e7096d605bea6e9b6314fae618961648873a06dc8341c206cf0b1",
+    "tdf-hq-ui/src/components/SessionVideoPreview.tsx": "4487eb699ad2c2d992373c5854e55fd508bbe5e034567f35e241c93bacbaacd8",
+    "tdf-hq-ui/src/components/StreamingPlayer.tsx": "5652966ea8bbe4eb33287a438ee46f8622dec7dd02a4cdde8c21ee58a4fab33e",
+    "tdf-hq-ui/src/config/artistMediaRecoveryRollout.test.ts": "393aef9bddead5150b4faec6531ecdbeb77fbf41c99acde58586726e29694bb9",
+    "tdf-hq-ui/src/config/artistMediaRecoveryRollout.ts": "87b85091fdf9d2a27d48cb8eb8c1a34485aa86f73cabc4f7f9553dfb1fec1a9d",
+    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts": "82f10252d063f3dcebe07c4ae250267078de0d4d6d14d674e25a7fc6dc404252",
+    "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts": "249e356bd64235804d938213ce99e909350ac3dafc06bc984558c1a1a7d19b63",
+    "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx": "7239d5ce0451329a04d2d56014f3ad06f00b67da9974f59b086e62dfb5e54890",
+    "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx": "3ce4bc961c3be9896f91b5901501d7b2989daef2e549d893e22c4bbb2193ac37",
+    "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts": "2596ee40090695de8cf4d8bc952daeacf621b2c1f09d2f60b97d78b97e0d7367",
+    "tdf-hq-ui/src/features/sessions/nativeSessions.ts": "4a1d0353025943fa582ea735e6726edb83495487f812da543ea119405503cdec",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx": "ee61fb92343adea6c07783c4301fdc17b3b917d9444fc3bd6ce359a04b62d905",
+    "tdf-hq-ui/src/pages/ArtistPublicPage.tsx": "4e6891375e7a4d14cf4966032d068f31abb2180e88a58b72dd1859e8485adf65",
+    "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx": "7ece79b993a2ca3bd0f8be586d02c7b44d7718259964fe0ded9988f2693a2e57",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx": "6758412b20817f8227f1ffc634d91cbeb6999b5aebfdfe0c1c4ac9248ed23049",
+    "tdf-hq-ui/src/pages/MusicReleaseStudioPage.tsx": "48c8e9f0da9164e0f04dd43431a01ab48f7f167ac28be776c3719d79b2070004",
+    "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx": "81dc0f510e119cc1658f467c2c24916ba9ab1526f5c6dedf6a5108f7bf1cd454",
+    "tdf-hq-ui/src/pages/RecordsPublicPage.tsx": "d98b02b415a9c01b40959a3801af5919f3e3d810ab20c86e978a1085e52dfd24",
+    "tdf-hq-ui/src/pages/VideoCampaignsPage.test.tsx": "a55ae0e79f4b4abd4a2bbb7f3c7a1e514e3757d532300d64318f68dfd8f51d43",
+    "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.test.tsx": "ddff7a7f59172f937d4435b76b22c9771ca8e1a2cf7fdd974d98bdd12758faa2",
+    "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.tsx": "31e207f772c7cc8745d11f66983c9d04a4ffacd63f16c1fa7fc28e8d57413dc9",
+    "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx": "ffc663df2c1d0e3ff0701b7cbc42ceaaeaf09a41e7a7da6fc6d8b4c203c1a1fb",
+    "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts": "e4b80a9b0159492de946ff5457b65c3ef209c6b1d58a2c0fbef18267928fd20b",
+    "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx": "9dd1f8e7489478cdc0bb64753fe038cf7c38a90859a8e2582f31f1834c1cf632",
+    "tdf-hq-ui/src/player/GlobalPlayer.tsx": "26b21df7e84725b24465fe74ed62b7b889f77497808669b1e1e6f50810db4445",
+    "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx": "3147970615b60f9760b4a6f285dea369c76785e6748e30ce479dff9e4cb51b14",
+    "tdf-hq-ui/src/player/MediaHealthPanel.tsx": "89b5dcdfb064f1a96720bb0324be6ada544837614f968d3010a95160f51ac0d3",
+    "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx": "3868432fbb203c9a47aff844c5140c26569787a2dc91d0dcd4d320ea8c2c4405",
+    "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "adddb86b01e71153316218c954e1a9d7afdc7aacc659c87825bd364e22d8eda0",
+    "tdf-hq-ui/src/player/PlayerProvider.tsx": "ad1fb0c898bb2cfbb55c1f4df9a3bb94943f3c9ade51f8603fb6085d85a8a985",
+    "tdf-hq-ui/src/player/assetAccess.ts": "2a294c24902571c0e5ba0c8728f2e331c2122abce9fedc5735f1107de0daf358",
+    "tdf-hq-ui/src/player/types.ts": "d041e505b24d1205ec151f702f28b7dc817e903b0556ba4f5f62bd7f621aad7a",
+    "tdf-hq-ui/src/utils/availableRadioStations.test.ts": "fb403dac0b0d3e81b4ff5651a231039a033f17520a3fbb0532cfcb14acb0cac8",
+    "tdf-hq-ui/src/utils/availableRadioStations.ts": "d3a756e5ee95d3cf375dfaa5535a43e0dd6469aa45eec7e7403ac19d32427eeb",
+    "tdf-hq-ui/src/vite-env.d.ts": "774e4d6418a7f3b87c68fc1c018f99acd65d74771582e402ca1d490f5a489b86",
+    "scripts/music-media-health.py": "a9b98debadbf1a1ccaec0f42b2a24ca03d0742dd3b32dfd94ccc0d517c9bf84d",
+    "scripts/test-music-media-health.py": "1139af6e4926516612974422bd09d3f488fec18ea275553699af8c8bde7fcce8"
+  },
+  "qualificationBeforeIdentityFix": {
+    "fullUISuites": 375,
+    "fullUITests": 4311,
+    "browserTests": 45,
+    "browserUnexpected": 0,
+    "browserSkipped": 0,
+    "scope": "Completed before track-wide authorization format filtering was corrected; not final source acceptance."
+  },
+  "concurrentSourcePreserved": "ba709f94fbded9582678837ef9ed3e10b4dab923",
+  "nativeIntegrationPR": "https://github.com/diegueins680/tdf-app/pull/718",
+  "restoredCheckpointMerge": {
+    "pr": 716,
+    "source": "ba709f94fbded9582678837ef9ed3e10b4dab923",
+    "merge": "077a0cc59b3c0eef71c21ebd44ea1f4352e13cba",
+    "target": "draft PR670 branch",
+    "nativeChangesIncluded": false
+  },
+  "historicalOwnerQualificationInputRevision": "fed5d1fe670082d73663409f2536f026b919c60a",
+  "terminalPermissionDenialFollowUp": {
+    "materialCommit": "c5b83bcadbc150a86dab60b8c85b17f1a3253574",
+    "originalNativeSelectionContract": "33c5835e87f61f18efda0cec9c460b44ac247f59",
+    "scope": "Terminal401/403/404 stops initial/background selection without queued-track substitution. Same-track authorization and non-permission recovery retain their previous paths.",
+    "counterexample": {
+      "runtimeSource": "fed5d1fe670082d73663409f2536f026b919c60a",
+      "sameFinalHarness": true,
+      "selectedTestsFailed": 2,
+      "observed": "Initial one→two and background protected→next before repair."
+    },
+    "focusedVerification": {
+      "playerTestsPassed": 132,
+      "failed": 0,
+      "skipped": 0,
+      "sourceInputSHA256": {
+        "tdf-hq-ui/src/player/PlayerProvider.tsx": "3d5469dcc2c2eb70fe94f7e3f9d3787adf02a6efeb9169393c9861144adfe075",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx": "b9a1ee86e2f984759bad334434d133ee40fb1042ac43eaf72a8cd5af1d9dbf55"
+      },
+      "scope": "JSDOM/media-event controls, including original Native33 denial case restored verbatim, queued-background denial, late-event/no-further-poll guards and native-pause/new-selection race."
+    },
+    "earlierOwnerResultsAreHistorical": true,
+    "limits": [
+      "The preceding fullUI/browser/backend results and inputSha256 are preserved owner evidence for their original inputs; they are not fresh broad acceptance of this changed runtime.",
+      "No actual native browser/device/provider/deployment execution was performed for the terminal-denial repair.",
+      "Fresh full source hostedCI and independent review remain required; Native706 has not merged to protected Main."
+    ],
+    "productionOperation": false
+  },
+  "nativePreparationUtilityFollowUp": {
+    "materialCommit": "d769b11632fa4bdfd5dedeb6f12fe615b21be486",
+    "changes": [
+      "Audit records only the tool and declared state; it makes no unverified owner or master claim.",
+      "Capture the actual returned parent resource UUID separately from chapter upserts.",
+      "Write SQL atomically with mode 0600; refuse input path, symlink and hardlink aliases."
+    ],
+    "pureVerification": {
+      "tests": 11,
+      "passed": 11,
+      "sameFinalOldUtilityFailureAssertions": 7,
+      "note": "Three alias variants are unittest subcases; all six original validation method bodies are preserved."
+    },
+    "isolatedPostgresVerification": {
+      "version": "16.13",
+      "canonicalMigrationRows": 251,
+      "scenarios": 5,
+      "scope": "Canonical SQL only, no startup: old wrong receipt rolled back; fixed existing parent and child UUIDs; idempotent replay; pending/no local files truthful audit; wrong-source atomic refusal.",
+      "ownedDatabaseDroppedAndServerStopped": true
+    },
+    "fastControlsWiredInto": "scripts/quality-repo.sh",
+    "priorPlayer132InputsUnchanged": true,
+    "priorPlayer132NotRerun": true,
+    "sourceInputSHA256": {
+      "scripts/prepare-native-session.py": "0e72ec4cfc39169daaf38aa6e54726e4f4c0eb0049367ef6f481d03e6334949b",
+      "scripts/test-prepare-native-session.py": "def72194129b0e2e7a2e0bacd42e4a681dbf4e242cb94a321873d9515858f040",
+      "scripts/quality-repo.sh": "e5b94bea6a1dfba862b638fcbaa60a15ee309cff0eb5a455f6ceedb03f1feeb7",
+      "docs/native-tdf-sessions.md": "4c05dbc349586cc4a208457f93170416792f75a5f44b0fa36afc28b642c170fd"
+    },
+    "limits": [
+      "Synthetic owned fixtures only; no actual masters, media requests, provider, production SQL or publication.",
+      "Earlier incorrect operator receipts are not automatically rewritten.",
+      "Fresh whole-source 718 CI and independent review remain required; direct 706 Main integration sequencing is unchanged."
+    ]
+  },
+  "knownInheritedNativeBoundaryReview": {
+    "originalReview": 4505103013,
+    "originalPullRequest": 706,
+    "finding": "Native video onPlay lacks the owned-source completed-chapter rewind used by global Play.",
+    "current718NativeBrowserReproduction": "NOT_RUN",
+    "featureMergeHold": true,
+    "resolution": "Qualify the original706 repair independently, then reconcile it into718/670 while preserving denial and utility fixes. No complete Native acceptance or Main delivery is claimed."
+  },
+  "nativeBoundaryReconciliationFollowUp": {
+    "inputs": {
+      "priorQualified718": "69aa4b6907bd4c9f4bd654e2890bb0c306ea8e1d",
+      "qualified706BoundaryAndUtility": "282ad7c43df5792bc601db38ec71279f146a4dd5",
+      "actualProtectedMain": "9e9c19fc3e55ebe112b99b574df71e543565bc94"
+    },
+    "finding": 4505103013,
+    "repair": "Normal merge preserves all owner/denial guards and uses owned-source chapter rewind in native onPlay.",
+    "actualVerification": {
+      "oldSameFinalHarnessSource69aa": "4 selected FAIL / 4 PASS;132 oldtests filtered by explicitpattern",
+      "combinedPlayer": "140PASS/0FAIL/0SKIP, all132 prior test bytes retained",
+      "fixtureOnlyAdaptation": "New706 controls emit actual play/playing confirmation and pause-drain events required by owner lifecycle; all assertions retained.",
+      "productionSHA256": "5d33f9a98e88a1c0d6827e4caf6ce57730fe1e624a9deb27edc4febe94a23e30",
+      "testSHA256": "05743841cfe10857587aa692921efad9136e42ed608e05afecf194ad75232b44"
+    },
+    "priorHoldDisposition": "Previous inherited706boundary hold remains historical. This qualified combined repair permits Root to evaluate component staging only after applicable gates/review; it does not itself waive gates or deliverNative to Main.",
+    "protectedSequence": "Original706 stays targeted to Main and must genuinely merge before670 protected Main integration.",
+    "limits": [
+      "No fresh real-native/browser/device/all-schedules qualification",
+      "Historical owner broad andPG251 evidence retain old identities; only unchanged-input bridges",
+      "No provider/media/master/deployment/GitHub mutation by this agent"
+    ]
+  }
+}

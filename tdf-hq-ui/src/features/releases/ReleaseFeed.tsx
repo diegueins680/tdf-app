@@ -26,7 +26,7 @@ import {
   getReleasePlaybackUrls,
   type ReleaseFeedItem,
   type ReleaseStreamingFallback,
-} from './ReleasePlayerActions';
+} from '../../player/ReleasePlayerActions';
 
 const playButtonIcon = <PlayArrowIcon />;
 const uploadButtonIcon = <CloudUploadIcon />;

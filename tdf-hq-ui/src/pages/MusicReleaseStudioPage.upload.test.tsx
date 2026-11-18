@@ -21,7 +21,7 @@ const version = {
 const uploadAsset = jest.fn<(options: UploadMusicAssetOptions) => Promise<unknown>>();
 const getVersion = jest.fn<() => Promise<MusicReleaseVersion>>();
 const transition = jest.fn<(releaseId: string, versionId: string, input: Record<string, unknown>, idempotencyKey: string) => Promise<unknown>>();
-jest.unstable_mockModule('../session/SessionContext', () => ({ useSession: () => ({ session: {
+jest.unstable_mockModule('../session/SessionContext', () => ({ getStoredSessionToken: () => null, useSession: () => ({ session: {
   partyId: 101, displayName: 'Artista sintético', roles: ['Artist'],
 } }) }));
 jest.unstable_mockModule('../api/catalogs', () => ({ Catalogs: { listPublicItems: async () => ({ items: [] }) } }));

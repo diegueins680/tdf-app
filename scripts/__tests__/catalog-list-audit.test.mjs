@@ -118,6 +118,27 @@ async function readReconciliation(beforePlayer = false) {
   const retirement = integration.retirements.find(row => row.source.name === 'migrations');
   const byId = new Map(active.map(row => row === tip ? row.previousDecision : row)
     .map(row => [row.id, row]));
+  const catalog = JSON.parse(await fs.readFile(path.join(workspaceRoot, catalogPath), 'utf8'));
+  const archived = catalog.reconciliation.unifiedSystemControls20261116;
+  assert.equal(archived.priorSource, PLAYER_SERVER_MAIN_BASE);
+  assert.deepEqual(archived.retiredDecision, predecessor.find(row => row.id === '9f5a58afbcc5a21f3a81'));
+  assert.equal(byId.has(archived.retiredDecision.id), false);
+  byId.set(archived.retiredDecision.id, archived.retiredDecision);
+  // The native player expands the Records source and restores the full client
+  // wrapper. Check their exact retired reviews when reconstructing old views.
+  for (const decision of [
+    ...catalog.reconciliation.nativeSessionSourceTagRetirement.decisions,
+    ...catalog.reconciliation.frontendComposeContext20261108.preservedBackendDecisions,
+    ...active.filter(row => row.reviewBatch === 'player-layer-relocation-20261118')
+      .map(row => row.previousDecision),
+  ]) {
+    const original = predecessor.find(row => row.id === decision.id);
+    if (original) {
+      assert.deepEqual(decision, original);
+      assert.equal(byId.has(decision.id), false);
+      byId.set(decision.id, decision);
+    }
+  }
   // The PayPal webhook domain list moved files unchanged (ADR 0133), so its
   // review is a successor under a new id; it stands in for the review it nests.
   const movedPaypalDomains = active.find(row => row.id === 'f562d95dce39e81da4af');

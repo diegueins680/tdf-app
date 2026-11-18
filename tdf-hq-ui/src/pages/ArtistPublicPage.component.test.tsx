@@ -9,6 +9,13 @@ import type { To } from 'react-router-dom';
 import type { ArtistProfileDTO, ArtistReleaseDTO, FanFollowDTO } from '../api/types';
 import { expectNoSeriousAccessibilityViolations } from '../test/accessibility';
 
+const rollout = { enabled: true };
+const beginArtistMock = jest.fn();
+const profilePlaybackMount = jest.fn(() => null);
+jest.unstable_mockModule('../config/artistMediaRecoveryRollout', () => ({ isArtistMediaRecoveryEnabled: () => rollout.enabled }));
+jest.unstable_mockModule('../player/PlayerProvider', () => ({ useOptionalPlayer: () => ({ beginArtist: beginArtistMock, pause: jest.fn() }) }));
+jest.unstable_mockModule('../player/ArtistProfilePlayback', () => ({ default: profilePlaybackMount }));
+
 const getPublicArtistMock = jest.fn<(artistRef: number | string) => Promise<ArtistProfileDTO>>();
 const getReleasesMock = jest.fn<() => Promise<ArtistReleaseDTO[]>>(async () => []);
 const listFollowsMock = jest.fn<() => Promise<FanFollowDTO[]>>();
@@ -120,6 +127,9 @@ function renderPage(initialEntry: string, sameArtistDestination = '/a/las-sintet
 
 describe('ArtistPublicPage follow continuity', () => {
   beforeEach(() => {
+    rollout.enabled = true;
+    beginArtistMock.mockClear();
+    profilePlaybackMount.mockClear();
     sessionMock = null;
     getPublicArtistMock.mockReset().mockResolvedValue(artist);
     getReleasesMock.mockReset().mockResolvedValue([]);
@@ -135,6 +145,25 @@ describe('ArtistPublicPage follow continuity', () => {
 
   afterEach(() => {
     cleanup();
+  });
+
+  it.each(['absent', 'false'])('does not replace the current queue or mount new backend playback for %s rollout', async () => {
+    rollout.enabled = false;
+    const view = renderPage('/a/las-sinteticas');
+    try {
+      await screen.findByRole('heading', { name: artist.apDisplayName, level: 1 });
+      expect(beginArtistMock).not.toHaveBeenCalled();
+      expect(profilePlaybackMount).not.toHaveBeenCalled();
+      expect(screen.getByRole('link', { name: /Crear cuenta o ingresar para seguir/ })).toBeTruthy();
+    } finally { view.unmount(); }
+  });
+  it('selects the original new artist playback only for enabled rollout', async () => {
+    const view = renderPage('/a/las-sinteticas');
+    try {
+      await screen.findByRole('heading', { name: artist.apDisplayName, level: 1 });
+      expect(beginArtistMock).toHaveBeenCalledWith('las-sinteticas');
+      expect(profilePlaybackMount).toHaveBeenCalled();
+    } finally { view.unmount(); }
   });
 
   it('selects and focuses an artist release beyond the first source page', async () => {

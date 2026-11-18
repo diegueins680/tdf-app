@@ -70,7 +70,7 @@ import {
   resolveReleasePlaybackAction,
   type ExternalReleasePlayback,
   type ReleaseFeedItem,
-} from '../features/releases/ReleasePlayerActions';
+} from '../player/ReleasePlayerActions';
 import { useReleaseFeed, type ReleaseFeedArtist } from '../features/releases/useReleaseFeed';
 import { ReleaseFeed } from '../features/releases/ReleaseFeed';
 import { FanProfileEditor } from '../features/fans/FanProfileEditor';

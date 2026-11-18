@@ -108,6 +108,11 @@ export function classifyChangedFiles(files, options = {}) {
       || changed.some((file) => isPathOrChild(file, 'tdf-hq')
         || file === 'fly.toml'
         || file === '.dockerignore'
+        || file === 'scripts/prepare-native-session.py'
+        || file === 'scripts/test-prepare-native-session.py'
+        || file === 'scripts/test-native-session-import.sh'
+        || file === 'scripts/test-native-session-import-sql.py'
+        || file === 'scripts/lib/postgres-test-database.sh'
         || file === 'scripts/test-public-booking-http-concurrency.sh'
         || file === 'scripts/test-music-catalog-search.mjs'
         || file === 'scripts/music-media-health.py'

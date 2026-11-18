@@ -8708,9 +8708,9 @@
       "title": "Single persistent web player and public music pages",
       "domain": "MEDIA",
       "critical": true,
-      "statement": "One PlayerProvider owns a single HTMLAudioElement mounted above all navigation. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion.",
+      "statement": "One PlayerProvider owns persistent release playback above all navigation: ordinary audio and native session video/audio elements are mutually exclusive, with one active source. Native Records sessions use explicit persisted artist identities, independent audio/video renditions and bounded chapter offsets; changing format or quality preserves position and the selected playback speed, and chapter playback cannot enter an adjacent song or credits. The queue persists asset ids and renews short-lived authorization on select or retry; position and preferences are bounded; Media Session, keyboard, focus and accessible messages are centralized. Public catalog, library and release pages render only what the public API returns. Radio route visibility controls initial discovery only: after opening during an authenticated session, internal navigation retains the same radio audio and visible controls, station, playback state and volume until explicit user action or session end; playback analytics use a stable identity with retry-safe ingestion. Imported native individual recording publications retain their stored source start/end offsets. Internally requested chapter/source pauses preserve continuation intent; an explicit user pause cancels it.",
       "authority": "Unreviewed recovered local implementation; ADR-004 and playback-identity.md in docs/music-releases/",
-      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694)",
+      "source": "Local main work of 2026-09-11..2026-09-16 recovered onto main in PR #510; docs/music-releases/playback-identity.md; User universal audio implementation directive 2026-10-25; formal/system/player-session.md; user radio continuity directive 2026-11-01 (PR #694); user native TDF sessions directive 2026-11-05; docs/native-tdf-sessions.md",
       "contract": "formal/system/player-session.md",
       "property": "At most one audio element plays; a queued item is played only after a fresh authorization for its asset id.",
       "actors": [
@@ -8747,7 +8747,7 @@
         "Persisted bounded queue and preferences",
         "Playback analytics events"
       ],
-      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing.",
+      "authorization": "Asset authorization comes from the backend public gate; the client grants nothing. Protected identity is checked across every source of a track before audio/video filtering; format selection cannot downgrade denied or malformed identity to an unbound URL. Terminal permission denial during initial source resolution or a background recheck stops and retires the selected source without substituting another queued track; same-track freshly authorized rendition attempts and bounded non-permission recovery remain available.",
       "privacy": "Analytics identity rotates with the session; favorites/history are per account.",
       "concurrency": "Selection and retry races resolved in favor of the latest request (native-player-verification.md).",
       "idempotency": "Analytics ingestion deduplicates by playback identity.",
@@ -8776,7 +8776,7 @@
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
         "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx",
-        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/player/ReleasePlayerActions.ts",
         "tdf-hq-ui/src/utils/musicPreviewRange.ts",
         "tdf-hq/sql/2026-09-16_music_playback_identity.sql",
         "tdf-hq/sql/2026-09-16_music_playback_identity_rollback.sql",
@@ -8785,7 +8785,13 @@
         ".github/workflows/ci.yml",
         "scripts/run-native-audio-tests.sh",
         "tdf-hq-ui/src/session/SessionProviders.tsx",
-        "playwright.config.mjs"
+        "playwright.config.mjs",
+        "tdf-hq-ui/src/api/nativeSessions.ts",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
+        "tdf-hq-ui/src/api/artistCatalog.ts",
+        "tdf-hq-ui/src/api/records.ts",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
+        "scripts/prepare-native-session.py"
       ],
       "tests": [
         "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
@@ -8798,7 +8804,7 @@
         "tdf-hq-ui/src/pages/MusicReleasePublicPage.login.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.audit.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.onboarding.test.tsx",
-        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/player/ReleasePlayerActions.test.ts",
         "tdf-hq-ui/src/utils/musicPreviewRange.test.ts",
         "tdf-hq/test/sql/music_playback_identity.sql",
         "scripts/test-music-playback-identity.mjs",
@@ -8812,9 +8818,18 @@
         "e2e/web/fixtures/native-music-setup.mjs",
         "tdf-hq-ui/src/pages/MusicPlaybackSelection.test.tsx",
         "tdf-hq-ui/src/components/RoutedRadioWidget.test.tsx",
-        "e2e/web/radio-navigation.spec.mjs"
+        "e2e/web/radio-navigation.spec.mjs",
+        "tdf-hq-ui/src/api/nativeSessions.test.ts",
+        "tdf-hq-ui/src/api/artistCatalog.test.ts",
+        "scripts/test-prepare-native-session.py",
+        "tdf-hq-ui/src/api/records.test.ts",
+        "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
+        "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx",
+        "scripts/test-native-session-import.sh",
+        "scripts/test-native-session-import-sql.py"
       ],
-      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness.",
+      "verification": "Jest regression tests, native Playwright AAC/FLAC playback, and a bounded executable design model with guard-removal controls. Model-to-implementation refinement, complete media authorization, and whole-platform single ownership remain unverified. Radio continuity is TESTED with rendered router/widget identity and media-command regressions plus native WAV clock advancement through real sidebar/history navigation in Brave, Chromium phone emulation and Firefox; API/auth/media content are synthetic. This does not extend the bounded release-player model or prove radio liveness. Source-bound regressions cover delayed internal pause delivery, latest-source cancellation, paused-source/unmount controls, imported recording card/deep-link bounds and canonical publication interactions. A local synthetic MP4 fixture exercises actual native video/audio continuation and explicit pause; this is finite browser evidence, not all-event-order or physical-device qualification. Source-bound native-load reset controls and synthetic MP4/M4A browser cases cover chosen and native-control speed across format, quality and chapter replacement; these are finite browser/application tests, not all-platform scheduling or decoder proofs.",
       "evidence": "Local results in docs/music-releases/native-player-verification.md and real-browser-integration.md; docs/music-releases/universal-audio-delivery-2026-10-25.md (new P0 evidence only; historical executions retain their original revisions)",
       "confidence": "Medium: browser evidence local only.",
       "ambiguity": [
@@ -12959,12 +12974,12 @@
       "recovery": "Listener may close the dialog, resume the retained TDF selection, or supply a valid release reference through the existing authorized save flow. Application-source rollback needs no schema or data reversal.",
       "observability": "Source-bound helper/rendered/PlayerProvider command-state tests and declared artifact hashes. No provider playback, native decoder or production-observability result is inferred from command tests.",
       "implementation": [
-        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+        "tdf-hq-ui/src/player/ReleasePlayerActions.ts",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.tsx"
       ],
       "tests": [
-        "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/player/ReleasePlayerActions.test.ts",
         "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
         "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
         "e2e/web/legacy-provider-playback.spec.mjs"
@@ -27108,7 +27123,7 @@
     {
       "id": "SYS-DESKTOP-002",
       "title": "Release player and radio share one system playback session",
-      "statement": "The web application keeps one ordered playback-owner registry: the owner that most recently started or selected audio installs its metadata and action handlers on the Media Session and reports to the desktop shell; passive updates never change the active owner; releasing the active owner restores the previous one; shell commands route to the active owner; the shell menu mirrors the last sanitized report.",
+      "statement": "The global player routes desktop and browser system media controls to one active engine for music and radio.",
       "domain": "SYS",
       "authority": "User directive 2026-11-08 (TDF App Desktop); ADR 0134 proposed",
       "source": "docs/adr/0134-desktop-shell-electron.md; docs/desktop/README.md; user directive 2026-11-08",
@@ -27845,7 +27860,7 @@
       ],
       "authorization": "Servant protected routes derive the database actor from AuthedUser and compare the required expected artist ID. Canonical reference eligibility reuses music_public_asset_accessible and the public release view. Legacy eligibility establishes existing public-release membership; direct-media classification and decoding remain player responsibilities. PUT /music/me/featured-track derives the authenticated artist Party and never grants publication or media access.",
       "privacy": "Public responses conceal unavailable source IDs and their timestamps; settings are scoped to the authenticated Party. Success responses use private, no-store. No signed URL is persisted or returned by preference endpoints.",
-      "concurrency": "Last successful authorized server write wins. Dependent frontend account-generation fencing remains outside this backend delivery stage.",
+      "concurrency": "Last successful authorized server write wins. Dependent frontend account-generation fencing remains outside this backend delivery stage. Last successful authorized server write wins. Dependent frontend account-generation fencing remains outside this backend delivery stage. The restored owner editor fences receipts and aborts requests at account/profile boundaries; saving has no playback side effect.",
       "idempotency": "Repeated selection has the same chosen reference; clearing an absent choice succeeds. Timestamp may change on an explicit repeated save.",
       "failure": "Owner settings read failure blocks writes until retry. Public preference read aborts after two seconds and falls back to the normal catalogue. No authoritative media-health verdict is inferred.",
       "recovery": "Retry settings read/write; replace or clear unavailable selection. Rollback preserves preference rows for reapplication.",
@@ -27862,12 +27877,20 @@
         "scripts/lib/production-release.mjs",
         "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
         "tdf-hq/sql/2026-11-07_artist_featured_identity_guard_rollback.sql",
-        "scripts/render-production-schema-verification.mjs"
+        "scripts/render-production-schema-verification.mjs",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/api/generated/types.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.tsx",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx"
       ],
       "tests": [
         "scripts/test-artist-featured-track.mjs",
         "tdf-hq/test/TDF/MusicRelease/ContentSpec.hs",
-        "scripts/__tests__/production-release.test.mjs"
+        "scripts/__tests__/production-release.test.mjs",
+        "tdf-hq-ui/src/player/ArtistFeaturedTrackEditor.test.tsx",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -27880,7 +27903,8 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required."
+        "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required.",
+        "result": "PARTIAL"
       }
     },
     {
@@ -27965,7 +27989,11 @@
         "tdf-hq/sql/2026-11-06_music_legacy_source_compatibility.sql",
         "tdf-hq/sql/2026-11-07_music_featured_source_health.sql",
         ".github/workflows/ci.yml",
-        "scripts/ci-change-scope.mjs"
+        "scripts/ci-change-scope.mjs",
+        "tdf-hq-ui/src/player/MediaHealthPanel.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/player/assetAccess.ts",
+        "tdf-hq-ui/src/components/SessionVideoPreview.tsx"
       ],
       "tests": [
         "scripts/test-music-media-health.mjs",
@@ -27978,7 +28006,11 @@
         "scripts/__tests__/catalog-list-audit.test.mjs",
         "scripts/test-music-worker-image.mjs",
         "scripts/lib/music-worker-image-smoke.sh",
-        "scripts/__tests__/ci-pipeline.test.mjs"
+        "scripts/__tests__/ci-pipeline.test.mjs",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "tdf-hq-ui/src/player/ReleasePlayerActions.test.ts",
+        "tdf-hq-ui/src/player/MediaHealthPanel.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",
@@ -27990,7 +28022,8 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required."
+        "reason": "Backend delivery stage: persisted validation, authorization, owner/team/admin diagnostic APIs and featured reference storage are implemented. Frontend controls and universal engine integration remain in PR670. Fresh hosted checks, independent approval and guarded production qualification remain required.",
+        "result": "PARTIAL"
       },
       "property": "Current-source lease fencing; public invalid suppression; temporary-failure tolerance; restoration only after success; publication and authorization remain separate from health. Diagnostic pages use bounded source-kind/ID cursors and recheck current owner/team/admin scope on every request; verdict updates do not reorder source identities. Legacy featured references obey the same health gate, while owner preferences survive invalidity and successful revalidation restores eligibility.",
       "verification": "Actual disposable PostgreSQL ingestion/claims/suppression/restoration checks, unsafe-fetch boundary tests and local native sample decoding; player permission and pause regressions. These tests are empirical evidence, not proof. Configured signed storage probes must remain inside the exact operator HTTPS authority and derivative-bucket path, retain pinned peer/default TLS hostname verification, and never follow redirects. Fake-connection/resolver controls cover private DNS and non-443 configured ports, reject namespace/origin/port escapes, and retain all legacy public-only checks; these controls do not establish real storage or TLS acceptance. The final worker image must import the actual health module as its non-root user without networking, with the full Python standard library. Required repository CI builds the image without publication and executes the immutable-image verifier, which also binds the health-script digest. Earlier backend Python controls alone do not establish final-image dependency availability. A premature EOF that contradicts declared HTTP Content-Length, or invalid length framing, is temporary transport failure and cannot establish a complete invalid media object. Exact/close-delimited completion and the existing bounded-prefix behavior remain; fake-transport controls keep native decoding separate. A real HTTP parser socket-pair regression bounds trickled response headers under the overall network deadline and verifies timeout cleanup.",
@@ -28072,6 +28105,126 @@
         "classification": "PARTIAL",
         "reason": "Local tests pass; the supervisor's launchd behaviour and disk guard are exercised by shell tests only, and hosted gates remain pending."
       }
+    },
+    {
+      "id": "MEDIA-ARTIST-PLAYBACK-001",
+      "title": "Shared artist and radio playback with bounded source recovery",
+      "domain": "MEDIA",
+      "critical": true,
+      "statement": "Artist profiles and the radio catalogue command the same PlayerProvider and active native media element. Artist navigation replaces the listening context, preserving explicit pause. Public artist queues preserve Party/source identity, use canonical tracks then direct public legacy media, and offer radio rather than automatically switching when exhausted. Native terminal failures try remaining eligible renditions, then move forward through the queue without repeat cycles. Persisted featured preferences and source health use the separately specified server gates; client transport events cannot establish a global invalid verdict.",
+      "authority": "User authorization to implement, test and publish artist autoplay, resilient playable-source selection and unification of the global player with the radio widget.",
+      "source": "docs/music-releases/unified-playback-progress.md",
+      "contract": "docs/music-releases/universal-player-state.md",
+      "actors": [
+        "Public listener",
+        "Artist",
+        "Radio listener"
+      ],
+      "preconditions": [
+        "Existing public catalogue and asset authorization gates remain authoritative.",
+        "PlayerProvider is mounted around both artist pages and RadioWidget."
+      ],
+      "inputs": [
+        "Profile route and linked Party ID",
+        "Canonical and legacy public catalogue results",
+        "Explicit play, pause and station selection",
+        "Native playing/error/waiting events",
+        "Asset authorization results and timeout"
+      ],
+      "state": {
+        "playback": [
+          "idle",
+          "loading",
+          "playing",
+          "paused",
+          "buffering",
+          "error",
+          "unavailable"
+        ],
+        "recovery": [
+          "bounded rendition retries",
+          "next rendition",
+          "next track",
+          "exhausted"
+        ],
+        "artistIntent": [
+          "automatic entry",
+          "explicit pause"
+        ]
+      },
+      "allowedTransitions": [
+        "Profile entry -> stop previous context -> public artist queue; explicit pause remains silent.",
+        "Terminal rendition failure -> untried eligible rendition -> later unfailed queue track -> unavailable.",
+        "Autoplay denial -> paused selected source -> explicit user play.",
+        "Empty artist queue -> show availability message and explicit radio link.",
+        "Explicit silent radio selection -> prepared global track without invoking play."
+      ],
+      "forbiddenTransitions": [
+        "Radio rerender reclaims a newer artist context.",
+        "Known provider page is loaded as native legacy audio.",
+        "A late aborted artist request overwrites a newer context.",
+        "Repeat or shuffle loops across terminally failed tracks during recovery.",
+        "Client decoding/network failure writes globally authoritative invalidity.",
+        "Unresolved play promise alone establishes visible playing state.",
+        "Artist exhaustion starts radio without user selection."
+      ],
+      "effects": [
+        "Replace the global listening queue and resolve asset grants through existing authorization.",
+        "Dispose the previous torrent session when its selected source changes.",
+        "Hide session-failed radio entries; replace the redundant radio dock with a catalogue launcher when a global track is selected."
+      ],
+      "authorization": "Public API membership and the existing asset-access endpoint are authoritative. Protected tracks only fall back to freshly authorized assets. Direct legacy references come only from public releases for the exact Party; provider pages are not extracted. Protected identity is checked across every source of a track before audio/video filtering; format selection cannot downgrade denied or malformed identity to an unbound URL.",
+      "privacy": "Listening state remains listener-scoped. Server diagnostics expose only source identity/version, status, fixed reason and timestamps to authorized owners, team members or administrators; raw URLs, object keys and credentials are omitted.",
+      "concurrency": "Latest profile/source generation and play-attempt fences discard obsolete asynchronous results. Metadata position restoration from main remains fenced to the matching track, URL and generation.",
+      "idempotency": "A profile key cannot repeatedly replace its completed queue; failed rendition objects and track IDs are bounded to the current selection context.",
+      "failure": "Two automatic network retries per rendition and a 15-second load/stall watchdog bound client recovery. Offline and browser-policy failures do not condemn media globally. An exhausted artist catalogue remains visible as unavailable.",
+      "recovery": "Try other eligible renditions, then advance forward without repeat/shuffle. Explicit selection/retry permits another attempt; radio fallback requires user action.",
+      "observability": "Existing playback events and executable component/engine regressions. Radio presence requires native playing. Local quarantine is not a persistent media-health verdict.",
+      "implementation": [
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.tsx",
+        "tdf-hq-ui/src/player/types.ts",
+        "tdf-hq-ui/src/player/publicMusicTrack.ts",
+        "tdf-hq-ui/src/api/musicReleases.ts",
+        "tdf-hq-ui/src/components/RadioWidget.tsx",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
+        "tdf-hq-ui/src/components/StreamingPlayer.tsx",
+        "tdf-hq-ui/src/utils/availableRadioStations.ts",
+        "tdf-hq-ui/src/config/artistMediaRecoveryRollout.ts",
+        "tdf-hq-ui/src/vite-env.d.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.test.ts",
+        "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.layout.test.tsx",
+        "tdf-hq-ui/src/components/RadioWidget.storage.test.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
+        "e2e/web/music-player.spec.mjs",
+        "e2e/web/music-player-native.spec.mjs",
+        "tdf-hq-ui/src/utils/availableRadioStations.test.ts",
+        "tdf-hq-ui/src/config/artistMediaRecoveryRollout.test.ts",
+        "tdf-hq-ui/src/pages/ArtistPublicPage.component.test.tsx",
+        "tdf-hq-ui/src/pages/MusicReleaseStudioPage.persistence.test.tsx",
+        "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
+        "tdf-hq-ui/src/components/SessionVideoPreview.globalHandoff.test.tsx",
+        "tdf-hq-ui/src/player/PlayerProvider.nativeAuthorization.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped local client execution; current-head hosted/native checks and deployment are separate obligations.",
+      "ambiguity": [
+        "Provider pages are external listening destinations; no unauthorized extraction or claim of control over another tab.",
+        "Catalogues beyond the shared 10,000-row bound and physical provenance reconciliation require further qualification.",
+        "Native playback, hosted checks, deployment and physical-device coverage retain distinct status."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Shared native transport, explicit-pause fences and bounded recovery are implemented with finite regressions. Native-session composition and fresh browser/hosted checks are in progress. Persistent health is specified separately; complete catalog provenance and production acceptance remain required."
+      },
+      "property": "One active audible native media element; latest context owns selection; explicit pause prevents automatic artist playback; bounded recovery never cycles over failed sources or tracks; no client failure establishes authoritative global invalidity.",
+      "verification": "Jest engine and rendered-component regressions, TypeScript, production build, changed-source lint, catalogue authority and immutable source admission. Native Playwright cases require current-head hosted execution; no implementation refinement proof is claimed. Staged initiation selects new backend-bound artist/media flows only for an exact-true public setting; disabled old-backend playback and both fresh/persisted explicit-identity denial are exercised with controlled component/engine fixtures. The setting is not authorization and never enables raw-URL fallback after protected-source denial.",
+      "evidence": "docs/music-releases/unified-playback-progress.md; PR #670 final candidate checks. Historical native results retain their earlier revision."
     }
   ]
 }

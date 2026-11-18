@@ -180,7 +180,7 @@
           "^api/generated/"
         ],
         "oversized": {
-          "tdf-hq-ui/src/components/RadioWidget.tsx": 3500,
+          "tdf-hq-ui/src/components/RadioWidget.tsx": 3371,
           "tdf-hq-ui/src/pages/AdminUsersPage.tsx": 2200,
           "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx": 2500,
           "tdf-hq-ui/src/pages/CourseRegistrationsAdminPage.tsx": 9800,

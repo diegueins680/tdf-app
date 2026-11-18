@@ -5,10 +5,12 @@ const listPublic = jest.fn<(...args: unknown[]) => Promise<MusicPublicReleaseSum
 const getReleases = jest.fn<(...args: unknown[]) => Promise<ArtistReleaseDTO[]>>();
 jest.unstable_mockModule('./fans', () => ({ Fans: { getReleases } }));
 jest.unstable_mockModule('./musicReleases', () => ({ musicReleases: { listPublic } }));
+const getFeed = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+jest.unstable_mockModule('./records', () => ({ Records: { getFeed } }));
 const { loadArtistCatalog, loadArtistCatalogs, listCanonicalArtistReleases } = await import('./artistCatalog');
 const canonical = (id: string, artistPartyId = 1) => ({ id, artistPartyId, title: 'Same title' }) as MusicPublicReleaseSummary;
 const legacy = (arReleaseId: number, arArtistId = 1) => ({ arReleaseId, arArtistId, arTitle: 'Same title' }) as ArtistReleaseDTO;
-beforeEach(() => { listPublic.mockReset().mockResolvedValue([]); getReleases.mockReset().mockResolvedValue([]); });
+beforeEach(() => { getFeed.mockReset().mockResolvedValue({ sessions: [], recordings: [], releases: [] }); listPublic.mockReset().mockResolvedValue([]); getReleases.mockReset().mockResolvedValue([]); });
 
 it('retains distinct legacy/canonical identities despite identical titles and deduplicates exact source IDs', async () => {
   listPublic.mockResolvedValue([canonical('1'), canonical('1')]);
@@ -72,4 +74,20 @@ it('keeps available artists when another artist has no reachable source', async 
   const catalogs = await loadArtistCatalogs([1, 2]);
   expect(catalogs[0]?.unavailableSources).toEqual(['canonical', 'legacy']);
   expect(catalogs[1]?.entries[0]?.key).toBe('canonical:available');
+});
+
+it('distinguishes the deliberately disabled canonical collection from a catalog network failure', async () => {
+  const { ApiError } = await import('./client');
+  listPublic.mockRejectedValue(new ApiError('Not Found', 404));
+  const catalog = await loadArtistCatalog(1);
+  expect(catalog.unavailableSources).toEqual([]);
+  expect(catalog.disabledSources).toEqual(['canonical']);
+});
+
+it('retains other catalogs when Records returns a malformed response', async () => {
+  getFeed.mockResolvedValue({ sessions: null });
+  getReleases.mockResolvedValue([legacy(1)]);
+  const catalog = await loadArtistCatalog(1);
+  expect(catalog.entries[0]?.key).toBe('legacy:1');
+  expect(catalog.unavailableSources).toEqual(['records']);
 });

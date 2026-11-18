@@ -8,12 +8,9 @@ import {
 /**
  * One system-level playback session for the whole web application.
  *
- * The release player and the radio widget each own an HTMLAudioElement. The
- * operating system (Media Session API: hardware media keys, macOS Now Playing,
- * Windows media transport controls) and the optional desktop shell menu only
- * see one "current" owner: the one that most recently started or selected
- * audio. Commands from either surface go to that owner, so a media key never
- * pauses the release player while the radio is the audible one.
+ * The global playback provider reports the current track to hardware media
+ * controls and the desktop shell. Owner labels distinguish music from radio
+ * while the provider remains responsible for the audio and playback intent.
  */
 export interface PlaybackSessionHandlers {
   play: () => void;

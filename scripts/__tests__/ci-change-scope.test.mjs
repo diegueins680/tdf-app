@@ -3,6 +3,20 @@ import test from 'node:test';
 
 import { allChangeScopes, classifyChangedFiles } from '../ci-change-scope.mjs';
 
+for (const source of [
+  'scripts/prepare-native-session.py',
+  'scripts/test-prepare-native-session.py',
+  'scripts/test-native-session-import.sh',
+  'scripts/test-native-session-import-sql.py',
+  'scripts/lib/postgres-test-database.sh',
+]) {
+  test(`native session importer ${source} selects the real PostgreSQL backend lane`, () => {
+    assert.deepEqual(classifyChangedFiles([source]), {
+      repo: true, backend: true, ui: false, mobile: false, contracts: false, migrations: false,
+    });
+  });
+}
+
 test('UI-only changes do not compile backend or mobile', () => {
   assert.deepEqual(classifyChangedFiles(['tdf-hq-ui/src/pages/BookingsPage.tsx']), {
     repo: true,

@@ -1,3 +1,40 @@
+# Frontend reconciliation in progress
+
+Native follow-up [PR718](https://github.com/diegueins680/tdf-app/pull/718) reuses
+[PR670](https://github.com/diegueins680/tdf-app/pull/670), retaining backend source
+883e12ee3 from [PR712](https://github.com/diegueins680/tdf-app/pull/712) and the
+native session controls from [PR706](https://github.com/diegueins680/tdf-app/pull/706).
+Native video/audio now share explicit pause, current-source event fences, bounded
+recovery and artist navigation with ordinary tracks. Delayed internal pause,
+native pause/resume intent, resumed metadata timeout, stale playing timeout and
+same-session video-to-audio fallback counterexamples were reproduced before the
+fixes. Audio mode never falls back to downloading video. Ready native artist
+recordings now participate in the profile queue with exact Party filtering.
+
+The latest held composition passed type checking, two transport/artist suites
+with132 tests and three artist suites with41 tests. The track-wide authorization repair then passed three core suites/136 tests, including four controls that failed when format filtering downgraded protected identity. The earlier restored source
+64eeb8e64 passed368 suites/4208 tests; that whole-suite result predates native
+composition. The native composition subsequently completed375 suites/4311 tests and45 native browser cases across Chromium desktop/phone and Firefox. Those runs predate the track-wide identity repair; the corrected source subsequently passed376 suites/4315 tests and all45 browser cases. Hosted checks and independent review remain pending. Local
+browser attempts stopped before test execution on sandbox loopback permission
+and then missing jq PATH; both are retained as harness failures.
+
+Backend a5745dbbe passed canonical Stack4308 examples (zero failures,23 pending),
+actual HTTP publication/permissions/health/featured withdrawal/restoration and
+stable diagnostic pagination, complete251-migration apply/replay/startup,
+repository quality and compiled API inspection933 operations/snapshot match.
+Hosted run42432110542 passed35 checks, with3 expected skips; the untraced Linux
+worker passed23 scenarios. Genuine approval and normal MERGE auto-merge exist,
+but protected main has advanced and ordinary FIFO/conflict reconciliation is
+still required. Backend implementation/testing/approval is not merge/deployment.
+
+Native Records health/grant identity/provenance correspondence, full catalog
+reconciliation, real provider/storage acceptance and physical devices remain
+open. Featured editing only offers supported Music/legacy identities. Production
+is unchanged: guarded runtime receipt and release/recovery controls remain
+unqualified. No rollout flag is activated or deployment protection bypassed.
+
+## Preserved backend-stage checkpoint
+
 # Backend-first music player delivery
 
 This stage supplies server prerequisites for the universal player in [PR #670](https://github.com/diegueins680/tdf-app/pull/670). Against protected main `d0b10b60d93cb379ac57b204e1d4137cd22dc5ba`, frontend runtime is unchanged; only generated web declarations and the existing long campaign browser journey budget change. Its action/assertion bounds are retained; the full edit/retry/reload/import/review flow has a 60-second total budget after the failed WebKit trace reached its final visible button at the 30-second default deadline. Mobile [PR #182](https://github.com/diegueins680/TDF-mobile/pull/182) merged through normal protection; its exact `20daa1b` source pin preserves the merged decoder repair. No feature flags or production configuration are activated.
@@ -40,3 +77,11 @@ They do not demonstrate a real private object-store TLS handshake, deployed
 worker identity, provider acceptance or complete legacy provenance. Existing
 byte/deadline caps, source-version leases, publication/territory gates and
 production activation requirements remain separate.
+
+The concurrent companion update ba709f94f is preserved by normal merge, including backend883e12ee3 configured-storage repair and current-main9df3922fc. The web runtime is byte-identical to completed ef68fbf58 UI/browser inputs; all22 configured-storage probe controls pass locally. Real storage/TLS and current whole-source hosted acceptance are separate.
+
+Current native source33c5835e8 is incorporated with both speed regression suites preserved. The four newer controls pass, bringing the targeted core suite to140 tests. Type checking passes. Only PlayerProvider.test.tsx changes relative to the fully executed web inputs; no second whole-suite result is invented for this test-only addition.
+
+The final normal repository gate exits 0 after regenerating merge-generated JSON. An earlier run read an unresolved traceability JSON file; its failed parse log is retained separately. The backend verification mirror has a tree exactly matching published source 883e12ee3: canonical Stack passes 4,312 examples (zero failures, 23 pending), and the actual compiled HTTP fixture passes on disposable PostgreSQL. This is logic/source correspondence, not a production image or runtime receipt.
+
+PR716 merged only source ba709f94f as 077a0cc59 into the draft PR670 branch. The later native transport implementation is PR718, initially at tree-exact source20cfa688a/f2ee9b712. It has not merged into PR670 or main and is not deployed. PR718 retains the actual716 merge ancestry.

@@ -44,26 +44,18 @@ Linux evidence; macOS/Windows installed-app runs are produced by the
 
 ## SYS-DESKTOP-002 — Shared playback session
 
-Intended behavior. `tdf-hq-ui/src/player/playbackSession.ts` keeps an ordered
-set of playback owners (`music`, `radio`). The owner that most recently started
-or selected audio is active; only the active owner's metadata and action
-handlers are installed on `navigator.mediaSession` and reported to the desktop
-shell. Passive state updates never change the active owner, so a release
-player paused by a radio takeover does not steal hardware keys from the radio.
-Releasing the active owner restores the previous one; with no owner, metadata
-is cleared and handlers are null. Shell commands (`play`, `pause`, `toggle`,
-`next`, `previous`) route to the active owner. The shell's native menu mirrors
-the last sanitized report.
+The global playback provider owns the current music or radio selection and
+registers its controls with Media Session and the desktop shell. The reported
+owner label follows the active track. Switching between music and radio clears
+the former label and retains one audio engine. Media key and menu commands act
+on that engine, including explicit pause and later resume. With no selection,
+the system metadata and handlers are cleared.
 
-Evidence. `playbackSession.test.ts` covers ownership order, passive updates,
-restoration, missing Media Session and shell reporting/command routing.
-`PlayerProvider.test.tsx`, `PlayerIdentity.test.tsx` and
-`RoutedRadioWidget.test.tsx` remain green with the integration.
-`tdf-desktop/test/playbackState.test.cjs` covers report sanitization and the
-menu model. `e2e/desktop/playback.spec.mjs` plays generated PCM in the real
-shell: menu labels, native pause, next (artist change), failing source,
-radio takeover and pause/resume through the native menu. Hardware key
-delivery by the operating system is not exercised in CI.
+The provider regression uses the same audio element across a music-to-radio
+transition and routes the system pause and play commands to the current source.
+The desktop browser journey uses generated PCM and checks the native menu,
+pause preservation, failed media, and the shared engine. Physical hardware key
+delivery needs device verification.
 
 ## SYS-DESKTOP-003 — Installers, updates and recovery
 

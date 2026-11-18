@@ -1,9 +1,15 @@
+import { isArtistMediaRecoveryEnabled } from '../config/artistMediaRecoveryRollout';
+import { nativeArtworkForUrl } from '../api/nativeSessions';
+import { NativeSessionCard } from '../features/sessions/NativeSessionCard';
+import { nativePublicationKey } from '../api/nativeSessions';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';
 import { loadArtistCatalog } from '../api/artistCatalog';
 import MarkdownText from '../components/MarkdownText';
 import ArtistVideoLibrary from '../components/ArtistVideoLibrary';
+import { useOptionalPlayer } from '../player/PlayerProvider';
+import ArtistProfilePlayback from '../player/ArtistProfilePlayback';
 import { PublicationAnchor, usePublicationSelection } from '../features/interactions/PublicationSelection';
 import { InteractionPanel } from '../features/interactions/InteractionPanel';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -185,6 +191,9 @@ export default function ArtistPublicPage() {
   }, []);
 
   const segment = (slugOrId ?? '').trim();
+  const beginArtist = useOptionalPlayer()?.beginArtist;
+  const artistMediaRecoveryEnabled = isArtistMediaRecoveryEnabled();
+  useEffect(() => { if (artistMediaRecoveryEnabled) beginArtist?.(segment); }, [artistMediaRecoveryEnabled, beginArtist, segment]);
 
   const artistQuery = useQuery({
     queryKey: ['public-artist', segment],
@@ -312,6 +321,7 @@ export default function ArtistPublicPage() {
   const artist = artistQuery.data ?? null;
   const releases = catalogQuery.data?.entries.flatMap((entry) => entry.source === 'legacy' ? [entry.release] : []) ?? [];
   const canonicalReleases = catalogQuery.data?.entries.flatMap((entry) => entry.source === 'canonical' ? [entry.release] : []) ?? [];
+  const nativeSessions = catalogQuery.data?.nativeSessions ?? [];
   const catalogIncomplete = catalogQuery.isError || (catalogQuery.data?.unavailableSources.length ?? 0) > 0;
 
   const releaseSelection = usePublicationSelection('release', releases.map((release) => release.arReleaseId), catalogQuery.isLoading);
@@ -365,7 +375,7 @@ export default function ArtistPublicPage() {
     );
   }
 
-  const heroImage = getArtistHeroImage(artist.apHeroLandscapeUrl ?? artist.apHeroImageUrl, artist.apSlug, artist.apDisplayName);
+  const heroImage = nativeArtworkForUrl(getArtistHeroImage(artist.apHeroLandscapeUrl ?? artist.apHeroImageUrl, artist.apSlug, artist.apDisplayName), nativeSessions);
   const avatarImage = artist.apHeroSquareUrl ?? heroImage;
   const spotifyUrl =
     artist.apSpotifyUrl ?? (artist.apSpotifyArtistId ? `https://open.spotify.com/artist/${artist.apSpotifyArtistId}` : null);
@@ -384,6 +394,9 @@ export default function ArtistPublicPage() {
 
   return (
     <Box sx={{ maxWidth: 1040, mx: 'auto' }}>
+      {artistMediaRecoveryEnabled && <ArtistProfilePlayback profileKey={segment} artistId={artistId} artistName={artist.apDisplayName} canManage={isSelf && hasToken}
+        releases={catalogQuery.data ? canonicalReleases : undefined} legacyReleases={releases} nativeSessions={nativeSessions} loading={catalogQuery.isPending}
+        failed={catalogQuery.isError || Boolean(catalogQuery.data?.unavailableSources.includes('canonical'))} retryCatalog={() => { void catalogQuery.refetch(); }} />}
       <Card sx={{ borderRadius: 4, overflow: 'hidden' }} variant="outlined">
         <section aria-labelledby="artist-hero">
         <Box
@@ -715,8 +728,9 @@ export default function ArtistPublicPage() {
               </Stack>
 
               {releaseSelection.notice}
+              {nativeSessions.map(nativeSession => <NativeSessionCard key={nativePublicationKey(nativeSession.publication)} session={nativeSession} />)}
               {catalogIncomplete && <Alert severity="warning" action={<Button aria-label="Reintentar catálogo del artista" onClick={() => { void catalogQuery.refetch(); }}>Reintentar</Button>}>
-                No pudimos cargar todo el catálogo del artista. Los lanzamientos disponibles se muestran abajo.
+                No pudimos cargar una parte del catálogo del artista. Puedes reproducir el contenido disponible y reintentar la carga.
               </Alert>}
               {catalogQuery.isLoading && (
                 <Box display="flex" alignItems="center" gap={1.5} py={2}>
@@ -727,7 +741,7 @@ export default function ArtistPublicPage() {
                 </Box>
               )}
 
-              {!catalogQuery.isLoading && !catalogIncomplete && releases.length === 0 && canonicalReleases.length === 0 && (
+              {!catalogQuery.isLoading && !catalogIncomplete && releases.length === 0 && canonicalReleases.length === 0 && nativeSessions.length === 0 && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   No hay releases publicados todavía.
                 </Typography>

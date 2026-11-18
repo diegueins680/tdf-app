@@ -57,7 +57,9 @@ test('system media controls follow songs, radio, explicit pause, artist changes 
     // Artist change through the native "next" command.
     expect(await clickPlaybackMenu(app, 'Siguiente')).toBe(true);
     await expect.poll(async () => (await playbackMenu(app))[0].label).toBe('Segunda pista sintética · Otra artista sintética');
-    await expect.poll(() => mediaSession(window)).toEqual({ title: 'Segunda pista sintética', artist: 'Otra artista sintética', state: 'playing' });
+    await expect.poll(() => mediaSession(window)).toEqual({ title: 'Segunda pista sintética', artist: 'Otra artista sintética', state: 'paused' });
+    expect(await clickPlaybackMenu(app, 'Reproducir')).toBe(true);
+    await expect.poll(async () => (await mediaSession(window)).state).toBe('playing');
 
     // Failing content: the third source is refused by the server; the player
     // reports it and the native controls still move to a valid track.
@@ -68,28 +70,28 @@ test('system media controls follow songs, radio, explicit pause, artist changes 
     await expect.poll(() => mediaSession(window)).toEqual({ title: 'Segunda pista sintética', artist: 'Otra artista sintética', state: 'playing' });
     await expect.poll(() => musicAudio.evaluate((element) => !element.paused)).toBe(true);
 
-    // Radio takes over the single playback session; the release player pauses.
-    await navigate(window, '/inicio#radio');
+    // Radio changes the source on the existing audio element.
+    await musicAudio.evaluate((element) => { window.desktopAudioBeforeRadio = element; });
+    await navigate(window, '/solicitudes-acceso/revision');
     const bar = window.getByTestId('radio-docked-bar');
     await expect(bar).toContainText('Emisora sintética', { timeout: 30_000 });
     await bar.getByRole('button', { name: 'Reproducir radio', exact: true }).click();
     const radioAudio = window.locator('audio[src$="/fixture-radio.wav"]');
     await expect.poll(() => radioAudio.evaluate((element) => !element.paused && element.currentTime > 0.1)).toBe(true);
-    await expect.poll(() => musicAudio.evaluate((element) => element.paused)).toBe(true);
+    expect(await radioAudio.evaluate((element) => element === window.desktopAudioBeforeRadio)).toBe(true);
+    await expect(window.locator('audio')).toHaveCount(1);
     await expect.poll(() => playbackMenu(app)).toEqual([
       { label: 'Emisora sintética · Radio TDF', enabled: false },
       { label: 'Pausar', enabled: true }, { label: 'Siguiente', enabled: true }, { label: 'Anterior', enabled: true },
     ]);
     await expect.poll(() => mediaSession(window)).toEqual({ title: 'Emisora sintética', artist: 'Radio TDF', state: 'playing' });
 
-    // Native pause/resume act on the radio, not on the paused release player.
+    // Native pause and resume control the current radio source.
     expect(await clickPlaybackMenu(app, 'Pausar')).toBe(true);
     await expect(bar.getByRole('button', { name: 'Reproducir radio', exact: true })).toBeVisible();
     await expect.poll(() => radioAudio.evaluate((element) => element.paused)).toBe(true);
-    expect(await musicAudio.evaluate((element) => element.paused)).toBe(true);
     expect(await clickPlaybackMenu(app, 'Reproducir')).toBe(true);
     await expect(bar.getByRole('button', { name: 'Pausar radio', exact: true })).toBeVisible();
     await expect.poll(() => radioAudio.evaluate((element) => !element.paused)).toBe(true);
-    expect(await musicAudio.evaluate((element) => element.paused)).toBe(true);
   } finally { await shell.close(); }
 });

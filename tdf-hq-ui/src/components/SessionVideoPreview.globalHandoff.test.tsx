@@ -1,0 +1,31 @@
+import { fireEvent, render, screen, act } from '@testing-library/react';
+import { afterEach, it, jest } from '@jest/globals';
+import SessionVideoPreview from './SessionVideoPreview';
+import { PlayerProvider, usePlayer } from '../player/PlayerProvider';
+afterEach(() => { jest.restoreAllMocks(); });
+it('hands native and provider previews back to the current global engine', async () => {
+  jest.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
+  jest.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(() => undefined);
+  jest.spyOn(HTMLMediaElement.prototype, 'currentSrc', 'get').mockImplementation(function(this:HTMLMediaElement){return this.src;});
+  jest.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(false);
+  jest.spyOn(HTMLMediaElement.prototype, 'play').mockImplementation(function(this:HTMLMediaElement){this.dispatchEvent(new Event('playing'));return Promise.resolve();});
+  let player: ReturnType<typeof usePlayer>;
+  function Probe(){player=usePlayer();return null;}
+  const item=(id:string)=>({id,title:id,artist:'Fixture',sources:[{url:`https://media.example/${id}.mp3`,quality:'high' as const,mediaType:'audio/mpeg'}]});
+  const view=render(<PlayerProvider><Probe/><SessionVideoPreview url="https://media.example.com/session.mp4" title="Video handoff"/></PlayerProvider>);
+  await act(async()=>player.playTrack(item('first')));
+  expect(player!.status).toBe('playing');
+  fireEvent.click(screen.getByRole('button',{name:'Ver video aquí'}));
+  expect(player!.status).toBe('paused');
+  fireEvent.play(screen.getByLabelText('Video handoff'));
+  await act(async()=>player.playTrack(item('second')));
+  expect(screen.queryByLabelText('Video handoff')).toBeNull();
+  expect(player!.status).toBe('playing');
+  view.rerender(<PlayerProvider><Probe/><SessionVideoPreview url="https://youtu.be/msDxB2NU3c4" title="Provider handoff"/></PlayerProvider>);
+  fireEvent.click(screen.getByRole('button',{name:'Ver video aquí'}));
+  expect(player!.status).toBe('paused');
+  expect(screen.getByTitle('Provider handoff')).toBeTruthy();
+  await act(async()=>player.playTrack(item('third')));
+  expect(screen.queryByTitle('Provider handoff')).toBeNull();
+  expect(player!.status).toBe('playing');
+});

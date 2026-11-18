@@ -122,6 +122,7 @@ async function installDeterministicMediaEngine(page) {
     };
     Object.defineProperties(HTMLMediaElement.prototype, {
       paused: { configurable: true, get() { return stateFor(this).paused; } },
+      currentSrc: { configurable: true, get() { return this.src; } },
       currentTime: {
         configurable: true,
         get() { return stateFor(this).currentTime; },
