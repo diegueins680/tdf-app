@@ -29,6 +29,7 @@ import {
 import {
   buildIterationBranchName,
   buildPullRequestBody,
+  completePendingPublication,
   countOpenLoopPullRequests,
   discardIterationChanges,
   diskReserveShortage,
@@ -36,8 +37,10 @@ import {
   listPendingTargetFiles,
   openPullRequest,
   prepareIterationBranch,
+  pushIterationCommit,
   syncSubmodulesRecursively,
   validateLoopConfig,
+  verifyCandidateTree,
   waitForGreenCi,
 } from '../continuous-improvement-loop.mjs';
 import {
@@ -226,8 +229,10 @@ async function createLoopFixture(prefix) {
 
 test('buildIterationBranchName puts a sortable UTC timestamp and the iteration under the prefix', () => {
   const now = new Date('2026-11-13T15:04:05.678Z');
-  assert.equal(buildIterationBranchName({}, 3, now), 'continuous-improvement-loop/20261113-150405-3');
-  assert.equal(buildIterationBranchName({ branchPrefix: 'bot/loop-' }, 1, now), 'bot/loop-20261113-150405-1');
+  const branch = buildIterationBranchName({}, 3, now);
+  assert.match(branch, /^continuous-improvement-loop\/20261113-150405-3-[a-f0-9-]{36}$/);
+  assert.notEqual(branch, buildIterationBranchName({}, 3, now));
+  assert.match(buildIterationBranchName({ branchPrefix: 'bot/loop-' }, 1, now), /^bot\/loop-20261113-150405-1-/);
 });
 
 test('validateLoopConfig refuses every way of targeting the base branch or skipping verification', async () => {
@@ -1188,6 +1193,7 @@ test('continuous-improvement-loop recovers its own worktree after an interrupted
 
   try {
     await fixture.git(['worktree', 'add', '--detach', linkedDir, 'origin/main']);
+    await prepareIterationBranch(linkedDir, { pushRemote: 'origin' }, 1);
     await fs.writeFile(path.join(linkedDir, 'tracked.txt'), 'before\ninterrupted\n', 'utf8');
     await fs.writeFile(path.join(linkedDir, 'leftover.txt'), 'leftover\n', 'utf8');
     const linkedConfig = await fixture.writeConfig({ requireLinkedWorktree: true });
@@ -1206,6 +1212,92 @@ test('continuous-improvement-loop recovers its own worktree after an interrupted
     await assert.rejects(() => fixture.runLoop(primaryConfig), /requires a clean tracked worktree/);
     assert.equal(await fs.readFile(path.join(fixture.repoDir, 'tracked.txt'), 'utf8'), 'before\nmy work\n');
   } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('branch preparation preserves unrelated edits and fetches from a remote without a tracking ref', async () => {
+  const fixture = await createLoopFixture('loop-explicit-fetch-');
+  const file = path.join(fixture.repoDir, 'tracked.txt');
+  try {
+    await fixture.git(['remote', 'add', '-t', 'other', 'upstream', fixture.remoteDir]);
+    await fs.writeFile(file, 'unrelated work\n');
+    const config = { pushRemote: 'upstream' };
+    await assert.rejects(() => prepareIterationBranch(fixture.repoDir, config, 1), /requires a clean tracked worktree/);
+    assert.equal(await fs.readFile(file, 'utf8'), 'unrelated work\n');
+    await fs.writeFile(file, 'before\n');
+    const branch = await prepareIterationBranch(fixture.repoDir, config, 1);
+    assert.equal(branch.baseSha, await fixture.remoteMainSha());
+    await assert.rejects(() => fixture.git(['rev-parse', '--verify', 'refs/remotes/upstream/main']));
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('publication rejects existing refs and concurrent remote changes', async () => {
+  const fixture = await createLoopFixture('loop-push-lease-');
+  try {
+    const parent = await fixture.remoteMainSha();
+    const branch = 'continuous-improvement-loop/test';
+    await pushIterationCommit(fixture.repoDir, 'origin', branch, parent);
+    await fs.writeFile(path.join(fixture.repoDir, 'tracked.txt'), 'proposal\n');
+    await fixture.git(['commit', '-am', 'proposal']);
+    const { stdout } = await fixture.git(['rev-parse', 'HEAD']);
+    const proposal = stdout.trim();
+    await assert.rejects(() => pushIterationCommit(fixture.repoDir, 'origin', branch, proposal), /stale info/);
+    await pushIterationCommit(fixture.repoDir, 'origin', branch, proposal, parent);
+    await fs.writeFile(path.join(fixture.repoDir, 'tracked.txt'), 'later proposal\n');
+    await fixture.git(['commit', '-am', 'later proposal']);
+    const later = (await fixture.git(['rev-parse', 'HEAD'])).stdout.trim();
+    await assert.rejects(() => pushIterationCommit(fixture.repoDir, 'origin', branch, later, parent), /stale info/);
+    assert.equal((await fixture.remoteGit(['rev-parse', `refs/heads/${branch}`])).stdout.trim(), proposal);
+    assert.equal(await fixture.remoteMainSha(), parent);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('verification rejects a verifier that modifies the proposal', async () => {
+  const fixture = await createLoopFixture('loop-verify-tree-');
+  try {
+    const branch = await prepareIterationBranch(fixture.repoDir, { pushRemote: 'origin' }, 1);
+    await fs.writeFile(path.join(fixture.repoDir, 'tracked.txt'), 'proposal\n');
+    const config = { verifyCommand: "printf 'different\\n' > tracked.txt" };
+    await assert.rejects(
+      () => verifyCandidateTree(fixture.repoDir, config, {}, branch, branch.baseSha),
+      /Verification changed files outside the generated specification indexes/,
+    );
+    assert.deepEqual(await fixture.remoteLoopBranches(), []);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('publication recovery reuses a draft when the creation response was lost', async () => {
+  const fixture = await createLoopFixture('loop-draft-recovery-');
+  const originalFetch = global.fetch;
+  try {
+    await fixture.git(['remote', 'set-url', 'origin', 'https://github.com/example/project.git']);
+    const sha = await fixture.remoteMainSha();
+    const branch = { branchName: 'continuous-improvement-loop/pending', baseBranch: 'main' };
+    const journal = path.join(fixture.repoDir, '.git', 'continuous-loop-pending-pr.json');
+    await fs.writeFile(journal, JSON.stringify({ branch, sha, repository: 'example/project' }));
+    let calls = 0;
+    global.fetch = async (url, options) => {
+      calls += 1;
+      assert.notEqual(options.method, 'POST');
+      assert.equal(new URL(url).searchParams.get('head'), `example:${branch.branchName}`);
+      return new Response(JSON.stringify([{
+        number: 42,
+        head: { sha, ref: branch.branchName, repo: { full_name: 'example/project' } },
+      }]));
+    };
+    const config = { pushRemote: 'origin', openPullRequest: true };
+    assert.deepEqual(await completePendingPublication(fixture.repoDir, config), { number: 42, url: '' });
+    assert.equal(await completePendingPublication(fixture.repoDir, config), null);
+    assert.equal(calls, 1);
+  } finally {
+    global.fetch = originalFetch;
     await fixture.cleanup();
   }
 });
@@ -2018,7 +2110,6 @@ test('continuous-improvement-loop never merges branches into the base and repair
   assert.doesNotMatch(script, /'--delete'/);
   assert.doesNotMatch(script, /\['merge', '(?!--abort)/);
   assert.doesNotMatch(script, /\['rebase', '--autostash'/);
-  assert.match(script, /await execText\('git', \['push', remoteName, `HEAD:refs\/heads\/\$\{branchName\}`\], repoRoot\);/);
   assert.match(script, /const branch = await prepareIterationBranch\(repoRoot, config, iteration\);/);
   assert.match(script, /const baseCiResult = await pollBaseBranchCi\(repoRoot, config, context, branch\);/);
   assert.match(script, /if \(baseCiResult && !baseCiResult\.ok\)/);

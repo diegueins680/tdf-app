@@ -55,7 +55,9 @@ Do not hand-edit generated API client files.
 The loop proposes changes; it never lands them:
 
 - it never commits to, merges into, or pushes `main`, and it never merges or deletes other branches
-- each iteration branches from the latest `origin/main` and, if it passes verification, is pushed as `continuous-improvement-loop/<timestamp>-<n>` with a draft pull request
+- each iteration branches from the fetched base commit and publishes the verified commit as `continuous-improvement-loop/<timestamp>-<n>-<uuid>` with a draft pull request
+- if publication is interrupted, the worktree records the verified commit and resumes the pending draft before starting another iteration
+- keep the worker identity separate from the publishing identity and restrict the publisher to the loop namespace using repository rules
 - it runs only in its own linked worktree (`CONTINUOUS_LOOP_WORKTREE`), so it cannot touch a checkout someone is working in
 - failed or unverified iterations are discarded, not checkpointed
 - the default unattended config keeps `pollGitHub` off until auth is healthy and you explicitly opt in
