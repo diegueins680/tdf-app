@@ -2447,11 +2447,27 @@
       ]
     },
     {
+      "method": "PUT",
+      "path": "/music/me/featured-track",
+      "basis": "named",
+      "requirements": [
+        "MEDIA-ARTIST-FEATURED-001"
+      ]
+    },
+    {
       "method": "POST",
       "path": "/music/me/playback-events",
       "basis": "named",
       "requirements": [
         "MEDIA-MUSIC-PLAYBACK-001"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/music/media-health/{sourceKind}/{sourceId}/revalidate",
+      "basis": "named",
+      "requirements": [
+        "MEDIA-SOURCE-HEALTH-001"
       ]
     },
     {

@@ -146,6 +146,7 @@ import TDF.DTO
     )
 import qualified TDF.DTO as DTO
 import qualified TDF.Server as NotificationServer
+import TDF.Services.LlmChat (extractApiErrorMessage, extractModelReplyText, openAIChatRequestErrorMessage, shouldRetryWithFallbackModel)
 import TDF.Server
     ( createPurchase
     , MarketplaceCartTotalsState(..)
@@ -413,8 +414,6 @@ import TDF.Server
     , resolveDriveClientCreds
     , validateDriveTokenExchangeRequest
     , validateDriveTokenRefreshRequest
-    , extractApiErrorMessage
-    , extractModelReplyText
     , extractChatKitSession
     , validateChatKitSessionPayload
     , resolveDriveUploadFolderId
@@ -428,8 +427,6 @@ import TDF.Server
     , resolveDrivePublicUrl
     , resolveDrivePublicUrlAfterPermission
     , resolveWorkflowId
-    , openAIChatRequestErrorMessage
-    , shouldRetryWithFallbackModel
     , listMarketplace
     , resolveMarketplacePhotoUrl
     , calendarServer
@@ -437,6 +434,9 @@ import TDF.Server
     )
 import qualified TDF.ServerRadio as Radio
 import qualified TDF.Auth.Throttle as Throttle
+import qualified TDF.Auth.ClientAddress as ClientAddress
+import qualified Network.Socket as Socket
+import Data.Containers.ListUtils (nubOrd)
 import qualified TDF.Calendar.TokenCipher as TokenCipher
 import qualified TDF.Server.SocialSync as SocialSync
 import qualified TDF.WhatsApp.Types as WA
@@ -10360,6 +10360,60 @@ spec = describe "TDF.Server helpers" $ do
             Throttle.authThrottleRetryAfterSeconds Throttle.ThrottleLoginFailure (at 900) `shouldBe` 900
             Throttle.authThrottleRetryAfterSeconds Throttle.ThrottleLoginFailure (at 1799) `shouldBe` 1
             Throttle.authThrottleRetryAfterSeconds Throttle.ThrottleLoginFailure (at 1799.5) `shouldBe` 1
+        it "counts login failures for the pair, the address and the identifier apart" $ do
+            let subject counter = Throttle.loginCounterSubject counter " Ada@Example.org " "198.51.100.7"
+                counters = [minBound .. maxBound] :: [Throttle.LoginCounter]
+            -- The identifier counter keeps the subject of the earlier per-identifier lockout.
+            subject Throttle.LoginIdentifier
+                `shouldBe` Throttle.authThrottleSubject Throttle.ThrottleLoginFailure "ada@example.org"
+            length (nubOrd (map subject counters)) `shouldBe` 3
+            Throttle.loginCounterSubject Throttle.LoginIdentifierAtAddress "ada@example.org" "198.51.100.7"
+                `shouldBe` subject Throttle.LoginIdentifierAtAddress
+            Throttle.loginCounterSubject Throttle.LoginIdentifierAtAddress "ada@example.org" "198.51.100.8"
+                `shouldNotBe` subject Throttle.LoginIdentifierAtAddress
+            Throttle.loginCounterSubject Throttle.LoginAddress "bob@example.org" "198.51.100.7"
+                `shouldBe` subject Throttle.LoginAddress
+            map Throttle.loginCounterLimit counters `shouldBe` [10, 50, 100]
+            let below = [(counter, Throttle.loginCounterLimit counter - 1) | counter <- counters]
+            Throttle.loginCountersLockedOut below `shouldBe` False
+            forM_ counters $ \full ->
+                Throttle.loginCountersLockedOut
+                    [ (counter, if counter == full then Throttle.loginCounterLimit counter else 0)
+                    | counter <- counters ]
+                    `shouldBe` True
+
+    describe "login client address" $ do
+        let v4 a b c d = Socket.SockAddrInet 443 (Socket.tupleToHostAddress (a, b, c, d))
+            v6 groups = Socket.SockAddrInet6 443 0 (Socket.tupleToHostAddress6 groups) 0
+            proxy = v4 172 18 0 3
+            public = v4 203 0 113 9
+        it "takes only the last forwarded entry, and only a numeric one" $ do
+            ClientAddress.lastForwardedEntry "192.0.2.1, 198.51.100.7" `shouldBe` Just "198.51.100.7"
+            ClientAddress.lastForwardedEntry " 2001:db8::1 " `shouldBe` Just "2001:db8::1"
+            ClientAddress.lastForwardedEntry "198.51.100.7, example.org" `shouldBe` Nothing
+            ClientAddress.lastForwardedEntry "198.51.100.7," `shouldBe` Nothing
+            ClientAddress.lastForwardedEntry "" `shouldBe` Nothing
+        it "trusts the forwarded header only from a loopback or private peer" $ do
+            map ClientAddress.trustedPeer [v4 127 0 0 1, v4 10 1 2 3, proxy, v4 192 168 1 1]
+                `shouldBe` [True, True, True, True]
+            map ClientAddress.trustedPeer [public, v4 172 32 0 1, v4 100 64 0 1]
+                `shouldBe` [False, False, False]
+            ClientAddress.trustedPeer (v6 (0, 0, 0, 0, 0, 0, 0, 1)) `shouldBe` True
+            ClientAddress.trustedPeer (v6 (0xfd00, 0, 0, 0, 0, 0, 0, 1)) `shouldBe` True
+            ClientAddress.trustedPeer (v6 (0, 0, 0, 0, 0, 0xffff, 0x0a00, 0x0001)) `shouldBe` True
+            ClientAddress.trustedPeer (v6 (0x2001, 0xdb8, 0, 0, 0, 0, 0, 1)) `shouldBe` False
+        it "keys IPv4 by address and IPv6 by its /64" $ do
+            ClientAddress.sockAddrKey public `shouldBe` "203.0.113.9"
+            ClientAddress.sockAddrKey (v6 (0, 0, 0, 0, 0, 0xffff, 0xcb00, 0x7109)) `shouldBe` "203.0.113.9"
+            ClientAddress.sockAddrKey (v6 (0x2001, 0xdb8, 1, 2, 3, 4, 5, 6))
+                `shouldBe` ClientAddress.sockAddrKey (v6 (0x2001, 0xdb8, 1, 2, 9, 9, 9, 9))
+            ClientAddress.sockAddrKey (v6 (0x2001, 0xdb8, 1, 2, 3, 4, 5, 6)) `shouldBe` "2001:db8:1:2::/64"
+        it "uses the forwarded client behind the proxy and the peer otherwise" $ do
+            ClientAddress.clientAddressKey proxy (Just "192.0.2.1, 198.51.100.7") `shouldReturn` "198.51.100.7"
+            ClientAddress.clientAddressKey proxy (Just "2001:db8:1:2::5") `shouldReturn` "2001:db8:1:2::/64"
+            ClientAddress.clientAddressKey proxy Nothing `shouldReturn` "172.18.0.3"
+            ClientAddress.clientAddressKey proxy (Just "not-an-address") `shouldReturn` "172.18.0.3"
+            ClientAddress.clientAddressKey public (Just "198.51.100.7") `shouldReturn` "203.0.113.9"
 
     describe "Google Calendar token cipher" $ do
         let keyText = T.replicate 4 "calendar-key-0123456789"
