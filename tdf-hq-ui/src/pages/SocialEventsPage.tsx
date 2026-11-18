@@ -69,6 +69,7 @@ import { UserSelector } from '../components/party-selector/PartySelector';
 import type { PartySelectorOption } from '../api/partySelector';
 import { formatDateForUser, resolveRuntimeCurrency } from '../utils/formatters';
 import { hasStrictAdminAccess } from '../utils/accessControl';
+import { useSaveTicketTier } from '../components/events/useSaveTicketTier';
 import EventTicketSaleRequestsQueue from '../components/events/EventTicketSaleRequestsQueue';
 import EventRsvpControls from '../components/events/EventRsvpControls';
 import EventManualPaymentsPanel from '../components/events/EventManualPaymentsPanel';
@@ -594,8 +595,8 @@ export default function SocialEventsPage() {
     },
   });
 
-  const createTierMutation = useMutation({
-    mutationFn: ({ eventId }: { eventId: string }) => {
+  const createTierMutation = useSaveTicketTier(
+    ({ eventId }) => {
       const draft = ticketTierForms[eventId] ?? {
         code: '',
         name: '',
@@ -608,7 +609,7 @@ export default function SocialEventsPage() {
       if (!draft.name.trim()) throw new Error('Nombre del ticket requerido.');
       if (priceCents === null) throw new Error('Precio inválido (usa centavos).');
       if (quantity === null || quantity <= 0) throw new Error('Cantidad inválida.');
-      const payload: SocialTicketTierDTO = {
+      return {
         ticketTierCode: draft.code.trim() || draft.name,
         ticketTierName: draft.name.trim(),
         ticketTierDescription: null,
@@ -621,18 +622,18 @@ export default function SocialEventsPage() {
         ticketTierActive: true,
         ticketTierPosition: null,
       };
-      return SocialEventsAPI.createTicketTier(eventId, payload);
     },
-    onSuccess: (_resp, { eventId }) => {
-      setTicketTierForms((prev) => ({
-        ...prev,
-        [eventId]: { code: '', name: '', price: '', quantity: '', currency: preferredCurrency },
-      }));
-      void qc.invalidateQueries({ queryKey: ['social-ticket-tiers', eventId] });
-      setFeedback({ kind: 'success', message: 'Tipo de ticket creado.' });
+    {
+      onSuccess: (_resp, { eventId }) => {
+        setTicketTierForms((prev) => ({
+          ...prev,
+          [eventId]: { code: '', name: '', price: '', quantity: '', currency: preferredCurrency },
+        }));
+        setFeedback({ kind: 'success', message: 'Tipo de ticket creado.' });
+      },
+      onError: (err) => setFeedback({ kind: 'error', message: err.message }),
     },
-    onError: (err: Error) => setFeedback({ kind: 'error', message: err.message }),
-  });
+  );
 
   const updateOrderStatusMutation = useMutation({
     mutationFn: ({ eventId, orderId, status }: { eventId: string; orderId: string; status: 'cancelled' | 'refunded' }) =>

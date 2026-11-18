@@ -1,7 +1,9 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 module TDF.EventTicketSaleSpec (spec) where
 
+import Control.Monad (forM_)
 import Control.Concurrent.Async (mapConcurrently)
 import Control.Monad.Logger (runNoLoggingT)
 import Control.Monad.Trans.Reader (ReaderT, runReaderT)
@@ -12,7 +14,7 @@ import Data.List (isPrefixOf, isSuffixOf, nub)
 import Data.Pool (destroyAllResources)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Time (UTCTime (..), fromGregorian, secondsToDiffTime)
+import Data.Time (UTCTime (..), fromGregorian, getCurrentTime, secondsToDiffTime)
 import Database.Persist (PersistValue (..))
 import Database.Persist.Postgresql (createPostgresqlPool)
 import Database.Persist.Sql (ConnectionPool, Single (..), rawExecute, rawSql, runSqlPool, toSqlKey)
@@ -25,8 +27,9 @@ import TDF.Auth (AuthedUser (..), modulesForRoles)
 import TDF.Config (loadConfig)
 import TDF.DB (Env (..))
 import TDF.DTO.SocialEventsDTO
-  ( EventTicketSaleDTO (..), EventTicketSaleRequestDTO (..) )
+  ( EventTicketSaleDTO (..), EventTicketSaleRequestDTO (..), EventTicketSaleTermsDTO (..) )
 import TDF.Models (RoleEnum (..))
+import TDF.Server.EventTicketCheckout (ApprovedTicketPolicy (..), loadApprovedTicketPolicy)
 import TDF.Server.EventTicketSale
   ( SalePolicyRow (..), saleStateFromRows, standardTicketSaleTerms, ticketSalePolicyVersion )
 import TDF.Server.SocialEventsHandlers (socialEventsServer)
@@ -39,7 +42,9 @@ spec :: Spec
 spec = do
   describe "event-ticket-sale-state" $ do
     let at day = UTCTime (fromGregorian 2026 11 day) (secondsToDiffTime 0)
-        row ident approval active approved = SalePolicyRow ident approval active approved (at 10) (at 12)
+        row ident approval active approved =
+          SalePolicyRow ident approval active approved (at 10) True True
+            (approved == Nothing) standardTicketSaleTerms
     it "prefers the active approved policy, then a pending draft" $ do
       fst (saleStateFromRows [row "b" "draft" False Nothing, row "a" "approved" True (Just (at 11))]) `shouldBe` "approved"
       fst (saleStateFromRows [row "b" "draft" False Nothing, row "a" "retired" False Nothing]) `shouldBe` "requested"
@@ -48,6 +53,14 @@ spec = do
       fst (saleStateFromRows [row "a" "retired" False (Just (at 11))]) `shouldBe` "none"
       fst (saleStateFromRows [row "a" "approved" False (Just (at 11))]) `shouldBe` "none"
       fst (saleStateFromRows []) `shouldBe` "none"
+    it "ignores unrelated or incompatible draft and retired policies" $ do
+      let declined = row "request" "retired" False Nothing
+          legacyDraft = (row "legacy" "draft" False Nothing) { sprWorkflowRequest = False }
+          legacyRetired = legacyDraft { sprApprovalStatus = "retired" }
+          incompatible = (row "changed" "draft" False Nothing) { sprStandardTerms = False }
+      saleStateFromRows [legacyDraft, legacyRetired, incompatible] `shouldBe` ("none", Nothing)
+      saleStateFromRows [legacyDraft, legacyRetired, incompatible, declined]
+        `shouldBe` ("declined", Just declined)
     it "names the event, the requester and the instant in the policy version" $ do
       let version = ticketSalePolicyVersion 300 "7402" (at 15)
       version `shouldBe` "ticket-v1-event-300-req-7402-20261115T000000000000"
@@ -88,6 +101,114 @@ spec = do
             (etsCanRequest initial, etsBlockedReason initial) `shouldBe` (False, Just "no_paid_tier")
             status <$> run pool (request organizer eventId) `shouldReturn` Just 409
             policies pool eventId `shouldReturn` []
+
+          it "recomputes eligibility when a USD tier becomes paid or inactive" $ \pool -> do
+            eventId <- newEvent pool 0
+            let currentEligibility = do
+                  current <- expectRight =<< run pool (sale organizer eventId)
+                  pure (etsCanRequest current, etsBlockedReason current)
+                changeTier statement =
+                  runSqlPool (rawExecute statement [PersistInt64 eventId]) pool
+            currentEligibility `shouldReturn` (False, Just "no_paid_tier")
+            changeTier "UPDATE event_ticket_tier SET price_cents = 2000 WHERE event_id = ?"
+            currentEligibility `shouldReturn` (True, Nothing)
+            changeTier "UPDATE event_ticket_tier SET is_active = FALSE WHERE event_id = ?"
+            currentEligibility `shouldReturn` (False, Just "no_paid_tier")
+
+          it "preserves migrated drafts and activates the exact new policy used by public checkout" $ \pool -> do
+            eventId <- newEvent pool 2000
+            [Single legacyId] <- runSqlPool (rawSql
+              "INSERT INTO event_ticket_checkout_policy(event_id, policy_version, currency,\
+              \ terms_version, terms_summary, refund_policy, transfer_allowed)\
+              \ VALUES (?, 'ticket-v1-db-' || ?::text, 'USD', 'ticket-terms-draft-v1',\
+              \ 'Borrador migrado', 'Política de reembolso pendiente de aprobación; no activar este borrador.', FALSE)\
+              \ RETURNING id::text" [PersistInt64 eventId, PersistInt64 eventId]) pool
+            initial <- expectRight =<< run pool (sale organizer eventId)
+            (etsStatus initial, etsCanRequest initial, etsRequestId initial)
+              `shouldBe` ("none", True, Nothing)
+            adminView <- expectRight =<< run pool (sale admin eventId)
+            etsCanDecide adminView `shouldBe` False
+            waiting <- expectRight =<< run pool (queue admin)
+            map etsrRequestId waiting `shouldNotContain` [legacyId]
+            status <$> run pool (approve admin legacyId) `shouldReturn` Just 404
+            status <$> run pool (decline admin legacyId) `shouldReturn` Just 404
+            now <- getCurrentTime
+            runSqlPool (loadApprovedTicketPolicy now (toSqlKey eventId)) pool `shouldReturn` Nothing
+
+            requested <- expectRight =<< run pool (request organizer eventId)
+            requestId <- maybe (fail "missing request id") pure (etsRequestId requested)
+            requestId `shouldNotBe` legacyId
+            reviewed <- expectRight =<< run pool (queue admin)
+            [etsrTerms item | item <- reviewed, etsrRequestId item == requestId]
+              `shouldBe` [etsTerms requested]
+            approved <- expectRight =<< run pool (approve admin requestId)
+            etsTerms approved `shouldBe` etsTerms requested
+
+            checkoutTime <- getCurrentTime
+            checkoutPolicy <- runSqlPool (loadApprovedTicketPolicy checkoutTime (toSqlKey eventId)) pool
+            let EventTicketSaleTermsDTO{..} = etsTerms requested
+            versionRows <- runSqlPool (rawSql
+              "SELECT policy_version FROM event_ticket_checkout_policy WHERE id = ?::uuid"
+              [PersistText requestId]) pool
+            case versionRows of
+              [Single version] -> checkoutPolicy `shouldBe` Just ApprovedTicketPolicy
+                { atpId = requestId
+                , atpVersion = version
+                , atpCurrency = etstCurrency
+                , atpBuyerFeeBps = etstBuyerFeeBps
+                , atpOrganizerFeeBps = etstOrganizerFeeBps
+                , atpTaxIncluded = False
+                , atpTaxBps = etstTaxBps
+                , atpHoldMinutes = etstHoldMinutes
+                , atpTermsVersion = "ticket-terms-v1"
+                , atpTermsSummary = etstTermsSummary
+                , atpRefundPolicy = etstRefundPolicy
+                , atpTransferAllowed = True
+                , atpMaxTicketsPerOrder = etstMaxTicketsPerOrder
+                , atpManualTransferHoldMinutes = Nothing
+                , atpManualTransferCutoffAt = Nothing
+                , atpTaxInvoiceRequired = False
+                }
+              _ -> expectationFailure "Expected the approved policy version"
+            policies pool eventId `shouldReturn`
+              [ ("draft", False, 200, 200, "USD", "ticket-terms-draft-v1")
+              , ("approved", True, 200, 200, "USD", "ticket-terms-v1")
+              ]
+
+          it "rejects incompatible drafts with a genuine request version" $ \pool -> do
+            forM_
+              [ "buyer_fee_bps = 900"
+              , "organizer_fee_bps = 900"
+              , "currency = 'EUR'"
+              , "tax_bps = 100"
+              , "terms_version = 'ticket-terms-draft-v1'"
+              , "terms_summary = 'Condiciones distintas'"
+              , "refund_policy = 'Sin reembolsos'"
+              , "hold_minutes = 30"
+              , "max_tickets_per_order = 8"
+              , "tax_included = TRUE"
+              , "tax_invoice_required = TRUE"
+              , "transfer_allowed = FALSE"
+              , "transfer_deadline = now()"
+              , "manual_transfer_hold_minutes = 120, manual_transfer_cutoff_at = now()"
+              , "effective_until = now() - interval '1 day'"
+              ] $ \change -> do
+                eventId <- newEvent pool 2000
+                requested <- expectRight =<< run pool (request organizer eventId)
+                requestId <- maybe (fail "missing request id") pure (etsRequestId requested)
+                runSqlPool (rawExecute
+                  ("UPDATE event_ticket_checkout_policy SET " <> change <> " WHERE id = ?::uuid")
+                  [PersistText requestId]) pool
+                waiting <- expectRight =<< run pool (queue admin)
+                map etsrRequestId waiting `shouldNotContain` [requestId]
+                adminView <- expectRight =<< run pool (sale admin eventId)
+                etsCanDecide adminView `shouldBe` False
+                status <$> run pool (approve admin requestId) `shouldReturn` Just 409
+                now <- getCurrentTime
+                runSqlPool (loadApprovedTicketPolicy now (toSqlKey eventId)) pool `shouldReturn` Nothing
+                replacement <- expectRight =<< run pool (request organizer eventId)
+                etsStatus replacement `shouldBe` "requested"
+                etsRequestId replacement `shouldNotBe` Just requestId
 
           it "keeps one pending request when the manager asks many times at once" $ \pool -> do
             eventId <- newEvent pool 2000
