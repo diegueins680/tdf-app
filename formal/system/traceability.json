@@ -28540,7 +28540,7 @@
     "scripts/__tests__/compiled-api-surface.test.mjs": "a16eb73989d2bf07247e408564610580223b12e5396ca3e548e689b34583693d",
     "scripts/__tests__/content-storage-model.test.mjs": "003db1f4799160041440c36b8e9f3f5492719528c445a96cf32b9997c40b1981",
     "scripts/__tests__/content-storage-reconciliation.test.mjs": "e495bbdecb4c88ad8c178c8d06d17cfebafc71148e2fcebeca1423b4558c27da",
-    "scripts/__tests__/continuous-improvement-loop.test.mjs": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
+    "scripts/__tests__/continuous-improvement-loop.test.mjs": "5af9e5dc2fda29168ecdaf142b4032214b07cb0b204d6da6f1e85b7a5e8ab382",
     "scripts/__tests__/dependency-security.test.mjs": "17dc6f24f9a2665485ed804f038b7ebb9a4228fda72118815d79a4335cce4b06",
     "scripts/__tests__/diagnose-social.test.mjs": "3392b144a1339b7e9b9946190b4e389937e5081eb6446869a592738511e1ac65",
     "scripts/__tests__/directory-event-search-http.mjs": "e01fc5373d34f9bd4284108bfe2066e2b6eecd8c75dc5b684a288c67724ef6dc",
@@ -50814,7 +50814,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
+      "sha256": "5af9e5dc2fda29168ecdaf142b4032214b07cb0b204d6da6f1e85b7a5e8ab382",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -52850,13 +52850,6 @@
       ]
     },
     {
-      "id": "SURFACE-14082aef6c304d37",
-      "path": "scripts/install-flyctl.mjs",
-      "sha256": "75c2c6f4934ff07fd6f00dec4bb2c8133047ca54c0632bea7739581871d56cdc",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
-    },
-    {
       "id": "SURFACE-37ed76fba61da70f",
       "path": "scripts/install-proof-checkers.py",
       "sha256": "1a14b7fa50dd6666db4a0fd5feb8e6993104a779b019b7a0dfd3562cf37736bb",
@@ -53040,13 +53033,6 @@
           "relationship": "implementation"
         }
       ]
-    },
-    {
-      "id": "SURFACE-6f9017626e33d004",
-      "path": "scripts/lib/flyctl-cli.mjs",
-      "sha256": "feaf16e47652a7d1612585af11ef0e6f4d6425813bb0215e5bd6edab6bebc45b",
-      "semanticConformance": "not-established-by-discovery",
-      "requirements": []
     },
     {
       "id": "SURFACE-16c0274ca9b29448",
@@ -85620,7 +85606,6 @@
     "SURFACE-6efdc7705573cc29",
     "SURFACE-e10a3732c19671ff",
     "SURFACE-7762cc1d53f882c8",
-    "SURFACE-14082aef6c304d37",
     "SURFACE-865e33190c6c6efa",
     "SURFACE-8ae2a3dbc74bbcd0",
     "SURFACE-997e028a6a9a38c3",
@@ -85628,7 +85613,6 @@
     "SURFACE-837e02c297524cce",
     "SURFACE-f7cfb7f13090b47a",
     "SURFACE-b7108336da7c8a87",
-    "SURFACE-6f9017626e33d004",
     "SURFACE-a38198fb9ee3c45e",
     "SURFACE-49f6227b405af138",
     "SURFACE-ee642d6d6fafaf64",
