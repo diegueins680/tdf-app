@@ -225,6 +225,12 @@
       "principle": "Legibilidad y reconocimiento de opciones",
       "finding": "El selector de reserva combinaba nombre y tarifa en una fila recortada en teléfonos; unidades inglesas y una tarifa de poco contraste en la opción seleccionada dificultaban leer el servicio. El espaciado de contenedores anidados también desplazaba los campos fuera de la columna.",
       "change": "El valor seleccionado muestra el nombre completo, las opciones separan nombre y tarifa, y los textos largos se ajustan dentro de su columna. El precio seleccionado conserva contraste y las unidades hour, episode, song y package se muestran como hora, episodio, canción y paquete; las unidades desconocidas se conservan. Se mantienen el catálogo, orden, identificadores y cálculo existente, con cotización, depósito y consentimiento."
+    },
+    {
+      "id": "COG-20261118-01",
+      "principle": "Prevención de errores y continuidad del contexto",
+      "finding": "El seguimiento del marketplace deshabilitaba el envío de referencias cortas sin explicarlas junto al campo, limitaba el texto con maxLength y dejaba editarlo durante el envío. El estado del formulario podía reutilizarse al cambiar de orden.",
+      "change": "Validación asociada al campo con foco al enviar, texto completo conservado, límites existentes por carácter Unicode y controles no admitidos, referencia capturada y bloqueada durante el envío y guardia inmediata de duplicados. Un rechazo conserva el borrador para reintento explícito; cada orden tiene estado montado propio y respuestas antiguas no sustituyen la orden actual. El ID completo se ajusta en teléfono y la evidencia recibida sigue pendiente de revisión, sin confirmar pago."
     }
   ],
   "measurements": [
@@ -348,7 +354,7 @@
       "id": 16,
       "item": "Errores junto al campo",
       "status": "Parcial; ampliado en esta continuación",
-      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo. Contacto y dirección de entrega de mercancía ahora tienen errores por campo, límites, foco al enviar y guard contra submit directo inválido o no disponible. Motivo de cancelación y reporte de pedido tienen límites, errores asociados, foco al enviar y texto sin truncar en campos acotados; confirmación nombrada y guards de estado/lectura/pending."
+      "nextOrEvidence": "Errores de contacto, cantidad y factura en checkout; referencia y archivo de transferencia en entradas; referencia bancaria en reservas, con texto conservado al fallar y campo deshabilitado durante el envío; código/teléfono PayPhone. Quedan otras superficies de pago sin revalidar. Los cuatro precios de renta también muestran error/ayuda por campo. El monto de pago manual y la tarifa por hora tienen errores asociados al campo. Stock, umbral de alerta y peso de mercancía tienen errores accesibles junto al campo. Contacto y dirección de entrega de mercancía ahora tienen errores por campo, límites, foco al enviar y guard contra submit directo inválido o no disponible. Motivo de cancelación y reporte de pedido tienen límites, errores asociados, foco al enviar y texto sin truncar en campos acotados; confirmación nombrada y guards de estado/lectura/pending. Seguimiento del marketplace: referencia bancaria con error asociado y foco, sin truncar, bloqueo durante envío, reintento explícito y borrador propio por orden; no confirma pago."
     },
     {
       "id": 17,
@@ -365,14 +371,14 @@
     {
       "id": 19,
       "item": "App: pestañas y acciones",
-      "status": "Pendiente",
-      "nextOrEvidence": "Eventos como pestaña, menú por rol y detalle; incluye decisiones D7 y D8."
+      "status": "Parcial en móvil #188; dispositivo e integración pendientes",
+      "nextOrEvidence": "PR móvil #188 OPEN DRAFT, cabeza 99f630fb1ca1a84038adc74686d4417212884205, sección 17/nov: Eventos como pestaña para cuentas con sesión; Crear algo nuevo pasa a Explorar conservando las acciones. Detalle y menús por acceso ya implementados allí. No integrado ni ejecutado en dispositivo en esta continuación; no se infiere aprobación adicional de D7/D8."
     },
     {
       "id": 20,
       "item": "App: explorar sin cuenta",
-      "status": "Pendiente",
-      "nextOrEvidence": "Recorrido invitado pendiente. D10 simplifica el registro en el PR móvil separado #188 tras aprobación de Diego; falta prueba nativa e integración."
+      "status": "Parcial en móvil #188; dispositivo e integración pendientes",
+      "nextOrEvidence": "PR móvil #188 en 99f630fb1ca1a84038adc74686d4417212884205: Explorar sin cuenta abre el directorio público; guardar, responder y pagar piden cuenta. Eventos para invitados sigue limitado por el registro compartido social.events; llegan por el chip del directorio. D10 de registro ya implementada separadamente tras aprobación. Falta integración y prueba nativa."
     },
     {
       "id": 21,
@@ -494,9 +500,9 @@
       "scope": "Full web checkpoint before the final schedule-disclosure change; affected suites and browser paths rerun afterwards."
     },
     "latestFocusedJest": {
-      "suitesPassed": 4,
-      "testsPassed": 34,
-      "sourceCommit": "de6336230e60a992083bb7e7e1d666033f20c1e5"
+      "suitesPassed": 2,
+      "testsPassed": 17,
+      "sourceCommit": "0158b83fc1aaabc3f7f24c324f0bf4d38ccdf372"
     },
     "browser": {
       "passed": 22,
@@ -510,9 +516,9 @@
       "latestBookingDisclosurePassed": 10
     },
     "governance": {
-      "sourceCommit": "de6336230e60a992083bb7e7e1d666033f20c1e5",
+      "sourceCommit": "0158b83fc1aaabc3f7f24c324f0bf4d38ccdf372",
       "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
-      "mappedChangedMaterialSurfaces": 133,
+      "mappedChangedMaterialSurfaces": 136,
       "inventory": "passed",
       "traceability": "passed",
       "semanticConformance": "not established by these checks"
@@ -526,8 +532,8 @@
     "typecheck": "passed",
     "lint": "passed",
     "latestBrowserMatrix": {
-      "cases": 49,
-      "passed": 49,
+      "cases": 28,
+      "passed": 28,
       "failed": 0,
       "skipped": 0,
       "flaky": 0,
@@ -541,57 +547,57 @@
         "WebKit critical"
       ],
       "caseGroups": {
-        "servicePicker": 7,
-        "briefIntroduction": 7,
-        "catalogRecoveryAndViewport": 21,
-        "physicalQuitoTimezones": 14
+        "marketplaceReferenceRecovery": 7,
+        "marketplaceOrderIdentity": 7,
+        "existingPayPhoneAndTicketTransferErrors": 14
       },
       "checks": [
-        "Full multiword and unbroken service names measured against actual select/field/card text rectangles, not only root overflow",
-        "Every menu option keeps its full name, catalog order and raw ID; names wrap, rates remain separate, selected rate passes full WCAG contrast",
-        "All option bounds inside viewport and normal pointer hit tests; keyboard Enter/ArrowDown/Escape returns focus and selects the same catalog ID",
-        "Known unit display translation, unchanged hourly reference calculation, zero versus absent rate and unknown unit text",
-        "Contact edits survive selection; selected ID reaches synthetic availability reads without a booking write",
-        "Existing healthy introduction, error/empty catalog recovery, exact overflow negative control and UTC/Madrid physical Quito timezone journeys",
-        "All WCAG/ARIA tags retained; no forced click, disabled accessibility rule or increased assertion budget"
+        "Associated error/helper/focus for invalid reference; all121 input characters retained without maxlength truncation",
+        "Pending reference and submit locked; direct form redispatch creates no second request",
+        "503 preserves raw draft; explicit retry sends identical trimmed reference and same private lookup header; no automatic retry",
+        "Accepted evidence remains unpaid and awaiting review, with no client payment confirmation",
+        "SPA order change starts a fresh draft; old response completion is awaited before checking new draft/order retention",
+        "Full UUID and reference form fit phone card; normal viewport/pointer and keyboard focus checks",
+        "All WCAG tags run after paint, opaque ancestors and finite animations; persistent MuiTouchRipple-childPulsate focus decoration stays active and is the only infinite-animation exception",
+        "Existing PayPhone and ticket reference/file validation browser regressions retained"
       ],
       "harness": {
         "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
         "port": 4189,
         "reuseExistingServer": false,
         "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
-        "identity": "Owned preview PID62589 cwd verified; /inicio bytes matched this worktree dist/index.html."
+        "identity": "Fresh build and strict owned preview required by adapter. Initial live preview64619 cwd and /inicio bytes verified against this worktree; final run rebuilt and owned its preview through the same strict adapter."
       },
-      "log": "/private/tmp/cogload-sixteenth-browser.log",
-      "limitations": "All APIs intercepted and all bookings synthetic/refused. Browser configurations do not establish native-device or human comprehension acceptance."
+      "log": "/private/tmp/cogload-seventeenth-browser-verified.log",
+      "limitations": "All API traffic synthetic; no real reference, order, payment or inbox changed. Browser configurations do not establish native-device/human comprehension acceptance."
     },
     "latestCompletedHostedCheckpoint": {
-      "commit": "7426a7bc1371e07af3110065cda97e86221b9bdc",
-      "ciRun": 44191951325,
-      "ciConclusion": "failure",
+      "commit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
+      "ciRun": 44215774402,
+      "ciConclusion": "success",
       "webJest": {
-        "suites": 382,
-        "tests": 4431,
+        "suites": 383,
+        "tests": 4433,
         "result": "passed"
       },
+      "backend": "passed",
       "mainBrowser": {
-        "passed": 1050,
+        "passed": 1065,
         "skipped": 22,
-        "failed": 1
+        "failed": 0
       },
-      "mainBrowserFailure": "One WebKit desktop EN cancellation axe sample reported near-black blended text on four nodes (1.01–1.02:1); the failure screenshot shows the fully visible dialog. Consistent with sampling a fade before opacity settled. The old getAnimations-only guard was insufficient; test now samples after paint, requires opaque ancestors and no running animations, and exercises a600ms synthetic fade. No WCAG rule or assertion budget removed.",
       "nativeMusic": {
         "passed": 74,
         "failed": 0
       },
       "additionalBrowser": {
         "storage": 8,
-        "torrent": "skipped after main browser failure",
-        "deletion": "skipped after main browser failure",
-        "discovery": "skipped after main browser failure"
+        "torrent": 21,
+        "deletion": 10,
+        "discovery": 25
       },
-      "specialistWorkflows": "all four passed: catalog44191956312,event44191962592,social44191968597,interaction44191974911",
-      "scope": "Only the recorded prior head. Main CI did not pass; backend and all listed successful jobs did."
+      "specialistWorkflows": "all four passed: catalog44215778836,event44215783030,social44215787342,interaction44215791734",
+      "scope": "Verified completed workflows and actual completed job logs for this prior head only. Conditional payment-staging and native-Android jobs were skipped; this is not native-device verification."
     },
     "latestNativePlaybackRecheck": {
       "cases": 4,
@@ -613,22 +619,32 @@
       "description": "La reverificación local de música nativa aprobó cuatro casos WebKit (dos recorridos repetidos dos veces) con el decodificador y reloj reales. No prueba que el fallo hosted esté resuelto. El primer intento usó el puerto4190 restringido por WebKit, no cargó la app y se detuvo; se excluye como evidencia de producto."
     },
     "latestHostedCheckpointSnapshot": {
-      "commit": "9343be19f661c145b4c25dd44c6e186ff2e77162",
-      "ciRun": 44210874742,
-      "ciConclusion": "in_progress at documentation preparation",
+      "commit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
+      "ciRun": 44215774402,
+      "ciConclusion": "success",
       "webJest": {
-        "suites": 382,
-        "tests": 4431,
+        "suites": 383,
+        "tests": 4433,
         "result": "passed"
       },
       "backend": "passed",
+      "mainBrowser": {
+        "passed": 1065,
+        "skipped": 22,
+        "failed": 0
+      },
       "nativeMusic": {
         "passed": 74,
         "failed": 0
       },
-      "mainBrowser": "persona-web-e2e still running; no final counts or overall pass established",
-      "specialistWorkflows": "all four passed: catalog44210878915,event44210882981,social44210887632,interaction44210891321",
-      "scope": "Read-only snapshot before publishing this pass. Counts belong only to the recorded prior head. A newer dispatch on the same ref may cancel its unfinished workflow."
+      "additionalBrowser": {
+        "storage": 8,
+        "torrent": 21,
+        "deletion": 10,
+        "discovery": 25
+      },
+      "specialistWorkflows": "all four passed: catalog44215778836,event44215783030,social44215787342,interaction44215791734",
+      "scope": "Verified completed workflows and actual completed job logs for this prior head only. Conditional payment-staging and native-Android jobs were skipped; this is not native-device verification."
     }
   },
   "limitations": [
@@ -749,6 +765,14 @@
     {
       "path": "figures/booking-service-options-phone.png",
       "scope": "Menú sintético en teléfono: nombres completos, precio seleccionado con contraste, cero, unidad desconocida y servicio sin precio."
+    },
+    {
+      "path": "figures/marketplace-reference-errors-phone.png",
+      "scope": "Referencia sintética de 121 caracteres conservada, error asociado visible y control alcanzable en teléfono; ID completo ajustado."
+    },
+    {
+      "path": "figures/marketplace-reference-retry-phone.png",
+      "scope": "Rechazo sintético: referencia retenida para reintento explícito, con aviso de que la orden sigue impaga."
     }
   ],
   "followups": [
@@ -2120,7 +2144,115 @@
       },
       "hostedCI": "New published head requires its own full workflows; prior in-progress run is not a pass.",
       "limitations": "Existing rate estimation policy and backend quote authority retained; this is presentation/local layout. No navigation/role/removal decision, new business option, real reservation, email, merge or deployment. Other forms, integrations, owner decisions, native-device and human comprehension acceptance remain open."
+    },
+    {
+      "date": "2026-11-18",
+      "baseCommit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
+      "scope": "Item16/22: marketplace transfer-reference inline errors, pending locks, explicit retry and order identity isolation; full order ID containment. Reconciled separate mobile19/20 implementation without integrating or changing its branch.",
+      "regressionVerification": {
+        "suites": 2,
+        "tests": 17,
+        "log": "/private/tmp/cogload-seventeenth-unit-final.log",
+        "checks": [
+          "Inline bounds/control validation, Unicode120-character request and raw overlong retention",
+          "Immediate duplicate guard, immutable pending reference, rejected draft and identical explicit retry",
+          "Missing access, mismatched response, old pending response/read after route change, paid order has no evidence form",
+          "Existing marketplace request list and private-token/API contracts"
+        ]
+      },
+      "browserVerification": {
+        "cases": 28,
+        "passed": 28,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "configurations": [
+          "Chromium desktop",
+          "Chromium phone",
+          "Chromium tablet",
+          "Android Chrome small",
+          "WebKit iPhone",
+          "Firefox critical",
+          "WebKit critical"
+        ],
+        "caseGroups": {
+          "marketplaceReferenceRecovery": 7,
+          "marketplaceOrderIdentity": 7,
+          "existingPayPhoneAndTicketTransferErrors": 14
+        },
+        "checks": [
+          "Associated error/helper/focus for invalid reference; all121 input characters retained without maxlength truncation",
+          "Pending reference and submit locked; direct form redispatch creates no second request",
+          "503 preserves raw draft; explicit retry sends identical trimmed reference and same private lookup header; no automatic retry",
+          "Accepted evidence remains unpaid and awaiting review, with no client payment confirmation",
+          "SPA order change starts a fresh draft; old response completion is awaited before checking new draft/order retention",
+          "Full UUID and reference form fit phone card; normal viewport/pointer and keyboard focus checks",
+          "All WCAG tags run after paint, opaque ancestors and finite animations; persistent MuiTouchRipple-childPulsate focus decoration stays active and is the only infinite-animation exception",
+          "Existing PayPhone and ticket reference/file validation browser regressions retained"
+        ],
+        "harness": {
+          "worktree": "/Users/diegosaa/GitHub/tdf-app-wt-cogload-20261116",
+          "port": 4189,
+          "reuseExistingServer": false,
+          "adapter": "/private/tmp/cogload-eleventh-playwright.config.mjs",
+          "identity": "Fresh build and strict owned preview required by adapter. Initial live preview64619 cwd and /inicio bytes verified against this worktree; final run rebuilt and owned its preview through the same strict adapter."
+        },
+        "log": "/private/tmp/cogload-seventeenth-browser-verified.log",
+        "limitations": "All API traffic synthetic; no real reference, order, payment or inbox changed. Browser configurations do not establish native-device/human comprehension acceptance."
+      },
+      "catalogCandidates": 1429,
+      "catalogUnreviewed": 0,
+      "catalogStale": 0,
+      "catalogPreservationTestsPassed": 11,
+      "catalogReview": "No new business choice/status/list or decision. Existing request/status catalogs and every complete decision object preserved; canonical JSON/CSV refreshed. Reference bounds/control categories checked against Server.hs validatePublicBookingManualReference and submitMarketplaceManualEvidence; wire contract unchanged.",
+      "typecheck": "passed",
+      "lint": "passed",
+      "previousHostedCheckpoint": {
+        "commit": "b847fcb6fcfde142455c1bb5ce1d566d3bd91be1",
+        "ciRun": 44215774402,
+        "ciConclusion": "success",
+        "webJest": {
+          "suites": 383,
+          "tests": 4433,
+          "result": "passed"
+        },
+        "backend": "passed",
+        "mainBrowser": {
+          "passed": 1065,
+          "skipped": 22,
+          "failed": 0
+        },
+        "nativeMusic": {
+          "passed": 74,
+          "failed": 0
+        },
+        "additionalBrowser": {
+          "storage": 8,
+          "torrent": 21,
+          "deletion": 10,
+          "discovery": 25
+        },
+        "specialistWorkflows": "all four passed: catalog44215778836,event44215783030,social44215787342,interaction44215791734",
+        "scope": "Verified completed workflows and actual completed job logs for this prior head only. Conditional payment-staging and native-Android jobs were skipped; this is not native-device verification."
+      },
+      "sourceFreshness": {
+        "sourceCommit": "0158b83fc1aaabc3f7f24c324f0bf4d38ccdf372",
+        "baseCommit": "083d1c6e1d0c709ea14b621782ff9faa3d60d572",
+        "mappedChangedMaterialSurfaces": 136,
+        "inventory": "passed",
+        "traceability": "passed",
+        "semanticConformance": "not established by these checks"
+      },
+      "separateImplementation": {
+        "pullRequest": "TDF-mobile#188",
+        "head": "99f630fb1ca1a84038adc74686d4417212884205",
+        "state": "OPEN DRAFT",
+        "scope": "Signed-in Eventos tab, Crear action within Explorar, and guest directory start from Nov17 section of PR. Guest Eventos tab remains limited by shared social.events access registry. D10 signup separately implemented following earlier approval.",
+        "limits": "Read-only source/PR context reconciliation, no new owner approval inferred for D7/D8. Not integrated or run on a native device here. Other root drafts#757/#758/#735/#769 read-only reverified unchanged."
+      },
+      "hostedCI": "New published head requires its own full workflows; prior green results apply only to b847fcb6.",
+      "limitations": "Retention covers the mounted order and failed send. Another order, reload or leaving the page resets the draft; no new storage or automatic retry. Endpoint, private access, payment/stock authority, request types and fulfillment policy unchanged. No merge/deployment, real payment/order/email or native-device acceptance."
     }
   ],
-  "lastUpdated": "2026-11-17"
+  "lastUpdated": "2026-11-18"
 }
