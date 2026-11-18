@@ -7,6 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import PaymentAlternativesNotice from './PaymentAlternativesNotice';
 
 import { ApiError } from '../../api/client';
 import {
@@ -42,6 +43,8 @@ export interface HostedCheckoutContext {
 interface HostedProviderCheckoutProps {
   checkout?: HostedCheckoutContext | null;
   offeredMethods: readonly string[];
+  alternativeMethods?: readonly string[];
+  paymentFailure?: { method?: string | null; needsVerification: boolean } | null;
   disabled?: boolean;
   english?: boolean;
   initialBuyerPhone?: string | null;
@@ -121,8 +124,8 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
         severity: session.canRetryOrFallback ? 'warning' : 'error',
         message: session.canRetryOrFallback
           ? (english
-            ? 'The payment was declined before a charge was created. You may try again.'
-            : 'El pago fue rechazado antes de crear un cobro. Puedes reintentar.')
+            ? 'The payment was declined before a charge was created. You may choose another available method or try again.'
+            : 'El pago fue rechazado antes de crear un cobro. Puedes elegir otro método disponible o reintentar.')
           : (english
             ? 'The result needs review. Do not use another payment method.'
             : 'El resultado necesita revisión. No uses otro método de pago.'),
@@ -158,6 +161,8 @@ const stateCopy = (session: ProviderPaymentSession, english: boolean): {
 export default function HostedProviderCheckout({
   checkout,
   offeredMethods,
+  alternativeMethods = offeredMethods,
+  paymentFailure,
   disabled = false,
   english = false,
   initialBuyerPhone,
@@ -327,7 +332,7 @@ export default function HostedProviderCheckout({
     return () => onSafetyLockChangeRef.current?.(false);
   }, [safetyLocked]);
 
-  if (methods.length === 0 && !pendingCreation && !selected && !session) return null;
+  if (methods.length === 0 && !pendingCreation && !selected && !session && !error && !paymentFailure) return null;
 
   const navigate = navigateToProvider ?? ((url: string) => window.location.assign(url));
 
@@ -493,12 +498,24 @@ export default function HostedProviderCheckout({
   const existingRedirect = session?.provider === 'placetopay'
     ? safePlaceToPayRedirect(session.redirectUrl)
     : null;
+  const showAlternatives = session?.state !== 'succeeded' && (
+    (Boolean(error) || Boolean(paymentFailure))
+    || session?.state === 'failed' || session?.state === 'confirmed_no_charge'
+  );
 
   return (
     <Stack spacing={1.5} component="section" aria-label={english ? 'Additional secure payment methods' : 'Métodos de pago seguros adicionales'}>
-      <Typography variant="subtitle2" fontWeight={800}>
+      {showAlternatives && (
+        <PaymentAlternativesNotice
+          methods={alternativeMethods}
+          failedMethod={selected?.label ?? paymentFailure?.method}
+          blocked={safetyLocked || Boolean(paymentFailure?.needsVerification)}
+          english={english}
+        />
+      )}
+      {methods.length > 0 && <Typography variant="subtitle2" fontWeight={800}>
         {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
-      </Typography>
+      </Typography>}
       {methods.some((method) => method.provider === 'payphone') && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <TextField

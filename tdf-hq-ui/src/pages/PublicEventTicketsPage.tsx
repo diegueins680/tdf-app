@@ -1,3 +1,4 @@
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import MarkdownText from '../components/MarkdownText';
 import {
   Alert,
@@ -110,6 +111,7 @@ export default function PublicEventTicketsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const [attemptedPaymentMethod, setAttemptedPaymentMethod] = useState<string | null>(null);
   // The order on screen could not be refreshed: its payment methods may be stale,
   // so none is offered until the server answers again.
   const [lookupFailed, setLookupFailed] = useState(false);
@@ -317,6 +319,7 @@ export default function PublicEventTicketsPage() {
   };
 
   const handleDatafast = async () => {
+    setAttemptedPaymentMethod('datafast');
     if (!checkout || !checkoutLookupToken) return;
     setPaymentBusy(true);
     setMessage(null);
@@ -341,6 +344,7 @@ export default function PublicEventTicketsPage() {
   };
 
   const handlePaypal = async () => {
+    setAttemptedPaymentMethod('paypal');
     if (!checkout || !checkoutLookupToken || !paypalClientId) return;
     setPaymentBusy(true);
     setMessage(null);
@@ -364,6 +368,7 @@ export default function PublicEventTicketsPage() {
   };
 
   const handleBankTransfer = async () => {
+    setAttemptedPaymentMethod('bank_transfer');
     if (!checkout || !checkoutLookupToken) return;
     setPaymentBusy(true);
     setMessage(null);
@@ -413,9 +418,12 @@ export default function PublicEventTicketsPage() {
     const script = document.createElement('script');
     script.src = datafastCheckout.dcWidgetUrl;
     script.async = true;
-    script.onerror = () => setMessage(english
+    script.onerror = () => {
+      setAttemptedPaymentMethod('datafast');
+      setMessage(english
       ? 'The hosted Datafast form did not load. No payment was confirmed.'
       : 'El formulario alojado de Datafast no cargó. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [datafastCheckout, datafastOpen, datafastWidgetKey, english]);
@@ -430,9 +438,12 @@ export default function PublicEventTicketsPage() {
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(checkout.quote.currency)}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
-    script.onerror = () => setMessage(english
+    script.onerror = () => {
+      setAttemptedPaymentMethod('paypal');
+      setMessage(english
       ? 'PayPal did not load. No payment was confirmed.'
       : 'PayPal no cargó. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [checkout?.paymentMethods, checkout?.quote.currency, english, orderStale, paypalClientId]);
@@ -754,6 +765,9 @@ export default function PublicEventTicketsPage() {
                             returnPath: `/eventos/${checkout.eventId}/orden/${checkout.orderId}`,
                           }}
                           offeredMethods={paid ? [] : offeredPaymentMethods}
+                          alternativeMethods={paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                          paymentFailure={!paid && (message || checkout.paymentStatus === 'failed')
+                            ? { method: attemptedPaymentMethod, needsVerification: paymentUnconfirmed || orderStale || checkout.paymentStatus !== 'failed' } : null}
                           disabled={paid || paymentBusy || datafastOpen || paypalOpen}
                           english={english}
                           initialBuyerPhone={buyerPhone}
@@ -799,6 +813,12 @@ export default function PublicEventTicketsPage() {
       <Dialog open={datafastOpen} onClose={() => setDatafastOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay with Datafast' : 'Pagar con Datafast'}</DialogTitle>
         <DialogContent dividers>
+          {message && <Alert severity="warning">{message}</Alert>}
+          {message && <PaymentAlternativesNotice
+                methods={orderStale || paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked english={english}
+              />}
           <Stack spacing={1.5}>
             <Alert severity="info">{english
               ? 'Complete payment in the secure form. Your tickets will appear here once payment is confirmed.'
@@ -817,6 +837,12 @@ export default function PublicEventTicketsPage() {
       <Dialog open={paypalOpen} onClose={() => setPaypalOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay with PayPal' : 'Pagar con PayPal'}</DialogTitle>
         <DialogContent dividers>
+          {message && <Alert severity="warning">{message}</Alert>}
+          {message && <PaymentAlternativesNotice
+                methods={orderStale || paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                failedMethod={attemptedPaymentMethod}
+                blocked english={english}
+              />}
           <Stack spacing={1.5}>
             <Alert severity="info">{english
               ? 'Complete payment with PayPal. Your tickets will appear here once payment is confirmed.'

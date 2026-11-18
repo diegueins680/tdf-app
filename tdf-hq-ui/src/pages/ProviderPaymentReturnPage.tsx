@@ -2,6 +2,8 @@ import { Alert, Box, Button, Card, CardContent, CircularProgress, Container, Sta
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { loadCheckoutPaymentAlternatives } from '../api/checkoutPaymentAlternatives';
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 
 import { getProviderPaymentSession, safePlaceToPayRedirect } from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
@@ -44,6 +46,13 @@ export default function ProviderPaymentReturnPage() {
   });
 
   const resumedCheckoutId = resume?.checkoutId;
+  const alternatives = useQuery({
+    queryKey: ['payment-return-alternatives', resumedCheckoutId, resume?.attemptId, resume?.returnPath],
+    queryFn: () => loadCheckoutPaymentAlternatives(resume!),
+    enabled: Boolean(resume && !status.isError && status.data?.canRetryOrFallback
+      && ['failed', 'confirmed_no_charge'].includes(status.data.state)),
+    retry: false,
+  });
   useEffect(() => {
     if (resumedCheckoutId && status.data?.state === 'succeeded') {
       markProviderPaymentResumeCompleted(resumedCheckoutId);
@@ -77,7 +86,7 @@ export default function ProviderPaymentReturnPage() {
   );
 
   const releaseAttemptIfAuthoritative = () => {
-    if (!canReleaseAttempt) return;
+    if (!canReleaseAttempt || status.isError || status.isFetching) return;
     clearProviderPaymentResume(resume.checkoutId);
     if (knownNoCharge) {
       clearPaymentIdempotencyKey(
@@ -128,6 +137,20 @@ export default function ProviderPaymentReturnPage() {
                     ? 'The server confirmed that no charge completed. Return to the order to choose an available method.'
                     : 'El servidor confirmó que no se completó un cobro. Vuelve a la orden para elegir un método disponible.'}
                 </Alert>
+              )}
+              {knownNoCharge && alternatives.isSuccess && (
+                <PaymentAlternativesNotice
+                  methods={alternatives.data}
+                  failedMethod={resume.paymentMethod === 'payphone_wallet'
+                    ? 'payphone_wallet' : `${resume.provider}_${resume.paymentMethod}`}
+                  blocked={status.isError || status.isFetching}
+                  english={english}
+                />
+              )}
+              {knownNoCharge && alternatives.isError && (
+                <Alert severity="info">{english
+                  ? 'Return to the original order to refresh its available payment methods.'
+                  : 'Vuelve a la orden original para consultar sus medios de pago disponibles.'}</Alert>
               )}
               {ambiguous && (
                 <Alert severity="warning">

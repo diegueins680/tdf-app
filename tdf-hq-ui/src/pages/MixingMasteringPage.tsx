@@ -1,3 +1,4 @@
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useMetaTags } from '../hooks/useMetaTags';
 import {
@@ -164,6 +165,7 @@ export default function MixingMasteringPage() {
   const [confirmedOrder, setConfirmedOrder] = useState<ServiceStorefrontOrderDTO | null>(null);
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const [attemptedPaymentMethod, setAttemptedPaymentMethod] = useState<string | null>(null);
   const [datafastDialogOpen, setDatafastDialogOpen] = useState(false);
   const [datafastCheckout, setDatafastCheckout] = useState<Awaited<ReturnType<typeof ServiceStorefront.createDatafastCheckout>> | null>(null);
   const [datafastWidgetKey, setDatafastWidgetKey] = useState(0);
@@ -279,6 +281,7 @@ export default function MixingMasteringPage() {
   }, []);
 
   const handleDatafastPayment = useCallback(async () => {
+    setAttemptedPaymentMethod('datafast');
     setPaymentBusy(true);
     setDatafastError(null);
     try {
@@ -294,6 +297,7 @@ export default function MixingMasteringPage() {
   }, [createServiceOrder, paymentError]);
 
   const handlePaypalPayment = useCallback(async () => {
+    setAttemptedPaymentMethod('paypal');
     if (!paypalClientId) {
       paymentError(new Error('PayPal no está habilitado para este comercio.'));
       return;
@@ -317,6 +321,7 @@ export default function MixingMasteringPage() {
   }, [createServiceOrder, paymentError, paypalClientId]);
 
   const handleManualPayment = useCallback(async () => {
+    setAttemptedPaymentMethod('bank_transfer');
     setPaymentBusy(true);
     try {
       const { order, token } = await createServiceOrder();
@@ -349,7 +354,10 @@ export default function MixingMasteringPage() {
     const script = document.createElement('script');
     script.src = datafastCheckout.dcWidgetUrl;
     script.async = true;
-    script.onerror = () => setDatafastError('No se pudo cargar el formulario de Datafast. No se confirmó ningún pago.');
+    script.onerror = () => {
+      setAttemptedPaymentMethod('datafast');
+      setDatafastError('No se pudo cargar el formulario de Datafast. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [datafastCheckout, datafastDialogOpen, datafastWidgetKey]);
@@ -364,7 +372,10 @@ export default function MixingMasteringPage() {
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=USD`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
-    script.onerror = () => setPaypalError('No se pudo cargar PayPal. No se confirmó ningún pago.');
+    script.onerror = () => {
+      setAttemptedPaymentMethod('paypal');
+      setPaypalError('No se pudo cargar PayPal. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [paypalClientId]);
@@ -787,6 +798,14 @@ export default function MixingMasteringPage() {
             </Button>}
             <HostedProviderCheckout
               offeredMethods={hostedPaymentMethods}
+              alternativeMethods={[
+                ...hostedPaymentMethods,
+                ...(availablePaymentMethods?.datafast ? ['datafast'] : []),
+                ...(availablePaymentMethods?.paypal && paypalClientId && paypalReady ? ['paypal'] : []),
+                ...(availablePaymentMethods?.bankTransfer ? ['bank_transfer'] : []),
+              ]}
+              paymentFailure={datafastError || paypalError || (snackbar.open && snackbar.severity === 'error')
+                ? { method: attemptedPaymentMethod ?? (datafastError ? 'datafast' : paypalError ? 'paypal' : null), needsVerification: true } : null}
               disabled={paymentBusy || datafastDialogOpen || paypalDialogOpen}
               initialBuyerPhone={formData.buyerPhone}
               pendingReturnPathPrefix="/mezcla-mastering/pedido/"
@@ -896,6 +915,7 @@ export default function MixingMasteringPage() {
               El pedido está creado, pero solo la verificación del servidor después del retorno puede marcarlo pagado.
             </Typography>
             {datafastError && <Alert severity="error">{datafastError}</Alert>}
+            {datafastError && <PaymentAlternativesNotice methods={[...hostedPaymentMethods, ...(availablePaymentMethods?.datafast ? ['datafast'] : []), ...(availablePaymentMethods?.paypal && paypalClientId && paypalReady ? ['paypal'] : []), ...(availablePaymentMethods?.bankTransfer ? ['bank_transfer'] : [])]} failedMethod="datafast" blocked />}
             {datafastCheckout && datafastReturnUrl ? (
               <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360, '& form': { width: '100%' } }}>
                 <form
@@ -923,6 +943,7 @@ export default function MixingMasteringPage() {
               PayPal autoriza en su componente; TDF captura y verifica importe, moneda y referencia en el servidor.
             </Typography>
             {paypalError && <Alert severity="error">{paypalError}</Alert>}
+            {paypalError && <PaymentAlternativesNotice methods={[...hostedPaymentMethods, ...(availablePaymentMethods?.datafast ? ['datafast'] : []), ...(availablePaymentMethods?.paypal && paypalClientId && paypalReady ? ['paypal'] : []), ...(availablePaymentMethods?.bankTransfer ? ['bank_transfer'] : [])]} failedMethod="paypal" blocked />}
             <Box ref={paypalButtonRef} minHeight={48} />
           </Stack>
         </DialogContent>

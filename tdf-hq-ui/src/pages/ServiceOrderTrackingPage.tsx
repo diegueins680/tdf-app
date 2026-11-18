@@ -58,7 +58,7 @@ export default function ServiceOrderTrackingPage() {
       amountMinor: orderQuery.data!.ssoPriceUsdCents,
       productFlow: 'professional_service',
     }),
-    enabled: orderQuery.data?.ssoStatus === 'awaiting_payment',
+    enabled: ['awaiting_payment', 'payment_failed'].includes(orderQuery.data?.ssoStatus ?? ''),
     retry: false,
   });
   const hostedPaymentMethods = useMemo(() => [
@@ -124,6 +124,8 @@ export default function ServiceOrderTrackingPage() {
                     returnPath: `/mezcla-mastering/pedido/${encodeURIComponent(order.ssoOrderNumber)}`,
                   }}
                   offeredMethods={order.ssoStatus === 'awaiting_payment' ? hostedPaymentMethods : []}
+                  alternativeMethods={hostedPaymentMethods}
+                  paymentFailure={order.ssoStatus === 'payment_failed' ? { needsVerification: true } : null}
                   disabled={order.ssoStatus !== 'awaiting_payment' || paymentMethodsQuery.isLoading}
                   initialBuyerPhone={order.ssoBuyerPhone}
                   onSafetyLockChange={setHostedPaymentLocked}

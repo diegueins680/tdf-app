@@ -28075,6 +28075,100 @@
         "classification": "PARTIAL",
         "reason": "Local tests pass; the supervisor's launchd behaviour and disk guard are exercised by shell tests only, and hosted gates remain pending."
       }
+    },
+    {
+      "id": "SYS-PAYMENT-ALTERNATIVES-001",
+      "title": "Show enabled payment alternatives after a failed attempt",
+      "statement": "After a payment problem, show the other executable methods enabled for the same purchase, excluding the failed option. Preserve unresolved-attempt safety and the original purchase; never infer a failure from a status lookup error or create another payment merely to show alternatives.",
+      "authority": "Owner instruction, 2026-11-18: show the other possible payment methods in every payment flow when a payment fails.",
+      "domain": "PAY",
+      "actors": [
+        "Buyer",
+        "Payment checkout UI",
+        "Payment status provider"
+      ],
+      "preconditions": [
+        "A buyer is viewing an existing payment flow or its original order return page.",
+        "Available methods come from that purchase or the same Stripe PaymentIntent; provider activation remains separately gated."
+      ],
+      "inputs": [
+        "Current order and checkout identity",
+        "Current server-offered methods and browser prerequisites",
+        "Attempted method and authoritative payment/retry status"
+      ],
+      "state": {
+        "payment": "not_started | failed | confirmed_no_charge | pending | ambiguous | succeeded",
+        "alternatives": "available | none_enabled | lookup_unavailable"
+      },
+      "allowedTransitions": [
+        "Confirmed no-charge or pre-charge failure -> show remaining available options.",
+        "Pending or unknown result -> preserve recovery lock and request status verification.",
+        "Verified success -> fulfillment/status display without proposing another payment."
+      ],
+      "forbiddenTransitions": [
+        "Timeout or failed status read -> claim a confirmed decline.",
+        "Show an unavailable provider or a method without an executor for this purchase.",
+        "Showing alternatives -> automatic payment, replacement order, price change or provider activation."
+      ],
+      "effects": [
+        "Render remaining method labels adjacent to errors, including provider dialogs.",
+        "Read the original order on supported return paths; preserve checkout identity and private lookup scope."
+      ],
+      "authorization": "The owner requested the UI change; branch review, deployment and existing provider activation controls remain in force.",
+      "privacy": "Do not log lookup tokens, PaymentIntent secrets or card data. Stripe reads use its public SDK for the original intent.",
+      "concurrency": "Retain existing recovery/status locks; do not overlap an unresolved charge with another method.",
+      "idempotency": "Render and read only; preserve the original order and existing idempotency/recovery records.",
+      "failure": "On availability lookup error, show that availability is unknown. If no alternative is enabled, direct the buyer to support with the order reference.",
+      "recovery": "Verify the original attempt before retrying or switching when its result is pending or uncertain.",
+      "observability": "Keep scoped tests, source fingerprints, build/lint results and deployment receipts separate from payment or fulfillment outcomes.",
+      "source": "docs/payments/payment-failure-alternatives.md",
+      "implementation": [
+        "tdf-hq-ui/src/components/StripeCheckoutModal.tsx",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.tsx",
+        "tdf-hq-ui/src/pages/DatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/DomoQuoteCheckoutPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplaceOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MarketplacePage.tsx",
+        "tdf-hq-ui/src/pages/MerchOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
+        "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceDatafastReturnPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
+        "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.tsx",
+        "tdf-hq-ui/src/components/payments/StripePaymentAlternativesNotice.tsx",
+        "tdf-hq-ui/src/api/checkoutPaymentAlternatives.ts"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
+        "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
+        "tdf-hq-ui/src/components/payments/StripePaymentAlternativesNotice.test.tsx",
+        "tdf-hq-ui/src/api/checkoutPaymentAlternatives.test.ts",
+        "tdf-hq-ui/src/components/__tests__/StripeCheckoutModal.test.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
+        "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
+        "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Scoped UI/component and read-only lookup coverage; no whole-system or production payment proof.",
+      "ambiguity": [
+        "This UI change does not enable new payment rails. Formal interleaving proof and live transaction qualification remain outside this patch."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implementation and scoped tests are present. New-head hosted review/build and production rollout remain separately required; no handwritten PASS claim."
+      },
+      "critical": true,
+      "property": "A displayed alternative is executable for the original purchase, excludes the failed option and never authorizes a duplicate payment while the original result is unknown.",
+      "contract": "docs/payments/payment-failure-alternatives.md",
+      "verification": "Component tests, original-order lookup tests, existing checkout regressions, lint, type checking and production bundle compilation; no live transaction or formal interleaving proof.",
+      "evidence": "The scoped UI tests and immutable CI job results for the candidate revision; local logs remain private."
     }
   ]
 }

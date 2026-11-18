@@ -1,3 +1,4 @@
+import PaymentAlternativesNotice from '../components/payments/PaymentAlternativesNotice';
 import {
   Alert,
   Box,
@@ -49,6 +50,7 @@ export default function DomoQuoteCheckoutPage() {
   const [loading, setLoading] = useState(validQuoteId && Boolean(lookupToken));
   const [busy, setBusy] = useState(false);
   const [hostedPaymentLocked, setHostedPaymentLocked] = useState(false);
+  const [attemptedPaymentMethod, setAttemptedPaymentMethod] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelNote, setCancelNote] = useState('');
@@ -148,6 +150,7 @@ export default function DomoQuoteCheckoutPage() {
   };
 
   const handleDatafast = async () => {
+    setAttemptedPaymentMethod('datafast');
     if (!quote || !lookupToken) return;
     setBusy(true);
     setMessage(null);
@@ -165,6 +168,7 @@ export default function DomoQuoteCheckoutPage() {
   };
 
   const handlePaypal = async () => {
+    setAttemptedPaymentMethod('paypal');
     if (!quote || !lookupToken || !paypalClientId) return;
     setBusy(true);
     setMessage(null);
@@ -188,9 +192,12 @@ export default function DomoQuoteCheckoutPage() {
     const script = document.createElement('script');
     script.src = datafastCheckout.dcWidgetUrl;
     script.async = true;
-    script.onerror = () => setMessage(english
+    script.onerror = () => {
+      setAttemptedPaymentMethod('datafast');
+      setMessage(english
       ? 'The hosted Datafast form did not load. No payment was confirmed.'
       : 'El formulario alojado de Datafast no cargó. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [datafastCheckout, datafastOpen, datafastWidgetKey, english]);
@@ -205,9 +212,12 @@ export default function DomoQuoteCheckoutPage() {
     script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(paypalClientId)}&currency=${encodeURIComponent(quote.currency)}`;
     script.async = true;
     script.onload = () => setPaypalReady(true);
-    script.onerror = () => setMessage(english
+    script.onerror = () => {
+      setAttemptedPaymentMethod('paypal');
+      setMessage(english
       ? 'PayPal did not load. No payment was confirmed.'
       : 'PayPal no cargó. No se confirmó ningún pago.');
+    };
     document.body.appendChild(script);
     return () => script.remove();
   }, [english, paypalClientId, quote?.currency, quote?.paymentMethods]);
@@ -365,6 +375,9 @@ export default function DomoQuoteCheckoutPage() {
                       returnPath: `/domo-del-pululahua/cotizaciones/${quote.quoteId}`,
                     }}
                     offeredMethods={awaitingPayment ? quote.paymentMethods : []}
+                    alternativeMethods={awaitingPayment ? quote.paymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady)) : []}
+                    paymentFailure={awaitingPayment && (message || quote.paymentStatus === 'failed')
+                      ? { method: attemptedPaymentMethod, needsVerification: quote.paymentStatus !== 'failed' } : null}
                     disabled={!awaitingPayment || busy || datafastOpen || paypalOpen}
                     english={english}
                     onSafetyLockChange={setHostedPaymentLocked}
@@ -405,6 +418,12 @@ export default function DomoQuoteCheckoutPage() {
       <Dialog open={datafastOpen} onClose={() => setDatafastOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay deposit with Datafast' : 'Pagar depósito con Datafast'}</DialogTitle>
         <DialogContent dividers>
+          {message && <Alert severity="warning">{message}</Alert>}
+          {message && <PaymentAlternativesNotice
+                methods={awaitingPayment ? quote.paymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady)) : []}
+                failedMethod={attemptedPaymentMethod}
+                blocked english={english}
+              />}
           <Stack spacing={1.5}>
             <Alert severity="info">{english
               ? 'Datafast hosts the card form. Returning here is not payment; the server verifies the exact provider resource, amount, currency, merchant, quote, and checkout.'
@@ -423,6 +442,12 @@ export default function DomoQuoteCheckoutPage() {
       <Dialog open={paypalOpen} onClose={() => setPaypalOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>{english ? 'Pay deposit with PayPal' : 'Pagar depósito con PayPal'}</DialogTitle>
         <DialogContent dividers>
+          {message && <Alert severity="warning">{message}</Alert>}
+          {message && <PaymentAlternativesNotice
+                methods={awaitingPayment ? quote.paymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady)) : []}
+                failedMethod={attemptedPaymentMethod}
+                blocked english={english}
+              />}
           <Stack spacing={1.5}>
             <Alert severity="info">{english
               ? 'PayPal approval is not payment success. TDF captures and verifies the immutable order on the server.'
