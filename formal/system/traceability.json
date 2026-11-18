@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "mobileRevision": "4d866387ac6938d7aeaad5d1fa2985f8e02932e7",
+  "mobileRevision": "158fdaee3c49a2e48be7fc74d597eb6856a6a249",
   "scope": "Explicit reviewed obligations plus mechanically discovered boundaries; semantic gaps stay open.",
   "requirements": [
     {
@@ -24001,6 +24001,89 @@
       "historicalStatus": null
     },
     {
+      "id": "PAY-PAYPHONE-CARD-001",
+      "title": "PayPhone card checkout through the hosted Button, confirmed only by the server",
+      "statement": "A buyer can pay a direct checkout by card through PayPhone's hosted payment Button (route label payphone_card) without a PayPhone account and without giving TDF a phone number. The browser is sent only to a PayPhone-hosted page. The charge counts as paid only after the query worker reads the Button status by its TDFC- reference (a JSON list holding exactly one transaction for that reference) and PayPhone's Confirm answer matches transaction, reference, amount and currency. A split is optional and needs the store coding password.",
+      "domain": "PAY",
+      "authority": "Owner request 2026-11-17 (PayPhone card payments without the app); PayPhone sandbox evidence 2026-11-17/18; ADR 0136 for the Button confirmation design.",
+      "source": "docs/adr/0136-marketplace-agreement-payments.md",
+      "contract": "docs/adr/0136-marketplace-agreement-payments.md",
+      "property": "route label (payphone, card) = payphone_card; card offered iff PayPhone runtime configured and the query worker ready (coding password not required); status list with exactly one entry for the reference is read, otherwise rejected; approved -> Confirm follow-up; Succeeded only from a matching Confirm; hosted redirect host is PayPhone over HTTPS without credentials or port; a card request carries no buyer phone.",
+      "actors": [
+        "Anonymous buyer",
+        "PayPhone",
+        "Query worker"
+      ],
+      "preconditions": [
+        "Checkout lookup token; PayPhone runtime configured; COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED and checkout.provider_query_recovery ready; verified one_time and server_verification capabilities for payphone/card."
+      ],
+      "inputs": [
+        "POST /commerce/checkouts/{checkoutId}/payment-sessions with provider payphone and paymentMethod card"
+      ],
+      "state": {
+        "attempt": [
+          "requires_customer_action",
+          "processing",
+          "succeeded",
+          "confirmed_no_charge",
+          "ambiguous"
+        ]
+      },
+      "allowedTransitions": [
+        "requires_customer_action -> succeeded only from a matching Confirm answer",
+        "requires_customer_action -> confirmed_no_charge from a canceled status"
+      ],
+      "forbiddenTransitions": [
+        "succeeded from a status read alone",
+        "succeeded from browser return parameters",
+        "redirect outside PayPhone hosted pages",
+        "buyer phone sent for a card payment"
+      ],
+      "effects": [
+        "provider Prepare and Confirm calls",
+        "reconciled payment attempt"
+      ],
+      "authorization": "Checkout lookup token (capability-header).",
+      "privacy": "No buyer phone is collected for card payments; the PayPhone token is never logged.",
+      "concurrency": "Shared provider query worker lease and reconciliation path.",
+      "idempotency": "Session creation by idempotency key (PAY-RETRY-001); Confirm is idempotent at PayPhone.",
+      "failure": "Unpaid prepared payments query as HTTP 404 and are retried; unconfirmed approvals are reversed by PayPhone.",
+      "recovery": "The query worker confirms every minute for 24 attempts; an unpaid attempt ends in review.",
+      "observability": "Stored provider operation, query job and reconciliation rows.",
+      "implementation": [
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
+        "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
+        "tdf-hq-ui/src/api/providerPaymentSessions.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.ts",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
+        "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
+        "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
+        "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx"
+      ],
+      "tests": [
+        "tdf-hq/test/Spec.hs",
+        "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
+        "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
+        "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx"
+      ],
+      "formalModels": [],
+      "verification": "Unit tests for the status list, follow-up confirmation, route label and card readiness without the coding password; UI tests for the card button without phone fields and the PayPhone redirect allowlist; PayPhone sandbox runs of Prepare, list-shaped status, Confirm and Reverse.",
+      "evidence": "docs/adr/0136-marketplace-agreement-payments.md",
+      "critical": true,
+      "status": "specified and implemented",
+      "confidence": "High for parsing and routing; end-to-end worker confirmation against the sandbox pending a buyer payment run.",
+      "ambiguity": [
+        "A Button status list with several transactions for one reference is rejected and ends in review.",
+        "Abandoned prepared payments query as HTTP 404 until the job dead-letters."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Implemented and unit-tested; worker confirmation against the live sandbox awaits a recorded run."
+      },
+      "historicalStatus": null
+    },
+    {
       "id": "PAY-HOSTED-NOTIFICATIONS-001",
       "title": "PlaceToPay and PayPhone notifications",
       "statement": "Provider notifications are authenticated or classified as untrusted, stored once in the provider inbox and applied by the worker after a server-to-server query; the handlers move no money. Routes: POST /commerce/provider-notifications/placetopay; POST /commerce/provider-notifications/payphone; POST /NotificacionPago.",
@@ -28197,7 +28280,7 @@
     "audit-ci.jsonc": "bca53950e6f78813af1983c7628e5d12fd18981956d2a970ed17102073ef0cb2",
     "datadog-ci.json": "1d8ae66e0b5b579b17d62f1b7daaef93e3f99033f73bfd990b0f4dd6a49bd82e",
     "docs/artist-management-claims.md": "6eae7004025f248312d567415ea91846adcfd1a522c27cb3a74404695471ef44",
-    "docs/catalog-persistence/catalog-list-decisions.json": "6d51b8fa8c73aaa4fb88875fcf8859aea108266c0ffbc3dcb68908a9b1391dc7",
+    "docs/catalog-persistence/catalog-list-decisions.json": "d72bfd2c50362266b04665f3681c3cac1a00aaa0653b98e8c8e923d1a99b208c",
     "docs/content-storage/mobile-companion.patch": "d84da9afff81098eb6705681149d4fc273aca147194790ae3028287a4dcba1a5",
     "docs/directory/event-search-sync.md": "9d2e98178150454326d943a001393298738282e3ddc91b4a0178c0b912f0bd24",
     "docs/music-directory/formal-model.yaml": "6fe6eb444ee62cd4912b47cecdd4e1354e0a42017b2d10a234b2d78f27a291ab",
@@ -29120,11 +29203,11 @@
     "tdf-hq-ui/src/api/artistUpcomingEvents.ts": "39f404af0080d8948d28fbe9e5b55ffa15ba2569343e9228639afd8f5968a3cf",
     "tdf-hq-ui/src/api/auth.test.ts": "e49f4b09c0738d72071bf395f2d1c8a43975a2b0e818b4983c58c63e4879db72",
     "tdf-hq-ui/src/api/auth.ts": "9fc3a39e212fc453ba5c38b701a69dce8c4129addba3aba4ae823cd1d0db57fa",
-    "tdf-hq-ui/src/api/bookings.ts": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
+    "tdf-hq-ui/src/api/bookings.ts": "3e1af33e4f0293ed6b14548cc0cfddbd0c9a1e0830619ac82de91a9d5bd1cccf",
     "tdf-hq-ui/src/api/client.test.ts": "e926290d808f7fed23fe6c52cf24ced83ebdfb77212787ce44b3a85860558d84",
     "tdf-hq-ui/src/api/client.ts": "c1a35d37d170cdf684226758a5fb024b1040545d8404c0f6d77e58e644e165fc",
     "tdf-hq-ui/src/api/contentStorage.ts": "9cb3ce56f763354e9651e4f32d0066b73d6deaf409b306b7c440305b9a0d56e1",
-    "tdf-hq-ui/src/api/courses.ts": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
+    "tdf-hq-ui/src/api/courses.ts": "d64ccdbdcd198dc325fa6363273727fae1306a81354e7b0ac522db1c7d5f4513",
     "tdf-hq-ui/src/api/directory.test.ts": "ee9c96a31856a1945af7e3f238974a43533d8ebf7f32f0cdadea2dcf834fa9ed",
     "tdf-hq-ui/src/api/directory.ts": "06b552832eadde716e47ff63ec5edc3ae19f1530369f96206eeaecf2bf438588",
     "tdf-hq-ui/src/api/domoQuotes.test.ts": "667cea36c2f98a12b4bc7355019a31ba5028cdfc29d8a7b0481da566ff6d40af",
@@ -29141,7 +29224,7 @@
     "tdf-hq-ui/src/api/fans.ts": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
     "tdf-hq-ui/src/api/feedback.test.ts": "6f631600a85bc3157e41510ab87599bec96e3e9d2b796497abe83ca195a0697f",
     "tdf-hq-ui/src/api/feedback.ts": "b61ff8899d5bf312b70b434ee9de4f01f5ef075a3a020134da881815698811c2",
-    "tdf-hq-ui/src/api/generated/types.ts": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+    "tdf-hq-ui/src/api/generated/types.ts": "ba59d6c482c292599e977f9799b40694a8ec86dbe3d322c16409965c37696c00",
     "tdf-hq-ui/src/api/internalFeedback.ts": "740d034752fe8fcbf5f14029149bee2d0a5b057ffa015bb09aee18d235f1460d",
     "tdf-hq-ui/src/api/inventory.ts": "6ae18f71871c7dfcebff6c55180ecadb1791feb220e35e6c24009f59b2030799",
     "tdf-hq-ui/src/api/inventory.upload.test.ts": "da727168f7e65d08d52a371cbe8ccfe0d0b1c91d4de940b827f7c37fdac72f85",
@@ -29158,6 +29241,10 @@
     "tdf-hq-ui/src/api/musicStorageResponse.ts": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
     "tdf-hq-ui/src/api/parties.test.ts": "89c70a9266f7700570eda82141accf25ed07b92c7336c4420191868d2bcfb171",
     "tdf-hq-ui/src/api/parties.ts": "7eaccd8baab22fc60e4c33c8d464175a7f499312537bd6749ba452286c116dcf",
+    "tdf-hq-ui/src/api/paymentCapabilities.test.ts": "5f9b587db687f0d850e259058b2e6243cc542a08b3f461f4b81f8153cbced419",
+    "tdf-hq-ui/src/api/paymentCapabilities.ts": "a7a520719b656f247eab915b9748cf5196db01b1795c8798c729bbc71d44576a",
+    "tdf-hq-ui/src/api/providerPaymentSessions.test.ts": "a7ac21ae81c68985fd23c379eb4b24e2a4b97d91a87c143f7965dbeed959e94b",
+    "tdf-hq-ui/src/api/providerPaymentSessions.ts": "ebbcb443862538d22387e45e19ee25ea83074f9d47987455e9bd9df0af90dade",
     "tdf-hq-ui/src/api/requestDeadline.ts": "f8294c115c2638bb82dc0f61ad5f2e4a63018b3d17490d1a7ee1f64d56080a99",
     "tdf-hq-ui/src/api/reviews.test.ts": "8837534fbfd77370f757db7a66df90d5b023b584592eda5433602d2504c1f7f2",
     "tdf-hq-ui/src/api/reviews.ts": "8fc0a3b74789b159185572e537899ad62139fd8b784a32ec8639d3c6da792dcb",
@@ -29272,8 +29359,8 @@
     "tdf-hq-ui/src/components/notificationTarget.test.ts": "e83721c45a53e1a560e8aecea120b4e698c088d87d8a6f5c53dab35fc1ec2005",
     "tdf-hq-ui/src/components/notificationTarget.ts": "dd32aa2f9698866c83081db51286d75d85c294ea015763acfcc1895989e68e17",
     "tdf-hq-ui/src/components/party-selector/PartySelector.test.tsx": "5729ba7933e16f4d80835ea5d2151a732149860bb2153398a47b05e5c6d6d646",
-    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
-    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": "d88e6a09e15ce65630f657f8aa0870b904ba29144c53ad469211478cfa233a00",
+    "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": "3c907ae3c9d7acff823381cfd7c315b1d15bbbe5d88dfd7a48beb61880b653fb",
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.test.tsx": "6d374f89848428dc6636951465e899c9488ac588f958152982f46b75444aa75f",
     "tdf-hq-ui/src/components/payments/ReconciliationEvidencePanel.tsx": "f65734eaafb845063f509d9a51a46815496669d75821658d35a6f7ae88f91316",
     "tdf-hq-ui/src/components/payments/TicketBankTransferPanel.test.tsx": "a3d9a2016da97b49a8d6ec1158faefd1d312aff248310e2bcac0100b166dddb2",
@@ -29450,6 +29537,7 @@
     "tdf-hq-ui/src/pages/MerchProductPage.tsx": "f4f2d80c1035cf622424164999ab3e81ec37d184e5cd34304eb1eb592e1e35b3",
     "tdf-hq-ui/src/pages/MerchReputationPage.tsx": "ef4c88e1640e18c84679d7968ce7eea06fc2b60d9df2e58787a8139c8726b359",
     "tdf-hq-ui/src/pages/MerchStorefrontPage.tsx": "e257cb0a49e7a7773fc26e24fa9f5f93fb7a68167fca821228f344fa4ced8aa4",
+    "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": "43ac9d0f3fc70339bfaca56f2f0090b6ca2b5d81e882302442869aab661d3d52",
     "tdf-hq-ui/src/pages/MobileAppPage.tsx": "20deeb29468aac2b25a1df0b157134b9bf9f9fc99641d3f74cd7f8529712b39a",
     "tdf-hq-ui/src/pages/MusicCampaignsPage.tsx": "b914809cea81f9ff7b4c6f02d95cf01813ae506779335e9113c50d04393c76a9",
     "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx": "d34d0f97e2928b467bffa3031398caef895d82eb7f1d046e578375f1a7389d2c",
@@ -29471,8 +29559,8 @@
     "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts": "4941936bcbb954b17033773cc792520831a6219dd23009d834fcab18318de87d",
     "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": "b015233958f9b3684f93c132236f99a9378f980ea3c66de9ffe3eeb6d71112c5",
     "tdf-hq-ui/src/pages/PaymentsPage.tsx": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
-    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
-    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "e364ac13f4e7f9cf0148ebd20085c9a070c7eb9aab222994a63f0b15031846c7",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "123fc62d70d2fc7ae0f1c0db6ed6749dd77ce4dbc4d0f57a09ec03a22d5cb910",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "6e7841d8be2ec4856c64fac824cf05b5de573b602a372e5f57bd04f97b1c6796",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "aec2259be898d0b415f4e1a4f46fb7ecd229abca07b08b5295653c65f145e951",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "e93f211a8931ebbf60d9c32ecfcdd05066712610e16e505201dc7bcfc288e3c1",
     "tdf-hq-ui/src/pages/PublicProfilePage.tsx": "231a90d2da08b7eb5049818d418372a6c05d9069b9b874e8cf37c28824e17164",
@@ -29485,6 +29573,7 @@
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
+    "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx": "564dd1d850034f39c3feb6cd71aa05b802b658080e6183d272819374c0701a00",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
     "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "4d9383f448eb9af782f818e311fd4890216b318e407d27d33ffc36557d1a39c9",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
@@ -29632,7 +29721,7 @@
     "tdf-hq/app/MusicDdexRenderMain.hs": "e70bf01308d7918735128deb87f309a35123c1764514f531e18f211355c561c1",
     "tdf-hq/assets/feature-registry.json": "7e149c55bc3a9b7d37429fabbcec86770a66a00a7ab9c4d57a39772ccf666754",
     "tdf-hq/config/default.env.example": "43e79e82892aa470110818f593c2784857a1e6324e8ae5a111ff1de063d55364",
-    "tdf-hq/docs/openapi/api.yaml": "169df5e00c28e75faeea29e47509f07478a7586da520fae3a30765c5d1215ab5",
+    "tdf-hq/docs/openapi/api.yaml": "8ff422621cfc3681960e910b828ac3d11ff900084687cf7420a48cf0eebd05fa",
     "tdf-hq/docs/openapi/artist-playback.yaml": "16c71adea21002fb54ecff645bba84be251a8537828d38342b1fb67a78acabcf",
     "tdf-hq/docs/openapi/directory.yaml": "796a92d53f69e5be446ac9de7f18da1916c151de4b0ead2f95d1d2751813e7e3",
     "tdf-hq/docs/openapi/interactions.yaml": "8d3ca2368a0ef1ea36a6c8f996b00d9a404c102fca1b44bf47eef8532a1fe598",
@@ -29873,14 +29962,14 @@
     "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs": "c12568bfac60b5734339eeec886cb23c0fe010a4d75df7f5d779480807805518",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs": "e6a563fa7b78d1386db2a378899752150086249dd112ecaad11fecbb4d9902c8",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
-    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs": "348dde3af9dbc28c982df9db1669b830291970d4b346577f098b4bd651261b3b",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs": "38bcf3bde4d2ef0ee7620c98b9586fb8b7db5c165207d34bbb28b8e73891244a",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs": "a4e9cf99c043b8d75235efc2e14f27472083b2bbc6e315503e37b9c586199e0f",
     "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs": "0845b9639d054fbb4e43af1a86abf9b9b1587306e8f2ee0200ad529d2fd17fd3",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
     "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "0e1b0135876e275cb5131236e7907060dca3f128b9e6341b2d6221141fee21e5",
     "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "983df8a6ae7a9054a8caa8626c55f0a6b6b1d7d2099330ded3efc6d48f6dc8e8",
     "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "e683710d467e99bef533498a64d1220fbd18286fa91f9580f68dfa6eb46c4043",
-    "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs": "3a583134de0b5428438b46725fc42b670b4b5147adc6cacc969c62ed4c1fd917",
+    "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs": "6352a40de1dd0aa01c67502609c0a06b51205eeb851c3efaabca6babfa3fbb88",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
     "tdf-hq/src/TDF/Commerce/StateMachine.hs": "08d0d3c259949639d6509e0d708cd05a60c7fecd73ff7379f83206287d2dce77",
@@ -29960,7 +30049,7 @@
     "tdf-hq/src/TDF/Server/MusicReleaseCommerce.hs": "feb330191f5b1146684ed7953ed957212d6b2aac155f829307c7305ea3444486",
     "tdf-hq/src/TDF/Server/MusicReleaseDDEX.hs": "803f46e01864c6b3afd56c46b106c9150251bfa7f2a54d980b3899c7dc5e5b70",
     "tdf-hq/src/TDF/Server/MusicReleaseUpload.hs": "5aa65ff0b83eade6f0083a33a5403325f2a6af7525e25c69333b8978a5f0bc62",
-    "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "96ec36b859349cf4c9edbd090f5d4a1ab9cc6d8b77a97d77bf92efd8aff2a671",
+    "tdf-hq/src/TDF/Server/PaymentAvailability.hs": "7863060f32a0f2d11c78f9c93ef27808c198a5bce0eecf5c31497ed608c0584c",
     "tdf-hq/src/TDF/Server/ProviderExecution.hs": "d5129a96d1450d4c428ff8d6886abb1311116c24c43f40b8ae3e01327dfd3116",
     "tdf-hq/src/TDF/Server/ProviderTransport.hs": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
     "tdf-hq/src/TDF/Server/RecordsIngestion.hs": "8892313223f8b49527235d2005c4d0ac005d5ba3ddda68e3a310a57e3f5ebd10",
@@ -30018,7 +30107,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "b13833107a3981a2d559af8d9a768ab8bb8c1e8a9c13026279c62feef1aff4db",
+    "tdf-hq/test/Spec.hs": "668becd5b0f8b3e14493bea9c00e83c254e65f4c232c0c36988890abf77ab0b1",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -30215,7 +30304,7 @@
     "tdf-mobile/src/api/ddex.ts": "a759f90b1122de941993471585bb72fbb391cfff4a4af94cf0f54cdedd426a32",
     "tdf-mobile/src/api/directory.ts": "d64473f51d496f89ed8022c7786cfd404029fcd4bee0238b2e3bcf83b370c5c8",
     "tdf-mobile/src/api/events.ts": "5ec7be5990dca41c52323967d16c7caa2b052e09d48325d06fcb8a17f0e20c1e",
-    "tdf-mobile/src/api/generated/types.ts": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+    "tdf-mobile/src/api/generated/types.ts": "ba59d6c482c292599e977f9799b40694a8ec86dbe3d322c16409965c37696c00",
     "tdf-mobile/src/api/navigationPreferences.ts": "2f489fb220a1fd3154342be7a3180fc8f0c55ae0223e39a0e0c9301ed34498d8",
     "tdf-mobile/src/api/onboarding.ts": "d11c6e108497168c7d0241ab45f287adb505bf37480cfb45dc256beb418730ac",
     "tdf-mobile/src/components/DirectoryPreviewImage.tsx": "f4e7652af9f2b3c332a9a16900b1888adea70d6785ed26cb205736d9b03edd0e",
@@ -33361,6 +33450,10 @@
         "relationship": "tests"
       },
       {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "tests"
+      },
+      {
         "requirement": "EVT-PLANNING-UX-001",
         "relationship": "tests"
       },
@@ -34075,11 +34168,19 @@
       {
         "requirement": "PAY-RECOVERY-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx": [
       {
         "requirement": "PAY-RECOVERY-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
         "relationship": "implementation"
       }
     ],
@@ -34120,6 +34221,10 @@
     "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx": [
       {
         "requirement": "PAY-RECOVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
         "relationship": "tests"
       }
     ],
@@ -43145,6 +43250,10 @@
       {
         "requirement": "PAY-ADAPTER-BINDING-001",
         "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "implementation"
       }
     ],
     "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs": [
@@ -43156,6 +43265,10 @@
     "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs": [
       {
         "requirement": "MKT-AGREEMENT-PAYMENT-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
         "relationship": "implementation"
       }
     ],
@@ -46909,6 +47022,52 @@
         "relationship": "implementation"
       }
     ],
+    "tdf-hq/src/TDF/Server/PaymentAvailability.hs": [
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/providerPaymentSessions.ts": [
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/paymentCapabilities.ts": [
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/MixingMasteringPage.tsx": [
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx": [
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/api/providerPaymentSessions.test.ts": [
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "tests"
+      }
+    ],
+    "tdf-hq-ui/src/api/paymentCapabilities.test.ts": [
+      {
+        "requirement": "PAY-PAYPHONE-CARD-001",
+        "relationship": "tests"
+      }
+    ],
     "tdf-hq/src/TDF/Calendar/Models.hs": [
       {
         "requirement": "INTEG-GOOGLE-CALENDAR-001",
@@ -47604,12 +47763,6 @@
       }
     ],
     "tdf-hq/src/TDF/Commerce/DatafastConfig.hs": [
-      {
-        "requirement": "PAY-DATAFAST-001",
-        "relationship": "implementation"
-      }
-    ],
-    "tdf-hq/src/TDF/Server/PaymentAvailability.hs": [
       {
         "requirement": "PAY-DATAFAST-001",
         "relationship": "implementation"
@@ -59539,7 +59692,7 @@
     {
       "id": "SURFACE-5a383ebf9d6c9038",
       "path": "tdf-hq-ui/src/api/bookings.ts",
-      "sha256": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
+      "sha256": "3e1af33e4f0293ed6b14548cc0cfddbd0c9a1e0830619ac82de91a9d5bd1cccf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -59683,7 +59836,7 @@
     {
       "id": "SURFACE-20340c57830b2359",
       "path": "tdf-hq-ui/src/api/courses.ts",
-      "sha256": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
+      "sha256": "d64ccdbdcd198dc325fa6363273727fae1306a81354e7b0ac522db1c7d5f4513",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60013,7 +60166,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+      "sha256": "ba59d6c482c292599e977f9799b40694a8ec86dbe3d322c16409965c37696c00",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -60423,16 +60576,26 @@
     {
       "id": "SURFACE-9e1dbd68b39d926a",
       "path": "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
-      "sha256": "8c0afc9528962481e7ce690373d153e32e968b6e0f2f590fb304459d2846e017",
+      "sha256": "5f9b587db687f0d850e259058b2e6243cc542a08b3f461f4b81f8153cbced419",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-c29a804d309aa3af",
       "path": "tdf-hq-ui/src/api/paymentCapabilities.ts",
-      "sha256": "0b196cead2b5488ba028997427c4b974f7997bcb57619058545c8554c4c4032f",
+      "sha256": "a7a520719b656f247eab915b9748cf5196db01b1795c8798c729bbc71d44576a",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-26dc290d28b12ef0",
@@ -60472,16 +60635,26 @@
     {
       "id": "SURFACE-19d831e818ff64d7",
       "path": "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
-      "sha256": "f71cf7e1b218c9cbbd7099b13ca472ca3a9db773c933c4ea7f8774ee4cb0e4a2",
+      "sha256": "a7ac21ae81c68985fd23c379eb4b24e2a4b97d91a87c143f7965dbeed959e94b",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
+          "relationship": "tests"
+        }
+      ]
     },
     {
       "id": "SURFACE-d3dd73dc1f3e306b",
       "path": "tdf-hq-ui/src/api/providerPaymentSessions.ts",
-      "sha256": "702a5c9cf268fd0a722be1765bd858426ad18f68926b31d9d2d04ff43ec94c43",
+      "sha256": "ebbcb443862538d22387e45e19ee25ea83074f9d47987455e9bd9df0af90dade",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-322b94aa1844c92d",
@@ -62639,11 +62812,15 @@
     {
       "id": "SURFACE-3b9b0b0c805d8c24",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
-      "sha256": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
+      "sha256": "d88e6a09e15ce65630f657f8aa0870b904ba29144c53ad469211478cfa233a00",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RECOVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
           "relationship": "tests"
         }
       ]
@@ -62651,11 +62828,15 @@
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
+      "sha256": "3c907ae3c9d7acff823381cfd7c315b1d15bbbe5d88dfd7a48beb61880b653fb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
           "relationship": "implementation"
         }
       ]
@@ -66381,9 +66562,14 @@
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "4108f16793becc7a7845b16353a13edb8e64d7b6278e4c8dd7465bec534448d0",
+      "sha256": "43ac9d0f3fc70339bfaca56f2f0090b6ca2b5d81e882302442869aab661d3d52",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-c6ff06a2e2277d3e",
@@ -66734,7 +66920,7 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
+      "sha256": "123fc62d70d2fc7ae0f1c0db6ed6749dd77ce4dbc4d0f57a09ec03a22d5cb910",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66746,11 +66932,15 @@
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "e364ac13f4e7f9cf0148ebd20085c9a070c7eb9aab222994a63f0b15031846c7",
+      "sha256": "6e7841d8be2ec4856c64fac824cf05b5de573b602a372e5f57bd04f97b1c6796",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PAY-RECOVERY-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
           "relationship": "implementation"
         }
       ]
@@ -67062,9 +67252,14 @@
     {
       "id": "SURFACE-54a41f2ada423353",
       "path": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
-      "sha256": "2eec23e0c54e1e493cbbe58c0616d053685967b837cf76ceb2a26f546d8c8b03",
+      "sha256": "564dd1d850034f39c3feb6cd71aa05b802b658080e6183d272819374c0701a00",
       "semanticConformance": "not-established-by-discovery",
-      "requirements": []
+      "requirements": [
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
+          "relationship": "implementation"
+        }
+      ]
     },
     {
       "id": "SURFACE-ca2671adb5443ee0",
@@ -70033,7 +70228,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "169df5e00c28e75faeea29e47509f07478a7586da520fae3a30765c5d1215ab5",
+      "sha256": "8ff422621cfc3681960e910b828ac3d11ff900084687cf7420a48cf0eebd05fa",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76010,7 +76205,7 @@
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "348dde3af9dbc28c982df9db1669b830291970d4b346577f098b4bd651261b3b",
+      "sha256": "38bcf3bde4d2ef0ee7620c98b9586fb8b7db5c165207d34bbb28b8e73891244a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76019,6 +76214,10 @@
         },
         {
           "requirement": "PAY-ADAPTER-BINDING-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
           "relationship": "implementation"
         }
       ]
@@ -76137,11 +76336,15 @@
     {
       "id": "SURFACE-b3ab13afc655164b",
       "path": "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
-      "sha256": "3a583134de0b5428438b46725fc42b670b4b5147adc6cacc969c62ed4c1fd917",
+      "sha256": "6352a40de1dd0aa01c67502609c0a06b51205eeb851c3efaabca6babfa3fbb88",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MKT-AGREEMENT-PAYMENT-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
           "relationship": "implementation"
         }
       ]
@@ -78202,9 +78405,13 @@
     {
       "id": "SURFACE-576775b1139a1557",
       "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
-      "sha256": "96ec36b859349cf4c9edbd090f5d4a1ab9cc6d8b77a97d77bf92efd8aff2a671",
+      "sha256": "7863060f32a0f2d11c78f9c93ef27808c198a5bce0eecf5c31497ed608c0584c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
+          "relationship": "implementation"
+        },
         {
           "requirement": "PAY-DATAFAST-001",
           "relationship": "implementation"
@@ -79630,7 +79837,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b13833107a3981a2d559af8d9a768ab8bb8c1e8a9c13026279c62feef1aff4db",
+      "sha256": "668becd5b0f8b3e14493bea9c00e83c254e65f4c232c0c36988890abf77ab0b1",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79739,6 +79946,10 @@
         },
         {
           "requirement": "LIVE-SESSION-INTAKE-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "PAY-PAYPHONE-CARD-001",
           "relationship": "tests"
         },
         {
@@ -84462,7 +84673,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+      "sha256": "ba59d6c482c292599e977f9799b40694a8ec86dbe3d322c16409965c37696c00",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -86205,15 +86416,11 @@
     "SURFACE-76f18b79d7a706c4",
     "SURFACE-d8478b8e80f80942",
     "SURFACE-b7a144db5e173cbd",
-    "SURFACE-9e1dbd68b39d926a",
-    "SURFACE-c29a804d309aa3af",
     "SURFACE-26dc290d28b12ef0",
     "SURFACE-eb6186bb49f8e2af",
     "SURFACE-7dc4d85edae3d59f",
     "SURFACE-8b0bf0ba2466b550",
     "SURFACE-9babc79b1a56bd8b",
-    "SURFACE-19d831e818ff64d7",
-    "SURFACE-d3dd73dc1f3e306b",
     "SURFACE-322b94aa1844c92d",
     "SURFACE-cdf54a14bb564ff8",
     "SURFACE-c9774767b7d89167",
@@ -86423,7 +86630,6 @@
     "SURFACE-20d3b5c28f107b7d",
     "SURFACE-689d1c649ef08997",
     "SURFACE-bee40b89d7a09a1d",
-    "SURFACE-4a562abbc0b9c284",
     "SURFACE-a4131610c954eb01",
     "SURFACE-41fac70eecbac758",
     "SURFACE-64a084fb5047842b",
@@ -86446,7 +86652,6 @@
     "SURFACE-0841fa11b4af7d60",
     "SURFACE-24d2133b7f15822c",
     "SURFACE-6b44ad06b4487812",
-    "SURFACE-54a41f2ada423353",
     "SURFACE-ca2671adb5443ee0",
     "SURFACE-34ddadce83f650d3",
     "SURFACE-3fd518a6b12b548c",
@@ -87417,6 +87622,7 @@
     "AUTH-ACCESS-REQUEST-LIFECYCLE-001",
     "MSG-STAFF-OUTBOUND-001",
     "PAY-HOSTED-SESSION-001",
+    "PAY-PAYPHONE-CARD-001",
     "PAY-LEGACY-RECORDS-001",
     "PROPOSAL-AUTHORING-001",
     "EVT-OPERATIONS-COMMANDS-001",
@@ -88629,7 +88835,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "16f466b471d34172e6f1deedfd9a9a54c734a464a8b3ae39c058ed9ccd0fb573",
+      "sourceSha256": "bfeeeb0a4cd4a65ccacaf4075386db6b95f6b4dee8517ef1da49aa24e19cc0ec",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -88657,7 +88863,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "16f466b471d34172e6f1deedfd9a9a54c734a464a8b3ae39c058ed9ccd0fb573",
+      "sourceSha256": "bfeeeb0a4cd4a65ccacaf4075386db6b95f6b4dee8517ef1da49aa24e19cc0ec",
       "definition": {
         "states": [
           "absent",
@@ -88687,7 +88893,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "16f466b471d34172e6f1deedfd9a9a54c734a464a8b3ae39c058ed9ccd0fb573",
+      "sourceSha256": "bfeeeb0a4cd4a65ccacaf4075386db6b95f6b4dee8517ef1da49aa24e19cc0ec",
       "definition": {
         "export": [
           "queued",
@@ -111902,7 +112108,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 223,
+    "PARTIAL": 224,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },

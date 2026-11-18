@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "purpose": "Discovery of indexed artifact classes with exact pinned Mobile; not a claim of complete semantic requirements extraction",
-  "mobileRevision": "4d866387ac6938d7aeaad5d1fa2985f8e02932e7",
+  "mobileRevision": "158fdaee3c49a2e48be7fc74d597eb6856a6a249",
   "components": {
     ".github": [
       ".github/workflows/artist-enrichment-daily.yml",
@@ -8209,7 +8209,7 @@
     {
       "id": "SURFACE-5a383ebf9d6c9038",
       "path": "tdf-hq-ui/src/api/bookings.ts",
-      "sha256": "a7210828095ad2ef993fc19f74fcc3c95abfba17fcb444f6271c2f6dd3a1442f",
+      "sha256": "3e1af33e4f0293ed6b14548cc0cfddbd0c9a1e0830619ac82de91a9d5bd1cccf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8305,7 +8305,7 @@
     {
       "id": "SURFACE-20340c57830b2359",
       "path": "tdf-hq-ui/src/api/courses.ts",
-      "sha256": "bd43900434c1133d46a41ad0270c6e14c5ff1183f238e360a287d797853c87e6",
+      "sha256": "d64ccdbdcd198dc325fa6363273727fae1306a81354e7b0ac522db1c7d5f4513",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8491,7 +8491,7 @@
     {
       "id": "SURFACE-326ca24d8c3dfea6",
       "path": "tdf-hq-ui/src/api/generated/types.ts",
-      "sha256": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+      "sha256": "ba59d6c482c292599e977f9799b40694a8ec86dbe3d322c16409965c37696c00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8701,13 +8701,13 @@
     {
       "id": "SURFACE-9e1dbd68b39d926a",
       "path": "tdf-hq-ui/src/api/paymentCapabilities.test.ts",
-      "sha256": "8c0afc9528962481e7ce690373d153e32e968b6e0f2f590fb304459d2846e017",
+      "sha256": "5f9b587db687f0d850e259058b2e6243cc542a08b3f461f4b81f8153cbced419",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c29a804d309aa3af",
       "path": "tdf-hq-ui/src/api/paymentCapabilities.ts",
-      "sha256": "0b196cead2b5488ba028997427c4b974f7997bcb57619058545c8554c4c4032f",
+      "sha256": "a7a520719b656f247eab915b9748cf5196db01b1795c8798c729bbc71d44576a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8743,13 +8743,13 @@
     {
       "id": "SURFACE-19d831e818ff64d7",
       "path": "tdf-hq-ui/src/api/providerPaymentSessions.test.ts",
-      "sha256": "f71cf7e1b218c9cbbd7099b13ca472ca3a9db773c933c4ea7f8774ee4cb0e4a2",
+      "sha256": "a7ac21ae81c68985fd23c379eb4b24e2a4b97d91a87c143f7965dbeed959e94b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-d3dd73dc1f3e306b",
       "path": "tdf-hq-ui/src/api/providerPaymentSessions.ts",
-      "sha256": "702a5c9cf268fd0a722be1765bd858426ad18f68926b31d9d2d04ff43ec94c43",
+      "sha256": "ebbcb443862538d22387e45e19ee25ea83074f9d47987455e9bd9df0af90dade",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9913,13 +9913,13 @@
     {
       "id": "SURFACE-3b9b0b0c805d8c24",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.test.tsx",
-      "sha256": "f71c9a856d9b1b2224f06307168f79aeb1a47f4f9bf1f201ee030d191a36cb39",
+      "sha256": "d88e6a09e15ce65630f657f8aa0870b904ba29144c53ad469211478cfa233a00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8ff97ac79f9014bb",
       "path": "tdf-hq-ui/src/components/payments/HostedProviderCheckout.tsx",
-      "sha256": "fd6674cc3b97424d868e0f77e681c5fea4362a82f8babc71dff15dc345112589",
+      "sha256": "3c907ae3c9d7acff823381cfd7c315b1d15bbbe5d88dfd7a48beb61880b653fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11761,7 +11761,7 @@
     {
       "id": "SURFACE-4a562abbc0b9c284",
       "path": "tdf-hq-ui/src/pages/MixingMasteringPage.tsx",
-      "sha256": "4108f16793becc7a7845b16353a13edb8e64d7b6278e4c8dd7465bec534448d0",
+      "sha256": "43ac9d0f3fc70339bfaca56f2f0090b6ca2b5d81e882302442869aab661d3d52",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11929,13 +11929,13 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
+      "sha256": "123fc62d70d2fc7ae0f1c0db6ed6749dd77ce4dbc4d0f57a09ec03a22d5cb910",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "e364ac13f4e7f9cf0148ebd20085c9a070c7eb9aab222994a63f0b15031846c7",
+      "sha256": "6e7841d8be2ec4856c64fac824cf05b5de573b602a372e5f57bd04f97b1c6796",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12109,7 +12109,7 @@
     {
       "id": "SURFACE-54a41f2ada423353",
       "path": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.tsx",
-      "sha256": "2eec23e0c54e1e493cbbe58c0616d053685967b837cf76ceb2a26f546d8c8b03",
+      "sha256": "564dd1d850034f39c3feb6cd71aa05b802b658080e6183d272819374c0701a00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13723,7 +13723,7 @@
     {
       "id": "SURFACE-eb5e006c61198fe0",
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "169df5e00c28e75faeea29e47509f07478a7586da520fae3a30765c5d1215ab5",
+      "sha256": "8ff422621cfc3681960e910b828ac3d11ff900084687cf7420a48cf0eebd05fa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17323,7 +17323,7 @@
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "348dde3af9dbc28c982df9db1669b830291970d4b346577f098b4bd651261b3b",
+      "sha256": "38bcf3bde4d2ef0ee7620c98b9586fb8b7db5c165207d34bbb28b8e73891244a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17371,7 +17371,7 @@
     {
       "id": "SURFACE-b3ab13afc655164b",
       "path": "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
-      "sha256": "3a583134de0b5428438b46725fc42b670b4b5147adc6cacc969c62ed4c1fd917",
+      "sha256": "6352a40de1dd0aa01c67502609c0a06b51205eeb851c3efaabca6babfa3fbb88",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18037,7 +18037,7 @@
     {
       "id": "SURFACE-576775b1139a1557",
       "path": "tdf-hq/src/TDF/Server/PaymentAvailability.hs",
-      "sha256": "96ec36b859349cf4c9edbd090f5d4a1ab9cc6d8b77a97d77bf92efd8aff2a671",
+      "sha256": "7863060f32a0f2d11c78f9c93ef27808c198a5bce0eecf5c31497ed608c0584c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18529,7 +18529,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "b13833107a3981a2d559af8d9a768ab8bb8c1e8a9c13026279c62feef1aff4db",
+      "sha256": "668becd5b0f8b3e14493bea9c00e83c254e65f4c232c0c36988890abf77ab0b1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -20983,7 +20983,7 @@
     {
       "id": "SURFACE-f915a87195e48eab",
       "path": "tdf-mobile/src/api/generated/types.ts",
-      "sha256": "fda193b1304afecae7fb41102ae3ad1eeb498ca83941500cac37634cab7e5b87",
+      "sha256": "ba59d6c482c292599e977f9799b40694a8ec86dbe3d322c16409965c37696c00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31550,7 +31550,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "16f466b471d34172e6f1deedfd9a9a54c734a464a8b3ae39c058ed9ccd0fb573",
+      "sha256": "bfeeeb0a4cd4a65ccacaf4075386db6b95f6b4dee8517ef1da49aa24e19cc0ec",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31984,7 +31984,7 @@
     },
     {
       "path": "tdf-hq/docs/openapi/api.yaml",
-      "sha256": "169df5e00c28e75faeea29e47509f07478a7586da520fae3a30765c5d1215ab5",
+      "sha256": "8ff422621cfc3681960e910b828ac3d11ff900084687cf7420a48cf0eebd05fa",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "interface-contract"
