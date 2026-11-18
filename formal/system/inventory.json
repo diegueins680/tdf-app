@@ -1144,6 +1144,7 @@
       "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
       "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts",
       "tdf-hq-ui/src/components/events/ticketSaleQueryKeys.ts",
+      "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
       "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
       "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx",
       "tdf-hq-ui/src/components/merch/MerchReputationSummary.test.tsx",
@@ -9875,6 +9876,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-cb90dfdf95af047d",
+      "path": "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
+      "sha256": "1fa417aea895ebb15eb308ee3f212a4aab69089eef5d748e9f9bed78051ba4fa",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-88fbc73f4e77632c",
       "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
       "sha256": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
@@ -12163,13 +12170,13 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
+      "sha256": "fe6c971357559251da436f382cd190627a5573c3c59343b391dac2e89d32b8cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "e93ad4221310a21e099fc03ec4b21ade0a8160974cf3dcd5fddb9728bceab02a",
+      "sha256": "9c04266c5cd79c8a5324a205dea0606e0ee41867a1c5f8387cf32cda741f14df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12199,7 +12206,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "2c9d081e5de596eb08961bc092c9c9ebe54dc497dbe6aeafac88a6accf0d9455",
+      "sha256": "309b788cb21ae6505fff38577913e2bf5e7b23a7a2acf9d6fc704ed3119cd3c9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18013,13 +18020,13 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
+      "sha256": "1fd141802cc47305f952b6f518b537f4fa951728f123a22fbcdcdcead4d83b76",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-861bcff9b9aafb09",
       "path": "tdf-hq/src/TDF/Server/EventTicketSale.hs",
-      "sha256": "835d51113473bcaf2a16af3e5416020041132fdf21fe0d9b15f5c1a0780ae081",
+      "sha256": "add3221a1221ad632c6587688312757d525615adbd239e7eb7ed9d1d21cb3323",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18817,7 +18824,7 @@
     {
       "id": "SURFACE-78bfd9d40d6ce29d",
       "path": "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
-      "sha256": "e38f330ea8fe475218280692aeae6629051ca4a4fbcd78a54f05a18ca1915f68",
+      "sha256": "ce947d4362721ad212fbd093b9bb3a74adbac9c395e4dd4f553486cfe4a93d2a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30920,7 +30927,7 @@
     },
     {
       "path": "formal/system/event-ticket-sale-approval.md",
-      "sha256": "9a8fd43860324cb3c6c3c2e9b81d39af21a00a2e4fe3bab8d03b6f3ad7a58b9d",
+      "sha256": "431057c377525c46b77b76f35b1f0d4a486865be7604cf2e04bd5153ff59a92c",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31599,7 +31606,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "259c0cd2e65b17e0dbda88c87f8f999bb420db759704d96bc82cc8d179e8cce7",
+      "sha256": "c909e4cdcc841d8253ec91b56e5ae069284f7b414a91552e2f42f0436888016d",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
