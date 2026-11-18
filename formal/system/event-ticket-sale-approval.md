@@ -27,8 +27,9 @@ organizer has no manager, so nobody can request its sale.
 ## Routes
 
 - `GET /social-events/events/{eventId}/ticket-sale` reports the sale as
-  `none`, `requested`, `approved` or `declined`, with the standard terms,
-  whether the caller may request and why not. Managers and strict
+  `none`, `requested`, `approved` or `declined`, whether the caller may
+  request and why not, and the terms. For an active approved policy the
+  response uses its stored terms. New requests use the standard terms. Managers and strict
   administrators only; others receive 403.
 - `POST /social-events/events/{eventId}/ticket-sale/request` records the
   request. Managers only.
@@ -66,12 +67,14 @@ The request is one `draft` row of `event_ticket_checkout_policy`. The state of
 an event is derived from its rows, newest first:
 
 1. an active row with `approval_status = 'approved'` gives `approved`;
-2. otherwise a `draft` row gives `requested`;
-3. otherwise, if the newest row is `retired` and was never approved, `declined`;
+2. otherwise a compatible, undecided workflow draft gives `requested`;
+3. otherwise, if the newest compatible workflow row was declined, `declined`;
 4. otherwise `none`.
 
-A policy that was approved and later retired is `none`, not `declined`: the
-manager may ask again.
+The reserved request version ties the draft to the event and the requesting
+party. Legacy drafts and incompatible workflow drafts are excluded from the
+sale state and approval queue. A manager may file a fresh request alongside
+those drafts. A policy that was approved and later retired allows a new request.
 
 Allowed transitions:
 
@@ -84,7 +87,10 @@ Allowed transitions:
 Approval sets `approval_status = 'approved'`, `active = TRUE`, `approved_at`,
 `effective_from` and `approved_by = 'party:<id>'` on the draft row. Declining
 sets `approval_status = 'retired'`. No row is deleted and no other column
-changes; the existing history trigger records each write.
+changes. The existing history trigger records each write. The approval
+validates the stored commercial terms, including transfer settings, payment
+method limits and the effective window. Public checkout reads the same
+approved row and snapshots its identity, price policy and terms for the order.
 
 The policy version is
 `ticket-v1-event-<eventId>-req-<partyId>-<UTC instant to the microsecond>`, so
@@ -101,7 +107,8 @@ enabled and configured. An approved sale on an unpublished event sells nothing.
 ## Concurrency and repetition
 
 Request and decision lock the `social_event` row `FOR UPDATE` and read the
-policy rows and tiers again under it. Simultaneous requests create one draft;
+policy rows and tiers again under it. The decision also locks the target policy
+row before reading its terms. Simultaneous requests create one eligible draft;
 the others return it. Requesting while a request is pending or approved
 returns the current state and writes nothing. Deciding a request the same way
 twice returns the recorded decision; deciding it the other way is refused with
@@ -121,21 +128,21 @@ recorded request or decision. There is no in-app notification.
 - 403: the caller is neither a manager nor a strict administrator (state and
   request), or is not a strict administrator (queue and decisions).
 - 404: the event is missing or hidden; the request identifier is not a UUID or
-  names no policy.
-- 409: no active paid tier in USD (request and approval); the request was
-  already decided the other way; the event already has another active policy.
+  names no workflow request.
+- 409: no active paid tier in USD (request and approval); the stored terms
+  are incompatible; the request was already decided the other way; the event
+  already has another active policy.
 
 ## Tests
 
-`tdf-hq/test/TDF/EventTicketSaleSpec.hs` has three pure examples for the state
-derivation and the policy version, and six PostgreSQL examples run by
+The test suite in `tdf-hq/test/TDF/EventTicketSaleSpec.hs` covers state
+derivation and the scoped policy version. The integration cases run through
 `scripts/test-event-ticket-sale.sh` against a fully migrated disposable
-database: manager-only state and request with the standard terms; refusal
-without a paid tier; eight simultaneous requests leaving one draft; the
-strict-administrator queue, single approval, its repetition and the refusal to
-decline afterwards; decline followed by a new request; approval refused after
-the paid tier is deactivated and for unknown identifiers. Jest covers the
-event card and the review queue.
+PostgreSQL database. They include legacy draft isolation, rejection of changed
+terms, the public checkout policy reader, manager and administrator access,
+missing tiers, concurrent requests, and idempotent decisions. Jest covers
+the event card, the review queue, and eligibility after creating or editing
+a ticket tier on the event detail page.
 
 ## Not covered
 
@@ -145,4 +152,4 @@ event card and the review queue.
 - Retiring an approved policy still requires an operator.
 - Mail delivery is not verified; a strict administrator who receives no mail
   finds the request in the queue on the events page.
-- No test exercises public checkout end to end from a request.
+- Order creation, payment capture and refund are outside this approval test suite.

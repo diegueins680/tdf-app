@@ -27850,11 +27850,11 @@
       "id": "EVT-TICKET-SALE-001",
       "title": "Paid ticket sale requests by event managers and their approval by strict administrators",
       "domain": "EVT",
-      "statement": "The stored organizer of an event, or a delegated administrator of it, requests paid ticket sales under TDF's fixed standard terms (USD, 200 basis points buyer fee, 200 basis points organizer fee, no tax, 15-minute hold, at most 100 tickets per order, full refund, terms version ticket-terms-v1) while the event has an active ticket tier priced above zero in USD. The request is one draft row of event_ticket_checkout_policy. Only a strict administrator lists pending requests and approves or declines one; approval makes that row the event's single active approved policy and records the approving party, declining retires it. Approval does not publish the event, enable the commerce flag or configure a payment provider. Routes: GET /social-events/events/{eventId}/ticket-sale; POST /social-events/events/{eventId}/ticket-sale/request; GET /social-events/ticket-sale-requests; POST /social-events/ticket-sale-requests/{requestId}/approve; POST /social-events/ticket-sale-requests/{requestId}/decline.",
+      "statement": "The stored organizer of an event, or a delegated administrator of it, requests paid ticket sales under TDF's fixed standard terms (USD, 200 basis points buyer fee, 200 basis points organizer fee, no tax, 15-minute hold, at most 100 tickets per order, full refund, terms version ticket-terms-v1) while the event has an active ticket tier priced above zero in USD. The request is one draft row of event_ticket_checkout_policy with the reserved workflow version and compatible stored terms. Only a strict administrator lists pending requests and approves or declines one; approval makes that row the event's single active approved policy and records the approving party, declining retires it. Approval does not publish the event, enable the commerce flag or configure a payment provider. Routes: GET /social-events/events/{eventId}/ticket-sale; POST /social-events/events/{eventId}/ticket-sale/request; GET /social-events/ticket-sale-requests; POST /social-events/ticket-sale-requests/{requestId}/approve; POST /social-events/ticket-sale-requests/{requestId}/decline.",
       "authority": "Product owner decision on 2026-11-15: an organizer asks from the event, a TDF administrator approves with one action and no database statement, and the terms are those of the policy approved by hand for event 121. The policy-version format, the 200-request queue limit and e-mail as the only notice are implementation choices.",
       "source": "formal/system/event-ticket-sale-approval.md",
       "contract": "formal/system/event-ticket-sale-approval.md",
-      "property": "An event has at most one pending request and at most one active approved policy; a policy becomes approved only through a strict administrator's decision on a pending request carrying the standard terms; an account that neither manages the event nor is a strict administrator reads and writes nothing.",
+      "property": "An event has at most one eligible pending workflow request and at most one active approved policy; a policy becomes approved only through a strict administrator's decision on a pending request carrying the standard terms; an account that neither manages the event nor is a strict administrator reads and writes nothing.",
       "actors": [
         "Event organizer",
         "Delegated event administrator",
@@ -27876,7 +27876,7 @@
       ],
       "state": {
         "boundary": "event_ticket_checkout_policy rows of one event and its event_ticket_tier rows",
-        "authority": "PostgreSQL rows read and written under the social_event row lock; the partial unique index on active policies and the policy validation and lifecycle triggers",
+        "authority": "PostgreSQL rows read and written under the social_event row lock; the partial unique index on active policies and the policy validation and lifecycle triggers. Decisions also lock the target policy row before validating stored terms",
         "saleStatus": "Derived on read: approved, requested, declined or none"
       },
       "allowedTransitions": [
@@ -27902,11 +27902,12 @@
       "privacy": "The queue shows strict administrators the event title, start, organizer display name and active tiers. Notices are sent to the primary e-mail of strict administrators and of the organizer and contain the event title and a link to the event. No buyer data is involved.",
       "concurrency": "Request and decision lock the social_event row FOR UPDATE and re-read policy rows and tiers under it, so simultaneous requests create one draft and simultaneous decisions record one. The partial unique index on active policies and the lifecycle trigger remain in force.",
       "idempotency": "Requesting while a request is pending or approved returns the current state and writes nothing. Deciding a request the same way again returns the recorded decision and sends no notice; deciding it the other way is refused.",
-      "failure": "403 caller lacks the role for the route; 404 event missing or hidden, or request identifier malformed or unknown; 409 no active paid USD tier, request already decided the other way, or another active policy exists.",
+      "failure": "403 caller lacks the role for the route; 404 event missing or hidden, or request identifier malformed, unknown or outside the workflow; 409 incompatible terms, no active paid USD tier, request already decided the other way, or another active policy exists.",
       "recovery": "A declined manager may request again. An approval made in error is undone by an operator retiring the policy; these routes cannot. A failed notice is not retried: the request stays in the administrators' queue.",
       "observability": "HTTP status; event_ticket_checkout_policy rows and their append-only history; policy_version names the requesting party and approved_by the approving party; a failed notice is written to the log buffer. No metric or audit entry is added.",
       "implementation": [
         "tdf-hq/src/TDF/Server/EventTicketSale.hs",
+        "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
         "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
         "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
         "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
@@ -27915,6 +27916,7 @@
         "tdf-hq-ui/src/components/events/EventTicketSaleCard.tsx",
         "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.tsx",
         "tdf-hq-ui/src/components/events/ticketSaleQueryKeys.ts",
+        "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
         "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
         "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
         "scripts/test-event-ticket-sale.sh"
@@ -27924,12 +27926,13 @@
         "scripts/test-event-ticket-sale.sh",
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/components/events/EventTicketSaleCard.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
         "tdf-hq-ui/src/components/events/EventTicketSaleRequestsQueue.test.tsx",
         ".github/workflows/ci.yml"
       ],
       "formalModels": [],
-      "verification": "Three pure Hspec examples for the state derivation and the policy version and six PostgreSQL examples in tdf-hq/test/TDF/EventTicketSaleSpec.hs, run through scripts/test-event-ticket-sale.sh against a fully migrated disposable database: manager-only state and request with the standard terms; refusal without a paid tier; eight simultaneous requests leaving one draft; strict-administrator queue, single approval, its repetition and refusal to decline afterwards; decline followed by a new request; approval refused once the paid tier is inactive and for unknown identifiers. Jest tests cover the event card and the review queue. The hosted workflow runs the script after the delegation runner; without the runner's database variable the PostgreSQL group reports one pending example.",
-      "evidence": "formal/system/event-ticket-sale-approval.md; local PostgreSQL 16 run of scripts/test-event-ticket-sale.sh on 2026-11-15 against a copy of the migrated delegation test database (9 examples, 0 failures); Jest run of the card and queue tests on the same day. The runner is a step of .github/workflows/ci.yml; no hosted run of it has been observed yet, and nothing has been exercised on production.",
+      "verification": "Hspec exercises the state derivation. The disposable PostgreSQL runner covers authorized transitions, concurrency, legacy draft isolation, rejection of incompatible terms, and the policy loaded by public checkout. Jest covers the card, queue, and request eligibility after creating or editing a ticket tier. The hosted workflow runs the script after the delegation runner; without its database variable the PostgreSQL group reports one pending example.",
+      "evidence": "formal/system/event-ticket-sale-approval.md; local PostgreSQL 16 run of scripts/test-event-ticket-sale.sh on 2026-11-15 against a copy of the migrated delegation test database (9 examples, 0 failures); Jest run of the card and queue tests on the same day. The runner is a step of .github/workflows/ci.yml; no hosted run of it has been observed yet, and nothing has been exercised on production. The 2026-11-15 evidence predates the review corrections.",
       "critical": false,
       "status": "specified and implemented",
       "confidence": "The new module was written against the policy table, its triggers and the storefront's policy query, all read in full; the request and decision lifecycle is exercised on PostgreSQL. Public checkout from an approved request is established by reading the storefront query, not by an end-to-end test, and there is no model.",
@@ -29011,6 +29014,7 @@
     "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx": "bdcfb14c801239f68d83f361f71277a888fdeccb0d8ea021bb330635744befb2",
     "tdf-hq-ui/src/components/events/eventRsvpQueryKeys.ts": "86da5182e76873a793d6c6637948d169c7b21b6ee989cc521e5600001cd11811",
     "tdf-hq-ui/src/components/events/ticketSaleQueryKeys.ts": "2a9a68f51b204c8dcb4e13761c6a2f00a17e7c7c82585589f8ef884ef6f477d5",
+    "tdf-hq-ui/src/components/events/useSaveTicketTier.ts": "1fa417aea895ebb15eb308ee3f212a4aab69089eef5d748e9f9bed78051ba4fa",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
     "tdf-hq-ui/src/components/legal/LegalDisclosure.tsx": "9e2dab621e0dbd7aa95d25d3d416d32d548095d11f3b7a21630dfec2ad809a50",
     "tdf-hq-ui/src/components/navigationLabels.test.ts": "01028083246407c2dffe74f833aa4b263db10f2ad3ed99621e8fc9c478af90fb",
@@ -29223,11 +29227,11 @@
     "tdf-hq-ui/src/pages/ResetPasswordPage.tsx": "e08f2bdf7a2e24449b597efa5773460d85f52f324147ab3f6d78f361abf6f873",
     "tdf-hq-ui/src/pages/SecurityPage.test.tsx": "6d8f0f2af34f9312217af92971c67e977ec63403ffdef45ed9c908fcf1720c49",
     "tdf-hq-ui/src/pages/SecurityPage.tsx": "ffb3da2eefb582087a1338086edc143d046b8c3e1489004d315314f83151ed58",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
-    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "e93ad4221310a21e099fc03ec4b21ade0a8160974cf3dcd5fddb9728bceab02a",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx": "fe6c971357559251da436f382cd190627a5573c3c59343b391dac2e89d32b8cb",
+    "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx": "9c04266c5cd79c8a5324a205dea0606e0ee41867a1c5f8387cf32cda741f14df",
     "tdf-hq-ui/src/pages/SocialEventsPage.discovery.test.tsx": "15dd2db47fab984029cfbabfd5e60830f3f29e4b8d93753f7da33f7f123c6a66",
     "tdf-hq-ui/src/pages/SocialEventsPage.finance.test.tsx": "94ef4c36895a388db4d47e7f8bddb6057ed4594a5aa997694ae57f110cd6d7b3",
-    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "36ff019b584ff40f263ab3691808477b3c289fb543926e8eee6f5ec95dedc444",
+    "tdf-hq-ui/src/pages/SocialEventsPage.tsx": "b324175f3f16364af0877831b4d735b96ffc98c9e528cc37aa40ee22ab6f7a1c",
     "tdf-hq-ui/src/pages/SocialInboxPage.tsx": "df7168e2986e8eab0e85a8ce46a3bfa29fcbc033c95ae43fefef228d47e1bb18",
     "tdf-hq-ui/src/pages/SocialPage.tsx": "eb1162e3cc9418ef3aef29a2a85842aaaaa96f32079062d48a88522912fc4d9d",
     "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
@@ -29671,8 +29675,8 @@
     "tdf-hq/src/TDF/Server/DomoQuoteCheckout.hs": "9b394263749af24f9d795823ddbabdf6ae35f767be5640a034a5a5a1dbe18500",
     "tdf-hq/src/TDF/Server/EventAdminDelegation.hs": "46d53f55d6b570e2dbdc7f077549a34d629cef8f157ee0cda991951c36456a2d",
     "tdf-hq/src/TDF/Server/EventResearch.hs": "4cb4334711d838087bb3929bd5e7211455e67707f2a2f891cb8e82eb6dd92d13",
-    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
-    "tdf-hq/src/TDF/Server/EventTicketSale.hs": "835d51113473bcaf2a16af3e5416020041132fdf21fe0d9b15f5c1a0780ae081",
+    "tdf-hq/src/TDF/Server/EventTicketCheckout.hs": "1fd141802cc47305f952b6f518b537f4fa951728f123a22fbcdcdcead4d83b76",
+    "tdf-hq/src/TDF/Server/EventTicketSale.hs": "add3221a1221ad632c6587688312757d525615adbd239e7eb7ed9d1d21cb3323",
     "tdf-hq/src/TDF/Server/Merch.hs": "8c09adb2ece3fe388ee79a7f51a045e1755a1f8a16940d5c28e4953901b27875",
     "tdf-hq/src/TDF/Server/MerchReputation.hs": "7e350af012396bb5a846a13f29c91cf2a2f6b8a0d3498f73a050aa2d1d401fd9",
     "tdf-hq/src/TDF/Server/MusicRelease.hs": "ef9e613714411c9f7388714b7b80d49e4a0001d440472fa74fbbd83047ced199",
@@ -29775,7 +29779,7 @@
     "tdf-hq/test/TDF/EventOperations/HttpTestConfig.hs": "bc4f5e6053643ddcbae742e1690e44f5698c6f527f86874723c3bf014ceda57a",
     "tdf-hq/test/TDF/EventOperations/SessionFenceSpec.hs": "65bdfb6d20e33eb7a062cebdeef4c1e3dbb48e83b10eda578a9dcdeddd9249dc",
     "tdf-hq/test/TDF/EventOrganizerSpec.hs": "1b389d78dad8a19780e52d5914e47bb6e6e6d27ac566209369476966c0ef5d00",
-    "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "e38f330ea8fe475218280692aeae6629051ca4a4fbcd78a54f05a18ca1915f68",
+    "tdf-hq/test/TDF/EventTicketSaleSpec.hs": "ce947d4362721ad212fbd093b9bb3a74adbac9c395e4dd4f553486cfe4a93d2a",
     "tdf-hq/test/TDF/FailureBoundarySpec.hs": "af9304e6702886dc65c7c4bbd26f3546df3fce3c550b794d2ee506b772c4bd0f",
     "tdf-hq/test/TDF/IndexDeclarationSpec.hs": "6aaa503fba276e9997a4bce7773d4ee75b1cd37c60313548e5bcb8d03006cb26",
     "tdf-hq/test/TDF/InteractionWriteBudgetSpec.hs": "463c88979cc05820d271bf4faa02e9fcfcad7cb271cbfd9f5ad889e232a1d003",
@@ -35076,6 +35080,10 @@
       },
       {
         "requirement": "PAY-DATAFAST-001",
+        "relationship": "implementation"
+      },
+      {
+        "requirement": "EVT-TICKET-SALE-001",
         "relationship": "implementation"
       }
     ],
@@ -44183,6 +44191,10 @@
       {
         "requirement": "GROWTH-FIRST-ACTION-001",
         "relationship": "tests"
+      },
+      {
+        "requirement": "EVT-TICKET-SALE-001",
+        "relationship": "tests"
       }
     ],
     "tdf-hq-ui/src/api/socialEvents.test.ts": [
@@ -48394,6 +48406,12 @@
       }
     ],
     "tdf-hq-ui/src/components/events/ticketSaleQueryKeys.ts": [
+      {
+        "requirement": "EVT-TICKET-SALE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "tdf-hq-ui/src/components/events/useSaveTicketTier.ts": [
       {
         "requirement": "EVT-TICKET-SALE-001",
         "relationship": "implementation"
@@ -61627,6 +61645,18 @@
       ]
     },
     {
+      "id": "SURFACE-cb90dfdf95af047d",
+      "path": "tdf-hq-ui/src/components/events/useSaveTicketTier.ts",
+      "sha256": "1fa417aea895ebb15eb308ee3f212a4aab69089eef5d748e9f9bed78051ba4fa",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-88fbc73f4e77632c",
       "path": "tdf-hq-ui/src/components/legal/LegalDisclosure.test.tsx",
       "sha256": "c7093d440d5f07d9fa1857faf664da102dbd9e10977e7bb6a19fc8bbd273c6df",
@@ -66120,7 +66150,7 @@
     {
       "id": "SURFACE-edc6714214dc4ca9",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
-      "sha256": "e7df8eaa6b55334a0debaadf14103030a9b7b123cd08898722403e07f648830f",
+      "sha256": "fe6c971357559251da436f382cd190627a5573c3c59343b391dac2e89d32b8cb",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66150,13 +66180,17 @@
         {
           "requirement": "GROWTH-FIRST-ACTION-001",
           "relationship": "tests"
+        },
+        {
+          "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "tests"
         }
       ]
     },
     {
       "id": "SURFACE-8b0fd4775d1e81e0",
       "path": "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
-      "sha256": "e93ad4221310a21e099fc03ec4b21ade0a8160974cf3dcd5fddb9728bceab02a",
+      "sha256": "9c04266c5cd79c8a5324a205dea0606e0ee41867a1c5f8387cf32cda741f14df",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66246,7 +66280,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "36ff019b584ff40f263ab3691808477b3c289fb543926e8eee6f5ec95dedc444",
+      "sha256": "b324175f3f16364af0877831b4d735b96ffc98c9e528cc37aa40ee22ab6f7a1c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76734,7 +76768,7 @@
     {
       "id": "SURFACE-7385d5c53761b485",
       "path": "tdf-hq/src/TDF/Server/EventTicketCheckout.hs",
-      "sha256": "96e9c37780c06b66a1270f9abb01d3ac6ce3ff2a344c9d2eda0cab60119acba2",
+      "sha256": "1fd141802cc47305f952b6f518b537f4fa951728f123a22fbcdcdcead4d83b76",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76768,13 +76802,17 @@
         {
           "requirement": "PAY-DATAFAST-001",
           "relationship": "implementation"
+        },
+        {
+          "requirement": "EVT-TICKET-SALE-001",
+          "relationship": "implementation"
         }
       ]
     },
     {
       "id": "SURFACE-861bcff9b9aafb09",
       "path": "tdf-hq/src/TDF/Server/EventTicketSale.hs",
-      "sha256": "835d51113473bcaf2a16af3e5416020041132fdf21fe0d9b15f5c1a0780ae081",
+      "sha256": "add3221a1221ad632c6587688312757d525615adbd239e7eb7ed9d1d21cb3323",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79242,7 +79280,7 @@
     {
       "id": "SURFACE-78bfd9d40d6ce29d",
       "path": "tdf-hq/test/TDF/EventTicketSaleSpec.hs",
-      "sha256": "e38f330ea8fe475218280692aeae6629051ca4a4fbcd78a54f05a18ca1915f68",
+      "sha256": "ce947d4362721ad212fbd093b9bb3a74adbac9c395e4dd4f553486cfe4a93d2a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87437,7 +87475,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "71fa3366ddd6793f56f7a46bb1bed25e2482ab0342fa81471a4f47ccc737d195",
+      "sourceSha256": "034e27e08c245560890940b1867c5d7b4472b16d7bf9c8e07f81925b47a5d39e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -87465,7 +87503,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "71fa3366ddd6793f56f7a46bb1bed25e2482ab0342fa81471a4f47ccc737d195",
+      "sourceSha256": "034e27e08c245560890940b1867c5d7b4472b16d7bf9c8e07f81925b47a5d39e",
       "definition": {
         "states": [
           "absent",
@@ -87495,7 +87533,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "71fa3366ddd6793f56f7a46bb1bed25e2482ab0342fa81471a4f47ccc737d195",
+      "sourceSha256": "034e27e08c245560890940b1867c5d7b4472b16d7bf9c8e07f81925b47a5d39e",
       "definition": {
         "export": [
           "queued",

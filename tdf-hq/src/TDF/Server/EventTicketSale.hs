@@ -77,29 +77,72 @@ standardTicketSaleTerms =
 standardTermsVersion :: T.Text
 standardTermsVersion = "ticket-terms-v1"
 
+-- The reserved version format identifies requests created by this workflow.
+-- Legacy and operator-created drafts have their own versions.
+workflowRequestSql :: T.Text
+workflowRequestSql =
+    "policy_version ~ ('^ticket-v1-event-' || event_id::text || '-req-[0-9]+-[0-9]{8}T[0-9]{12}$')"
+
+standardTermsSql :: T.Text
+standardTermsSql =
+    "ROW(currency, buyer_fee_bps, organizer_fee_bps, tax_bps, hold_minutes,\
+    \ terms_version, terms_summary, refund_policy, max_tickets_per_order)\
+    \ = ROW(?::text, ?::integer, ?::integer, ?::integer, ?::integer,\
+    \ ?::text, ?::text, ?::text, ?::integer)\
+    \ AND transfer_allowed AND NOT tax_included AND NOT tax_invoice_required\
+    \ AND transfer_deadline IS NULL AND effective_until IS NULL\
+    \ AND manual_transfer_hold_minutes IS NULL AND manual_transfer_cutoff_at IS NULL"
+
+standardTermValues :: [PersistValue]
+standardTermValues =
+    [ PersistText etstCurrency
+    , PersistInt64 (fromIntegral etstBuyerFeeBps)
+    , PersistInt64 (fromIntegral etstOrganizerFeeBps)
+    , PersistInt64 (fromIntegral etstTaxBps)
+    , PersistInt64 (fromIntegral etstHoldMinutes)
+    , PersistText standardTermsVersion
+    , PersistText etstTermsSummary
+    , PersistText etstRefundPolicy
+    , PersistInt64 (fromIntegral etstMaxTicketsPerOrder)
+    ]
+  where
+    EventTicketSaleTermsDTO{..} = standardTicketSaleTerms
+
+undecidedPolicySql :: T.Text
+undecidedPolicySql =
+    "NOT active AND approved_at IS NULL AND approved_by IS NULL AND effective_from IS NULL"
+
 data SalePolicyRow = SalePolicyRow
     { sprId :: T.Text
     , sprApprovalStatus :: T.Text
     , sprActive :: Bool
-    , sprApprovedAt :: Maybe UTCTime
+    , sprDecidedAt :: Maybe UTCTime
     , sprCreatedAt :: UTCTime
-    , sprUpdatedAt :: UTCTime
+    , sprWorkflowRequest :: Bool
+    , sprStandardTerms :: Bool
+    , sprUndecided :: Bool
+    , sprTerms :: EventTicketSaleTermsDTO
     }
     deriving (Show, Eq)
 
 -- | Rows are newest first. An active approved policy wins; otherwise a
--- pending draft; otherwise the newest row decides whether the last request
+-- pending compatible request; otherwise the newest workflow row decides whether it
 -- was declined. A policy that was approved and later retired is not a
 -- declined request: the manager may simply ask again.
 saleStateFromRows :: [SalePolicyRow] -> (T.Text, Maybe SalePolicyRow)
 saleStateFromRows rows
     | Just row <- find (\r -> sprActive r && sprApprovalStatus r == "approved") rows = ("approved", Just row)
-    | Just row <- find ((== "draft") . sprApprovalStatus) rows = ("requested", Just row)
-    | (row : _) <- rows
-    , sprApprovalStatus row == "retired"
-    , isNothing (sprApprovedAt row) =
+    | Just row <- find isPendingRequest workflowRows = ("requested", Just row)
+    | (row : _) <- workflowRows
+    , sprUndecided row
+    , sprApprovalStatus row == "retired" =
         ("declined", Just row)
     | otherwise = ("none", Nothing)
+  where
+    workflowRows = filter (\row -> sprWorkflowRequest row && sprStandardTerms row) rows
+
+isPendingRequest :: SalePolicyRow -> Bool
+isPendingRequest row = sprApprovalStatus row == "draft" && sprUndecided row
 
 -- | Names the event, the requesting party and the instant, so the request's
 -- author stays readable in the append-only policy history.
@@ -146,13 +189,24 @@ eventTicketSaleServer user currentPartyId EventTicketSaleDeps{..} =
     loadRows eventKey = do
         rows <-
             rawSql
-                "SELECT id::text, approval_status, active, approved_at, created_at, updated_at\
-                \ FROM event_ticket_checkout_policy WHERE event_id = ?\
-                \ ORDER BY created_at DESC, id DESC"
-                [toPersistValue eventKey]
+                ( "SELECT id::text, approval_status, active, created_at, "
+                    <> " CASE WHEN approval_status = 'approved' THEN approved_at ELSE updated_at END, "
+                    <> workflowRequestSql <> ", (" <> standardTermsSql <> "), (" <> undecidedPolicySql <> "),"
+                    <> " currency, buyer_fee_bps, organizer_fee_bps, tax_bps, hold_minutes,"
+                    <> " max_tickets_per_order, refund_policy, terms_summary"
+                    <> " FROM event_ticket_checkout_policy WHERE event_id = ?"
+                    <> " ORDER BY created_at DESC, id DESC"
+                )
+                (standardTermValues <> [toPersistValue eventKey])
         pure
-            [ SalePolicyRow{..}
-            | (Single sprId, Single sprApprovalStatus, Single sprActive, Single sprApprovedAt, Single sprCreatedAt, Single sprUpdatedAt) <- rows
+            [ SalePolicyRow{sprTerms = EventTicketSaleTermsDTO{..}, ..}
+            | ( Single sprId, Single sprApprovalStatus, Single sprActive, Single sprCreatedAt
+              , Single sprDecidedAt, Single sprWorkflowRequest
+              , Single sprStandardTerms, Single sprUndecided, Single etstCurrency
+              , Single etstBuyerFeeBps, Single etstOrganizerFeeBps, Single etstTaxBps
+              , Single etstHoldMinutes, Single etstMaxTicketsPerOrder, Single etstRefundPolicy
+              , Single etstTermsSummary
+              ) <- rows
             ]
 
     hasPayableTier :: SocialEventId -> SqlPersistT IO Bool
@@ -167,6 +221,7 @@ eventTicketSaleServer user currentPartyId EventTicketSaleDeps{..} =
     saleDTO :: SocialEventId -> Bool -> Bool -> [SalePolicyRow] -> EventTicketSaleDTO
     saleDTO eventKey manager payable rows =
         let (status, mRow) = saleStateFromRows rows
+            requestRow = mRow >>= \row -> if sprWorkflowRequest row then Just row else Nothing
             blocked
                 | status == "approved" = Just "already_approved"
                 | status == "requested" = Just "already_requested"
@@ -176,16 +231,16 @@ eventTicketSaleServer user currentPartyId EventTicketSaleDeps{..} =
          in EventTicketSaleDTO
                 { etsEventId = keyText eventKey
                 , etsStatus = status
-                , etsRequestId = sprId <$> mRow
-                , etsRequestedAt = sprCreatedAt <$> mRow
+                , etsRequestId = sprId <$> requestRow
+                , etsRequestedAt = sprCreatedAt <$> requestRow
                 , etsDecidedAt = case status of
-                    "approved" -> mRow >>= sprApprovedAt
-                    "declined" -> sprUpdatedAt <$> mRow
+                    "approved" -> mRow >>= sprDecidedAt
+                    "declined" -> mRow >>= sprDecidedAt
                     _ -> Nothing
                 , etsCanRequest = isNothing blocked
                 , etsBlockedReason = blocked
                 , etsCanDecide = strictAdmin && status == "requested"
-                , etsTerms = standardTicketSaleTerms
+                , etsTerms = maybe standardTicketSaleTerms sprTerms mRow
                 }
 
     currentSale :: SocialEventId -> SocialEvent -> SqlPersistT IO (Bool, EventTicketSaleDTO)
@@ -225,25 +280,16 @@ eventTicketSaleServer user currentPartyId EventTicketSaleDeps{..} =
                             Just reason | reason `elem` ["already_requested", "already_approved"] -> pure (Right (before, Nothing))
                             Just _ -> pure (Left err409{errBody = "Add an active paid ticket tier in USD before requesting paid sales"})
                             Nothing -> do
-                                let terms = standardTicketSaleTerms
                                 rawExecute
                                     "INSERT INTO event_ticket_checkout_policy\
                                     \ (event_id, policy_version, currency, buyer_fee_bps, organizer_fee_bps, tax_bps,\
-                                    \  hold_minutes, terms_version, terms_summary, refund_policy, transfer_allowed,\
-                                    \  approval_status, active, max_tickets_per_order, tax_included, tax_invoice_required)\
-                                    \ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, 'draft', FALSE, ?, FALSE, FALSE)"
-                                    [ toPersistValue eventKey
-                                    , PersistText (ticketSalePolicyVersion (fromSqlKey eventKey) currentPartyId now)
-                                    , PersistText (etstCurrency terms)
-                                    , PersistInt64 (fromIntegral (etstBuyerFeeBps terms))
-                                    , PersistInt64 (fromIntegral (etstOrganizerFeeBps terms))
-                                    , PersistInt64 (fromIntegral (etstTaxBps terms))
-                                    , PersistInt64 (fromIntegral (etstHoldMinutes terms))
-                                    , PersistText standardTermsVersion
-                                    , PersistText (etstTermsSummary terms)
-                                    , PersistText (etstRefundPolicy terms)
-                                    , PersistInt64 (fromIntegral (etstMaxTicketsPerOrder terms))
-                                    ]
+                                    \  hold_minutes, terms_version, terms_summary, refund_policy, max_tickets_per_order,\
+                                    \  transfer_allowed, approval_status, active, tax_included, tax_invoice_required)\
+                                    \ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, 'draft', FALSE, FALSE, FALSE)"
+                                    ( [ toPersistValue eventKey
+                                      , PersistText (ticketSalePolicyVersion (fromSqlKey eventKey) currentPartyId now)
+                                      ] <> standardTermValues
+                                    )
                                 (_, after) <- currentSale eventKey eventRow
                                 reviewers <- strictAdminContacts
                                 pure (Right (after, Just (eventRow, reviewers)))
@@ -263,11 +309,12 @@ eventTicketSaleServer user currentPartyId EventTicketSaleDeps{..} =
         runSql $ do
             rows <-
                 rawSql
-                    "SELECT policy.id::text, policy.event_id, policy.created_at\
-                    \ FROM event_ticket_checkout_policy policy\
-                    \ WHERE policy.approval_status = 'draft'\
-                    \ ORDER BY policy.created_at ASC, policy.id ASC LIMIT 200"
-                    []
+                    ( "SELECT id::text, event_id, created_at FROM event_ticket_checkout_policy"
+                        <> " WHERE approval_status = 'draft' AND (" <> workflowRequestSql <> ")"
+                        <> " AND (" <> undecidedPolicySql <> ") AND (" <> standardTermsSql <> ")"
+                        <> " ORDER BY created_at ASC, id ASC LIMIT 200"
+                    )
+                    standardTermValues
             fmap catMaybes . forM rows $ \(Single requestId, Single rawEventId, Single requestedAt) -> do
                 let eventKey = toSqlKey (rawEventId :: Int64) :: SocialEventId
                 mEvent <- get eventKey
@@ -308,22 +355,32 @@ eventTicketSaleServer user currentPartyId EventTicketSaleDeps{..} =
                     case locked of
                         Nothing -> pure (Left err404{errBody = "Event not found"})
                         Just (Entity _ eventRow) -> do
+                            -- Keep a concurrent policy writer from changing the terms
+                            -- between validation and activation.
+                            _ <- (rawSql
+                                "SELECT id::text FROM event_ticket_checkout_policy WHERE id = ?::uuid FOR UPDATE"
+                                [PersistText requestId] :: SqlPersistT IO [Single T.Text])
                             rows <- loadRows eventKey
                             payable <- hasPayableTier eventKey
                             let target = find ((== requestId) . sprId) rows
                                 otherActive = any (\r -> sprActive r && sprId r /= requestId) rows
                                 alreadyDecided row
                                     | approve = sprApprovalStatus row == "approved" && sprActive row
-                                    | otherwise = sprApprovalStatus row == "retired" && isNothing (sprApprovedAt row)
+                                    | otherwise = sprApprovalStatus row == "retired" && sprUndecided row
                             case target of
                                 Nothing -> pure (Left err404{errBody = "Ticket sale request not found"})
                                 -- Deciding the same way twice returns the
                                 -- recorded decision and notifies nobody.
+                                Just row
+                                    | not (sprWorkflowRequest row) ->
+                                        pure (Left err404{errBody = "Ticket sale request not found"})
+                                    | not (sprStandardTerms row) ->
+                                        pure (Left err409{errBody = "This request no longer matches the standard ticket sale terms"})
                                 Just row | alreadyDecided row -> do
                                     (_, dto) <- currentSale eventKey eventRow
                                     pure (Right (dto, Nothing))
                                 Just row
-                                    | sprApprovalStatus row /= "draft" ->
+                                    | not (isPendingRequest row) ->
                                         pure (Left err409{errBody = "This ticket sale request was already decided"})
                                     | approve && otherActive ->
                                         pure (Left err409{errBody = "This event already has an active ticket policy"})
