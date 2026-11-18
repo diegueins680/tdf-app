@@ -1591,6 +1591,10 @@ async function finalizeIteration(repoRoot, config, context, branch) {
     // Nothing is committed, pushed, or proposed until the build-and-test gate passes.
     await emitLoopStatus({ state: 'running', phase: 'verification', ideaTitle: context.idea_title });
     logStep('Verification');
+    // Stage the proposal first: freshness checks such as `git diff --exit-code`
+    // after regenerating files compare against the index, which must hold the
+    // proposed tree rather than the base.
+    await stageCommitCandidates(repoRoot, config.initialUntracked, config.initialTrackedPaths);
     await runVerification(repoRoot, config, context);
 
     const stagedFiles = await listStagedFiles(
@@ -1978,12 +1982,19 @@ async function main() {
       // look like a failed audit and would otherwise launch its fix step.
       shuttingDown = true;
       // Stop the running worker tree before exiting so nothing keeps editing
-      // the worktree, including any step that was already starting.
-      killStepGroup(activeStepChild, 'SIGTERM');
-      setTimeout(() => {
-        killStepGroup(activeStepChild, 'SIGKILL');
+      // the worktree. The handle is kept here because the step's shell can
+      // exit (and clear activeStepChild) while a descendant ignoring SIGTERM
+      // is still running; no other step can start once shutting down.
+      const stopping = activeStepChild;
+      killStepGroup(stopping, 'SIGTERM');
+      setTimeout(async () => {
+        if (stepGroupAlive(stopping)) killStepGroup(stopping, 'SIGKILL');
+        // Exit only once the group is gone, so the runner never reports a
+        // stop while one of its workers is still running.
+        const deadline = Date.now() + STEP_KILL_GRACE_MS;
+        while (Date.now() < deadline && stepGroupAlive(stopping)) await sleep(50);
         process.exit(143);
-      }, activeStepChild ? 3000 : 0);
+      }, stopping ? 3000 : 0);
     });
   }
 

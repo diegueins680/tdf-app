@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-17T23:44:30.986Z",
+  "generatedAt": "2026-11-18T00:23:22.605Z",
   "repositoryRoot": ".",
   "filesScanned": 2753,
   "candidateCount": 1466,
@@ -181115,7 +181115,7 @@
       "lines": [
         67
       ],
-      "consumerCount": 76,
+      "consumerCount": 77,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-14_checkout_event_refund_runtime.sql",
@@ -181177,6 +181177,7 @@
         ".github/workflows/merge-admission.yml",
         "scripts/__tests__/ci-job-admission.test.mjs",
         "scripts/__tests__/ci-pipeline.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/fixtures/ci-selected-job-admission-before.json",
         "scripts/__tests__/logical-correctness-audit.test.mjs",
         "scripts/__tests__/music-worker-timing.test.mjs",

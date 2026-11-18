@@ -1287,6 +1287,54 @@ test('continuous-improvement-loop starts no further step after a stop signal dur
   }
 });
 
+test('continuous-improvement-loop stops a worker that ignores SIGTERM after its shell exits during shutdown', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-shutdown-stubborn-test-');
+  const pidFile = path.join(fixture.tempRoot, 'shutdown-stubborn.pid');
+  const worker = path.join(fixture.tempRoot, 'shutdown-stubborn.mjs');
+
+  try {
+    await fs.writeFile(worker, `import fs from 'node:fs';\nprocess.on('SIGTERM', () => {});\nfs.writeFileSync(${JSON.stringify(pidFile)}, String(process.pid));\nsetInterval(() => {}, 1000);\n`, 'utf8');
+    const configPath = await fixture.writeConfig({ implementationCommand: `node "${worker}" > /dev/null 2>&1` });
+    const loop = spawn('node', [loopScriptPath, '--config', configPath, '--max-iterations', '1'], {
+      cwd: fixture.repoDir,
+      stdio: 'ignore',
+    });
+    const exited = new Promise((resolve) => loop.on('exit', (code) => resolve(code)));
+    const deadline = Date.now() + 60_000;
+    let workerPid = 0;
+    while (!workerPid && Date.now() < deadline) {
+      workerPid = Number((await fs.readFile(pidFile, 'utf8').catch(() => '')).trim()) || 0;
+      if (!workerPid) await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    assert.ok(workerPid > 0);
+
+    loop.kill('SIGTERM');
+    assert.equal(await exited, 143);
+    assert.throws(() => process.kill(workerPid, 0), /ESRCH/);
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
+test('the loop stages the proposal before verification so freshness checks compare the proposed tree', async () => {
+  const fixture = await createLoopFixture('continuous-improvement-loop-stage-before-verify-test-');
+
+  try {
+    // A freshness check in the style of scripts/quality-repo.sh: regenerate,
+    // then require no difference from the index.
+    const configPath = await fixture.writeConfig({
+      verifyCommand: "printf 'before\\nafter\\n' > tracked.txt && git diff --exit-code -- tracked.txt",
+    });
+    await fixture.runLoop(configPath);
+    const [branch] = await fixture.remoteLoopBranches();
+    assert.ok(branch, 'the verified proposal is published');
+    const content = await fixture.remoteGit(['show', `refs/heads/${branch}:tracked.txt`]);
+    assert.equal(content.stdout, 'before\nafter\n');
+  } finally {
+    await fixture.cleanup();
+  }
+});
+
 test('continuous-improvement-loop keeps stopping a timed-out worker that ignores SIGTERM after its shell exits', async () => {
   const fixture = await createLoopFixture('continuous-improvement-loop-stubborn-test-');
   const pidFile = path.join(fixture.tempRoot, 'stubborn.pid');
