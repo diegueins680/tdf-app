@@ -63,6 +63,7 @@ placeToPayAdapter config = do
     , adapterBuildSameDayReverse = \_ _ -> unsupportedOperation
     , adapterParseResponse = parseResponse config
     , adapterAssessNotification = verifyPlaceToPayNotification config
+    , adapterQueryFollowUp = noQueryFollowUp
     }
 
 placeToPayReference :: Text -> Text
@@ -76,6 +77,7 @@ buildCreate
   -> Either AdapterError AdapterRequest
 buildCreate config context payment = do
   validateContext context
+  refuseSplitTransfers payment
   validateCreate payment
   validateUsdMoney (cpMoney payment)
   paymentMethod <- maybe
