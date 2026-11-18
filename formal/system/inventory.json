@@ -45,6 +45,7 @@
       "e2e/web/auth-landing.spec.mjs",
       "e2e/web/booking-catalog-recovery.spec.mjs",
       "e2e/web/booking-introduction.spec.mjs",
+      "e2e/web/booking-service-picker.spec.mjs",
       "e2e/web/booking-timezone.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
       "e2e/web/chat-mobile-follow.spec.mjs",
@@ -1631,6 +1632,8 @@
       "tdf-hq-ui/src/utils/assertNever.ts",
       "tdf-hq-ui/src/utils/authErrorMessage.test.ts",
       "tdf-hq-ui/src/utils/authErrorMessage.ts",
+      "tdf-hq-ui/src/utils/bookingBillingUnitLabel.test.ts",
+      "tdf-hq-ui/src/utils/bookingBillingUnitLabel.ts",
       "tdf-hq-ui/src/utils/bookingStatusLabel.test.ts",
       "tdf-hq-ui/src/utils/bookingStatusLabel.ts",
       "tdf-hq-ui/src/utils/bottomDock.test.tsx",
@@ -3345,6 +3348,12 @@
       "id": "SURFACE-68715286d15c4a9a",
       "path": "e2e/web/booking-introduction.spec.mjs",
       "sha256": "c46296e4f287004eb23e8e764ea4044c56ba955645b6abacc72650ae078e5aac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-94fd964e3b8aca2d",
+      "path": "e2e/web/booking-service-picker.spec.mjs",
+      "sha256": "791e55ce6e9ce1dba931839bea55d732042f2a9af39c21ecf6f8d4f97aacc6d6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11750,7 +11759,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "fff734dc82e0c566a9210d3f188956173a5c38dc0003ece2bff149c5bc757456",
+      "sha256": "f4a17704ae8ce1fbf489c50f4f2093786d43bbc447940befb3b7cd8f50a20aa5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12741,6 +12750,18 @@
       "id": "SURFACE-3b725d897439a2a6",
       "path": "tdf-hq-ui/src/utils/authErrorMessage.ts",
       "sha256": "1983475914b88d680127ff4e2beb785d5e550d84821895b912e97496739890f8",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-d44e0061dcce1cc0",
+      "path": "tdf-hq-ui/src/utils/bookingBillingUnitLabel.test.ts",
+      "sha256": "a02e0f74692885aa048d0cd701e629ce9a1d0b04bd7adae8868a605a7a60501d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-0f2712cbaaf971e5",
+      "path": "tdf-hq-ui/src/utils/bookingBillingUnitLabel.ts",
+      "sha256": "618c325df5c0fff85cd84af8f0e4617a10f3813fc62c3efd612155c6c3c6909e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31102,7 +31123,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "6ca2cf61d764a83d87654b81d05bf5e12acd54c99b6043a61cca0ad4d04e1a2f",
+      "sha256": "baa87ce669883650f8bbef97cd3072004efcfcb07e63b69d88634ce02a989ffc",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
