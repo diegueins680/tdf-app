@@ -6836,7 +6836,7 @@
     {
       "id": "SURFACE-3862d80cc6873442",
       "path": "scripts/test-production-workspace-browser.py",
-      "sha256": "82d05d028e58ed4ba1bf075bae4074f11ae5408947f09d39bca66b42b9ae308e",
+      "sha256": "2abc00701aa573ea07d20b3ca4ab8ab3b7c300b43f0cc359e67e27794360a017",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -30150,7 +30150,7 @@
     },
     {
       "path": "formal/production/README.md",
-      "sha256": "90bf8fe32d586d06e9c1b114e6e437b38899b8877be590aee75a27f92b73cb26",
+      "sha256": "3d8e7fea1a943056e5ec1847fc5452f23f57537d8df8b4979d9234daea701217",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"

@@ -64,6 +64,12 @@ def scenario(browser, api, web, actors, offering):
             t=mix(name)
             next_actor=t['approver'] if t['status']=='En revisión' else None if t['status']=='Completada' else t['owner']
             assert (t['status'],next_actor)==(state,owner)
+            pg,card=task_page(name)
+            label=next((n for n,(party,_) in actors.items() if party==owner),None)
+            expect(card.get_by_text('Próxima acción: '+label if label else 'Sin acción pendiente',exact=False)).to_be_visible()
+            pg.get_by_role('button',name='Mis tareas',exact=True).click()
+            expect(pg.get_by_role('heading',name='Mezcla de Luna',exact=True)).to_have_count(int(owner==actors[name][0]))
+            pg.close()
 
     producer, engineer, artist = [actors[n][0] for n in ['Productor','Ingeniera','Artista']]
     today=date.today()
@@ -81,14 +87,38 @@ def scenario(browser, api, web, actors, offering):
         page.get_by_role('button',name='Crear producción privada').click()
     assert created.value.status==200, created.value.text()
     pid=created.value.json()['id']
-    action('Productor',op='invite',username='workspace-engineer',role='engineer')
-    action('Productor',op='invite',username='workspace-artist',role='client')
+    page.get_by_text('Invitar al equipo',exact=True).click()
+    for username,role in [('workspace-engineer','engineer'),('workspace-artist','client')]:
+        page.get_by_label('Usuario de la cuenta TDF').fill(username)
+        page.get_by_label('Permiso del proyecto').select_option(role)
+        with page.expect_response(lambda r:r.url.endswith('/actions')) as invitation:
+            page.get_by_role('button',name='Dar acceso al proyecto').click()
+        assert invitation.value.status==200,invitation.value.text()
     booked=http('Productor','POST','/bookings',data=dict(cbTitle='Batería EP',cbStartsAt=recording+'T09:00:00-05:00',
         cbEndsAt=recording+'T12:00:00-05:00',cbStatus='Confirmed',cbServiceOfferingId=offering,cbEngineerPartyId=engineer)).json()['bookingId']
     p=project('Productor')
-    drums=action('Productor',op='task',title='Batería compartida',stage='Grabación',owner=engineer,duration=1,due=recording,
-        songs=[s['id'] for s in p['songs']],booking=booked)
-    action('Ingeniera',op='progress',task=drums,status='Completada')
+    form=page.locator('details').filter(has=page.get_by_text('Nueva tarea de proyecto o de canciones',exact=True)).last
+    form.locator('summary').click()
+    form.locator('[name=title]').fill('Batería compartida')
+    form.get_by_label('Etapa o hito').fill('Grabación')
+    form.get_by_label('Fecha comprometida').fill(recording)
+    form.get_by_label('Canciones (vacío para todo el proyecto)').select_option([s['id'] for s in p['songs']])
+    form.get_by_label('Responsable',exact=True).select_option(str(engineer))
+    form.get_by_label('Número de reserva').fill(str(booked))
+    with page.expect_response(lambda r:r.url.endswith('/actions')) as created_task:
+        form.get_by_role('button',name='Añadir tarea').click()
+    assert created_task.value.status==200,created_task.value.text()
+    drums=created_task.value.json()['id']
+    pg=accounts['Ingeniera'].new_page()
+    pg.goto(web+'/producciones')
+    cards=pg.locator('.MuiCard-root').filter(has=pg.get_by_role('heading',name='Batería compartida',exact=True))
+    expect(cards).to_have_count(3)
+    cards.first.locator('summary').first.click()
+    with pg.expect_response(lambda r:r.url.endswith('/actions')) as completed:
+        cards.first.get_by_role('button',name='Completar',exact=True).click()
+    assert completed.value.status==200,completed.value.text()
+    expect(cards.get_by_text('Grabación · Completada',exact=False)).to_have_count(3)
+    pg.close()
     shared=next(t for t in project('Ingeniera')['tasks'] if t['id']==drums)
     assert len(shared['songs'])==3 and shared['booking']['id']==booked and shared['status']=='Completada'
     song=p['songs'][0]['id']
@@ -176,6 +206,7 @@ def scenario(browser, api, web, actors, offering):
     assert project('Productor')['delivery']==delivery
     suggested=next(c['suggested'] for c in proposal['changes'] if c['task']==master['id'])
     http('Productor','PUT',f'/bookings/{booked_master}',data=dict(ubStartsAt=suggested+'T09:00:00-05:00',ubEndsAt=suggested+'T12:00:00-05:00'))
+    page.set_viewport_size({'width':390,'height':844})
     page.reload()
     page.get_by_role('button',name='Cronograma del proyecto').click()
     expect(page.get_by_text('Propuesta de ajuste',exact=True)).to_be_visible()
@@ -194,6 +225,7 @@ def scenario(browser, api, web, actors, offering):
     page.get_by_role('button',name='Calendario entre proyectos').click()
     expect(page.get_by_text('Segundo proyecto · Entrega coincidente')).to_be_visible()
     expect(page.get_by_text('Sin superposiciones',exact=False)).to_be_visible()
+    assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
     print('PASS real TDF booking, six-stage EP, shared drums, four account scopes, both action owners, version history, stale decision, schedule, mobile viewport, cross-project workload', flush=True)
 
 
