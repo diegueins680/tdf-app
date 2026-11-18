@@ -113,3 +113,10 @@ __pycache__/
 
 # Local Playwright MCP session output (screenshots, exports).
 .playwright-mcp/
+
+# Agent workspace notes: local only, never published (public repo).
+/MEMORY.md
+/DREAMS.md
+/USER.md
+/TOOLS.md
+/memory/
