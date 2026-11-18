@@ -17068,7 +17068,7 @@
       "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
       "source": "formal/system/admin-routes.md",
       "contract": "formal/system/admin-routes.md",
-      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
+      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; a number whose WhatsApp consent is withdrawn is refused with 409 before anything is sent or recorded (whatsAppRecipientConsentWithdrawn); otherwise every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
       "actors": [
         "Strict administrator"
       ],
@@ -17101,12 +17101,13 @@
       "privacy": "Sends to personal phone numbers without a consent check.",
       "concurrency": "None.",
       "idempotency": "Not idempotent: each call sends again.",
-      "failure": "400 invalid input or unresolvable phone; 404 user or message.",
+      "failure": "400 invalid input or unresolvable phone; 404 user or message; 409 consent withdrawn.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAdmin.hs",
-        "tdf-hq/src/TDF/WhatsApp/Transport.hs"
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
@@ -17118,7 +17119,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No WhatsApp consent, opt-out or 24-hour customer-service-window check is applied on this path (PRIV-WHATSAPP-001 governs consent for the public flow only).",
+        "No 24-hour customer-service-window check is applied on this path. (Resolved 2026-11-18: a send or resend to a number whose consent is withdrawn is refused with 409 before anything is sent or recorded.)",
         "A resend may replace the body, so any number ever messaged can be sent arbitrary text."
       ],
       "conformance": {
@@ -23783,7 +23784,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
       "source": "formal/system/social-messaging-routes.md",
       "contract": "formal/system/social-messaging-routes.md",
-      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered.",
+      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered. The same check (whatsAppRecipientConsentWithdrawn) runs before every other send to a contact: administrator sends and resends (409), the course-registration auto-reply and the automatic AI reply (not sent; the reply is marked as an error). An operator question goes only to the configured operator phone, so no contact consent applies.",
       "actors": [
         "Social inbox staff",
         "Administrator"
@@ -23834,16 +23835,17 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs. Added 2026-11-18: whatsAppRecipientConsentWithdrawn is tested against PostgreSQL in tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs (no row, subscribed, after STOP in both phone spellings, resubscribed, unparseable number).",
       "evidence": "formal/system/social-messaging-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "WhatsApp replies do not mark the inbound message replied; the operator-question route and the administrator send route do not consult consent.",
+        "WhatsApp replies do not mark the inbound message replied. (Resolved 2026-11-18: every send to a contact consults consent; the operator question never messages a contact.)",
         "Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a number never subscribed.",
         "Consent and opt-out are gated by the plain Admin role while siblings use strict admin."
       ],
@@ -29642,7 +29644,7 @@
     "tdf-hq/src/TDF/CMS/Models.hs": "7cbd5b8e31dd3214114c63b162408af2438d674759e1ec3c528fe8a66bf7484f",
     "tdf-hq/src/TDF/Calendar/Models.hs": "ade52945cff1553e3e6e88edbd3a67457bda196364df216a62a8d1d69e8bcee8",
     "tdf-hq/src/TDF/Calendar/TokenCipher.hs": "663078efb750b0158d3af8b7bdba30b8b874473f33f9a676425bcc0ee05e5b3b",
-    "tdf-hq/src/TDF/CampaignAutomation.hs": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
+    "tdf-hq/src/TDF/CampaignAutomation.hs": "2cb7ce3d8732aba8f17708deee5f15bf0b41f5376e95dac0962a8564fce6c9d8",
     "tdf-hq/src/TDF/Catalog/Integrity.hs": "e918ed18cf1351d63b16a111af524f6f42541c873974da43299cc5134ce990d0",
     "tdf-hq/src/TDF/Catalog/Security.hs": "bf5ec6b5b0a740ca58709fac5a04118d29cfacf1002ecd4299c35d8a142313e0",
     "tdf-hq/src/TDF/Catalog/Seed.hs": "50badb8bb7b8e413086ec8f656cbfea8818733394f96af51464b8367e4e814d0",
@@ -29685,7 +29687,7 @@
     "tdf-hq/src/TDF/Courses/Metadata.hs": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
     "tdf-hq/src/TDF/Courses/Production.hs": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
     "tdf-hq/src/TDF/Courses/PublicMetadata.hs": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
-    "tdf-hq/src/TDF/Cron.hs": "74692f8cd6294d02c8b5b121e3fc0a2089fabbcde9cbdef781e17d090071192d",
+    "tdf-hq/src/TDF/Cron.hs": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
     "tdf-hq/src/TDF/DDEX/DB.hs": "6112dc50132668fa43db303e48c4214f4fcf156b62118ab0f2fb27fa5f2dbfb8",
     "tdf-hq/src/TDF/DDEX/Models.hs": "a3c5d3b4768aa58a5c413b773f482e09b1712e257220d1c33dae7da85950bbfa",
     "tdf-hq/src/TDF/DTO.hs": "6b81f163b2c7c5c39c2fe9ccaee3346390d2282e205d3365aa4607f4a69f4032",
@@ -29731,7 +29733,7 @@
     "tdf-hq/src/TDF/Routes/DomoQuotes.hs": "e6b29418ab5e7bbf57fa0fd2809178b4e51669f21e672764460c701c962945c0",
     "tdf-hq/src/TDF/Routes/EventTickets.hs": "09876be565334ca1447092a96546f919b578168a2e927acaa593153ea3fe8e00",
     "tdf-hq/src/TDF/Seed.hs": "ae8d277b4e45a2065843b193ed54087d2b4b1bbca928cd4ea70e7dd36d229264",
-    "tdf-hq/src/TDF/Server.hs": "d760b7f6be41ff776a10576616051cba593327a77bc2ebd153d3f6a7ef3839af",
+    "tdf-hq/src/TDF/Server.hs": "e6ff7cfdf1c79b7af0dd8d09ead32ac2b469272ee270f1589aaa97667c963062",
     "tdf-hq/src/TDF/Server/Catalog.hs": "6d63ee47b90b56860ee9493db80fc510a3b7a064c5d4962c545d6025b0ec4887",
     "tdf-hq/src/TDF/Server/CommerceOperations.hs": "93cd13122c41d81ab133de2c60e29d9b3b14bca8860dafcaf8668009f091e9ce",
     "tdf-hq/src/TDF/Server/CourseCheckout.hs": "d58ec1ae0f46d6104770f4d4741ea98916b023d4bc534cac51561ad8d5a0fe84",
@@ -29764,7 +29766,7 @@
     "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs": "f6ed880698126fbfbc409ca4b1098c5f5052b0ea22cd44cade3d3e17de0db6cb",
     "tdf-hq/src/TDF/Server/TicketRefunds.hs": "456b9333bf591befa32058f57a5ff2ebd78b796bceac7c49bc579fe42bd7089e",
     "tdf-hq/src/TDF/Server/TicketTaxDocuments.hs": "dd6e8fb2c4abd47630fb49b14b662a90c0da10e060600cf9293fd82fa2bd1027",
-    "tdf-hq/src/TDF/ServerAdmin.hs": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
+    "tdf-hq/src/TDF/ServerAdmin.hs": "7ac0b9e10bceeb3d90db939fb6ba851398cf52790e36fe5566624e54934857a7",
     "tdf-hq/src/TDF/ServerAuth.hs": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
     "tdf-hq/src/TDF/ServerExtra.hs": "fac511e58b2072a96962ad2e025ae6c34e568ec8593502a1c0b33e83e572100b",
     "tdf-hq/src/TDF/ServerFanClub.hs": "fd0030b5c216270bf2381982e7eec4202afc7a8607e4a581398723692a3cb461",
@@ -29892,7 +29894,7 @@
     "tdf-hq/test/TDF/Trials/PublicLeadSpec.hs": "42b2da69c834ae9d60c4d88e4573c06aedd68e14e0dd6b4579cef5da89fdd21b",
     "tdf-hq/test/TDF/VideoCampaignsSpec.hs": "8a3d61f60286b5846516d8ea0bfd68154fa62172354f69232dc385e4615daad2",
     "tdf-hq/test/TDF/WhatsAppConsentSpec.hs": "abc739b58ab17d8c792a275bb9ec2f7ae26e265512d4f2a96daa8b4e268fe6df",
-    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
+    "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": "793ceed7d044f4ae86b61fd5bcbdf200fc833977d1408d6461f5536ac3c500fd",
     "tdf-hq/test/TicketAdmissionMain.hs": "4c8c47c34c9d031cfa9355962d3610fd6a7337cb8332fb16a7a865b87b6e6f88",
     "tdf-hq/test/TicketConfirmationMain.hs": "186207da08c7f3aaf2833aa3c4eb3e753c4bfe267c1d4e53a1c8f5d6ab355392",
     "tdf-hq/test/TicketConfirmationSmtpMain.hs": "88ba8d4bec720b495356297d939ec3e9780fe22d81046fc31f9986a08dee20d6",
@@ -39381,6 +39383,10 @@
         "relationship": "implementation"
       },
       {
+        "requirement": "MSG-ADMIN-WHATSAPP-001",
+        "relationship": "implementation"
+      },
+      {
         "requirement": "ADS-AUTOMATION-001",
         "relationship": "implementation"
       },
@@ -42906,6 +42912,10 @@
     "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs": [
       {
         "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "MSG-STAFF-OUTBOUND-001",
         "relationship": "tests"
       }
     ],
@@ -74935,11 +74945,15 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
+      "sha256": "2cb7ce3d8732aba8f17708deee5f15bf0b41f5376e95dac0962a8564fce6c9d8",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "PRIV-WHATSAPP-001",
+          "relationship": "implementation"
+        },
+        {
+          "requirement": "MSG-ADMIN-WHATSAPP-001",
           "relationship": "implementation"
         },
         {
@@ -75752,7 +75766,7 @@
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "74692f8cd6294d02c8b5b121e3fc0a2089fabbcde9cbdef781e17d090071192d",
+      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -76798,7 +76812,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "d760b7f6be41ff776a10576616051cba593327a77bc2ebd153d3f6a7ef3839af",
+      "sha256": "e6ff7cfdf1c79b7af0dd8d09ead32ac2b469272ee270f1589aaa97667c963062",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -77961,7 +77975,7 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
+      "sha256": "7ac0b9e10bceeb3d90db939fb6ba851398cf52790e36fe5566624e54934857a7",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -80982,11 +80996,15 @@
     {
       "id": "SURFACE-da468ce284927c10",
       "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
-      "sha256": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
+      "sha256": "793ceed7d044f4ae86b61fd5bcbdf200fc833977d1408d6461f5536ac3c500fd",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
           "requirement": "MSG-WHATSAPP-REDELIVERY-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "MSG-STAFF-OUTBOUND-001",
           "relationship": "tests"
         }
       ]
@@ -88005,7 +88023,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "afd24567f7a55583e3f557bfb9bc5c087765c9d3f626bb8e585013740c5d4932",
+      "sourceSha256": "6e096a2110f146943001dc5a196bfedf2d14b0b4ec14dcec530ede24d603f3a0",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -88033,7 +88051,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "afd24567f7a55583e3f557bfb9bc5c087765c9d3f626bb8e585013740c5d4932",
+      "sourceSha256": "6e096a2110f146943001dc5a196bfedf2d14b0b4ec14dcec530ede24d603f3a0",
       "definition": {
         "states": [
           "absent",
@@ -88063,7 +88081,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "afd24567f7a55583e3f557bfb9bc5c087765c9d3f626bb8e585013740c5d4932",
+      "sourceSha256": "6e096a2110f146943001dc5a196bfedf2d14b0b4ec14dcec530ede24d603f3a0",
       "definition": {
         "export": [
           "queued",

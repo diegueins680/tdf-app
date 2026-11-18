@@ -17067,7 +17067,7 @@
       "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
       "source": "formal/system/admin-routes.md",
       "contract": "formal/system/admin-routes.md",
-      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
+      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; a number whose WhatsApp consent is withdrawn is refused with 409 before anything is sent or recorded (whatsAppRecipientConsentWithdrawn); otherwise every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
       "actors": [
         "Strict administrator"
       ],
@@ -17100,12 +17100,13 @@
       "privacy": "Sends to personal phone numbers without a consent check.",
       "concurrency": "None.",
       "idempotency": "Not idempotent: each call sends again.",
-      "failure": "400 invalid input or unresolvable phone; 404 user or message.",
+      "failure": "400 invalid input or unresolvable phone; 404 user or message; 409 consent withdrawn.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAdmin.hs",
-        "tdf-hq/src/TDF/WhatsApp/Transport.hs"
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
@@ -17117,7 +17118,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No WhatsApp consent, opt-out or 24-hour customer-service-window check is applied on this path (PRIV-WHATSAPP-001 governs consent for the public flow only).",
+        "No 24-hour customer-service-window check is applied on this path. (Resolved 2026-11-18: a send or resend to a number whose consent is withdrawn is refused with 409 before anything is sent or recorded.)",
         "A resend may replace the body, so any number ever messaged can be sent arbitrary text."
       ],
       "conformance": {
@@ -23782,7 +23783,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
       "source": "formal/system/social-messaging-routes.md",
       "contract": "formal/system/social-messaging-routes.md",
-      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered.",
+      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered. The same check (whatsAppRecipientConsentWithdrawn) runs before every other send to a contact: administrator sends and resends (409), the course-registration auto-reply and the automatic AI reply (not sent; the reply is marked as an error). An operator question goes only to the configured operator phone, so no contact consent applies.",
       "actors": [
         "Social inbox staff",
         "Administrator"
@@ -23833,16 +23834,17 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs. Added 2026-11-18: whatsAppRecipientConsentWithdrawn is tested against PostgreSQL in tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs (no row, subscribed, after STOP in both phone spellings, resubscribed, unparseable number).",
       "evidence": "formal/system/social-messaging-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "WhatsApp replies do not mark the inbound message replied; the operator-question route and the administrator send route do not consult consent.",
+        "WhatsApp replies do not mark the inbound message replied. (Resolved 2026-11-18: every send to a contact consults consent; the operator question never messages a contact.)",
         "Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a number never subscribed.",
         "Consent and opt-out are gated by the plain Admin role while siblings use strict admin."
       ],
