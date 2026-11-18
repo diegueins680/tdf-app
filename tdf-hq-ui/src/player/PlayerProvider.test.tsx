@@ -15,7 +15,7 @@ const { PlayerProvider, usePlayer } = await import('./PlayerProvider');
 const { authorizePlayerAsset } = await import('./assetAccess');
 const { dispatchPlaybackCommand, getActivePlaybackOwner } = await import('./playbackSession');
 const { default: GlobalPlayer } = await import('./GlobalPlayer');
-const { dispatchReleaseToRadio } = await import('../features/releases/ReleasePlayerActions');
+const { dispatchReleaseToRadio } = await import('./ReleasePlayerActions');
 
 const track = (id: string): PlayerTrack => ({ id, title: id, artist: 'Synthetic', releaseId: 'release',
   sources: [{ url: `https://media.invalid/${id}.m4a`, quality: 'high', mediaType: 'audio/mp4' }] });

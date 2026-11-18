@@ -1,6 +1,6 @@
 import { jest } from '@jest/globals';
-import type { ArtistReleaseDTO } from '../../api/types';
-jest.unstable_mockModule('../../config/artistMediaRecoveryRollout', () => ({ isArtistMediaRecoveryEnabled: () => true }));
+import type { ArtistReleaseDTO } from '../api/types';
+jest.unstable_mockModule('../config/artistMediaRecoveryRollout', () => ({ isArtistMediaRecoveryEnabled: () => true }));
 const {
   buildReleaseStreamUpdatePayload,
   dispatchReleaseToRadio,

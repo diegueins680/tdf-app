@@ -1,7 +1,7 @@
-import { isArtistMediaRecoveryEnabled } from '../../config/artistMediaRecoveryRollout';
-import type { ArtistReleaseDTO, ArtistReleaseUpsert } from '../../api/types';
-import { normalizeStreamingSource } from '../../utils/media';
-import { PLAYER_LOAD_TRACK_EVENT, type LoadPlayerTrackDetail } from '../../player/types';
+import { isArtistMediaRecoveryEnabled } from '../config/artistMediaRecoveryRollout';
+import type { ArtistReleaseDTO, ArtistReleaseUpsert } from '../api/types';
+import { normalizeStreamingSource } from '../utils/media';
+import { PLAYER_LOAD_TRACK_EVENT, type LoadPlayerTrackDetail } from './types';
 
 export interface ReleaseFeedItem extends ArtistReleaseDTO {
   artistName: string;

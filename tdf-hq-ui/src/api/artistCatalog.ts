@@ -1,6 +1,6 @@
 import { ApiError } from './client';
 import { Records, type RecordsFeedDTO } from './records';
-import { nativeSessionsFromFeed, type NativeSession } from '../features/sessions/nativeSessions';
+import { nativeSessionsFromFeed, type NativeSession } from './nativeSessions';
 import { Fans } from './fans';
 import { musicReleases, type MusicPublicReleaseSummary } from './musicReleases';
 import type { ArtistReleaseDTO } from './types';

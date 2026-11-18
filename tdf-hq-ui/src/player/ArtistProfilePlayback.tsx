@@ -5,9 +5,9 @@ import { useOptionalPlayer } from './PlayerProvider';
 import { publicMusicTrack } from './publicMusicTrack';
 import ArtistFeaturedTrackEditor from './ArtistFeaturedTrackEditor';
 import type { ArtistReleaseDTO } from '../api/types';
-import { resolveReleasePlaybackAction } from '../features/releases/ReleasePlayerActions';
+import { resolveReleasePlaybackAction } from './ReleasePlayerActions';
 import type { PlayerTrack } from './types';
-import { sessionPlayerTrack, type NativeSession } from '../features/sessions/nativeSessions';
+import { sessionPlayerTrack, type NativeSession } from '../api/nativeSessions';
 
 const EMPTY_LEGACY_RELEASES: ArtistReleaseDTO[] = [];
 const EMPTY_NATIVE_SESSIONS: NativeSession[] = [];

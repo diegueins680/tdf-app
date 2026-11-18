@@ -1,6 +1,6 @@
 import { Alert, Box, Button, Card, CardContent, Chip, List, ListItem, Stack, Typography } from '@mui/material';
 import { PLAYER_LOAD_TRACK_EVENT, type LoadPlayerTrackDetail } from '../../player/types';
-import { sessionPlayerTrack, type NativeSession, type SessionChapter } from './nativeSessions';
+import { sessionPlayerTrack, type NativeSession, type SessionChapter } from '../../api/nativeSessions';
 import { InteractionPanel } from '../interactions/InteractionPanel';
 import { PublicationAnchor } from '../interactions/PublicationSelection';
 

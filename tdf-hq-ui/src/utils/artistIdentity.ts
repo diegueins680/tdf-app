@@ -9,6 +9,7 @@ export function canonicalArtistPartyId(value: unknown): number | null {
 export function buildArtistPublicPath(partyId: unknown, slug?: string | null): string | null {
   const id = canonicalArtistPartyId(partyId);
   if (id === null) return null;
-  const safeSlug = typeof slug === 'string' && slug.length <= 96 && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : null;
+  // The public endpoint interprets a numeric reference as a Party ID.
+  const safeSlug = typeof slug === 'string' && slug.length <= 96 && !/^\d+$/.test(slug) && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : null;
   return `/a/${safeSlug ?? id}`;
 }

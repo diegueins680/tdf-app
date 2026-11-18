@@ -1,7 +1,7 @@
 import { isArtistMediaRecoveryEnabled } from '../config/artistMediaRecoveryRollout';
-import { nativeArtworkForUrl } from '../features/sessions/nativeSessions';
+import { nativeArtworkForUrl } from '../api/nativeSessions';
 import { NativeSessionCard } from '../features/sessions/NativeSessionCard';
-import { nativePublicationKey } from '../features/sessions/nativeSessions';
+import { nativePublicationKey } from '../api/nativeSessions';
 import { buildArtistPublicPath } from '../utils/artistIdentity';
 import { invalidateArtistAudience, setArtistFollowing } from '../features/fans/artistAudience';
 import { PublishedReleaseCard } from '../features/releases/PublishedReleaseCard';

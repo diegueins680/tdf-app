@@ -3,7 +3,7 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import type { ArtistReleaseDTO } from '../api/types';
 import type { ArtistFeaturedTrack, MusicPublicRelease, MusicPublicReleaseSummary } from '../api/musicReleases';
 import type { PlayerTrack } from './types';
-import type { NativeSession } from '../features/sessions/nativeSessions';
+import type { NativeSession } from '../api/nativeSessions';
 
 const beginArtist = jest.fn<(key: string) => void>();
 const loadArtist = jest.fn<(key: string, tracks: PlayerTrack[]) => void>();

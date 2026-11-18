@@ -303,13 +303,11 @@
       "scripts/codex-logical-correctness-loop.sh",
       "scripts/codex-loop-worker.sh",
       "scripts/content-storage-model.mjs",
-      "scripts/continuous-improvement-loop-dirty-worktree.mjs",
-      "scripts/continuous-improvement-loop-forever.mjs",
       "scripts/continuous-improvement-loop-supervisor.sh",
+      "scripts/continuous-improvement-loop-verify.mjs",
       "scripts/continuous-improvement-loop.codex.json",
       "scripts/continuous-improvement-loop.example.json",
       "scripts/continuous-improvement-loop.mjs",
-      "scripts/continuous-improvement-loop.test.mjs",
       "scripts/deploy-stripe-ticketing.sh",
       "scripts/diagnose-instagram.mjs",
       "scripts/diagnose-social.mjs",
@@ -350,7 +348,7 @@
       "scripts/lib/alloy-controls.mjs",
       "scripts/lib/auth_throttle_http.py",
       "scripts/lib/compiled-api-surface.mjs",
-      "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
+      "scripts/lib/continuous-improvement-loop-verify.mjs",
       "scripts/lib/continuous-improvement-loop.mjs",
       "scripts/lib/discovery.mjs",
       "scripts/lib/disposable-postgres-url.mjs",
@@ -866,6 +864,8 @@
       "tdf-hq-ui/src/api/artistEnrichment.test.ts",
       "tdf-hq-ui/src/api/artistEnrichment.ts",
       "tdf-hq-ui/src/api/artistInvitations.ts",
+      "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+      "tdf-hq-ui/src/api/artistProfileMedia.ts",
       "tdf-hq-ui/src/api/artistUpcomingEvents.test.ts",
       "tdf-hq-ui/src/api/artistUpcomingEvents.ts",
       "tdf-hq-ui/src/api/auth.test.ts",
@@ -948,6 +948,8 @@
       "tdf-hq-ui/src/api/musicReleases.upload.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.test.ts",
       "tdf-hq-ui/src/api/musicStorageResponse.ts",
+      "tdf-hq-ui/src/api/nativeSessions.test.ts",
+      "tdf-hq-ui/src/api/nativeSessions.ts",
       "tdf-hq-ui/src/api/navigationPreferences.ts",
       "tdf-hq-ui/src/api/operations.test.ts",
       "tdf-hq-ui/src/api/operations.ts",
@@ -1014,12 +1016,15 @@
       "tdf-hq-ui/src/components/ApiStatusChip.tsx",
       "tdf-hq-ui/src/components/ArtistClaimPanel.test.tsx",
       "tdf-hq-ui/src/components/ArtistClaimPanel.tsx",
+      "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+      "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
       "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
       "tdf-hq-ui/src/components/ArtistFansList.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.test.tsx",
       "tdf-hq-ui/src/components/ArtistInvitationLinksPanel.tsx",
       "tdf-hq-ui/src/components/ArtistProfileImage.test.tsx",
       "tdf-hq-ui/src/components/ArtistProfileImage.tsx",
+      "tdf-hq-ui/src/components/ArtistProfileLink.tsx",
       "tdf-hq-ui/src/components/ArtistVideoLibrary.test.tsx",
       "tdf-hq-ui/src/components/ArtistVideoLibrary.tsx",
       "tdf-hq-ui/src/components/AssetDialogs.tsx",
@@ -1257,8 +1262,6 @@
       "tdf-hq-ui/src/features/releases/ReleaseArtwork.tsx",
       "tdf-hq-ui/src/features/releases/ReleaseFeed.test.tsx",
       "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
-      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-      "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
       "tdf-hq-ui/src/features/releases/catalogQueries.test.ts",
       "tdf-hq-ui/src/features/releases/catalogQueries.ts",
       "tdf-hq-ui/src/features/releases/resolveReleaseArtwork.test.ts",
@@ -1266,8 +1269,6 @@
       "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
       "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
       "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
-      "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
-      "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
       "tdf-hq-ui/src/features/social/SocialWorkspace.test.tsx",
       "tdf-hq-ui/src/features/social/SocialWorkspace.tsx",
       "tdf-hq-ui/src/hooks/useAutoSave.test.ts",
@@ -1592,6 +1593,8 @@
       "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
       "tdf-hq-ui/src/player/PlayerProvider.tsx",
       "tdf-hq-ui/src/player/PlayerShell.tsx",
+      "tdf-hq-ui/src/player/ReleasePlayerActions.test.ts",
+      "tdf-hq-ui/src/player/ReleasePlayerActions.ts",
       "tdf-hq-ui/src/player/analytics.test.ts",
       "tdf-hq-ui/src/player/analytics.ts",
       "tdf-hq-ui/src/player/assetAccess.ts",
@@ -1659,6 +1662,7 @@
       "tdf-hq-ui/src/utils/artistFollowIntent.ts",
       "tdf-hq-ui/src/utils/artistIdentity.test.ts",
       "tdf-hq-ui/src/utils/artistIdentity.ts",
+      "tdf-hq-ui/src/utils/artistImage.ts",
       "tdf-hq-ui/src/utils/artistProfileContent.test.ts",
       "tdf-hq-ui/src/utils/artistProfileContent.ts",
       "tdf-hq-ui/src/utils/assertNever.ts",
@@ -1747,6 +1751,7 @@
       "tdf-hq-ui/src/utils/radioRouteVisibility.ts",
       "tdf-hq-ui/src/utils/releaseDate.test.ts",
       "tdf-hq-ui/src/utils/releaseDate.ts",
+      "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
       "tdf-hq-ui/src/utils/roles.ts",
       "tdf-hq-ui/src/utils/serviceTypesStore.ts",
       "tdf-hq-ui/src/utils/sessionPersonalData.test.ts",
@@ -2366,6 +2371,7 @@
       "tdf-hq/src/TDF/Artists/Promotion.hs",
       "tdf-hq/src/TDF/Auth.hs",
       "tdf-hq/src/TDF/Auth/AccountName.hs",
+      "tdf-hq/src/TDF/Auth/ClientAddress.hs",
       "tdf-hq/src/TDF/Auth/Throttle.hs",
       "tdf-hq/src/TDF/CMS/Models.hs",
       "tdf-hq/src/TDF/Calendar/Models.hs",
@@ -2396,6 +2402,7 @@
       "tdf-hq/src/TDF/Commerce/Money.hs",
       "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs",
       "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs",
+      "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/Http.hs",
       "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs",
@@ -2420,6 +2427,7 @@
       "tdf-hq/src/TDF/Contracts/Types.hs",
       "tdf-hq/src/TDF/Cors.hs",
       "tdf-hq/src/TDF/CoursePhone.hs",
+      "tdf-hq/src/TDF/Courses/Metadata.hs",
       "tdf-hq/src/TDF/Courses/Production.hs",
       "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
       "tdf-hq/src/TDF/Cron.hs",
@@ -2446,6 +2454,7 @@
       "tdf-hq/src/TDF/DTO/SocialDiscoveryDTO.hs",
       "tdf-hq/src/TDF/DTO/SocialEventsDTO.hs",
       "tdf-hq/src/TDF/DTO/SocialSyncDTO.hs",
+      "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
       "tdf-hq/src/TDF/Directory/Policy.hs",
       "tdf-hq/src/TDF/Distribution/StateMachine.hs",
       "tdf-hq/src/TDF/Email.hs",
@@ -2549,6 +2558,7 @@
       "tdf-hq/src/TDF/Services/FacebookMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramMessaging.hs",
       "tdf-hq/src/TDF/Services/InstagramSync.hs",
+      "tdf-hq/src/TDF/Services/LlmChat.hs",
       "tdf-hq/src/TDF/Services/RecordsIngestion.hs",
       "tdf-hq/src/TDF/Services/Stripe.hs",
       "tdf-hq/src/TDF/Services/YouTube.hs",
@@ -2566,6 +2576,7 @@
       "tdf-hq/src/TDF/Ticketing/Admission.hs",
       "tdf-hq/src/TDF/Ticketing/Confirmation.hs",
       "tdf-hq/src/TDF/Ticketing/Inventory.hs",
+      "tdf-hq/src/TDF/Ticketing/Issuance.hs",
       "tdf-hq/src/TDF/Ticketing/Refund.hs",
       "tdf-hq/src/TDF/Ticketing/Transfer.hs",
       "tdf-hq/src/TDF/Trials/API.hs",
@@ -3206,13 +3217,13 @@
     {
       "id": "SURFACE-562c5d7f20f572bc",
       "path": ".github/workflows/check-messaging-token.yml",
-      "sha256": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
+      "sha256": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-0ad43ac6597144d2",
       "path": ".github/workflows/check-mobile-distribution.yml",
-      "sha256": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+      "sha256": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3308,7 +3319,7 @@
     {
       "id": "SURFACE-24b0fd9f63025110",
       "path": "e2e/desktop/playback.spec.mjs",
-      "sha256": "506592965c63e3ba501a4920b65880d8ecc9dad186b8462a067820207d5a4552",
+      "sha256": "1a28b5ef206be82050f961123dfbe72e8e40cd91a5fc1bb4eb0afca85cb33cf4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3614,7 +3625,7 @@
     {
       "id": "SURFACE-bb80adee648c0293",
       "path": "e2e/web/records-thumbnails.spec.mjs",
-      "sha256": "53bff5d1d66f9ee34b8d177f04c1aa0d53e42129bb230d4774a0fe15970b2821",
+      "sha256": "2becc9611b6e709626b7d0a3db3e8d2985948caf8763e3f6e783c34d800ac3f5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3788,7 +3799,7 @@
     {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
-      "sha256": "19794399d49fc0d91653d91e6b3c8e4d2c5abd947927102e2f2f8b7f198df83e",
+      "sha256": "96a65fcb9a8fcced995341e4ad639bfa8df7298d6a28b543fc1be1adf569f8b4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3944,7 +3955,7 @@
     {
       "id": "SURFACE-d41c5a6a64677381",
       "path": "scripts/__tests__/catalog-list-audit.test.mjs",
-      "sha256": "539741064b7a1362a412e161d22e00e0e5ee76917903ae5d9736fc831992f16c",
+      "sha256": "6678d953c03f9df0ea01589230cb3e167bed8223fb151b1638c19be85a44e817",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -3998,7 +4009,7 @@
     {
       "id": "SURFACE-2a6db69bcc12b984",
       "path": "scripts/__tests__/continuous-improvement-loop.test.mjs",
-      "sha256": "85810f63d296d3086bda76084634371ab1ffc34d2564876c57adbc8b71da289a",
+      "sha256": "a9f665f14a487ec4b4bf8a0bafb11999250e0d0d816a72cc5426bab57b4082f7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4028,7 +4039,7 @@
     {
       "id": "SURFACE-38cae059ca169cb6",
       "path": "scripts/__tests__/directory-search-plan-parity.mjs",
-      "sha256": "3943a28082bd34a2fa30dc40632b2f9cd67298e0da9ee8034058944ea1e27ea5",
+      "sha256": "d3f45fd24ceabcf7d7d02fba79f91c591b2b86ee2904d9961003277440b0e6e1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4220,7 +4231,7 @@
     {
       "id": "SURFACE-30ba86b00dd5f4d7",
       "path": "scripts/__tests__/hetzner-inspection.test.mjs",
-      "sha256": "21ec6653c818ca31badb7aa7e6f16b485cf7a03abeadc7bc7cf6288906d7e053",
+      "sha256": "53e255cde8b47686eaeaa0122f9348b6df387b5b6ccf4be7059c655c466309c4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4868,7 +4879,7 @@
     {
       "id": "SURFACE-6c037a47184dd0e1",
       "path": "scripts/codex-loop-worker.sh",
-      "sha256": "6da47a449c7eebca4b1c1deab3a459a42d72f3472c04b71e5588b800b2c7f405",
+      "sha256": "467cb345b75f0afa7d96e98be460d4225374f3dec1c203c0984f62aef16cc282",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4878,45 +4889,33 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-3b3b7300cb3b148d",
-      "path": "scripts/continuous-improvement-loop-dirty-worktree.mjs",
-      "sha256": "9952689276374049d8eba81df209ea1dd6398b3b58ee201fc5e15aa5cf78c63b",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-a5b3501b72738223",
-      "path": "scripts/continuous-improvement-loop-forever.mjs",
-      "sha256": "9efb8aed16f5d26d97f15f32dc53b2c5bc281e3a29b1185a0ec8d21a14f882a6",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
       "id": "SURFACE-b3c3757671de3a8f",
       "path": "scripts/continuous-improvement-loop-supervisor.sh",
-      "sha256": "7f0c42b1a096a1887825717c8605c265bc6fca268edf8e0a636cc4a95b3dbc3e",
+      "sha256": "5f7ad2ee6a6070463e7fb8e5da4eeda56afc66c00015dc4eb6935b4a0ca4d7b4",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dcc180d2a4916e98",
+      "path": "scripts/continuous-improvement-loop-verify.mjs",
+      "sha256": "2c25693b5cc8608695c2353f3a7e31f5ec918e02fbd670bb6f0bfaa2f2e7d96c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-4866f83da6180efe",
       "path": "scripts/continuous-improvement-loop.codex.json",
-      "sha256": "cca31937bdc0322a70265c25a4256ff968c53784f2c772791da5b23ac215b711",
+      "sha256": "bb03117ee8f488069cca81703f8e70f96fb7412902f9bfb78b7f1363ed9a1af2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-587b06f07bbc17e1",
       "path": "scripts/continuous-improvement-loop.example.json",
-      "sha256": "87770e25fc0a34763b9e159e9934aa5025a7c7729611cb1e32495de2355e0830",
+      "sha256": "6f0a787a68041a7413c53b447854f77ce09accaf37efb14aee92bc90334a2a3d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-655b9679c92bd422",
       "path": "scripts/continuous-improvement-loop.mjs",
-      "sha256": "ecf7580ba5fa6a19d2937ef5cfd9fc4ae643af7d4349b3ecfb6fd45c00d821f5",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-cb864006a7638836",
-      "path": "scripts/continuous-improvement-loop.test.mjs",
-      "sha256": "defacc8e2687ea746480d89efa942a411845d263e39b37f592d79554149cdae2",
+      "sha256": "f2618194f28d356e0d5d9c856bf92397f7b69b7b6e2bbde1a2745ea58cbc79c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -4940,7 +4939,7 @@
     {
       "id": "SURFACE-55c2c32700cda24a",
       "path": "scripts/discover-improvement-idea.mjs",
-      "sha256": "9baaef9c2ffaaa7636bbe12f785b9e42cb8603349a822250fa8d9f0d363a45f1",
+      "sha256": "a4fce3753e221d2cb7c1577a15e97719372a686e586234e0af358a98082a9ccf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5036,7 +5035,7 @@
     {
       "id": "SURFACE-f9faf7061e36724c",
       "path": "scripts/inspect-hetzner-production.mjs",
-      "sha256": "945458c790cf56573329d5e22619b789db22e8ad70fe213e43f4b81a39213927",
+      "sha256": "aae57b63c56cacfba8c47c4603b2f99301c6325ffcff1594da560660239fcae4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5066,7 +5065,7 @@
     {
       "id": "SURFACE-bad721e602863a57",
       "path": "scripts/install-continuous-improvement-loop-launchd.sh",
-      "sha256": "dcebbbc4b020fa157b45903c7c5a343e0e95d1d6777145f76f4489450e301b9d",
+      "sha256": "21408db312b60e4ef2c36cc07796f6f9fb2e342b4f5ab3c3fcd7f59442eaa4f0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5150,7 +5149,7 @@
     {
       "id": "SURFACE-e51d4870cffa2db7",
       "path": "scripts/lib/auth_throttle_http.py",
-      "sha256": "871129c684a31eeecce2e75cb82e7d26c69f08ef8b0b4be201591b784ef71fbe",
+      "sha256": "c30b34ba0e5057b013ffd601421ed462c61a71e61e51e25f233e130d3c915989",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -5160,21 +5159,21 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
-      "id": "SURFACE-4738d9e01ae03383",
-      "path": "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
-      "sha256": "faf36f605524fb8935e15f5b440fc8ba22dbe4b0cf4606ebca7b466d5555b680",
+      "id": "SURFACE-52387ab4cef049b4",
+      "path": "scripts/lib/continuous-improvement-loop-verify.mjs",
+      "sha256": "3db41dd0683f33d1a03d46f402e6cd9c25a4e07cd2b690a179ba8e6744fc9f97",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-596444d6be3be153",
       "path": "scripts/lib/continuous-improvement-loop.mjs",
-      "sha256": "8b56d1d8ff9176a99571c7a8592604022048992f3d9b5b7f9539b39fcc70b422",
+      "sha256": "658148df4d0bf1c8df6e19da2d1266673158ba934f2191186b3b57b5e2e36fae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-5d55ff4fc614658c",
       "path": "scripts/lib/discovery.mjs",
-      "sha256": "a14e9b4b45190816752fdceb69684a059746e0a55344fef3c18f8451dcecdc14",
+      "sha256": "347304302f3a0e0161a6b8fc95d311a1eca12b6cd11bb3ffec378b862878ac4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6074,7 +6073,7 @@
     {
       "id": "SURFACE-6d63ec22f8ea99a7",
       "path": "scripts/start-continuous-improvement-loop.sh",
-      "sha256": "bd3e135520d8df917f6d634b59e3eae56d1eb80a76f9b4f9efad407d2c0ff632",
+      "sha256": "f36c33ec0d9767180c2543c3596964794e02c3e943efa72b3fbb2e970ec81850",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6260,7 +6259,7 @@
     {
       "id": "SURFACE-0971df6c3529561b",
       "path": "scripts/test-community-search.py",
-      "sha256": "bf63693f3a57208714bf1c49a5a06c4f8c18cc816ac30c0854e21fd0884aa7dc",
+      "sha256": "03d412c521370786b97e3b97299c197dd4af36b709e31896edf754ac201871bb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -6524,7 +6523,7 @@
     {
       "id": "SURFACE-305b8be869b1a5ec",
       "path": "scripts/test-hetzner-inspection.py",
-      "sha256": "6d044a60f64054bc370d9f9c67dbb341c2715411ccee1d5c780845444b97e181",
+      "sha256": "93fbbdd4918b2e78eec510a2a3710a07fb86ae9fbbe75f6831f530e4577236e4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8168,7 +8167,7 @@
     {
       "id": "SURFACE-c708f44fd07aaecc",
       "path": "tdf-hq-ui/src/api/admin.ts",
-      "sha256": "aa46977058c668c63545c17d7fdaa2eacceef4e9dfb0df1feb77f37b08cafe35",
+      "sha256": "61f5d4bce6561301d7ab6d9630a5334fb37ec794d3ceaeeebab02769a44e7cfd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8186,7 +8185,7 @@
     {
       "id": "SURFACE-128a32e4c523fd40",
       "path": "tdf-hq-ui/src/api/artistCatalog.ts",
-      "sha256": "746f1024c03b4e0da2e5bddf14e75998569e188c58b9b03b568774508c2f802e",
+      "sha256": "df818fc893572dad82f34b3f62508f71f732760d54b7230e8a6b2bd25ef5e7b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8205,6 +8204,18 @@
       "id": "SURFACE-ca0fcabe86de92f8",
       "path": "tdf-hq-ui/src/api/artistInvitations.ts",
       "sha256": "22b382c361b9ee99744c24a7ebb2888ac7037482cc607460a84a353614937a17",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dfed9ffddc3aa569",
+      "path": "tdf-hq-ui/src/api/artistProfileMedia.test.ts",
+      "sha256": "fe5a2920bf7c970b9fadc7b9869aef0917dba873ff9158ee6ca09523dfcefd33",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-f78816ba807d3b45",
+      "path": "tdf-hq-ui/src/api/artistProfileMedia.ts",
+      "sha256": "c65ad9b776938dead35bbe19e884ab2e8c0c49ba5f384088f0d46b8868b4d3d5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8492,13 +8503,13 @@
     {
       "id": "SURFACE-743e4202864493ee",
       "path": "tdf-hq-ui/src/api/fans.test.ts",
-      "sha256": "1d36c8a5f648dd3f44b7389181786dc3b603fa350570c898a091f9bf70bbd425",
+      "sha256": "950ce9aa232eb1bc40b85f24b4ee05dc53599dff908edea22fd96d04f1c00c08",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-ffd1f7d4f06774cf",
       "path": "tdf-hq-ui/src/api/fans.ts",
-      "sha256": "3d9fed39e573ed6f24f0d367fdb669414d86ffb172a8177423cecd4c8f874bf6",
+      "sha256": "75f0d175c04cd78845fb2fb305577eb00db074d30f2cc693a70d4d3a023a7046",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -8697,6 +8708,18 @@
       "id": "SURFACE-a8caa690095942ac",
       "path": "tdf-hq-ui/src/api/musicStorageResponse.ts",
       "sha256": "8f48adb2834adc89083f4ef643dde01dcfae051815f42121ac21bb1e6e233e78",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-aea9281143281e78",
+      "path": "tdf-hq-ui/src/api/nativeSessions.test.ts",
+      "sha256": "b5182c225479285db81bb07d1186bb2acb918bbf31a8a8e1f9173ab3f42e6484",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-686426e54e5f3623",
+      "path": "tdf-hq-ui/src/api/nativeSessions.ts",
+      "sha256": "569df0fd28c2a99f2dcc8161d96df5cb295bdcc19728845aa534f8fade34e40c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9096,6 +9119,18 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-8e1723edf220f689",
+      "path": "tdf-hq-ui/src/components/ArtistCoverPreview.test.tsx",
+      "sha256": "06395a1892e95b4d05a90098e954daca051517b77ceb7e17fd5826abc37534ba",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-84d1edb4b5f2be7f",
+      "path": "tdf-hq-ui/src/components/ArtistCoverPreview.tsx",
+      "sha256": "7ec230fec58cd0bf78d13c45f79e1293d273ae38307944c58ef6802f7110554d",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fe345132afa3a68e",
       "path": "tdf-hq-ui/src/components/ArtistFansList.test.tsx",
       "sha256": "bd3dab4df6469191bc1cdc53c951410c01fd9cf98bd874b1b55c3c88f8d92e8c",
@@ -9129,6 +9164,12 @@
       "id": "SURFACE-9641be0a0cab4f6d",
       "path": "tdf-hq-ui/src/components/ArtistProfileImage.tsx",
       "sha256": "3c8e49833a85f3220ca06125db816d25bfbd6a465abc82f300be2d0759cb1370",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-8fef27125aa18c8e",
+      "path": "tdf-hq-ui/src/components/ArtistProfileLink.tsx",
+      "sha256": "b320117e6d8108cad10a55c193ff7c05111a2abbaae149d4628499eef34ad15b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -9470,13 +9511,13 @@
     {
       "id": "SURFACE-2d575081440ad9a8",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.test.tsx",
-      "sha256": "235b3736f18e7096d605bea6e9b6314fae618961648873a06dc8341c206cf0b1",
+      "sha256": "987d719226612452df02396f642d729b1968c250c5b33897e5314768225026c6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a64f86cb6be0afe2",
       "path": "tdf-hq-ui/src/components/SessionVideoPreview.tsx",
-      "sha256": "4487eb699ad2c2d992373c5854e55fd508bbe5e034567f35e241c93bacbaacd8",
+      "sha256": "e1ae77a64b4b6a786c6402961cbcf57992874e6749298acf270c1d9519d09c60",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10172,13 +10213,13 @@
     {
       "id": "SURFACE-2e6553cdf058fc4c",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.test.tsx",
-      "sha256": "f3a51d5be321a6539137c208f42aeea6146b48d90aef3e1a9ee048c6ebac836c",
+      "sha256": "00e48cd3adc8e9b5e6f3f6c752f329b33245ef08cff59acde707e316b40db427",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7c62d34c2753965f",
       "path": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
-      "sha256": "eab1076340f853beda8044ffe0b7fa249d5f714d3a825a561a4120569db32f95",
+      "sha256": "45f4d920685dd6b5bddea888fb4131064813564b5ea9276ce1149334a925e8cd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10202,13 +10243,13 @@
     {
       "id": "SURFACE-2539d004605fd6d7",
       "path": "tdf-hq-ui/src/features/fanclubs/FanClubPreview.test.tsx",
-      "sha256": "826eb05dac4016237a2148ce5391049ca33f252ee7cb0542899c1eb6819c8f52",
+      "sha256": "e7109413fd72f29596cf005bfad400f7b2bc60e7e0babb3116a8d7f4942fb826",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-10d683e3558c7c8e",
       "path": "tdf-hq-ui/src/features/fanclubs/FanClubPreview.tsx",
-      "sha256": "08ee7bc678eafa92b7b188ce770e91f90c5f418447c024553101e2555961fda2",
+      "sha256": "d332a4b9f06873ed1fd60cde5dd8ab87b44820648dd267e7cb6bc17b0d0f0fb4",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10238,7 +10279,7 @@
     {
       "id": "SURFACE-2a073b8f5ad461e7",
       "path": "tdf-hq-ui/src/features/fans/FollowedArtists.tsx",
-      "sha256": "310cb8fce17503e19799426b20fcdec5a3b6e9eb6716a7f91b017ec4dc450018",
+      "sha256": "625d4c58450a76a62d7023e3a11b6ef2e89a10c7ee7a354887a2c586ce35da84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10520,13 +10561,13 @@
     {
       "id": "SURFACE-e28aa4c9f9e05abc",
       "path": "tdf-hq-ui/src/features/records/resolveRecordThumbnail.ts",
-      "sha256": "69c34d5b67e05787814dccb1778f88c1715172d11d80d2807d72d35948a16d95",
+      "sha256": "87e3ba60f811319738b5ad8496aabad74551f452c812e1e7d043ee265eb84ca9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6a288f194a0a37aa",
       "path": "tdf-hq-ui/src/features/releases/PublishedReleaseCard.tsx",
-      "sha256": "563ec855bfdf6a86c95ec5f1cb654780865d9c04405cc067744de625a22fd00d",
+      "sha256": "c2c69b6b7be1bfff0a472c7c6a5c78e7d3afa05a1f98459ecea5c173544b9696",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10550,19 +10591,7 @@
     {
       "id": "SURFACE-bed1b6650305b76c",
       "path": "tdf-hq-ui/src/features/releases/ReleaseFeed.tsx",
-      "sha256": "e9a42c05107105e1fb5959ac88c5cb7260e72cdd665065025eb3534188e66a5a",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-be5a695450cd340a",
-      "path": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.test.ts",
-      "sha256": "82f10252d063f3dcebe07c4ae250267078de0d4d6d14d674e25a7fc6dc404252",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-cfa376560285627f",
-      "path": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
-      "sha256": "249e356bd64235804d938213ce99e909350ac3dafc06bc984558c1a1a7d19b63",
+      "sha256": "fb7c1178ca60a85eebd89d58a35d0600794a50a2b06fa89ffc7de65125afb54a",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10592,31 +10621,19 @@
     {
       "id": "SURFACE-0f0cf60d35e6f5c1",
       "path": "tdf-hq-ui/src/features/releases/useReleaseFeed.ts",
-      "sha256": "d14328c34a608a3748610ffb35448acf5beed529601883f3f5077b70d445ff49",
+      "sha256": "dfc198ff5a4f5daeb28c5c99c0fe8f1d87e77e422c546e9233bf762d36d0310f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-f1b97cf7cc5b4eaf",
       "path": "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
-      "sha256": "7239d5ce0451329a04d2d56014f3ad06f00b67da9974f59b086e62dfb5e54890",
+      "sha256": "5f723bc6d111ee78994ddd2bbde40047b4fef81e92d8a04f0dd04ed8f5f55af8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-8c59c9acbb5b29a1",
       "path": "tdf-hq-ui/src/features/sessions/NativeSessionCard.tsx",
-      "sha256": "3ce4bc961c3be9896f91b5901501d7b2989daef2e549d893e22c4bbb2193ac37",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-48bc61fb013dcaf0",
-      "path": "tdf-hq-ui/src/features/sessions/nativeSessions.test.ts",
-      "sha256": "2596ee40090695de8cf4d8bc952daeacf621b2c1f09d2f60b97d78b97e0d7367",
-      "semanticConformance": "not-established-by-discovery"
-    },
-    {
-      "id": "SURFACE-e26b7365f9aa6c9c",
-      "path": "tdf-hq-ui/src/features/sessions/nativeSessions.ts",
-      "sha256": "4a1d0353025943fa582ea735e6726edb83495487f812da543ea119405503cdec",
+      "sha256": "0b606184e52a4df070b3e38c0fd3c3fab51952ad89e305bddc6dc1c2f1ef8441",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -10994,7 +11011,7 @@
     {
       "id": "SURFACE-7d1cdc171a244d93",
       "path": "tdf-hq-ui/src/pages/ArtistEnrichmentReviewPage.tsx",
-      "sha256": "d4c78364465efb2470458c71eabb7e90ce7943aa6005852aae064c352e6b0005",
+      "sha256": "88cdd0c3a3ced6c7beca9b87ae90badd0842f82fd08907d0bdd621a0b0738ba0",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11024,7 +11041,7 @@
     {
       "id": "SURFACE-f23ba2e5ecf07fe3",
       "path": "tdf-hq-ui/src/pages/ArtistPublicPage.tsx",
-      "sha256": "4e6891375e7a4d14cf4966032d068f31abb2180e88a58b72dd1859e8485adf65",
+      "sha256": "8bef0afd1d78232061fca08ee4de74f550036f7c1dc9bf916ab7e4a2643c7a26",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11276,13 +11293,13 @@
     {
       "id": "SURFACE-5fd31c626962ad2f",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.test.tsx",
-      "sha256": "20f32301f537008ac78ba682ad5d83a2c99e01e0e90cc64bffd8da5227f5b48e",
+      "sha256": "69d2e5c5578e6a197df30ed9a19b82e36fd3a207c26bf6d2358b922a94c673a1",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-932153a167d40c81",
       "path": "tdf-hq-ui/src/pages/DirectorySearchPage.tsx",
-      "sha256": "57d4e4708ecadf1e32f5daeaf4c1af8e45c715c88977ecbf6182278850dfcf64",
+      "sha256": "8291bfa98091297a5b96ca67cf1f2b822bd8a4470d83a19fae59ff99a7682074",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11384,7 +11401,7 @@
     {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "546c843c331c1c3fa6cde2e5ed8aec89c573b79ea428c45fa098f83dd1b2b6c7",
+      "sha256": "a0217caa2b802383711316d3637cbd34ebb74a97db209e6bcd7cc7602437d22b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11402,7 +11419,7 @@
     {
       "id": "SURFACE-3d536aa30411edce",
       "path": "tdf-hq-ui/src/pages/FanHubPage.playback.test.tsx",
-      "sha256": "fcad8c00f1b68c4b875120bf73398a95215782822cca0de37f1a0daf1707d296",
+      "sha256": "3945e81116656a821405f40415d587746f12b85fcf5223c92ae50d6e99b8c996",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11414,7 +11431,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "9292299f7b936d625838f2cd68fc8a88b14d39237bf692a1cbdf595a23652cb5",
+      "sha256": "85696fd90517d9dc9cff7a7c9d2e518e923284e4b556bc9e6b3609822dd47e28",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11564,13 +11581,13 @@
     {
       "id": "SURFACE-6c5ad1714500a7c5",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.test.tsx",
-      "sha256": "09e4d76079f9858f37dd634b681e2319e9b30405354112ac629dea51286f34a4",
+      "sha256": "5bf37c8fc363b406b689146f65e932fb3364d62c954be5c23a6b5a44a9e2a26e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-c9de0ed930b9721b",
       "path": "tdf-hq-ui/src/pages/LabelArtistsPage.tsx",
-      "sha256": "b0608bc7bfe80e07a3b108ec56961a2b017e165773915fb25d93fe6a0888871a",
+      "sha256": "f1b5f931b5a23450506065536a4709b6a06656e138aabf14c957b85043359a97",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11606,7 +11623,7 @@
     {
       "id": "SURFACE-4f9114663eff5a34",
       "path": "tdf-hq-ui/src/pages/LabelReleasesPage.tsx",
-      "sha256": "209b471c138d4a8a9369059a34002f06b8de9fce8f6ad9601b809ad0c9a64892",
+      "sha256": "cfc9a5768094f99ed0e36b50c851e838bbdcefb0941921c9e34d232e9b0adc77",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11810,7 +11827,7 @@
     {
       "id": "SURFACE-eb82e4705c1d2848",
       "path": "tdf-hq-ui/src/pages/MusicCatalogPage.test.tsx",
-      "sha256": "38daadb76e6ff15d8a4b1f8458ec2104cd8b1d76d6991ffbc9568eea95678334",
+      "sha256": "d34d0f97e2928b467bffa3031398caef895d82eb7f1d046e578375f1a7389d2c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11846,7 +11863,7 @@
     {
       "id": "SURFACE-474a81a2327740d9",
       "path": "tdf-hq-ui/src/pages/MusicReleasePublicPage.tsx",
-      "sha256": "9e4a04f54d85ba89a1620c986778c3d1293214ef161ce2a51c6cde32e8dd3744",
+      "sha256": "4aaf402124079126a777b2367f8dcfdace4182e34ad52c293b6ea87b0ee5e6df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11870,7 +11887,7 @@
     {
       "id": "SURFACE-6dc3d41d6d23778b",
       "path": "tdf-hq-ui/src/pages/MusicReleaseStudioPage.upload.test.tsx",
-      "sha256": "d5b2555b6b1e5a0bf27f0a124f3fb57019397d06a9695dbf9e8a417ceb72309c",
+      "sha256": "cec944e6e74bac98819b4dea879b6bc344ddd3a78e7adc21abcd80280ade89b8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12068,7 +12085,7 @@
     {
       "id": "SURFACE-56568ee47192d217",
       "path": "tdf-hq-ui/src/pages/RecordsPublicPage.tsx",
-      "sha256": "d98b02b415a9c01b40959a3801af5919f3e3d810ab20c86e978a1085e52dfd24",
+      "sha256": "d0a3fea0c99cf0347716a24c0ee7faf0d0dff21f32888ae8e86aec581ec82609",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12206,7 +12223,7 @@
     {
       "id": "SURFACE-42617e2d26348bd0",
       "path": "tdf-hq-ui/src/pages/SocialEventsPage.tsx",
-      "sha256": "668a587375c5ef9cfdd3cfc31184d79af112684f54eb4a88271fc64d74993397",
+      "sha256": "01229e45a124cb6abe0382d9eef00561606deb69ec554d8dd26b4a85de1f06fb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12254,13 +12271,13 @@
     {
       "id": "SURFACE-94ed138833ff9be9",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.test.tsx",
-      "sha256": "a497fb3d7e11289a6be96cb284c6ceee1dd4a2f0435a3b05ecf51030a8e5bbcc",
+      "sha256": "6ba4f8f777f72fe88da87c5e4f0730a353132d7812eaec2b957e1ebed5c4d38e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-a8a994f85758ab3a",
       "path": "tdf-hq-ui/src/pages/TdfPlatformPage.tsx",
-      "sha256": "0e33d6390625cc6b44a98f9bb32b10897613b33ee1fa2260d6e1c49d3d9c8fea",
+      "sha256": "9a8e4993313f12a39537882a555efffc12d698d5d13abb487c8eda1b64dc2210",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12338,7 +12355,7 @@
     {
       "id": "SURFACE-1e42b51a3ed57a58",
       "path": "tdf-hq-ui/src/pages/VideoCampaignsPage.tsx",
-      "sha256": "d3a2149f3bdde2e710a920fca3d2dc43e3085615c54b4c3685502bc894f5d7bb",
+      "sha256": "5de2d80b223e90a179d1d66863ecac1a6b73037ffe86fc6598603d70142c7fa2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12500,7 +12517,7 @@
     {
       "id": "SURFACE-7b92c5483aeaae74",
       "path": "tdf-hq-ui/src/player/ArtistProfilePlayback.integration.test.tsx",
-      "sha256": "ffc663df2c1d0e3ff0701b7cbc42ceaaeaf09a41e7a7da6fc6d8b4c203c1a1fb",
+      "sha256": "a71cbc2efee912be0840e528ac3b8a2a37ac91a393d8f9002698bf7fd710ee55",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12512,7 +12529,7 @@
     {
       "id": "SURFACE-16a0f1bec2658d22",
       "path": "tdf-hq-ui/src/player/ArtistProfilePlayback.tsx",
-      "sha256": "9dd1f8e7489478cdc0bb64753fe038cf7c38a90859a8e2582f31f1834c1cf632",
+      "sha256": "6ab8f3e0b1855ebc7533c0ea1c97d72b227c070d69255b23cb809fb95bd9e502",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12548,7 +12565,7 @@
     {
       "id": "SURFACE-5686de720c21778e",
       "path": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-      "sha256": "3d4b6a5253d5306d7082e8bab70ba96ceb63379322f0726b478a6543a5a12c90",
+      "sha256": "84f7669fed3905e0c4a534ea10d15d87968bcbfb6a9dbc5b49ada6bdadd93a03",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12561,6 +12578,18 @@
       "id": "SURFACE-89e8da86b1aae065",
       "path": "tdf-hq-ui/src/player/PlayerShell.tsx",
       "sha256": "bce3f4680f8f764eed1302b5ad71ef9a801686cafb2f74e3377ce4d7ed5650a3",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e1a30ef823ba21d1",
+      "path": "tdf-hq-ui/src/player/ReleasePlayerActions.test.ts",
+      "sha256": "556f02aa30c991a094cb4b30072c51e3576c91757e77c06afb3fa25a1fb82a4a",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-dbf48a4afa5a9d15",
+      "path": "tdf-hq-ui/src/player/ReleasePlayerActions.ts",
+      "sha256": "d93bc7cd2e872990edfa6c180aa24c736816d6e496ad6a4c7ebed30c359e1c0c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12938,13 +12967,13 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "442e84f10b7af1f1527199cd5fb248a0e51902ac20dd09514285d5c3aa8284ed",
+      "sha256": "3d73b8ce3626b8466daf28a2bf37dfadb2e37b547f3d9587b7cbb6cba1b4d115",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "3f038cf72e83e7967c18b1f2bbd05a0a6c5558932116ee599f5b9c4bf0912bf0",
+      "sha256": "ccbc0da7f4944f842ef115a7c3257fced61fc3e8ec08e8de510ab061de39fa7e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12956,13 +12985,19 @@
     {
       "id": "SURFACE-954c31f1f53602cf",
       "path": "tdf-hq-ui/src/utils/artistIdentity.test.ts",
-      "sha256": "acb5a3e652e775479c512004696b564253f1e0dd90904eb29fb8c2343902210f",
+      "sha256": "9cd7cb76de4f51c7cdebb6489d4920408ee8ae34b8448da433915768eb6b3b61",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-b2be3c4bb9adc022",
       "path": "tdf-hq-ui/src/utils/artistIdentity.ts",
-      "sha256": "e037a5ceb7a7c8377575666d7d0e3a540a3c714da8324f17b85521c96e047a4d",
+      "sha256": "cb53889654ea5f1790c37d40acbf0839c4ba8bc1698870063530c09e8813174f",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-12770ceb2b42cba4",
+      "path": "tdf-hq-ui/src/utils/artistImage.ts",
+      "sha256": "d4d5b2e77247f434e0bb07d1cddf46ecd10022160933e7b3e9722e8c52795845",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13491,6 +13526,12 @@
       "id": "SURFACE-bcd48d67432136ed",
       "path": "tdf-hq-ui/src/utils/releaseDate.ts",
       "sha256": "db23efb506ffd9aab7be771830e0f78c75fd0ff8a49ce957d5e27e1fd9fc84df",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-7e0dc33999b1de01",
+      "path": "tdf-hq-ui/src/utils/resolveRecordThumbnail.ts",
+      "sha256": "651eca81c12dd1a15bc5c94086572a12ec322cfbe77301562e6ba6398dd2f978",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -16862,7 +16903,7 @@
     {
       "id": "SURFACE-4685f0d1d0cfd356",
       "path": "tdf-hq/src/TDF/API.hs",
-      "sha256": "14f98ec436c46f5eed2df814ca140ea1125b93a7ac3bcc4ff6f160861a2233ec",
+      "sha256": "5fff27851b528e15bc225b2cbf15a5df9804e87d6419d92c0eb9a87fc2695b20",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17108,7 +17149,7 @@
     {
       "id": "SURFACE-200737fdda273f28",
       "path": "tdf-hq/src/TDF/API/SocialEventsAPI.hs",
-      "sha256": "ff4a520a6e7c6b9d770a157701b30a5460b9d5ab97a137ff0aedfcf43e3fb33b",
+      "sha256": "f478a6ef0b343c4884d4f2477c1c9f912e58ee68d76affe2005a04d87b65871e",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17196,9 +17237,15 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-81704df539b2da06",
+      "path": "tdf-hq/src/TDF/Auth/ClientAddress.hs",
+      "sha256": "9520084fa6710848f47c40efbf35133af4d889720d9b7806bf5136adf60e904c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-fcdcb342b1a07142",
       "path": "tdf-hq/src/TDF/Auth/Throttle.hs",
-      "sha256": "462dd51867cf0f6634fc2450e7723e297721dbc4544775aa9d2fcbcf12eb0533",
+      "sha256": "32444975e77373416fec2c1c379e5975713cc0857123d82930752bca5b0ef43f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17222,7 +17269,7 @@
     {
       "id": "SURFACE-83024dbf8c244b83",
       "path": "tdf-hq/src/TDF/CampaignAutomation.hs",
-      "sha256": "f6419624116a99987e6e68fb59c39f56073ec1a0392fa9fbb66e4a776a634c8b",
+      "sha256": "2cb7ce3d8732aba8f17708deee5f15bf0b41f5376e95dac0962a8564fce6c9d8",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17376,6 +17423,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-4c930baf69b931a2",
+      "path": "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+      "sha256": "c12568bfac60b5734339eeec886cb23c0fe010a4d75df7f5d779480807805518",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-1f329e23e5aba24d",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
       "sha256": "16971d54ba7ab0eccd890a33511cf88b9884599e8b5274cb91ef291736a0a720",
@@ -17426,7 +17479,7 @@
     {
       "id": "SURFACE-ec38793d0cc5b091",
       "path": "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs",
-      "sha256": "edd3db953b7f89b6a79cce9fe5cddcc8711f13169a8558335fc40339634d085f",
+      "sha256": "0e1b0135876e275cb5131236e7907060dca3f128b9e6341b2d6221141fee21e5",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17520,6 +17573,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-134c9ddb3c32afae",
+      "path": "tdf-hq/src/TDF/Courses/Metadata.hs",
+      "sha256": "ba3efe18dff11d3f36413640d7d3c2b58222a445dd2240509ef2b1378b5fe661",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-b5ed9df91b31bc61",
       "path": "tdf-hq/src/TDF/Courses/Production.hs",
       "sha256": "f2b56127bd17e3f98c3bf6836ea38ae7a9281bfb58fc6d6a6212d80d348c106c",
@@ -17528,13 +17587,13 @@
     {
       "id": "SURFACE-6585884b25e4a8d9",
       "path": "tdf-hq/src/TDF/Courses/PublicMetadata.hs",
-      "sha256": "d084222b9da081d89cfb4f80dc7442e6be0fe3f54873c547c96a77a3f1003af2",
+      "sha256": "f1b7d5faa26ac03e6217695f5b1dbf11ba31108bd1d3967969f62efe33b04376",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-7774c01ac1644990",
       "path": "tdf-hq/src/TDF/Cron.hs",
-      "sha256": "49728135c1299ac19d712709832349c1e3a405f66c58c3f4baf1a272dc5ae804",
+      "sha256": "79880bef33e2bb3a2d7d21a8b91de25e64a184cf7f92affce51576dce9cfd61c",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17673,6 +17732,12 @@
       "id": "SURFACE-d8b4f1e2ff66bf87",
       "path": "tdf-hq/src/TDF/DTO/SocialSyncDTO.hs",
       "sha256": "3dddc78ae270f09ddaafef0e86ebcce94e19a3e45b3b0689db3b37bd45527b24",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-15d051dc6f1642e3",
+      "path": "tdf-hq/src/TDF/DTO/TicketPaymentReceipt.hs",
+      "sha256": "79047936e9a4fff6cbf15767563a68cba32c1d4eaff754a2e6f18046615d3a43",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17972,7 +18037,7 @@
     {
       "id": "SURFACE-a6d0775d20903e98",
       "path": "tdf-hq/src/TDF/Routes/EventTickets.hs",
-      "sha256": "59bb47d4b48d4d98aef545b02c3d2d51b47f73dc17c7d1033a47f1874a9ef1b8",
+      "sha256": "09876be565334ca1447092a96546f919b578168a2e927acaa593153ea3fe8e00",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -17984,7 +18049,7 @@
     {
       "id": "SURFACE-30631eda0c3b4bf0",
       "path": "tdf-hq/src/TDF/Server.hs",
-      "sha256": "f3407cfd5ad25614728fea1b9c2f9b877535441bbd420c82020cd38f598ae842",
+      "sha256": "e6ff7cfdf1c79b7af0dd8d09ead32ac2b469272ee270f1589aaa97667c963062",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18014,7 +18079,7 @@
     {
       "id": "SURFACE-0383785953b45d34",
       "path": "tdf-hq/src/TDF/Server/Directory.hs",
-      "sha256": "594adfab7aa756ac1d0b20d438e871ddc7b4efbccd7edc6a7b01918530bc27be",
+      "sha256": "ea7b71a9b509d0495035e527f7a5ede89a413de035d47ce07070b58ec3300d5d",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18116,7 +18181,7 @@
     {
       "id": "SURFACE-8bea15f709688422",
       "path": "tdf-hq/src/TDF/Server/ProviderTransport.hs",
-      "sha256": "4d9a69a37a2e851b92b8b50c6875c954bdf73b68d55511c0830d9c9bf4e9f940",
+      "sha256": "f42c6b0bf7913cf6f0a0deeae6aa6c14785644edf2d50d97dd840d1202080cae",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18134,7 +18199,7 @@
     {
       "id": "SURFACE-f26997e896f3fcbc",
       "path": "tdf-hq/src/TDF/Server/ServiceStorefront.hs",
-      "sha256": "dfca68a73bc3e6f4dca416da2e14e6139a94f54465993816eb44e7be320efd68",
+      "sha256": "ad338e7fb54bcf415d0b2a87f653a2855ab0f0f92219a09c1c22125ab02b7d19",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18146,7 +18211,7 @@
     {
       "id": "SURFACE-b256b583899a43d4",
       "path": "tdf-hq/src/TDF/Server/SocialEventsHandlers.hs",
-      "sha256": "08f28edd0a66048437fe769039ecb24318e8c577e6292c0047ef5486a53e7342",
+      "sha256": "790e1d6df83864710f6251d7473976d779a65c25d7e291be540041627dff278f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18170,7 +18235,7 @@
     {
       "id": "SURFACE-6bf5b2f9b831197f",
       "path": "tdf-hq/src/TDF/Server/TicketPaymentReceipt.hs",
-      "sha256": "910df00db309c1967dd48ce6ce39508259d9ffd6cf86c3511c9d8b7ffddfb44d",
+      "sha256": "f6ed880698126fbfbc409ca4b1098c5f5052b0ea22cd44cade3d3e17de0db6cb",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18188,13 +18253,13 @@
     {
       "id": "SURFACE-b79d63603a30c4ce",
       "path": "tdf-hq/src/TDF/ServerAdmin.hs",
-      "sha256": "430a48624f32ee0f0350dc368fd6b49a55b377a4c5624f06c2f74b849fef7712",
+      "sha256": "7ac0b9e10bceeb3d90db939fb6ba851398cf52790e36fe5566624e54934857a7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2c8058f1bd710db0",
       "path": "tdf-hq/src/TDF/ServerAuth.hs",
-      "sha256": "6fbee18809a8eb6330c1d34ea8be5ad0631641737896553bc40f758e5d6dba07",
+      "sha256": "477362e6c98bbd71fe01453a167cb418180f6f804354a7f840f9a96f950b7c8f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18291,6 +18356,12 @@
       "id": "SURFACE-b4b451c7f0a9bfab",
       "path": "tdf-hq/src/TDF/Services/InstagramSync.hs",
       "sha256": "e16d11f884ad009aa3d7695165db99fc9b245c8e863c10ad0eea4f3c5625ade7",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-e60c666298519425",
+      "path": "tdf-hq/src/TDF/Services/LlmChat.hs",
+      "sha256": "9c2a181eb58e95a0e66ab55afc0c66f50ff5e2b04a5b7917c52ca844e6c1785b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18393,6 +18464,12 @@
       "id": "SURFACE-b48f5e82f84a1379",
       "path": "tdf-hq/src/TDF/Ticketing/Inventory.hs",
       "sha256": "12bffe2306dd3639c0afe23e05e08a1baa55c9615540a3e8a747d9e83eb90e8c",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
+      "id": "SURFACE-43aa8fca8f095e2e",
+      "path": "tdf-hq/src/TDF/Ticketing/Issuance.hs",
+      "sha256": "398c68514db13ca6c396a3b160cdf10d9b0524c48acb10e7c21032d15e5e25b7",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18500,7 +18577,7 @@
     {
       "id": "SURFACE-f0d2532f872b8258",
       "path": "tdf-hq/tdf-hq.cabal",
-      "sha256": "673a6d8fb0c870c78debcee40df7e476707b380247da19414870db6ec6490af1",
+      "sha256": "609af91c348659abaecb1eaca910dbc2c02e512fc4d1b9f6ac63222c88cb7e5f",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -18578,7 +18655,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "1556d52061b59dda1fa6e20d5fb1bd5986f4cd7a578545946dc8ceec86dfee4d",
+      "sha256": "16d5ee619523893449b1f199beb354f075ccee05eb1fea0c374f8849d27d02df",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19040,7 +19117,7 @@
     {
       "id": "SURFACE-85fdfa0ceef5e10d",
       "path": "tdf-hq/test/TDF/ServerSpec.hs",
-      "sha256": "c91224ef9cacdc0991b1a1d0f2edba10a1da577673ec80314b878d0908447cd4",
+      "sha256": "0c8208720533a0ed4f5e1daef883b778bc9333ff5752c39807a065222af8c274",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -19154,7 +19231,7 @@
     {
       "id": "SURFACE-da468ce284927c10",
       "path": "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs",
-      "sha256": "4cf9911fe480a87f18ff9aff6ad87852614e44fd61a898d5ccf0097d4f641a74",
+      "sha256": "793ceed7d044f4ae86b61fd5bcbdf200fc833977d1408d6461f5536ac3c500fd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -22023,7 +22100,7 @@
   "artifacts": [
     {
       "path": "AI_WORKFLOW.md",
-      "sha256": "3d317430f467a68fdc8541205ce5da725e754113793f5ba88c4aa9c8337fbc76",
+      "sha256": "905a1dbf49d26cc640390b2b278fdfd8f55aba725d0aa0d1559a9a78bece3f1e",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22163,7 +22240,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "0b78d100a1dc87b48523ea9aad7fdc58d513a4c01cd8120d25cefc8bede95f54",
+      "sha256": "7d48b36d8b035f0035b7d6ced9f7b7fad2ca3a3b437d8dac1a905f20f4a99256",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22611,7 +22688,7 @@
     },
     {
       "path": "docs/adr/0133-enforced-module-boundaries.md",
-      "sha256": "71af7f45965b5d8016716e17748db867efcbdd15ecd3831e70452cc0f06d02b5",
+      "sha256": "3f56a0328fa3a400d3a47c167710f1022709bc618cff90394bce8cdbe257b8ad",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -22674,7 +22751,7 @@
     },
     {
       "path": "docs/artist-enrichment-runbook.md",
-      "sha256": "8da89361a61a7404f93547ddf4937c5ee0f0813eab7d807ac068e0119ebd3b6e",
+      "sha256": "8cb30c509bd51f19ff35ab1ff5d10e0c9b97419656fdb1814e5f14a4170a447f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -25733,7 +25810,7 @@
     },
     {
       "path": "formal/auth/README.md",
-      "sha256": "ca9b994f3f9c4f7df7374b5e301f52389d754e4ff9f6c6490676f15ee642b6d5",
+      "sha256": "285c3c265de52623072fc5a278759a97a49ef298849adc07b7a3f2f57363f058",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -30591,7 +30668,7 @@
     },
     {
       "path": "formal/system/audit-2026-10-31-phase1.md",
-      "sha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "authority": "inferred",
       "authorityBasis": "Estado: 28 obligaciones de modelo en `verify:inductive-proofs` (cuatro modelos, todos con prueba inductiva y control negativo).",
       "kind": "requirement-candidate"
@@ -31606,7 +31683,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e3aa2fb0065bf17549559864b3f1bae2e246f0e0b28c4d77a3710fae591e8291",
+      "sha256": "9897345fe544ae3bd025f4079b625354f64b95a094c8527251fd95179b003a49",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
@@ -31648,7 +31725,7 @@
     },
     {
       "path": "formal/system/social-messaging-routes.md",
-      "sha256": "019aa7af6d2bf2d89fb6bf9cff16850af98cea8558afd148a19c1f6242f192e3",
+      "sha256": "c0d688d2ebc31b062fd790c4f3d7480f5954641bbf81cc4f583262274218e0b2",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31802,7 +31879,7 @@
     },
     {
       "path": "ops/hetzner/README.md",
-      "sha256": "b34d8b33635e0b75e24e96c153f2fe52ff18d8eb2ec2f39fe12f071e2bd5064c",
+      "sha256": "774ab7e42fae8947ce8f0b91c0e5633f1178d3942c8ce26ea2d08bc3ba748ff1",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31824,6 +31901,13 @@
     {
       "path": "ops/hetzner/compose.restore.yaml",
       "sha256": "d73e899c86d0012d274f2cefd261562f44f3c42542ece2c604a7e0ca1b8d8b06",
+      "authority": "inferred",
+      "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
+      "kind": "requirement-candidate"
+    },
+    {
+      "path": "ops/hetzner/recovery-custody-setup.md",
+      "sha256": "86f64f455746d38ede99401e8b2cd42657792c754dcb7fab78ec00fe16986c70",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -37540,7 +37624,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 118,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-01",
@@ -37571,7 +37655,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 119,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-02",
@@ -37602,7 +37686,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 120,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-03",
@@ -37633,7 +37717,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 121,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-04",
@@ -37664,7 +37748,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 122,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-05",
@@ -37695,7 +37779,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 123,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-06",
@@ -37726,7 +37810,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 124,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-07",
@@ -37757,7 +37841,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 125,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-08",
@@ -37788,7 +37872,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 126,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-09",
@@ -37819,7 +37903,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 127,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-10",
@@ -37850,7 +37934,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 128,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-11",
@@ -37881,7 +37965,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 162,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-12",
@@ -37910,7 +37994,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 163,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-13",
@@ -37939,7 +38023,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 195,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-14",
@@ -37968,7 +38052,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 196,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-15",
@@ -37997,7 +38081,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 197,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-16",
@@ -38026,7 +38110,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 205,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-17",
@@ -38055,7 +38139,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 211,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-18",
@@ -38084,7 +38168,7 @@
       "statement": "error",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 212,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-19",
@@ -38113,7 +38197,7 @@
       "statement": "warning",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 222,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-21",
@@ -38142,7 +38226,7 @@
       "statement": "info",
       "source": "formal/system/audit-2026-10-31-phase1.md",
       "line": 223,
-      "sourceSha256": "3ea87c5110b46603fc20e2f1d707c2f5b1834ea03da72ccb35affef215ae842a",
+      "sourceSha256": "6e808c03926d9654a3d8162012c58b362697baf5dedbde4237368e094ef3a3e0",
       "status": "inferred",
       "declarationColumns": {
         "ID": "F-22",

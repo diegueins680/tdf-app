@@ -1,6 +1,6 @@
 import { nativeArtworkForUrl, nativeSessionsFromFeed, readNativeSession, sessionPlayerTrack } from './nativeSessions';
-import type { RecordsFeedDTO, RecordsResourceDTO } from '../../api/records';
-import { EMPTY_QUEUE, nextQueueIndex, queueReducer } from '../../player/queue';
+import type { RecordsFeedDTO, RecordsResourceDTO } from './records';
+import { EMPTY_QUEUE, nextQueueIndex, queueReducer } from '../player/queue';
 const entity = { id: 'session-id', title: 'Synthetic session' };
 const metadata = () => ({ schemaVersion: 1, kind: 'session', artistPartyIds: [535], artist: 'Synthetic', state: 'ready', durationMs: 30000,
   sources: [{ url: 'https://api.tdfrecords.net/assets/serve/synthetic/video.mp4', mediaType: 'video/mp4', quality: 'high' },

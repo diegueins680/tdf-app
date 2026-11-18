@@ -72,7 +72,7 @@ test('system media controls follow songs, radio, explicit pause, artist changes 
 
     // Radio changes the source on the existing audio element.
     await musicAudio.evaluate((element) => { window.desktopAudioBeforeRadio = element; });
-    await navigate(window, '/inicio#radio');
+    await navigate(window, '/solicitudes-acceso/revision');
     const bar = window.getByTestId('radio-docked-bar');
     await expect(bar).toContainText('Emisora sintética', { timeout: 30_000 });
     await bar.getByRole('button', { name: 'Reproducir radio', exact: true }).click();

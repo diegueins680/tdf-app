@@ -30757,6 +30757,77 @@
       "currentDecisionId": "912cda11c7b6eb622f76",
       "executionAllowed": false
     },
+    "continuousImprovementLoopRework20261113": {
+      "sourceMain": "65e5517c5c30e00c95c9f3c4063987ff4ccfc545",
+      "reason": "The continuous improvement loop rework (pull request #750) deleted scripts/continuous-improvement-loop-forever.mjs and scripts/lib/continuous-improvement-loop-dirty-worktree.mjs, so these fingerprints have no current candidate. The exact decisions, their positions and their source locators are preserved as history. No catalog values are deleted: both lists were command-line and process-state mechanics of removed automation.",
+      "decisions": [
+        {
+          "position": 45,
+          "decision": {
+            "id": "c8eb2cd455c6586eb633",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          "source": {
+            "file": "scripts/continuous-improvement-loop-forever.mjs",
+            "name": "runnerState",
+            "line": 32,
+            "values": [
+              "mode",
+              "pid",
+              "state",
+              "root",
+              "configPath",
+              "intervalSeconds",
+              "stopPollSeconds",
+              "cycleTimeoutSeconds",
+              "cycleKillGraceSeconds",
+              "startedAt",
+              "updatedAt",
+              "heartbeatAt",
+              "cycleCount",
+              "pidFile",
+              "stopFile",
+              "heartbeatFile",
+              "runnerLogFile",
+              "statusFile",
+              "stateDir",
+              "childArgs"
+            ]
+          }
+        },
+        {
+          "position": 63,
+          "decision": {
+            "id": "02f3751b46f8a4867bec",
+            "classification": "genuine-technical-constant",
+            "disposition": "retain-in-code",
+            "specializedModel": "technical_constant_allowlist",
+            "priority": "P3-retain",
+            "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+            "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+            "reviewed": true
+          },
+          "source": {
+            "file": "scripts/lib/continuous-improvement-loop-dirty-worktree.mjs",
+            "name": "dirtyStatus",
+            "line": 214,
+            "values": [
+              "status",
+              "--porcelain"
+            ]
+          }
+        }
+      ],
+      "addedDecisionIds": [
+        "16e3988d48089cc77b7e"
+      ]
+    },
     "frontendComposeContext20261108": {
       "reason": "Restore exact reviewed full-player wrapper and synthetic fixture. Preserve the backend-only wrapper decision as historical context; all current candidates still require strict audit.",
       "preservedBackendDecisions": [
@@ -31472,16 +31543,6 @@
       }
     },
     {
-      "id": "c8eb2cd455c6586eb633",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
-      "reviewed": true
-    },
-    {
       "id": "25bd48ebe5582108498d",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -31649,16 +31710,6 @@
       "priority": "P0-security",
       "risk": "Echoing arbitrary status strings from hosting payloads could disclose sensitive or attacker-controlled content in CI logs and artifacts.",
       "justification": "This fixed output vocabulary redacts all unrecognized app/machine states to unknown. It is not a payment state machine or business catalog, does not control availability, and cannot authorize a payment or deployment.",
-      "reviewed": true
-    },
-    {
-      "id": "02f3751b46f8a4867bec",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
-      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
       "reviewed": true
     },
     {
@@ -75311,50 +75362,6 @@
       "reviewed": true
     },
     {
-      "id": "7233cfc847a5104949f1",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Conflating these source tags could replace a legacy reference with an inferred canonical publication.",
-      "justification": "Individually reviewed discriminants for the three existing public read sources: canonical Music, legacy artist releases and persisted Records delivery metadata. These are internal source-provenance tags, not artist-selectable catalog values, publication kinds, grants or identity inference.",
-      "reviewed": true,
-      "reviewMethod": "individual-source-review",
-      "reviewBatch": "native-tdf-sessions-2026-11-05",
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/artistCatalog.ts",
-        "line": 8,
-        "kind": "literal-union",
-        "name": "CatalogSource",
-        "valueCount": 3,
-        "consumerCount": 38,
-        "exactDuplicateIds": [],
-        "similarCandidateIds": []
-      },
-      "previousDecision": {
-        "id": "44a129d61d3814253c76",
-        "classification": "genuine-technical-constant",
-        "disposition": "retain-in-code",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P3-retain",
-        "risk": "Conflating these source tags could replace a legacy reference with an inferred canonical publication.",
-        "justification": "Individually reviewed discriminants for two existing API response shapes. These are internal source-provenance tags, not artist-selectable business values, editable release kinds, persisted genre values or streaming grants.",
-        "reviewed": true,
-        "reviewMethod": "individual-source-review",
-        "reviewBatch": "artist-catalog-unification-2026-10-29",
-        "evidence": {
-          "file": "tdf-hq-ui/src/api/artistCatalog.ts",
-          "line": 5,
-          "kind": "literal-union",
-          "name": "CatalogSource",
-          "valueCount": 2,
-          "consumerCount": 30,
-          "exactDuplicateIds": [],
-          "similarCandidateIds": []
-        }
-      }
-    },
-    {
       "id": "8c80d98c11e7d2dca074",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
@@ -75732,38 +75739,6 @@
       },
       "reviewBatch": "music-release-platform-sync-2026-10-07",
       "reviewMethod": "manual-source-review"
-    },
-    {
-      "id": "b4afb300f6c7ae1e24dd",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-      "justification": "Typed API-client dispatch adds artist featured-track GET/PUT methods while retaining all inherited methods. These transport function names are implementation mechanics, not editable/selectable domain catalog values.",
-      "reviewed": true,
-      "evidence": {
-        "file": "tdf-hq-ui/src/api/musicReleases.ts",
-        "line": 545
-      },
-      "reviewBatch": "artist-featured-track-2026-10-30",
-      "reviewMethod": "manual-source-review",
-      "previousDecision": {
-        "id": "a54bc30988f056e6d713",
-        "classification": "genuine-technical-constant",
-        "disposition": "retain-in-code",
-        "specializedModel": "technical_constant_allowlist",
-        "priority": "P3-retain",
-        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
-        "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
-        "reviewed": true,
-        "evidence": {
-          "file": "tdf-hq-ui/src/api/musicReleases.ts",
-          "line": 518
-        },
-        "reviewBatch": "music-track-search-2026-10-26",
-        "reviewMethod": "manual-source-review"
-      }
     },
     {
       "id": "6c09847d52c099763024",
@@ -78588,6 +78563,25 @@
       }
     },
     {
+      "id": "375e2baef11729d8d3ed",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "An unreviewed failure vocabulary could reflect runtime data or hide the rejected admission boundary.",
+      "justification": "Individually reviewed: these nine strings name fixed read-only inspection phases, not selectable business data or deployment authority. They must remain a closed protocol vocabulary; complete-message, exit-status and empty-stdout checks reject arbitrary remote diagnostics. Rejection never creates a runtime receipt or permits release preparation.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "release-recovery-diagnostics-2026-11-10",
+      "evidence": {
+        "file": "scripts/inspect-hetzner-production.mjs",
+        "line": 17,
+        "kind": "array",
+        "name": "failureStages",
+        "valueCount": 9
+      }
+    },
+    {
       "id": "3d30e49db2fefa10a623",
       "classification": "governed-reference-data",
       "disposition": "consumer-update",
@@ -78756,7 +78750,7 @@
       "reviewed": true
     },
     {
-      "id": "b79cd312b41d5645e457",
+      "id": "f2b2cb5d5a6f09576306",
       "classification": "genuine-technical-constant",
       "disposition": "retain-in-code",
       "specializedModel": "technical_constant_allowlist",
@@ -78765,10 +78759,33 @@
       "justification": "Individually reviewed exact spotify.link and spoti.fi host literals used only by the legacy playback URL adapter. They are fixed parsing/routing compatibility cases, not selectable business providers, rights declarations, payment rails or an editable catalog. Original link targets remain unchanged and external playback is not claimed.",
       "reviewed": true,
       "evidence": {
-        "file": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
-        "line": 46
+        "file": "tdf-hq-ui/src/player/ReleasePlayerActions.ts",
+        "line": 47,
+        "kind": "array",
+        "name": "provider",
+        "valueCount": 2,
+        "values": [
+          "spotify.link",
+          "spoti.fi"
+        ]
       },
-      "reviewBatch": "legacy-provider-actions-2026-10-26"
+      "reviewBatch": "player-layer-relocation-20261118",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "previousDecision": {
+        "id": "b79cd312b41d5645e457",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P2-compatibility",
+        "risk": "Changing exact host classification may send a provider HTML/share page to native audio or mislabel external navigation. This list confers no authorization or provider-payment authority.",
+        "justification": "Individually reviewed exact spotify.link and spoti.fi host literals used only by the legacy playback URL adapter. They are fixed parsing/routing compatibility cases, not selectable business providers, rights declarations, payment rails or an editable catalog. Original link targets remain unchanged and external playback is not claimed.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/features/releases/ReleasePlayerActions.ts",
+          "line": 46
+        },
+        "reviewBatch": "legacy-provider-actions-2026-10-26"
+      }
     },
     {
       "id": "578a6926f6b1b91c0ae7",
@@ -78813,77 +78830,6 @@
         "exactDuplicateIds": [],
         "similarCandidateIds": []
       }
-    },
-    {
-      "id": "113d30680a015e946cfd",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This synthetic ready NativeSession object supplies title/artist/offset/media fields solely to the NativeSessionCard parameterized regression. The test asserts original recording/recording_session/record_release interaction identity with exact string IDs. It is not a selectable session catalog or persisted production fixture.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
-        "line": 18,
-        "kind": "object-registry",
-        "name": "session",
-        "valueCount": 9,
-        "values": [
-          "id",
-          "title",
-          "artist",
-          "artistPartyIds",
-          "durationMs",
-          "state",
-          "sources",
-          "chapters",
-          "credits"
-        ]
-      }
-    },
-    {
-      "id": "591730a43b318244f921",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This synthetic processing NativeSession object exercises selected card focus and expansion with an exact publication string ID. Its field names and state are test setup; no backend session, release, privilege or catalog is created.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
-        "line": 30,
-        "kind": "object-registry",
-        "name": "session",
-        "valueCount": 10,
-        "values": [
-          "id",
-          "title",
-          "artist",
-          "artistPartyIds",
-          "publication",
-          "durationMs",
-          "state",
-          "sources",
-          "chapters",
-          "credits"
-        ]
-      }
-    },
-    {
-      "id": "5400ecebb818745bb318",
-      "classification": "security-system-registry",
-      "disposition": "consumer-update",
-      "specializedModel": "Canonical InteractionKind / InteractionIdentity from the interactions API and generated OpenAPI schema",
-      "priority": "P1-consumer",
-      "risk": "An incorrect publication kind or coerced string key can attach a conversation to the wrong publication.",
-      "justification": "This typed adapter binds the existing RecordsFeedDTO sessions, recordings and releases fields to their already established InteractionIdentity kinds: recording_session, recording and record_release. These are the exact canonical kinds used by the original grids; it introduces no new registry value, option authority or editable catalog. NativePublicationKind is constrained by the generated InteractionKind schema. Exact-kind/string-ID, equal-ID cross-kind, malformed-metadata and selected-publication regressions qualify the consumer mapping.",
-      "reviewed": true
     },
     {
       "id": "bf9a966de4b48fc631fe",
@@ -81402,169 +81348,6 @@
       "reviewed": true
     },
     {
-      "id": "3da2ce1c629b3a01038d",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-        "line": 22,
-        "kind": "array",
-        "name": "collections",
-        "valueCount": 2,
-        "values": [
-          "recordings",
-          "recording"
-        ]
-      }
-    },
-    {
-      "id": "d60bc4e0e30a78088f7c",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-        "line": 23,
-        "kind": "array",
-        "name": "collections",
-        "valueCount": 3,
-        "values": [
-          "sessions",
-          "recording_session",
-          "session"
-        ]
-      }
-    },
-    {
-      "id": "b7b102839e55773b7334",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-        "line": 24,
-        "kind": "array",
-        "name": "collections",
-        "valueCount": 3,
-        "values": [
-          "releases",
-          "record_release",
-          "release"
-        ]
-      }
-    },
-    {
-      "id": "669d6672eec3a484b83c",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This synthetic two-resource test fixture combines an existing YouTube preview with TDF native metadata to exercise native parsing and preservation of legacy cards/actions. Mocked API/thumbnail/panel boundaries and synthetic URLs keep it out of production catalogs, media delivery or rights decisions. Its membership is regression input, not a governed provider list.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-        "line": 29,
-        "kind": "array",
-        "name": "resources",
-        "valueCount": 2,
-        "values": [
-          "{id, providerCode=youtube, externalCode=Synthetic001, kind=video, url=https://www.youtube.com/watch?v=Synthetic001, primary=true, sortOrder=0}",
-          "{id, providerCode=tdf, externalCode, kind=video, url=https://media.invalid/source.mp4, primary=false, sortOrder=1, providerMetadata}"
-        ]
-      }
-    },
-    {
-      "id": "15c7440b1e26543c6492",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-        "line": 71,
-        "kind": "array",
-        "name": "providers",
-        "valueCount": 2,
-        "values": [
-          "YouTube",
-          "https://www.youtube.com/watch?v=Synthetic001"
-        ]
-      }
-    },
-    {
-      "id": "23e77610381e5099e7bd",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-        "line": 72,
-        "kind": "array",
-        "name": "providers",
-        "valueCount": 2,
-        "values": [
-          "tdf",
-          "https://media.invalid/source.mp4"
-        ]
-      }
-    },
-    {
-      "id": "29f56e522a5711afd348",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-source-bound-test-fixture",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P1-integrity",
-      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
-      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
-      "reviewed": true,
-      "reviewMethod": "explicit-test-fixture-source-review",
-      "reviewBatch": "pr706-published65-tracked-tests-20261106",
-      "evidence": {
-        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
-        "line": 72,
-        "kind": "array",
-        "name": "providers",
-        "valueCount": 2,
-        "values": [
-          "Spotify",
-          "https://open.spotify.com/album/synthetic-release"
-        ]
-      }
-    },
-    {
       "id": "320dead252ef1658d8a8",
       "classification": "security-system-registry",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -82303,25 +82086,6 @@
         "kind": "switch-cases",
         "name": "command",
         "valueCount": 5
-      }
-    },
-    {
-      "id": "dd2eff4609f15778c9c3",
-      "classification": "genuine-technical-constant",
-      "disposition": "retain-in-code",
-      "specializedModel": "technical_constant_allowlist",
-      "priority": "P3-retain",
-      "risk": "Changing synthetic DTO keys can invalidate the real dispatch/engine regression without representing a persisted business catalog.",
-      "justification": "This eight-field synthetic ArtistReleaseDTO exists only in the controlled old-backend/player regression. It carries fake media.invalid data and expected transport fields, not selectable production values, permissions or rights; runtime source authorization is separately exercised.",
-      "reviewed": true,
-      "reviewMethod": "manual-source-review",
-      "reviewBatch": "artist-media-rollout-counterexample-20261107",
-      "evidence": {
-        "file": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
-        "line": 1000,
-        "kind": "object-registry",
-        "name": "release",
-        "valueCount": 8
       }
     },
     {
@@ -93068,6 +92832,25 @@
       }
     },
     {
+      "id": "e92ce89eca127e0bbe74",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "A page size outside the directory search limit would be rejected by the API; the values only bound how many profiles one request returns.",
+      "justification": "Individually reviewed source: the three page sizes (12, 24, 48) offered by the community results pager and accepted from the perPage URL parameter. They are presentation limits passed as the search limit, not business, taxonomy or reference data, and no persisted catalog exists for them.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "community-discovery-pagination-20261116",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/discovery/CommunityDiscovery.tsx",
+        "line": 11,
+        "kind": "array",
+        "name": "PAGE_SIZE_OPTIONS",
+        "valueCount": 3
+      }
+    },
+    {
       "id": "92bdf7d80182ff259008",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
@@ -93208,14 +92991,30 @@
       "reviewed": true
     },
     {
-      "id": "a43462622b60606b37d9",
+      "id": "f562d95dce39e81da4af",
       "classification": "dynamic-business-catalog",
       "disposition": "migrate-and-remove-authority-from-code",
       "specializedModel": "domain-specific catalog table selected during consumer refactor",
       "priority": "P2-domain",
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
-      "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
-      "reviewed": true
+      "justification": "The same six PayPal webhook domain types, unchanged in value and order, moved verbatim with paypalWebhookDomainTypes from TDF.Server.ServiceStorefront to TDF.Commerce.PaypalWebhook; the reviewed classification and disposition are unchanged.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
+        "line": 269
+      },
+      "reviewBatch": "paypal-webhook-domain-module-2026-11-10",
+      "reviewMethod": "successor-of-reviewed-decision",
+      "previousDecision": {
+        "id": "a43462622b60606b37d9",
+        "classification": "dynamic-business-catalog",
+        "disposition": "migrate-and-remove-authority-from-code",
+        "specializedModel": "domain-specific catalog table selected during consumer refactor",
+        "priority": "P2-domain",
+        "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
+        "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
+        "reviewed": true
+      }
     },
     {
       "id": "fb1005d3b1d035e17581",
@@ -95281,6 +95080,369 @@
       "risk": "Cross-client divergence, invalid historical labels, ambiguous backfill, or broken filters/reports.",
       "justification": "The values are selectable, displayable, reportable, governable, or relational business data and therefore require a specialized persisted model.",
       "reviewed": true
+    },
+    {
+      "id": "16e3988d48089cc77b7e",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, security checks, or implementation dispatch.",
+      "justification": "CLI commands, release steps, process state, and audit-rule identifiers are execution mechanics of repository automation.",
+      "reviewed": true
+    },
+    {
+      "id": "7233cfc847a5104949f1",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Conflating these source tags could replace a legacy reference with an inferred canonical publication.",
+      "justification": "Individually reviewed discriminants for the three existing public read sources: canonical Music, legacy artist releases and persisted Records delivery metadata. These are internal source-provenance tags, not artist-selectable catalog values, publication kinds, grants or identity inference.",
+      "reviewed": true,
+      "reviewMethod": "individual-source-review",
+      "reviewBatch": "native-tdf-sessions-2026-11-05",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/artistCatalog.ts",
+        "line": 8,
+        "kind": "literal-union",
+        "name": "CatalogSource",
+        "valueCount": 3,
+        "consumerCount": 38,
+        "exactDuplicateIds": [],
+        "similarCandidateIds": []
+      },
+      "previousDecision": {
+        "id": "44a129d61d3814253c76",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Conflating these source tags could replace a legacy reference with an inferred canonical publication.",
+        "justification": "Individually reviewed discriminants for two existing API response shapes. These are internal source-provenance tags, not artist-selectable business values, editable release kinds, persisted genre values or streaming grants.",
+        "reviewed": true,
+        "reviewMethod": "individual-source-review",
+        "reviewBatch": "artist-catalog-unification-2026-10-29",
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/artistCatalog.ts",
+          "line": 5,
+          "kind": "literal-union",
+          "name": "CatalogSource",
+          "valueCount": 2,
+          "consumerCount": 30,
+          "exactDuplicateIds": [],
+          "similarCandidateIds": []
+        }
+      }
+    },
+    {
+      "id": "b4afb300f6c7ae1e24dd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+      "justification": "Typed API-client dispatch adds artist featured-track GET/PUT methods while retaining all inherited methods. These transport function names are implementation mechanics, not editable/selectable domain catalog values.",
+      "reviewed": true,
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/musicReleases.ts",
+        "line": 545
+      },
+      "reviewBatch": "artist-featured-track-2026-10-30",
+      "reviewMethod": "manual-source-review",
+      "previousDecision": {
+        "id": "a54bc30988f056e6d713",
+        "classification": "genuine-technical-constant",
+        "disposition": "retain-in-code",
+        "specializedModel": "technical_constant_allowlist",
+        "priority": "P3-retain",
+        "risk": "Changing the constant could break parsing, transport, or implementation dispatch.",
+        "justification": "Typed API-client method dispatch gains searchTracks while every inherited method remains unchanged. These protocol function names are not selectable/reportable domain values.",
+        "reviewed": true,
+        "evidence": {
+          "file": "tdf-hq-ui/src/api/musicReleases.ts",
+          "line": 518
+        },
+        "reviewBatch": "music-track-search-2026-10-26",
+        "reviewMethod": "manual-source-review"
+      }
+    },
+    {
+      "id": "113d30680a015e946cfd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This synthetic ready NativeSession object supplies title/artist/offset/media fields solely to the NativeSessionCard parameterized regression. The test asserts original recording/recording_session/record_release interaction identity with exact string IDs. It is not a selectable session catalog or persisted production fixture.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
+        "line": 18,
+        "kind": "object-registry",
+        "name": "session",
+        "valueCount": 9,
+        "values": [
+          "id",
+          "title",
+          "artist",
+          "artistPartyIds",
+          "durationMs",
+          "state",
+          "sources",
+          "chapters",
+          "credits"
+        ]
+      }
+    },
+    {
+      "id": "591730a43b318244f921",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This synthetic processing NativeSession object exercises selected card focus and expansion with an exact publication string ID. Its field names and state are test setup; no backend session, release, privilege or catalog is created.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/features/sessions/NativeSessionCard.test.tsx",
+        "line": 30,
+        "kind": "object-registry",
+        "name": "session",
+        "valueCount": 10,
+        "values": [
+          "id",
+          "title",
+          "artist",
+          "artistPartyIds",
+          "publication",
+          "durationMs",
+          "state",
+          "sources",
+          "chapters",
+          "credits"
+        ]
+      }
+    },
+    {
+      "id": "debe3e7d3b834c4296bc",
+      "classification": "security-system-registry",
+      "disposition": "consumer-update",
+      "specializedModel": "Canonical InteractionKind / InteractionIdentity from the interactions API and generated OpenAPI schema",
+      "priority": "P1-consumer",
+      "risk": "An incorrect publication kind or coerced string key can attach a conversation to the wrong publication.",
+      "justification": "This typed adapter binds the existing RecordsFeedDTO sessions, recordings and releases fields to their already established InteractionIdentity kinds: recording_session, recording and record_release. These are the exact canonical kinds used by the original grids; it introduces no new registry value, option authority or editable catalog. NativePublicationKind is constrained by the generated InteractionKind schema. Exact-kind/string-ID, equal-ID cross-kind, malformed-metadata and selected-publication regressions qualify the consumer mapping.",
+      "reviewed": true,
+      "reviewBatch": "player-layer-relocation-20261118",
+      "reviewMethod": "successor-of-reviewed-decisions",
+      "evidence": {
+        "file": "tdf-hq-ui/src/api/nativeSessions.ts",
+        "line": 77,
+        "kind": "array",
+        "name": "collections",
+        "valueCount": 3,
+        "values": [
+          "{kind=recording_session, items}",
+          "{kind=recording, items}",
+          "{kind=record_release, items}"
+        ]
+      },
+      "previousDecision": {
+        "id": "5400ecebb818745bb318",
+        "classification": "security-system-registry",
+        "disposition": "consumer-update",
+        "specializedModel": "Canonical InteractionKind / InteractionIdentity from the interactions API and generated OpenAPI schema",
+        "priority": "P1-consumer",
+        "risk": "An incorrect publication kind or coerced string key can attach a conversation to the wrong publication.",
+        "justification": "This typed adapter binds the existing RecordsFeedDTO sessions, recordings and releases fields to their already established InteractionIdentity kinds: recording_session, recording and record_release. These are the exact canonical kinds used by the original grids; it introduces no new registry value, option authority or editable catalog. NativePublicationKind is constrained by the generated InteractionKind schema. Exact-kind/string-ID, equal-ID cross-kind, malformed-metadata and selected-publication regressions qualify the consumer mapping.",
+        "reviewed": true
+      }
+    },
+    {
+      "id": "3da2ce1c629b3a01038d",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 22,
+        "kind": "array",
+        "name": "collections",
+        "valueCount": 2,
+        "values": [
+          "recordings",
+          "recording"
+        ]
+      }
+    },
+    {
+      "id": "d60bc4e0e30a78088f7c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 23,
+        "kind": "array",
+        "name": "collections",
+        "valueCount": 3,
+        "values": [
+          "sessions",
+          "recording_session",
+          "session"
+        ]
+      }
+    },
+    {
+      "id": "b7b102839e55773b7334",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only tuple maps an existing RecordsFeed collection to its existing canonical InteractionKind and existing deep-link parameter. The table drives actual page regressions for malformed metadata retention, one discussion panel and selection focus. It introduces no production collection/kind/URL parameter and grants no authority; API and generated schemas remain canonical.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 24,
+        "kind": "array",
+        "name": "collections",
+        "valueCount": 3,
+        "values": [
+          "releases",
+          "record_release",
+          "release"
+        ]
+      }
+    },
+    {
+      "id": "669d6672eec3a484b83c",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This synthetic two-resource test fixture combines an existing YouTube preview with TDF native metadata to exercise native parsing and preservation of legacy cards/actions. Mocked API/thumbnail/panel boundaries and synthetic URLs keep it out of production catalogs, media delivery or rights decisions. Its membership is regression input, not a governed provider list.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 29,
+        "kind": "array",
+        "name": "resources",
+        "valueCount": 2,
+        "values": [
+          "{id, providerCode=youtube, externalCode=Synthetic001, kind=video, url=https://www.youtube.com/watch?v=Synthetic001, primary=true, sortOrder=0}",
+          "{id, providerCode=tdf, externalCode, kind=video, url=https://media.invalid/source.mp4, primary=false, sortOrder=1, providerMetadata}"
+        ]
+      }
+    },
+    {
+      "id": "15c7440b1e26543c6492",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 71,
+        "kind": "array",
+        "name": "providers",
+        "valueCount": 2,
+        "values": [
+          "YouTube",
+          "https://www.youtube.com/watch?v=Synthetic001"
+        ]
+      }
+    },
+    {
+      "id": "23e77610381e5099e7bd",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 72,
+        "kind": "array",
+        "name": "providers",
+        "valueCount": 2,
+        "values": [
+          "tdf",
+          "https://media.invalid/source.mp4"
+        ]
+      }
+    },
+    {
+      "id": "29f56e522a5711afd348",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-source-bound-test-fixture",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P1-integrity",
+      "risk": "Misclassifying or weakening these exact fixture expectations can conceal cross-publication identity, lost provider actions or selected-card regressions; they must not become production authority.",
+      "justification": "This test-only expected label/URL pair verifies the existing release grid keeps its YouTube/TDF/Spotify provider action, exact href, target and rel while one canonical discussion/focus remains. The runtime still renders API-provided resources; this pair adds no provider authority or production option. Changing it could mask the release-link regression caught by the retained RED control.",
+      "reviewed": true,
+      "reviewMethod": "explicit-test-fixture-source-review",
+      "reviewBatch": "pr706-published65-tracked-tests-20261106",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/RecordsPublicPage.nativeSessions.test.tsx",
+        "line": 72,
+        "kind": "array",
+        "name": "providers",
+        "valueCount": 2,
+        "values": [
+          "Spotify",
+          "https://open.spotify.com/album/synthetic-release"
+        ]
+      }
+    },
+    {
+      "id": "dd2eff4609f15778c9c3",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "Changing synthetic DTO keys can invalidate the real dispatch/engine regression without representing a persisted business catalog.",
+      "justification": "This eight-field synthetic ArtistReleaseDTO exists only in the controlled old-backend/player regression. It carries fake media.invalid data and expected transport fields, not selectable production values, permissions or rights; runtime source authorization is separately exercised.",
+      "reviewed": true,
+      "reviewMethod": "manual-source-review",
+      "reviewBatch": "artist-media-rollout-counterexample-20261107",
+      "evidence": {
+        "file": "tdf-hq-ui/src/player/PlayerProvider.test.tsx",
+        "line": 1000,
+        "kind": "object-registry",
+        "name": "release",
+        "valueCount": 8
+      }
     }
   ]
 }

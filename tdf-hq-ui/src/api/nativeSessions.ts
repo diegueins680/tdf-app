@@ -1,6 +1,6 @@
-import type { RecordsFeedDTO, RecordsResourceDTO } from '../../api/records';
-import type { InteractionIdentity } from '../../api/interactions';
-import type { PlayerQuality, PlayerSource, PlayerTrack } from '../../player/types';
+import type { RecordsFeedDTO, RecordsResourceDTO } from './records';
+import type { InteractionIdentity } from './interactions';
+import type { PlayerQuality, PlayerSource, PlayerTrack } from '../player/types';
 
 export type NativePublicationKind = Extract<InteractionIdentity['kind'], 'recording' | 'recording_session' | 'record_release'>;
 export interface NativePublication extends InteractionIdentity { kind: NativePublicationKind }

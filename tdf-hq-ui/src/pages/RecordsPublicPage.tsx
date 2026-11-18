@@ -1,5 +1,5 @@
 import { NativeSessionCard } from '../features/sessions/NativeSessionCard';
-import { nativePublicationKey, nativeSessionsFromFeed } from '../features/sessions/nativeSessions';
+import { nativePublicationKey, nativeSessionsFromFeed } from '../api/nativeSessions';
 import MarkdownText from '../components/MarkdownText';
 import SessionVideoPreview from '../components/SessionVideoPreview';
 import { PublicationAnchor, usePublicationSelection, type PublicationSelection } from '../features/interactions/PublicationSelection';

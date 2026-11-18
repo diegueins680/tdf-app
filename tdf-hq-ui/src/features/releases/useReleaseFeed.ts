@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { loadArtistCatalogs } from '../../api/artistCatalog';
 import type { MusicPublicReleaseSummary } from '../../api/musicReleases';
 import { compareReleaseDateValues } from '../../utils/releaseDate';
-import type { ReleaseFeedItem } from './ReleasePlayerActions';
+import type { ReleaseFeedItem } from '../../player/ReleasePlayerActions';
 
 export interface ReleaseFeedArtist {
   id: number;

@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import { cleanup, render, screen } from '@testing-library/react';
 import type { InteractionIdentity } from '../../api/interactions';
-import type { NativePublication } from './nativeSessions';
+import type { NativePublication } from '../../api/nativeSessions';
 
 jest.unstable_mockModule('../interactions/InteractionPanel', () => ({
   InteractionPanel: ({ kind, entityKey, initiallyExpanded }: InteractionIdentity & { initiallyExpanded?: boolean }) =>

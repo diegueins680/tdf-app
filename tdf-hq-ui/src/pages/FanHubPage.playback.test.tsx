@@ -2,7 +2,7 @@ import { jest } from '@jest/globals';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { ReleaseFeedItem } from '../features/releases/ReleasePlayerActions';
+import type { ReleaseFeedItem } from '../player/ReleasePlayerActions';
 
 const session = { username: 'synthetic-fan', partyId: 42, roles: ['fan'], modules: [] };
 let release: ReleaseFeedItem;
