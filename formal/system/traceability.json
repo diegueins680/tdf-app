@@ -28681,7 +28681,7 @@
     "formal/system/public-routes.json": "9016977e2364108de37d0346ac1676b6e1b3bc9c064a4c376aa62a8b9fcc505b",
     "formal/system/receipt-admission-counterexample.json": "fba5d983fab0dfe4f435e99705582ff2d369265d6b386ba9c834a5f33198dec6",
     "formal/system/receipt-admission.md": "d552a28ff051307e470ee5a137f8498f101277d6fb8973aec200284ba0294719",
-    "formal/system/recovery-expiry-arithmetic.json": "15c95ac8cdd4e0add1a6e96bcc75953c859948fd52dcf1474fc5190616228059",
+    "formal/system/recovery-expiry-arithmetic.json": "9948cacd1360b4920b19c1fb39cc85d8c2c954deae9d2a710518db7e54298189",
     "formal/system/route-requirements.json": "490ebfd79bbf4aa228bc4fa0e8d3ff7cbac043e195367c06f6063450fed45376",
     "formal/system/state-machine-bindings.json": "a80699840cd01f7f7210cb1ea71e5ff66b6117b987cc9ad4106e889f59f42791",
     "functions/_middleware.js": "ad3053eedee74014d114908e7c2025402332d7ff44f502336e90fa19fb3ab17e",
