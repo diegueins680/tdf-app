@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-18T17:55:24.876Z",
+  "generatedAt": "2026-11-18T19:36:16.266Z",
   "repositoryRoot": ".",
   "filesScanned": 2758,
   "candidateCount": 1464,
@@ -7557,7 +7557,7 @@
       "lines": [
         42
       ],
-      "consumerCount": 224,
+      "consumerCount": 225,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -62899,7 +62899,7 @@
       "domain": "fan-social",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 784,
+      "line": 788,
       "values": [
         "{label=Slug público, ready}",
         "{label=Bio, ready}",
@@ -62910,7 +62910,7 @@
       "valueCount": 5,
       "recommendedClassification": "genuine-technical-constant",
       "lines": [
-        784
+        788
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -62935,7 +62935,7 @@
       "domain": "fan-social",
       "kind": "array",
       "name": "<anonymous>",
-      "line": 808,
+      "line": 812,
       "values": [
         "{title=Lanzamientos, description=Publica, corrige enlaces de audio y revisa pendientes del sello., to=/label/releases, label=Abrir lanzamientos}",
         "{title=Artistas, description=Edita perfiles, activos y enlaces desde el módulo del sello., to=/label/artistas, label=Ir a artistas}",
@@ -62945,7 +62945,7 @@
       "valueCount": 4,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        808
+        812
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -79212,7 +79212,7 @@
       "lines": [
         67
       ],
-      "consumerCount": 304,
+      "consumerCount": 305,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
@@ -79456,7 +79456,7 @@
       "lines": [
         182
       ],
-      "consumerCount": 243,
+      "consumerCount": 244,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/docs/openapi/api.yaml",
