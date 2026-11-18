@@ -793,6 +793,10 @@ def main(argv):
     back = sub.add_parser('rollback')
     back.add_argument('--confirm', required=True)
     args = parser.parse_args(argv)
+    # Local recovery qualification is incomplete. No configuration can opt in.
+    # Reject before host construction, directories, journal, image pull or fencing.
+    if args.command != 'status':
+        raise Rejected('Operational payment recovery is unqualified: UUID/legacy callback and post-snapshot reconciliation evidence required')
     os.umask(0o077)
     require(os.geteuid() == 0, 'run as root on the production host')
     host = Host()
