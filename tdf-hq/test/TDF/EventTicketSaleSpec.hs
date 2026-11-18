@@ -182,8 +182,10 @@ spec = do
               , "currency = 'EUR'"
               , "tax_bps = 100"
               , "terms_version = 'ticket-terms-draft-v1'"
-              , "terms_summary = 'Condiciones distintas'"
-              , "refund_policy = 'Sin reembolsos'"
+              -- The terms identity trigger forbids one terms_version naming two
+              -- texts for an event, so different texts need their own version.
+              , "terms_version = 'ticket-terms-draft-v2', terms_summary = 'Condiciones distintas'"
+              , "terms_version = 'ticket-terms-draft-v3', refund_policy = 'Sin reembolsos'"
               , "hold_minutes = 30"
               , "max_tickets_per_order = 8"
               , "tax_included = TRUE"
