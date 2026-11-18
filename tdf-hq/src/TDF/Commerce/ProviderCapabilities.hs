@@ -369,6 +369,10 @@ providerProfile provider = case provider of
             [ CapabilityOneTime
             , CapabilityServerVerification
             ])
+        , (MethodCard,
+            [ CapabilityOneTime
+            , CapabilityServerVerification
+            ])
         ]
     }
   ProviderBankTransfer -> Just ProviderProfile

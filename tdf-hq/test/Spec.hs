@@ -2448,6 +2448,7 @@ main = hspec $ do
             providerOrder `shouldBe`
               [ CheckoutStore.ProviderDatafast
               , CheckoutStore.ProviderPlaceToPay
+              , CheckoutStore.ProviderPayPhone
               ]
 
         it "uses exact public labels for each executable provider-method pair" $ do
@@ -2470,6 +2471,8 @@ main = hspec $ do
             label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodPayPhoneWallet
               `shouldBe` Just "payphone_wallet"
             label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodCard
+              `shouldBe` Just "payphone_card"
+            label CheckoutStore.ProviderPayPhone ProviderCapabilities.MethodBankRedirect
               `shouldBe` Nothing
 
         it "does not route a documented capability until every runtime gate is true" $ do
@@ -3101,7 +3104,7 @@ main = hspec $ do
             ProviderAdapter.adapterAssessNotification ptp (notification (signature <> "00"))
               `shouldSatisfy` isLeft
 
-        it "builds PayPhone API Sale with integer cents and query-before-retry" $ do
+        it "prepares a PayPhone button payment with integer cents and query-before-retry" $ do
             let request = fromRight (error "valid PayPhone create fixture")
                   (ProviderAdapter.adapterBuildCreate payPhone adapterContext
                     createPayment
@@ -3111,13 +3114,112 @@ main = hspec $ do
                 encodedBody = maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
                 summary = ProviderAdapter.safeRequestSummary request
             ProviderAdapter.arUrl request
-              `shouldBe` "https://pay.payphonetodoesposible.com/api/Sale"
+              `shouldBe` "https://pay.payphonetodoesposible.com/api/button/Prepare"
             ProviderAdapter.arRetryPolicy request `shouldBe` ProviderAdapter.QueryBeforeRetry
             encodedBody `shouldContain` "\"amount\":12515"
             encodedBody `shouldContain` "\"tax\":315"
+            encodedBody `shouldContain` "\"cancellationUrl\""
+            encodedBody `shouldNotContain` "phoneNumber"
             show summary `shouldNotContain` "test-token"
-            either (const True) (const False)
-              (ProviderAdapter.adapterBuildCreate payPhone adapterContext createPayment)
+            isRight (ProviderAdapter.adapterBuildCreate payPhone adapterContext
+              createPayment { ProviderAdapter.cpPaymentMethod = ProviderCapabilities.MethodCard })
+              `shouldBe` True
+            isLeft (ProviderAdapter.adapterBuildCreate payPhone adapterContext
+              createPayment
+                { ProviderAdapter.cpPaymentMethod = ProviderCapabilities.MethodBankRedirect })
+              `shouldBe` True
+
+        it "redirects only to PayPhone's own hosted page for the requested method" $ do
+            let prepared appUrl cardUrl = A.object
+                  [ "paymentId" .= ("Pay-123_abc" :: Text)
+                  , "payWithPayPhone" .= (appUrl :: Text)
+                  , "payWithCard" .= (cardUrl :: Text)
+                  ]
+                appPage = "https://pay.payphonetodoesposible.com/PayPhone/Index?paymentId=Pay-123_abc"
+                cardPage = "https://pay.payphonetodoesposible.com/Anonymous/Index?paymentId=Pay-123_abc"
+                createLocator method = locator
+                  { ProviderAdapter.plExternalId = PayPhoneAdapter.payPhoneCreateLocatorId method }
+                parseFor method = ProviderAdapter.adapterParseResponse payPhone
+                  ProviderAdapter.AdapterCreate (createLocator method)
+            fmap ProviderAdapter.adapterResultRedirectUrl
+              (parseFor ProviderCapabilities.MethodPayPhoneWallet (prepared appPage cardPage))
+              `shouldBe` Right (Just appPage)
+            fmap ProviderAdapter.adapterResultRedirectUrl
+              (parseFor ProviderCapabilities.MethodCard (prepared appPage cardPage))
+              `shouldBe` Right (Just cardPage)
+            fmap ProviderAdapter.adapterResultExternalId
+              (parseFor ProviderCapabilities.MethodCard (prepared appPage cardPage))
+              `shouldBe` Right "Pay-123_abc"
+            parseFor ProviderCapabilities.MethodCard
+              (prepared appPage "https://pay.payphonetodoesposible.com.attacker.example/Anonymous/Index?paymentId=Pay-123_abc")
+              `shouldSatisfy` isLeft
+            parseFor ProviderCapabilities.MethodPayPhoneWallet
+              (prepared "https://pay.payphonetodoesposible.com/PayPhone/Index?paymentId=other" cardPage)
+              `shouldSatisfy` isLeft
+
+        it "never treats a PayPhone button query as proof of payment" $ do
+            let buttonLocator = locator { ProviderAdapter.plExternalId = "Pay-123_abc" }
+                transaction statusCode amount = A.object
+                  [ "amount" .= (amount :: Int)
+                  , "clientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (statusCode :: Int)
+                  , "transactionId" .= (93776857 :: Int)
+                  ]
+                query value = ProviderAdapter.adapterParseResponse payPhone
+                  ProviderAdapter.AdapterQuery buttonLocator value
+                approved = query (A.toJSON [transaction 3 12515])
+            -- Observed in sandbox: unconfirmed approvals are reversed by PayPhone.
+            fmap ProviderAdapter.adapterResultState approved
+              `shouldBe` Right ProviderAdapter.AdapterPending
+            fmap ProviderAdapter.adapterResultCertainty approved
+              `shouldBe` Right ProviderCapabilities.ProviderAmbiguous
+            fmap ProviderAdapter.adapterResultExternalId approved
+              `shouldBe` Right "Pay-123_abc"
+            fmap ProviderAdapter.adapterResultState (query (A.toJSON [transaction 2 12515]))
+              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            fmap ProviderAdapter.adapterResultState (query (transaction 1 12515))
+              `shouldBe` Right ProviderAdapter.AdapterPending
+            query (A.toJSON [transaction 3 12516]) `shouldSatisfy` isLeft
+            query (A.toJSON ([] :: [A.Value])) `shouldSatisfy` isLeft
+
+        it "records a PayPhone charge only from an exact-binding confirmation" $ do
+            let confirmLocator = locator { ProviderAdapter.plExternalId = "93776857" }
+                mutation = ProviderAdapter.PaymentMutation
+                  { ProviderAdapter.pmLocator = confirmLocator
+                  , ProviderAdapter.pmAmountMinor = 12515
+                  , ProviderAdapter.pmProviderActionAt = ProviderAdapter.acNow adapterContext
+                  }
+                request = fromRight (error "valid PayPhone confirm fixture")
+                  (ProviderAdapter.adapterBuildCapture payPhone adapterContext mutation)
+                confirmation transactionId statusCode amount = A.object
+                  [ "amount" .= (amount :: Int)
+                  , "clientTransactionId" .= ("TDF-payment-001" :: Text)
+                  , "currency" .= ("USD" :: Text)
+                  , "statusCode" .= (statusCode :: Int)
+                  , "transactionId" .= (transactionId :: Int)
+                  ]
+                confirm value = ProviderAdapter.adapterParseResponse payPhone
+                  ProviderAdapter.AdapterCapture confirmLocator value
+            ProviderAdapter.arUrl request
+              `shouldBe` "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
+            maybe "" (BL.unpack . A.encode) (ProviderAdapter.arBody request)
+              `shouldContain` "\"id\":93776857"
+            fmap ProviderAdapter.adapterResultState (confirm (confirmation 93776857 3 12515))
+              `shouldBe` Right ProviderAdapter.AdapterSucceeded
+            fmap ProviderAdapter.adapterResultCertainty (confirm (confirmation 93776857 3 12515))
+              `shouldBe` Right ProviderCapabilities.ProviderSucceeded
+            fmap ProviderAdapter.adapterResultState (confirm (confirmation 93776857 1 12515))
+              `shouldBe` Right ProviderAdapter.AdapterPending
+            fmap ProviderAdapter.adapterResultState (confirm (confirmation 93776857 2 12515))
+              `shouldBe` Right ProviderAdapter.AdapterCancelled
+            confirm (confirmation 93776858 3 12515) `shouldSatisfy` isLeft
+            confirm (confirmation 93776857 3 12516) `shouldSatisfy` isLeft
+            isLeft (ProviderAdapter.adapterBuildCapture payPhone adapterContext
+              mutation { ProviderAdapter.pmLocator = locator { ProviderAdapter.plExternalId = "Pay-123" } })
+              `shouldBe` True
+            isLeft (ProviderAdapter.adapterBuildCapture payPhone adapterContext
+              mutation { ProviderAdapter.pmAmountMinor = 100 })
               `shouldBe` True
 
         it "trusts PayPhone success only after an authenticated exact-binding query" $ do
@@ -3257,8 +3359,12 @@ main = hspec $ do
                   }
                 placeToPayCapabilities = ProviderCapabilities.providerCapabilities
                   CheckoutStore.ProviderPlaceToPay
+            map ProviderCapabilities.routeProvider
+              (ProviderCapabilities.routePayments [activePayPhone]
+                (requestFor ProviderCapabilities.MethodCard))
+              `shouldBe` [CheckoutStore.ProviderPayPhone]
             ProviderCapabilities.routePayments [activePayPhone]
-              (requestFor ProviderCapabilities.MethodCard) `shouldBe` []
+              (requestFor ProviderCapabilities.MethodBankRedirect) `shouldBe` []
             map ProviderCapabilities.routeProvider
               (ProviderCapabilities.routePayments [activePayPhone]
                 (requestFor ProviderCapabilities.MethodPayPhoneWallet))

@@ -435,6 +435,7 @@ spec = do
         latePaypalRefundSpec
         manualCaptureReplaySpec
         completionCapabilityIntegrationSpec
+        payPhoneButtonSpec
         RefundSafety.databaseSpec $ \pool provider amounts ->
           captureFixtureForDomainWithLines "service_booking" "payment" Checkout.AttemptProcessing amounts pool provider
         RefundRecovery.databaseSpec
@@ -1111,7 +1112,7 @@ notificationRowCount pool creation = do
 
 notificationHandler :: ConnectionPool -> BS.ByteString -> IO (Either ServerError NoContent)
 notificationHandler pool raw = do
-  let _ :<|> _ :<|> receive :<|> _ = providerExecutionServer
+  let _ :<|> _ :<|> _ :<|> receive :<|> _ = providerExecutionServer
   runHandler (runReaderT (receive (BL.fromStrict raw)) (Env pool (error "Notification must not use AppConfig")))
 
 handlerNotificationCount :: ConnectionPool -> IO Int64
@@ -1564,6 +1565,94 @@ queryReport roles pool environment status limit offset = do
     Right headers -> do
       getHeaders headers `shouldContain` [("Cache-Control", "no-store")]
       pure (Right (getResponse headers))
+
+payPhoneButtonSpec :: SpecWith ConnectionPool
+payPhoneButtonSpec = describe "PayPhone button confirmation" $ do
+  -- Sandbox evidence (2026-11-17): PayPhone's query reports an unconfirmed
+  -- approval as Approved and reverses it about five minutes later, so only
+  -- the authenticated Confirm response may record the charge.
+  it "keeps an approved but unconfirmed button payment unpaid" $ \pool -> do
+    payment <- payPhoneButtonFixture pool
+    before <- runSqlPool (paymentSnapshot payment) pool
+    approved <- buttonParse payment AdapterQuery (Execution.bppProviderResourceId payment)
+      (A.toJSON [buttonTransaction payment 3])
+    Adapter.adapterResultState approved `shouldBe` Adapter.AdapterPending
+    runSqlPool (Reconciliation.applyQueryResult payment approved "button-query" notificationTime)
+      pool >>= (`shouldSatisfy` isRight)
+    after <- runSqlPool (paymentSnapshot payment) pool
+    after `shouldNotBe` []
+    attemptStatus pool payment >>= (`shouldNotBe` "succeeded")
+    length after `shouldBe` length before
+
+  it "records the charge from an exact confirmation and replays it idempotently" $ \pool -> do
+    payment <- payPhoneButtonFixture pool
+    confirmed <- buttonParse payment AdapterCapture "93776650" (buttonTransaction payment 3)
+    let bound = confirmed { Adapter.adapterResultExternalId = Execution.bppProviderResourceId payment }
+    runSqlPool (Reconciliation.applyQueryResult payment bound "payphone-confirm:93776650" notificationTime)
+      pool `shouldReturn` Right Reconciliation.ReconciliationProcessed
+    attemptStatus pool payment `shouldReturn` "succeeded"
+    snapshot <- runSqlPool (paymentSnapshot payment) pool
+    _ <- runSqlPool (Reconciliation.applyQueryResult payment bound "payphone-confirm:93776650" notificationTime) pool
+    runSqlPool (paymentSnapshot payment) pool `shouldReturn` snapshot
+
+  it "records a reversed button payment as no charge" $ \pool -> do
+    payment <- payPhoneButtonFixture pool
+    cancelled <- buttonParse payment AdapterQuery (Execution.bppProviderResourceId payment)
+      (A.toJSON [buttonTransaction payment 2])
+    cancelledResult pool payment cancelled
+    noChargeStates pool payment `shouldReturn` ("cancelled","cancelled","provider_cancelled")
+
+buttonTransaction :: Execution.BoundProviderPayment -> Int -> A.Value
+buttonTransaction payment statusCode = A.object
+  [ "transactionId" A..= (93776650 :: Int64)
+  , "clientTransactionId" A..= Execution.bppProviderReference payment
+  , "amount" A..= Execution.bppAmountMinor payment
+  , "currency" A..= Execution.bppCurrency payment
+  , "statusCode" A..= statusCode
+  ]
+
+buttonParse
+  :: Execution.BoundProviderPayment -> Adapter.AdapterOperation -> Text -> A.Value
+  -> IO Adapter.AdapterResult
+buttonParse payment operation externalId value = do
+  adapter <- requireRight (PayPhone.payPhoneAdapter (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store"))
+  requireRight (Adapter.adapterParseResponse adapter operation
+    (Adapter.PaymentLocator externalId
+      (Adapter.ExpectedPayment (Execution.bppProviderReference payment)
+        (Execution.bppAmountMinor payment) (Execution.bppCurrency payment)))
+    value)
+
+attemptStatus :: ConnectionPool -> Execution.BoundProviderPayment -> IO Text
+attemptStatus pool payment = do
+  rows <- runSqlPool (rawSql "SELECT status FROM commerce_payment_attempt WHERE id=?::uuid"
+    [paymentAttemptParameter payment]) pool :: IO [Single Text]
+  case rows of
+    [Single status] -> pure status
+    _ -> fail "Expected one payment attempt"
+
+-- | A PayPhone binding as the button flow creates it: the provider resource is
+-- the alphanumeric prepared payment ID, not a numeric transaction ID.
+payPhoneButtonFixture :: ConnectionPool -> IO Execution.BoundProviderPayment
+payPhoneButtonFixture pool = do
+  let provider = Checkout.ProviderPayPhone
+  (creation, operation, _) <- replayFixtureWithMerchant "service_booking"
+    "synthetic-provider-retry-merchant" pool provider
+  let checkoutId = Checkout.checkoutReferenceId (Checkout.pacCheckout creation)
+      reference = providerReference provider checkoutId
+      attempt = Execution.porAttempt operation
+  resource <- (("Pay" <>) . T.take 18 . T.filter (/= '-') . toText) <$> nextRandom
+  checkout <- runSqlPool (Execution.loadAuthorizedCheckout checkoutId (digestText checkoutId)
+    (Checkout.pacCreatedAt creation)) pool >>= requireRight
+  _ <- runSqlPool (Execution.claimProviderOperation (Execution.porReference operation)
+    (Checkout.pacCreatedAt creation) recoveryEncryptionKey) pool >>= requireRight
+  _ <- runSqlPool (Execution.recordCreateResult (Execution.porReference operation) checkout attempt
+    provider (Checkout.pacMerchantRef creation) reference recoveryEncryptionKey
+    (Adapter.AdapterResult Adapter.AdapterRequiresCustomerAction resource
+      (Just ("https://pay.payphonetodoesposible.com/Anonymous/Index?paymentId=" <> resource))
+      Nothing Nothing ProviderAmbiguous)
+    "synthetic-button-binding" (Checkout.pacCreatedAt creation)) pool >>= requireRight
+  runSqlPool (Execution.loadBoundProviderPayment provider Checkout.CheckoutSandbox
+    (Checkout.pacMerchantRef creation) resource (Just reference)) pool >>= requireRight
 
 noChargeReplaySpec :: SpecWith ConnectionPool
 noChargeReplaySpec = describe "history-preserving no-charge reconciliation" $

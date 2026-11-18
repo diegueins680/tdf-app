@@ -1,16 +1,37 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | PayPhone API Sale adapter. PayPhone's response URL is not signed, so every
--- callback is deliberately classified as untrusted until the authenticated
--- transaction-status endpoint confirms merchant reference, amount, currency,
--- and status.
+-- | PayPhone payment button ("Botón de Pagos") adapter.
+--
+-- A checkout is prepared server-side (@/api/button/Prepare@) and the buyer
+-- pays on PayPhone's hosted page, either with a card or with the PayPhone
+-- app. PayPhone then redirects the buyer to the response URL with the
+-- PayPhone transaction ID and our client transaction ID.
+--
+-- Sandbox observation (2026-11-17): an approved but unconfirmed payment is
+-- reported by the transaction query as @statusCode 3 / Approved@, with no
+-- field distinguishing it from a confirmed one, and PayPhone reverses it to
+-- @statusCode 2 / Canceled@ about five minutes later. Therefore:
+--
+-- * only the authenticated @/api/button/V2/Confirm@ response (modelled as
+--   'AdapterCapture', keyed by the PayPhone transaction ID) may establish a
+--   successful charge;
+-- * a plain query never reports success. Approved stays pending until it is
+--   confirmed, and a canceled transaction is a confirmed no-charge outcome.
+--
+-- PayPhone's response URL and notifications are not signed, so every
+-- callback stays untrusted until an authenticated server-to-server response
+-- confirms merchant reference, amount, currency and status.
+--
+-- Bindings created by the retired API Sale flow use a numeric transaction ID
+-- as the provider resource; their query, cancel and reversal behaviour is kept.
 module TDF.Commerce.ProviderAdapter.PayPhone
   ( PayPhoneConfig(..)
   , payPhoneAdapter
+  , payPhoneCreateLocatorId
   ) where
 
-import           Control.Monad (unless, when)
 import           Control.Applicative ((<|>))
+import           Control.Monad (unless, when)
 import           Data.Aeson ((.:), (.:?), (.=), Value)
 import qualified Data.Aeson as A
 import           Data.Aeson.Types (Parser, parseEither)
@@ -24,7 +45,7 @@ import           Data.Time
 import           TDF.Commerce.CheckoutStore (PaymentProvider(..))
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderCapabilities
-  ( PaymentMethod(..), ProviderOutcomeCertainty(..) )
+  ( PaymentMethod(..), ProviderOutcomeCertainty(..), paymentMethodText )
 
 data PayPhoneConfig = PayPhoneConfig
   { payPhoneToken   :: Text
@@ -42,13 +63,19 @@ payPhoneAdapter config = do
     , adapterBuildCreate = buildCreate config
     , adapterBuildQuery = buildQuery config
     , adapterBuildCancel = buildCancel config
-    , adapterBuildCapture = \_ _ -> unsupportedOperation
+    , adapterBuildCapture = buildConfirm config
     , adapterBuildVoid = \_ _ -> unsupportedOperation
     , adapterBuildRefund = \_ _ -> unsupportedOperation
     , adapterBuildSameDayReverse = buildSameDayReverse config
     , adapterParseResponse = parseResponse
     , adapterAssessNotification = assessCallback config
     }
+
+-- | The placeholder external ID the executor passes while parsing a create
+-- response. It carries the requested method so the matching hosted page
+-- (card form or PayPhone app) is returned as the redirect.
+payPhoneCreateLocatorId :: PaymentMethod -> Text
+payPhoneCreateLocatorId method = "pending:" <> paymentMethodText method
 
 buildCreate
   :: PayPhoneConfig
@@ -57,32 +84,18 @@ buildCreate
   -> Either AdapterError AdapterRequest
 buildCreate config _ payment = do
   validateCreate payment
-  unless (cpPaymentMethod payment == MethodPayPhoneWallet)
-    (Left (AdapterError "PayPhone API Sale supports only the PayPhone wallet flow."))
+  unless (cpPaymentMethod payment `elem` [MethodCard, MethodPayPhoneWallet])
+    (Left (AdapterError "PayPhone supports only card and PayPhone wallet payments."))
   validateUsdMoney (cpMoney payment)
-  phone <- maybe
-    (Left (AdapterError "PayPhone buyer phone number is required."))
-    Right
-    (cpBuyerPhone payment)
-  countryCode <- maybe
-    (Left (AdapterError "PayPhone E.164 country code is required."))
-    Right
-    (cpBuyerCountryCode payment)
-  unless (digitsBetween 6 15 phone)
-    (Left (AdapterError "PayPhone buyer phone number is invalid."))
-  unless (digitsBetween 1 3 countryCode)
-    (Left (AdapterError "PayPhone country code is invalid."))
   let money = cpMoney payment
   pure AdapterRequest
     { arProvider = ProviderPayPhone
     , arOperation = AdapterCreate
     , arMethod = AdapterPost
-    , arUrl = payPhoneBaseUrl <> "/api/Sale"
+    , arUrl = payPhoneBaseUrl <> "/api/button/Prepare"
     , arHeaders = payPhoneHeaders config
     , arBody = Just (A.object
-        [ "phoneNumber" .= phone
-        , "countryCode" .= countryCode
-        , "amount" .= mbTotalMinor money
+        [ "amount" .= mbTotalMinor money
         , "amountWithoutTax" .= mbWithoutTaxMinor money
         , "amountWithTax" .= mbTaxableBaseMinor money
         , "tax" .= mbTaxMinor money
@@ -93,6 +106,7 @@ buildCreate config _ payment = do
         , "currency" .= normalizedCurrency (mbCurrency money)
         , "reference" .= cpDescription payment
         , "responseUrl" .= cpReturnUrl payment
+        , "cancellationUrl" .= cpReturnUrl payment
         ])
     , arRetryPolicy = QueryBeforeRetry
     }
@@ -112,6 +126,38 @@ buildQuery config _ locator = do
     , arHeaders = payPhoneHeaders config
     , arBody = Nothing
     , arRetryPolicy = SafeReadRetry
+    }
+
+-- | Confirms a button payment. The locator's external ID is the PayPhone
+-- transaction ID received on the buyer's return or in a notification; it is
+-- untrusted until PayPhone answers for the same client transaction ID with
+-- the expected amount and currency. Confirming again is idempotent.
+buildConfirm
+  :: PayPhoneConfig
+  -> AdapterContext
+  -> PaymentMutation
+  -> Either AdapterError AdapterRequest
+buildConfirm config _ mutation = do
+  let locator = pmLocator mutation
+      expected = plExpected locator
+  validateClientReference (epReference expected)
+  transactionId <- maybe
+    (Left (AdapterError "PayPhone transaction ID is invalid."))
+    Right
+    (positiveTransactionId (plExternalId locator))
+  unless (pmAmountMinor mutation == epAmountMinor expected)
+    (Left (AdapterError "PayPhone confirms only the full payment amount."))
+  pure AdapterRequest
+    { arProvider = ProviderPayPhone
+    , arOperation = AdapterCapture
+    , arMethod = AdapterPost
+    , arUrl = payPhoneBaseUrl <> "/api/button/V2/Confirm"
+    , arHeaders = payPhoneHeaders config
+    , arBody = Just (A.object
+        [ "id" .= transactionId
+        , "clientTxId" .= epReference expected
+        ])
+    , arRetryPolicy = QueryBeforeRetry
     }
 
 buildCancel
@@ -160,45 +206,100 @@ parseResponse
   -> Value
   -> Either AdapterError AdapterResult
 parseResponse operation locator value = case operation of
-  AdapterCreate -> parsePayPhoneValue parseCreate value
-  AdapterQuery -> parsePayPhoneValue (parseQuery locator) value
+  AdapterCreate -> parsePayPhoneValue (parseCreate locator) value
+  AdapterQuery
+    | legacySaleBinding locator -> parsePayPhoneValue (parseLegacyQuery locator) value
+    | otherwise -> parsePayPhoneValue (parseButtonQuery locator) value
+  AdapterCapture -> parsePayPhoneValue (parseConfirm locator) value
   AdapterCancel -> parsePayPhoneValue
     (parseBooleanMutation AdapterCancelled ProviderConfirmedNoCharge locator) value
   AdapterSameDayReverse -> parsePayPhoneValue
     (parseBooleanMutation AdapterReversed ProviderSucceeded locator) value
   _ -> unsupportedOperation
 
-parseCreate :: Value -> Parser AdapterResult
-parseCreate = A.withObject "PayPhone create response" $ \object -> do
-  transactionId <- object .: "transactionId" :: Parser Int64
-  when (transactionId <= 0) (fail "PayPhone returned an invalid transaction ID")
+parseCreate :: PaymentLocator -> Value -> Parser AdapterResult
+parseCreate locator = A.withObject "PayPhone prepare response" $ \object -> do
+  paymentId <- object .: "paymentId"
+  unless (validProviderIdentifier paymentId)
+    (fail "PayPhone returned an invalid payment ID")
+  appUrl <- object .: "payWithPayPhone"
+  cardUrl <- object .: "payWithCard"
+  let wanted
+        | plExternalId locator == payPhoneCreateLocatorId MethodCard = cardUrl
+        | otherwise = appUrl
+  unless (hostedCheckoutUrl paymentId wanted)
+    (fail "PayPhone returned an unexpected checkout URL")
   pure AdapterResult
-    { adapterResultState = AdapterPending
-    , adapterResultExternalId = T.pack (show transactionId)
-    , adapterResultRedirectUrl = Nothing
+    { adapterResultState = AdapterRequiresCustomerAction
+    , adapterResultExternalId = paymentId
+    , adapterResultRedirectUrl = Just wanted
     , adapterResultAmountMinor = Nothing
     , adapterResultCurrency = Nothing
     , adapterResultCertainty = ProviderAmbiguous
     }
 
-parseQuery :: PaymentLocator -> Value -> Parser AdapterResult
-parseQuery locator = A.withObject "PayPhone query response" $ \object -> do
-  clientReference <- object .: "clientTransactionId"
-  transactionId <- object .: "transactionId" :: Parser Int64
-  amountMinor <- object .: "amount" :: Parser Int64
-  currency <- normalizedCurrency <$> object .: "currency"
-  statusCode <- object .: "statusCode" :: Parser Int
-  let transactionIdText = T.pack (show transactionId)
-  unless (transactionIdText == plExternalId locator)
-    (fail "PayPhone transaction ID does not match the stored sale")
-  validateBindingParser (plExpected locator) clientReference amountMinor currency
-  let (state, certainty) = payPhoneStatus statusCode
+-- | Query result for a button binding. The binding's own resource ID (the
+-- prepared payment ID) is reported back, because PayPhone's transaction ID
+-- only exists once the buyer starts paying.
+parseButtonQuery :: PaymentLocator -> Value -> Parser AdapterResult
+parseButtonQuery locator value = do
+  entries <- case value of
+    A.Array _ -> A.parseJSON value
+    A.Object _ -> pure [value]
+    _ -> fail "PayPhone query response must be an object or a list"
+  transactions <- traverse transactionParser entries
+  let matching = filter ((== epReference expected) . txReference) transactions
+  when (null matching) (fail "PayPhone query has no transaction for this order")
+  mapM_ (validateTransaction expected) matching
+  let statuses = map txStatusCode matching
+      (state, certainty)
+        | all (== 2) statuses = (AdapterCancelled, ProviderConfirmedNoCharge)
+        | all (`elem` [1, 2, 3]) statuses = (AdapterPending, ProviderAmbiguous)
+        | otherwise = (AdapterUnknown, ProviderAmbiguous)
   pure AdapterResult
     { adapterResultState = state
-    , adapterResultExternalId = transactionIdText
+    , adapterResultExternalId = plExternalId locator
     , adapterResultRedirectUrl = Nothing
-    , adapterResultAmountMinor = Just amountMinor
-    , adapterResultCurrency = Just currency
+    , adapterResultAmountMinor = Just (epAmountMinor expected)
+    , adapterResultCurrency = Just (normalizedCurrency (epCurrency expected))
+    , adapterResultCertainty = certainty
+    }
+  where
+    expected = plExpected locator
+
+parseConfirm :: PaymentLocator -> Value -> Parser AdapterResult
+parseConfirm locator value = do
+  transaction <- transactionParser value
+  unless (T.pack (show (txId transaction)) == plExternalId locator)
+    (fail "PayPhone confirmed a different transaction")
+  validateTransaction (plExpected locator) transaction
+  let (state, certainty) = case txStatusCode transaction of
+        3 -> (AdapterSucceeded, ProviderSucceeded)
+        2 -> (AdapterCancelled, ProviderConfirmedNoCharge)
+        1 -> (AdapterPending, ProviderAmbiguous)
+        _ -> (AdapterUnknown, ProviderAmbiguous)
+  pure AdapterResult
+    { adapterResultState = state
+    , adapterResultExternalId = plExternalId locator
+    , adapterResultRedirectUrl = Nothing
+    , adapterResultAmountMinor = Just (txAmountMinor transaction)
+    , adapterResultCurrency = Just (txCurrency transaction)
+    , adapterResultCertainty = certainty
+    }
+
+parseLegacyQuery :: PaymentLocator -> Value -> Parser AdapterResult
+parseLegacyQuery locator value = do
+  transaction <- transactionParser value
+  unless (T.pack (show (txId transaction)) == plExternalId locator)
+    (fail "PayPhone transaction ID does not match the stored sale")
+  validateTransaction (plExpected locator) transaction
+  let (state, certainty) = legacySaleStatus (txStatusCode transaction)
+  pure AdapterResult
+    { adapterResultState = state
+    , adapterResultExternalId = plExternalId locator
+    , adapterResultRedirectUrl = Nothing
+    , adapterResultAmountMinor = Just (txAmountMinor transaction)
+    , adapterResultCurrency = Just (txCurrency transaction)
     , adapterResultCertainty = certainty
     }
 
@@ -242,8 +343,35 @@ assessCallback config = parsePayPhoneValue $ A.withObject "PayPhone callback" $ 
     , notificationRequiresQuery = True
     }
 
-payPhoneStatus :: Int -> (AdapterResultState, ProviderOutcomeCertainty)
-payPhoneStatus statusCode = case statusCode of
+data PayPhoneTransaction = PayPhoneTransaction
+  { txId          :: Int64
+  , txReference   :: Text
+  , txAmountMinor :: Int64
+  , txCurrency    :: Text
+  , txStatusCode  :: Int
+  }
+
+transactionParser :: Value -> Parser PayPhoneTransaction
+transactionParser = A.withObject "PayPhone transaction" $ \object -> do
+  transactionId <- object .: "transactionId"
+  when (transactionId <= 0) (fail "PayPhone returned an invalid transaction ID")
+  PayPhoneTransaction transactionId
+    <$> object .: "clientTransactionId"
+    <*> object .: "amount"
+    <*> (normalizedCurrency <$> object .: "currency")
+    <*> object .: "statusCode"
+
+validateTransaction :: ExpectedPayment -> PayPhoneTransaction -> Parser ()
+validateTransaction expected transaction = do
+  unless (txReference transaction == epReference expected)
+    (fail "Provider payment reference does not match the order")
+  unless (txAmountMinor transaction == epAmountMinor expected)
+    (fail "Provider payment amount does not match the order")
+  unless (txCurrency transaction == normalizedCurrency (epCurrency expected))
+    (fail "Provider payment currency does not match the order")
+
+legacySaleStatus :: Int -> (AdapterResultState, ProviderOutcomeCertainty)
+legacySaleStatus statusCode = case statusCode of
   1 -> (AdapterPending, ProviderAmbiguous)
   -- The documented terminal label is Canceled. The numeric code does not
   -- establish whether the buyer, provider or issuer caused the outcome.
@@ -251,19 +379,30 @@ payPhoneStatus statusCode = case statusCode of
   3 -> (AdapterSucceeded, ProviderSucceeded)
   _ -> (AdapterUnknown, ProviderAmbiguous)
 
-validateBindingParser :: ExpectedPayment -> Text -> Int64 -> Text -> Parser ()
-validateBindingParser expected reference amountMinor currency = do
-  unless (reference == epReference expected)
-    (fail "Provider payment reference does not match the order")
-  unless (amountMinor == epAmountMinor expected)
-    (fail "Provider payment amount does not match the order")
-  unless (normalizedCurrency currency == normalizedCurrency (epCurrency expected))
-    (fail "Provider payment currency does not match the order")
+-- | API Sale bindings stored PayPhone's numeric transaction ID; button
+-- bindings store the alphanumeric prepared payment ID.
+legacySaleBinding :: PaymentLocator -> Bool
+legacySaleBinding = maybe False (const True) . positiveTransactionId . plExternalId
+
+positiveTransactionId :: Text -> Maybe Int64
+positiveTransactionId value
+  | T.null value || T.length value > 18 || not (T.all isDigit value) = Nothing
+  | otherwise = case reads (T.unpack value) of
+      [(transactionId, "")] | transactionId > 0 -> Just transactionId
+      _ -> Nothing
+
+-- | Accepts only PayPhone's own hosted checkout pages for this payment.
+hostedCheckoutUrl :: Text -> Text -> Bool
+hostedCheckoutUrl paymentId url =
+  any (\path -> url == payPhoneBaseUrl <> path <> "?paymentId=" <> paymentId)
+    ["/PayPhone/Index", "/Anonymous/Index"]
 
 validateCreate :: CreatePayment -> Either AdapterError ()
 validateCreate payment
   | not (validProviderIdentifier (cpReference payment)) =
       Left (AdapterError "PayPhone client transaction ID is invalid.")
+  | T.length (cpReference payment) > 50 =
+      Left (AdapterError "PayPhone client transaction ID is too long.")
   | T.null (T.strip (cpDescription payment)) =
       Left (AdapterError "PayPhone payment reference is required.")
   | not ("https://" `T.isPrefixOf` T.toLower (cpReturnUrl payment)) =
@@ -274,12 +413,6 @@ validateClientReference :: Text -> Either AdapterError ()
 validateClientReference reference
   | validProviderIdentifier reference = Right ()
   | otherwise = Left (AdapterError "PayPhone client transaction ID is invalid.")
-
-digitsBetween :: Int -> Int -> Text -> Bool
-digitsBetween minimumLength maximumLength value =
-  T.length value >= minimumLength
-    && T.length value <= maximumLength
-    && T.all isDigit value
 
 eligibleForSameDayReverse :: AdapterContext -> PaymentMutation -> Bool
 eligibleForSameDayReverse context mutation =

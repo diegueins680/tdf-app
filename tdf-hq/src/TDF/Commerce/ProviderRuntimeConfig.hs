@@ -89,7 +89,7 @@ loadRuntimeProviderAdapter environment provider = case provider of
         { rpaAdapter = adapter
         , rpaReturnUrl = validatedReturn
         , rpaNotificationUrl = Nothing
-        , rpaConfiguredMethods = [MethodPayPhoneWallet]
+        , rpaConfiguredMethods = [MethodPayPhoneWallet, MethodCard]
         }
   _ -> pure (Left "Shared provider executor does not support this provider")
 

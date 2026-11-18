@@ -6003,6 +6003,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/commerce/checkouts/{checkoutId}/payment-sessions/{attemptId}/payphone-confirmation": {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+            };
+            path: {
+                checkoutId: string;
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Confirm a PayPhone button payment after the buyer returns
+         * @description Takes the untrusted id and clientTransactionId PayPhone appended to the response URL, requires the client transaction ID to be this attempt's own reference, and calls PayPhone's authenticated Confirm API. Only a confirmation matching transaction, reference, amount and currency is applied; PayPhone reverses approved payments that are not confirmed within about five minutes. Repeating the call is idempotent.
+         */
+        post: operations["confirmPayPhonePayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/commerce/provider-notifications/placetopay": {
         parameters: {
             query?: never;
@@ -11259,7 +11284,7 @@ export interface components {
             termsAcceptedAt?: string | null;
             /** Format: date-time */
             depositPaidAt?: string | null;
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card")[];
         };
         PublicDomoPaypalCaptureRequest: {
             paypalOrderId: string;
@@ -11391,7 +11416,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string;
             quote: components["schemas"]["PublicEventTicketQuote"];
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card" | "bank_transfer")[];
             /** @description Empty until fulfillment issues tickets after verified payment. */
             tickets: components["schemas"]["PublicEventTicket"][];
             /** @description Present only after the buyer selected bank transfer. */
@@ -11594,7 +11619,7 @@ export interface components {
             holdExpiresAt: string;
             quote: components["schemas"]["PublicBookingQuote"];
             /** @description Rails both configured and enabled for this immutable checkout. Empty means no online payment action may be shown. */
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "bank_transfer")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card" | "bank_transfer")[];
             manualPayment: components["schemas"]["PublicBookingManualPayment"] | null;
         };
         PublicBookingManualPaymentCreate: {
@@ -12500,6 +12525,11 @@ export interface components {
             paymentMethod: "card" | "bank_redirect" | "deuna_qr" | "payphone_wallet";
             buyerPhone?: string;
             buyerCountryCode?: string;
+        };
+        PayPhoneConfirmation: {
+            /** Format: int64 */
+            transactionId: number;
+            clientTransactionId: string;
         };
         PaymentSession: {
             /** Format: uuid */
@@ -14926,7 +14956,7 @@ export interface components {
             /** Format: date-time */
             holdExpiresAt: string | null;
             quote: components["schemas"]["CourseCheckoutQuote"] | null;
-            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet")[];
+            paymentMethods: ("datafast" | "paypal" | "placetopay_card" | "placetopay_bank_redirect" | "placetopay_deuna_qr" | "payphone_wallet" | "payphone_card")[];
             checkoutAvailable: boolean;
         };
         CoursePaypalCaptureRequest: {
@@ -32692,6 +32722,63 @@ export interface operations {
                 content?: never;
             };
             /** @description Encrypted operation storage is unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirmPayPhonePayment: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Checkout-Lookup-Token": string;
+            };
+            path: {
+                checkoutId: string;
+                attemptId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayPhoneConfirmation"];
+            };
+        };
+        responses: {
+            /** @description Lookup-token-scoped state after applying the authenticated confirmation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentSession"];
+                };
+            };
+            /** @description Invalid return values */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Session absent or lookup token invalid */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The payment is not prepared or its state changed concurrently */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description PayPhone or secure storage is temporarily unavailable; retry */
             503: {
                 headers: {
                     [name: string]: unknown;

@@ -15,9 +15,17 @@ const checkoutId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const attemptId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const getMock = jest.fn();
 
+const confirmMock = jest.fn();
+
 jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
   getProviderPaymentSession: getMock,
-  safePlaceToPayRedirect: () => null,
+  confirmPayPhonePayment: confirmMock,
+  payPhoneReturnFromSearch: (params: URLSearchParams) => {
+    const id = params.get('id');
+    const clientTransactionId = params.get('clientTransactionId');
+    return id && clientTransactionId ? { transactionId: Number(id), clientTransactionId } : null;
+  },
+  safeProviderRedirect: () => null,
 }));
 
 jest.unstable_mockModule('../contexts/LocalePreferencesContext', () => ({

@@ -3,7 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
-import { getProviderPaymentSession, safePlaceToPayRedirect } from '../api/providerPaymentSessions';
+import {
+  confirmPayPhonePayment,
+  getProviderPaymentSession,
+  payPhoneReturnFromSearch,
+  safeProviderRedirect,
+} from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
 import {
   clearPaymentIdempotencyKey,
@@ -27,13 +32,28 @@ export default function ProviderPaymentReturnPage() {
   const [searchParams] = useSearchParams();
   const checkoutId = searchParams.get('tdf_checkout');
   const resume = loadProviderPaymentResume(checkoutId ?? undefined);
+  const payPhoneReturn = resume?.provider === 'payphone'
+    ? payPhoneReturnFromSearch(searchParams)
+    : null;
   const status = useQuery({
-    queryKey: ['provider-payment-session-return', resume?.checkoutId, resume?.attemptId],
-    queryFn: () => getProviderPaymentSession(
-      resume!.checkoutId,
-      resume!.attemptId,
-      resume!.lookupToken,
-    ),
+    queryKey: ['provider-payment-session-return', resume?.checkoutId, resume?.attemptId,
+      payPhoneReturn?.transactionId],
+    // PayPhone reverses an approved payment unless the server confirms it
+    // within minutes, so while it is unresolved every status read is an
+    // (idempotent) confirmation. The returned values are untrusted; the server
+    // checks them with PayPhone before applying anything.
+    queryFn: () => (payPhoneReturn
+      ? confirmPayPhonePayment(
+        resume!.checkoutId,
+        resume!.attemptId,
+        resume!.lookupToken,
+        payPhoneReturn,
+      )
+      : getProviderPaymentSession(
+        resume!.checkoutId,
+        resume!.attemptId,
+        resume!.lookupToken,
+      )),
     enabled: Boolean(resume),
     retry: false,
     refetchOnWindowFocus: true,
@@ -68,9 +88,7 @@ export default function ProviderPaymentReturnPage() {
     || (session?.state === 'failed' && session.canRetryOrFallback);
   const ambiguous = session?.state === 'ambiguous'
     || Boolean(session && !session.canRetryOrFallback && !succeeded);
-  const redirect = session?.provider === 'placetopay'
-    ? safePlaceToPayRedirect(session.redirectUrl)
-    : null;
+  const redirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
   const canReleaseAttempt = paymentAttemptCanBeReleased(
     session?.state,
     session?.canRetryOrFallback,

@@ -3,7 +3,6 @@ import {
   Button,
   CircularProgress,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -13,7 +12,7 @@ import {
   createProviderPaymentSession,
   getProviderPaymentSession,
   HOSTED_PAYMENT_METHODS,
-  safePlaceToPayRedirect,
+  safeProviderRedirect,
   type HostedPaymentMethodDefinition,
   type HostedPaymentMethodLabel,
   type ProviderPaymentSession,
@@ -75,12 +74,11 @@ const methodCopy = (
     placetopay_card: ['Card · PlaceToPay', 'Tarjeta · PlaceToPay'],
     placetopay_bank_redirect: ['Online bank payment · PlaceToPay', 'Pago bancario en línea · PlaceToPay'],
     placetopay_deuna_qr: ['DeUna! QR · PlaceToPay', 'QR DeUna! · PlaceToPay'],
-    payphone_wallet: ['PayPhone wallet', 'Billetera PayPhone'],
+    payphone_card: ['Card · PayPhone', 'Tarjeta · PayPhone'],
+    payphone_wallet: ['PayPhone app', 'App PayPhone'],
   };
   return copy[label][english ? 0 : 1];
 };
-
-const digitsOnly = (value: string): string => value.replace(/\D/g, '');
 
 const isPotentiallyAmbiguous = (error: unknown): boolean =>
   !(error instanceof PaymentStartNotSentError)
@@ -160,7 +158,6 @@ export default function HostedProviderCheckout({
   offeredMethods,
   disabled = false,
   english = false,
-  initialBuyerPhone,
   prepareCheckout,
   pendingReturnPathPrefix,
   onSafetyLockChange,
@@ -186,8 +183,6 @@ export default function HostedProviderCheckout({
   const [recoveryRevision, setRecoveryRevision] = useState(0);
   const [potentiallyAmbiguous, setPotentiallyAmbiguous] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [buyerCountryCode, setBuyerCountryCode] = useState('593');
-  const [buyerPhone, setBuyerPhone] = useState(() => digitsOnly(initialBuyerPhone ?? ''));
   const recoveryScope = checkout?.checkoutId ?? pendingReturnPathPrefix ?? '';
   const recoveryScopeRef = useRef(recoveryScope);
   recoveryScopeRef.current = recoveryScope;
@@ -295,8 +290,6 @@ export default function HostedProviderCheckout({
       returnPath: pending.returnPath,
     });
     setSelected(pendingMethod);
-    if (pending.buyerPhone) setBuyerPhone(pending.buyerPhone);
-    if (pending.buyerCountryCode) setBuyerCountryCode(pending.buyerCountryCode);
     setPotentiallyAmbiguous(true);
     setError(publicError(english, true));
     return undefined;
@@ -341,16 +334,11 @@ export default function HostedProviderCheckout({
       setError(publicError(english, true));
       return;
     }
-    const phone = original?.buyerPhone ?? digitsOnly(buyerPhone);
-    const countryCode = original?.buyerCountryCode ?? digitsOnly(buyerCountryCode);
-    if (method.provider === 'payphone'
-        && (phone.length < 6 || phone.length > 15
-          || countryCode.length < 1 || countryCode.length > 3)) {
-      setError(english
-        ? 'Enter a valid country calling code and phone number for PayPhone.'
-        : 'Ingresa un código de país y número de teléfono válidos para PayPhone.');
-      return;
-    }
+    // A request transmitted by an earlier version may carry a buyer phone;
+    // replaying it must send the same body to recover the same attempt.
+    const legacyPhone = original?.buyerPhone && original.buyerCountryCode
+      ? { buyerPhone: original.buyerPhone, buyerCountryCode: original.buyerCountryCode }
+      : {};
     setBusy(true);
     setPotentiallyAmbiguous(true);
     setSelected(method);
@@ -388,10 +376,7 @@ export default function HostedProviderCheckout({
         paymentMethod: method.paymentMethod,
         lookupToken: context.lookupToken,
         returnPath: context.returnPath,
-        ...(method.provider === 'payphone' ? {
-          buyerPhone: phone,
-          buyerCountryCode: countryCode,
-        } : {}),
+        ...legacyPhone,
         createdAt: Date.now(),
       };
       if (!saveProviderPaymentPending(pending)) {
@@ -406,10 +391,7 @@ export default function HostedProviderCheckout({
         {
           provider: method.provider,
           paymentMethod: method.paymentMethod,
-          ...(method.provider === 'payphone' ? {
-            buyerPhone: phone,
-            buyerCountryCode: countryCode,
-          } : {}),
+          ...legacyPhone,
         },
       );
       // Leave the original pending marker intact if navigation changed the
@@ -431,7 +413,7 @@ export default function HostedProviderCheckout({
         clearProviderPaymentPending(context.checkoutId);
         setPendingCreation(null);
       }
-      if (next.provider === 'placetopay' && next.state === 'requires_customer_action') {
+      if (next.state === 'requires_customer_action') {
         if (!resumeSaved) {
           setPotentiallyAmbiguous(true);
           setError(english
@@ -439,7 +421,7 @@ export default function HostedProviderCheckout({
             : 'No se pudo guardar la recuperación segura. Permanece en esta página mientras TDF concilia el intento.');
           return;
         }
-        const redirect = safePlaceToPayRedirect(next.redirectUrl);
+        const redirect = safeProviderRedirect(next.provider, next.redirectUrl);
         if (!redirect) {
           setError(english
             ? 'The provider returned an unsafe redirect. Do not retry with another method; support must reconcile this attempt.'
@@ -490,37 +472,13 @@ export default function HostedProviderCheckout({
   };
 
   const copy = session ? stateCopy(session, english) : null;
-  const existingRedirect = session?.provider === 'placetopay'
-    ? safePlaceToPayRedirect(session.redirectUrl)
-    : null;
+  const existingRedirect = safeProviderRedirect(session?.provider, session?.redirectUrl);
 
   return (
     <Stack spacing={1.5} component="section" aria-label={english ? 'Additional secure payment methods' : 'Métodos de pago seguros adicionales'}>
       <Typography variant="subtitle2" fontWeight={800}>
         {english ? 'More secure payment methods' : 'Más métodos de pago seguros'}
       </Typography>
-      {methods.some((method) => method.provider === 'payphone') && (
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <TextField
-            size="small"
-            label={english ? 'Country code' : 'Código país'}
-            disabled={safetyLocked}
-            value={buyerCountryCode}
-            onChange={(event) => setBuyerCountryCode(digitsOnly(event.target.value).slice(0, 3))}
-            inputProps={{ inputMode: 'numeric', maxLength: 3 }}
-            sx={{ maxWidth: { sm: 150 } }}
-          />
-          <TextField
-            size="small"
-            label={english ? 'PayPhone number' : 'Número PayPhone'}
-            disabled={safetyLocked}
-            value={buyerPhone}
-            onChange={(event) => setBuyerPhone(digitsOnly(event.target.value).slice(0, 15))}
-            inputProps={{ inputMode: 'tel', maxLength: 15 }}
-            helperText={english ? 'Digits only, without the country code.' : 'Solo dígitos, sin el código de país.'}
-          />
-        </Stack>
-      )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
         {methods.map((method) => {
           const isSelected = selected?.label === method.label;

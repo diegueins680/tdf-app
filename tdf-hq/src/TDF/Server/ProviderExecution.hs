@@ -33,11 +33,13 @@ import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderAdapter
 import           TDF.Commerce.ProviderAdapter.Http
   ( AdapterTransportError(..), executeAdapterRequest, sharedProviderManager )
+import qualified TDF.Commerce.ProviderAdapter.PayPhone as PayPhone
 import qualified TDF.Commerce.ProviderAdapter.PlaceToPay as PlaceToPay
 import           TDF.Commerce.ProviderCapabilities
 import qualified TDF.Commerce.PaymentRuntimeStore as PaymentRuntime
 import qualified TDF.Commerce.ProviderEventStore as ProviderEvent
 import qualified TDF.Commerce.ProviderExecutionStore as Store
+import qualified TDF.Commerce.ProviderReconciliation as Reconciliation
 import           TDF.Commerce.ProviderRuntimeConfig
 import           TDF.DB (Env(..))
 import qualified TDF.Server.EventTicketCheckout as EventTicketCheckout
@@ -50,6 +52,7 @@ providerExecutionServer :: ServerT ProviderExecutionAPI AppM
 providerExecutionServer =
        createPaymentSession
   :<|> getPaymentSession
+  :<|> confirmPayPhonePayment
   :<|> placeToPayNotification
   :<|> payPhoneNotification
   :<|> payPhoneNotification
@@ -189,7 +192,8 @@ startPaymentSession checkoutId lookupHash idempotencyKey userAgent provider paym
       payment = preflightPayment { cpReference = merchantReference }
       expected = ExpectedPayment merchantReference
         (Store.ceTotalMinor checkout) (Store.ceCurrency checkout)
-      locator = PaymentLocator "pending" expected
+      -- PayPhone reads the requested method to pick its hosted page.
+      locator = PaymentLocator (PayPhone.payPhoneCreateLocatorId paymentMethod) expected
       fingerprint = Store.providerCreateRequestFingerprint (Store.ceCheckout checkout)
         provider paymentMethod merchantReference (Store.ceTotalMinor checkout)
         (Store.ceCurrency checkout) (cpBuyerPhone payment) (cpBuyerCountryCode payment)
@@ -267,6 +271,105 @@ getPaymentSession rawCheckoutId rawAttemptId rawLookupToken = do
       lookupHash encryptionKey) envPool
   operation <- either (const (throwError err404)) pure loaded
   pure (operationToDTO checkoutId operation)
+
+-- | Called by the return page with the values PayPhone appended to the
+-- response URL. PayPhone reverses an approved button payment that is not
+-- confirmed within about five minutes, so the confirmation is the only
+-- evidence that may record the charge. The query string is untrusted: the
+-- client transaction ID must be this attempt's own reference, and only the
+-- authenticated Confirm response (same transaction, reference, amount and
+-- currency) is applied through the shared reconciliation path.
+confirmPayPhonePayment
+  :: Text
+  -> Text
+  -> Maybe Text
+  -> PayPhoneConfirmationDTO
+  -> AppM PaymentSessionDTO
+confirmPayPhonePayment rawCheckoutId rawAttemptId rawLookupToken request = do
+  Env{envPool} <- ask
+  checkoutId <- either (throwError . badRequest) pure (validatedUuid "checkoutId" rawCheckoutId)
+  attemptId <- either (throwError . badRequest) pure (validatedUuid "attemptId" rawAttemptId)
+  lookupToken <- requireLookupToken rawLookupToken
+  let lookupHash = sha256Text lookupToken
+  authorized <- liftIO $ runSqlPool
+    (Store.authorizeCreateOperation checkoutId attemptId lookupHash) envPool
+  _ <- either (const (throwError err404)) pure authorized
+  encryptionKey <- liftIO loadProviderOperationEncryptionKey
+    >>= either (throwError . unavailableText) pure
+  operation <- liftIO (runSqlPool
+      (Store.loadAuthorizedCreateOperation checkoutId attemptId lookupHash encryptionKey) envPool)
+    >>= either (const (throwError err404)) pure
+  unless (Store.porProvider operation == Checkout.ProviderPayPhone) $
+    throwError (badRequest "This payment session is not a PayPhone payment")
+  if Store.porStatus operation `elem` ["succeeded", "confirmed_no_charge", "failed"]
+    -- Already settled: a repeated return or refresh changes nothing.
+    then pure (operationToDTO checkoutId operation)
+    else confirmPreparedPayPhonePayment checkoutId attemptId lookupHash encryptionKey
+      operation request
+
+confirmPreparedPayPhonePayment
+  :: Text -> Text -> Text -> Text -> Store.ProviderOperationRecord
+  -> PayPhoneConfirmationDTO -> AppM PaymentSessionDTO
+confirmPreparedPayPhonePayment checkoutId attemptId lookupHash encryptionKey operation request = do
+  Env{envPool} <- ask
+  resourceId <- maybe
+    (throwError (conflict "PayPhone payment has not been prepared"))
+    pure
+    (Store.porProviderResourceId operation)
+  when (ppcTransactionId request <= 0) $
+    throwError (badRequest "PayPhone transaction ID is invalid")
+  environment <- liftIO loadConfiguredCheckoutEnvironment
+    >>= either (throwError . unavailableText) pure
+  merchantRef <- liftIO (runSqlPool
+      (Store.loadReadyMerchantAccount environment Checkout.ProviderPayPhone) envPool)
+    >>= either (throwError . unavailableText) pure
+  runtime <- liftIO (loadRuntimeProviderAdapter environment Checkout.ProviderPayPhone)
+    >>= either (throwError . unavailableText) pure
+  bound <- liftIO (runSqlPool
+      (Store.loadBoundProviderPayment Checkout.ProviderPayPhone environment merchantRef
+        resourceId (Just (ppcClientTransactionId request))) envPool)
+    >>= either (const (throwError (badRequest "PayPhone return does not match this payment"))) pure
+  unless (Checkout.paymentAttemptReferenceId (Store.bppAttempt bound) == attemptId) $
+    throwError (badRequest "PayPhone return does not match this payment")
+  now <- liftIO getCurrentTime
+  nonce <- liftIO (getEntropy 32)
+  let transactionId = T.pack (show (ppcTransactionId request))
+      locator = PaymentLocator
+        { plExternalId = transactionId
+        , plExpected = ExpectedPayment
+            { epReference = Store.bppProviderReference bound
+            , epAmountMinor = Store.bppAmountMinor bound
+            , epCurrency = Store.bppCurrency bound
+            }
+        }
+      mutation = PaymentMutation
+        { pmLocator = locator
+        , pmAmountMinor = Store.bppAmountMinor bound
+        , pmProviderActionAt = now
+        }
+      adapter = rpaAdapter runtime
+  confirmRequest <- either (throwError . badRequest . adapterErrorPublicMessage) pure
+    (adapterBuildCapture adapter (AdapterContext now nonce) mutation)
+  transport <- liftIO (executeAdapterRequest sharedProviderManager confirmRequest)
+  providerValue <- either
+    (const (throwError unavailable { errBody = "PayPhone confirmation is temporarily unavailable" }))
+    pure
+    transport
+  confirmed <- either
+    (const (throwError unavailable { errBody = "PayPhone confirmation requires reconciliation" }))
+    pure
+    (adapterParseResponse adapter AdapterCapture locator providerValue)
+  -- The confirmation was bound to this attempt's reference, amount and
+  -- currency above; it is now reported against the binding's own resource.
+  let result = confirmed { adapterResultExternalId = Store.bppProviderResourceId bound }
+  applied <- liftIO $ runSqlPool
+    (Reconciliation.applyQueryResult bound result ("payphone-confirm:" <> transactionId) now)
+    envPool
+  _ <- either (throwError . conflict) pure applied
+  reloaded <- liftIO (runSqlPool
+      (Store.loadAuthorizedCreateOperation checkoutId attemptId lookupHash encryptionKey) envPool)
+    >>= either (const (throwError err404)) pure
+  pure (operationToDTO checkoutId reloaded)
 
 placeToPayNotification :: BL.ByteString -> AppM NoContent
 placeToPayNotification rawBody = do

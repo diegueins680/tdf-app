@@ -10,7 +10,8 @@ export type HostedPaymentMethodLabel =
   | 'placetopay_card'
   | 'placetopay_bank_redirect'
   | 'placetopay_deuna_qr'
-  | 'payphone_wallet';
+  | 'payphone_wallet'
+  | 'payphone_card';
 
 export interface HostedPaymentMethodDefinition {
   label: HostedPaymentMethodLabel;
@@ -22,6 +23,7 @@ export const HOSTED_PAYMENT_METHODS: readonly HostedPaymentMethodDefinition[] = 
   { label: 'placetopay_card', provider: 'placetopay', paymentMethod: 'card' },
   { label: 'placetopay_bank_redirect', provider: 'placetopay', paymentMethod: 'bank_redirect' },
   { label: 'placetopay_deuna_qr', provider: 'placetopay', paymentMethod: 'deuna_qr' },
+  { label: 'payphone_card', provider: 'payphone', paymentMethod: 'card' },
   { label: 'payphone_wallet', provider: 'payphone', paymentMethod: 'payphone_wallet' },
 ];
 
@@ -31,6 +33,9 @@ const PLACE_TO_PAY_HOSTS = new Set([
   'checkout-test.placetopay.ec',
   'checkout.placetopay.ec',
 ]);
+
+const PAYPHONE_HOST = 'pay.payphonetodoesposible.com';
+const PAYPHONE_CHECKOUT_PATHS = new Set(['/PayPhone/Index', '/Anonymous/Index']);
 
 const requireUuid = (value: string, field: string): string => {
   const normalized = value.trim();
@@ -79,6 +84,36 @@ export const getProviderPaymentSession = (
   { headers: checkoutHeaders(lookupToken) },
 );
 
+export interface PayPhoneReturn {
+  transactionId: number;
+  clientTransactionId: string;
+}
+
+/**
+ * Reads the values PayPhone appends to the response URL. They are untrusted:
+ * the server confirms them with PayPhone before anything is shown as paid.
+ */
+export const payPhoneReturnFromSearch = (params: URLSearchParams): PayPhoneReturn | null => {
+  const rawId = params.get('id')?.trim() ?? '';
+  const clientTransactionId = params.get('clientTransactionId')?.trim() ?? '';
+  if (!/^[1-9][0-9]{0,17}$/.test(rawId)) return null;
+  if (!/^[A-Za-z0-9._-]{1,128}$/.test(clientTransactionId)) return null;
+  const transactionId = Number(rawId);
+  if (!Number.isSafeInteger(transactionId)) return null;
+  return { transactionId, clientTransactionId };
+};
+
+export const confirmPayPhonePayment = (
+  checkoutId: string,
+  attemptId: string,
+  lookupToken: string,
+  payPhoneReturn: PayPhoneReturn,
+) => post<ProviderPaymentSession>(
+  `/commerce/checkouts/${requireUuid(checkoutId, 'checkoutId')}/payment-sessions/${requireUuid(attemptId, 'attemptId')}/payphone-confirmation`,
+  payPhoneReturn,
+  { headers: checkoutHeaders(lookupToken) },
+);
+
 export const paymentMethodDefinition = (
   label: string,
 ): HostedPaymentMethodDefinition | null =>
@@ -93,4 +128,28 @@ export const safePlaceToPayRedirect = (rawUrl: string | null | undefined): strin
   } catch {
     return null;
   }
+};
+
+const safePayPhoneRedirect = (rawUrl: string | null | undefined): string | null => {
+  if (!rawUrl) return null;
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.port) return null;
+    if (parsed.hostname.toLowerCase() !== PAYPHONE_HOST) return null;
+    if (!PAYPHONE_CHECKOUT_PATHS.has(parsed.pathname)) return null;
+    const paymentId = parsed.searchParams.get('paymentId') ?? '';
+    return /^[A-Za-z0-9._-]{1,128}$/.test(paymentId) ? parsed.toString() : null;
+  } catch {
+    return null;
+  }
+};
+
+/** Only each provider's own hosted checkout page may receive the buyer. */
+export const safeProviderRedirect = (
+  provider: string | null | undefined,
+  rawUrl: string | null | undefined,
+): string | null => {
+  if (provider === 'placetopay') return safePlaceToPayRedirect(rawUrl);
+  if (provider === 'payphone') return safePayPhoneRedirect(rawUrl);
+  return null;
 };

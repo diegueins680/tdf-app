@@ -114,7 +114,8 @@ runtimeReady environment flow method activation = case paProvider activation of
     liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
       method)
   Checkout.ProviderPayPhone ->
-    liftIO (runtimeProviderConfigured environment Checkout.ProviderPayPhone)
+    liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPayPhone
+      method)
   Checkout.ProviderStripe -> pure False
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
@@ -145,6 +146,7 @@ publicPaymentRouteLabel route = case (routeProvider route, routeMethod route) of
     Just "placetopay_bank_redirect"
   (Checkout.ProviderPlaceToPay, MethodDeunaQr) -> Just "placetopay_deuna_qr"
   (Checkout.ProviderPayPhone, MethodPayPhoneWallet) -> Just "payphone_wallet"
+  (Checkout.ProviderPayPhone, MethodCard) -> Just "payphone_card"
   (Checkout.ProviderBankTransfer, MethodManualBankTransfer) ->
     Just "bank_transfer"
   _ -> Nothing

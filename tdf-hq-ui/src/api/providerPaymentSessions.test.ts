@@ -9,10 +9,13 @@ jest.unstable_mockModule('./client', () => ({
 }));
 
 const {
+  confirmPayPhonePayment,
   createProviderPaymentSession,
   getProviderPaymentSession,
   paymentMethodDefinition,
+  payPhoneReturnFromSearch,
   safePlaceToPayRedirect,
+  safeProviderRedirect,
 } = await import('./providerPaymentSessions');
 
 describe('provider payment-session client', () => {
@@ -83,5 +86,34 @@ describe('provider payment-session client', () => {
       .toBeNull();
     expect(safePlaceToPayRedirect('http://checkout.placetopay.ec/session/42'))
       .toBeNull();
+  });
+
+  it('redirects PayPhone buyers only to PayPhone hosted checkout pages', () => {
+    const card = 'https://pay.payphonetodoesposible.com/Anonymous/Index?paymentId=Pay-1';
+    const app = 'https://pay.payphonetodoesposible.com/PayPhone/Index?paymentId=Pay-1';
+    expect(safeProviderRedirect('payphone', card)).toBe(card);
+    expect(safeProviderRedirect('payphone', app)).toBe(app);
+    expect(safeProviderRedirect('payphone', 'https://pay.payphonetodoesposible.com.evil.example/Anonymous/Index?paymentId=Pay-1')).toBeNull();
+    expect(safeProviderRedirect('payphone', 'https://pay.payphonetodoesposible.com/api/Sale?paymentId=Pay-1')).toBeNull();
+    expect(safeProviderRedirect('payphone', 'http://pay.payphonetodoesposible.com/Anonymous/Index?paymentId=Pay-1')).toBeNull();
+    expect(safeProviderRedirect('placetopay', card)).toBeNull();
+    expect(safeProviderRedirect('payphone', 'https://checkout.placetopay.ec/session/42')).toBeNull();
+  });
+
+  it('reads only well-formed PayPhone return values and confirms them with the lookup capability', async () => {
+    expect(payPhoneReturnFromSearch(new URLSearchParams('id=93776650&clientTransactionId=TDF-abc_1.2')))
+      .toEqual({ transactionId: 93776650, clientTransactionId: 'TDF-abc_1.2' });
+    expect(payPhoneReturnFromSearch(new URLSearchParams('id=0&clientTransactionId=TDF-1'))).toBeNull();
+    expect(payPhoneReturnFromSearch(new URLSearchParams('id=12a&clientTransactionId=TDF-1'))).toBeNull();
+    expect(payPhoneReturnFromSearch(new URLSearchParams('id=1&clientTransactionId=<script>'))).toBeNull();
+    expect(payPhoneReturnFromSearch(new URLSearchParams('clientTransactionId=TDF-1'))).toBeNull();
+
+    await confirmPayPhonePayment(checkoutId, attemptId, lookupToken,
+      { transactionId: 93776650, clientTransactionId: 'TDF-1' });
+    expect(postMock).toHaveBeenCalledWith(
+      `/commerce/checkouts/${checkoutId}/payment-sessions/${attemptId}/payphone-confirmation`,
+      { transactionId: 93776650, clientTransactionId: 'TDF-1' },
+      { headers: { 'X-Checkout-Lookup-Token': lookupToken } },
+    );
   });
 });
