@@ -27834,7 +27834,7 @@
     {
       "id": "GROWTH-FIRST-ACTION-001",
       "title": "An invited visitor reaches the promised first action after signup",
-      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to the event's managers and to accounts with the Scheduling module; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
+      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to the event's managers and to accounts with the Scheduling module; artist profiles that still carry the account placeholder name are left out of the fan hub catalog; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
       "domain": "Growth",
       "authority": "Product owner request on 2026-11-13 to walk the invitation funnel on production and remove what stops invited people.",
       "source": "User request: make an invited person able to get real value in one sitting; walk production as a new organizer, fan and artist from the campaign links and fix every blocker.",
@@ -27875,7 +27875,8 @@
         "Publish from a state with no direct, review-free transition to a publicly listable state",
         "Write event fields read before the confirmation instead of the latest stored ones",
         "Show a planning-workspace link to a signed-in visitor who neither manages the event nor holds the Scheduling module",
-        "Override a time zone the account chose with the browser's"
+        "Override a time zone the account chose with the browser's",
+        "List an unnamed placeholder artist profile in the fan hub catalog for other viewers"
       ],
       "effects": [
         "Existing follow and unfollow writes from the starter list",
@@ -27916,6 +27917,7 @@
       "ambiguity": [
         "A logistics team member who is neither a manager of the event nor holds the Scheduling module can open the planning workspace (EVT-LOGISTICS-ACCESS-001) but is not offered the link on the event page.",
         "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test.",
+        "Unnamed artist profiles still appear in the server-side community directory search and on Mobile.",
         "The server reports UTC both for an account that never chose a zone and for one that chose UTC. A zone saved from the same browser is remembered locally and kept; on another device a chosen UTC still starts a new event in the browser's zone, which the form lets the organizer change."
       ],
       "conformance": {

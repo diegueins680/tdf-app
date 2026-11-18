@@ -6503,7 +6503,7 @@
     {
       "id": "SURFACE-b3d437c938c87672",
       "path": "scripts/test-guarded-release.py",
-      "sha256": "98bef5b8c838f31cd9850435cf6aad2053ce3e725d65b2bb32cb355124dd280f",
+      "sha256": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11411,7 +11411,7 @@
     {
       "id": "SURFACE-a6c4ec4bd3a29d80",
       "path": "tdf-hq-ui/src/pages/FanHubPage.tsx",
-      "sha256": "808f4fe698e3cdda8a8228dc7fb2c9b0b63a1cdd563517ee1189607b16b7dda0",
+      "sha256": "1041c7daf37c1a4241de0cfb5e05de3a0fd28020e6511e37d17f7f3ba18f0cfd",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12857,7 +12857,7 @@
     {
       "id": "SURFACE-a14b7188c2af7d0c",
       "path": "tdf-hq-ui/src/utils/accessControl.test.ts",
-      "sha256": "633c8a7d0f6e20eb90fdd06a18eb198731096e5b2bcbc040d78bb452311e463c",
+      "sha256": "be57cad0e4e85b33a1204d7ec6c49200bdac8bbac3f6cd6ebcc305254dbf92e2",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -12881,13 +12881,13 @@
     {
       "id": "SURFACE-a4ae75705e817d87",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.test.ts",
-      "sha256": "3d73b8ce3626b8466daf28a2bf37dfadb2e37b547f3d9587b7cbb6cba1b4d115",
+      "sha256": "790d21daa491d64c77e09a77a6a3e194c6695aa3c422e60cb37abbfe9dfa9360",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-46e2a7583543c04e",
       "path": "tdf-hq-ui/src/utils/artistFallbacks.ts",
-      "sha256": "ccbc0da7f4944f842ef115a7c3257fced61fc3e8ec08e8de510ab061de39fa7e",
+      "sha256": "614af6cecdaa948bada5c998e0ca1e18bf54410a6561136842d0b43c5af82c4b",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -13469,7 +13469,7 @@
     {
       "id": "SURFACE-1db49bff24529d0b",
       "path": "tdf-hq-ui/src/utils/signupFields.ts",
-      "sha256": "802cf6e1249668d29769e82560aedd167821646da839f825b8159dcb6809ed8c",
+      "sha256": "af56138c4a10328afa7b1290aa5353a04fd8ed1864fb683bea7afaca31560089",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31011,7 +31011,7 @@
     },
     {
       "path": "formal/system/invited-first-action.md",
-      "sha256": "6617c701b1141a20eb09b77228fb246d8ddf0b3c5bae32c1f5caf7df53cc1cb9",
+      "sha256": "01c5135ad37637c91fc23fc52a3795a294c211f5ba7d16ff048a32aa171768e5",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31585,7 +31585,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "a584dc5f3e3bbdbafbf5a08151384e6281270e36bb4d469fab05473cfe168f42",
+      "sha256": "2534c9807a14f44f836ef24d0970468a3703e392c5b17064cec2df4671769b40",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"
