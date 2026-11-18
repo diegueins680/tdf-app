@@ -9,6 +9,95 @@ servers:
     description: Development server
 
 paths:
+  /public/event-demo-requests:
+    get:
+      operationId: getEventDemoAvailability
+      summary: Check if event demo requests can currently be received
+      security: []
+      responses:
+        '200':
+          description: Event demo intake is enabled
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available]
+                properties:
+                  available: {type: boolean}
+        '503':
+          description: Event demo intake is disabled
+    post:
+      operationId: createEventDemoRequest
+      summary: Receive a request for an event demo without booking an appointment
+      security: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          required: true
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 128
+            pattern: '^[A-Za-z0-9_-]+$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, email, message]
+              properties:
+                name: {type: string, maxLength: 160}
+                email: {type: string, format: email}
+                message: {type: string, maxLength: 2000}
+                channel:
+                  type: string
+                  enum: [instagram-organizador, instagram-publico, tiktok-organizador, tiktok-publico]
+      responses:
+        '200':
+          description: Request received or idempotently replayed; no appointment is booked
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: {type: string, enum: [requested]}
+        '400':
+          description: Invalid intake
+        '409':
+          description: Idempotency key already recorded a different payload
+        '503':
+          description: No owner is configured for the intake
+  /admin/event-demo-requests:
+    get:
+      operationId: listEventDemoRequests
+      summary: List demo requests as the configured owner with admin access
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The owner's recent demo requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [inquiryId, createdAt, status]
+                  properties:
+                    inquiryId: {type: integer}
+                    createdAt: {type: string, format: date-time}
+                    name: {type: string, nullable: true}
+                    email: {type: string, nullable: true}
+                    message: {type: string, nullable: true}
+                    channel: {type: string, nullable: true}
+                    status: {type: string}
+        '403':
+          description: Caller is not the authorized owner or lacks admin access
+        '503':
+          description: No owner is configured for the intake
   /music/artists/{artistPartyId}/featured-track:
     $ref: './artist-playback.yaml#/paths/~1music~1artists~1{artistPartyId}~1featured-track'
   /music/me/featured-track:
