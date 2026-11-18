@@ -75779,7 +75779,7 @@
       "reviewed": true
     },
     {
-      "id": "cbfb2e7629209b469aeb",
+      "id": "8ce113fec3c2b206646b",
       "classification": "governed-reference-data",
       "disposition": "consumer-update",
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
@@ -75789,7 +75789,7 @@
       "reviewed": true
     },
     {
-      "id": "97f5e84df29e38480f3f",
+      "id": "461b09bfd03dfc53a612",
       "classification": "security-system-registry",
       "disposition": "retain-as-versioned-adapter-dispatch",
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
@@ -77121,7 +77121,7 @@
       "reviewed": true
     },
     {
-      "id": "dae3b89dd11670870aa4",
+      "id": "bb442758aac4e8bc0d5c",
       "classification": "governed-reference-data",
       "disposition": "consumer-update",
       "specializedModel": "commerce_provider_method, commerce_provider_method_capability",
