@@ -28466,7 +28466,7 @@
     "formal/payments/domo_quote_arithmetic.py": "992b9afd58dc3cc30c25754d760624ac6bab041f524d1dfcc885b32fa8b79537",
     "formal/payments/hosted_dead_letter_review.py": "ea8c7f8e369951d95dcbaf3fc19d8e32c11df3ce1146ae3b61e3e3f6f67c27f9",
     "formal/payments/merch_money_arithmetic.py": "9692bf9be55ea1082982a4c7a099ca1968b3b1a2fb90bbd4a8e97e6fbf6cec31",
-    "formal/payments/placetopay_query_admission.py": "214cc0e1443316165ba5b71b8da6de359027d089fd68caf5ef3f2972a126aba7",
+    "formal/payments/placetopay_query_admission.py": "0a80876802976ca8bd59376832b875b1803e1177bac41c5662cf217d33849678",
     "formal/payments/provider_binding_admission.py": "dba36ddd9614166b7c5257399f755e71874ef86619c64b9ee1c308a7d74d350a",
     "formal/payments/stripe_ticket_capture.py": "0f2196fcad2327bb7f7889b1dabf7190f85637dacd6c860f20895fe7c1e78c5d",
     "formal/social/DmReads.tla": "b322db9a64900980298be4b0ed7f9d8341f8df66a2ed0fa57ebca8868b893eff",
@@ -29762,15 +29762,15 @@
     "tdf-hq/src/TDF/Commerce/PaymentIntentStore.hs": "4a655de2a4eb6ad5edb36749d3001f32e9320aa326d9c8c7a84d3ae01cb9617a",
     "tdf-hq/src/TDF/Commerce/PaymentRuntimeStore.hs": "d8b27ce401b562c8e24bd3889080ab3e5990e7cd826b2c39d6b54add53f935a1",
     "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs": "c12568bfac60b5734339eeec886cb23c0fe010a4d75df7f5d779480807805518",
-    "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs": "be59449fadda2d0d467c16b8241905b833dd5dd681f5ca011dec8139986bbbee",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs": "6555e5698da0d651856d6fb5585a23d4f012cc84ffa9fdc403b21d11024e5d21",
     "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPalRefund.hs": "4632ba5c390ffb6711af14186ac736bb4077e548ad6610c971ad54a286dc42ac",
-    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs": "3a558f9d284542498a024136047e4cc59583506cee8a5e47eb7b4d3e96fc9eb5",
-    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs": "32bff7bcff26966faf8d88f063712cfe247e7003b741c16854c16629fcebad2a",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs": "8c181426f35b01fbbaccd4f8fa3dfdd8e04c67ed0da070157fa8bc78ae140944",
+    "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs": "a4e9cf99c043b8d75235efc2e14f27472083b2bbc6e315503e37b9c586199e0f",
     "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs": "0845b9639d054fbb4e43af1a86abf9b9b1587306e8f2ee0200ad529d2fd17fd3",
     "tdf-hq/src/TDF/Commerce/ProviderEventStore.hs": "8a792c1acc5881f86cd99d27b8916bc021d95853f7bcde82cac290aebef2300d",
     "tdf-hq/src/TDF/Commerce/ProviderEventWorker.hs": "0e1b0135876e275cb5131236e7907060dca3f128b9e6341b2d6221141fee21e5",
-    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "f45c2b0ddd9a9909682a15fe7197ea5480a28551a4575f7d0fcb2f7193d8ca47",
-    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "7bc73d48a3903741855811eff1c285b88ed6241c309a4c75756d1c5817807426",
+    "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs": "eb93415a3e9465971750cd2398cc34cc9f1de93fb8af02b16f8ca26e25ae8074",
+    "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs": "86e0c30a63e8190ee83065d49a7fc2c460e94b961a5e8d1a12588ba91afb8a67",
     "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs": "3a583134de0b5428438b46725fc42b670b4b5147adc6cacc969c62ed4c1fd917",
     "tdf-hq/src/TDF/Commerce/RefundReconciliation.hs": "0f9936d7191f11608855676eadff6e5dd6db071e9a1701b132c7c0d7f89d999d",
     "tdf-hq/src/TDF/Commerce/RefundStore.hs": "b05f83fa53804e4577033666b4e61d4aa3ae30a1d6c0311ced6b06417302a2cf",
@@ -29909,7 +29909,7 @@
     "tdf-hq/test/MusicReleaseSpecMain.hs": "058a2a1d4ae855cc50042b0c581ba4376e0ec54f0dcee231ba22c123fed04864",
     "tdf-hq/test/MusicS3ProbeMain.hs": "55e8f6c3268ba11ee998becd9c799c807fc3120183f09231def2af138a104175",
     "tdf-hq/test/PaymentIntentExpiryProbe.hs": "e3db3255008f572978cbb14c9bdb8af94fb4fc940c0fa1547b0fe390676da9b5",
-    "tdf-hq/test/Spec.hs": "36e3b6234bae9d7a786e0fd957c54caa49b2ecf00076ec2dcea36c6828b6a00a",
+    "tdf-hq/test/Spec.hs": "d0c18be396c57473c5edd823adff9a587ed1ebf548084965183a0c38bee9eb72",
     "tdf-hq/test/TDF/APITypesSpec.hs": "94e7d031e345db27fd18962236ece571c1df25ee4dcaa2cc1b002af3e2b001e7",
     "tdf-hq/test/TDF/AppleSignInSpec.hs": "c6ab00cc58d8c07476148aba02d766adca4eb4ebcb2f869cafd42eced8ff8535",
     "tdf-hq/test/TDF/Artists/EnrichmentSpec.hs": "4713abb8742f6efd9afcb2e43d8c86148ae5e5aff8c8c5ddda5333e1325e387b",
@@ -75643,7 +75643,7 @@
     {
       "id": "SURFACE-1f329e23e5aba24d",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
-      "sha256": "be59449fadda2d0d467c16b8241905b833dd5dd681f5ca011dec8139986bbbee",
+      "sha256": "6555e5698da0d651856d6fb5585a23d4f012cc84ffa9fdc403b21d11024e5d21",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75678,7 +75678,7 @@
     {
       "id": "SURFACE-9038b2dbdf428e2c",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
-      "sha256": "3a558f9d284542498a024136047e4cc59583506cee8a5e47eb7b4d3e96fc9eb5",
+      "sha256": "8c181426f35b01fbbaccd4f8fa3dfdd8e04c67ed0da070157fa8bc78ae140944",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75694,7 +75694,7 @@
     {
       "id": "SURFACE-f3e27f9ed209afef",
       "path": "tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs",
-      "sha256": "32bff7bcff26966faf8d88f063712cfe247e7003b741c16854c16629fcebad2a",
+      "sha256": "a4e9cf99c043b8d75235efc2e14f27472083b2bbc6e315503e37b9c586199e0f",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75765,7 +75765,7 @@
     {
       "id": "SURFACE-1d441708a9c7e070",
       "path": "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
-      "sha256": "f45c2b0ddd9a9909682a15fe7197ea5480a28551a4575f7d0fcb2f7193d8ca47",
+      "sha256": "eb93415a3e9465971750cd2398cc34cc9f1de93fb8af02b16f8ca26e25ae8074",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -75785,7 +75785,7 @@
     {
       "id": "SURFACE-24ec334e6417bf04",
       "path": "tdf-hq/src/TDF/Commerce/ProviderReconciliation.hs",
-      "sha256": "7bc73d48a3903741855811eff1c285b88ed6241c309a4c75756d1c5817807426",
+      "sha256": "86e0c30a63e8190ee83065d49a7fc2c460e94b961a5e8d1a12588ba91afb8a67",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -79298,7 +79298,7 @@
     {
       "id": "SURFACE-d117cfc262185911",
       "path": "tdf-hq/test/Spec.hs",
-      "sha256": "36e3b6234bae9d7a786e0fd957c54caa49b2ecf00076ec2dcea36c6828b6a00a",
+      "sha256": "d0c18be396c57473c5edd823adff9a587ed1ebf548084965183a0c38bee9eb72",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
