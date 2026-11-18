@@ -42,6 +42,9 @@ the invitation promised, and what this change guarantees instead.
   removed the Scheduling module requirement from that page; this requirement
   only limits who is offered the link, to the event's managers and to accounts
   with the Scheduling module.
+- Artist profiles that still carry the account placeholder name ("Cuenta TDF")
+  or no name are left out of the fan hub catalog, except for their owner. The
+  server-side community directory search still lists them.
 - Ticket checkout availability, pricing and refund policy are unchanged.
 
 ## Evidence
