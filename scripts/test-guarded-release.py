@@ -372,6 +372,10 @@ class GuardedReleaseTests(unittest.TestCase):
         self.assertEqual(self.host.edge_config, ORIGINAL_CADDY)
         self.assertEqual(self.host.timer, 'active')
         self.assertIn('reopened', receipt['steps'])
+        # Recovery brings service back, but leaves the interrupted journal open.
+        with self.assertRaisesRegex(ValueError, 'Release journal boundary rejected'):
+            self.plan()
+        self.assertEqual(self.status()['pendingStage'], 'migrate')
 
     def test_successful_migration_run_with_missing_ledger_row_is_rejected(self):
         # e.g. an image built from a different manifest exits 0 but skips a migration.
