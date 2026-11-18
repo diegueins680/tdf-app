@@ -177,10 +177,11 @@ queryProviderWith fetch adapter payment now = do
           -- The provider's own follow-up (PayPhone's Button confirmation)
           -- answers for the payment; the first answer is never applied.
           Right (Just followUp) -> do
-            confirmed <- fetch followUp
+            confirmed <- fetch (followUpRequest followUp)
             pure $ case confirmed of
               Left AdapterTransportError{} -> Left QueryUnavailable
-              Right answer -> parse answer
+              Right answer -> either (const (Left QueryBindingMismatch)) Right
+                (parseFollowUpResponse followUp answer)
 
 -- No thread is started by default. The process switch is also reread each
 -- tick; the database gate and account qualification remain independently required.

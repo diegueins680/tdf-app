@@ -289,32 +289,33 @@ buttonConfirmation
   -> AdapterContext
   -> PaymentLocator
   -> Value
-  -> Either AdapterError (Maybe AdapterRequest)
+  -> Either AdapterError (Maybe QueryFollowUp)
 buttonConfirmation config _ locator value
   | not (isButtonReference reference) = Right Nothing
   | otherwise = do
       validateClientReference reference
-      approved <- parsePayPhoneValue approvedTransaction value
-      pure $ flip fmap approved $ \transactionId -> AdapterRequest
-        { arProvider = ProviderPayPhone
-        , arOperation = AdapterQuery
-        , arMethod = AdapterPost
-        , arUrl = payPhoneBaseUrl <> "/api/button/V2/Confirm"
-        , arHeaders = payPhoneHeaders config
-        , arBody = Just (A.object ["id" .= transactionId, "clientTxId" .= reference])
-        , arRetryPolicy = SafeReadRetry
-        }
+      (transactionId, result) <- parsePayPhoneValue (parseTransaction locator) value
+      pure $ if adapterResultState result == AdapterSucceeded
+        then Just (confirmation transactionId)
+        else Nothing
   where
     reference = epReference (plExpected locator)
-    approvedTransaction = A.withObject "PayPhone status response" $ \object -> do
-      clientReference <- object .: "clientTransactionId"
-      transactionId <- object .: "transactionId" :: Parser Int64
-      amountMinor <- object .: "amount" :: Parser Int64
-      currency <- normalizedCurrency <$> object .: "currency"
-      statusCode <- object .: "statusCode" :: Parser Int
-      when (transactionId <= 0) (fail "PayPhone returned an invalid transaction ID")
-      validateBindingParser (plExpected locator) clientReference amountMinor currency
-      pure (if statusCode == 3 then Just transactionId else Nothing)
+    confirmation transactionId = QueryFollowUp
+      { followUpRequest = AdapterRequest
+          { arProvider = ProviderPayPhone
+          , arOperation = AdapterQuery
+          , arMethod = AdapterPost
+          , arUrl = payPhoneBaseUrl <> "/api/button/V2/Confirm"
+          , arHeaders = payPhoneHeaders config
+          , arBody = Just (A.object ["id" .= transactionId, "clientTxId" .= reference])
+          , arRetryPolicy = SafeReadRetry
+          }
+      , parseFollowUpResponse = parsePayPhoneValue $ \answer -> do
+          (confirmedId, result) <- parseTransaction locator answer
+          unless (confirmedId == transactionId)
+            (fail "PayPhone confirmation returned a different transaction ID")
+          pure result
+      }
 
 buildCancel
   :: PayPhoneConfig
@@ -416,7 +417,17 @@ parseSaleCreate object = do
     }
 
 parseQuery :: PaymentLocator -> Value -> Parser AdapterResult
-parseQuery locator = A.withObject "PayPhone query response" $ \object -> do
+parseQuery locator value = do
+  (_, result) <- parseTransaction locator value
+  when (isButtonReference (epReference (plExpected locator))
+      && adapterResultState result == AdapterSucceeded)
+    (fail "PayPhone Button approval requires confirmation")
+  pure result
+
+-- | Check the financial binding and keep the transaction identity distinct
+-- from the stored resource (the preparation ID for Button payments).
+parseTransaction :: PaymentLocator -> Value -> Parser (Int64, AdapterResult)
+parseTransaction locator = A.withObject "PayPhone query response" $ \object -> do
   clientReference <- object .: "clientTransactionId"
   transactionId <- object .: "transactionId" :: Parser Int64
   amountMinor <- object .: "amount" :: Parser Int64
@@ -431,14 +442,14 @@ parseQuery locator = A.withObject "PayPhone query response" $ \object -> do
     (fail "PayPhone transaction ID does not match the stored sale")
   validateBindingParser (plExpected locator) clientReference amountMinor currency
   let (state, certainty) = payPhoneStatus statusCode
-  pure AdapterResult
+  pure (transactionId, AdapterResult
     { adapterResultState = state
-    , adapterResultExternalId = if button then plExternalId locator else transactionIdText
+    , adapterResultExternalId = plExternalId locator
     , adapterResultRedirectUrl = Nothing
     , adapterResultAmountMinor = Just amountMinor
     , adapterResultCurrency = Just currency
     , adapterResultCertainty = certainty
-    }
+    })
 
 parseBooleanMutation
   :: AdapterResultState

@@ -27,6 +27,7 @@ module TDF.Commerce.ProviderAdapter
   , PaymentMutation(..)
   , AdapterResult(..)
   , NotificationAssessment(..)
+  , QueryFollowUp(..)
   , ProviderAdapter(..)
   , minorToDecimal
   , decimalToMinor
@@ -216,6 +217,12 @@ data NotificationAssessment = NotificationAssessment
   , notificationRequiresQuery  :: Bool
   } deriving (Eq, Show)
 
+-- | Keep the parser paired with the particular request it needs to verify.
+data QueryFollowUp = QueryFollowUp
+  { followUpRequest :: AdapterRequest
+  , parseFollowUpResponse :: Value -> Either AdapterError AdapterResult
+  }
+
 -- | A closed adapter value captures validated provider configuration. The
 -- application can route and execute it without branching in product modules.
 data ProviderAdapter = ProviderAdapter
@@ -229,17 +236,15 @@ data ProviderAdapter = ProviderAdapter
   , adapterBuildSameDayReverse :: AdapterContext -> PaymentMutation -> Either AdapterError AdapterRequest
   , adapterParseResponse      :: AdapterOperation -> PaymentLocator -> Value -> Either AdapterError AdapterResult
   , adapterAssessNotification :: Value -> Either AdapterError NotificationAssessment
-    -- | Given a successful status-query answer, the request the provider needs
-    -- before that answer may be applied (PayPhone's Button confirmation), or
-    -- 'Nothing' when the answer is final. The follow-up answer is parsed as the
-    -- query answer instead of the first one.
+    -- | A provider-specific confirmation and its bound response parser, or
+    -- 'Nothing' when the initial query may be parsed directly.
   , adapterQueryFollowUp      :: AdapterContext -> PaymentLocator -> Value
-                              -> Either AdapterError (Maybe AdapterRequest)
+                              -> Either AdapterError (Maybe QueryFollowUp)
   }
 
 -- | A provider whose status query answer is final.
 noQueryFollowUp
-  :: AdapterContext -> PaymentLocator -> Value -> Either AdapterError (Maybe AdapterRequest)
+  :: AdapterContext -> PaymentLocator -> Value -> Either AdapterError (Maybe QueryFollowUp)
 noQueryFollowUp _ _ _ = Right Nothing
 
 minorToDecimal :: Int64 -> Scientific

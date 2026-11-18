@@ -84,7 +84,8 @@ Hechos verificados antes de diseñar (fuentes al final):
      identifica la preparación y no la transacción; la conciliación busca la transacción por la
      referencia (`GET /api/Sale/client/{clientTransactionId}`) y, si está aprobada y coinciden
      referencia, monto y moneda, la confirma con su `transactionId` (`/api/button/V2/Confirm`) en el
-     mismo intento. Solo la respuesta de la confirmación se aplica; PayPhone exige confirmar en los
+     mismo intento. Para aplicar la respuesta de Confirm deben coincidir el ID enviado a Confirm,
+     la referencia del comercio, el monto y la moneda. PayPhone exige confirmar en los
      cinco minutos siguientes al pago o revierte el cobro. Por eso el Botón solo se ofrece con el
      worker de consultas activo (proceso y flag `checkout.provider_query_recovery`), la página solo se
      entrega durante diez minutos desde la preparación y el vencimiento del depósito vuelve a comprobar

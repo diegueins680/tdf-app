@@ -91,7 +91,7 @@ pruebas de PayPhone, con dos cuentas y un receptor real:
 | --- | --- |
 | La consulta de estado por referencia (`GET /api/Sale/client/{clientTransactionId}`) encuentra también las transacciones del Botón | PayPhone la documenta en API Sale sin limitarla a ese producto. Pagar una vez y consultarla con la referencia `TDFC-`; si no la encuentra, el cobro nunca se confirma y PayPhone lo revierte: habría que tomar el `id` de la URL de respuesta o de la notificación externa |
 | Antes del pago, esa consulta responde con un estado HTTP de error | Consultar la referencia recién preparada; un 2xx con otro formato dejaría la consulta en revisión |
-| Confirm (`{id: transactionId, clientTxId}`) responde con `transactionId`, `clientTransactionId`, `amount` en centavos, `currency` y `statusCode` | Comparar con la respuesta real; el `paymentId` de Prepare es opaco (texto) y solo identifica la preparación |
+| Confirm (`{id: transactionId, clientTxId}`) responde con `transactionId`, `clientTransactionId`, `amount` en centavos, `currency` y `statusCode` | Verificar que el `transactionId` de la respuesta sea el mismo `id` enviado a Confirm y que referencia, monto y moneda correspondan al cobro. El `paymentId` opaco de Prepare identifica la sesión de pago |
 | PayPhone acepta `transferTo` con `Amount` numérico en centavos | Revisar en PayPhone Developer que el receptor recibió `provider_amount_minor` |
 | `payWithCard` está en `payphonetodoesposible.com` o `payphone.app` | Si es otro dominio, ampliar `safePayPhoneRedirect` (backend y web) |
 | PayPhone añade `id` y `clientTransactionId` a la URL de respuesta sin romper `tdf_checkout` | La página de retorno ya corta lo que siga a un segundo `?` |

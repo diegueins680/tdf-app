@@ -3234,8 +3234,8 @@ main = hspec $ do
                   , ProviderAdapter.plExpected = expected
                       { ProviderAdapter.epReference = "TDFC-0123456789abcdef0123456789a" }
                   }
-                status statusCode amount = A.object
-                  [ "transactionId" .= (23178284 :: Int)
+                status transactionId statusCode amount = A.object
+                  [ "transactionId" .= (transactionId :: Int)
                   , "clientTransactionId" .= ("TDFC-0123456789abcdef0123456789a" :: Text)
                   , "amount" .= (amount :: Int)
                   , "currency" .= ("USD" :: Text)
@@ -3243,34 +3243,44 @@ main = hspec $ do
                   , "transactionStatus" .= ("Approved" :: Text)
                   ]
                 followUp = ProviderAdapter.adapterQueryFollowUp payPhoneSplit adapterContext
-                summary = fmap (fmap ProviderAdapter.safeRequestSummary)
+                summary = fmap (fmap (ProviderAdapter.safeRequestSummary . ProviderAdapter.followUpRequest))
             -- The preparation ID is not a transaction: the status read uses the reference.
             fmap ProviderAdapter.arUrl
               (ProviderAdapter.adapterBuildQuery payPhoneSplit adapterContext buttonLocator)
               `shouldBe` Right
                 "https://pay.payphonetodoesposible.com/api/Sale/client/TDFC-0123456789abcdef0123456789a"
             -- An approved, matching answer is confirmed with its transaction ID first.
-            let confirm = fromRight (error "valid PayPhone confirmation")
-                  (followUp buttonLocator (status 3 12515))
-                confirmBody = maybe "" (BL.unpack . A.encode) (confirm >>= ProviderAdapter.arBody)
-            fmap ProviderAdapter.arUrl confirm
-              `shouldBe` Just "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
-            confirmBody `shouldContain` "\"id\":23178284"
-            confirmBody `shouldContain` "\"clientTxId\":\"TDFC-0123456789abcdef0123456789a\""
+            confirm <- case followUp buttonLocator (status 23178284 3 12515) of
+              Right (Just step) -> pure step
+              _ -> fail "Expected a PayPhone confirmation request for the approved status"
+            let request = ProviderAdapter.followUpRequest confirm
+            ProviderAdapter.arUrl request
+              `shouldBe` "https://pay.payphonetodoesposible.com/api/button/V2/Confirm"
+            ProviderAdapter.arBody request `shouldBe` Just (A.object
+              [ "id" .= (23178284 :: Int)
+              , "clientTxId" .= ("TDFC-0123456789abcdef0123456789a" :: Text) ])
             -- A cancelled answer is final; a mismatched one is never confirmed.
-            summary (followUp buttonLocator (status 2 12515)) `shouldBe` Right Nothing
-            summary (followUp buttonLocator (status 3 100)) `shouldSatisfy` isLeft
+            summary (followUp buttonLocator (status 23178284 2 12515)) `shouldBe` Right Nothing
+            summary (followUp buttonLocator (status 23178284 3 100)) `shouldSatisfy` isLeft
             -- API Sale answers are final as they are.
-            summary (followUp locator (status 3 12515)) `shouldBe` Right Nothing
+            summary (followUp locator (status 23178284 3 12515)) `shouldBe` Right Nothing
             -- The confirmation answer settles the Button binding by its preparation ID.
-            let settled statusCode = ProviderAdapter.adapterParseResponse payPhoneSplit
-                  ProviderAdapter.AdapterQuery buttonLocator (status statusCode 12515)
-            fmap ProviderAdapter.adapterResultState (settled 3)
+            let settled transactionId code =
+                  ProviderAdapter.parseFollowUpResponse confirm (status transactionId code 12515)
+            fmap ProviderAdapter.adapterResultState (settled 23178284 3)
               `shouldBe` Right ProviderAdapter.AdapterSucceeded
-            fmap ProviderAdapter.adapterResultExternalId (settled 3)
+            fmap ProviderAdapter.adapterResultExternalId (settled 23178284 3)
               `shouldBe` Right "GSizecyUkIAkxTj3SQ"
-            fmap ProviderAdapter.adapterResultState (settled 2)
+            fmap ProviderAdapter.adapterResultState (settled 23178284 2)
               `shouldBe` Right ProviderAdapter.AdapterCancelled
+            -- Even with the same merchant reference, amount and currency, a different
+            -- transaction can neither settle this order nor release it for another charge.
+            forM_ [2, 3] $ \code ->
+              settled 23178285 code `shouldSatisfy` isLeft
+            ProviderAdapter.parseFollowUpResponse confirm (status 23178284 3 100)
+              `shouldSatisfy` isLeft
+            ProviderAdapter.adapterParseResponse payPhoneSplit ProviderAdapter.AdapterQuery
+              buttonLocator (status 23178284 3 12515) `shouldSatisfy` isLeft
             -- A Button charge is never cancelled through API Sale.
             (ProviderAdapter.safeRequestSummary
               <$> ProviderAdapter.adapterBuildCancel payPhoneSplit adapterContext buttonLocator)

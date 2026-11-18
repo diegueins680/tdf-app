@@ -39,7 +39,7 @@ SOURCES = {
     'tdf-hq/src/TDF/Commerce/ProviderAdapter/PlaceToPay.hs':
         'a4e9cf99c043b8d75235efc2e14f27472083b2bbc6e315503e37b9c586199e0f',
     'tdf-hq/src/TDF/Commerce/ProviderAdapter.hs':
-        '6555e5698da0d651856d6fb5585a23d4f012cc84ffa9fdc403b21d11024e5d21',
+        'e6a563fa7b78d1386db2a378899752150086249dd112ecaad11fecbb4d9902c8',
 }
 N = 3  # transactions encoded per response
 
