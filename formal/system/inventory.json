@@ -44,6 +44,7 @@
       "e2e/web/artist-merch.spec.mjs",
       "e2e/web/auth-landing.spec.mjs",
       "e2e/web/booking-catalog-recovery.spec.mjs",
+      "e2e/web/booking-introduction.spec.mjs",
       "e2e/web/booking-timezone.spec.mjs",
       "e2e/web/campaign-accessibility.spec.mjs",
       "e2e/web/chat-mobile-follow.spec.mjs",
@@ -3341,6 +3342,12 @@
       "semanticConformance": "not-established-by-discovery"
     },
     {
+      "id": "SURFACE-68715286d15c4a9a",
+      "path": "e2e/web/booking-introduction.spec.mjs",
+      "sha256": "c46296e4f287004eb23e8e764ea4044c56ba955645b6abacc72650ae078e5aac",
+      "semanticConformance": "not-established-by-discovery"
+    },
+    {
       "id": "SURFACE-a58a6650faecc2e6",
       "path": "e2e/web/booking-timezone.spec.mjs",
       "sha256": "97b2aacfe448cf5d01ad4b8b54521d9b0fe03ba6354a3004ea2d7ac405b4d651",
@@ -3505,7 +3512,7 @@
     {
       "id": "SURFACE-e10033ba34bd1851",
       "path": "e2e/web/merch-order-recovery.spec.mjs",
-      "sha256": "b640d5c1ff90a97296b2dcada07e3477fbb386a4f531812884a537867c648f2f",
+      "sha256": "6279bc728c5df0695d50ceeca50a5bad33763c1a0711a1745dd3ef2a52678865",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11743,7 +11750,7 @@
     {
       "id": "SURFACE-7efdc216a8d713ee",
       "path": "tdf-hq-ui/src/pages/PublicBookingPage.tsx",
-      "sha256": "c0fc81815927e1ae10b84d6dcf42983494020e4bab109e5d7b40fd4b630e3d7f",
+      "sha256": "fff734dc82e0c566a9210d3f188956173a5c38dc0003ece2bff149c5bc757456",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -31095,7 +31102,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "2158d117910ed81f1e5bffdb5791a3e35cef5efb8d62c2bad296a25c0c0b3f86",
+      "sha256": "6ca2cf61d764a83d87654b81d05bf5e12acd54c99b6043a61cca0ad4d04e1a2f",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

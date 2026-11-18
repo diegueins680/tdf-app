@@ -1778,19 +1778,28 @@ export default function PublicBookingPage() {
                 </Typography>
                 {bookingStatusChip}
               </Stack>
-              <Typography variant="body1" color="text.secondary">
-                {pageDescription}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Horario del estudio: <strong>08:00–22:00, Quito ({studioZoneLabel})</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {authoritativeQuote ? (
-                  <>Precio y depósito calculados por el servidor en <strong>{authoritativeQuote.currency}</strong>.</>
-                ) : (
-                  <>Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.</>
-                )}
-              </Typography>
+              <Box data-testid="booking-introduction">
+                <Typography data-testid="booking-introduction-copy" variant="body1" color="text.secondary">
+                  {pageDescription}
+                </Typography>
+                <Box component="details" data-testid="booking-practical-details" sx={{ mt: 1 }}>
+                  <Typography component="summary" variant="body2" color="text.secondary" sx={{ cursor: 'pointer', py: 1.25, minHeight: 44, boxSizing: 'border-box' }}>
+                    Horario y precios
+                  </Typography>
+                  <Stack spacing={1} sx={{ pt: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      Horario del estudio: <strong>08:00–22:00, Quito ({studioZoneLabel})</strong>. Tu zona: <strong>{userZoneLabel}</strong>.
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {authoritativeQuote ? (
+                        <>Revisa el precio y el depósito antes de confirmar, en <strong>{authoritativeQuote.currency}</strong>.</>
+                      ) : (
+                        <>Precios de referencia en <strong>{studioCurrency}</strong>; confirmamos el total contigo antes de agendar.</>
+                      )}
+                    </Typography>
+                  </Stack>
+                </Box>
+              </Box>
               {priceBanner && (
                 <Alert severity="info" variant="outlined">
                   {priceBanner}

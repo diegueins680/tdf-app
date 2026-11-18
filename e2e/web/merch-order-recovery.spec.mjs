@@ -51,7 +51,17 @@ async function inspect(page, control, root) {
     await expect(control).toBeInViewport({ ratio: 1, timeout: 500 });
     expect(await control.evaluate(node => { const r = node.getBoundingClientRect(); return node.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)); })).toBe(true);
   }).toPass({ timeout: 8000 });
-  await expect.poll(() => root.evaluate(node => (node.closest('.MuiModal-root') ?? node).getAnimations({ subtree: true }).filter(a => a.playState === 'running').length)).toBe(0);
+  // WebKit can report no Web Animations before MUI's fade has reached its
+  // final style. Sample after paint and require every ancestor to be opaque.
+  await expect.poll(() => root.evaluate(async node => {
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    for (let current = node; current; current = current.parentElement) {
+      const style = getComputedStyle(current);
+      if (Number(style.opacity) !== 1 || style.visibility !== 'visible') return false;
+    }
+    const scope = node.closest('.MuiModal-root') ?? node;
+    return scope.getAnimations({ subtree: true }).every(animation => animation.playState !== 'running');
+  })).toBe(true);
   await page.addScriptTag({ content: axe.source });
   expect(await root.evaluate(async node => (await globalThis.axe.run(node, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'] } })).violations.map(v => ({ id: v.id, nodes: v.nodes.map(n => n.failureSummary) })))).toEqual([]);
 }
@@ -85,6 +95,8 @@ for (const language of ['es', 'en']) {
   test(`unpaid cancellation requires a current named confirmation, ${language} @critical @mobile-flow`, async ({ page, baseURL }, info) => {
     test.setTimeout(60_000); const state = await fixture(page, baseURL, language, false);
     await page.goto('/tienda/orden/synthetic-order');
+    // Exercise the opacity guard with a deliberately longer synthetic fade.
+    await page.addStyleTag({ content: '.MuiDialog-container { transition-duration: 600ms !important; }' });
     const form = page.getByRole('form', { name: en ? 'Cancel unpaid order' : 'Cancelar orden sin pagar', exact: true });
     const input = form.getByRole('textbox', { name: en ? 'Reason for cancellation' : 'Motivo de cancelación', exact: true });
     const review = form.getByRole('button', { name: en ? 'Review cancellation' : 'Revisar cancelación', exact: true });
