@@ -142,6 +142,25 @@ test('buildCommitContext ignores generic idea titles and uses target plus reason
 
 const LOOP_BRANCH_PREFIX = 'continuous-improvement-loop/';
 
+// A stopped worker may stay a zombie where PID 1 does not reap orphans; it is
+// no longer running, so only a live (non-zombie) process counts as surviving.
+async function assertProcessStopped(pid) {
+  const deadline = Date.now() + 5_000;
+  for (;;) {
+    let state = '';
+    try {
+      process.kill(pid, 0);
+      state = (await fs.readFile(`/proc/${pid}/stat`, 'utf8').catch(() => '')).replace(/^.*\) /s, '').charAt(0);
+    } catch (error) {
+      assert.equal(error.code, 'ESRCH');
+      return;
+    }
+    if (state === 'Z' || state === 'X') return;
+    if (Date.now() > deadline) assert.fail(`process ${pid} is still running (state ${state || 'unknown'})`);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+}
+
 async function createLoopFixture(prefix) {
   const tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
   const remoteDir = path.join(tempRoot, 'remote.git');
@@ -1157,7 +1176,7 @@ test('continuous-improvement-loop stops a step that exceeds its timeout, includi
 
     const grandchildPid = Number((await fs.readFile(pidFile, 'utf8')).trim());
     assert.ok(grandchildPid > 0);
-    assert.throws(() => process.kill(grandchildPid, 0), /ESRCH/);
+    await assertProcessStopped(grandchildPid);
   } finally {
     await fixture.cleanup();
   }
@@ -1310,7 +1329,7 @@ test('continuous-improvement-loop stops a worker that ignores SIGTERM after its 
 
     loop.kill('SIGTERM');
     assert.equal(await exited, 143);
-    assert.throws(() => process.kill(workerPid, 0), /ESRCH/);
+    await assertProcessStopped(workerPid);
   } finally {
     await fixture.cleanup();
   }
@@ -1351,7 +1370,7 @@ test('continuous-improvement-loop keeps stopping a timed-out worker that ignores
 
     const workerPid = Number((await fs.readFile(pidFile, 'utf8')).trim());
     assert.ok(workerPid > 0);
-    assert.throws(() => process.kill(workerPid, 0), /ESRCH/);
+    await assertProcessStopped(workerPid);
   } finally {
     await fixture.cleanup();
   }

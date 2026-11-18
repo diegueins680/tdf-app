@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-18T00:23:22.605Z",
+  "generatedAt": "2026-11-18T01:00:34.760Z",
   "repositoryRoot": ".",
   "filesScanned": 2753,
   "candidateCount": 1466,
@@ -4794,7 +4794,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "status",
-      "line": 295,
+      "line": 314,
       "values": [
         "status",
         "--config"
@@ -4802,7 +4802,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        295
+        314
       ],
       "consumerCount": 1238,
       "backendConsumers": [
@@ -5082,7 +5082,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "array",
       "name": "status",
-      "line": 869,
+      "line": 888,
       "values": [
         "status",
         "--short"
@@ -5090,7 +5090,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        869
+        888
       ],
       "consumerCount": 1237,
       "backendConsumers": [
@@ -8346,7 +8346,7 @@
       "lines": [
         442
       ],
-      "consumerCount": 201,
+      "consumerCount": 202,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-07-12_marketplace_active_stripe_payment.sql",
@@ -8468,6 +8468,7 @@
         ".github/workflows/merge-admission.yml",
         "scripts/__tests__/browser-vendor.test.mjs",
         "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/migration-batch-postgres.mjs",
@@ -28099,7 +28100,7 @@
       "lines": [
         35
       ],
-      "consumerCount": 32,
+      "consumerCount": 33,
       "backendConsumers": [
         "tdf-hq/sql/2026-11-04_content_storage.sql",
         "tdf-hq/sql/2026-11-04_content_storage_accounting.sql",
@@ -28123,6 +28124,7 @@
       ],
       "automationConsumers": [
         "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/music-worker-heartbeat-shutdown.test.mjs",
         "scripts/__tests__/test-child-completion.test.mjs",
         "scripts/continuous-improvement-loop.mjs",
@@ -71696,7 +71698,7 @@
       "lines": [
         330
       ],
-      "consumerCount": 108,
+      "consumerCount": 109,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-07_records_cms_backfill_apply.sql",
@@ -71779,6 +71781,7 @@
       "automationConsumers": [
         "scripts/__tests__/browser-vendor.test.mjs",
         "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/migration-batch-postgres.mjs",
@@ -86788,7 +86791,7 @@
       "lines": [
         15
       ],
-      "consumerCount": 67,
+      "consumerCount": 68,
       "backendConsumers": [
         "tdf-hq/sql/2026-11-06_music_media_health.sql",
         "tdf-hq/src/TDF/App/StartupResponse.hs",
@@ -86829,6 +86832,7 @@
         "scripts/__tests__/alloy-controls.test.mjs",
         "scripts/__tests__/artist-enrichment.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/hetzner-restore.test.mjs",
         "scripts/__tests__/identity-http-runtime.mjs",
         "scripts/__tests__/music-linux-integration.test.mjs",
@@ -118852,7 +118856,7 @@
       "lines": [
         564
       ],
-      "consumerCount": 70,
+      "consumerCount": 71,
       "backendConsumers": [
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
         "tdf-hq/sql/2026-09-11_music_release_platform.sql",
@@ -118906,6 +118910,7 @@
       "automationConsumers": [
         "scripts/__tests__/browser-vendor.test.mjs",
         "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/directory-saved-search-http.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -140706,7 +140711,7 @@
       "lines": [
         816
       ],
-      "consumerCount": 104,
+      "consumerCount": 105,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-07_records_cms_backfill_source.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -140789,6 +140794,7 @@
       "automationConsumers": [
         "scripts/__tests__/browser-vendor.test.mjs",
         "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/migration-batch-postgres.mjs",
@@ -148186,7 +148192,7 @@
         110,
         196
       ],
-      "consumerCount": 83,
+      "consumerCount": 84,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -148246,6 +148252,7 @@
       "automationConsumers": [
         "scripts/__tests__/browser-vendor.test.mjs",
         "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/migration-batch-postgres.mjs",
@@ -148601,7 +148608,7 @@
       "lines": [
         166
       ],
-      "consumerCount": 107,
+      "consumerCount": 108,
       "backendConsumers": [
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
         "tdf-hq/sql/2026-09-08_merch_reputation.sql",
@@ -148688,6 +148695,7 @@
       "automationConsumers": [
         "scripts/__tests__/browser-vendor.test.mjs",
         "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/directory-saved-search-http.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
@@ -180433,7 +180441,7 @@
       "lines": [
         4
       ],
-      "consumerCount": 99,
+      "consumerCount": 100,
       "backendConsumers": [
         "tdf-hq/sql/002_party_booking_enhancements.sql",
         "tdf-hq/sql/2026-08-14_music_directory_core.sql",
@@ -180518,6 +180526,7 @@
       "automationConsumers": [
         "scripts/__tests__/browser-vendor.test.mjs",
         "scripts/__tests__/ci-job-admission.test.mjs",
+        "scripts/__tests__/continuous-improvement-loop.test.mjs",
         "scripts/__tests__/hetzner-preparation.test.mjs",
         "scripts/__tests__/instagram-token-workflows.test.mjs",
         "scripts/__tests__/migration-batch-postgres.mjs",
