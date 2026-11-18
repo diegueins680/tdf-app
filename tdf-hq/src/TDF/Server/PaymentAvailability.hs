@@ -28,8 +28,9 @@ import           System.Environment (lookupEnv)
 import qualified TDF.Commerce.CheckoutStore as Checkout
 import           TDF.Commerce.ProviderCapabilities
 import           TDF.Commerce.ProviderCapabilityStore (loadProviderActivations)
+import qualified TDF.Commerce.ProviderExecutionStore as Execution
 import           TDF.Commerce.ProviderRuntimeConfig
-  ( runtimeProviderConfigured, runtimeProviderMethodConfigured )
+  ( runtimeProviderMethodConfigured )
 import           TDF.DB (Env(..))
 import qualified TDF.Server.ServiceStorefront as ServiceStorefront
 
@@ -113,8 +114,14 @@ runtimeReady environment flow method activation = case paProvider activation of
   Checkout.ProviderPlaceToPay ->
     liftIO (runtimeProviderMethodConfigured environment Checkout.ProviderPlaceToPay
       method)
-  Checkout.ProviderPayPhone ->
-    liftIO (runtimeProviderConfigured environment Checkout.ProviderPayPhone)
+  Checkout.ProviderPayPhone -> do
+    -- The Button ('MethodCard') is configured only with its coding password
+    -- (ADR 0136); the wallet alone must not open the card route.
+    configured <- liftIO (runtimeProviderMethodConfigured environment
+      Checkout.ProviderPayPhone method)
+    if configured && method == MethodCard
+      then buttonConfirmationReady
+      else pure configured
   Checkout.ProviderStripe -> pure False
   Checkout.ProviderCash -> pure False
   Checkout.ProviderPos -> pure False
@@ -122,6 +129,20 @@ runtimeReady environment flow method activation = case paProvider activation of
   where
     merchantMatches configured =
       not (T.null (T.strip configured)) && paMerchantRef activation == Just configured
+    -- PayPhone reverses a Button payment that is not confirmed within five
+    -- minutes, and only the query worker confirms it (ADR 0136): the Button is
+    -- offered only while that worker runs and may query this account.
+    buttonConfirmationReady = case paMerchantRef activation of
+      Nothing -> pure False
+      Just merchantRef -> do
+        worker <- liftIO ((== Just "true") <$> lookupEnv "COMMERCE_PROVIDER_QUERY_RECOVERY_ENABLED")
+        pool <- envPool <$> ask
+        ready <- liftIO $ flip runSqlPool pool $ do
+          installed <- Execution.providerQueryRecoveryInstalled
+          if installed
+            then Execution.queryRecoveryReady Checkout.ProviderPayPhone environment merchantRef
+            else pure False
+        pure (worker && ready)
 
 -- Merchandise-specific instructions must never enable another product's rail.
 bankTransferInstructionsReady :: ProductFlow -> Bool -> Bool -> Bool

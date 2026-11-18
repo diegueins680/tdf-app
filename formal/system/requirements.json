@@ -10314,7 +10314,7 @@
       "id": "MKT-AGREEMENT-PAYMENT-001",
       "title": "Marketplace agreement payments on the canonical checkout with a frozen split per charge",
       "domain": "MKT",
-      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit; on the balance, whatever the paid charges did not actually collect for the platform), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money. A deposit unpaid at its deadline expires the agreement and releases the slot, when a participant loads agreements and every five minutes from a background job. Disputed agreements are listed for administrators, oldest dispute first, with who opened the dispute, from which state and why. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor refuses agreement checkouts until a split-capable provider flow exists.",
+      "statement": "With the marketplace.agreement_payments gate on, an agreement whose provider profile has a ready payout account usable in the agreed currency and whose deposit is positive starts pending_deposit and settled on the platform, with a deposit deadline from the pricing rule; otherwise it starts confirmed and off-platform as in MKT-AGREEMENT-001. The buyer starts the charge the agreement is waiting for (the deposit while pending_deposit, the balance while balance_due). Each charge is one marketplace_agreement_payment row bound to one canonical checkout of domain marketplace_agreement, and freezes its split: the TDF commission due on that charge (as much of the frozen commission as fits in the deposit; on the balance, whatever the paid charges did not actually collect for the platform), the estimated processor fee borne by the configured payer (the service provider by default), and the provider amount, adding up exactly to the charge. Only verified provider evidence bound to that checkout marks a charge paid; a paid deposit confirms the agreement and a paid balance completes it and records the verified interaction. The buyer's confirmation of delivery waits for the balance when one is owed. A participant cannot cancel directly, nor by withdrawing the accepted offer, once a deposit was collected or while a payment attempt may still collect money. A deposit unpaid at its deadline expires the agreement and releases the slot, when a participant loads agreements and every five minutes from a background job. Disputed agreements are listed for administrators, oldest dispute first, with who opened the dispute, from which state and why. TDF never holds the provider's part: the agreement domain routes as a marketplace product flow, which requires verified connected-account, split and payout capabilities, and the shared executor reads each agreement charge's recipient and provider amount under a row lock, checks them again in the transaction that records the payment attempt, and passes them to the adapter, which carries them in the same provider operation (PayPhone Button transferTo, AES-256-CBC with the store coding password) or refuses them (PayPhone API Sale, PlaceToPay). PayPhone Button references carry the TDFC- prefix and are reconciled with the Button confirmation.",
       "authority": "Product owner decisions of 2026-11-12 (Stripe, PayPhone and DataWeb by currency and user choice; automatic provider payout; DataWeb integrated but closed; split on every charge); ADR 0136; ADR 0115",
       "source": "docs/adr/0136-marketplace-agreement-payments.md; docs/adr/0115-provider-neutral-payment-routing.md",
       "contract": "docs/adr/0136-marketplace-agreement-payments.md",
@@ -10388,6 +10388,12 @@
         "tdf-hq-ui/src/api/directory.ts",
         "tdf-hq-ui/src/features/marketplace/agreements.ts",
         "tdf-hq-ui/src/features/marketplace/AgreementCard.tsx",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.ts",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderAdapter/PayPhone.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderExecutionStore.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderCapabilities.hs",
+        "tdf-hq/src/TDF/Commerce/ProviderRuntimeConfig.hs",
         "tdf-hq-ui/src/features/marketplace/PayoutAccountsPanel.tsx",
         "tdf-hq-ui/src/features/marketplace/AgreementDisputesPanel.tsx",
         "tdf-hq-ui/src/pages/DirectoryAdminPage.tsx",
@@ -10403,13 +10409,14 @@
         "tdf-hq/test/TDF/Directory/PolicySpec.hs",
         "tdf-hq/test/Spec.hs",
         "tdf-hq-ui/src/features/marketplace/agreements.test.ts",
+        "tdf-hq-ui/src/features/marketplace/agreementPayment.test.ts",
         "scripts/__tests__/production-release.test.mjs",
         "scripts/__tests__/catalog-list-audit.test.mjs"
       ],
       "formalModels": [
         "docs/music-directory/formal-model.yaml"
       ],
-      "verification": "Hspec property tests of the payment transition relation, the split and commission arithmetic, the delivery-confirmation target and the payout identifier shape; routing test that the agreement domain is a marketplace flow; Jest unit tests of the client mirror; static state-machine gate; local PostgreSQL exercise of the migration, rollback, guards and checkout sync triggers with a stubbed evidence function, and of every new statement (PREPARE). No PostgreSQL integration test of the handler transactions and no provider sandbox run yet.",
+      "verification": "Hspec property tests of the payment transition relation, the split and commission arithmetic, the delivery-confirmation target and the payout identifier shape; routing test that the agreement domain is a marketplace flow; Jest unit tests of the client mirror and of the payment starter (PayPhone redirect allowlist, recovery record, disabled gate); Hspec tests of the PayPhone transferTo encryption against openssl and Python cryptography vectors, the Button Prepare request, split refusals by API Sale and PlaceToPay, and the Button confirmation as reconciliation query; static state-machine gate; local PostgreSQL exercise of the migration, rollback, guards and checkout sync triggers with a stubbed evidence function, and of every new statement (PREPARE). No PostgreSQL integration test of the handler transactions and no provider sandbox run yet.",
       "evidence": "Local static gates and PostgreSQL 16 exercise on 2026-11-12; CI on the candidate.",
       "status": "specified and implemented",
       "critical": false,
@@ -10420,7 +10427,7 @@
       ],
       "conformance": {
         "classification": "PARTIAL",
-        "reason": "Domain, guards, handlers and read-side UI are implemented behind the marketplace.agreement_payments flag, which is off in every environment; split-capable provider execution (PayPhone button, Stripe destination charges), the payment screen, refunds, PostgreSQL handler integration tests and provider sandbox evidence remain open."
+        "reason": "Domain, guards, handlers and read-side UI are implemented behind the marketplace.agreement_payments flag, which is off in every environment; the PayPhone Button with split is implemented and unit-tested but unverified against PayPhone (no sandbox run, no recorded capability evidence); Stripe destination charges, automatic refunds, PostgreSQL handler integration tests and provider sandbox evidence remain open."
       }
     },
     {
@@ -27717,6 +27724,101 @@
       "conformance": {
         "classification": "PARTIAL",
         "reason": "Local component tests cover the behavior. Browser verification on the deployed page remains pending."
+      },
+      "critical": false
+    },
+    {
+      "id": "GROWTH-FIRST-ACTION-001",
+      "title": "An invited visitor reaches the promised first action after signup",
+      "statement": "A signed-in fan who follows nobody is offered artists to follow before other fan hub content; an event's organizer can publish its non-public event through an explicit confirmed action; planning-workspace links are shown only to the event's managers and to accounts with the Scheduling module; artist profiles that still carry the account placeholder name are left out of the fan hub catalog; new events start in the browser's time zone for accounts that never chose one; and single-task pages are not preceded by the upcoming-events carousel.",
+      "domain": "Growth",
+      "authority": "Product owner request on 2026-11-13 to walk the invitation funnel on production and remove what stops invited people.",
+      "source": "User request: make an invited person able to get real value in one sitting; walk production as a new organizer, fan and artist from the campaign links and fix every blocker.",
+      "property": "After signing up from an invitation, the promised action (follow an artist, publish an event, complete an artist profile) is reachable without a dead end and without scrolling past unrelated sections.",
+      "contract": "formal/system/invited-first-action.md",
+      "actors": [
+        "Fan",
+        "Event organizer",
+        "Delegated event administrator",
+        "Artist"
+      ],
+      "preconditions": [
+        "The visitor is authenticated; existing server authorization for follows and event updates remains authoritative.",
+        "The public event lifecycle catalog exposes states, capabilities and direct transitions."
+      ],
+      "inputs": [
+        "Artist catalog and the viewer's follows",
+        "Event, its workflow state and the lifecycle states",
+        "Session roles and modules",
+        "Account time zone preference and browser time zone"
+      ],
+      "state": {
+        "boundary": "formal/system/invited-first-action.md",
+        "states": [
+          "not public",
+          "confirming publication",
+          "public"
+        ]
+      },
+      "allowedTransitions": [
+        "not public -> confirming publication on request",
+        "confirming publication -> not public on cancel or failure",
+        "confirming publication -> public after the server accepts visibility and the direct workflow transition",
+        "no follows -> starter list shown; the list stays for that viewer after a follow"
+      ],
+      "forbiddenTransitions": [
+        "Publish without an explicit confirmation",
+        "Publish from a state with no direct, review-free transition to a publicly listable state",
+        "Write event fields read before the confirmation instead of the latest stored ones",
+        "Show a planning-workspace link to a signed-in visitor who neither manages the event nor holds the Scheduling module",
+        "Override a time zone the account chose with the browser's",
+        "List an unnamed placeholder artist profile in the fan hub catalog for other viewers"
+      ],
+      "effects": [
+        "Existing follow and unfollow writes from the starter list",
+        "One existing event update that sets visibility and, when needed, the workflow state"
+      ],
+      "authorization": "Unchanged: the event update endpoint enforces organizer or delegated-administrator access and the allowed workflow transition; planning-workspace access rules are unchanged.",
+      "privacy": "Publishing makes the event's title, date, place and poster public, which the confirmation states before the write. No other visibility changes.",
+      "concurrency": "The event is read again immediately before the update; the server rejects a workflow state that changed meanwhile and the confirmation stays open with the reason.",
+      "idempotency": "Publishing an already public event is not offered. A repeated follow tap is ignored while a follow is being saved.",
+      "failure": "A refused or failed publication leaves the event unchanged and shows the server reason; a failed follow keeps the existing recovery behavior.",
+      "recovery": "Retry from the open confirmation, or reload when the event state changed.",
+      "observability": "Published state and public link on the event page; an event_published growth event; pressed state on follow controls.",
+      "implementation": [
+        "tdf-hq-ui/src/components/events/EventPublishControl.tsx",
+        "tdf-hq-ui/src/features/fans/FirstFollowStarter.tsx",
+        "tdf-hq-ui/src/components/events/EventPreparationPanel.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.tsx",
+        "tdf-hq-ui/src/pages/FanHubPage.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.tsx",
+        "tdf-hq-ui/src/pages/CollaborativeEventCreatorPage.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.tsx"
+      ],
+      "tests": [
+        "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx",
+        "tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx",
+        "tdf-hq-ui/src/components/events/EventPreparationPanel.test.tsx",
+        "tdf-hq-ui/src/components/events/UpcomingEventsCarousel.test.tsx",
+        "tdf-hq-ui/src/pages/SocialEventDetailPage.test.tsx",
+        "tdf-hq-ui/src/pages/collaborativeEventCreation.test.ts",
+        "tdf-hq-ui/src/contexts/LocalePreferencesContext.test.ts"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "verification": "Component and page tests for the publish target, confirmation, refusal and failure paths, the starter list, gated planning links, the time zone default and carousel suppression; TypeScript and changed-file lint; read-only preview of the local build against production data.",
+      "evidence": "tdf-hq-ui/src/components/events/EventPublishControl.test.tsx; tdf-hq-ui/src/features/fans/FirstFollowStarter.test.tsx; formal/system/invited-first-action.md.",
+      "confidence": "Local tests cover each behavior. The publish write was not executed against a real server.",
+      "ambiguity": [
+        "A logistics team member who is neither a manager of the event nor holds the Scheduling module can open the planning workspace (EVT-LOGISTICS-ACCESS-001) but is not offered the link on the event page.",
+        "The fan hub wiring of the starter list is covered by a production-data preview, not by a page-level test.",
+        "Unnamed artist profiles still appear in the server-side community directory search and on Mobile.",
+        "The server reports UTC both for an account that never chose a zone and for one that chose UTC. A zone saved from the same browser is remembered locally and kept; on another device a chosen UTC still starts a new event in the browser's zone, which the form lets the organizer change."
+      ],
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Local component tests cover the behavior. A real publication through the deployed page and the fan hub wiring remain to be verified after release."
       },
       "critical": false
     },
