@@ -6715,6 +6715,112 @@
       "evidence": "Synthetic filesystem/process controls only, exact source-qualified Linux evidence required."
     },
     {
+      "id": "DEPLOY-RELEASE-001",
+      "title": "A routine backend release keeps users fenced until the candidate is verified and an exact off-host copy exists",
+      "domain": "DEPLOY",
+      "statement": "A routine Hetzner backend release shall serve a maintenance response and stop every compose writer before capturing the stopped database and deployment directory, shall verify an encrypted off-host copy through a fresh connection and an isolated start of the captured database before any migration, shall apply only the candidate's reviewed migration batch, and shall reopen traffic only after the candidate reports its own revision, a healthy database and passing smoke checks; rollback shall be refused once traffic reopens.",
+      "authority": "Owner decisions of 13 November 2026 (pragmatic guarded release, Storage Box, owner-held recovery key, at most 30 minutes downtime)",
+      "source": "formal/system/guarded-release.md",
+      "contract": "formal/system/guarded-release.md",
+      "critical": true,
+      "actors": [
+        "Owner approving each production phase",
+        "Release operator",
+        "Recovery key custodian"
+      ],
+      "preconditions": [
+        "Running API and database match the configured immutable images",
+        "Candidate image published for the exact commit",
+        "Storage Box sub-account key and pinned host key installed root-only on the host",
+        "Custodian holds the private age identity off-host",
+        "API image override, when present, is exactly a three-line api image setting"
+      ],
+      "inputs": [
+        "Candidate commit",
+        "Registry-derived image digest",
+        "Manifest-derived migration ids and hash",
+        "Mobile gitlink",
+        "Committed tool revision",
+        "Public age recipient",
+        "Storage target",
+        "Smoke paths"
+      ],
+      "state": {
+        "states": [
+          "planned",
+          "fenced",
+          "captured",
+          "copied-off-host",
+          "migrated",
+          "candidate-verified",
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ],
+        "initial": "planned",
+        "terminal": [
+          "reopened",
+          "rolled-back",
+          "rejected"
+        ]
+      },
+      "allowedTransitions": [
+        "planned -> fenced (maintenance, writers stopped, database stopped cleanly)",
+        "fenced -> captured -> copied-off-host (exact read-back) -> isolate verified",
+        "isolate verified -> migrated (every manifest id in ledger) -> candidate-verified -> reopened",
+        "any pre-reopen state -> rolled-back (captured database restored when migrations may have run)"
+      ],
+      "forbiddenTransitions": [
+        "Capture while the API, a database-network peer or a client backend can write",
+        "Migrate before a verified off-host copy and isolated start",
+        "Reopen with a candidate whose revision, health or smoke checks fail",
+        "Roll back after reopen",
+        "Run a phase with tool code or parameters that differ from the journal plan",
+        "Place the private recovery identity on the production host"
+      ],
+      "effects": [
+        "Maintenance edge response",
+        "Compose service stop/start",
+        "Root-private capture and encrypted bundle",
+        "Off-host bundle and record",
+        "Reviewed migrations",
+        "API image change",
+        "Edge restore"
+      ],
+      "authorization": "Each phase needs the candidate revision confirmation given only after owner approval; rollback needs its own confirmation.",
+      "privacy": "Captures stay root-private and leave the host only age-encrypted; outputs carry digests, stage names and fixed messages, never configuration, SQL output or credentials.",
+      "concurrency": "The release journal's permanent lock serializes releases; the physical isolate shares the rehearsal reservation. Privileged host writers outside compose are not fenced.",
+      "idempotency": "Completed stages are skipped; an interrupted stage blocks further phases until rollback or reviewed recovery.",
+      "failure": "Any rejected check stops the phase with a fixed message and leaves a pending journal intent; maintenance stays up.",
+      "recovery": "Rollback before reopen returns to the recovery image, replaying the cold capture when migrations may have run and retaining the post-migration data directory. A journal abandon record is still missing.",
+      "observability": "Per-stage evidence files in the release directory, their hashes in the journal, the trusted bundle record off-host, and a rollback receipt.",
+      "implementation": [
+        "ops/hetzner/guarded-release.py",
+        "scripts/guarded-release.mjs",
+        "scripts/generate-recovery-key.sh"
+      ],
+      "tests": [
+        "scripts/test-guarded-release.py",
+        "scripts/quality-repo.sh"
+      ],
+      "formalModels": [],
+      "status": "specified and implemented",
+      "confidence": "Orchestration controls over the real journal and release files with an in-memory host; fifteen safety-check mutations detected. A read-only inspection on 13 November confirmed the compose override, journal location and capacity. No staging or production execution yet.",
+      "ambiguity": [
+        "Storage Box acceptance and custodian decrypt pending",
+        "Journal abandon record missing",
+        "Edge certificates not captured",
+        "Authenticated login probe optional"
+      ],
+      "verification": "29 controls: full release, ordering and confirmation, interrupted-stage blocking, client/peer fencing, corrupt off-host copy, Caddyfile and parameter drift, missing migration rows, rollback with and without database restore, refusal after reopen, release succession, and the real runtime observation against production-shaped inspect output including the 13 November image override and compose file set.",
+      "conformance": {
+        "classification": "PARTIAL",
+        "reason": "Executor and driver exist; staging rehearsal and supervised production execution are pending."
+      },
+      "property": "No migration runs before a verified off-host copy of a fenced cold capture, and no traffic reaches a candidate that failed verification.",
+      "evidence": "Synthetic host model only; Docker, PostgreSQL, Caddy and SFTP behaviour need staging and supervised production evidence."
+    },
+    {
       "id": "MOB-ONBOARD-001",
       "title": "Session-bound durable onboarding reconciliation",
       "statement": "Onboarding completion must use confirmed server evidence for the currently rendered account; durable first-value intent survives offline or pending responses and stale account callbacks cannot complete another occurrence.",
@@ -28605,6 +28711,7 @@
     "ops/hetzner/backup-postgres.sh": "71682273cf6e2efec4644369af577f3ee6c0ee015c5d45d5998c9a43ea3f23a7",
     "ops/hetzner/catalog-readonly-role.sql": "bfe39fb7b68d8f04d88998436825ded0fd0732c85a346dce6b6fbaeca7ae4e49",
     "ops/hetzner/compose.production.yaml": "2dfeb47f7b2d5707dca25d6e73154dcda1579a12726fe11d44377c4a5fb05814",
+    "ops/hetzner/guarded-release.py": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
     "ops/hetzner/inspect-runtime.py": "96a65fcb9a8fcced995341e4ad639bfa8df7298d6a28b543fc1be1adf569f8b4",
     "ops/hetzner/isolated-application-canary.py": "a21c2ad244d0c2b5a340c6f51b867a3f5b4c1551340e0953836a1c46375ed83f",
     "ops/hetzner/physical-postgres-recovery.py": "7da57b99b33ecee82eb70b5c2786bf2f6cb827b0429c7ddd68256751149ad20b",
@@ -28760,8 +28867,10 @@
     "scripts/fetch-ddex-ern432-schema.sh": "9a7e2da809fd59d0709067b8fdd75f71a21dd474449d62c28551d1ac1b1f3a84",
     "scripts/generate-app-icons.mjs": "0d85263b6dc6e4d6909b7e7f6378a13c499446521b69eccd7e089ab7b68d5cc0",
     "scripts/generate-identity-party-reference-view.mjs": "980ebaec42704393878751e4dd40238f02f64ada510b3a02d60154d884b07493",
+    "scripts/generate-recovery-key.sh": "74a581a9bce5b64e0eb2e26bfe432e766256ec41aec4693f96183658bd1e2595",
     "scripts/get-admin-token.sh": "168dd8f5ba17d927685a86ac763a03a9aff55736bf4b4426a6d7541817a35110",
     "scripts/get-instagram-token.mjs": "0b00f6cc1ad6793f029339bc006ed520245af87ea55e285658faf48ba978e592",
+    "scripts/guarded-release.mjs": "636c8c39c80a6919efd7b5830682c6a4e0691ade8c8c34ff886a39e74cd384e8",
     "scripts/identity-reconciliation.mjs": "7d4c598975768955f9b392c6b21679fab99a8eef1d288211461e401ec2b6d89e",
     "scripts/inspect-compiled-api.mjs": "2b65b93d80950b7c3cb650dafc247cfd49f6575e8a6653fc083223741da47e70",
     "scripts/inspect-hetzner-production.mjs": "aae57b63c56cacfba8c47c4603b2f99301c6325ffcff1594da560660239fcae4",
@@ -28824,7 +28933,7 @@
     "scripts/production_access.py": "46a29b5cffa7d30a35e7a29f638530c19f3e4c1e84d12aff9fdad05f9c162308",
     "scripts/quality-backend.sh": "a0884ab0acf6282cfcf873d45f5c4d18053bb3d612306c7a431715fb3d300f21",
     "scripts/quality-mobile.sh": "f3303a22072b3882ed2e4612f7de7cd6fa93212daf1b33f24b451b226b984cc2",
-    "scripts/quality-repo.sh": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
+    "scripts/quality-repo.sh": "81348be6b8c5455ac84d984b3f7b148263c2f17e7ee8e102bf415327d2a46c78",
     "scripts/quality-ui.sh": "4361a3180ecaf177a227915374253d8c0e4ec9eb21e87fc52c52442e31d04fda",
     "scripts/recovery-time-boundaries.py": "3bdaaf72c0773a049eeb21bd200473f82f44c81555e3914bc2f44975acb98646",
     "scripts/refresh-messaging-token.mjs": "39a650fdb2bbb91cceb7132210aec9a967328d8703dd4240d9bbd077443550d7",
@@ -28888,6 +28997,7 @@
     "scripts/test-event-organizer.sh": "0439a458ebcfc99b55954c7cae158f885c4aab415add0027d83343a4b4b1c660",
     "scripts/test-event-raci-browser.sh": "1f5732fd0fd9fb56085843be0c3746d92dab1f337973447fec44adca6e8afbd5",
     "scripts/test-google-account-name-verifier.py": "f92c6f875fe663e7c94d06f03cbffab4d6c5dc3114f1692094098713c894d0e9",
+    "scripts/test-guarded-release.py": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
     "scripts/test-hetzner-backup.py": "86dd9814e4c4d2c6271ea8b017964cb9af3cb8d223bf1bd0916896f0d455d6d1",
     "scripts/test-hetzner-inspection.py": "93fbbdd4918b2e78eec510a2a3710a07fb86ae9fbbe75f6831f530e4577236e4",
     "scripts/test-hetzner-restore.py": "febd18d0de83c7434e51feca3fc2915d965edea3bed4b370444cd5589f86e1a1",
@@ -30042,7 +30152,7 @@
     "tdf-hq/test/TDF/Commerce/DomoQuotePropertiesSpec.hs": "61dd0f6673c2132b50244e0a0a0b7b9342405e4fba03609b2ac21b7e265c9a7b",
     "tdf-hq/test/TDF/Commerce/PaymentArithmeticSpec.hs": "05faa877282c56eb800f467ccbad1b53fe960adf65387cb07804df5d88a416e7",
     "tdf-hq/test/TDF/Commerce/ProviderAdapterBindingSpec.hs": "5b0a405f5a8e81e439655b8aac0384c828258113c625cfa1f1d4acb0376a3cde",
-    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "720d5b0e565e7aa4cf63f1ffb7dff919c31dbb3e5c68f647eacbf576f326c0c6",
+    "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
     "tdf-hq/test/TDF/Commerce/RefundRecoverySpec.hs": "ae1d310f45cdae97aefd053f7cc0907c993d7e32bedceac220558560460ef65d",
     "tdf-hq/test/TDF/Commerce/RefundSafetySpec.hs": "7e264a29dacc2345206bcbe3d9dbd1a8c2bf2c8d1d31007050908dbe802a0663",
     "tdf-hq/test/TDF/Commerce/WorkerLoggingSpec.hs": "5b8f78d6fb441bb70871247e798ee206d9f887e5572e81bce6a5b48a08e0ce02",
@@ -30570,6 +30680,10 @@
       },
       {
         "requirement": "DEPLOY-JOURNAL-001",
+        "relationship": "tests"
+      },
+      {
+        "requirement": "DEPLOY-RELEASE-001",
         "relationship": "tests"
       },
       {
@@ -37937,6 +38051,30 @@
       {
         "requirement": "DEPLOY-JOURNAL-001",
         "relationship": "formalModels"
+      }
+    ],
+    "ops/hetzner/guarded-release.py": [
+      {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/guarded-release.mjs": [
+      {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/generate-recovery-key.sh": [
+      {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "implementation"
+      }
+    ],
+    "scripts/test-guarded-release.py": [
+      {
+        "requirement": "DEPLOY-RELEASE-001",
+        "relationship": "tests"
       }
     ],
     "tdf-mobile/src/api/client.ts": [
@@ -50485,6 +50623,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-05424790f9d7fc44",
+      "path": "ops/hetzner/guarded-release.py",
+      "sha256": "4551cec5f09215463ad98ea7a4dc3e3c47417b02fc5ccbd50fad63c20e15239b",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-9b36cc4cd4e2a67a",
       "path": "ops/hetzner/inspect-runtime.py",
       "sha256": "96a65fcb9a8fcced995341e4ad639bfa8df7298d6a28b543fc1be1adf569f8b4",
@@ -52984,6 +53134,18 @@
       "requirements": []
     },
     {
+      "id": "SURFACE-e0c190071be51379",
+      "path": "scripts/generate-recovery-key.sh",
+      "sha256": "74a581a9bce5b64e0eb2e26bfe432e766256ec41aec4693f96183658bd1e2595",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RELEASE-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
       "id": "SURFACE-298863fcec57d5aa",
       "path": "scripts/generate-sri-invoice.mjs",
       "sha256": "a60cf9d9c304055fe8b907ab6cf2e93dd1b0c64f96f714cccb4b7ec20114386c",
@@ -53010,6 +53172,18 @@
       "requirements": [
         {
           "requirement": "OPS-CLIENT-001",
+          "relationship": "implementation"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-bce169431baa7297",
+      "path": "scripts/guarded-release.mjs",
+      "sha256": "636c8c39c80a6919efd7b5830682c6a4e0691ade8c8c34ff886a39e74cd384e8",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RELEASE-001",
           "relationship": "implementation"
         }
       ]
@@ -54227,7 +54401,7 @@
     {
       "id": "SURFACE-9342794dfd2ad228",
       "path": "scripts/quality-repo.sh",
-      "sha256": "0ce489265374520c8891534780643135f53b38d92fb6cd400f7007b7745bac7b",
+      "sha256": "81348be6b8c5455ac84d984b3f7b148263c2f17e7ee8e102bf415327d2a46c78",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -54264,6 +54438,10 @@
         },
         {
           "requirement": "DEPLOY-JOURNAL-001",
+          "relationship": "tests"
+        },
+        {
+          "requirement": "DEPLOY-RELEASE-001",
           "relationship": "tests"
         },
         {
@@ -55929,6 +56107,18 @@
       "requirements": [
         {
           "requirement": "AUTH-ENTRY-002",
+          "relationship": "tests"
+        }
+      ]
+    },
+    {
+      "id": "SURFACE-b3d437c938c87672",
+      "path": "scripts/test-guarded-release.py",
+      "sha256": "072a3aea42d088aac1cb00825bf34c7f3d08ff9fff21c630017f2ee5c9977a74",
+      "semanticConformance": "not-established-by-discovery",
+      "requirements": [
+        {
+          "requirement": "DEPLOY-RELEASE-001",
           "relationship": "tests"
         }
       ]
@@ -80097,7 +80287,7 @@
     {
       "id": "SURFACE-9472263a2a388543",
       "path": "tdf-hq/test/TDF/Commerce/ProviderRetrySpec.hs",
-      "sha256": "720d5b0e565e7aa4cf63f1ffb7dff919c31dbb3e5c68f647eacbf576f326c0c6",
+      "sha256": "1d44b71cfda45994856a9657043c1da774f32399a7dcec5bc0b54e7d9b47afff",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -87381,6 +87571,7 @@
     "EVT-PRESENTATION-001",
     "DEPLOY-FILES-001",
     "DEPLOY-ENVELOPE-001",
+    "DEPLOY-RELEASE-001",
     "MOB-BUILD-001",
     "OPS-CLIENT-001",
     "MEDIA-INVENTORY-001",
@@ -88647,7 +88838,7 @@
     {
       "id": "SYS-MONEY-003",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "331cf4df8adaa80dc674e17a5da5ba6dbb623b1788a9d3ea18e28c8387b1ae04",
+      "sourceSha256": "818b1179099c543b4bd4dfeafa8679da9e8982dc91ad28e7f642207f65f2380e",
       "definition": {
         "boundary": "formal/system/payment-arithmetic.md; formal/system/ledger-posting.md",
         "property": "per-currency accumulated sum uses arbitrary precision (Integer in Haskell, numeric in SQL)",
@@ -88675,7 +88866,7 @@
     {
       "id": "PAY-INVOICE-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "331cf4df8adaa80dc674e17a5da5ba6dbb623b1788a9d3ea18e28c8387b1ae04",
+      "sourceSha256": "818b1179099c543b4bd4dfeafa8679da9e8982dc91ad28e7f642207f65f2380e",
       "definition": {
         "states": [
           "absent",
@@ -88705,7 +88896,7 @@
     {
       "id": "MEDIA-MUSIC-DDEX-001",
       "source": "formal/system/requirements.json",
-      "sourceSha256": "331cf4df8adaa80dc674e17a5da5ba6dbb623b1788a9d3ea18e28c8387b1ae04",
+      "sourceSha256": "818b1179099c543b4bd4dfeafa8679da9e8982dc91ad28e7f642207f65f2380e",
       "definition": {
         "export": [
           "queued",
@@ -111920,7 +112111,7 @@
     "IMPLEMENTED BUT UNSPECIFIED": 126,
     "NOT APPLICABLE": 0,
     "NOT IMPLEMENTED": 0,
-    "PARTIAL": 223,
+    "PARTIAL": 224,
     "PASS": 0,
     "SPECIFICATION AMBIGUITY": 0
   },
