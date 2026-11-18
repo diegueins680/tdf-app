@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-18T13:50:54.089Z",
+  "generatedAt": "2026-11-18T14:42:07.805Z",
   "repositoryRoot": ".",
-  "filesScanned": 2751,
+  "filesScanned": 2752,
   "candidateCount": 1464,
   "byClassification": {
     "dynamic-business-catalog": 964,
@@ -9435,7 +9435,7 @@
       "lines": [
         601
       ],
-      "consumerCount": 1634,
+      "consumerCount": 1635,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-02_add_metadata_records.sql",
@@ -16964,7 +16964,7 @@
       "lines": [
         236
       ],
-      "consumerCount": 99,
+      "consumerCount": 101,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/sql/2026-08-13_distribution_accounting_core.sql",
@@ -16984,6 +16984,7 @@
         "tdf-hq/src/TDF/App/FailureBoundary.hs",
         "tdf-hq/src/TDF/AppleSignIn.hs",
         "tdf-hq/src/TDF/Auth.hs",
+        "tdf-hq/src/TDF/Auth/Throttle.hs",
         "tdf-hq/src/TDF/Catalog/Security.hs",
         "tdf-hq/src/TDF/Catalog/Types.hs",
         "tdf-hq/src/TDF/Commerce/PaypalWebhook.hs",
@@ -17014,8 +17015,7 @@
         "tdf-hq/test/TDF/MusicRelease/DDEX/ERN432Spec.hs",
         "tdf-hq/test/TDF/MusicRelease/DomainSpec.hs",
         "tdf-hq/test/TDF/ServerAdminSpec.hs",
-        "tdf-hq/test/TDF/ServerExtraSpec.hs",
-        "tdf-hq/test/TDF/ServerSpec.hs"
+        "tdf-hq/test/TDF/ServerExtraSpec.hs"
       ],
       "webConsumers": [
         "tdf-hq-ui/src/__tests__/analytics.test.ts",
@@ -17056,6 +17056,7 @@
         "scripts/__tests__/studio-audit-staging-baseline.test.mjs",
         "scripts/baseline-studio-audit-staging-migrations.mjs",
         "scripts/build-catalog-decisions.mjs",
+        "scripts/lib/auth_throttle_http.py",
         "scripts/lib/hetzner-preparation.mjs",
         "scripts/lib/identity-reconciliation.mjs",
         "scripts/lib/operations_conformance.py",
@@ -68806,7 +68807,7 @@
       "lines": [
         1057
       ],
-      "consumerCount": 359,
+      "consumerCount": 360,
       "backendConsumers": [
         "tdf-hq/docs/openapi/api.yaml",
         "tdf-hq/docs/openapi/directory.yaml",
@@ -68983,6 +68984,7 @@
         "scripts/install-recovery-tools.py",
         "scripts/interactions/test-api.py",
         "scripts/interactions/test-native.py",
+        "scripts/lib/auth_throttle_http.py",
         "scripts/lib/compiled-api-surface.mjs",
         "scripts/lib/continuous-improvement-loop-verify.mjs",
         "scripts/lib/continuous-improvement-loop.mjs",
@@ -68991,8 +68993,7 @@
         "scripts/lib/identity-reconciliation.mjs",
         "scripts/lib/instagram-token-lifecycle.mjs",
         "scripts/lib/invoice_receipt_conformance.py",
-        "scripts/lib/logical-correctness-audit.mjs",
-        "scripts/lib/music-api-s3-probe.mjs"
+        "scripts/lib/logical-correctness-audit.mjs"
       ],
       "apiAndIntegrationConsumers": [
         "scripts/build-ddex-ern432-package.sh",
@@ -70052,7 +70053,7 @@
         102,
         111
       ],
-      "consumerCount": 564,
+      "consumerCount": 565,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -96656,7 +96657,7 @@
       "lines": [
         16003
       ],
-      "consumerCount": 607,
+      "consumerCount": 608,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -96936,7 +96937,7 @@
       "lines": [
         16018
       ],
-      "consumerCount": 576,
+      "consumerCount": 577,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -97432,7 +97433,7 @@
       "lines": [
         16064
       ],
-      "consumerCount": 602,
+      "consumerCount": 603,
       "backendConsumers": [
         "tdf-hq/app/MusicDdexRenderMain.hs",
         "tdf-hq/db/migrations/2025-11-03_create_contracts.sql",
@@ -160707,7 +160708,7 @@
       "domain": "studio-services-booking",
       "kind": "haskell-list",
       "name": "updateBookingRequestFields",
-      "line": 755,
+      "line": 759,
       "values": [
         "ubTitle",
         "ubServiceOfferingId",
@@ -160721,7 +160722,7 @@
       "valueCount": 8,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        755
+        759
       ],
       "consumerCount": 1,
       "backendConsumers": [],
@@ -163118,7 +163119,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "Directive",
-      "line": 154,
+      "line": 155,
       "values": [
         "Send",
         "Hold"
@@ -163126,7 +163127,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        154
+        155
       ],
       "consumerCount": 2,
       "backendConsumers": [
@@ -166328,7 +166329,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MetaChannel",
-      "line": 2640,
+      "line": 2643,
       "values": [
         "MetaInstagram",
         "MetaFacebook"
@@ -166336,7 +166337,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        2640
+        2643
       ],
       "consumerCount": 4,
       "backendConsumers": [
@@ -166370,7 +166371,7 @@
       "domain": "events-ticketing",
       "kind": "haskell-list",
       "name": "calendarEventStatuses",
-      "line": 4988,
+      "line": 4991,
       "values": [
         "confirmed",
         "tentative",
@@ -166379,7 +166380,7 @@
       "valueCount": 3,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        4988
+        4991
       ],
       "consumerCount": 67,
       "backendConsumers": [
@@ -166483,7 +166484,7 @@
       "domain": "academy-courses",
       "kind": "haskell-list",
       "name": "courseFollowUpTypeOptions",
-      "line": 6044,
+      "line": 6047,
       "values": [
         "note",
         "call",
@@ -166496,7 +166497,7 @@
       "valueCount": 7,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        6044
+        6047
       ],
       "consumerCount": 132,
       "backendConsumers": [
@@ -166665,7 +166666,7 @@
       "domain": "security-authorization",
       "kind": "haskell-list",
       "name": "serviceAdProviderRoles",
-      "line": 9456,
+      "line": 9459,
       "values": [
         "Admin",
         "Manager",
@@ -166691,7 +166692,7 @@
       "valueCount": 20,
       "recommendedClassification": "security-system-registry",
       "lines": [
-        9456
+        9459
       ],
       "consumerCount": 55,
       "backendConsumers": [
@@ -166788,7 +166789,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-sum-type",
       "name": "MarketplaceCartKind",
-      "line": 16091,
+      "line": 16094,
       "values": [
         "MarketplaceCartSale",
         "MarketplaceCartRental"
@@ -166796,7 +166797,7 @@
       "valueCount": 2,
       "recommendedClassification": "dynamic-business-catalog",
       "lines": [
-        16091
+        16094
       ],
       "consumerCount": 0,
       "backendConsumers": [],
@@ -166821,7 +166822,7 @@
       "domain": "cross-cutting-or-technical",
       "kind": "haskell-list",
       "name": "canonicalMarketplaceOrderStatuses",
-      "line": 19069,
+      "line": 19072,
       "values": [
         "holding",
         "awaiting_payment",
@@ -166830,7 +166831,7 @@
       "valueCount": 3,
       "recommendedClassification": "governed-reference-data",
       "lines": [
-        19069
+        19072
       ],
       "consumerCount": 156,
       "backendConsumers": [

@@ -17068,7 +17068,7 @@
       "authority": "Derived from the handlers on main 6033b84e by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/admin-routes.md.",
       "source": "formal/system/admin-routes.md",
       "contract": "formal/system/admin-routes.md",
-      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
+      "property": "The user or message must exist and resolve to a phone number; a reply must reference that user's message; a number whose WhatsApp consent is withdrawn is refused with 409 before anything is sent or recorded (whatsAppRecipientConsentWithdrawn); otherwise every call sends through the WhatsApp Cloud API and records an outgoing row, also when sending fails.",
       "actors": [
         "Strict administrator"
       ],
@@ -17101,12 +17101,13 @@
       "privacy": "Sends to personal phone numbers without a consent check.",
       "concurrency": "None.",
       "idempotency": "Not idempotent: each call sends again.",
-      "failure": "400 invalid input or unresolvable phone; 404 user or message.",
+      "failure": "400 invalid input or unresolvable phone; 404 user or message; 409 consent withdrawn.",
       "recovery": "Retry after correcting input or authority; no automatic recovery.",
       "observability": "HTTP status and stored rows only.",
       "implementation": [
         "tdf-hq/src/TDF/ServerAdmin.hs",
-        "tdf-hq/src/TDF/WhatsApp/Transport.hs"
+        "tdf-hq/src/TDF/WhatsApp/Transport.hs",
+        "tdf-hq/src/TDF/CampaignAutomation.hs"
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerAdminSpec.hs"
@@ -17118,7 +17119,7 @@
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "No WhatsApp consent, opt-out or 24-hour customer-service-window check is applied on this path (PRIV-WHATSAPP-001 governs consent for the public flow only).",
+        "No 24-hour customer-service-window check is applied on this path. (Resolved 2026-11-18: a send or resend to a number whose consent is withdrawn is refused with 409 before anything is sent or recorded.)",
         "A resend may replace the body, so any number ever messaged can be sent arbitrary text."
       ],
       "conformance": {
@@ -23062,7 +23063,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/identity-routes.md.",
       "source": "formal/system/identity-routes.md",
       "contract": "formal/system/identity-routes.md",
-      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once ten invalid-credential answers were recorded for the identifier in the current 15-minute window (auth_rate_limit, counted per normalized identifier whether or not the account exists; the count check, the password check and the count run in one transaction under a per-identifier advisory lock, so concurrent attempts cannot pass the limit together), checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
+      "property": "Login validates username (254) and password (72 bytes) shape (400), locks the party and credential, refuses with 429 and Retry-After once invalid-credential answers in the current 15-minute window reach the limit of any of three counters (auth_rate_limit, whether or not the account exists): ten for the normalized identifier at the client address, fifty for the client address across identifiers, one hundred for the identifier from every address; the client address is the last X-Forwarded-For entry when the TCP peer is a loopback or private address (the reverse proxy) and the peer otherwise, IPv6 keyed by /64 (TDF.Auth.ClientAddress); the count checks, the password check and the counts run in one transaction under the three counters' advisory locks taken in a fixed order, so concurrent attempts cannot pass a limit together, checks the password before the active flag and answers 401 \"Invalid username or password\" alike for an unknown identifier, a wrong password and a disabled account, and mints an api_token (ID-SESSION-004) plus a login activity row without revoking other sessions. Google login validates the ID token shape, terms and intent (400), needs a configured client id (500), verifies the token with Google (401 on any failure, audience, issuer, expiry, verified email), serializes on an advisory lock per issuer and subject, and either logs the bound credential in, links an unbound identity to a password-confirmed TDF account, or creates a new party, customer role by policy, fan profile, credential and identity when createNewAccount and terms are given (401 otherwise). Signup normalizes the email, requires a password of at least 8 characters, the current terms version, a first or last name and an optional E.164 phone (400), refuses claimArtistId (403, ID-ARTIST-CLAIM-001) and unknown fanArtistIds (422), answers 409 when the email exists, inserts party, policy role, follows, credential, fan profile and token in one transaction and emails a welcome. Signup consumes a per-email counter before creating anything and answers 429 past five requests in an hour.",
       "actors": [
         "Anonymous visitor"
       ],
@@ -23111,6 +23112,7 @@
         "tdf-hq/src/TDF/ServerAuth.hs",
         "tdf-hq/src/TDF/Auth.hs",
         "tdf-hq/src/TDF/Auth/Throttle.hs",
+        "tdf-hq/src/TDF/Auth/ClientAddress.hs",
         "tdf-hq/src/TDF/App/Boot.hs",
         "tdf-hq/sql/2026-11-10_auth_rate_limit.sql",
         "tdf-hq/sql/2026-11-10_auth_rate_limit_rollback.sql"
@@ -23125,13 +23127,13 @@
       "formalModels": [
         "formal/auth/credential_throttle.py"
       ],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): the failure counter equals the failed password checks of the window and never exceeds ten, a locked-out attempt checks no password, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10 (owner decision): the throttle policy (subject normalization, fixed windows, lockout and over-limit thresholds, Retry-After) is unit-tested in tdf-hq/test/TDF/ServerSpec.hs; scripts/test-auth-throttle-http.sh drives the compiled backend over HTTP on PostgreSQL: the sixth signup for an email answers 429, a disabled account and an unknown identifier answer exactly like a wrong password, the eleventh attempt answers 429 with Retry-After even with the right password, forty concurrent wrong passwords have exactly ten checked, and seven reset requests issue five challenges. Added 2026-11-18: the same script (each scenario with its own forwarded address) checks that the owner at another address still signs in after ten failures from one address, that fifty failures from one address across identifiers refuse that address only, that one hundred failures from ten addresses refuse the account from a fresh address, and that only the last forwarded entry counts; the three counters and the client address derivation are unit-tested in ServerSpec. The startup migration creates auth_rate_limit with the migration's own statements (ensureAuthThrottleSchema). Z3 proof credential_throttle.py (translation of the pure policy of TDF.Auth.Throttle and of the login transaction, pinned by the hash of those two regions; attempts on one subject assumed serialized by the advisory lock): each of the three login counters never exceeds its limit (10, 50, 100) and a failed check moves all three by one, a locked-out attempt checks no password, the owner at a fresh address is refused only by the identifier counter, which needs ten addresses, signup admits exactly the first five requests of a window, Retry-After is between one second and the window and reaches the next window; guard necessity checked.",
       "evidence": "formal/system/identity-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "Throttling is per identifier only: the backend has no trusted client address (no proxy-forwarding contract), so one client can still try a few passwords against many accounts, and anyone can lock a known identifier out of password login for up to fifteen minutes by failing ten times. Google login is not throttled.",
+        "Resolved 2026-11-18 (owner decision): failures from one address lock the account only for that address; locking the owner out from everywhere needs one hundred failures in fifteen minutes, so at least ten addresses. That residual lockout remains. The client address relies on the deployment having exactly one reverse proxy that appends the client to X-Forwarded-For (Caddy in production, Fly in staging); a CDN in front would make all clients share its addresses. Google login is not throttled.",
         "Signup still discloses an existing email with 409.",
         "A racing duplicate signup answers 500 instead of 409.",
         "A Google account may share a primary email with a password account, after which email login for that address matches two parties and fails."
@@ -23785,7 +23787,7 @@
       "authority": "Derived from the handlers on main f615c862 by reading the code (formal audit F-05 follow-up, 2026-11-07); owner confirmation of the intended behaviour pending. formal/system/social-messaging-routes.md.",
       "source": "formal/system/social-messaging-routes.md",
       "contract": "formal/system/social-messaging-routes.md",
-      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered.",
+      "property": "Replies need hasSocialInboxAccess (403), a valid sender id, an optional external id that must name an existing inbound message from that sender (404/400) and a body of up to 4096 safe characters (400); they send through the provider API and record an outgoing row whether or not the send succeeded; Meta replies also mark the inbound message replied when still unreplied. Operator questions need the operator phone configured (503). Consent and opt-out need the Admin role (403), consent=true or a normalized phone (400), upsert whats_app_consent (consent true, or false with opt-out source and instant withdrawal settlement) and send a confirmation unless sendMessage=false. A WhatsApp reply to a contact whose consent row is withdrawn (consent false with a revocation time) is refused with 409 before anything is sent or recorded (validateWhatsAppReplyConsent); a contact with no consent row, who wrote in but never subscribed, can still be answered. The same check (whatsAppRecipientConsentWithdrawn) runs before every other send to a contact: administrator sends and resends (409), the course-registration auto-reply and the automatic AI reply (not sent; the reply is marked as an error). An operator question goes only to the configured operator phone, so no contact consent applies.",
       "actors": [
         "Social inbox staff",
         "Administrator"
@@ -23836,16 +23838,17 @@
       ],
       "tests": [
         "tdf-hq/test/TDF/ServerSpec.hs",
-        "tdf-hq/test/TDF/ServerExtraSpec.hs"
+        "tdf-hq/test/TDF/ServerExtraSpec.hs",
+        "tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs"
       ],
       "formalModels": [],
-      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs.",
+      "verification": "Behaviour read from the handlers and summarized per route in formal/system/social-events-routes.md; no dedicated test unless listed. Added 2026-11-10: validateWhatsAppReplyConsent is unit-tested in tdf-hq/test/TDF/ServerSpec.hs. Added 2026-11-18: whatsAppRecipientConsentWithdrawn is tested against PostgreSQL in tdf-hq/test/TDF/WhatsAppRedeliverySpec.hs (no row, subscribed, after STOP in both phone spellings, resubscribed, unparseable number).",
       "evidence": "formal/system/social-messaging-routes.md",
       "critical": true,
       "status": "implemented but unspecified",
       "confidence": "Descriptive: derived from code reading, not from an owner specification or a proof.",
       "ambiguity": [
-        "WhatsApp replies do not mark the inbound message replied; the operator-question route and the administrator send route do not consult consent.",
+        "WhatsApp replies do not mark the inbound message replied. (Resolved 2026-11-18: every send to a contact consults consent; the operator question never messages a contact.)",
         "Staff consent capture sets consent immediately with no double opt-in; opt-out confirms even for a number never subscribed.",
         "Consent and opt-out are gated by the plain Admin role while siblings use strict admin."
       ],
