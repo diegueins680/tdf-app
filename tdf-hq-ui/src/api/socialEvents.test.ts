@@ -379,3 +379,38 @@ describe('delegated event administration', () => {
     });
   });
 });
+
+describe('claims on events without an organizer', () => {
+  const eventId = rawPathSegment('event 7');
+  const eventPath = `/social-events/events/${encodeExpectedPathSegment(eventId)}`;
+
+  beforeEach(() => {
+    getMock.mockReset();
+    postMock.mockReset();
+  });
+
+  it('reads the caller claim state and submits trimmed evidence by encoded event', async () => {
+    const state = { eocsEventId: 'event 7', eocsClaimable: true, eocsClaim: null };
+    const claim = { eocId: '4', eocEventId: 'event 7', eocStatus: 'submitted', eocSubmittedAt: '2026-11-13T10:00:00Z' };
+    getMock.mockResolvedValueOnce(state);
+    postMock.mockResolvedValueOnce(claim);
+    await expect(SocialEventsAPI.getEventOrganizerClaim(eventId)).resolves.toBe(state);
+    await expect(SocialEventsAPI.submitEventOrganizerClaim(eventId, '  Organizo este evento desde 2024.  ')).resolves.toBe(claim);
+    expect(getMock).toHaveBeenCalledWith(`${eventPath}/organizer-claim`);
+    expect(postMock).toHaveBeenCalledWith(`${eventPath}/organizer-claims`, { eoccEvidence: 'Organizo este evento desde 2024.' });
+  });
+
+  it('lists the review queue and records a decision by encoded claim', async () => {
+    const queue = [{ eocrId: 'claim/4', eocrStatus: 'submitted' }];
+    const decided = { eocrId: 'claim/4', eocrStatus: 'approved' };
+    getMock.mockResolvedValueOnce(queue);
+    postMock.mockResolvedValueOnce(decided);
+    await expect(SocialEventsAPI.listEventOrganizerClaims()).resolves.toBe(queue);
+    await expect(SocialEventsAPI.decideEventOrganizerClaim('claim/4', 'approved', ' Evidencia revisada. ')).resolves.toBe(decided);
+    expect(getMock).toHaveBeenCalledWith('/social-events/organizer-claims');
+    expect(postMock).toHaveBeenCalledWith('/social-events/organizer-claims/claim%2F4/decision', {
+      eocdDecision: 'approved',
+      eocdNotes: 'Evidencia revisada.',
+    });
+  });
+});

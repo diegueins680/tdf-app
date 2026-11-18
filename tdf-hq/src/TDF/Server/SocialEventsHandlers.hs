@@ -231,6 +231,7 @@ import TDF.API.SocialEventsAPI
 import qualified TDF.Ticketing.Admission as Admission
 import TDF.Ticketing.Issuance (finalizePaidTicketOrder, issueMissingTicketsForOrder)
 import qualified TDF.Server.EventAdminDelegation as EventAdmin
+import qualified TDF.Server.EventOrganizerClaim as EventClaim
 import TDF.Server.EventAdminDelegation (eventNotOrganizerError, eventWithoutOrganizerError, isEventManager, isTicketTierSaleOpen, requireEventManager)
 import qualified TDF.Ticketing.Inventory as TicketInventory
 import qualified TDF.Ticketing.Refund as TicketRefund
@@ -2266,6 +2267,8 @@ socialEventsServerWithStripeRefund issueStripeRefund user =
             ( EventAdmin.EventAdminDeps parseVisibleEventKey (parseKeyOr400 "administrator invitation") (parseKeyOr400 "ticket tier")
                 lockSocialEventForMutation isImportedEventHidden validateTicketPurchaseBuyerName validateTicketPurchaseBuyerEmail
                 issueMissingTicketsForOrder ticketOrderEntityToDTO sendTicketConfirmationForOrder )
+        :<|> EventClaim.eventOrganizerClaimsServer currentPartyId (hasStrictAdminAccess user)
+            (EventClaim.EventOrganizerClaimDeps parseVisibleEventKey lockSocialEventForMutation assignMissingEventOrganizer)
         :<|> memoryInvitationsServer
   where
     currentPartyId :: T.Text

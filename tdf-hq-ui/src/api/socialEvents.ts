@@ -600,6 +600,43 @@ export interface EventCourtesyTicketDTO {
   ectHolderEmail?: string | null;
 }
 
+// Reviewed claims on an event without an organizer
+export type EventOrganizerClaimStatus = 'submitted' | 'approved' | 'rejected' | 'superseded';
+export type EventOrganizerClaimDecision = 'approved' | 'rejected';
+
+export interface EventOrganizerClaimDTO {
+  eocId: string;
+  eocEventId: string;
+  eocStatus: EventOrganizerClaimStatus;
+  eocSubmittedAt: string;
+  eocReviewedAt?: string | null;
+}
+
+export interface EventOrganizerClaimStateDTO {
+  eocsEventId: string;
+  /** True while the event has no organizer. */
+  eocsClaimable: boolean;
+  /** The caller's most recent claim on this event, if any. */
+  eocsClaim?: EventOrganizerClaimDTO | null;
+}
+
+/** Reviewer view: only strict administrators receive evidence and notes. */
+export interface EventOrganizerClaimReviewDTO {
+  eocrId: string;
+  eocrEventId: string;
+  eocrEventTitle: string;
+  eocrEventStart: string;
+  eocrEventHasOrganizer: boolean;
+  eocrClaimantPartyId: string;
+  eocrClaimantName?: string | null;
+  eocrEvidence: string;
+  eocrStatus: EventOrganizerClaimStatus;
+  eocrSubmittedAt: string;
+  eocrReviewerPartyId?: string | null;
+  eocrReviewerNotes?: string | null;
+  eocrReviewedAt?: string | null;
+}
+
 type RequestWithoutBody = (path: string) => Promise<unknown>;
 type GetRequest = (path: string, init?: RequestInit) => Promise<unknown>;
 type RequestWithBody = (path: string, body: unknown) => Promise<unknown>;
@@ -926,6 +963,20 @@ export const SocialEventsAPI = {
       ectHolderEmail: email || null,
     }) as SocialTicketOrderDTO;
   },
+  // Reviewed claims on an event without an organizer. Submitting grants nothing.
+  getEventOrganizerClaim: async (eventId: string) =>
+    await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/organizer-claim`) as EventOrganizerClaimStateDTO,
+  submitEventOrganizerClaim: async (eventId: string, evidence: string) =>
+    await postUnknown(`/social-events/events/${encodeURIComponent(eventId)}/organizer-claims`, {
+      eoccEvidence: evidence.trim(),
+    }) as EventOrganizerClaimDTO,
+  listEventOrganizerClaims: async () =>
+    await getUnknown('/social-events/organizer-claims') as EventOrganizerClaimReviewDTO[],
+  decideEventOrganizerClaim: async (claimId: string, decision: EventOrganizerClaimDecision, notes: string) =>
+    await postUnknown(`/social-events/organizer-claims/${encodeURIComponent(claimId)}/decision`, {
+      eocdDecision: decision,
+      eocdNotes: notes.trim(),
+    }) as EventOrganizerClaimReviewDTO,
   // QR Codes
   getTicketQR: async (eventId: string, ticketId: string) =>
     await getUnknown(`/social-events/events/${encodeURIComponent(eventId)}/tickets/${encodeURIComponent(ticketId)}/qr`) as TicketWithQRDTO,

@@ -487,6 +487,17 @@ EventAdminMember
     UniqueEventAdminMember eventId partyId
     deriving Show Generic
 
+EventOrganizerClaim
+    eventId SocialEventId
+    claimantPartyId Text
+    evidence Text
+    status Text
+    submittedAt UTCTime default=now()
+    reviewerPartyId Text Maybe
+    reviewerNotes Text Maybe
+    reviewedAt UTCTime Maybe
+    deriving Show Generic
+
 EventLogisticsPlace
     eventId SocialEventId
     venueId VenueId Maybe

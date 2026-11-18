@@ -31,6 +31,7 @@ import TicketPricePreview from '../components/events/TicketPricePreview';
 import EventPreparationPanel from '../components/events/EventPreparationPanel';
 import EventLineupEditor from '../components/events/EventLineupEditor';
 import EventAdminsCard from '../components/events/EventAdminsCard';
+import EventOrganizerClaimCard from '../components/events/EventOrganizerClaimCard';
 import EventCourtesyTicketsCard from '../components/events/EventCourtesyTicketsCard';
 import { estimateTicketFees, parseOptionalPriceCents } from '../utils/eventTicketPricing';
 
@@ -233,6 +234,9 @@ export default function SocialEventDetailPage() {
   // Organizer or delegated administrator: event editing, poster, ticket tiers
   // and courtesies. Memory campaigns and moderation stay with `isOrganizer`.
   const canManageEvent = isOrganizer || adminAccess === 'admin';
+  // An event without an organizer can be claimed; the server reviews the claim
+  // before assigning it (EVT-ORGANIZER-CLAIM-001).
+  const eventLacksOrganizer = Boolean(event) && !event?.eventOrganizerPartyId?.trim();
   const canShareTickets = ticketStorefrontPrerequisitesMet
     && storefrontQuery.data?.checkoutAvailable === true;
   const ticketPurchaseUrl = typeof window === 'undefined'
@@ -499,6 +503,13 @@ export default function SocialEventDetailPage() {
           key={`admins:${editorScope}`}
           eventId={eventId}
           access={adminAccess}
+          accountScope={accountScope}
+          formatDate={(value) => formatDate(value, locale, event.eventTimezone ?? timezone)}
+        />}
+
+        {event && session?.partyId && eventLacksOrganizer && <EventOrganizerClaimCard
+          key={`organizer-claim:${editorScope}`}
+          eventId={eventId}
           accountScope={accountScope}
           formatDate={(value) => formatDate(value, locale, event.eventTimezone ?? timezone)}
         />}

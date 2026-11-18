@@ -1313,6 +1313,11 @@
       "id": "2026-11-07_artist_featured_identity_guard",
       "path": "tdf-hq/sql/2026-11-07_artist_featured_identity_guard.sql",
       "introducedBy": "6d7bf89fc4ab5127549f67c5e044f69007f1ac2c"
+    },
+    {
+      "id": "2026-11-13_event_organizer_claim",
+      "path": "tdf-hq/sql/2026-11-13_event_organizer_claim.sql",
+      "introducedBy": "3accdff1e33a2808f6791b75cce52bb8d49d461e"
     }
   ]
 }

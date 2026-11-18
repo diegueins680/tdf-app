@@ -22,6 +22,12 @@ and the event-operations migration of 2026-09-14 records such events as
   or only whitespace of any kind), written through one `UPDATE … WHERE
   organizer_party_id IS NOT DISTINCT FROM` the empty value just read, and reread; the edit proceeds only if the
   stored organizer is then the caller. A refused edit assigns nobody.
+- Since 2026-11-13 an account can also ask for such an event: it submits a
+  claim with evidence, which grants nothing, and a strict administrator other
+  than the claimant approves or rejects it. An approval assigns the claimant
+  through the same single conditional assignment, under the event row lock
+  (EVT-ORGANIZER-CLAIM-001, [event-organizer-claim.md](event-organizer-claim.md)).
+  No route assigns an organizer to its own caller on request.
 - Logistics access to such an event follows the recorded logistics team only
   (viewer or editor); nobody holds the owner role.
 - Unchanged: strict administrators act on any event, with or without an organizer,
@@ -75,8 +81,13 @@ removes the behavior.
   only to the organizer and Mobile has no event edit. Today the recovery is an API
   call or a reviewed database assignment. An event without an organizer therefore
   loses organizer-level management on deploy until one of the two is done.
-- The administrator who assigns the event becomes and stays its organizer; there is
-  no route to hand it to another party.
+- The administrator who assigns the event by editing it becomes and stays its
+  organizer. The only route that gives an event without an organizer to another
+  party is the approval of that party's claim (EVT-ORGANIZER-CLAIM-001); no
+  route replaces a stored organizer.
+- The model covers the administrator assignment only. The assignment by an
+  approved claim calls the same function under the same lock, but the model
+  was not extended with claims.
 - The model is bounded and covers assignment only. It does not cover the routes
   that compare the organizer themselves, administrator role changes during a
   request, or direct database edits.

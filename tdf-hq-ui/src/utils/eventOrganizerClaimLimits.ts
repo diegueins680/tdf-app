@@ -1,0 +1,4 @@
+// Mirrors the server validation of EVT-ORGANIZER-CLAIM-001; the server decides.
+export const EVENT_ORGANIZER_CLAIM_EVIDENCE_MIN_LENGTH = 20;
+export const EVENT_ORGANIZER_CLAIM_NOTES_MIN_LENGTH = 10;
+export const EVENT_ORGANIZER_CLAIM_TEXT_MAX_LENGTH = 2000;
