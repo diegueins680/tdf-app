@@ -9,6 +9,12 @@ servers:
     description: Development server
 
 paths:
+  /productions:
+    $ref: './productions.yaml#/paths/~1productions'
+  /productions/{project}/actions:
+    $ref: './productions.yaml#/paths/~1productions~1{project}~1actions'
+  /productions/{project}/versions/{version}/audio:
+    $ref: './productions.yaml#/paths/~1productions~1{project}~1versions~1{version}~1audio'
   /music/artists/{artistPartyId}/featured-track:
     $ref: './artist-playback.yaml#/paths/~1music~1artists~1{artistPartyId}~1featured-track'
   /music/me/featured-track:

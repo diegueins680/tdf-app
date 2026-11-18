@@ -47,6 +47,7 @@ const InventoryPage = lazy(() => import('../pages/InventoryPage'));
 const KanbanPage = lazy(() => import('../pages/KanbanPage'));
 const LabelArtistsPage = lazy(() => import('../pages/LabelArtistsPage'));
 const LabelAssetsPage = lazy(() => import('../pages/LabelAssetsPage'));
+const ProductionWorkspacePage = lazy(() => import('../pages/ProductionWorkspacePage'));
 const LabelProjectsPage = lazy(() => import('../pages/LabelProjectsPage'));
 const LabelReleasesPage = lazy(() => import('../pages/LabelReleasesPage'));
 const MusicReleaseStudioPage = lazy(() => import('../pages/MusicReleaseStudioPage'));
@@ -120,6 +121,7 @@ export function renderProtectedRoutes() {
         <Route path="/admin/roles" element={<Navigate to="/configuracion/roles-permisos" replace />} />
         <Route path="/operacion/control" element={<Navigate to="/dashboard/operations" replace />} />
 
+        <Route path="/producciones" element={<ProductionWorkspacePage />} />
         <Route path="/dashboard/operations" element={<OperationsControlCenterPage />} />
         <Route path="/musica/biblioteca" element={<MusicLibraryPage />} />
         <Route path="/mis-clasificados" element={<DirectoryManagePage />} />

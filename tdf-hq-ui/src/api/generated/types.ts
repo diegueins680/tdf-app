@@ -4,6 +4,58 @@
  */
 
 export interface paths {
+    "/productions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Return projects with member-filtered tasks, immutable audio review history and current schedule */
+        get: operations["listProductions"];
+        put?: never;
+        /** Create a private production and reverse-schedule its songs from a template */
+        post: operations["createProduction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/productions/{project}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply one project-scoped transition under the project transaction lock */
+        post: operations["updateProduction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/productions/{project}/versions/{version}/audio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read private audio for this exact version */
+        get: operations["readProductionAudio"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/music/artists/{artistPartyId}/featured-track": {
         parameters: {
             query?: never;
@@ -17534,6 +17586,19 @@ export interface components {
         };
     };
     responses: {
+        /** @description The persisted result identifier */
+        Receipt: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    id: string;
+                    kind?: string;
+                };
+            };
+        };
         /** @description Not found or not publicly eligible */
         NotFound: {
             headers: {
@@ -17597,6 +17662,7 @@ export interface components {
         OrderLookupToken: string;
         /** @description Stable caller-generated key. Reuse with a different request snapshot is rejected. */
         IdempotencyKey: string;
+        Project: string;
         SearchQuery: string;
         /** @description Opaque stable keyset cursor */
         Cursor: string;
@@ -17617,6 +17683,191 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listProductions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Client projections contain only expressly shared versions and their tasks */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>[];
+                };
+            };
+            /** @description Active TDF session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createProduction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title: string;
+                    /** @enum {string} */
+                    format: "Sencillo" | "EP" | "Álbum";
+                    /** Format: date */
+                    delivery: string;
+                    songs: {
+                        title?: string;
+                        /** Format: uuid */
+                        track?: string;
+                    }[];
+                    template: {
+                        name: string;
+                        days: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["Receipt"];
+            /** @description Invalid template or song */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active TDF session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateProduction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project: components["parameters"]["Project"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    op: "invite" | "task" | "edit" | "dependency" | "block" | "progress" | "publish" | "feedback" | "propose" | "backplan" | "confirm";
+                    /** Format: uuid */
+                    task?: string;
+                    /** @description Required except for version feedback and proposal confirmation */
+                    revision?: number;
+                    /** Format: uuid */
+                    version?: string;
+                    /** @enum {string} */
+                    kind?: "comment" | "changes" | "approve";
+                    /**
+                     * Format: uuid
+                     * @description Idempotency key for the exact version and feedback payload
+                     */
+                    request?: string;
+                    /**
+                     * Format: uuid
+                     * @description Completed private TDF audio owned by the authenticated uploader
+                     */
+                    file?: string;
+                    /** Format: uuid */
+                    proposal?: string;
+                };
+            };
+        };
+        responses: {
+            200: components["responses"]["Receipt"];
+            /** @description Invalid transition input */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Active TDF session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Project role or assignment does not allow the transition */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Project or version unavailable to this account */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Stale plan */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    readProductionAudio: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project: components["parameters"]["Project"];
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Immutable file bytes, private cache disabled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Active TDF session required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No visible version at this project path */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     getArtistFeaturedTrack: {
         parameters: {
             query?: never;

@@ -168,6 +168,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Mi perfil de artista', path: '/mi-artista' },
       { label: 'Tienda', path: '/marketplace' },
       { label: 'Lanzamientos públicos', path: '/records' },
+      { label: 'Producciones musicales', path: '/producciones' },
       { label: 'Reservar estudio', path: '/reservar' },
       { label: 'Agenda de pruebas', path: '/trials' },
       { label: 'Registro live sessions', path: '/live-sessions/registro' },

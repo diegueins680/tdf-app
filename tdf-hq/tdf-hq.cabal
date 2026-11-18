@@ -59,6 +59,8 @@ library
     TDF.API.Label
     TDF.API.Drive
     TDF.API.ContentStorage
+    TDF.API.Production
+    TDF.Server.Production
     TDF.ContentStorage
     TDF.API.Rooms
     TDF.API.Services
