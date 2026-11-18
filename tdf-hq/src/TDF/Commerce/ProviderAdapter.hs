@@ -20,12 +20,14 @@ module TDF.Commerce.ProviderAdapter
   , safeRequestSummary
   , AdapterContext(..)
   , MoneyBreakdown(..)
+  , SplitTransfer(..)
   , CreatePayment(..)
   , ExpectedPayment(..)
   , PaymentLocator(..)
   , PaymentMutation(..)
   , AdapterResult(..)
   , NotificationAssessment(..)
+  , QueryFollowUp(..)
   , ProviderAdapter(..)
   , minorToDecimal
   , decimalToMinor
@@ -34,6 +36,8 @@ module TDF.Commerce.ProviderAdapter
   , validVisibleCredential
   , validProviderIdentifier
   , unsupportedOperation
+  , noQueryFollowUp
+  , refuseSplitTransfers
   ) where
 
 import           Data.Aeson (Value)
@@ -151,6 +155,17 @@ data MoneyBreakdown = MoneyBreakdown
   , mbTipMinor              :: Int64
   } deriving (Eq, Show)
 
+-- | One recipient of a split charge (ADR 0136): part of the charge that the
+-- provider pays out directly to a third party in the same operation, so the
+-- platform never holds it. The identifier is personal data (an
+-- identification number or a phone), so there is no 'Show' instance and no
+-- adapter logs it. 'stByPhone' says which of the two the identifier is.
+data SplitTransfer = SplitTransfer
+  { stIdentifier  :: Text
+  , stByPhone     :: Bool
+  , stAmountMinor :: Int64
+  } deriving (Eq)
+
 data CreatePayment = CreatePayment
   { cpPaymentMethod    :: PaymentMethod
   , cpReference        :: Text
@@ -162,6 +177,10 @@ data CreatePayment = CreatePayment
   , cpBuyerCountryCode :: Maybe Text
   , cpIpAddress        :: Text
   , cpUserAgent        :: Text
+  , cpTransfers        :: [SplitTransfer]
+    -- ^ Split recipients. Empty for a charge the platform keeps whole. An
+    -- adapter without a split operation must refuse a non-empty list rather
+    -- than collect the recipients' part into the platform account.
   } deriving (Eq)
 
 data ExpectedPayment = ExpectedPayment
@@ -198,6 +217,12 @@ data NotificationAssessment = NotificationAssessment
   , notificationRequiresQuery  :: Bool
   } deriving (Eq, Show)
 
+-- | Keep the parser paired with the particular request it needs to verify.
+data QueryFollowUp = QueryFollowUp
+  { followUpRequest :: AdapterRequest
+  , parseFollowUpResponse :: Value -> Either AdapterError AdapterResult
+  }
+
 -- | A closed adapter value captures validated provider configuration. The
 -- application can route and execute it without branching in product modules.
 data ProviderAdapter = ProviderAdapter
@@ -211,7 +236,16 @@ data ProviderAdapter = ProviderAdapter
   , adapterBuildSameDayReverse :: AdapterContext -> PaymentMutation -> Either AdapterError AdapterRequest
   , adapterParseResponse      :: AdapterOperation -> PaymentLocator -> Value -> Either AdapterError AdapterResult
   , adapterAssessNotification :: Value -> Either AdapterError NotificationAssessment
+    -- | A provider-specific confirmation and its bound response parser, or
+    -- 'Nothing' when the initial query may be parsed directly.
+  , adapterQueryFollowUp      :: AdapterContext -> PaymentLocator -> Value
+                              -> Either AdapterError (Maybe QueryFollowUp)
   }
+
+-- | A provider whose status query answer is final.
+noQueryFollowUp
+  :: AdapterContext -> PaymentLocator -> Value -> Either AdapterError (Maybe QueryFollowUp)
+noQueryFollowUp _ _ _ = Right Nothing
 
 minorToDecimal :: Int64 -> Scientific
 minorToDecimal amountMinor = scientific (fromIntegral amountMinor) (-2)
@@ -262,3 +296,10 @@ validProviderIdentifier value =
 
 unsupportedOperation :: Either AdapterError value
 unsupportedOperation = Left (AdapterError "Operation is not enabled for this provider adapter.")
+
+-- | For adapters (or adapter methods) that cannot pay part of a charge out to
+-- a third party: a split charge is refused before any request is built.
+refuseSplitTransfers :: CreatePayment -> Either AdapterError ()
+refuseSplitTransfers payment
+  | null (cpTransfers payment) = Right ()
+  | otherwise = Left (AdapterError "This payment method cannot split a charge with a third party.")

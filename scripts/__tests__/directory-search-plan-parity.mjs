@@ -21,8 +21,16 @@ function render(template, params) {
 // per-row intent projection is ignored when comparing result rows.
 const INTENT_INDEX = 15;
 const legacy = (params) => params.filter((_, index) => index !== INTENT_INDEX);
+// Fields added after the reference revision: the classified intent (ADR 0132)
+// and the picture component of the ranking. The fixture has no pictures, so a
+// zero picture score must leave every ID, score and position unchanged; any
+// other value is kept and fails the comparison.
 const withoutIntent = (rows) => rows.map((row) => {
   const { intent, ...item } = row.jsonb_build_object;
+  if (item.scoreBreakdown?.image === 0) {
+    const { image, ...breakdown } = item.scoreBreakdown;
+    item.scoreBreakdown = breakdown;
+  }
   return { ...row, jsonb_build_object: item };
 });
 const q = (query = '', city = null, genre = null, latitude = null, longitude = null, radius = null) => [query, 'classified', city, latitude, longitude, radius, null, null, null, genre, null, null, null, null, null, null, 'suppressed', null, 50];

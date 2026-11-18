@@ -795,7 +795,7 @@ notificationMinimizationSpec = describe "provider notification evidence minimiza
       [ "TransactionId" A..= (1234 :: Int), "ClientTransactionId" A..= ("CLIENT-1" :: Text)
       , "StoreId" A..= ("synthetic-store" :: Text) ])
     adapter <- requireRight (PayPhone.payPhoneAdapter
-      (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store"))
+      (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store" Nothing))
     value <- requireRight (A.eitherDecodeStrict' retained)
     assessment <- requireRight (Adapter.adapterAssessNotification adapter value)
     Adapter.notificationExternalId assessment `shouldBe` "1234"
@@ -3193,7 +3193,7 @@ parsedQuery :: Execution.BoundProviderPayment -> Adapter.AdapterResultState -> I
 parsedQuery payment state = do
   adapter <- if Execution.bppProvider payment == Checkout.ProviderPlaceToPay
     then requireRight (PlaceToPay.placeToPayAdapter notificationConfig)
-    else requireRight (PayPhone.payPhoneAdapter (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store"))
+    else requireRight (PayPhone.payPhoneAdapter (PayPhone.PayPhoneConfig "synthetic-token" "synthetic-store" Nothing))
   requireRight (Adapter.adapterParseResponse adapter AdapterQuery
     (Adapter.PaymentLocator (Execution.bppProviderResourceId payment)
       (Adapter.ExpectedPayment (Execution.bppProviderReference payment)
