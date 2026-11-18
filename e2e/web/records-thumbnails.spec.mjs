@@ -69,7 +69,10 @@ test('Records handles failed images and decoded placeholders with bounded reques
   await expect.poll(() => control.evaluate(i => i.naturalWidth)).toBe(480);
   expect(requests.every(p => /\/vi\/(ooPsIHsikYU|Cb7VGZJ6apo|f2BabxM1Pjc)\/(hqdefault|mqdefault)\.jpg/.test(p))).toBe(true);
   // Compact + card instances can each request a candidate once; never retry endlessly.
-  expect(requests.length).toBeLessThanOrEqual(10);
+  const instances = await page.locator('img[alt]').evaluateAll(images => images
+    .filter(image => /i\.ytimg\.com/.test(image.currentSrc || image.src))
+    .map(image => `${image.alt.slice(-6)}:${new URL(image.currentSrc || image.src).pathname}:${image.complete}:${image.naturalWidth}`));
+  expect(requests.length, `requests ${JSON.stringify(requests)} viewport ${JSON.stringify(page.viewportSize())} images ${JSON.stringify(instances)}`).toBeLessThanOrEqual(10);
 });
 
 test('Records preserves source identities, keyboard links and responsive unavailable states @critical', async ({ page, baseURL }) => {
