@@ -76,6 +76,7 @@ export default function FanClubPage() {
     ? clubQuery.error.status
     : undefined;
   const clubLoadFailed = validArtistId && !clubQuery.data && clubErrorStatus !== 404;
+  const isArtistWithUnavailableClub = validArtistId && clubErrorStatus === 404 && session?.partyId === artistIdNum;
 
   const feedQuery = useQuery({
     queryKey: ['fan-club-feed', artistIdNum],
@@ -138,17 +139,19 @@ export default function FanClubPage() {
           title={clubLoadFailed ? 'No pudimos cargar el club' : 'Club no disponible'}
           description={clubLoadFailed
             ? 'No pudimos comprobar su disponibilidad. Revisa tu conexión e inténtalo de nuevo.'
-            : validArtistId
+            : isArtistWithUnavailableClub
+              ? 'Puedes publicar enlaces en tu perfil de artista mientras el club no esté disponible.'
+              : validArtistId
               ? 'Consulta el perfil público del artista o sigue explorando en Comunidad.'
               : 'El enlace no identifica un club válido.'}
-          actionLabel={clubLoadFailed ? 'Reintentar' : validArtistId ? 'Ver perfil del artista' : 'Volver a la comunidad'}
-          actionHref={clubLoadFailed ? undefined : validArtistId ? `/artista/${artistIdNum}` : '/fans'}
+          actionLabel={clubLoadFailed ? 'Reintentar' : isArtistWithUnavailableClub ? 'Editar mi perfil de artista' : validArtistId ? 'Ver perfil del artista' : 'Volver a la comunidad'}
+          actionHref={clubLoadFailed ? undefined : isArtistWithUnavailableClub ? '/mi-artista' : validArtistId ? `/artista/${artistIdNum}` : '/fans'}
           actionOnClick={clubLoadFailed ? () => { void clubQuery.refetch(); } : undefined}
         >
           {(clubErrorStatus === 401 || clubErrorStatus === 403) && (
             <Button component={RouterLink} to={loginPath}>Ingresar de nuevo</Button>
           )}
-          {clubLoadFailed && validArtistId && (
+          {((clubLoadFailed && validArtistId) || isArtistWithUnavailableClub) && (
             <Button component={RouterLink} to={`/artista/${artistIdNum}`}>Ver perfil del artista</Button>
           )}
           {(clubLoadFailed || validArtistId) && (
