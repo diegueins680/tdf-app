@@ -114,15 +114,16 @@ import           TDF.Services.EventLogisticsRoutes
   )
 import qualified TDF.Models.SocialEventsModels as Social
 import           TDF.Routes.Courses      (CourseMetadata(..))
-import           TDF.Server              ( buildLandingUrl
-                                         , loadAdExamples
-                                         , runRagChatWithStatus
+import           TDF.Courses.Metadata    ( buildLandingUrl
                                          , courseMetadataFor
                                          , toCourseMetadata
                                          , normalizeSlug
                                          , productionCourseSlug
                                          , productionCoursePrice
                                          , productionCourseCapacity
+                                         )
+import           TDF.Services.LlmChat    ( loadAdExamples
+                                         , runRagChatWithStatus
                                          )
 import           TDF.RagStore            (ensureRagIndex, retrieveRagContext)
 import qualified TDF.Trials.Models       as Trials
@@ -149,6 +150,7 @@ import           Web.PathPieces          (fromPathPiece)
 import           TDF.WhatsApp.Client     (SendTextResult)
 import           TDF.WhatsApp.History    (OutgoingWhatsAppRecord(..), recordOutgoingWhatsAppMessage)
 import           TDF.WhatsApp.Transport  (WhatsAppEnv(..), loadWhatsAppEnv, sendWhatsAppTextIO)
+import qualified TDF.CampaignAutomation as CampaignAutomation
 
 -- Auto-reply directive parsing
 data Directive = Send Text | Hold Text (Maybe Text) deriving (Show, Eq)
@@ -1704,8 +1706,20 @@ replyWhatsAppConversation cfg pool waEnv acc senderId = do
       ]
       [Desc ME.WhatsAppMessageCreatedAt])
     pool
+  withdrawn <- runSqlPool (CampaignAutomation.whatsAppRecipientConsentWithdrawn senderId) pool
   case mLatestPending of
     Nothing -> pure acc
+    -- No automated reply to a contact who withdrew consent, including the
+    -- STOP message itself (MSG-STAFF-OUTBOUND-001).
+    Just (Entity key _) | withdrawn -> do
+      runSqlPool
+        (update key
+          [ ME.WhatsAppMessageReplyStatus =. "error"
+          , ME.WhatsAppMessageReplyError =. Just "Contact withdrew WhatsApp consent; no automatic reply"
+          , ME.WhatsAppMessageLastAttemptAt =. Just now
+          ])
+        pool
+      pure acc
     Just (Entity key msg) -> do
       recent <- runSqlPool
         (selectList
