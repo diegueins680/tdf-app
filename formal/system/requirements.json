@@ -28098,17 +28098,19 @@
       ],
       "state": {
         "payment": "not_started | failed | confirmed_no_charge | pending | ambiguous | succeeded",
-        "alternatives": "available | none_enabled | lookup_unavailable"
+        "alternatives": "available | browser_unchecked | none_enabled | lookup_unavailable"
       },
       "allowedTransitions": [
         "Confirmed no-charge or pre-charge failure -> show remaining available options.",
         "Pending or unknown result -> preserve recovery lock and request status verification.",
-        "Verified success -> fulfillment/status display without proposing another payment."
+        "Verified success -> fulfillment/status display without proposing another payment.",
+        "Configured order-offered method with untested browser readiness -> show as an option to check on the original order, separately from ready methods."
       ],
       "forbiddenTransitions": [
         "Timeout or failed status read -> claim a confirmed decline.",
         "Show an unavailable provider or a method without an executor for this purchase.",
-        "Showing alternatives -> automatic payment, replacement order, price change or provider activation."
+        "Showing alternatives -> automatic payment, replacement order, price change or provider activation.",
+        "A fresh return document lacking the PayPal SDK -> claim PayPal is unavailable or that no alternative exists."
       ],
       "effects": [
         "Render remaining method labels adjacent to errors, including provider dialogs.",

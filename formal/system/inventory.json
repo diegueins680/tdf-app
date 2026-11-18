@@ -9925,13 +9925,13 @@
     {
       "id": "SURFACE-17bb1f87a3c3c0f3",
       "path": "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.test.tsx",
-      "sha256": "dd6666b747d34577e00870fe2ba62f90b989d11e119872f4fe2362f4b0fe1e7c",
+      "sha256": "100fc395fcc009307a061656c7ee53c1ef12b6f97f9ff57b709a0b499cac7175",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-2123e59d8b083c96",
       "path": "tdf-hq-ui/src/components/payments/PaymentAlternativesNotice.tsx",
-      "sha256": "fa258b3f702aad42908cdbc2ec3355d7bb28e5b8b9c7f87b23a65029db9aaa54",
+      "sha256": "0d48baa6660efc131f1b7490acfa82d07f90dd4d4a9f42a89cf1c399a00505b6",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -11929,13 +11929,13 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "b91fcd0226bf7657065f6f45c3bc561f4d1ce869c055db9f030f192a33e63685",
+      "sha256": "9372cb8bd0264e952ae620a49693dda9b4bddf7cc0084117a6614c8058ae3e84",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "ee33d1019180b64e851307bd3591cc9fdca944c088473a782a7d5456f5c3f60a",
+      "sha256": "ff4f3563dded2f179c851f8a3b868518a9838ba281d382c9f63384411f97a7aa",
       "semanticConformance": "not-established-by-discovery"
     },
     {
@@ -24767,7 +24767,7 @@
     },
     {
       "path": "docs/payments/payment-failure-alternatives.md",
-      "sha256": "028e74a640d8f2b5c6085c7631d041d33850b8cbcf992c5cdae124d337676b40",
+      "sha256": "a7976f68569f13ef941edff8625b9a4062677927311414cce29be2063cbbeb25",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-candidate"
@@ -31550,7 +31550,7 @@
     },
     {
       "path": "formal/system/requirements.json",
-      "sha256": "e3086b20a41f334823ac44dfd08744539313705280c83561f2c36e259c1aadfc",
+      "sha256": "c1987c3cde2aa06661531f2cfd55eacf277aae939663d77c7d50c2f97ff538a8",
       "authority": "inferred",
       "authorityBasis": "No explicit approval declaration extracted; retain source provenance for review",
       "kind": "requirement-register"

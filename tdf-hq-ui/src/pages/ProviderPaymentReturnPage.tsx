@@ -85,8 +85,9 @@ export default function ProviderPaymentReturnPage() {
     session?.state,
     session?.canRetryOrFallback,
   );
-  const paypalAvailable = Boolean(env.read('VITE_PAYPAL_CLIENT_ID')
-    && typeof window !== 'undefined' && window.paypal?.Buttons);
+  const paypalConfigured = Boolean(env.read('VITE_PAYPAL_CLIENT_ID'));
+  const paypalAvailable = paypalConfigured
+    && typeof window !== 'undefined' && Boolean(window.paypal?.Buttons);
 
   const releaseAttemptIfAuthoritative = () => {
     if (!canReleaseAttempt || status.isError || status.isFetching) return;
@@ -144,6 +145,8 @@ export default function ProviderPaymentReturnPage() {
               {knownNoCharge && alternatives.isSuccess && (
                 <PaymentAlternativesNotice
                   methods={alternatives.data.filter((method) => method !== 'paypal' || paypalAvailable)}
+                  methodsToCheck={paypalConfigured && !paypalAvailable
+                    ? alternatives.data.filter((method) => method === 'paypal') : []}
                   failedMethod={resume.paymentMethod === 'payphone_wallet'
                     ? 'payphone_wallet' : `${resume.provider}_${resume.paymentMethod}`}
                   blocked={status.isError || status.isFetching}

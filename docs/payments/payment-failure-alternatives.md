@@ -4,6 +4,8 @@ Petición de Diego, 18 de noviembre de 2026: en cualquier flujo de pago, mostrar
 
 `PaymentAlternativesNotice` muestra los medios disponibles para la compra actual y excluye el medio que falló. La lista procede de la orden o de sus capacidades verificadas, con los requisitos del navegador aplicados. No habilita proveedores ni inicia pagos. Si no existe otro medio ejecutable, indica cómo pedir ayuda con la referencia de la orden. Una consulta fallida de disponibilidad no equivale a una lista vacía verificada.
 
+Después de un retorno de página completa, que PayPal no esté cargado todavía no prueba que sea imposible usarlo. Si la orden lo ofrece y está configurado, se muestra en una sección separada de opciones por comprobar al volver a la orden; no se anuncia como listo ni se afirma que no exista alternativa. La ausencia de configuración sí lo excluye.
+
 Los pagos alojados comparten esta presentación en `HostedProviderCheckout`. Se conserva el bloqueo de recuperación e idempotencia: un timeout, un estado ambiguo o un fallo al consultar no autorizan otro intento. Solo la respuesta autoritativa `canRetryOrFallback` permite liberar el intento. Las pantallas de retorno consultan la orden original y comprueban que sigue correspondiendo al mismo checkout; no crean una orden de reemplazo para mostrar alternativas.
 
 Stripe puede admitir varios medios en el mismo PaymentIntent. `StripePaymentAlternativesNotice` consulta ese intento mediante el SDK público y muestra los medios restantes únicamente cuando permite elegir de nuevo (`requires_payment_method`), excluyendo la opción seleccionada en PaymentElement. Un resultado pendiente, exitoso, incompatible o desconocido exige verificar la orden antes de pagar de nuevo. No se registra el secreto del intento.

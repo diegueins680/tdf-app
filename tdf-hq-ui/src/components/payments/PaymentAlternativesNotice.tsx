@@ -15,6 +15,8 @@ const LABELS: Record<string, [string, string]> = {
 interface PaymentAlternativesNoticeProps {
   /** Only methods the current purchase actually supports, including browser requirements. */
   methods: readonly string[];
+  /** Offered by the order, but browser availability has not been checked here. */
+  methodsToCheck?: readonly string[];
   failedMethod?: string | null;
   /** A failed status read or timeout is not proof that no charge occurred. */
   blocked?: boolean;
@@ -25,6 +27,7 @@ interface PaymentAlternativesNoticeProps {
 
 export default function PaymentAlternativesNotice({
   methods,
+  methodsToCheck = [],
   failedMethod,
   blocked = false,
   english = false,
@@ -34,6 +37,13 @@ export default function PaymentAlternativesNotice({
   const alternatives = [...new Set(methods)].filter((method) =>
     method !== failedMethod && (Object.prototype.hasOwnProperty.call(LABELS, method)
       || Object.prototype.hasOwnProperty.call(methodLabels, method)));
+  const unchecked = [...new Set(methodsToCheck)].filter((method) =>
+    method !== failedMethod && !alternatives.includes(method)
+    && (Object.prototype.hasOwnProperty.call(LABELS, method)
+      || Object.prototype.hasOwnProperty.call(methodLabels, method)));
+  const uncheckedTitle = english
+    ? 'Options to check when returning to your order'
+    : 'Opciones por comprobar al volver a tu orden';
 
   return (
     <Alert severity="info" role="status">
@@ -55,7 +65,7 @@ export default function PaymentAlternativesNotice({
                 : 'Elige otra opción en los controles de pago de esta compra.')}
           </Typography>
         </>
-      ) : (
+      ) : unchecked.length === 0 ? (
         <Typography variant="body2">
           {availabilityUnknown ? (english
             ? 'Other payment methods could not be checked. Review the options in the secure payment form or contact TDF with your order reference.'
@@ -66,6 +76,19 @@ export default function PaymentAlternativesNotice({
             ? ' Verify the original payment before paying again.'
             : ' Verifica el pago original antes de volver a pagar.')}
         </Typography>
+      ) : blocked && <Typography variant="body2">{english
+        ? 'Verify the original payment before paying again.'
+        : 'Verifica el pago original antes de volver a pagar.'}</Typography>}
+      {unchecked.length > 0 && (
+        <Box component="section" aria-label={uncheckedTitle} sx={{ mt: alternatives.length ? 1.5 : 0 }}>
+          <Typography variant="body2" fontWeight={700}>{uncheckedTitle}</Typography>
+          <Box component="ul" sx={{ my: 1, pl: 2.5 }}>
+            {unchecked.map((method) => <li key={method}>{methodLabels[method] ?? LABELS[method]![english ? 1 : 0]}</li>)}
+          </Box>
+          <Typography variant="body2">{english
+            ? 'Their availability in this browser will be checked when you open the payment form.'
+            : 'Su disponibilidad en este navegador se comprobará al abrir el formulario de pago.'}</Typography>
+        </Box>
       )}
     </Alert>
   );

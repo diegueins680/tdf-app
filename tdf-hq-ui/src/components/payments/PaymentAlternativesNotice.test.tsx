@@ -27,3 +27,23 @@ it('does not carry methods from a previous purchase into an unavailable checkout
   expect(screen.queryByRole('listitem')).toBeNull();
   expect(screen.getByText(/No hay otro medio habilitado.*referencia de tu orden/)).toBeInTheDocument();
 });
+
+it('separates unchecked browser options from ready methods and does not claim none exist', () => {
+  const view = render(<PaymentAlternativesNotice methods={['bank_transfer']} methodsToCheck={['paypal', 'paypal', 'bank_transfer', 'not_enabled']} />);
+  const pending = within(screen.getByRole('region', { name: 'Opciones por comprobar al volver a tu orden' }));
+  expect(pending.getAllByRole('listitem')).toHaveLength(1);
+  expect(pending.getByText('PayPal')).toBeInTheDocument();
+  view.rerender(<PaymentAlternativesNotice methods={[]} methodsToCheck={['paypal']} />);
+  expect(screen.queryByText(/No hay otro medio habilitado/)).toBeNull();
+  expect(screen.queryByText(/Elige otra opción/)).toBeNull();
+  expect(screen.getByText(/se comprobará al abrir el formulario/)).toBeInTheDocument();
+});
+
+it('excludes the failed method from unchecked options while preserving the unresolved-payment warning', () => {
+  render(<PaymentAlternativesNotice methods={[]} methodsToCheck={['paypal', 'datafast']} failedMethod="datafast" blocked english />);
+  const pending = within(screen.getByRole('region', { name: 'Options to check when returning to your order' }));
+  expect(pending.getAllByRole('listitem')).toHaveLength(1);
+  expect(pending.getByText('PayPal')).toBeInTheDocument();
+  expect(screen.getByText(/Verify the original payment before paying again/)).toBeInTheDocument();
+  expect(screen.queryByRole('button')).toBeNull();
+});
