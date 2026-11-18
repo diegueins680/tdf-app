@@ -29466,8 +29466,8 @@
     "tdf-hq-ui/src/pages/PartyRelationshipMigration.test.ts": "4941936bcbb954b17033773cc792520831a6219dd23009d834fcab18318de87d",
     "tdf-hq-ui/src/pages/PaymentsPage.recovery.test.tsx": "b015233958f9b3684f93c132236f99a9378f980ea3c66de9ffe3eeb6d71112c5",
     "tdf-hq-ui/src/pages/PaymentsPage.tsx": "81858d869a98dd7cf676fc970baeb16464ef6d47e6625569a10e20b44831e74c",
-    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
-    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "3380b41f19fca2477b41609b574a6c8a1119995f1f5de7c0c0bc9da44b34ceb2",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx": "b91fcd0226bf7657065f6f45c3bc561f4d1ce869c055db9f030f192a33e63685",
+    "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx": "ee33d1019180b64e851307bd3591cc9fdca944c088473a782a7d5456f5c3f60a",
     "tdf-hq-ui/src/pages/PublicBookingOrderTrackingPage.tsx": "c0906a8284cd230a5fd2502d35941856d629862c31d3c62ab85b3648d53d7129",
     "tdf-hq-ui/src/pages/PublicBookingPage.tsx": "42df47733f75f44f13d72182bcb89084c2d2533c4ff1939ad6b31d0e8ff31905",
     "tdf-hq-ui/src/pages/PublicEventTicketsPage.tsx": "4eb66dfcf2022208dd69e178895854c0bc629bd076fa2b84554ed006cab44980",
@@ -66783,7 +66783,7 @@
     {
       "id": "SURFACE-57d71f490b9a0d52",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
-      "sha256": "5fc09340ac30ede790142aaa70e886ace4a9ddc71697be3c06b25ba379d40c2b",
+      "sha256": "b91fcd0226bf7657065f6f45c3bc561f4d1ce869c055db9f030f192a33e63685",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -66799,7 +66799,7 @@
     {
       "id": "SURFACE-6b97ed3a68e676f6",
       "path": "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.tsx",
-      "sha256": "3380b41f19fca2477b41609b574a6c8a1119995f1f5de7c0c0bc9da44b34ceb2",
+      "sha256": "ee33d1019180b64e851307bd3591cc9fdca944c088473a782a7d5456f5c3f60a",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {

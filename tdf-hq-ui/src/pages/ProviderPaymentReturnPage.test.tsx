@@ -14,6 +14,15 @@ import {
 const checkoutId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const attemptId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const getMock = jest.fn();
+const alternativesMock = jest.fn<() => Promise<string[]>>();
+let paypalClientId = '';
+
+jest.unstable_mockModule('../api/checkoutPaymentAlternatives', () => ({
+  loadCheckoutPaymentAlternatives: alternativesMock,
+}));
+jest.unstable_mockModule('../utils/env', () => ({
+  env: { read: (key: string) => key === 'VITE_PAYPAL_CLIENT_ID' ? paypalClientId : undefined },
+}));
 
 jest.unstable_mockModule('../api/providerPaymentSessions', () => ({
   getProviderPaymentSession: getMock,
@@ -67,6 +76,9 @@ describe('ProviderPaymentReturnPage', () => {
   beforeEach(() => {
     window.sessionStorage.clear();
     getMock.mockReset();
+    alternativesMock.mockReset().mockResolvedValue([]);
+    paypalClientId = '';
+    Object.defineProperty(window, 'paypal', { configurable: true, writable: true, value: undefined });
     resume();
   });
 
@@ -80,6 +92,23 @@ describe('ProviderPaymentReturnPage', () => {
     await screen.findByText(/servidor verificó el pago/);
     expect(getMock).toHaveBeenCalledWith(checkoutId, attemptId, 'secure-checkout-lookup-token');
     expect(screen.getByRole('link', { name: 'Volver a la orden' }).getAttribute('href')).toBe('/orden');
+  });
+
+  it.each([
+    { clientId: '', sdk: true, visible: false },
+    { clientId: 'configured-public-client-id', sdk: false, visible: false },
+    { clientId: 'configured-public-client-id', sdk: true, visible: true },
+  ])('requires browser configuration and a ready SDK before offering PayPal: %j', async ({ clientId, sdk, visible }) => {
+    paypalClientId = clientId;
+    Object.defineProperty(window, 'paypal', { configurable: true, writable: true,
+      value: sdk ? { Buttons: jest.fn() } : undefined });
+    getMock.mockResolvedValue(session('failed', true));
+    alternativesMock.mockResolvedValue(['paypal', 'bank_transfer']);
+    renderPage();
+    await screen.findByText('Otros medios de pago para esta compra');
+    expect(Boolean(screen.queryByText('PayPal', { exact: true }))).toBe(visible);
+    expect(screen.getByText('Transferencia bancaria', { exact: true })).toBeTruthy();
+    expect(getMock).toHaveBeenCalledTimes(1);
   });
 
   it.each(['', '?tdf_checkout=', '?tdf_checkout=unknown'])('never guesses a checkout for an ambiguous or invalid return %s', (query) => {

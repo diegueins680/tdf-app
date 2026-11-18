@@ -7,6 +7,7 @@ import PaymentAlternativesNotice from '../components/payments/PaymentAlternative
 
 import { getProviderPaymentSession, safePlaceToPayRedirect } from '../api/providerPaymentSessions';
 import { useLocalePreferences } from '../contexts/LocalePreferencesContext';
+import { env } from '../utils/env';
 import {
   clearPaymentIdempotencyKey,
   clearProviderPaymentResume,
@@ -84,6 +85,8 @@ export default function ProviderPaymentReturnPage() {
     session?.state,
     session?.canRetryOrFallback,
   );
+  const paypalAvailable = Boolean(env.read('VITE_PAYPAL_CLIENT_ID')
+    && typeof window !== 'undefined' && window.paypal?.Buttons);
 
   const releaseAttemptIfAuthoritative = () => {
     if (!canReleaseAttempt || status.isError || status.isFetching) return;
@@ -140,7 +143,7 @@ export default function ProviderPaymentReturnPage() {
               )}
               {knownNoCharge && alternatives.isSuccess && (
                 <PaymentAlternativesNotice
-                  methods={alternatives.data}
+                  methods={alternatives.data.filter((method) => method !== 'paypal' || paypalAvailable)}
                   failedMethod={resume.paymentMethod === 'payphone_wallet'
                     ? 'payphone_wallet' : `${resume.provider}_${resume.paymentMethod}`}
                   blocked={status.isError || status.isFetching}
