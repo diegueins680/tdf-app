@@ -2,7 +2,7 @@
 
 Petición de Diego, 18 de noviembre de 2026: en cualquier flujo de pago, mostrar los demás medios posibles cuando falle un intento.
 
-`PaymentAlternativesNotice` muestra los medios disponibles para la compra actual y excluye el medio que falló. La lista procede de la orden o de sus capacidades verificadas, con los requisitos del navegador aplicados. No habilita proveedores ni inicia pagos. Si no existe otro medio ejecutable, indica cómo pedir ayuda con la referencia de la orden. Una consulta fallida de disponibilidad no equivale a una lista vacía verificada.
+`PaymentAlternativesNotice` muestra los medios disponibles para la compra actual y excluye el medio que falló. La lista procede de la orden o de sus capacidades verificadas, con los requisitos del navegador aplicados. No habilita proveedores ni inicia pagos. Si no existe otro medio ejecutable, indica cómo pedir ayuda con la referencia de la orden. Una consulta pendiente o fallida de disponibilidad no equivale a una lista vacía verificada: se comunica que falta consultar los medios y no se presentan opciones antiguas como verificadas. Hasta recibir una respuesta válida no se inicia un nuevo intento; sigue siendo posible recuperar el intento original con su misma clave de idempotencia.
 
 Después de un retorno de página completa, que PayPal no esté cargado todavía no prueba que sea imposible usarlo. Si la orden lo ofrece y está configurado, se muestra en una sección separada de opciones por comprobar al volver a la orden; no se anuncia como listo ni se afirma que no exista alternativa. La ausencia de configuración sí lo excluye.
 

@@ -28110,7 +28110,8 @@
         "Timeout or failed status read -> claim a confirmed decline.",
         "Show an unavailable provider or a method without an executor for this purchase.",
         "Showing alternatives -> automatic payment, replacement order, price change or provider activation.",
-        "A fresh return document lacking the PayPal SDK -> claim PayPal is unavailable or that no alternative exists."
+        "A fresh return document lacking the PayPal SDK -> claim PayPal is unavailable or that no alternative exists.",
+        "Pending or failed availability lookup -> claim no alternative exists, display cached methods as verified, or start a new payment attempt."
       ],
       "effects": [
         "Render remaining method labels adjacent to errors, including provider dialogs.",
@@ -28154,7 +28155,8 @@
         "tdf-hq-ui/src/pages/ProviderPaymentReturnPage.test.tsx",
         "tdf-hq-ui/src/pages/CourseProductionLandingPage.test.tsx",
         "tdf-hq-ui/src/pages/MixingMasteringPage.test.tsx",
-        "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx"
+        "tdf-hq-ui/src/__tests__/DomoQuoteCheckoutPage.test.tsx",
+        "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.test.tsx"
       ],
       "formalModels": [],
       "status": "specified and implemented",

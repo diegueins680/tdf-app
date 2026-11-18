@@ -34,10 +34,10 @@ export default function PaymentAlternativesNotice({
   methodLabels = {},
   availabilityUnknown = false,
 }: PaymentAlternativesNoticeProps) {
-  const alternatives = [...new Set(methods)].filter((method) =>
+  const alternatives = [...new Set(availabilityUnknown ? [] : methods)].filter((method) =>
     method !== failedMethod && (Object.prototype.hasOwnProperty.call(LABELS, method)
       || Object.prototype.hasOwnProperty.call(methodLabels, method)));
-  const unchecked = [...new Set(methodsToCheck)].filter((method) =>
+  const unchecked = [...new Set(availabilityUnknown ? [] : methodsToCheck)].filter((method) =>
     method !== failedMethod && !alternatives.includes(method)
     && (Object.prototype.hasOwnProperty.call(LABELS, method)
       || Object.prototype.hasOwnProperty.call(methodLabels, method)));

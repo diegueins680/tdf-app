@@ -766,6 +766,7 @@ export default function PublicEventTicketsPage() {
                           }}
                           offeredMethods={paid ? [] : offeredPaymentMethods}
                           alternativeMethods={paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
+                          availabilityUnknown={orderStale}
                           paymentFailure={!paid && (message || checkout.paymentStatus === 'failed')
                             ? { method: attemptedPaymentMethod, needsVerification: paymentUnconfirmed || orderStale || checkout.paymentStatus !== 'failed' } : null}
                           disabled={paid || paymentBusy || datafastOpen || paypalOpen}
@@ -814,7 +815,7 @@ export default function PublicEventTicketsPage() {
         <DialogTitle>{english ? 'Pay with Datafast' : 'Pagar con Datafast'}</DialogTitle>
         <DialogContent dividers>
           {message && <Alert severity="warning">{message}</Alert>}
-          {message && <PaymentAlternativesNotice
+          {message && <PaymentAlternativesNotice availabilityUnknown={orderStale}
                 methods={orderStale || paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
                 failedMethod={attemptedPaymentMethod}
                 blocked english={english}
@@ -838,7 +839,7 @@ export default function PublicEventTicketsPage() {
         <DialogTitle>{english ? 'Pay with PayPal' : 'Pagar con PayPal'}</DialogTitle>
         <DialogContent dividers>
           {message && <Alert severity="warning">{message}</Alert>}
-          {message && <PaymentAlternativesNotice
+          {message && <PaymentAlternativesNotice availabilityUnknown={orderStale}
                 methods={orderStale || paid ? [] : offeredPaymentMethods.filter((method) => method !== 'paypal' || Boolean(paypalClientId && paypalReady))}
                 failedMethod={attemptedPaymentMethod}
                 blocked english={english}

@@ -606,9 +606,9 @@ export default function MarketplacePage() {
       marketplace: true,
     }),
   });
-  const showPaypalOption = paypalConfiguredInBrowser
+  const showPaypalOption = paypalConfiguredInBrowser && marketplacePaymentMethodsQuery.isSuccess
     && Boolean(marketplacePaymentMethodsQuery.data?.paypal);
-  const showDatafastOption = !datafastUnavailable
+  const showDatafastOption = !datafastUnavailable && marketplacePaymentMethodsQuery.isSuccess
     && Boolean(marketplacePaymentMethodsQuery.data?.datafast);
   const [savedCartMeta, setSavedCartMeta] = useState<{ cartId: string; count: number; updatedAt: number | null } | null>(() => {
     const meta = readCartMeta();
@@ -2613,7 +2613,7 @@ export default function MarketplacePage() {
                             )}
                           </Stack>
                           {(Boolean(stripeError) || Boolean(datafastError) || Boolean(paypalError)) && (
-                            <PaymentAlternativesNotice
+                            <PaymentAlternativesNotice availabilityUnknown={!marketplacePaymentMethodsQuery.isSuccess}
                               methods={[
                                 ...(showStripeOption ? ['stripe'] : []),
                                 ...(showDatafastOption ? ['datafast'] : []),
@@ -2625,7 +2625,7 @@ export default function MarketplacePage() {
                           )}
                           {marketplacePaymentMethodsQuery.isError && (
                             <Alert severity="warning" variant="outlined">
-                              Los pagos en línea no están disponibles. Puedes enviar una solicitud sin pago.
+                              No pudimos verificar los métodos de pago en línea. Puedes enviar una solicitud sin pago.
                             </Alert>
                           )}
                           {paymentMethod === 'card' && (
@@ -2916,7 +2916,7 @@ export default function MarketplacePage() {
               <Alert severity="warning" onClose={() => setStripeError(null)}>
                 {stripeError}
               </Alert>
-              <PaymentAlternativesNotice methods={[
+              <PaymentAlternativesNotice availabilityUnknown={!marketplacePaymentMethodsQuery.isSuccess} methods={[
                 ...(showDatafastOption ? ['datafast'] : []),
                 ...(showPaypalOption && paypalReady ? ['paypal'] : []),
               ]} failedMethod="stripe" blocked />
@@ -2972,7 +2972,7 @@ export default function MarketplacePage() {
               <Alert severity="warning" onClose={() => setDatafastError(null)}>
                 {datafastError}
               </Alert>
-              <PaymentAlternativesNotice methods={showPaypalOption && paypalReady ? ['paypal'] : []} failedMethod="datafast" blocked />
+              <PaymentAlternativesNotice availabilityUnknown={!marketplacePaymentMethodsQuery.isSuccess} methods={showPaypalOption && paypalReady ? ['paypal'] : []} failedMethod="datafast" blocked />
             </>)}
             {datafastCheckout && datafastReturnUrl && (
               <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360, '& form': { width: '100%' } }}>
@@ -3272,7 +3272,7 @@ export default function MarketplacePage() {
             {!paypalReady && <Alert severity="info">Cargando PayPal...</Alert>}
             {paypalError && <>
               <Alert severity="warning">{paypalError}</Alert>
-              <PaymentAlternativesNotice methods={showDatafastOption ? ['datafast'] : []} failedMethod="paypal" blocked />
+              <PaymentAlternativesNotice availabilityUnknown={!marketplacePaymentMethodsQuery.isSuccess} methods={showDatafastOption ? ['datafast'] : []} failedMethod="paypal" blocked />
             </>}
             <Box id="paypal-button-container" sx={{ mt: 1 }} />
           </Stack>

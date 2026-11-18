@@ -44,6 +44,7 @@ interface HostedProviderCheckoutProps {
   checkout?: HostedCheckoutContext | null;
   offeredMethods: readonly string[];
   alternativeMethods?: readonly string[];
+  availabilityUnknown?: boolean;
   paymentFailure?: { method?: string | null; needsVerification: boolean } | null;
   disabled?: boolean;
   english?: boolean;
@@ -162,6 +163,7 @@ export default function HostedProviderCheckout({
   checkout,
   offeredMethods,
   alternativeMethods = offeredMethods,
+  availabilityUnknown = false,
   paymentFailure,
   disabled = false,
   english = false,
@@ -341,7 +343,7 @@ export default function HostedProviderCheckout({
     const requestScope = recoveryScopeRef.current;
     const original = pendingCreation?.provider === method.provider
       && pendingCreation.paymentMethod === method.paymentMethod ? pendingCreation : null;
-    if (!original && (disabled || !methods.some((candidate) => candidate.label === method.label))) return;
+    if (!original && (disabled || availabilityUnknown || !methods.some((candidate) => candidate.label === method.label))) return;
     if (safetyLocked && selected?.label !== method.label) {
       setError(publicError(english, true));
       return;
@@ -508,6 +510,7 @@ export default function HostedProviderCheckout({
       {showAlternatives && (
         <PaymentAlternativesNotice
           methods={alternativeMethods}
+          availabilityUnknown={availabilityUnknown}
           failedMethod={selected?.label ?? paymentFailure?.method}
           blocked={safetyLocked || Boolean(paymentFailure?.needsVerification)}
           english={english}
@@ -546,7 +549,7 @@ export default function HostedProviderCheckout({
             <Button
               key={method.label}
               variant={method.provider === 'placetopay' ? 'contained' : 'outlined'}
-              disabled={disabled || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
+              disabled={disabled || availabilityUnknown || busy || ((safetyLocked || blockedByAttempt) && !isSelected) || (Boolean(session) && isSelected)}
               onClick={() => void startPayment(method)}
             >
               {busy && isSelected ? <CircularProgress size={20} color="inherit" /> : methodCopy(method.label, english)}
@@ -576,7 +579,7 @@ export default function HostedProviderCheckout({
         </Button>
       )}
       {session?.canRetryOrFallback && (session.state === 'failed' || session.state === 'confirmed_no_charge') && (
-        <Button variant="outlined" onClick={resetKnownNoCharge} disabled={disabled || busy}>
+        <Button variant="outlined" onClick={resetKnownNoCharge} disabled={disabled || availabilityUnknown || busy}>
           {english ? 'Choose another payment method' : 'Elegir otro método de pago'}
         </Button>
       )}

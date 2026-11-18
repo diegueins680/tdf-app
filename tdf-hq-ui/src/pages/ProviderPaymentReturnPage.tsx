@@ -145,6 +145,7 @@ export default function ProviderPaymentReturnPage() {
               {knownNoCharge && alternatives.isSuccess && (
                 <PaymentAlternativesNotice
                   methods={alternatives.data.filter((method) => method !== 'paypal' || paypalAvailable)}
+                  availabilityUnknown={status.isError || status.isFetching}
                   methodsToCheck={paypalConfigured && !paypalAvailable
                     ? alternatives.data.filter((method) => method === 'paypal') : []}
                   failedMethod={resume.paymentMethod === 'payphone_wallet'

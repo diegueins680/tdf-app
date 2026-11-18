@@ -95153,6 +95153,25 @@
         "name": "payment_method_types",
         "valueCount": 2
       }
+    },
+    {
+      "id": "ac7d73f0f4464d7e5194",
+      "classification": "genuine-technical-constant",
+      "disposition": "retain-in-code",
+      "specializedModel": "technical_constant_allowlist",
+      "priority": "P3-retain",
+      "risk": "This test-only all-disabled capability response protects the distinction between a successful empty lookup and a failed or pending lookup. It does not enable production payment methods.",
+      "justification": "Reviewed test-only noMethods fixture used to simulate an authoritative capability response with all methods unavailable. Production availability remains server-owned.",
+      "reviewed": true,
+      "reviewMethod": "source-review-2026-11-18",
+      "reviewBatch": "payment-failure-alternatives",
+      "evidence": {
+        "file": "tdf-hq-ui/src/pages/ServiceOrderTrackingPage.test.tsx",
+        "line": 14,
+        "kind": "object-registry",
+        "name": "noMethods",
+        "valueCount": 7
+      }
     }
   ]
 }

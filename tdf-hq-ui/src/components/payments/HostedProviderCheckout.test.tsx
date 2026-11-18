@@ -344,4 +344,27 @@ describe('payment failure alternatives', () => {
     fireEvent.click(alternative);
     expect(createMock).toHaveBeenCalledTimes(1);
   });
+
+  it('preserves unknown availability and prevents new attempts with cached methods', () => {
+    render(<HostedProviderCheckout checkout={context} offeredMethods={['placetopay_card']}
+      availabilityUnknown paymentFailure={{ needsVerification: false }} />);
+    expect(screen.getByText(/No pudimos consultar otros medios de pago/)).toBeTruthy();
+    expect(screen.queryByText(/No hay otro medio habilitado/)).toBeNull();
+    const method = screen.getByRole('button', { name: /Tarjeta · PlaceToPay/ });
+    expect(method.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(method);
+    expect(createMock).not.toHaveBeenCalled();
+  });
+
+  it('still recovers the original transmitted attempt while current methods are unknown', async () => {
+    const key = loadOrCreatePaymentIdempotencyKey(checkoutId, 'placetopay', 'card');
+    saveProviderPaymentPending({ version: 1, ...context, provider: 'placetopay', paymentMethod: 'card', createdAt: Date.now() });
+    createMock.mockResolvedValue({ checkoutId, attemptId, provider: 'placetopay',
+      state: 'processing', canRetryOrFallback: false, outcomeCertainty: 'ambiguous' });
+    render(<HostedProviderCheckout checkout={context} offeredMethods={[]} availabilityUnknown />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Recuperar pago original' }));
+    await waitFor(() => expect(createMock).toHaveBeenCalledTimes(1));
+    expect(createMock).toHaveBeenCalledWith(checkoutId, context.lookupToken, key,
+      { provider: 'placetopay', paymentMethod: 'card' });
+  });
 });

@@ -196,6 +196,7 @@ export default function PublicBookingOrderTrackingPage() {
                     }}
                     offeredMethods={paidStatuses.has(order.paymentStatus) ? [] : order.paymentMethods}
                     alternativeMethods={order.paymentMethods.filter((method) => method.startsWith('placetopay_') || method.startsWith('payphone_'))}
+                    availabilityUnknown={loading || Boolean(error)}
                     paymentFailure={!paidStatuses.has(order.paymentStatus) && (error || order.paymentStatus === 'failed')
                       ? { needsVerification: Boolean(error) || order.paymentStatus !== 'failed' } : null}
                     disabled={loading || paidStatuses.has(order.paymentStatus)}

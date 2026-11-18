@@ -206,7 +206,7 @@ export default function MixingMasteringPage() {
       productFlow: 'professional_service',
     }),
   });
-  const availablePaymentMethods = paymentMethodsQuery.data;
+  const availablePaymentMethods = paymentMethodsQuery.isSuccess ? paymentMethodsQuery.data : undefined;
   const hostedPaymentMethods = useMemo(() => [
     ...(availablePaymentMethods?.placeToPayCard ? ['placetopay_card'] : []),
     ...(availablePaymentMethods?.placeToPayBankRedirect ? ['placetopay_bank_redirect'] : []),
@@ -798,6 +798,7 @@ export default function MixingMasteringPage() {
             </Button>}
             <HostedProviderCheckout
               offeredMethods={hostedPaymentMethods}
+              availabilityUnknown={!paymentMethodsQuery.isSuccess}
               alternativeMethods={[
                 ...hostedPaymentMethods,
                 ...(availablePaymentMethods?.datafast ? ['datafast'] : []),
@@ -832,7 +833,9 @@ export default function MixingMasteringPage() {
             && hostedPaymentMethods.length === 0
           )) && (
             <Alert severity="warning" sx={{ mb: 2 }}>
-              No hay un método de pago verificado y operativo para este pedido. No se creó ningún cobro.
+              {paymentMethodsQuery.isError
+                ? 'No pudimos consultar los métodos de pago para este pedido. Reintenta la consulta antes de elegir un medio.'
+                : 'No hay un método de pago verificado y operativo para este pedido.'}
             </Alert>
           )}
 
@@ -915,7 +918,7 @@ export default function MixingMasteringPage() {
               El pedido está creado, pero solo la verificación del servidor después del retorno puede marcarlo pagado.
             </Typography>
             {datafastError && <Alert severity="error">{datafastError}</Alert>}
-            {datafastError && <PaymentAlternativesNotice methods={[...hostedPaymentMethods, ...(availablePaymentMethods?.datafast ? ['datafast'] : []), ...(availablePaymentMethods?.paypal && paypalClientId && paypalReady ? ['paypal'] : []), ...(availablePaymentMethods?.bankTransfer ? ['bank_transfer'] : [])]} failedMethod="datafast" blocked />}
+            {datafastError && <PaymentAlternativesNotice availabilityUnknown={!paymentMethodsQuery.isSuccess} methods={[...hostedPaymentMethods, ...(availablePaymentMethods?.datafast ? ['datafast'] : []), ...(availablePaymentMethods?.paypal && paypalClientId && paypalReady ? ['paypal'] : []), ...(availablePaymentMethods?.bankTransfer ? ['bank_transfer'] : [])]} failedMethod="datafast" blocked />}
             {datafastCheckout && datafastReturnUrl ? (
               <Box ref={datafastFormRef} key={datafastWidgetKey} sx={{ minHeight: 360, '& form': { width: '100%' } }}>
                 <form
@@ -943,7 +946,7 @@ export default function MixingMasteringPage() {
               PayPal autoriza en su componente; TDF captura y verifica importe, moneda y referencia en el servidor.
             </Typography>
             {paypalError && <Alert severity="error">{paypalError}</Alert>}
-            {paypalError && <PaymentAlternativesNotice methods={[...hostedPaymentMethods, ...(availablePaymentMethods?.datafast ? ['datafast'] : []), ...(availablePaymentMethods?.paypal && paypalClientId && paypalReady ? ['paypal'] : []), ...(availablePaymentMethods?.bankTransfer ? ['bank_transfer'] : [])]} failedMethod="paypal" blocked />}
+            {paypalError && <PaymentAlternativesNotice availabilityUnknown={!paymentMethodsQuery.isSuccess} methods={[...hostedPaymentMethods, ...(availablePaymentMethods?.datafast ? ['datafast'] : []), ...(availablePaymentMethods?.paypal && paypalClientId && paypalReady ? ['paypal'] : []), ...(availablePaymentMethods?.bankTransfer ? ['bank_transfer'] : [])]} failedMethod="paypal" blocked />}
             <Box ref={paypalButtonRef} minHeight={48} />
           </Stack>
         </DialogContent>

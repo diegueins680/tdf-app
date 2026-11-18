@@ -125,6 +125,7 @@ export default function ServiceOrderTrackingPage() {
                   }}
                   offeredMethods={order.ssoStatus === 'awaiting_payment' ? hostedPaymentMethods : []}
                   alternativeMethods={hostedPaymentMethods}
+                  availabilityUnknown={!paymentMethodsQuery.isSuccess}
                   paymentFailure={order.ssoStatus === 'payment_failed' ? { needsVerification: true } : null}
                   disabled={order.ssoStatus !== 'awaiting_payment' || paymentMethodsQuery.isLoading}
                   initialBuyerPhone={order.ssoBuyerPhone}

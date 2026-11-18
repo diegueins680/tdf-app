@@ -47,3 +47,10 @@ it('excludes the failed method from unchecked options while preserving the unres
   expect(screen.getByText(/Verify the original payment before paying again/)).toBeInTheDocument();
   expect(screen.queryByRole('button')).toBeNull();
 });
+
+it('does not treat unknown availability as either a verified empty list or cached ready methods', () => {
+  render(<PaymentAlternativesNotice methods={['bank_transfer']} methodsToCheck={['paypal']} availabilityUnknown />);
+  expect(screen.getByText(/No pudimos consultar otros medios de pago/)).toBeInTheDocument();
+  expect(screen.queryByText(/No hay otro medio habilitado/)).toBeNull();
+  expect(screen.queryByRole('listitem')).toBeNull();
+});
