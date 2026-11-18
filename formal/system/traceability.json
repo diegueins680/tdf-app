@@ -28077,8 +28077,8 @@
     ".github/workflows/build.yml": "2b2b50ee403c6de8b26dc6190bb1137ebb8b1434c43af19fdc3e1feff67ea428",
     ".github/workflows/campaign-platform.yml": "285bec8277f776afd71d0659e48497e6ad070c766a3070b2025252832b17826e",
     ".github/workflows/catalog-list-audit.yml": "8f40aa2c4caffde1bc8ab4e39c63d113d47483cd1683c92d489936af3768f17f",
-    ".github/workflows/check-messaging-token.yml": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
-    ".github/workflows/check-mobile-distribution.yml": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+    ".github/workflows/check-messaging-token.yml": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
+    ".github/workflows/check-mobile-distribution.yml": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
     ".github/workflows/ci-safe-install.yml": "57ba42c33f22512b669951996633641dedd9f598198ba320bf4bdd51a915547a",
     ".github/workflows/ci.yml": "75794018c70149c89c9322f7bd0acf64e9b79ef221db55c14c0b9ee643775139",
     ".github/workflows/datadog-synthetics.yml": "c51ae1a581d96eb197af0576ddd18ae9a063e5bf8b6f1763e0a89af0dcd6c637",
@@ -48930,7 +48930,7 @@
     {
       "id": "SURFACE-562c5d7f20f572bc",
       "path": ".github/workflows/check-messaging-token.yml",
-      "sha256": "a12b842220c5a2b2e9a6917e33e8d8945486d05a52f4874ec749a0459a4bbc3e",
+      "sha256": "68ee6bacc89bb3d49176cd023a289b68c5fcaabf616fe599c645be7b34a20ddf",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
@@ -48942,7 +48942,7 @@
     {
       "id": "SURFACE-0ad43ac6597144d2",
       "path": ".github/workflows/check-mobile-distribution.yml",
-      "sha256": "371b1d43c186feca31c7b66ec7cda20e7d01f1297bfc94d7d0f9402b55151602",
+      "sha256": "a02130cf5379c4a451ec8588b989a057a683dcf275fd3d6638b275aaec0ba599",
       "semanticConformance": "not-established-by-discovery",
       "requirements": [
         {
