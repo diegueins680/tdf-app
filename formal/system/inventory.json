@@ -11347,13 +11347,13 @@
     {
       "id": "SURFACE-adbe6d097447b912",
       "path": "tdf-hq-ui/src/pages/FanClubPage.recovery.test.tsx",
-      "sha256": "67247d4cb24abd1fe878b57d009ab858d7c4dc91bf4e34500d67791b2a6a1431",
+      "sha256": "ac93ad9c7177059be02467a213afc1f7a5c08a818b0e2059d619f89d7d4a36bf",
       "semanticConformance": "not-established-by-discovery"
     },
     {
       "id": "SURFACE-60cd6659a77e2df2",
       "path": "tdf-hq-ui/src/pages/FanClubPage.tsx",
-      "sha256": "a0217caa2b802383711316d3637cbd34ebb74a97db209e6bcd7cc7602437d22b",
+      "sha256": "b66b575f4ba3b45494887c73fa9975fdf12d5116a67f6556ed6be49e91828bc9",
       "semanticConformance": "not-established-by-discovery"
     },
     {
